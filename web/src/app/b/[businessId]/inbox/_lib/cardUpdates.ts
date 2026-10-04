@@ -71,6 +71,15 @@ export function cardWithResolvedHandoff(card: ConversationDetailView, resolved: 
   };
 }
 
+/** The card with a resolved handoff open again: the conversation waits for a person once more. */
+export function cardWithReopenedHandoff(card: ConversationDetailView, reopened: HandoffListItem): ConversationDetailView {
+  return {
+    ...card,
+    handoffs: (card.handoffs ?? []).map((handoff) => (handoff.id === reopened.id ? reopened : handoff)),
+    conversation: card.conversation.status === "open" ? { ...card.conversation, status: "handoff" } : card.conversation,
+  };
+}
+
 /** The card with one request in another status. */
 export function cardWithRequestStatus(card: ConversationDetailView, leadId: string, status: LeadStatus): ConversationDetailView {
   return {

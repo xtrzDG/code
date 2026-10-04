@@ -24,7 +24,7 @@ export function EncryptionKeysScreen() {
       <PageHeader
         title={t("adminSecurity.title")}
         description={t("adminSecurity.description")}
-        actions={<LiveStatus updatedAt={keys.updatedAt} isFetching={keys.isFetching && data !== undefined} />}
+        status={<LiveStatus updatedAt={keys.updatedAt} isFetching={keys.isFetching && data !== undefined} />}
       />
 
       {keys.error && !data ? (

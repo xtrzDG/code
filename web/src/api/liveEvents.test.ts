@@ -46,6 +46,8 @@ describe("live events", () => {
       queryKeys.handoffs.all(BUSINESS),
       queryKeys.conversations.all(BUSINESS),
     ]);
+    // A reopened handoff (an Undo) waits for a person again, without the new-handoff alert.
+    expect(invalidationsFor(event("handoff.reopened"), BUSINESS)).toEqual(invalidationsFor(event("handoff.created"), BUSINESS));
     expect(invalidationsFor(event("lead.changed"), BUSINESS)).toContainEqual(queryKeys.leads.all(BUSINESS));
     expect(invalidationsFor(event("booking.created"), BUSINESS)).toContainEqual(queryKeys.bookings.all(BUSINESS));
     expect(invalidationsFor(event("channel.error"), BUSINESS)).toEqual([counts, queryKeys.channels.all(BUSINESS)]);

@@ -24,3 +24,8 @@ export function booking(id: string, date: string, time: string | null): BookingV
     created_at: 1_790_000_000_000_000,
   };
 }
+
+/** A booking today at 20:00 with any fields replaced. */
+export function bookingFixture(fields: Partial<BookingView> = {}): BookingView {
+  return { ...booking("booking_1", "2026-10-05", "20:00"), ...fields };
+}

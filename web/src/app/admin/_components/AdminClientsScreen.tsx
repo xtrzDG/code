@@ -30,7 +30,7 @@ export function AdminClientsScreen() {
       <PageHeader
         title={t("pages.admin.title")}
         description={t("pages.admin.description")}
-        actions={<LiveStatus updatedAt={list.updatedAt} isFetching={list.isFetching && data !== undefined} />}
+        status={<LiveStatus updatedAt={list.updatedAt} isFetching={list.isFetching && data !== undefined} />}
       />
 
       {list.error && !data ? (

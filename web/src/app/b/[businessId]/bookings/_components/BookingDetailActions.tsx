@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import type { BookingView } from "@/components/insights/types";
 import { Button, OverflowMenu, type MenuAction } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
-import { bookingActionLayout, bookingActions, hasStarted, localNowIn, type BookingActionKey } from "../_lib/bookingList";
+import { bookingActionLayout, bookingActions, hasStarted, type BookingActionKey } from "../_lib/bookingList";
+import { useLocalNow } from "../_lib/useLocalNow";
 import type { BookingsPage } from "../_lib/useBookingsPage";
 
 const LABELS: Record<BookingActionKey | "edit", MessageKey> = {
@@ -18,16 +17,6 @@ const LABELS: Record<BookingActionKey | "edit", MessageKey> = {
   cancel: "bookings.actions.cancel",
   edit: "bookings.actions.edit",
 };
-
-/** The business's local time now, moved on every minute (an open dialog crosses a booking's start). */
-function useLocalNow(timeZone: string): string {
-  const [now, setNow] = useState(() => localNowIn(timeZone));
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(localNowIn(timeZone)), 60_000);
-    return () => window.clearInterval(timer);
-  }, [timeZone]);
-  return now;
-}
 
 /**
  * The buttons under a booking's details: one main action (confirm a

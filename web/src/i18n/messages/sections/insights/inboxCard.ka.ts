@@ -108,4 +108,5 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
     confirm: "მოგვარდა",
   },
   resolved: "მოინიშნა მოგვარებულად. ასისტენტი ამ კლიენტს ისევ პასუხობს.",
+  reopened: "გადაცემა ისევ ღიაა. ასისტენტი არ უპასუხებს, სანამ არ მოგვარდება.",
 };

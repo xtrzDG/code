@@ -157,7 +157,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
       <PageHeader
         title={t("nav.channels")}
         description={t("pages.channels.description")}
-        actions={<LiveStatus updatedAt={channels.updatedAt} isFetching={channels.isFetching && channels.data !== undefined} />}
+        status={<LiveStatus updatedAt={channels.updatedAt} isFetching={channels.isFetching && channels.data !== undefined} />}
       />
 
       {!isOwner ? <OwnerOnlyNote className="mb-6" /> : null}

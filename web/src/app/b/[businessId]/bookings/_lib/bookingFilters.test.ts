@@ -7,6 +7,8 @@ import {
   isRangeValid,
   parseBookingFilters,
   rangeDates,
+  sheetFilterCount,
+  withoutSheetFilters,
 } from "./bookingFilters";
 
 describe("booking ranges", () => {
@@ -29,7 +31,14 @@ describe("booking ranges", () => {
 
 describe("booking filters in the URL", () => {
   it("round-trip and drop invalid values", () => {
-    const filters = { ...DEFAULT_BOOKING_FILTERS, range: "custom" as const, from: "2026-10-01", to: "2026-10-07", status: "pending" as const };
+    const filters = {
+      ...DEFAULT_BOOKING_FILTERS,
+      phoneView: "all" as const,
+      range: "custom" as const,
+      from: "2026-10-01",
+      to: "2026-10-07",
+      status: "pending" as const,
+    };
     const query = bookingFiltersQuery(filters);
     expect(query).toBe("range=custom&from=2026-10-01&to=2026-10-07&status=pending");
     expect(parseBookingFilters(Object.fromEntries(new URLSearchParams(query)))).toEqual(filters);
@@ -37,6 +46,31 @@ describe("booking filters in the URL", () => {
       DEFAULT_BOOKING_FILTERS,
     );
     expect(bookingFiltersQuery(DEFAULT_BOOKING_FILTERS)).toBe("");
+  });
+
+  it("open a phone on today's agenda unless the address asks for the list", () => {
+    expect(parseBookingFilters({}).phoneView).toBe("today");
+    expect(parseBookingFilters({ status: "pending" }).phoneView).toBe("all");
+    expect(parseBookingFilters({ range: "week" }).phoneView).toBe("all");
+    expect(parseBookingFilters({ view: "all" }).phoneView).toBe("all");
+    expect(parseBookingFilters({ view: "today", test: "1" }).phoneView).toBe("today");
+    expect(parseBookingFilters({ view: "calendar" }).phoneView).toBe("today");
+
+    const list = { ...DEFAULT_BOOKING_FILTERS, phoneView: "all" as const };
+    expect(bookingFiltersQuery(list)).toBe("view=all");
+    expect(parseBookingFilters(Object.fromEntries(new URLSearchParams("view=all")))).toEqual(list);
+    const agendaWithTest = { ...DEFAULT_BOOKING_FILTERS, includeTest: true };
+    expect(bookingFiltersQuery(agendaWithTest)).toBe("test=1&view=today");
+    expect(parseBookingFilters(Object.fromEntries(new URLSearchParams("test=1&view=today")))).toEqual(agendaWithTest);
+  });
+});
+
+describe("the phone's filter sheet", () => {
+  it("counts and clears status, place and test bookings, not the dates", () => {
+    expect(sheetFilterCount(DEFAULT_BOOKING_FILTERS)).toBe(0);
+    const chosen = { ...DEFAULT_BOOKING_FILTERS, range: "week" as const, status: "pending" as const, resourceId: "resource_1", includeTest: true };
+    expect(sheetFilterCount(chosen)).toBe(3);
+    expect(withoutSheetFilters(chosen)).toEqual({ ...DEFAULT_BOOKING_FILTERS, range: "week" });
   });
 });
 

@@ -4,6 +4,7 @@ import type { ConversationDetailView, HandoffListItem, LeadListItem } from "@/co
 
 import {
   cardWithAssignment,
+  cardWithReopenedHandoff,
   cardWithRequestStatus,
   cardWithResolvedHandoff,
   openHandoffOf,
@@ -85,6 +86,15 @@ describe("a resolved handoff", () => {
     const next = cardWithResolvedHandoff(card, handoff("handoff_1", "resolved", 1));
     expect(next.conversation.status).toBe("handoff");
     expect(openHandoffOf(next)?.id).toBe("handoff_2");
+  });
+
+  it("hands the conversation back to a person when a handoff is reopened (Undo)", () => {
+    const resolved = cardWithResolvedHandoff(cardOf({ handoffs: [handoff("handoff_1", "notified", 1)] }), handoff("handoff_1", "resolved", 1));
+    const next = cardWithReopenedHandoff(resolved, handoff("handoff_1", "notified", 1));
+    expect(next.conversation.status).toBe("handoff");
+    expect(openHandoffOf(next)?.id).toBe("handoff_1");
+    const closed = cardOf({ conversation: { id: "conversation_1", status: "closed" } as ConversationDetailView["conversation"] });
+    expect(cardWithReopenedHandoff(closed, handoff("handoff_1", "notified", 1)).conversation.status).toBe("closed");
   });
 });
 

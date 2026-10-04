@@ -3,8 +3,6 @@
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import type { PagedData } from "@/api/paging";
-import { queryCache } from "@/api/queryCache";
 import { queryKeys } from "@/api/queryKeys";
 import { useCursorPage } from "@/api/useCursorPage";
 import { useMutation } from "@/api/useMutation";
@@ -13,12 +11,14 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { useToday } from "@/components/insights/useToday";
 import type { BookingPage, BookingView } from "@/components/insights/types";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
-import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { COMPACT_SCREEN_QUERY, useMediaQuery, WIDE_SCREEN_QUERY } from "@/lib/useMediaQuery";
 
-import { bookingApiQuery, bookingFiltersQuery, isRangeValid, rangeDates, type BookingFilters } from "./bookingFilters";
+import { bookingApiQuery, bookingFiltersQuery, isRangeValid, rangeDates, type BookingFilters, type PhoneBookingsView } from "./bookingFilters";
 import { customerLanguage, nightsOf } from "./bookingList";
-import { useBookingStatus, withBooking } from "./useBookingStatus";
+import { replaceInLists, useBookingStatus } from "./useBookingStatus";
+import { useTodayBookings } from "./useTodayBookings";
+
 export type BookingDialog =
   | { kind: "none" }
   | { kind: "create" }
@@ -26,19 +26,22 @@ export type BookingDialog =
   | { kind: "message"; title: string; text: string };
 
 /**
- * The bookings page's state: filters kept in the URL, the paged list and
- * places from the API, the open dialog, and changing a booking's status or
- * cancelling it (with the text for the customer).
+ * The bookings page's state: filters kept in the URL, the paged list (on
+ * large screens, and on phones under "All bookings") and today's agenda
+ * (phones), places from the API, the open dialog, and changing a booking's
+ * status or cancelling it (with the text for the customer), each with Undo.
  */
 export function useBookingsPage(initialFilters: BookingFilters) {
   const { t } = useI18n();
-  const toast = useToast();
   const { business } = useBusiness();
   const businessId = business.id;
   const today = useToday(business.timezone);
   const [filters, setFiltersState] = useState(initialFilters);
   const [dialog, setDialog] = useState<BookingDialog>({ kind: "none" });
   const [cancelLanguage, setCancelLanguage] = useState(business.default_language);
+  // False until hydrated, so neither view loads before the screen is known.
+  const isCompact = useMediaQuery(COMPACT_SCREEN_QUERY);
+  const isWide = useMediaQuery(WIDE_SCREEN_QUERY);
 
   const range = rangeDates(filters, today);
   const rangeValid = isRangeValid(range);
@@ -59,8 +62,9 @@ export function useBookingsPage(initialFilters: BookingFilters) {
           query: { ...bookingApiQuery(filters, range), limit: String(limit), cursor: cursor ?? undefined },
         },
       }),
-    { enabled: rangeValid },
+    { enabled: rangeValid && (isWide || filters.phoneView === "all") },
   );
+  const agenda = useTodayBookings({ enabled: isCompact && filters.phoneView === "today", includeTest: filters.includeTest });
   const resources = useQuery(queryKeys.resources.list(businessId), () =>
     api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } } }),
   );
@@ -72,7 +76,7 @@ export function useBookingsPage(initialFilters: BookingFilters) {
         ? { kind: "details", booking }
         : current,
     );
-  const changeStatus = useBookingStatus(listKey, showDetails);
+  const status = useBookingStatus(showDetails);
   const cancel = useMutation(
     (booking: BookingView, language: string) =>
       api.POST("/v1/businesses/{business_id}/bookings/{booking_id}/cancel", {
@@ -89,19 +93,24 @@ export function useBookingsPage(initialFilters: BookingFilters) {
     setFiltersState(next);
     replaceUrlQuery(bookingFiltersQuery(next));
   };
+  const setPhoneView = (phoneView: PhoneBookingsView) => setFilters({ ...filters, phoneView });
 
-  const replaceBooking = (updated: BookingView) =>
-    queryCache.update<PagedData<BookingView, BookingPage>>(listKey, (data) => withBooking(data, updated));
+  const replaceBooking = (updated: BookingView) => replaceInLists(businessId, updated);
 
   const resourceUnits = new Map((resources.data?.items ?? []).map((resource) => [resource.id, resource.booking_unit]));
   const isStay = (booking: BookingView) =>
     resourceUnits.get(booking.resource_id) === "night" || (booking.time === null && nightsOf(booking) > 0);
 
+  // Modal also reports a close when another dialog replaces it: only close the current one.
+  const closeIf = (kind: BookingDialog["kind"]) => () =>
+    setDialog((current) => (current.kind === kind ? { kind: "none" } : current));
+
   const runCancel = async (booking: BookingView) => {
     const result = await cancel.run(booking, cancelLanguage);
     if (result.ok) {
       replaceBooking(result.data.booking);
-      toast.success(t("bookings.cancelled"));
+      // Undone, the cancellation's text for the customer has nothing left to say.
+      status.offerUndo(t("bookings.cancelled"), result.data.booking, booking.status, closeIf("message"));
       setDialog({ kind: "message", title: t("bookings.cancelled"), text: result.data.confirmation_text });
     }
   };
@@ -111,20 +120,20 @@ export function useBookingsPage(initialFilters: BookingFilters) {
     setDialog({ kind: "cancel", booking });
   };
   const close = () => setDialog({ kind: "none" });
-  // Modal also reports a close when another dialog replaces it: only close the current one.
-  const closeIf = (kind: BookingDialog["kind"]) => () =>
-    setDialog((current) => (current.kind === kind ? { kind: "none" } : current));
   const dialogBooking = "booking" in dialog ? dialog.booking : null;
   const defaultDate = range.from && range.from > today ? range.from : today;
 
   return {
+    isCompact,
     filters,
     setFilters,
+    setPhoneView,
     range,
     rangeValid,
     today,
     defaultDate,
     bookings,
+    agenda,
     resources: resources.data?.items ?? [],
     dialog,
     setDialog,
@@ -133,7 +142,8 @@ export function useBookingsPage(initialFilters: BookingFilters) {
     closeIf,
     isStay,
     replaceBooking,
-    runStatus: changeStatus.run,
+    runStatus: status.run,
+    isChangingStatus: status.isPending,
     cancelLanguage,
     setCancelLanguage,
     openCancel,

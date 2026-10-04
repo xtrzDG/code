@@ -31,7 +31,7 @@ export function MetricsScreen() {
       <PageHeader
         title={t("adminMetrics.title")}
         description={t("adminMetrics.description")}
-        actions={<LiveStatus updatedAt={metrics.updatedAt} isFetching={metrics.isFetching && view !== undefined} />}
+        status={<LiveStatus updatedAt={metrics.updatedAt} isFetching={metrics.isFetching && view !== undefined} />}
       />
 
       {metrics.error && !view ? (
