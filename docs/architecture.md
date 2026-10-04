@@ -78,7 +78,8 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 | Таблица ТЗ | Документ |
 | --- | --- |
 | tenants | `BusinessDocument` (участники, контакты менеджеров, режим обслуживания) |
-| users | `UserDocument`, `OtpChallengeDocument`, `UserSessionDocument` |
+| users | `UserDocument`, `OtpChallengeDocument`, `UserSessionDocument` (с `auth_level` и `authenticated_at`) |
+| двухфакторный вход | `TotpFactorDocument` (ключ — id пользователя, секрет зашифрован ключами `ENCRYPTION_KEYS`), `RecoveryCodeDocument` (только HMAC), `MfaChallengeDocument` (второй шаг входа, 5 минут); все — уровня платформы |
 | assistants, assistant_versions | `AssistantVersionDocument` |
 | knowledge_items | `KnowledgeItemDocument` |
 | resources, schedules, schedule_exceptions | `ResourceDocument`, `ScheduleExceptionDocument` |
@@ -500,9 +501,35 @@ WhatsApp, где продолжится ответ клиента; при отк
   каждый роутер описывает их через `standard_error_responses()`
   (`openapi_error_contract.py`), и сгенерированный клиент кабинета знает тип
   ошибок. DELETE отвечает 204.
-- Авторизация: `Authorization: Bearer`, зависимость
-  `build_current_user_dependency`; доступ к бизнесу — `AuthorizeBusinessAccessUseCase`
-  (owner, staff; вход платформенного админа пишется в журнал аудита).
+- Авторизация: `Authorization: Bearer`, асинхронная зависимость
+  `build_current_user_dependency`: проверив токен (в пуле потоков), она
+  кладёт сессию запроса (`SessionAssurance`: пользователь, сессия,
+  `auth_level`, `authenticated_at`) в `SessionAssuranceContext` —
+  контекстную переменную задачи запроса, которую видят потоки маршрута, но
+  не другие запросы и не фон. Доступ к бизнесу — `AuthorizeBusinessAccessUseCase`
+  (owner, staff; при `require_mfa_for_members` участник с одним фактором
+  получает 403 `mfa_required`; вход платформенного админа пишется в журнал
+  аудита). Админ платформы — тот, кто есть в `PLATFORM_ADMIN_*` сейчас
+  (`is_listed_platform_admin`, при каждой проверке; флаг в `UserDocument`
+  только для отображения), и админка требует сессию с двумя факторами
+  (`AuthorizePlatformAdminUseCase`). Фон (сессии нет) действует от имени
+  уже проверенного запроса.
+- Двухфакторный вход (`app/use_cases/users/mfa/`): `VerifyOtpLoginUseCase`
+  открывает сессию только тем, у кого нет приложения и кто не админ;
+  остальным — `MfaRequiredView` и `MfaChallengeDocument`, а сессию с
+  `TWO_FACTOR` открывает `VerifyMfaLoginUseCase` (код TOTP ±30 с, каждый
+  шаг один раз — compare-and-swap по `last_used_step`; код восстановления
+  гасится тоже через compare-and-swap). Каждое изменение фактора — запись
+  `MFA_CHANGED` в журнале аудита.
+- Подтверждение важных действий (step-up): use case после авторизации
+  вызывает одну строку `step_up.require_recent_authentication()`
+  (`RequireRecentAuthentication`, окно `STEP_UP_MAX_AGE_SECONDS`). Отказ —
+  `StepUpRequiredError`: 401 `authentication_required` с причиной
+  `step_up_required` и `WWW-Authenticate: Bearer
+  error="insufficient_user_authentication"` (RFC 9470), по которому прокси
+  кабинета не стирает сессию; кабинет показывает окно подтверждения
+  (`/v1/auth/step-up`) и повторяет запрос. Неверный код — 422 с причиной
+  `wrong_code`, а не 401.
 - Живой кабинет (`events_routes.py`): use case после сохранения объявляет
   одной строкой, что изменилось (`EventPublisherFacilitatorContract.publish`:
   бизнес, вид события, id; никогда текст клиента; песочница не объявляется).

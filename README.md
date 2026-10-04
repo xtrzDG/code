@@ -346,6 +346,16 @@ Render делает свои снимки базы и восстановлени
   отвечает, рискованный запрос отклоняется (fail closed). Без ключей проверка
   выключена (разработка, тесты).
 
+- **Второй фактор.** Приложение-аутентификатор (TOTP, RFC 6238) подключается в
+  «Аккаунт → Безопасность»; его секрет зашифрован ключами `ENCRYPTION_KEYS`.
+  Код действует один раз, коды восстановления хранятся только как HMAC и тоже
+  действуют один раз; второй шаг входа живёт 5 минут и даёт 5 попыток. Админ
+  платформы входит только с приложением, а права админа читаются из
+  `PLATFORM_ADMIN_*` при каждом запросе. Выгрузка и удаление данных контакта,
+  изменения команды, подключение канала, вход в кабинет клиента и смена ключа
+  требуют входа или подтверждения не старше `STEP_UP_MAX_AGE_SECONDS` (401 с
+  причиной `step_up_required`; кабинет спрашивает код и повторяет действие).
+
 В `development` и `test` каналы без провайдера пишут код в лог (`OTP_LOG_CODES`, по
 умолчанию включено). В `production` коды никогда не пишутся в лог (`OTP_LOG_CODES=true`
 — ошибка запуска), канал без провайдера не предлагается, а без единого провайдера
@@ -530,7 +540,8 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | Раздел | Маршруты |
 | --- | --- |
 | Здоровье | `GET /healthz` (жив ли процесс; не трогает базу и потоки запросов), `GET /readyz` (готов ли принимать трафик: база отвечает за 2 с, все миграции сборки применены, есть свободное соединение — иначе 503; в ответе каждая проверка и возраст пульса воркера) |
-| Вход и профиль | `GET /v1/auth/login-options[?country_code=…]`, `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/logout`, `GET·PATCH /v1/me` |
+| Вход и профиль | `GET /v1/auth/login-options[?country_code=…]`, `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify` (сессия, или `mfa_required` и второй шаг, если есть приложение-аутентификатор или это админ платформы), `POST /v1/auth/mfa/verify` (второй шаг: код приложения или код восстановления), `POST /v1/auth/mfa/enroll` (админ без приложения подключает его при входе), `POST /v1/auth/logout`, `GET·PATCH /v1/me` (в ответе `auth_level`) |
+| Безопасность аккаунта | `GET /v1/me/security`, `POST /v1/me/mfa/totp` (секрет и ссылка для QR), `POST /v1/me/mfa/totp/confirm` (первый код — 10 кодов восстановления, показываются один раз), `DELETE /v1/me/mfa/totp`, `POST /v1/me/mfa/recovery-codes` (новый набор); каждое изменение — `mfa_changed` в журнале аудита. Подтверждение важных действий: `POST /v1/auth/step-up` (код приложения или код входа на свой номер/почту), `POST /v1/auth/step-up/verify`; `GET·PUT …/security` (владелец: двухфакторный вход для всей команды) |
 | Каталог | `GET /v1/catalog/countries[/{code}]`, `GET /v1/catalog/languages`, `GET /v1/catalog/plans`, `GET /v1/catalog/niches[/{niche}]`, `POST /v1/phone-numbers/parse` |
 | Бизнесы и команда | `POST·GET /v1/businesses`, `GET·PATCH /v1/businesses/{id}` (в ответе `revision`, растёт с каждым сохранением; PATCH с `expected_revision` от устаревшей версии — 409 `stale_revision`, ничего не меняется), `POST …/members` (роль `owner` или `staff`), `PATCH·DELETE …/members/{user_id}` (последнего владельца нельзя ни удалить, ни сделать сотрудником), `GET …/call-forwarding-instructions` |
 | Данные и договор | `GET·POST …/dpa`, `GET /v1/legal/dpa/{version}?language=` (текст DPA, без токена), `GET …/audit-log` (страницы, фильтры `action`, `entity`, `actor_id`, `since`, `until`), `GET …/contacts` (страницы, `search`), `GET·DELETE …/contacts/{contact_id}`, `GET …/contacts/{contact_id}/export` |

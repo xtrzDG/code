@@ -1,6 +1,88 @@
 {
   "components": {
     "schemas": {
+      "AccountSecurityView": {
+        "additionalProperties": false,
+        "description": "The signed-in person's two-factor sign-in: their authenticator (None:\nnone set up), how many recovery codes are left, and how the current\nsession is signed in. `is_mfa_required`: a platform admin, who must use\nan authenticator.",
+        "properties": {
+          "auth_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "authenticated_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authenticated At"
+          },
+          "is_mfa_required": {
+            "default": false,
+            "title": "Is Mfa Required",
+            "type": "boolean"
+          },
+          "recovery_codes_left": {
+            "default": 0,
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Recovery Codes Left",
+            "type": "integer"
+          },
+          "step_up_max_age_seconds": {
+            "maximum": 86400.0,
+            "minimum": 60.0,
+            "title": "Step Up Max Age Seconds",
+            "type": "integer"
+          },
+          "totp_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totp Confirmed At"
+          },
+          "totp_last_used_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totp Last Used At"
+          },
+          "totp_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TotpFactorStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "step_up_max_age_seconds"
+        ],
+        "title": "AccountSecurityView",
+        "type": "object"
+      },
       "ActivationEventKind": {
         "description": "A milestone on the way from sign-up to the first customers, recorded\nonce per business: the owner tried the test chat, the assistant went\nlive (first publish), the first real conversation, booking and handoff.",
         "enum": [
@@ -1207,7 +1289,7 @@
         "type": "object"
       },
       "AuditAction": {
-        "description": "Operation on personal data recorded in the audit log (concept section\n10), or a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests).",
+        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business.",
         "enum": [
           "view",
           "create",
@@ -1217,7 +1299,8 @@
           "admin_access",
           "login",
           "retention_purge",
-          "publish_untested"
+          "publish_untested",
+          "mfa_changed"
         ],
         "title": "AuditAction",
         "type": "string"
@@ -1329,6 +1412,15 @@
         ],
         "title": "AuditLogPage",
         "type": "object"
+      },
+      "AuthLevel": {
+        "description": "How a session was signed in: with the login code alone (ONE_FACTOR) or\nwith the login code and an authenticator or recovery code (TWO_FACTOR).\nPlatform admin pages and businesses that require it take only\nTWO_FACTOR sessions.",
+        "enum": [
+          "one_factor",
+          "two_factor"
+        ],
+        "title": "AuthLevel",
+        "type": "string"
       },
       "AutotestCheckCode": {
         "description": "Why the test harness failed a scenario, as a code each language renders:\na deterministic check of what the assistant did (no booking, no handoff,\nrecords nobody asked for, a reply in another script), or why the\nscenario could not be evaluated at all.",
@@ -2643,6 +2735,42 @@
           "is_saved"
         ],
         "title": "BusinessProfileView",
+        "type": "object"
+      },
+      "BusinessSecurityView": {
+        "additionalProperties": false,
+        "description": "Whether the team must sign in with two factors, how many members have\nno authenticator yet (they cannot open the business while it is on),\nand whether the viewer's own session is signed in with two factors.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "members_without_two_factor": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Members Without Two Factor",
+            "type": "integer"
+          },
+          "require_mfa_for_members": {
+            "title": "Require Mfa For Members",
+            "type": "boolean"
+          },
+          "viewer_auth_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "business_id",
+          "require_mfa_for_members"
+        ],
+        "title": "BusinessSecurityView",
         "type": "object"
       },
       "BusinessStatus": {
@@ -5594,8 +5722,18 @@
       },
       "CurrentUserView": {
         "additionalProperties": false,
-        "description": "The signed-in user and every business they work in.",
+        "description": "The signed-in user and every business they work in, and how the current\nsession is signed in (None outside a signed-in request).",
         "properties": {
+          "auth_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "memberships": {
             "items": {
               "$ref": "#/components/schemas/UserMembershipView"
@@ -9290,11 +9428,15 @@
       },
       "LoginSessionView": {
         "additionalProperties": false,
-        "description": "A new session. The bearer token is shown only here; the server keeps\nnothing but its hash.",
+        "description": "A new session. The bearer token is shown only here; the server keeps\nnothing but its hash. `auth_level` says how it was signed in; a session\nopened while setting up an authenticator carries the new\n`recovery_codes` (shown once).",
         "properties": {
           "access_token": {
             "title": "Access Token",
             "type": "string"
+          },
+          "auth_level": {
+            "$ref": "#/components/schemas/AuthLevel",
+            "default": "one_factor"
           },
           "expires_at": {
             "title": "Expires At",
@@ -9303,6 +9445,16 @@
           "is_new_user": {
             "title": "Is New User",
             "type": "boolean"
+          },
+          "recovery_codes": {
+            "items": {
+              "maxLength": 14,
+              "minLength": 14,
+              "pattern": "^[a-hjkmnp-z2-9]{4}-[a-hjkmnp-z2-9]{4}-[a-hjkmnp-z2-9]{4}$",
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
           },
           "user": {
             "$ref": "#/components/schemas/UserView"
@@ -9783,6 +9935,57 @@
           "sources"
         ],
         "title": "MetricsFilterChoices",
+        "type": "object"
+      },
+      "MfaChallengeView": {
+        "additionalProperties": false,
+        "description": "The login code matched; the sign-in needs an authenticator code (or a\nrecovery code) too. `requires_enrollment`: a platform admin without an\nauthenticator sets one up first (`POST /v1/auth/mfa/enroll`).",
+        "properties": {
+          "expires_in_seconds": {
+            "maximum": 3600.0,
+            "minimum": 30.0,
+            "title": "Expires In Seconds",
+            "type": "integer"
+          },
+          "mfa_challenge_id": {
+            "title": "Mfa Challenge Id",
+            "type": "string"
+          },
+          "requires_enrollment": {
+            "default": false,
+            "title": "Requires Enrollment",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mfa_challenge_id",
+          "expires_in_seconds"
+        ],
+        "title": "MfaChallengeView",
+        "type": "object"
+      },
+      "MfaRequiredView": {
+        "additionalProperties": false,
+        "description": "The answer of the login code step for a person who must also give an\nauthenticator code (they set one up, or they are a platform admin): no\nsession yet. `POST /v1/auth/mfa/verify` with `mfa_challenge` opens it.",
+        "properties": {
+          "is_new_user": {
+            "title": "Is New User",
+            "type": "boolean"
+          },
+          "mfa_challenge": {
+            "$ref": "#/components/schemas/MfaChallengeView"
+          },
+          "mfa_required": {
+            "default": true,
+            "title": "Mfa Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mfa_challenge",
+          "is_new_user"
+        ],
+        "title": "MfaRequiredView",
         "type": "object"
       },
       "MissedCallReason": {
@@ -11834,6 +12037,27 @@
         "title": "RecordingConsentRule",
         "type": "string"
       },
+      "RecoveryCodesView": {
+        "additionalProperties": false,
+        "description": "A new set of recovery codes, shown once: only their hashes are kept.",
+        "properties": {
+          "recovery_codes": {
+            "items": {
+              "maxLength": 14,
+              "minLength": 14,
+              "pattern": "^[a-hjkmnp-z2-9]{4}-[a-hjkmnp-z2-9]{4}-[a-hjkmnp-z2-9]{4}$",
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes"
+        ],
+        "title": "RecoveryCodesView",
+        "type": "object"
+      },
       "ReplyGuardVerdict": {
         "description": "Result of the invented-numbers guard on an assistant reply.",
         "enum": [
@@ -12195,6 +12419,30 @@
         ],
         "title": "ServiceMode",
         "type": "string"
+      },
+      "SessionAssuranceView": {
+        "additionalProperties": false,
+        "description": "How the session is signed in now, and until when it may do sensitive actions.",
+        "properties": {
+          "auth_level": {
+            "$ref": "#/components/schemas/AuthLevel"
+          },
+          "authenticated_at": {
+            "title": "Authenticated At",
+            "type": "integer"
+          },
+          "step_up_valid_until": {
+            "title": "Step Up Valid Until",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auth_level",
+          "authenticated_at",
+          "step_up_valid_until"
+        ],
+        "title": "SessionAssuranceView",
+        "type": "object"
       },
       "SetupActionTarget": {
         "description": "The cabinet place where the owner acts; the cabinet maps it to a page:\nPROFILE (with a wizard step), STAFF_CONTACTS, CHANNELS,\nTEST_CHAT, AGREEMENT (the data processing agreement), BILLING,\nCHECKS (the automatic checks, under Advanced), APPLY_CHANGES, or\nOVERVIEW once everything is done.",
@@ -13216,6 +13464,39 @@
         "title": "StarterSectionView",
         "type": "object"
       },
+      "StepUpChallengeView": {
+        "additionalProperties": false,
+        "description": "How to confirm it is you: with an authenticator code (or a recovery\ncode), or with the login code just sent (`login_code`).",
+        "properties": {
+          "login_code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OtpChallengeView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "$ref": "#/components/schemas/StepUpMethod"
+          }
+        },
+        "required": [
+          "method"
+        ],
+        "title": "StepUpChallengeView",
+        "type": "object"
+      },
+      "StepUpMethod": {
+        "description": "How a signed-in person confirms it is them before a sensitive action: a\ncode of their authenticator app (or a recovery code) when they have one,\notherwise a new login code sent to their phone or e-mail.",
+        "enum": [
+          "totp",
+          "login_code"
+        ],
+        "title": "StepUpMethod",
+        "type": "string"
+      },
       "SubscriptionStatus": {
         "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.",
         "enum": [
@@ -13711,6 +13992,48 @@
         ],
         "title": "ToolCallView",
         "type": "object"
+      },
+      "TotpEnrollmentView": {
+        "additionalProperties": false,
+        "description": "A new authenticator to add to an app: the QR code's address and, for\ntyping it in by hand, the secret. Shown once; the first code from the\napp confirms it.",
+        "properties": {
+          "account_label": {
+            "title": "Account Label",
+            "type": "string"
+          },
+          "issuer": {
+            "title": "Issuer",
+            "type": "string"
+          },
+          "provisioning_uri": {
+            "title": "Provisioning Uri",
+            "type": "string"
+          },
+          "secret": {
+            "maxLength": 32,
+            "minLength": 32,
+            "pattern": "^[A-Z2-7]{32}$",
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "secret",
+          "provisioning_uri",
+          "account_label",
+          "issuer"
+        ],
+        "title": "TotpEnrollmentView",
+        "type": "object"
+      },
+      "TotpFactorStatus": {
+        "description": "An authenticator being set up (PENDING until its first code is entered)\nor in use (ACTIVE). A user has at most one.",
+        "enum": [
+          "pending",
+          "active"
+        ],
+        "title": "TotpFactorStatus",
+        "type": "string"
       },
       "TrialConversionView": {
         "additionalProperties": false,
@@ -16994,6 +17317,259 @@
         ]
       }
     },
+    "/v1/auth/mfa/enroll": {
+      "post": {
+        "operationId": "start_mfa_login_enrollment_v1_auth_mfa_enroll_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A platform admin without an authenticator sets one up while signing in.",
+                "properties": {
+                  "mfa_challenge_id": {
+                    "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Mfa Challenge Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "mfa_challenge_id"
+                ],
+                "title": "StartMfaEnrollmentRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpEnrollmentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Mfa Login Enrollment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/mfa/verify": {
+      "post": {
+        "operationId": "verify_mfa_login_v1_auth_mfa_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The second step of a sign-in: an authenticator code or a recovery code.",
+                "properties": {
+                  "code": {
+                    "anyOf": [
+                      {
+                        "maxLength": 6,
+                        "minLength": 6,
+                        "pattern": "^[0-9]{6}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Code"
+                  },
+                  "mfa_challenge_id": {
+                    "pattern": "^mfa_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "title": "Mfa Challenge Id",
+                    "type": "string"
+                  },
+                  "recovery_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Recovery Code"
+                  }
+                },
+                "required": [
+                  "mfa_challenge_id"
+                ],
+                "title": "VerifyMfaLoginRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginSessionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Verify Mfa Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/v1/auth/otp/start": {
       "post": {
         "operationId": "start_otp_login_v1_auth_otp_start_post",
@@ -17373,7 +17949,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginSessionView"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LoginSessionView"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaRequiredView"
+                    }
+                  ],
+                  "title": "Response Verify Otp Login V1 Auth Otp Verify Post"
                 }
               }
             },
@@ -17451,6 +18035,290 @@
           }
         },
         "summary": "Verify Otp Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/step-up": {
+      "post": {
+        "operationId": "start_step_up_v1_auth_step_up_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpChallengeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Step Up",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/step-up/verify": {
+      "post": {
+        "operationId": "verify_step_up_v1_auth_step_up_verify_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The confirmation: `code` of the authenticator, a `recovery_code`, or the\n`login_code` of the challenge `/v1/auth/step-up` sent.",
+                "properties": {
+                  "challenge_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^otp_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Challenge Id"
+                  },
+                  "code": {
+                    "anyOf": [
+                      {
+                        "maxLength": 6,
+                        "minLength": 6,
+                        "pattern": "^[0-9]{6}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Code"
+                  },
+                  "login_code": {
+                    "anyOf": [
+                      {
+                        "maxLength": 6,
+                        "minLength": 6,
+                        "pattern": "^[0-9]{6}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Login Code"
+                  },
+                  "recovery_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Recovery Code"
+                  }
+                },
+                "title": "VerifyStepUpRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionAssuranceView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Verify Step Up",
         "tags": [
           "auth"
         ]
@@ -36819,6 +37687,261 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/security": {
+      "get": {
+        "operationId": "get_business_security_v1_businesses__business_id__security_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSecurityView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Business Security",
+        "tags": [
+          "businesses"
+        ]
+      },
+      "put": {
+        "operationId": "update_business_security_v1_businesses__business_id__security_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "require_mfa_for_members": {
+                    "title": "Require Mfa For Members",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "require_mfa_for_members"
+                ],
+                "title": "UpdateBusinessSecurityRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSecurityView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Business Security",
+        "tags": [
+          "businesses"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/setup": {
       "get": {
         "operationId": "get_setup_v1_businesses__business_id__setup_get",
@@ -41095,6 +42218,567 @@
           }
         },
         "summary": "Update Current User",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/mfa/recovery-codes": {
+      "post": {
+        "operationId": "regenerate_recovery_codes_v1_me_mfa_recovery_codes_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Regenerate Recovery Codes",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/mfa/totp": {
+      "delete": {
+        "operationId": "remove_totp_factor_v1_me_mfa_totp_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Remove Totp Factor",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "start_totp_enrollment_v1_me_mfa_totp_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpEnrollmentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Totp Enrollment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/mfa/totp/confirm": {
+      "post": {
+        "operationId": "confirm_totp_enrollment_v1_me_mfa_totp_confirm_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The first code from the app, which turns the new authenticator on.",
+                "properties": {
+                  "code": {
+                    "maxLength": 6,
+                    "minLength": 6,
+                    "pattern": "^[0-9]{6}$",
+                    "title": "Code",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "title": "ConfirmTotpRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Confirm Totp Enrollment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/security": {
+      "get": {
+        "operationId": "get_account_security_v1_me_security_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSecurityView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Account Security",
         "tags": [
           "auth"
         ]
