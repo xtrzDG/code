@@ -96,7 +96,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.wall_clock,
         )
         self.store_inbound_messages = StoreInboundMessagesUseCase(
-            self.inbound_event_repo, self.job_queue, self.wall_clock
+            self.inbound_event_repo, self.job_queue, self.channel_repo, self.wall_clock
         )
         self.accept_platform_bot_update = AcceptPlatformBotUpdateUseCase(
             self.inbound_event_repo, self.job_queue, self.settings, self.wall_clock
@@ -116,6 +116,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.outbound_message_repo,
             self.job_queue,
             self.wall_clock,
+            self.channel_repo,
         )
         self.release_inbound_event = ReleaseInboundEventUseCase(
             self.inbound_event_repo, self.wall_clock

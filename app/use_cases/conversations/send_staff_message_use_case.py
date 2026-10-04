@@ -133,6 +133,7 @@ class SendStaffMessageUseCase(
             self._conversation_repo,
             self._message_repo,
             self._channel_repo,
+            business.default_language,
             now,
         )
         delivery: StaffMessageDelivery

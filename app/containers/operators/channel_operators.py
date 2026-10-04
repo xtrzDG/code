@@ -72,6 +72,12 @@ class ChannelOperatorsContainer(containers.DeclarativeContainer):
     set_whatsapp_staff_template_operator = pipeline_operator(
         channel_pipelines.set_whatsapp_staff_template_pipeline, storage_scope
     )
+    set_whatsapp_staff_templates_operator = pipeline_operator(
+        channel_pipelines.set_whatsapp_staff_templates_pipeline, storage_scope
+    )
+    validate_telegram_token_operator = pipeline_operator(
+        channel_pipelines.validate_telegram_token_pipeline, storage_scope
+    )
     get_widget_snippet_operator = pipeline_operator(
         channel_pipelines.get_widget_snippet_pipeline, storage_scope
     )

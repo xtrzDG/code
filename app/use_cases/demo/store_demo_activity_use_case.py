@@ -18,7 +18,10 @@ from app.contracts.repositories.booking_repositories import (
     LeadRepoContract,
     UnansweredQuestionRepoContract,
 )
-from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.business_repositories import (
+    BusinessRepoContract,
+    ChannelRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import (
     AuditLogRepoContract,
     DpaAcceptanceRepoContract,
@@ -53,6 +56,7 @@ from app.schemas.dto.media import MediaLocation, StoredMediaFile
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.demo.demo_channel_activity import stamp_demo_channels
 from app.utilities.assembly.autotest_evaluation import build_verdict
 
 # The owner accepted the DPA this long before the first version went live.
@@ -67,8 +71,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
     the demo catalog describes: customers, conversations with tool calls,
     phone calls, bookings, leads, handoffs, unanswered questions, feedback
     after visits, the subscription with its usage, the accepted DPA and
-    audit entries, the voice notes and photos customers sent, and the
-    topics customers asked about.
+    audit entries, the voice notes and photos customers sent, the topics
+    customers asked about, and when each channel last carried a message.
     """
 
     def __init__(
@@ -97,7 +101,9 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         media_storage: MediaStorageAdapterContract,
         conversation_topics_repo: ConversationTopicsRepoContract,
         app_settings: AppSettings,
+        channel_repo: ChannelRepoContract,
     ) -> None:
+        self._channel_repo: ChannelRepoContract = channel_repo
         self._registry: DemoDatasetRegistryContract = demo_dataset_registry
         self._business_repo: BusinessRepoContract = business_repo
         self._version_repo: AssistantVersionRepoContract = assistant_version_repo
@@ -139,6 +145,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         )
         self._go_live(business.id, published_id, input_data.seeded_at)
         self._store_customers(activity)
+        stamp_demo_channels(self._channel_repo, business.id, activity)
         self._store_feedback(activity)
         self._store_billing(activity)
         self._store_compliance(input_data, activity)

@@ -4,6 +4,7 @@ The WhatsApp message template for staff replies outside the 24-hour window
 """
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
@@ -15,6 +16,9 @@ from app.schemas.typings.conversations.constrained_integers import (
     StaffTemplateReplyMaxLength,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+
+# Templates one WhatsApp number keeps for staff replies (one per language).
+MAX_STAFF_TEMPLATES: int = 30
 
 
 class WhatsAppStaffTemplateView(ImmutableDTO):
@@ -53,4 +57,34 @@ class SetWhatsAppStaffTemplateCommand(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId
     request: WhatsAppStaffTemplateRequest
+    client_ip_address: ClientIpAddress | None = None
+
+
+class WhatsAppStaffTemplateEntry(ImmutableDTO):
+    """One approved template of the per-language list: its name and language."""
+
+    name: WhatsAppTemplateName
+    language_code: WhatsAppTemplateLanguageCode
+
+
+class WhatsAppStaffTemplatesRequest(ImmutableDTO):
+    """
+    HTTP body that replaces the templates for staff replies, one per
+    template language (e.g. "staff_reply" in "ka", "staff_reply_he" in
+    "he"); an empty list removes them all. Staff replies take the template
+    of the conversation's language, then the business's default language.
+    """
+
+    templates: list[WhatsAppStaffTemplateEntry] = Field(
+        default_factory=list[WhatsAppStaffTemplateEntry],
+        max_length=MAX_STAFF_TEMPLATES,
+    )
+
+
+class SetWhatsAppStaffTemplatesCommand(ImmutableDTO):
+    """Owner replaces the per-language WhatsApp templates for staff replies."""
+
+    user_id: UserId
+    business_id: BusinessId
+    request: WhatsAppStaffTemplatesRequest
     client_ip_address: ClientIpAddress | None = None

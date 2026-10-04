@@ -1,3 +1,5 @@
+from typing import cast
+
 import httpx
 
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
@@ -11,11 +13,17 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.channels.constrained_strings import (
     ChannelWebhookUrl,
+    TelegramBotUserId,
     TelegramBotUsername,
     TelegramWebhookSecret,
 )
-from app.schemas.typings.channels.strings import OutboundMessagePart, ProviderMessageId
+from app.schemas.typings.channels.strings import (
+    OutboundMessagePart,
+    ProviderMessageId,
+    TelegramBotDisplayName,
+)
 from app.schemas.typings.conversations.strings import ChannelUserId
+from app.schemas.typings.media.strings import ProviderMediaId
 from app.utilities.channels.json_values import (
     JsonObject,
     as_object,
@@ -39,6 +47,9 @@ CLIENT_ERROR_CODES: range = range(400, 500)
 # Only customer messages are handled; edits, callbacks and the rest are not.
 ALLOWED_UPDATES: tuple[str, ...] = ("message",)
 TYPING_ACTION: str = "typing"
+# Profile photos come in 160, 320 and 640 px squares; the smallest at least
+# this wide is enough for an avatar in the cabinet.
+AVATAR_MIN_WIDTH: int = 96
 
 
 class TelegramBotClient(TelegramBotApiClientContract):
@@ -63,15 +74,32 @@ class TelegramBotClient(TelegramBotApiClientContract):
     def get_me(self, bot_token: ProviderToken) -> TelegramBotProfile:
         result: JsonObject | None = as_object(self._call(bot_token, "getMe", {}))
         username: str | None = None if result is None else read_text(result, "username")
-        if username is None:
+        if result is None or username is None:
             raise ExternalServiceError("Telegram getMe returned no bot username.")
 
         try:
-            return TelegramBotProfile(username=TelegramBotUsername(username))
+            return TelegramBotProfile(
+                username=TelegramBotUsername(username),
+                bot_user_id=read_bot_user_id(result),
+                display_name=read_display_name(result),
+            )
         except ValueError as error:
             raise ExternalServiceError(
                 "Telegram getMe returned an invalid bot username."
             ) from error
+
+    def get_profile_photo_file_id(
+        self, bot_token: ProviderToken, bot_user_id: TelegramBotUserId
+    ) -> ProviderMediaId | None:
+        result: JsonObject | None = as_object(
+            self._call(
+                bot_token,
+                "getUserProfilePhotos",
+                {"user_id": int(str(bot_user_id)), "limit": 1},
+            )
+        )
+        photos: list[object] = [] if result is None else read_list(result, "photos")
+        return choose_avatar_size(as_objects(photos[0]) if photos else [])
 
     def set_webhook(
         self,
@@ -187,3 +215,58 @@ class TelegramBotClient(TelegramBotApiClientContract):
         raise ExternalServiceError(
             f"Telegram {method_name} failed ({error_code}): {description}"
         )
+
+
+def read_bot_user_id(result: JsonObject) -> TelegramBotUserId | None:
+    """getMe's numeric `id` as a typed id; None when it is missing or odd."""
+
+    bot_id: int | None = read_integer(result, "id")
+    if bot_id is None or bot_id <= 0:
+        return None
+
+    return TelegramBotUserId(str(bot_id))
+
+
+def read_display_name(result: JsonObject) -> TelegramBotDisplayName | None:
+    name: str | None = read_text(result, "first_name")
+    return None if name is None or not name.strip() else TelegramBotDisplayName(name)
+
+
+def read_list(source: JsonObject, key: str) -> list[object]:
+    value: object = source.get(key)
+    return list(cast(list[object], value)) if isinstance(value, list) else []
+
+
+def as_objects(value: object) -> list[JsonObject]:
+    items: list[object] = (
+        list(cast(list[object], value)) if isinstance(value, list) else []
+    )
+    found: list[JsonObject] = []
+    for item in items:
+        item_object: JsonObject | None = as_object(item)
+        if item_object is not None:
+            found.append(item_object)
+    return found
+
+
+def choose_avatar_size(sizes: list[JsonObject]) -> ProviderMediaId | None:
+    """
+    The file of the smallest photo size at least `AVATAR_MIN_WIDTH` wide
+    (Telegram lists them smallest first), else the largest one.
+    """
+
+    usable: list[tuple[int, str]] = []
+    for size in sizes:
+        file_id: str | None = read_text(size, "file_id")
+        if file_id is not None:
+            usable.append((read_integer(size, "width") or 0, file_id))
+
+    if not usable:
+        return None
+
+    usable.sort(key=lambda entry: entry[0])
+    for width, file_id in usable:
+        if width >= AVATAR_MIN_WIDTH:
+            return ProviderMediaId(file_id)
+
+    return ProviderMediaId(usable[-1][1])

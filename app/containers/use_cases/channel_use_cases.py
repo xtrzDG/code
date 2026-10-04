@@ -31,6 +31,10 @@ from app.schemas.dto.channels.staff_links import (
     PlatformBotWebhookSetup,
     TelegramLinkView,
 )
+from app.schemas.dto.channels.telegram_token_checks import (
+    TelegramBotCheckView,
+    ValidateTelegramTokenCommand,
+)
 from app.schemas.dto.channels.widget import (
     WidgetConfigView,
     WidgetMessageCommand,
@@ -41,7 +45,10 @@ from app.schemas.dto.channels.widget import (
 )
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.deliveries import RoutedInboundMessage
-from app.schemas.dto.staff_reply_templates import SetWhatsAppStaffTemplateCommand
+from app.schemas.dto.staff_reply_templates import (
+    SetWhatsAppStaffTemplateCommand,
+    SetWhatsAppStaffTemplatesCommand,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import MetaWebhookChallenge
 from app.use_cases.channels.accept_widget_message_use_case import (
@@ -52,6 +59,9 @@ from app.use_cases.channels.configure_platform_bot_webhook_use_case import (
 )
 from app.use_cases.channels.connection.connect_channel_use_case import (
     ConnectChannelUseCase,
+)
+from app.use_cases.channels.connection.validate_telegram_token_use_case import (
+    ValidateTelegramTokenUseCase,
 )
 from app.use_cases.channels.create_telegram_link_use_case import (
     CreateTelegramLinkUseCase,
@@ -72,6 +82,9 @@ from app.use_cases.channels.receive_telegram_webhook_use_case import (
 )
 from app.use_cases.channels.set_whatsapp_staff_template_use_case import (
     SetWhatsAppStaffTemplateUseCase,
+)
+from app.use_cases.channels.set_whatsapp_staff_templates_use_case import (
+    SetWhatsAppStaffTemplatesUseCase,
 )
 from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhookUseCase
 
@@ -140,6 +153,25 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         channel_repo=repositories.channel_repo,
         audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    set_whatsapp_staff_templates_use_case: Factory[
+        UseCaseContract[SetWhatsAppStaffTemplatesCommand, ChannelView]
+    ] = Factory(
+        SetWhatsAppStaffTemplatesUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        channel_repo=repositories.channel_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    validate_telegram_token_use_case: Factory[
+        UseCaseContract[ValidateTelegramTokenCommand, TelegramBotCheckView]
+    ] = Factory(
+        ValidateTelegramTokenUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        telegram_client=clients.telegram_bot_client,
+        telegram_file_client=clients.telegram_file_client,
+        rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     disable_channel_use_case: Factory[

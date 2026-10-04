@@ -3,6 +3,7 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind, ChannelStatus, WidgetPosition
+from app.schemas.constants.deliveries import DeliveryFailureReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
     ChannelErrorSummary,
@@ -35,9 +36,10 @@ class WebChatAppearance(PersistentDocument):
 
 class WhatsAppStaffTemplate(PersistentDocument):
     """
-    The Meta-approved message template staff replies travel in once the
+    A Meta-approved message template staff replies travel in once the
     WhatsApp 24-hour window has closed: its name and the language it was
-    approved in. Its body has a single parameter, the staff text.
+    approved in. Its body has a single parameter, the staff text. A
+    channel keeps one per language (`ChannelDocument.whatsapp_staff_templates`).
     """
 
     name: WhatsAppTemplateName
@@ -74,9 +76,23 @@ class ChannelDocument(BaseDocument):
     Version 3: `credential_expires_at` and `credential_checked_at`, when a
     Meta channel's token runs out (None: it never does, or nobody asked
     Meta yet) and when the daily check last asked; both optional.
+
+    Version 4: the channel's health and per-language staff templates, all
+    optional. `whatsapp_staff_templates` holds one approved template per
+    language (unique `language_code`); staff replies take the one of the
+    conversation's language, then the business's default language
+    (`app/utilities/channels/staff_templates.py`). The single
+    `whatsapp_staff_template` of version 3 is still written (the template
+    of the default language, else the first) for the previous release, and
+    version 3 rows read it as a one-template list (upcaster).
+    `last_inbound_at` and `last_outbound_at` are when the platform last
+    brought a customer message and last took one of ours (to the minute:
+    `app/utilities/channels/channel_activity.py`); `last_error_reason`
+    classifies `last_error` in the cabinet's terms (None for a reason
+    written before version 4).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: ChannelId = Field(default_factory=ChannelId)
     business_id: BusinessId
     kind: ChannelKind
@@ -85,8 +101,14 @@ class ChannelDocument(BaseDocument):
     status: ChannelStatus = ChannelStatus.PENDING
     last_error: ChannelErrorSummary | None = None
     last_error_at: Microseconds | None = None
+    last_error_reason: DeliveryFailureReason | None = None
     web_chat_appearance: WebChatAppearance | None = None
     whatsapp_staff_template: WhatsAppStaffTemplate | None = None
+    whatsapp_staff_templates: list[WhatsAppStaffTemplate] = Field(
+        default_factory=list[WhatsAppStaffTemplate]
+    )
     public_profile: ChannelPublicProfile | None = None
     credential_expires_at: Microseconds | None = None
     credential_checked_at: Microseconds | None = None
+    last_inbound_at: Microseconds | None = None
+    last_outbound_at: Microseconds | None = None

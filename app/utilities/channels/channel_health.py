@@ -5,9 +5,10 @@ delivery puts it back to CONNECTED.
 
 A channel in ERROR still receives and answers messages (the refusal may be
 temporary, and a working delivery is what clears it); the cabinet shows the
-reason so the owner can reconnect. Every change is announced on the
-cabinet's live stream (`channel.error` when a channel fails,
-`channel.changed` otherwise).
+reason so the owner can reconnect: the platform's words (`last_error`)
+and what they mean in the cabinet's terms (`last_error_reason`, the
+outbox's failure reason). Every change is announced on the cabinet's live
+stream (`channel.error` when a channel fails, `channel.changed` otherwise).
 """
 
 from typed_time_provider import Microseconds
@@ -15,6 +16,7 @@ from typed_time_provider import Microseconds
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.deliveries import DeliveryFailureReason
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.typings.channels.constrained_strings import ChannelErrorSummary
@@ -71,6 +73,7 @@ def mark_channel_failing(
     channel: ChannelDocument,
     reason: str,
     now: Microseconds,
+    failure: DeliveryFailureReason | None = None,
 ) -> None:
     """Put an active channel in ERROR with the platform's reason."""
 
@@ -80,6 +83,7 @@ def mark_channel_failing(
     channel.status = ChannelStatus.ERROR
     channel.last_error = summarize_channel_error(reason)
     channel.last_error_at = now
+    channel.last_error_reason = failure
     channel.updated_at = now
     channel_repo.save(channel)
     live_events.publish(channel.business_id, LiveEventKind.CHANNEL_ERROR, (channel.id,))
@@ -91,6 +95,7 @@ def note_channel_refusal(
     channel: ChannelDocument,
     reason: str,
     now: Microseconds,
+    failure: DeliveryFailureReason | None = None,
 ) -> None:
     """
     The platform refused one message for good (a blocked bot, a closed
@@ -102,6 +107,7 @@ def note_channel_refusal(
 
     channel.last_error = summarize_channel_error(reason)
     channel.last_error_at = now
+    channel.last_error_reason = failure
     channel.updated_at = now
     channel_repo.save(channel)
     live_events.publish(
@@ -124,6 +130,7 @@ def mark_channel_working(
         if channel.status is ChannelStatus.CONNECTED and channel.last_error is not None:
             channel.last_error = None
             channel.last_error_at = None
+            channel.last_error_reason = None
             channel.updated_at = now
             channel_repo.save(channel)
             live_events.publish(
@@ -135,6 +142,7 @@ def mark_channel_working(
     channel.status = ChannelStatus.CONNECTED
     channel.last_error = None
     channel.last_error_at = None
+    channel.last_error_reason = None
     channel.updated_at = now
     channel_repo.save(channel)
     live_events.publish(

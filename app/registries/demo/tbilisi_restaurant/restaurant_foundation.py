@@ -7,6 +7,7 @@ from Israel and the Arab countries in Hebrew and Arabic.
 
 from app.registries.demo.demo_clock import DemoClock
 from app.registries.demo.demo_foundation_parts import (
+    DEMO_STAFF_TEMPLATES,
     bookable,
     connected_channel,
     opening_hours,
@@ -154,7 +155,7 @@ def build_restaurant_foundation(
             ChannelKind.WHATSAPP,
             opened,
             "109876543210987",
-            staff_template=("staff_reply", "ru"),
+            staff_templates=DEMO_STAFF_TEMPLATES,
             # WhatsApp Business on the restaurant's own number.
             whatsapp_number=RESTAURANT_PUBLIC_NUMBER.removeprefix("+"),
         ),

@@ -13,7 +13,9 @@ from app.gateways.http.business_routes import build_business_router
 from app.gateways.http.call_router_assembly import build_call_routers
 from app.gateways.http.catalog_routes import build_catalog_router
 from app.gateways.http.channel_routes import build_channel_router
-from app.gateways.http.channel_settings_routes import build_channel_settings_router
+from app.gateways.http.channel_setup_router_assembly import (
+    build_channel_setup_routers,
+)
 from app.gateways.http.compliance_routes import build_compliance_router
 from app.gateways.http.conversation_routes import build_conversation_router
 from app.gateways.http.events_routes import build_events_router
@@ -237,17 +239,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             widget_message_operator=channels.widget_message_operator(),
             widget_messages_operator=channels.get_widget_messages_operator(),
         ),
-        build_channel_settings_router(
-            list_channels_operator=channels.list_channels_operator(),
-            connect_channel_operator=channels.connect_channel_operator(),
-            disable_channel_operator=channels.disable_channel_operator(),
-            widget_snippet_operator=channels.get_widget_snippet_operator(),
-            create_telegram_link_operator=channels.create_telegram_link_operator(),
-            current_user=current_user,
-            set_whatsapp_staff_template_operator=(
-                channels.set_whatsapp_staff_template_operator()
-            ),
-        ),
+        *build_channel_setup_routers(operators, current_user),
         build_voice_router(
             voice_tool_operator=conversations.voice_tool_webhook_operator(),
             call_initiation_operator=conversations.start_voice_call_operator(),

@@ -14,6 +14,7 @@ from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.channels.constrained_strings import (
     ChannelWebhookUrl,
     MetaObjectId,
+    TelegramBotUserId,
     TelegramWebhookSecret,
     WhatsAppTemplateLanguageCode,
     WhatsAppTemplateName,
@@ -25,6 +26,7 @@ from app.schemas.typings.channels.strings import (
     VoicePlatformToolId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
+from app.schemas.typings.media.strings import ProviderMediaId
 from app.schemas.typings.platform.strings import PlatformSecret
 
 # Raw JSON object exchanged with a provider (the external boundary).
@@ -38,6 +40,15 @@ class TelegramBotApiClientContract(ClientContract, Protocol):
 
     def get_me(self, bot_token: ProviderToken) -> TelegramBotProfile:
         """Raises ValidationFailedError for a rejected token."""
+        raise NotImplementedError
+
+    def get_profile_photo_file_id(
+        self, bot_token: ProviderToken, bot_user_id: TelegramBotUserId
+    ) -> ProviderMediaId | None:
+        """
+        `getUserProfilePhotos` of the bot: the file of its current photo in
+        a small size (None: no photo). Errors as `send_message`.
+        """
         raise NotImplementedError
 
     def set_webhook(

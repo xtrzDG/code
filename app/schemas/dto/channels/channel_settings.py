@@ -10,6 +10,7 @@ from app.schemas.constants.channels import (
     ChannelStatus,
     WidgetPosition,
 )
+from app.schemas.constants.deliveries import DeliveryFailureReason
 from app.schemas.dto.staff_reply_templates import WhatsAppStaffTemplateView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.booleans import HasChannelCredential
@@ -89,13 +90,23 @@ class ChannelView(ImmutableDTO):
     `account_id` is the public account inside the channel: bot username,
     WhatsApp phone number id, page id, Instagram account id, or the E.164
     number of the assistant line. With status ERROR, `last_error` is the
-    platform's short reason (no secrets) and `last_error_at` its time. The
+    platform's short reason (no secrets) and `last_error_at` its time; a
+    connected channel keeps the reason of a message the platform refused
+    for good the same way. `last_error_reason` says what it means in the
+    cabinet's terms (`credential_rejected`: reconnect; `template_rejected`:
+    check the WhatsApp templates; `recipient_refused`: one customer could
+    not be reached; None when unknown). `last_inbound_at` and
+    `last_outbound_at` are when the channel last brought a customer message
+    and last carried one of ours (to the minute; None: not yet). The
     website chat also reports its saved colour and launcher corner (None:
-    the widget's defaults). WhatsApp reports the template staff replies use
-    once the 24-hour window has closed (None: no template, such replies are
-    refused). `link_state` says whether a connected messenger or phone can
-    be shared as a link (the same rule the share links follow); None for a
-    channel that is not connected or has no link (the website chat).
+    the widget's defaults). WhatsApp reports the templates staff replies use
+    once the 24-hour window has closed, one per language
+    (`staff_reply_templates`, empty: such replies are refused), and in
+    `staff_reply_template` the one of the business's default language (else
+    the first; the single template of earlier clients). `link_state` says
+    whether a connected messenger or phone can be shared as a link (the
+    same rule the share links follow); None for a channel that is not
+    connected or has no link (the website chat).
     """
 
     id: ChannelId
@@ -107,7 +118,13 @@ class ChannelView(ImmutableDTO):
     updated_at: Microseconds
     last_error: ChannelErrorSummary | None = None
     last_error_at: Microseconds | None = None
+    last_error_reason: DeliveryFailureReason | None = None
+    last_inbound_at: Microseconds | None = None
+    last_outbound_at: Microseconds | None = None
     widget_color: WidgetAccentColor | None = None
     widget_position: WidgetPosition | None = None
     staff_reply_template: WhatsAppStaffTemplateView | None = None
+    staff_reply_templates: list[WhatsAppStaffTemplateView] = Field(
+        default_factory=list[WhatsAppStaffTemplateView]
+    )
     link_state: ChannelLinkState | None = None

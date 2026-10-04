@@ -91,6 +91,10 @@ class RawChannelSecretInput(BaseTypedString):
     """
 
 
+class TelegramBotDisplayName(BaseTypedString):
+    """A Telegram bot's name as customers see it (getMe `first_name`)."""
+
+
 class VoicePlatformToolId(BaseTypedString):
     """Id of a webhook tool registered on the voice platform."""
 

@@ -14,6 +14,7 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
 )
+from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.deliveries import DeliveryFailureKind, OutboundMessageStatus
 from app.schemas.constants.feedback import FeedbackRequestStatus
 from app.schemas.constants.handoffs import HandoffStatus
@@ -22,6 +23,7 @@ from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.deliveries import OutboundAttempt
+from app.utilities.channels.channel_activity import stamp_channel_activity
 from app.utilities.channels.channel_health import (
     mark_channel_failing,
     mark_channel_working,
@@ -44,11 +46,13 @@ def update_channel_health(
     now: Microseconds,
 ) -> None:
     """
-    A delivered reply shows the channel works (and clears an old error); a
-    refused credential puts it in ERROR; a reply refused for good (a 4xx,
-    or every retry failed) leaves its reason for the owner to see. Only
-    while the channel still has the connection the reply was sent with: an
-    outcome of a replaced token says nothing about the new one.
+    A delivered reply shows the channel works (and clears an old error) and
+    is the channel's latest outgoing message (`last_outbound_at`, to the
+    minute); a refused credential puts it in ERROR; a reply refused for
+    good (a 4xx, or every retry failed) leaves its reason for the owner to
+    see, with what it means (`last_failure_reason`). Only while the channel
+    still has the connection the reply was sent with: an outcome of a
+    replaced token says nothing about the new one.
     """
 
     if attempt.channel is None:
@@ -62,6 +66,7 @@ def update_channel_health(
 
     if message.status is OutboundMessageStatus.DELIVERED:
         mark_channel_working(channel_repo, live_events, channel, now)
+        stamp_channel_activity(channel_repo, channel, MessageDirection.OUTBOUND, now)
         return
 
     if message.status is not OutboundMessageStatus.DEAD or message.last_error is None:
@@ -69,12 +74,22 @@ def update_channel_health(
 
     if attempt.failure is DeliveryFailureKind.CREDENTIAL_REJECTED:
         mark_channel_failing(
-            channel_repo, live_events, channel, str(message.last_error), now
+            channel_repo,
+            live_events,
+            channel,
+            str(message.last_error),
+            now,
+            message.last_failure_reason,
         )
         return
 
     note_channel_refusal(
-        channel_repo, live_events, channel, str(message.last_error), now
+        channel_repo,
+        live_events,
+        channel,
+        str(message.last_error),
+        now,
+        message.last_failure_reason,
     )
 
 

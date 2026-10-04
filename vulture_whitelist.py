@@ -411,3 +411,8 @@ _.platform_admin_permissions  # app/schemas/dto/users.py (CurrentUserView)
 _.granted_by  # app/schemas/domain/support_access_grants.py
 _.opened_from_ip  # app/schemas/domain/support_access_grants.py
 _.end_reason  # app/schemas/domain/support_access_grants.py
+
+# Guided channels (R9-CONNECT): response fields the cabinet reads (the
+# Channels page's per-language staff templates and the checked bot's photo).
+_.staff_reply_templates  # app/schemas/dto/channels/channel_settings.py
+_.avatar_data_url  # app/schemas/dto/channels/telegram_token_checks.py
