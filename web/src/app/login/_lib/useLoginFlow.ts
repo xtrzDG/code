@@ -9,17 +9,32 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { startLogin, verifyLogin } from "@/api/auth";
+import {
+  needsSecondStep,
+  startLogin,
+  verifyLogin,
+  type SecondStepRequired,
+} from "@/api/auth";
 import { toApiError } from "@/api/errors";
 import type { OtpChallengeView, OtpDeliveryChannel } from "@/api/types";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError } from "@/lib/countries";
+import {
+  buildOtpStartBody,
+  classifyOtpStartError,
+  classifyOtpVerifyError,
+} from "@/lib/countries";
 
 import { findBotCheckSiteKey } from "./botCheck";
 import { withDeliveryChannel } from "./loginOptions";
-import { CodeSchema, EmailSchema, PROBLEM_MESSAGES, PhoneSchema, RESEND_INTERVAL_MS } from "./loginTexts";
+import {
+  CodeSchema,
+  EmailSchema,
+  PROBLEM_MESSAGES,
+  PhoneSchema,
+  RESEND_INTERVAL_MS,
+} from "./loginTexts";
 import { useDestination } from "./useDestination";
 
 interface CodeStage {
@@ -46,6 +61,8 @@ export function useLoginFlow(next: string) {
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<MessageKey | null>(null);
   const [isVerifying, setVerifying] = useState(false);
+  /** The code was right; the account asks for its authenticator (or to set one up). */
+  const [secondStep, setSecondStep] = useState<SecondStepRequired | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const codeInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,13 +78,29 @@ export function useLoginFlow(next: string) {
     return () => window.clearInterval(timer);
   }, [codeStage]);
 
-  async function sendCode(channelOverride?: OtpDeliveryChannel, turnstileToken?: string): Promise<boolean> {
-    const { method, phoneNumber, email, countryCode, phoneChannels, deliveryChannel } = destination;
+  async function sendCode(
+    channelOverride?: OtpDeliveryChannel,
+    turnstileToken?: string,
+  ): Promise<boolean> {
+    const {
+      method,
+      phoneNumber,
+      email,
+      countryCode,
+      phoneChannels,
+      deliveryChannel,
+    } = destination;
     setSending(true);
     try {
       const challenge = await startLogin({
         ...withDeliveryChannel(
-          buildOtpStartBody({ method, phoneNumber, email, countryCode, locale }),
+          buildOtpStartBody({
+            method,
+            phoneNumber,
+            email,
+            countryCode,
+            locale,
+          }),
           method,
           phoneChannels,
           channelOverride ?? deliveryChannel,
@@ -113,9 +146,14 @@ export function useLoginFlow(next: string) {
       return;
     }
     const isPhone = destination.method === "phone";
-    const parsed = (isPhone ? PhoneSchema : EmailSchema).safeParse(isPhone ? destination.phoneNumber : destination.email);
+    const parsed = (isPhone ? PhoneSchema : EmailSchema).safeParse(
+      isPhone ? destination.phoneNumber : destination.email,
+    );
     if (!parsed.success) {
-      destination.setError((parsed.error.issues[0]?.message ?? "validation.required") as MessageKey);
+      destination.setError(
+        (parsed.error.issues[0]?.message ??
+          "validation.required") as MessageKey,
+      );
       return;
     }
     destination.setError(null);
@@ -131,7 +169,15 @@ export function useLoginFlow(next: string) {
     setCodeError(null);
     setVerifying(true);
     try {
-      await verifyLogin({ challenge_id: codeStage.challenge.challenge_id, code: parsed.data });
+      const answer = await verifyLogin({
+        challenge_id: codeStage.challenge.challenge_id,
+        code: parsed.data,
+      });
+      if (needsSecondStep(answer)) {
+        setSecondStep(answer);
+        setVerifying(false);
+        return;
+      }
       // A full load picks up the account language and the new session.
       window.location.assign(next);
     } catch (caught) {
@@ -198,7 +244,13 @@ export function useLoginFlow(next: string) {
     verify,
     resend,
     sendByOtherChannel,
+    secondStep,
+    destinationLabel:
+      destination.method === "phone"
+        ? destination.phoneNumber
+        : destination.email,
     changeDestination: () => {
+      setSecondStep(null);
       setCodeStage(null);
       setBotCheck(null);
       clearCode();

@@ -8,7 +8,13 @@ import type { LoginFlow } from "../_lib/useLoginFlow";
 import { PhoneFields } from "./PhoneFields";
 
 /** Step one: phone or e-mail, then "Get a code". */
-export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; sessionExpired: boolean }) {
+export function DestinationForm({
+  flow,
+  sessionExpired,
+}: {
+  flow: LoginFlow;
+  sessionExpired: boolean;
+}) {
   const { t } = useI18n();
   const { destination } = flow;
   const { method, isUnavailable, error } = destination;
@@ -16,7 +22,9 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
   return (
     <>
       <div className="mb-6 space-y-1.5">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">{t("auth.title")}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-ink">
+          {t("auth.title")}
+        </h1>
         <p className="text-sm text-ink-muted">{t("auth.subtitle")}</p>
       </div>
 
@@ -42,7 +50,9 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
                 className={cn(
                   "flex h-8 cursor-pointer items-center justify-center rounded-md px-3 text-sm font-medium transition-colors",
                   "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus",
-                  method === option ? "bg-surface text-ink ring-1 ring-line-strong/40" : "text-ink-muted hover:text-ink",
+                  method === option
+                    ? "bg-surface text-ink ring-1 ring-line-strong/40"
+                    : "text-ink-muted hover:text-ink",
                 )}
               >
                 <input
@@ -53,7 +63,9 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
                   onChange={() => destination.setMethod(option)}
                   className="sr-only"
                 />
-                {option === "phone" ? t("auth.methodPhone") : t("auth.methodEmail")}
+                {option === "phone"
+                  ? t("auth.methodPhone")
+                  : t("auth.methodEmail")}
               </label>
             ))}
           </div>

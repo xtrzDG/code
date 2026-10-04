@@ -64,6 +64,7 @@ export const settingsRecordsEn = {
       login: "Sign-in",
       retention_purge: "Deleted by retention",
       publish_untested: "Update published without passing checks",
+      mfa_changed: "Two-factor sign-in changed",
     },
     entities: {
       contact: "Customer",

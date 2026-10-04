@@ -45,6 +45,8 @@ export const ADMIN_PATH = "/admin";
 export const ADMIN_SECURITY_PATH = "/admin/security";
 /** The founder's growth metrics: funnel, MRR, cohorts, Web Vitals. */
 export const ADMIN_METRICS_PATH = "/admin/metrics";
+/** Account → Security: the authenticator app and recovery codes. */
+export const ACCOUNT_SECURITY_PATH = "/account/security";
 /** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
 export const OFFLINE_PATH = "/offline";
 
@@ -52,7 +54,7 @@ export const OFFLINE_PATH = "/offline";
 export const NOTIFICATION_LINK_PREFIX = "/n/";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
-const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
+const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, "/account/", "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -195,4 +197,25 @@ export function loginPath(options: { next?: string | null; reason?: LoginReason 
   }
   const query = search.toString();
   return query ? `${LOGIN_PATH}?${query}` : LOGIN_PATH;
+}
+
+/** Why Account → Security was opened for the person (a place that needs an authenticator app). */
+export type SecurityReason = "business" | "admin";
+
+/** Account → Security, telling why it opened and where to go back once done. */
+export function securityPath(options: { reason?: SecurityReason; next?: string | null } = {}): string {
+  const search = new URLSearchParams();
+  if (options.reason) {
+    search.set("reason", options.reason);
+  }
+  const next = options.next ? safeNextPath(options.next, "") : "";
+  if (next) {
+    search.set("next", next);
+  }
+  const query = search.toString();
+  return query ? `${ACCOUNT_SECURITY_PATH}?${query}` : ACCOUNT_SECURITY_PATH;
+}
+
+export function isSecurityReason(value: string | null | undefined): value is SecurityReason {
+  return value === "business" || value === "admin";
 }

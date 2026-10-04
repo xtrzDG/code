@@ -3,6 +3,7 @@ import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
+import { isStepUpChallenge } from "@/lib/stepUpChallenge";
 
 import {
   REQUEST_ID_HEADER,
@@ -40,7 +41,8 @@ export function prepareBackendCall(
 
 /**
  * Send the request to `backendPath` (+ the incoming query string) and stream
- * the answer back. A 401 for a request that carried the session ends it. A
+ * the answer back. A 401 for a request that carried the session ends it,
+ * except a step-up challenge (the session stays; the page asks for a code). A
  * body over the path's limit (bodyLimits.ts) is refused with 413 before it
  * reaches the API.
  */
@@ -77,7 +79,7 @@ export async function relayToBackend(
     status: upstream.status,
     headers: pickResponseHeaders(upstream.headers, requestId),
   });
-  if (upstream.status === 401 && token) {
+  if (upstream.status === 401 && token && !isStepUpChallenge(upstream.status, upstream.headers)) {
     clearSessionCookie(response);
   }
   return response;

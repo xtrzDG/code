@@ -42,8 +42,13 @@ export function BotCheck({
         </p>
       </div>
       {/* The widget keeps its place while it loads; a failed load shows why instead. */}
-      <div ref={container} className={status === "unavailable" ? "hidden" : "min-h-[65px]"} />
-      {status === "unavailable" ? <Alert tone="warning">{t("auth.botCheck.unavailable")}</Alert> : null}
+      <div
+        ref={container}
+        className={status === "unavailable" ? "hidden" : "min-h-[65px]"}
+      />
+      {status === "unavailable" ? (
+        <Alert tone="warning">{t("auth.botCheck.unavailable")}</Alert>
+      ) : null}
     </FadeIn>
   );
 }

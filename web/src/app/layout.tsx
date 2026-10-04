@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { MotionProvider } from "@/components/motion/MotionProvider";
+import { StepUpDialog } from "@/components/security/StepUpDialog";
 import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -39,7 +40,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider initialTheme={theme}>
             <MotionProvider>
-              <ToastProvider>{children}</ToastProvider>
+              <ToastProvider>
+                {children}
+                <StepUpDialog />
+              </ToastProvider>
             </MotionProvider>
           </ThemeProvider>
         </I18nProvider>

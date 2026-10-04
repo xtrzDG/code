@@ -71,6 +71,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       login: "Вход",
       retention_purge: "Удалено по сроку хранения",
       publish_untested: "Опубликовано обновление без пройденных проверок",
+      mfa_changed: "Изменён вход с подтверждением",
     },
     entities: {
       contact: "Клиент",

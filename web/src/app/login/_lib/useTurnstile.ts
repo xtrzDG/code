@@ -10,7 +10,12 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 
 import type { Theme } from "@/lib/theme";
 
-import { LOGIN_ACTION, TURNSTILE_SCRIPT_URL, turnstileLanguage, turnstileTheme } from "./botCheck";
+import {
+  LOGIN_ACTION,
+  TURNSTILE_SCRIPT_URL,
+  turnstileLanguage,
+  turnstileTheme,
+} from "./botCheck";
 
 interface TurnstileOptions {
   sitekey: string;
@@ -24,7 +29,10 @@ interface TurnstileOptions {
 }
 
 interface TurnstileApi {
-  render: (container: HTMLElement, options: TurnstileOptions) => string | undefined;
+  render: (
+    container: HTMLElement,
+    options: TurnstileOptions,
+  ) => string | undefined;
   reset: (widgetId: string) => void;
   remove: (widgetId: string) => void;
 }
@@ -45,7 +53,10 @@ function loadTurnstile(): Promise<TurnstileApi> {
     const script = document.createElement("script");
     script.src = TURNSTILE_SCRIPT_URL;
     script.async = true;
-    script.onload = () => (window.turnstile ? resolve(window.turnstile) : reject(new Error("Turnstile missing")));
+    script.onload = () =>
+      window.turnstile
+        ? resolve(window.turnstile)
+        : reject(new Error("Turnstile missing"));
     script.onerror = () => {
       scriptLoad = null;
       script.remove();
@@ -60,7 +71,12 @@ export type TurnstileStatus = "loading" | "ready" | "unavailable";
 
 export function useTurnstile(
   container: RefObject<HTMLDivElement | null>,
-  options: { siteKey: string; theme: Theme; locale: string; onToken: (token: string) => void },
+  options: {
+    siteKey: string;
+    theme: Theme;
+    locale: string;
+    onToken: (token: string) => void;
+  },
 ): TurnstileStatus {
   const [status, setStatus] = useState<TurnstileStatus>("loading");
   const onToken = useRef(options.onToken);
