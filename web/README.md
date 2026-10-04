@@ -156,7 +156,11 @@ npm run e2e -- onboarding         # one file
   control (`e2e/pseudo-locale.spec.ts`; the suite starts the cabinet with
   `PSEUDO_LOCALE=true`), a 45-minute service performed by one master added
   in the knowledge base, booked by hand and listed with its value, and the
-  demo salon counting clients, not guests (`e2e/services.spec.ts`).
+  demo salon counting clients, not guests (`e2e/services.spec.ts`), and the
+  owner's exports: tables as CSV from Settings → Privacy, Bookings and the
+  Inbox with their filters, the full export built by the worker and
+  downloaded by its signed link, no export buttons for staff
+  (`e2e/data-exports.spec.ts`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
