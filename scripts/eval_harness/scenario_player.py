@@ -148,7 +148,7 @@ def play_sample(
         error = f"{type(raised).__name__}: {raised}"
 
     criteria: list[EvalCriterionResult] = score_conversation(
-        planned, expectations, conversation.replies
+        planned, expectations, conversation.replies, seeded.business.name
     )
     stale: list[str] = list(
         dict.fromkeys(
@@ -185,7 +185,8 @@ def play_sample(
         ],
         tool_calls=[
             f"{call.tool_name}({call.input_json})"
-            + (f" -> error {call.result_json}" if call.is_error else "")
+            + (" -> error " if call.is_error else " -> ")
+            + str(call.result_json)
             for reply in conversation.replies
             for call in reply.tool_calls
         ],

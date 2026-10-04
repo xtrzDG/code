@@ -11,44 +11,46 @@ front of the first reply is left out, except for the disclosure check.
 """
 
 from collections.abc import Sequence
-from decimal import Decimal
 
-from app.schemas.constants.assistants import AutotestCheckCode
-from app.schemas.constants.conversations import ReplyGuardVerdict
 from app.schemas.constants.evaluations import EvalCriterion
 from app.schemas.dto.assistants.autotest_runs import AutotestScenario
-from app.schemas.dto.billing import Money
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.dto.evaluations import EvalCriterionResult, EvalExpectations
-from app.schemas.typings.evaluations.strings import EvalCheckNote
+from app.schemas.typings.businesses.strings import BusinessName
 from app.utilities.assembly.autotest_evaluation import (
-    check_conversation,
     read_model_text,
 )
 from app.utilities.assembly.eval_field_matching import find_matching_call
+from app.utilities.assembly.eval_text_scorers import (
+    all_calls,
+    result,
+    score_forbidden_values,
+    score_guard,
+    score_handoff,
+    score_prices,
+    score_records,
+    score_required_facts,
+)
 from app.utilities.assembly.script_detection import is_written_in_script
 from app.utilities.localization.language_tags import base_language_code
-from app.utilities.money.money_math import convert_money_to_major_units
-from app.utilities.reply_guard.guard_lexicon import build_guard_lexicon
-from app.utilities.reply_guard.number_mentions import extract_number_mentions
-
-GUARD_ACTIONS: dict[ReplyGuardVerdict, str] = {
-    ReplyGuardVerdict.REWRITTEN: "rewrote",
-    ReplyGuardVerdict.HANDED_OFF: "handed off",
-}
 
 
 def score_conversation(
     scenario: AutotestScenario,
     expectations: EvalExpectations,
     replies: Sequence[AssistantReply],
+    business_name: BusinessName | None = None,
 ) -> list[EvalCriterionResult]:
-    """Every criterion that applies to the scenario, in a fixed order."""
+    """
+    Every criterion that applies to the scenario, in a fixed order.
+    `business_name` is left out of the disclosure's script check: a Latin
+    name inside a Hebrew disclosure keeps it Hebrew.
+    """
 
     results: list[EvalCriterionResult] = [
         score_language(scenario, replies),
-        score_disclosure(scenario, replies),
+        score_disclosure(scenario, replies, business_name),
         score_tool_calls(expectations, replies),
     ]
     if any(call.fields for call in expectations.tool_calls):
@@ -69,22 +71,6 @@ def score_conversation(
     results.append(score_guard(replies))
     results.append(score_records(scenario, replies))
     return results
-
-
-def result(criterion: EvalCriterion, notes: Sequence[str]) -> EvalCriterionResult:
-    return EvalCriterionResult(
-        criterion=criterion,
-        is_passed=not notes,
-        notes=[EvalCheckNote(note) for note in notes],
-    )
-
-
-def model_texts(replies: Sequence[AssistantReply]) -> list[str]:
-    return [read_model_text(reply) for reply in replies if reply.text is not None]
-
-
-def all_calls(replies: Sequence[AssistantReply]) -> list[ToolCallView]:
-    return [call for reply in replies for call in reply.tool_calls]
 
 
 def score_language(
@@ -118,7 +104,9 @@ def score_language(
 
 
 def score_disclosure(
-    scenario: AutotestScenario, replies: Sequence[AssistantReply]
+    scenario: AutotestScenario,
+    replies: Sequence[AssistantReply],
+    business_name: BusinessName | None = None,
 ) -> EvalCriterionResult:
     """
     The AI disclosure opens the first reply, in the scenario's script, and
@@ -140,7 +128,12 @@ def score_disclosure(
     if written[0].disclosure_text is None:
         notes.append("The disclosure is not in the first reply.")
 
-    if is_written_in_script(disclosure, scenario.language_script) is False:
+    own_words: str = (
+        disclosure
+        if business_name is None
+        else disclosure.replace(str(business_name), " ")
+    )
+    if is_written_in_script(own_words, scenario.language_script) is False:
         notes.append(f"The disclosure is not written in {scenario.language_name}.")
 
     repeats: int = sum(str(reply.text).count(disclosure) for reply in written)
@@ -185,105 +178,3 @@ def score_call_fields(
             notes.append(f"{expected.tool_name}: {'; '.join(mismatches)}.")
 
     return result(EvalCriterion.BOOKING_FIELDS, notes)
-
-
-def score_prices(
-    scenario: AutotestScenario,
-    prices: Sequence[Money],
-    replies: Sequence[AssistantReply],
-) -> EvalCriterionResult:
-    """Each expected price is named as an amount in some reply."""
-
-    lexicon = build_guard_lexicon(
-        [scenario.language], sorted({price.currency_code for price in prices})
-    )
-    amounts: set[Decimal] = {
-        amount
-        for text in model_texts(replies)
-        for mention in extract_number_mentions(text, lexicon)
-        for amount in mention.amounts
-    }
-    notes: list[str] = []
-    for price in prices:
-        major: Decimal = convert_money_to_major_units(price)
-        if major not in amounts:
-            notes.append(f"No reply names the price {major} {price.currency_code}.")
-
-    return result(EvalCriterion.PRICES, notes)
-
-
-def score_required_facts(
-    expectations: EvalExpectations, replies: Sequence[AssistantReply]
-) -> EvalCriterionResult:
-    """Each required fact appears (any of its spellings, ignoring case)."""
-
-    joined: str = "\n".join(model_texts(replies)).casefold()
-    notes: list[str] = [
-        "No reply mentions "
-        + " or ".join(repr(str(value)) for value in group.values)
-        + "."
-        for group in expectations.required_facts
-        if not any(str(value).casefold() in joined for value in group.values)
-    ]
-    return result(EvalCriterion.REQUIRED_FACTS, notes)
-
-
-def score_forbidden_values(
-    expectations: EvalExpectations, replies: Sequence[AssistantReply]
-) -> EvalCriterionResult:
-    """No forbidden value appears in what the model wrote (ignoring case)."""
-
-    joined: str = "\n".join(model_texts(replies)).casefold()
-    notes: list[str] = [
-        f"A reply contains the forbidden {str(value)!r}."
-        for value in expectations.forbidden_values
-        if str(value).casefold() in joined
-    ]
-    return result(EvalCriterion.FORBIDDEN_VALUES, notes)
-
-
-def score_handoff(
-    is_handoff_expected: bool, replies: Sequence[AssistantReply]
-) -> EvalCriterionResult:
-    """The conversation went to a person exactly when the scenario says so."""
-
-    is_handed_off: bool = any(
-        reply.is_handed_off or reply.created_handoff_ids for reply in replies
-    )
-    if is_handed_off is is_handoff_expected:
-        return result(EvalCriterion.HANDOFF, [])
-
-    return result(
-        EvalCriterion.HANDOFF,
-        [
-            "The conversation was handed off to a person although it should not be."
-            if is_handed_off
-            else "The conversation was not handed off to a person."
-        ],
-    )
-
-
-def score_guard(replies: Sequence[AssistantReply]) -> EvalCriterionResult:
-    """The invented-numbers guard let every reply through unchanged."""
-
-    notes: list[str] = [
-        f"Reply {number}: the number guard "
-        f"{GUARD_ACTIONS.get(reply.guard_verdict, 'changed')} the answer."
-        for number, reply in enumerate(replies, start=1)
-        if reply.guard_verdict is not ReplyGuardVerdict.CLEAN
-    ]
-    return result(EvalCriterion.GUARD, notes)
-
-
-def score_records(
-    scenario: AutotestScenario, replies: Sequence[AssistantReply]
-) -> EvalCriterionResult:
-    """The autotest checks of what was created (bookings, leads, handoffs)."""
-
-    notes: list[str] = [
-        str(failure.note)
-        for failure in check_conversation(scenario, replies)
-        # The language criterion reports the script already.
-        if failure.code is not AutotestCheckCode.WRONG_REPLY_LANGUAGE
-    ]
-    return result(EvalCriterion.RECORDS, notes)
