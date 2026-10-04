@@ -15,6 +15,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.inbox.booleans import HasOpenRequest
 from app.schemas.typings.inbox.constrained_integers import AssignmentRevision
+from app.utilities.conversations.review_fields import with_review_attention
 from app.utilities.inbox.team_fields import keep_team_fields, with_team_attention
 
 
@@ -37,7 +38,9 @@ class ConversationTeamWrites(BusinessScopedRepository[ConversationDocument]):
         if self._modify_in_business(conversation.business_id, key, merge) is not None:
             return
 
-        if self._collection.insert_if_absent(key, with_team_attention(conversation)):
+        if self._collection.insert_if_absent(
+            key, with_review_attention(with_team_attention(conversation))
+        ):
             return
 
         self._modify_in_business(conversation.business_id, key, merge)
@@ -45,11 +48,17 @@ class ConversationTeamWrites(BusinessScopedRepository[ConversationDocument]):
     def _save_many_as_given(
         self, conversations: Sequence[ConversationDocument]
     ) -> None:
-        """Bulk loads write the team fields as given (awaits_team derived)."""
+        """
+        Bulk loads write the team and review fields as given (awaits_team
+        and awaits_improvement derived).
+        """
 
         self._store_many(
             [
-                (str(conversation.id), with_team_attention(conversation))
+                (
+                    str(conversation.id),
+                    with_review_attention(with_team_attention(conversation)),
+                )
                 for conversation in conversations
             ]
         )

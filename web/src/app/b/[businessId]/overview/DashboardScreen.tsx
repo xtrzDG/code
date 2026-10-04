@@ -16,6 +16,7 @@ import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useSetupProgress } from "@/components/setupGuide/useSetupProgress";
+import { AnswersToImproveCard } from "@/components/teaching/AnswersToImproveCard";
 import { useValueOfDates } from "@/components/value/useValueQueries";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -214,6 +215,9 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             ) : null}
           </section>
         )}
+
+        {/* Bad ratings and questions without an answer, to fix while they are fresh. */}
+        {isLaunched(business.status) ? <AnswersToImproveCard /> : null}
 
         {/* What customers asked about in the last 30 days (the period above does not change it). */}
         {isLaunched(business.status) ? <TopicsCard /> : null}

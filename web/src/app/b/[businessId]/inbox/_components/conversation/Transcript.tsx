@@ -9,7 +9,8 @@
  * team are never here: this is what the customer and the assistant said.
  * Voice messages, photos and places a customer sent are shown above the
  * words they came with (MessageAttachments); a staff reply sent through a
- * messenger says under it how it travels (DeliveryChip).
+ * messenger says under it how it travels (DeliveryChip); under an answer
+ * of the assistant, what the reply guard did and, for owners, "Fix answer".
  */
 
 import { describeError } from "@/api/errors";
@@ -27,6 +28,7 @@ import { messageAttachments } from "../../_lib/messageMedia";
 import type { EarlierMessages } from "../../_lib/useEarlierMessages";
 import { DeliveryChip } from "./DeliveryChip";
 import { MessageAttachments } from "./MessageAttachments";
+import { AnswerTools } from "./AnswerTools";
 import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
 const BUBBLE: Record<MessageView["author"], string> = {
@@ -40,10 +42,13 @@ export function Transcript({
   messages,
   earlier,
   label,
+  onFixAnswer,
 }: {
   messages: readonly MessageView[];
   earlier?: EarlierMessages;
   label: string;
+  /** Owners: "Fix this answer" under each answer of the assistant. */
+  onFixAnswer?: ((messageId: string) => void) | null;
 }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
@@ -84,7 +89,7 @@ export function Transcript({
           </p>
           <ol className="space-y-4">
             {day.messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+              <MessageBubble key={message.id} message={message} onFix={onFixAnswer ?? null} />
             ))}
           </ol>
         </section>
@@ -99,7 +104,7 @@ function memberName(
   return member ? (member.display_name ?? member.email ?? member.phone_number ?? null) : null;
 }
 
-function MessageBubble({ message }: { message: MessageView }) {
+function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((messageId: string) => void) | null }) {
   const { t } = useI18n();
   const format = useBusinessFormat();
   const { business, me, isPlatformAdmin } = useBusiness();
@@ -156,6 +161,9 @@ function MessageBubble({ message }: { message: MessageView }) {
           </div>
         )}
         {message.delivery ? <DeliveryChip delivery={message.delivery} className="mt-1" /> : null}
+        {message.author === "assistant" ? (
+          <AnswerTools message={message} onFix={onFix} alignEnd={side === "end"} />
+        ) : null}
         {calls.length > 0 ? (
           <ul className={cn("mt-1.5 flex flex-wrap gap-1.5", side === "end" && "justify-end")} aria-label={t("inboxCard.actions.label")}>
             {calls.map((call, index) => (

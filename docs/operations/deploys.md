@@ -140,6 +140,25 @@ other languages again; the activity times come back with the next
 messages. `workshop migrate-documents --collection channels` after the
 release is optional (reads upcast anyway).
 
+The release that teaches the assistant from conversations ("Fix this
+answer", bad rating reasons and the owner's checks, migration 1112) also
+writes new enum values in the release that introduces them, an exception
+to the enum rule below: autotest runs hold scenarios of the new kind
+`owner_check` and the check codes `expected_text_missing`,
+`forbidden_text_mentioned` and `no_lead_created`. An old API instance
+that reads such a run (the autotest page, the go-live checklist) may fail
+that request until the overlap ends, and an old worker that plays a run a
+new instance planned fails the job, which the queue tries again until a
+new worker takes it: nothing is lost. The new review fields of
+conversations (`rating_reason`, `rated_message_id`, `improved_at`,
+`awaits_improvement`), `correction_of` of knowledge items and the new
+`autotest_cases` collection are unknown to the old release, which ignores
+them; but an old instance that saves a conversation during the overlap (a
+customer turn) writes it without them, so the reason of a bad rating given
+just before may be lost and the conversation leaves "Answers worth
+improving" (the rating itself stays). Before rolling back past that
+release, let running autotests finish.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

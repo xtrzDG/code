@@ -64,6 +64,7 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
     { page: "assistant/profile", label: "navigation.pages.assistantProfile", roles: OWNERS },
     { page: "assistant/channels", label: "navigation.pages.assistantChannels", roles: OWNERS },
     { page: "assistant/versions", label: "navigation.pages.assistantVersions", roles: OWNERS, isAdvanced: true },
+    { page: "assistant/checks", label: "navigation.pages.assistantChecks", roles: OWNERS, isAdvanced: true },
   ],
   settings: [
     { page: "settings", label: "navigation.pages.settingsGeneral", roles: OWNERS },
@@ -89,6 +90,7 @@ export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
   "assistant/profile": "navigation.descriptions.assistantProfile",
   "assistant/channels": "pages.channels.description",
   "assistant/versions": "navigation.descriptions.assistantVersions",
+  "assistant/checks": "navigation.descriptions.assistantChecks",
   "settings/quick-replies": "quickReplies.description",
   "settings/calls": "callSettings.description",
   "settings/reviews": "reviewSettings.description",

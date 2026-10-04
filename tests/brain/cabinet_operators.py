@@ -223,6 +223,7 @@ def build_cabinet_operators(
                     RateConversationUseCase(
                         authorize_business_access=world.authorize,
                         conversation_repo=world.conversation_repo,
+                        conversation_review_repo=world.conversation_repo,
                         contact_repo=world.contact_repo,
                         message_repo=world.message_repo,
                         summary_transformer=summary_transformer,

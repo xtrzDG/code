@@ -65,6 +65,15 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     get_message_media_operator = pipeline_operator(
         conversation_pipelines.get_message_media_pipeline, storage_scope
     )
+    get_answer_correction_draft_operator = pipeline_operator(
+        conversation_pipelines.get_answer_correction_draft_pipeline, storage_scope
+    )
+    correct_answer_operator = pipeline_operator(
+        conversation_pipelines.correct_answer_pipeline, storage_scope
+    )
+    list_answers_to_improve_operator = pipeline_operator(
+        conversation_pipelines.list_answers_to_improve_pipeline, storage_scope
+    )
 
     # --- Voice call start.
     start_voice_call_operator = platform_pipeline_operator(

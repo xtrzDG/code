@@ -4,9 +4,11 @@ Example:
     is_sandbox: IsSandboxConversation = False
 """
 
+AwaitsImprovement = bool
 CanTextCaller = bool
 IncludeSandboxConversations = bool
 IsAfterHours = bool
+IsAnswerCorrected = bool
 IsConversationHandedOff = bool
 IsFallbackModel = bool
 IsFirstAssistantReply = bool

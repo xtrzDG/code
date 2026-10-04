@@ -428,3 +428,15 @@ _.telegram_url  # app/schemas/dto/help.py (SupportContactsView)
 _.email_url  # app/schemas/dto/help.py (SupportContactsView)
 _.is_scheduled  # app/schemas/dto/platform_status.py (AnnouncementView)
 _.past_announcements  # app/schemas/dto/platform_status.py (PlatformStatusView)
+
+# Teaching from conversations (1112): where a saved check came from and the
+# reasons of a bad rating arrive from the cabinet; the correction draft,
+# the last result of a check and the counts of "Answers worth improving"
+# are response fields only the cabinet reads.
+_.CORRECTION  # app/schemas/constants/assistants.py (AutotestCaseSource)
+_.SHOULD_HAND_OFF  # app/schemas/constants/conversations.py (ConversationRatingReason)
+_.last_result  # app/schemas/dto/assistants/autotest_cases.py (AutotestCaseView)
+_.suggested_scope  # app/schemas/dto/conversation_feed/answer_corrections.py
+_.current_fact  # app/schemas/dto/conversation_feed/answer_corrections.py
+_.is_corrected  # app/schemas/dto/conversation_feed/answer_corrections.py
+_.bad_rating_count  # app/schemas/dto/conversation_feed/answers_to_improve.py

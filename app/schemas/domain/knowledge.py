@@ -5,6 +5,7 @@ from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSour
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.knowledge.booleans import IsKnowledgeItemActive
 from app.schemas.typings.knowledge.constrained_integers import (
     BufferMinutes,
@@ -71,7 +72,9 @@ class KnowledgeItemDocument(BaseDocument):
     # 2: `buffer_minutes`, `performer_resource_ids` and `seasonal_rates`
     # (optional); `duration_minutes` is 5 to 720 minutes, longer or shorter
     # ones of version 1 move to an attribute (upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: `correction_of`, the assistant answer an owner corrected with this
+    # item ("Fix this answer"; optional, None for every other item).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
     business_id: BusinessId
     kind: KnowledgeItemKind
@@ -93,3 +96,4 @@ class KnowledgeItemDocument(BaseDocument):
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER
     is_active: IsKnowledgeItemActive = True
     import_batch_id: MenuImportBatchId | None = None
+    correction_of: MessageId | None = None

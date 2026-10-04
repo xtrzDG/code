@@ -9,6 +9,12 @@ class AssistantVersionId(BasePrefixedTypedId):
     prefix = "assistant_version"
 
 
+class AutotestCaseId(BasePrefixedTypedId):
+    """Random identifier of one owner check (a permanent autotest case)."""
+
+    prefix = "autotest_case"
+
+
 class AutotestRunId(BasePrefixedTypedId):
     """Random identifier of one autotest run over an assistant version."""
 

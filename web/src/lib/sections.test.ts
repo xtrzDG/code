@@ -46,7 +46,7 @@ describe("the five sections", () => {
 
   it("keep versions and autotests under Advanced", () => {
     const advanced = SECTION_PAGES.assistant.filter((entry) => entry.isAdvanced).map((entry) => entry.page);
-    expect(advanced).toEqual(["assistant/versions"]);
+    expect(advanced).toEqual(["assistant/versions", "assistant/checks"]);
   });
 
   it("name pages and their titles", () => {

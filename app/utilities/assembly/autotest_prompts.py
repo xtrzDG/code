@@ -49,6 +49,12 @@ KIND_LANGUAGE_NOTES: dict[AutotestScenarioKind, tuple[str, ...]] = {
 CUSTOMER_OPENING_TEXT: str = (
     "The conversation starts now. Write your first message to the assistant."
 )
+# How the AI customer's transcript of an owner check begins: its first
+# message was the check's question, sent as written (the scripted model
+# knows by it that the conversation goes on from there).
+OWNER_CHECK_CONTINUATION_OPENING: str = (
+    "The conversation has started: your first message was sent for you."
+)
 SILENT_ASSISTANT_TEXT: str = (
     "(The assistant did not answer: a human colleague will reply later.)"
 )
@@ -159,6 +165,24 @@ def build_assistant_turn_text(reply: AssistantReply) -> MessageText:
         return MessageText(SILENT_ASSISTANT_TEXT)
 
     return reply.text
+
+
+def build_owner_check_continuation(question: str, reply: AssistantReply) -> MessageText:
+    """
+    The AI customer's first turn of an owner check that goes on after its
+    question: what was asked for it and what the assistant answered.
+    """
+
+    return MessageText(
+        "\n".join(
+            [
+                OWNER_CHECK_CONTINUATION_OPENING,
+                f"Your first message: {question}",
+                f"The assistant answered: {build_assistant_turn_text(reply)}",
+                "Write your next message.",
+            ]
+        )
+    )
 
 
 def build_judge_request_text(

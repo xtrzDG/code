@@ -82,6 +82,7 @@ from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
     SIGN_IN_DOCUMENT_COLLECTIONS,
 )
+from app.utilities.storage.teaching_collections import TEACHING_COLLECTIONS
 
 DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Users and sign-in (platform-wide), two-factor sign-in included.
@@ -281,6 +282,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *OPERATIONS_COLLECTIONS,
     # Platform admins and support's time-boxed access to a business (1103).
     *ACCESS_COLLECTIONS,
+    *TEACHING_COLLECTIONS,  # The owner's own checks (1112).
 )
 
 

@@ -32,7 +32,11 @@ from app.schemas.typings.assistants.constrained_strings import (
     AutotestScenarioKey,
     LlmModelId,
 )
-from app.schemas.typings.assistants.prefixed_id import AssistantVersionId, AutotestRunId
+from app.schemas.typings.assistants.prefixed_id import (
+    AssistantVersionId,
+    AutotestCaseId,
+    AutotestRunId,
+)
 from app.schemas.typings.assistants.strings import (
     AutotestCheckNote,
     JudgeNote,
@@ -118,6 +122,8 @@ class AutotestScenarioResultView(ImmutableDTO):
     )
     transcript: list[AutotestTranscriptLineView]
     cost_micro_usd: CostMicroUsd
+    # The owner's check an OWNER_CHECK scenario played.
+    autotest_case_id: AutotestCaseId | None = None
 
 
 class AutotestRunView(ImmutableDTO):

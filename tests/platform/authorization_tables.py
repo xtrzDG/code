@@ -7,6 +7,10 @@ the storage scope of its business.
 
 from tests.platform.authorization_requests import BUSINESS_PREFIX as B
 
+CORRECTION: str = (
+    f"{B}/conversations/{{conversation_id}}/messages/{{message_id}}/correction"
+)
+
 # Operations only owners may use; staff get 403 (AuthorizeBusinessAccess
 # with required_role=OWNER): settings, team, billing, publishing, channels,
 # the customers' personal data and the audit log.
@@ -19,6 +23,10 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/assistant-versions/{{version_id}}/rollback",
         f"POST {B}/assistant/apply",
         f"GET {B}/audit-log",
+        f"GET {B}/autotest-cases",
+        f"POST {B}/autotest-cases",
+        f"PATCH {B}/autotest-cases/{{case_id}}",
+        f"DELETE {B}/autotest-cases/{{case_id}}",
         f"GET {B}/billing",
         f"POST {B}/billing/cancel",
         f"POST {B}/billing/checkout",
@@ -33,6 +41,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"PUT {B}/channels/{{channel}}",
         f"DELETE {B}/channels/{{channel}}",
         f"GET {B}/contacts",
+        f"GET {CORRECTION}",
+        f"POST {CORRECTION}",
         f"GET {B}/contacts/{{contact_id}}",
         f"DELETE {B}/contacts/{{contact_id}}",
         f"GET {B}/contacts/{{contact_id}}/export",

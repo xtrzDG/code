@@ -67,4 +67,5 @@ class AutotestRunViewTransformer(
                 for line in result.transcript
             ],
             cost_micro_usd=result.cost_micro_usd,
+            autotest_case_id=result.autotest_case_id,
         )

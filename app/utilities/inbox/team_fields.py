@@ -6,6 +6,10 @@ operations change, and whether the conversation waits for the team.
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.inbox.booleans import AwaitsTeam
+from app.utilities.conversations.review_fields import (
+    REVIEW_OWNED_FIELDS,
+    with_review_attention,
+)
 
 # Changed only by assignment and request bookkeeping; a plain save of the
 # conversation keeps what is stored.
@@ -43,13 +47,19 @@ def keep_team_fields(
 ) -> ConversationDocument:
     """
     What a plain save writes over the stored conversation: everything of
-    `incoming` but the team-owned fields, which stay as stored (a turn that
-    read the conversation before someone assigned it must not undo the
-    assignment), and `awaits_team` derived again.
+    `incoming` but the team-owned and review fields, which stay as stored
+    (a turn that read the conversation before someone assigned or rated it
+    must not undo that), and `awaits_team` and `awaits_improvement`
+    derived again.
     """
 
-    return with_team_attention(
-        incoming.model_copy(
-            update={field: getattr(stored, field) for field in TEAM_OWNED_FIELDS}
+    return with_review_attention(
+        with_team_attention(
+            incoming.model_copy(
+                update={
+                    field: getattr(stored, field)
+                    for field in (*TEAM_OWNED_FIELDS, *REVIEW_OWNED_FIELDS)
+                }
+            )
         )
     )

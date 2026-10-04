@@ -13,6 +13,7 @@ from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
     ConversationRating,
+    ConversationRatingReason,
     ConversationStatus,
     MessageAuthor,
     StaffMessageDelivery,
@@ -149,6 +150,8 @@ class ConversationSummaryView(ImmutableDTO):
     last_message_at: Microseconds
     created_at: Microseconds
     rating: ConversationRating | None = None
+    rating_reason: ConversationRatingReason | None = None
+    rated_message_id: MessageId | None = None
 
 
 class ConversationPage(ImmutableDTO):

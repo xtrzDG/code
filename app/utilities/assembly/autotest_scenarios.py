@@ -29,11 +29,14 @@ BOOKING_SCENARIO_KINDS: frozenset[AutotestScenarioKind] = frozenset(
         AutotestScenarioKind.CANCELLATION,
     }
 )
+# The owner's own checks are critical too: a corrected answer must stay
+# correct in every version that reaches customers.
 LAUNCH_CRITICAL_SCENARIO_KINDS: frozenset[AutotestScenarioKind] = frozenset(
     {
         AutotestScenarioKind.PRICE_QUESTION,
         AutotestScenarioKind.BOOKING,
         AutotestScenarioKind.BOOKING_OUT_OF_HOURS,
+        AutotestScenarioKind.OWNER_CHECK,
     }
 )
 FIXED_GOALS: dict[AutotestScenarioKind, str] = {
@@ -74,6 +77,9 @@ FIXED_GOALS: dict[AutotestScenarioKind, str] = {
     AutotestScenarioKind.TRANSLITERATED: (
         "Ask whether the business is open tomorrow evening and how much its "
         "most popular offer costs."
+    ),
+    AutotestScenarioKind.OWNER_CHECK: (
+        "Ask the question the owner saved as a check, word for word."
     ),
 }
 

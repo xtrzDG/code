@@ -11,6 +11,7 @@ from app.repositories.activation_repositories import (
     NudgeSentRepository,
     OnboardingRequestRepository,
 )
+from app.repositories.autotest_case_repository import AutotestCaseRepository
 from app.repositories.setup_probe_repository import SetupProbeRepository
 from app.repositories.setup_repositories import (
     ActivationEventRepository,
@@ -25,7 +26,8 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories over `LaunchCollectionsContainer`: the guided launch
     (1044), the hosted chat addresses (1052) and the current website import
-    (1054) and the activation follow-up (1080). `RepositoriesContainer`
+    (1054), the activation follow-up (1080) and the owner's own checks
+    (1112). `RepositoriesContainer`
     extends it, so they are read as
     `repositories.setup_state_repo` like every other repository.
     """
@@ -70,4 +72,9 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
         SetupProbeRepository,
         conversation_collection=probe_collections.conversation_collection,
         booking_collection=probe_collections.booking_collection,
+    )
+    # The owner's own checks ("My checks", 1112).
+    autotest_case_repo: Singleton[AutotestCaseRepository] = Singleton(
+        AutotestCaseRepository,
+        collection=launch_collections.autotest_case_collection,
     )

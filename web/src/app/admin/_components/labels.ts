@@ -86,6 +86,7 @@ export const SCENARIO_LABELS: Record<Schema<"AutotestScenarioKind">, MessageKey>
   emergency: "admin.detail.scenarioKinds.emergency",
   foreign_language: "admin.detail.scenarioKinds.foreign_language",
   transliterated: "admin.detail.scenarioKinds.transliterated",
+  owner_check: "admin.detail.scenarioKinds.owner_check",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<Schema<"PaymentStatus">, MessageKey> = {
@@ -126,6 +127,9 @@ export const CHECK_CODE_LABELS: Record<Schema<"AutotestCheckCode">, MessageKey> 
   no_customer_message: "admin.detail.checkCodes.no_customer_message",
   judge_unavailable: "admin.detail.checkCodes.judge_unavailable",
   judge_unreadable: "admin.detail.checkCodes.judge_unreadable",
+  expected_text_missing: "admin.detail.checkCodes.expected_text_missing",
+  forbidden_text_mentioned: "admin.detail.checkCodes.forbidden_text_mentioned",
+  no_lead_created: "admin.detail.checkCodes.no_lead_created",
 };
 
 export const CRITERION_LABELS: Record<Schema<"JudgeCriterion">, MessageKey> = {

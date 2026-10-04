@@ -2,20 +2,30 @@
 
 from base_pydantic_schemas import ImmutableDTO
 
-from app.schemas.constants.conversations import ConversationRating, StaffMessageDelivery
+from app.schemas.constants.conversations import (
+    ConversationRating,
+    ConversationRatingReason,
+    StaffMessageDelivery,
+)
 from app.schemas.dto.conversation_feed.conversation_views import MessageView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.booleans import SendAsTemplate
 from app.schemas.typings.conversations.constrained_strings import StaffReplyText
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.users.prefixed_id import UserId
 
 
 class ConversationRatingRequest(ImmutableDTO):
-    """HTTP body of rating a conversation; null clears the rating."""
+    """
+    HTTP body of rating a conversation; null clears the rating. A bad
+    rating may say why (`reason`) and which assistant answer it is about
+    (`message_id`; the latest answer when omitted).
+    """
 
     rating: ConversationRating | None
+    reason: ConversationRatingReason | None = None
+    message_id: MessageId | None = None
 
 
 class RateConversationCommand(ImmutableDTO):
@@ -25,6 +35,8 @@ class RateConversationCommand(ImmutableDTO):
     business_id: BusinessId
     conversation_id: ConversationId
     rating: ConversationRating | None
+    reason: ConversationRatingReason | None = None
+    message_id: MessageId | None = None
 
 
 class StaffMessageRequest(ImmutableDTO):

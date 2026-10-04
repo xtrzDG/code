@@ -102,7 +102,8 @@ def build_conversation_router(
                                                     earlier messages of the
                                                     card, oldest first (audited)
         PUT  .../conversations/{conversation_id}/rating
-                                                    {rating: good|bad|null}
+                                                    {rating: good|bad|null,
+                                                     reason?, message_id?}
         POST .../conversations/{conversation_id}/messages
                                                     {text, as_template?}: staff
                                                     write to the customer
@@ -207,6 +208,8 @@ def build_conversation_router(
                     "Conversation",
                 ),
                 rating=body.rating,
+                reason=body.reason,
+                message_id=body.message_id,
             )
         )
 

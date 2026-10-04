@@ -11,6 +11,8 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AcquisitionSourceTag": "qr-tables",
     "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",
+    "AutotestCaseQuestion": "Do you have a vegetarian menu?",
+    "AutotestExpectedText": "vegetarian",
     "AutotestScenarioKey": "booking-happy-path",
     "BackupObjectKey": "workshop/2026/09/workshop-20260921T122640Z.pgdump.age",
     "CabinetRoutePattern": "/b/[businessId]/inbox",

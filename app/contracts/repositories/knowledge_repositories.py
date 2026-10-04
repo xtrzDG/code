@@ -15,6 +15,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
@@ -51,6 +52,14 @@ class KnowledgeItemRepoContract(RepoContract, Protocol):
         limit: DocumentQueryLimit,
     ) -> list[KnowledgeItemDocument]:
         """The business's first-written items of a kind (an indexed query)."""
+        raise NotImplementedError
+
+    def find_by_correction(
+        self,
+        business_id: BusinessId,
+        message_id: MessageId,
+    ) -> KnowledgeItemDocument | None:
+        """The item an owner corrected this assistant answer with (indexed)."""
         raise NotImplementedError
 
     def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:

@@ -91,6 +91,15 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     get_message_media_pipeline = orchestrator_pipeline(
         conversation_orchestrators.get_message_media_orchestrator
     )
+    get_answer_correction_draft_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.get_answer_correction_draft_orchestrator
+    )
+    correct_answer_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.correct_answer_orchestrator
+    )
+    list_answers_to_improve_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.list_answers_to_improve_orchestrator
+    )
 
     # --- Voice call start.
     start_voice_call_pipeline = orchestrator_pipeline(

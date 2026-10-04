@@ -13,6 +13,14 @@ from app.schemas.dto.assistants.assistant_commands import (
     RunAutotestsCommand,
 )
 from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_cases import (
+    AutotestCaseCommand,
+    AutotestCaseList,
+    AutotestCaseView,
+    CreateAutotestCaseCommand,
+    ListAutotestCasesQuery,
+    UpdateAutotestCaseCommand,
+)
 from app.schemas.dto.assistants.autotest_runs import (
     AutotestPlanningRequest,
     AutotestRunCompletion,
@@ -26,6 +34,18 @@ from app.schemas.dto.jobs import (
 )
 from app.use_cases.autotests.abandon_autotest_run_use_case import (
     AbandonAutotestRunUseCase,
+)
+from app.use_cases.autotests.cases.create_autotest_case_use_case import (
+    CreateAutotestCaseUseCase,
+)
+from app.use_cases.autotests.cases.delete_autotest_case_use_case import (
+    DeleteAutotestCaseUseCase,
+)
+from app.use_cases.autotests.cases.list_autotest_cases_use_case import (
+    ListAutotestCasesUseCase,
+)
+from app.use_cases.autotests.cases.update_autotest_case_use_case import (
+    UpdateAutotestCaseUseCase,
 )
 from app.use_cases.autotests.enqueue_autotest_run_use_case import (
     EnqueueAutotestRunUseCase,
@@ -67,6 +87,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         resource_repo=repositories.resource_repo,
+        autotest_case_repo=repositories.autotest_case_repo,
         niche_template_registry=registries.niche_template_registry,
         language_registry=registries.language_registry,
     )
@@ -133,4 +154,42 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
         autotest_run_view_transformer=transformers.autotest_run_view_transformer,
+    )
+
+    # --- The owner's own checks ("My checks").
+    list_autotest_cases_use_case: Factory[
+        UseCaseContract[ListAutotestCasesQuery, AutotestCaseList]
+    ] = Factory(
+        ListAutotestCasesUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
+    )
+    create_autotest_case_use_case: Factory[
+        UseCaseContract[CreateAutotestCaseCommand, AutotestCaseView]
+    ] = Factory(
+        CreateAutotestCaseUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
+        conversation_repo=repositories.conversation_repo,
+        conversation_review_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        unanswered_question_repo=repositories.unanswered_question_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    update_autotest_case_use_case: Factory[
+        UseCaseContract[UpdateAutotestCaseCommand, AutotestCaseView]
+    ] = Factory(
+        UpdateAutotestCaseUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    delete_autotest_case_use_case: Factory[
+        UseCaseContract[AutotestCaseCommand, None]
+    ] = Factory(
+        DeleteAutotestCaseUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
     )

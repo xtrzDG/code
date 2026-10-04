@@ -3,6 +3,35 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class AutotestCaseQuestion(BaseConstrainedTypedString):
+    """
+    What the customer asks in an owner check, word for word: the first
+    message of its test conversation; at least one visible character.
+
+    Example:
+        question = AutotestCaseQuestion("Do you have a vegetarian menu?")
+    """
+
+    min_length = 1
+    max_length = 500
+    pattern = r"\S"
+
+
+class AutotestExpectedText(BaseConstrainedTypedString):
+    """
+    A word, number or phrase an owner check expects the assistant's answer
+    to contain (or never to contain); matched ignoring case, accents,
+    punctuation and spacing.
+
+    Example:
+        expected = AutotestExpectedText("18 GEL")
+    """
+
+    min_length = 1
+    max_length = 200
+    pattern = r"\w"
+
+
 class AutotestScenarioKey(BaseConstrainedTypedString):
     """
     Stable key of one autotest scenario, e.g. "booking__ka".

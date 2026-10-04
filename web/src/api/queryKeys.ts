@@ -36,6 +36,8 @@ export const queryKeys = {
     inboxViews: (businessId: Id) => ["dashboard", businessId, "inboxViews"] as const,
     /** What customers asked about, as the nightly grouping last stored it. */
     topics: (businessId: Id) => ["dashboard", businessId, "topics"] as const,
+    /** Bad ratings nobody acted on and questions without an answer (the Overview's list). */
+    answersToImprove: (businessId: Id) => ["dashboard", businessId, "answersToImprove"] as const,
   },
 
   reports: {
@@ -54,6 +56,9 @@ export const queryKeys = {
     list: (businessId: Id, filters: string, today: string) =>
       ["conversations", businessId, "list", filters, today] as const,
     detail: (businessId: Id, conversationId: Id) => ["conversations", businessId, "detail", conversationId] as const,
+    /** "Fix this answer": the draft of one assistant answer (each read is audited). */
+    correction: (businessId: Id, conversationId: Id, messageId: Id) =>
+      ["conversations", businessId, "correction", conversationId, messageId] as const,
     /** Every view of the team inbox (each load is audited, like the feed). */
     inboxAll: (businessId: Id) => ["conversations", businessId, "inbox"] as const,
     inbox: (businessId: Id, view: string, channel: Optional<string>) =>
@@ -151,6 +156,8 @@ export const queryKeys = {
     pending: (businessId: Id, locale: Locale) => ["assistant", businessId, "pending", locale] as const,
     /** The same in every language: what the assistant knows changed. */
     pendingAll: (businessId: Id) => ["assistant", businessId, "pending"] as const,
+    /** The owner's own checks ("My checks") with their latest results. */
+    checks: (businessId: Id) => ["assistant", businessId, "checks"] as const,
   },
 
   setup: {
