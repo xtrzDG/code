@@ -68,7 +68,8 @@ test("an announced outage shows on the status page and over the cabinet until it
     await dialog.getByLabel("Text in English").fill(OUTAGE);
     await dialog.getByRole("button", { name: texts.form.publish }).click();
     await expect(dialog).toBeHidden();
-    await expect(card.getByText(OUTAGE)).toBeVisible();
+    // The closed dialog keeps its form while it fades out: the card's own line.
+    await expect(card.getByRole("paragraph").filter({ hasText: OUTAGE })).toBeVisible();
 
     // Anyone: the status page, without signing in.
     const visitorContext = await browser.newContext({ reducedMotion: "reduce" });
