@@ -19,6 +19,9 @@ from app.facilitators.calendar.google_calendar_sync_facilitator import (
 from app.facilitators.channels.typing_signal_facilitator import (
     TypingSignalFacilitator,
 )
+from app.facilitators.claim_check.claim_check_facilitator import (
+    ClaimCheckFacilitator,
+)
 from app.facilitators.events.event_publisher_facilitator import (
     EventPublisherFacilitator,
 )
@@ -56,9 +59,6 @@ from app.facilitators.product_events.record_product_event_facilitator import (
 from app.facilitators.setup.owner_nudge_facilitator import OwnerNudgeFacilitator
 from app.facilitators.users.login_code_cap_alert_facilitator import (
     LoginCodeCapAlertFacilitator,
-)
-from app.facilitators.claim_check.claim_check_facilitator import (
-    ClaimCheckFacilitator,
 )
 from app.facilitators.users.turnstile_bot_check_facilitator import (
     TurnstileBotCheckFacilitator,

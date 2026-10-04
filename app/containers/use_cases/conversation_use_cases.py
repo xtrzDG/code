@@ -111,6 +111,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
         contact_message_limit=config.app_settings.provided.contact_message_limit_per_hour,
+        injection_flag_limit=config.app_settings.provided.reply_safety.injection_flag_limit,
     )
     generate_assistant_reply_use_case: Factory[
         UseCaseContract[PreparedTurn, GeneratedReply]

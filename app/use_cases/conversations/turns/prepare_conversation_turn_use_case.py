@@ -25,6 +25,7 @@ from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversation_engine import TurnGate
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.live_events import LiveEventKind
+from app.schemas.constants.reply_safety import InjectionSignal
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -38,6 +39,7 @@ from app.schemas.exceptions.application_errors import ConflictError, NotFoundErr
 from app.schemas.typings.conversations.booleans import IsAfterHours
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
+    InjectionFlagLimit,
 )
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
@@ -70,6 +72,7 @@ from app.utilities.media.attachment_texts import (
     has_readable_content,
     readable_message_text,
 )
+from app.utilities.reply_guard.injection_signals import detect_injection
 
 # Longer messages are cut: no customer needs more, and tokens cost money.
 MAX_CUSTOMER_TEXT_LENGTH: int = 4000
@@ -93,8 +96,11 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
        requested or published version (ConflictError when the business has
        none).
     4. The gate: staff own a conversation in HANDOFF (silence in chat, a
-       call-back promise on the phone); past the hourly per-contact limit the
-       assistant answers once with a stop message, then stays silent.
+       call-back promise on the phone); a message that looks like prompt
+       injection is flagged on the stored message, and a contact with
+       INJECTION_FLAG_LIMIT flagged messages in a day, or past the hourly
+       per-contact limit, is answered once with a stop message, then the
+       assistant stays silent.
     5. The customer's language, any language (`detect_any`: a message that
        tells too little keeps the conversation's, then the contact's, then
        the version default language), the after-hours flag from
@@ -118,6 +124,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
         contact_message_limit: ContactMessageLimit,
+        injection_flag_limit: InjectionFlagLimit,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -134,6 +141,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._contact_message_limit: ContactMessageLimit = contact_message_limit
+        self._injection_flag_limit: InjectionFlagLimit = injection_flag_limit
 
     def run(self, input_data: InboundMessage) -> PreparedTurn:
         input_data = remove_nul_characters(input_data)
@@ -168,6 +176,10 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 f"Assistant version {conversation.assistant_version_id} was not found."
             )
 
+        written_text = MessageText(str(input_data.text)[:MAX_CUSTOMER_TEXT_LENGTH])
+        attachments: list[MessageAttachment] = list(input_data.attachments)
+        customer_text = MessageText(readable_message_text(written_text, attachments))
+        injection_flag: InjectionSignal | None = detect_injection(str(customer_text))
         gate: TurnGate = choose_turn_gate(
             self._conversation_repo,
             self._message_repo,
@@ -176,10 +188,9 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             contact,
             conversation,
             now,
+            injection_flag,
+            self._injection_flag_limit,
         )
-        written_text = MessageText(str(input_data.text)[:MAX_CUSTOMER_TEXT_LENGTH])
-        attachments: list[MessageAttachment] = list(input_data.attachments)
-        customer_text = MessageText(readable_message_text(written_text, attachments))
         if gate is TurnGate.ANSWER and not has_readable_content(
             written_text, attachments
         ):
@@ -214,6 +225,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 text=written_text,
                 language=language,
                 attachments=attachments,
+                injection_flag=injection_flag,
                 created_at=now,
                 updated_at=now,
             )

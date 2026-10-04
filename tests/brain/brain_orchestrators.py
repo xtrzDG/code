@@ -96,6 +96,7 @@ def build_brain_orchestrators(
             live_events=live_events,
             wall_clock=wall_clock,
             contact_message_limit=contact_message_limit,
+            injection_flag_limit=options.injection_flag_limit,
         ),
         generate_reply=GenerateAssistantReplyUseCase(
             llm_adapter=llm,

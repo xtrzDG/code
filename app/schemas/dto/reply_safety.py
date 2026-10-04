@@ -6,6 +6,10 @@ from pydantic import Field
 from app.schemas.constants.reply_safety import ClaimTopic
 from app.schemas.domain.conversations import ClaimFinding
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.schemas.typings.client_health.constrained_integers import (
+    GuardedReplyCount,
+    InjectionFlagCount,
+)
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import (
     ClaimText,
@@ -48,3 +52,16 @@ class ClaimCheckResult(ImmutableDTO):
 
     findings: list[ClaimFinding] = Field(default_factory=list[ClaimFinding])
     usage: VerifierUsage | None = None
+
+
+class ClientGuardActivity(ImmutableDTO):
+    """
+    What the reply guard did for one client in a time window: the model's
+    replies it checked, those it had rewritten once or handed to staff, and
+    the customer messages that looked like prompt injection.
+    """
+
+    checked_replies: GuardedReplyCount = GuardedReplyCount(0)
+    rewritten_replies: GuardedReplyCount = GuardedReplyCount(0)
+    handed_off_replies: GuardedReplyCount = GuardedReplyCount(0)
+    injection_flags: InjectionFlagCount = InjectionFlagCount(0)
