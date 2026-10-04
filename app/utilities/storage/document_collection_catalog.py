@@ -24,6 +24,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
+from app.schemas.domain.conversation_topics import ConversationTopicsDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
@@ -246,6 +247,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("value_reports"), ValueReportDocument
+    ),
+    # What customers ask about, grouped every night (1100).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("conversation_topics"), ConversationTopicsDocument
     ),
     # Feedback after visits: review settings, the request per visit (1062).
     DocumentCollectionDefinition(

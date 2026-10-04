@@ -233,4 +233,18 @@ class WidgetSessionKey(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9_\-]{16,128}$"
 
 
+class WidgetSourceInput(BaseConstrainedTypedString):
+    """
+    Where a website visitor came from, as the widget read it (its script's
+    data-source, else `?src=` or `?utm_source=` of the page), before the
+    server reduces it to an `AcquisitionSourceTag`: any text up to 200
+    characters, so a page's odd tag never refuses the visitor's message.
+
+    Example:
+        source = WidgetSourceInput("QR Tables")
+    """
+
+    max_length = 200
+
+
 # Keep abc order for all non example types, if possible.

@@ -17,13 +17,16 @@ from app.schemas.typings.deliveries.constrained_integers import (
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.deliveries.strings import InboundErrorText, InboundPayloadText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 
 
 class InboundCustomerMessage(PersistentDocument):
     """
     A customer's message as the channel adapter read it from the webhook:
     the typed text and the attachments (voice notes, photos, places, ...),
-    whose files the worker fetches.
+    whose files the worker fetches. `acquisition_source` is where the
+    customer came from when the message carried it (a tagged link, an ad):
+    a conversation this message starts keeps it.
     """
 
     channel_user_id: ChannelUserId
@@ -33,6 +36,7 @@ class InboundCustomerMessage(PersistentDocument):
     attachments: list[InboundAttachment] = Field(
         default_factory=list[InboundAttachment]
     )
+    acquisition_source: AcquisitionSourceTag | None = None
 
 
 class InboundEventDocument(BaseDocument):
@@ -58,9 +62,11 @@ class InboundEventDocument(BaseDocument):
     Version 3: when staff were asked to answer a customer message the
     assistant never answered (`handoff_requested_at`, set by the sweeper of
     the inbox once per FAILED event; optional).
+
+    Version 4: the customer message's `acquisition_source` (optional).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind

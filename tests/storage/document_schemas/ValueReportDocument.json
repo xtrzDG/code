@@ -1,7 +1,7 @@
 {
   "collection": "value_reports",
   "document_type": "ValueReportDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -180,6 +180,18 @@
         "pattern": "^\\d{4}-(W\\d{2}|\\d{2}|\\d{2}-\\d{2})$",
         "type": "string"
       },
+      "plan_cost_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "previous": {
         "additionalProperties": false,
         "properties": {
@@ -299,8 +311,20 @@
         "minimum": 0,
         "type": "integer"
       },
+      "return_multiple": {
+        "anyOf": [
+          {
+            "minimum": 0.0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "starts_at": {

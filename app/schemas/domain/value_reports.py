@@ -12,11 +12,13 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.schemas.typings.value.constrained_floats import ValueReturnMultiple
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
     BookedValueMinor,
     DigestRecipientCount,
     EstimatedRevenueMinor,
+    PlanCostMinor,
     StaffMinutesSaved,
 )
 from app.schemas.typings.value.constrained_strings import ValueReportPeriodKey
@@ -63,8 +65,10 @@ class ValueReportDocument(BaseDocument):
     """
 
     # 2: the totals' `valued_booking_count`, `booked_value_minor` and
-    # `revenue_source` (optional).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # `revenue_source` (optional). 3: `plan_cost_minor` and
+    # `return_multiple`, the plan's price for the period and how many times
+    # the money covered it (optional; None when the currencies differ).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: ValueReportId
     business_id: BusinessId
     kind: ValueReportKind
@@ -82,3 +86,5 @@ class ValueReportDocument(BaseDocument):
     previous: ValueTotalsSnapshot
     delivery: ValueReportDelivery
     recipient_count: DigestRecipientCount
+    plan_cost_minor: PlanCostMinor | None = None
+    return_multiple: ValueReturnMultiple | None = None

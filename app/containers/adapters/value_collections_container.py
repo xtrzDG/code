@@ -6,6 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.schemas.domain.conversation_topics import ConversationTopicsDocument
 from app.schemas.domain.value_reports import ValueReportDocument
 from app.schemas.domain.value_settings import (
     DigestPreferencesDocument,
@@ -17,7 +18,8 @@ class ValueCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of what the assistant is worth (migration
     1061): each business's average check, each owner's digest choices and
-    the stored digests and monthly reports. A sibling of
+    the stored digests and monthly reports; and what customers ask about
+    (1100). A sibling of
     DocumentCollectionsContainer with the same storage factory (Postgres
     with DATABASE_URL, else in memory).
     """
@@ -46,6 +48,14 @@ class ValueCollectionsContainer(containers.DeclarativeContainer):
     value_report_collection = document_collection(
         ValueReportDocument,
         "value_reports",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    conversation_topics_collection = document_collection(
+        ConversationTopicsDocument,
+        "conversation_topics",
         config,
         clients,
         utilities,

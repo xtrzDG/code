@@ -78,3 +78,17 @@ class ValueReportDelivery(StrEnum):
     SENT = "sent"
     NO_RECIPIENTS = "no_recipients"
     QUIET = "quiet"
+
+
+class DigestChannel(StrEnum):
+    """
+    Where an owner gets their digests and monthly reports: the sign-in
+    e-mail, the devices with notifications on (Web Push), a Telegram chat
+    linked to the platform bot, or WhatsApp from the platform's number (an
+    approved utility template, so the owner opts in by choosing it).
+    """
+
+    EMAIL = "email"
+    PUSH = "push"
+    TELEGRAM = "telegram"
+    WHATSAPP = "whatsapp"

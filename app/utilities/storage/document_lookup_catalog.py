@@ -3,9 +3,9 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082, 1090, 1093 and 1094), each ELEMENT_TEXT field a trigger over
-`workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
-and checks queries against this catalog.
+1074, 1081, 1082, 1090, 1093, 1094 and 1100), each ELEMENT_TEXT field a
+trigger over `workshop.document_lookup_keys`; `document_lookup_fields`
+explains the kinds and checks queries against this catalog.
 """
 
 from collections.abc import Mapping
@@ -94,6 +94,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _filter("language"),
         _filter("is_after_hours"),
         _filter("is_sandbox"),
+        # Where customers came from, counted per period (Reports, 1100).
+        _filter("acquisition_source"),
         _integer("last_message_at"),
         _integer("created_at"),
     ),
