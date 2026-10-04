@@ -1,0 +1,50 @@
+from dependency_injector import containers
+from dependency_injector.providers import DependenciesContainer
+
+from app.containers.adapters.document_collection_provider import document_collection
+from app.containers.clients import ClientsContainer
+from app.containers.config import ConfigContainer
+from app.containers.time_provider import TimeProviderContainer
+from app.containers.utilities import UtilitiesContainer
+from app.schemas.domain.incidents import IncidentDocument
+from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
+from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+
+
+class OperationsCollectionsContainer(containers.DeclarativeContainer):
+    """
+    The document collections of the platform's own operations (migration
+    1093): the platform alerts' episodes, the recorded backups and restore
+    drills, and the incident log. A sibling of DocumentCollectionsContainer
+    with the same storage factory.
+    """
+
+    clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    platform_alert_state_collection = document_collection(
+        PlatformAlertStateDocument,
+        "platform_alert_states",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    maintenance_run_collection = document_collection(
+        MaintenanceRunDocument,
+        "maintenance_runs",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    incident_collection = document_collection(
+        IncidentDocument,
+        "incidents",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )

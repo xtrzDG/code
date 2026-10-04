@@ -70,9 +70,13 @@ class ChannelDocument(BaseDocument):
     Version 2: `public_profile`, the public address for share links and QR
     codes (optional: channels connected earlier have none until they are
     reconnected).
+
+    Version 3: `credential_expires_at` and `credential_checked_at`, when a
+    Meta channel's token runs out (None: it never does, or nobody asked
+    Meta yet) and when the daily check last asked; both optional.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: ChannelId = Field(default_factory=ChannelId)
     business_id: BusinessId
     kind: ChannelKind
@@ -84,3 +88,5 @@ class ChannelDocument(BaseDocument):
     web_chat_appearance: WebChatAppearance | None = None
     whatsapp_staff_template: WhatsAppStaffTemplate | None = None
     public_profile: ChannelPublicProfile | None = None
+    credential_expires_at: Microseconds | None = None
+    credential_checked_at: Microseconds | None = None

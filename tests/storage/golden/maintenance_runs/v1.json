@@ -1,0 +1,15 @@
+{
+  "archive_key": "workshop/2026/09/workshop-20260921T122640Z.pgdump.age",
+  "archive_size": 1,
+  "created_at": 1790000000000000,
+  "error": "Sample MaintenanceErrorText",
+  "finished_at": 1790000000000000,
+  "id": "maintenance_run_59f4cf9e-7a70-449e-b360-5e0efc72c53c",
+  "kind": "backup",
+  "outcome": "succeeded",
+  "release": "4718714c0f2e9a1b",
+  "row_count": 1,
+  "schema_version": "1",
+  "started_at": 1790000000000000,
+  "updated_at": 1790000000000000
+}

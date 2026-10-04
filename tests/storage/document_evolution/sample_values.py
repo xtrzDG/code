@@ -10,6 +10,7 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AutotestScenarioKey": "booking-happy-path",
+    "BackupObjectKey": "workshop/2026/09/workshop-20260921T122640Z.pgdump.age",
     "CabinetRoutePattern": "/b/[businessId]/inbox",
     "BusinessPublicSlug": "cafe-batumi",
     "CabinetDeepLink": (
@@ -20,6 +21,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CurrencyPairCode": "EUR/GEL",
     "DpaDocumentVersion": "2026-07",
     "GoLiveCheckDetail": "no_opening_hours",
+    "IncidentTitle": "WhatsApp replies delayed",
     "InstagramUsername": "cafe.batumi",
     "E164PhoneNumber": "+995599123456",
     "EmailAddress": "owner@example.com",

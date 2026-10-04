@@ -12,6 +12,7 @@ from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
 from app.containers.media_repositories import MediaRepositoriesContainer
+from app.containers.operations_repositories import OperationsRepositoriesContainer
 from app.containers.rate_repositories import RateRepositoriesContainer
 from app.containers.security_repositories import SecurityRepositoriesContainer
 from app.containers.value_repositories import ValueRepositoriesContainer
@@ -99,6 +100,7 @@ class RepositoriesContainer(
     RateRepositoriesContainer,
     AnalyticsRepositoriesContainer,
     MediaRepositoriesContainer,
+    OperationsRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 

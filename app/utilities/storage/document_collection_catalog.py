@@ -76,6 +76,7 @@ from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
+from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
     SIGN_IN_DOCUMENT_COLLECTIONS,
 )
@@ -270,6 +271,8 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     # Activation follow-up: nudges sent, done-for-you setup requests (1080).
     *ACTIVATION_COLLECTIONS,
+    # Alerts, backups and incidents of the platform itself (1093).
+    *OPERATIONS_COLLECTIONS,
 )
 
 

@@ -31,6 +31,9 @@ from app.containers.adapters.media_collections_container import (
 from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
+from app.containers.adapters.operations_collections_container import (
+    OperationsCollectionsContainer,
+)
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
 )
@@ -49,17 +52,20 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import LlmTurnDocument
 from app.schemas.domain.exchange_rates import ExchangeRateDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.jobs import (
     PeriodicJobRunDocument,
     QueuedJobDocument,
     WorkerHeartbeatDocument,
 )
 from app.schemas.domain.key_rotations import KeyRotationDocument
+from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.mfa import (
     MfaChallengeDocument,
     RecoveryCodeDocument,
     TotpFactorDocument,
 )
+from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.users import (
@@ -121,6 +127,11 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         TotpFactorDocument,
         RecoveryCodeDocument,
         MfaChallengeDocument,
+        # The platform's own operations: alerts, backups, incidents (an
+        # incident names the businesses it affected, it belongs to none).
+        PlatformAlertStateDocument,
+        MaintenanceRunDocument,
+        IncidentDocument,
     }
 )
 
@@ -139,6 +150,7 @@ COLLECTION_CONTAINERS = (
     RateCollectionsContainer,
     AnalyticsCollectionsContainer,
     MediaCollectionsContainer,
+    OperationsCollectionsContainer,
 )
 
 

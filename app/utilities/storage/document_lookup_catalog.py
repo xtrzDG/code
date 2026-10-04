@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081 and 1082), each ELEMENT_TEXT field a trigger over
+1074, 1081, 1082 and 1093), each ELEMENT_TEXT field a trigger over
 `workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
 and checks queries against this catalog.
 """
@@ -65,11 +65,13 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The businesses of a signed-in user.
     DocumentCollectionName("businesses"): (_element("members[].user_id"),),
     # Webhook routing: the channel of an incoming message; channels in
-    # error (a navigation badge, migration 1040).
+    # error (a navigation badge, migration 1040; the admin system page,
+    # 1093) and Meta tokens that run out soon (1093).
     DocumentCollectionName("channels"): (
         _filter("kind"),
         _text("external_id"),
         _text("status"),
+        _integer("credential_expires_at"),
     ),
     # Every customer message: the contact, its open conversation, the
     # hourly message count and the transcript.
@@ -186,6 +188,20 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("manager_telegram_links"): (_text("code_hash"),),
     # The freshest worker pulse (GET /readyz) and the purge of old ones.
     DocumentCollectionName("worker_heartbeats"): (_integer("beat_at"),),
+    # The admin system page and the platform alerts (1093): queued jobs
+    # counted by state and lane (and by name), the oldest due job of a
+    # lane; the incident log newest first; the last backup and drill.
+    DocumentCollectionName("queued_jobs"): (
+        _text("status"),
+        _text("lane"),
+        _filter("name"),
+        _integer("run_at"),
+    ),
+    DocumentCollectionName("incidents"): (_integer("created_at"),),
+    DocumentCollectionName("maintenance_runs"): (
+        _text("kind"),
+        _integer("finished_at"),
+    ),
     # The newest rate of a currency pair (1071).
     DocumentCollectionName("exchange_rates"): (_text("pair"), _integer("rate_day")),
     # The devices of one user in a business (Settings, "this device").
