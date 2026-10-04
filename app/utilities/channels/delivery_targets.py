@@ -8,6 +8,7 @@ from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     ValidationFailedError,
@@ -17,6 +18,8 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.strings import ChannelUserId
+from app.utilities.channels.channel_health import ACTIVE_CHANNEL_STATUSES
 
 
 def find_business_channel(
@@ -53,6 +56,29 @@ def decrypt_channel_secret(
             f"The {channel.kind.value} credential cannot be read; reconnect the "
             "channel."
         ) from error
+
+
+def build_delivery_target(
+    channel: ChannelDocument,
+    channel_user_id: ChannelUserId,
+    secret_cipher: SecretCipherAdapterContract,
+) -> ChannelDeliveryTarget:
+    """
+    Delivery target for a connected channel (also one in ERROR: a working
+    delivery is what clears the error); raises ExternalServiceError.
+    """
+
+    if channel.status not in ACTIVE_CHANNEL_STATUSES:
+        raise ExternalServiceError(
+            f"The {channel.kind.value} channel of this business is not connected."
+        )
+
+    return ChannelDeliveryTarget(
+        channel=channel.kind,
+        account_id=channel.external_id,
+        channel_user_id=channel_user_id,
+        credential=decrypt_channel_secret(channel, secret_cipher),
+    )
 
 
 def build_whatsapp_usage_event(

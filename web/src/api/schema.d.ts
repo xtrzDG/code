@@ -55,6 +55,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Incidents */
+        get: operations["list_incidents_v1_admin_incidents_get"];
+        put?: never;
+        /** Create Incident */
+        post: operations["create_incident_v1_admin_incidents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/jobs": {
         parameters: {
             query?: never;
@@ -151,6 +169,23 @@ export interface paths {
         put?: never;
         /** Start Key Rotation */
         post: operations["start_key_rotation_v1_admin_security_encryption_keys_rotate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/system": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Admin System */
+        get: operations["get_admin_system_v1_admin_system_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2973,6 +3008,74 @@ export interface components {
             status: components["schemas"]["PaymentStatus"];
         };
         /**
+         * AdminSystemView
+         * @description The platform at `checked_at`: workers, queue lanes and dead letters,
+         *     channels that need the team, database size by table (None without
+         *     Postgres), the last backup and restore drill, and the platform alerts.
+         */
+        AdminSystemView: {
+            /** Alerts */
+            alerts: components["schemas"]["AlertStateView"][];
+            /** Channels In Error */
+            channels_in_error: components["schemas"]["ChannelIssueView"][];
+            /** Channels In Error Count */
+            channels_in_error_count: number;
+            /** Checked At */
+            checked_at: number;
+            /** Database Bytes */
+            database_bytes?: number | null;
+            /** Dead Jobs */
+            dead_jobs: components["schemas"]["DeadJobTally"][];
+            /** Expiring Credentials */
+            expiring_credentials: components["schemas"]["ChannelIssueView"][];
+            /** Is Backup Overdue */
+            is_backup_overdue: boolean;
+            /** Lanes */
+            lanes: components["schemas"]["LaneView"][];
+            last_backup?: components["schemas"]["MaintenanceRunView"] | null;
+            last_restore_drill?: components["schemas"]["MaintenanceRunView"] | null;
+            /** Tables */
+            tables: components["schemas"]["TableSizeView"][];
+            /** Workers */
+            workers: components["schemas"]["WorkerPulseView"][];
+        };
+        /**
+         * AlertStateView
+         * @description A platform alert that fires now, or whose last episode ended within a day.
+         */
+        AlertStateView: {
+            code: components["schemas"]["PlatformAlertCode"];
+            /** Detail */
+            detail: string;
+            /** Figure */
+            figure: number;
+            /** Fired At */
+            fired_at: number;
+            /** Notification Count */
+            notification_count: number;
+            /** Notified At */
+            notified_at?: number | null;
+            /** Resolved At */
+            resolved_at?: number | null;
+            /** Runbook */
+            runbook: string;
+            severity: components["schemas"]["IncidentSeverity"];
+            status: components["schemas"]["PlatformAlertStatus"];
+            /** Summary */
+            summary: string;
+            /** Threshold */
+            threshold: number;
+            unit: components["schemas"]["AlertUnit"];
+        };
+        /**
+         * AlertUnit
+         * @description What a platform alert's figure and threshold count. RATIO is a rule's
+         *     multiple of a usual level (the handoff spike: three times the hourly
+         *     mean of the week); its checks compare counts.
+         * @enum {string}
+         */
+        AlertUnit: "count" | "seconds" | "percent" | "ratio";
+        /**
          * AnsweredQuestionResult
          * @description The resolved question and the new FAQ item. The assistant must be
          *     reassembled (and autotested) before customers see the answer.
@@ -4203,6 +4306,32 @@ export interface components {
             channel_user_id: string;
         };
         /**
+         * ChannelIssueView
+         * @description A connected channel that needs the team: in ERROR (the platform refused
+         *     its credential or deliveries fail), or a Meta token that runs out soon
+         *     (`credential_expires_at`) or already did.
+         */
+        ChannelIssueView: {
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name?: string | null;
+            /** Channel Id */
+            channel_id: string;
+            /** Credential Expires At */
+            credential_expires_at?: number | null;
+            /**
+             * Is Expired
+             * @default false
+             */
+            is_expired: boolean;
+            kind: components["schemas"]["ChannelKind"];
+            /** Last Error */
+            last_error?: string | null;
+            /** Last Error At */
+            last_error_at?: number | null;
+        };
+        /**
          * ChannelKind
          * @description Customer-facing channel the assistant answers in.
          * @enum {string}
@@ -5195,6 +5324,16 @@ export interface components {
          */
         DataRegion: "eu" | "us";
         /**
+         * DeadJobTally
+         * @description How many dead letters one job name has.
+         */
+        DeadJobTally: {
+            /** Count */
+            count: number;
+            /** Name */
+            name: string;
+        };
+        /**
          * DeliveryFailureReason
          * @description Why the last send attempt of an outbox message failed, in words a
          *     business owner can act on (the cabinet says it next to the message):
@@ -6083,6 +6222,69 @@ export interface components {
             unassigned: number;
         };
         /**
+         * IncidentKind
+         * @description What happened: an outage (customers get no answers), degraded service
+         *     (slow or partial answers), or a personal data breach, which the
+         *     affected owners are told about under section 12.1 of the DPA.
+         * @enum {string}
+         */
+        IncidentKind: "outage" | "degradation" | "data_breach";
+        /** IncidentPage */
+        IncidentPage: {
+            /** Items */
+            items: components["schemas"]["IncidentView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * IncidentSeverity
+         * @description How bad an incident is (docs/operations/incident.md): SEV1 most or all
+         *     customers get no answers, or personal data left the platform; SEV2 one
+         *     channel, provider or feature is down for many, or answers are slow;
+         *     SEV3 a few businesses are affected, or there is a workaround.
+         * @enum {string}
+         */
+        IncidentSeverity: "sev1" | "sev2" | "sev3";
+        /**
+         * IncidentStatus
+         * @description Whether an incident is still being handled or over.
+         * @enum {string}
+         */
+        IncidentStatus: "open" | "resolved";
+        /**
+         * IncidentView
+         * @description One incident of the log, as the platform admin sees it.
+         */
+        IncidentView: {
+            /** Affected Business Ids */
+            affected_business_ids: string[];
+            /** Approximate Record Count */
+            approximate_record_count?: number | null;
+            /** Approximate Subject Count */
+            approximate_subject_count?: number | null;
+            /** Created At */
+            created_at: number;
+            /** Detected At */
+            detected_at: number;
+            /** Id */
+            id: string;
+            kind: components["schemas"]["IncidentKind"];
+            /** Notice Languages */
+            notice_languages: string[];
+            /** Notified At */
+            notified_at?: number | null;
+            /** Notified Owner Count */
+            notified_owner_count: number;
+            /** Reported By */
+            reported_by: string;
+            severity: components["schemas"]["IncidentSeverity"];
+            /** Started At */
+            started_at: number;
+            status: components["schemas"]["IncidentStatus"];
+            /** Title */
+            title: string;
+        };
+        /**
          * InvoiceKind
          * @description What an invoice charges for.
          * @enum {string}
@@ -6296,6 +6498,25 @@ export interface components {
         KnowledgeSearchResult: {
             /** Items */
             items?: components["schemas"]["KnowledgeItemView"][];
+        };
+        /**
+         * LaneView
+         * @description One lane of the job queue: jobs due and waiting for a worker, waiting
+         *     for a later time (retries with backoff, scheduled work), running, and
+         *     dead; how long the oldest due job has waited (None: nothing waits).
+         */
+        LaneView: {
+            /** Dead */
+            dead: number;
+            lane: components["schemas"]["JobLane"];
+            /** Oldest Wait Seconds */
+            oldest_wait_seconds?: number | null;
+            /** Running */
+            running: number;
+            /** Scheduled */
+            scheduled: number;
+            /** Waiting */
+            waiting: number;
         };
         /**
          * LanguageCount
@@ -6606,6 +6827,38 @@ export interface components {
             /** Recovery Codes */
             recovery_codes?: string[];
             user: components["schemas"]["UserView"];
+        };
+        /**
+         * MaintenanceRunKind
+         * @description What a recorded maintenance run did: an off-site backup or a restore drill.
+         * @enum {string}
+         */
+        MaintenanceRunKind: "backup" | "restore_drill";
+        /**
+         * MaintenanceRunOutcome
+         * @description How a backup or a restore drill ended.
+         * @enum {string}
+         */
+        MaintenanceRunOutcome: "succeeded" | "failed";
+        /**
+         * MaintenanceRunView
+         * @description The last backup or restore drill and how it ended.
+         */
+        MaintenanceRunView: {
+            /** Archive Size */
+            archive_size?: number | null;
+            /** Error */
+            error?: string | null;
+            /** Finished At */
+            finished_at: number;
+            kind: components["schemas"]["MaintenanceRunKind"];
+            outcome: components["schemas"]["MaintenanceRunOutcome"];
+            /** Release */
+            release?: string | null;
+            /** Row Count */
+            row_count?: number | null;
+            /** Started At */
+            started_at: number;
         };
         /**
          * ManagerContactChannel
@@ -7471,6 +7724,26 @@ export interface components {
             /** Quotes */
             quotes: components["schemas"]["PlanQuote"][];
         };
+        /**
+         * PlatformAlertCode
+         * @description What the platform alerts job watches (ops/alerts/*.yaml has each rule's
+         *     threshold, window and runbook).
+         *
+         *     DEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer
+         *     message waits for a worker. OUTBOUND_FAILURES: replies and staff
+         *     notifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:
+         *     far more conversations go to people than usual. TOOL_ERRORS: assistant
+         *     tools fail. STALE_WORKER: a worker of the current release stopped
+         *     beating. OTP_CAP_TRIPS: a platform cap refused login codes.
+         * @enum {string}
+         */
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips";
+        /**
+         * PlatformAlertStatus
+         * @description Whether a platform alert fires right now or its last episode is over.
+         * @enum {string}
+         */
+        PlatformAlertStatus: "firing" | "resolved";
         /**
          * PlatformBotCommandResult
          * @description How the platform Telegram bot handled one staff message. The webhook
@@ -8551,6 +8824,18 @@ export interface components {
             trial_ends_at?: number | null;
         };
         /**
+         * TableSizeView
+         * @description One table of the database: its disk space with indexes, its rows (estimated).
+         */
+        TableSizeView: {
+            /** Row Estimate */
+            row_estimate: number;
+            /** Table */
+            table: string;
+            /** Total Bytes */
+            total_bytes: number;
+        };
+        /**
          * TelegramLinkView
          * @description One-time link code. The staff member opens `deep_link` (or sends
          *     "/start <code>" to `bot_username`) before `expires_at`.
@@ -9369,6 +9654,30 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * WorkerPulseView
+         * @description One worker process that beat within the last day: its build, since when
+         *     it runs, how old its last pulse is (stale after five minutes) and the
+         *     periodic jobs whose last run in it failed.
+         */
+        WorkerPulseView: {
+            /** Age Seconds */
+            age_seconds: number;
+            /** Beat At */
+            beat_at: number;
+            /** Failing Jobs */
+            failing_jobs: string[];
+            /** Host Name */
+            host_name: string;
+            /** Is Stale */
+            is_stale: boolean;
+            /** Release */
+            release?: string | null;
+            /** Started At */
+            started_at: number;
+            /** Worker Id */
+            worker_id: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -9579,6 +9888,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClientCabinetAccess"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_incidents_v1_admin_incidents_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_incident_v1_admin_incidents_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Affected Business Ids */
+                    affected_business_ids: string[];
+                    /** Approximate Record Count */
+                    approximate_record_count?: number | null;
+                    /** Approximate Subject Count */
+                    approximate_subject_count?: number | null;
+                    /** Detected At */
+                    detected_at?: number | null;
+                    /**
+                     * IncidentKind
+                     * @description What happened: an outage (customers get no answers), degraded service
+                     *     (slow or partial answers), or a personal data breach, which the
+                     *     affected owners are told about under section 12.1 of the DPA.
+                     * @enum {string}
+                     */
+                    kind: "outage" | "degradation" | "data_breach";
+                    /** Notice Texts */
+                    notice_texts?: {
+                        /** Language */
+                        language: string;
+                        /** Likely Consequences */
+                        likely_consequences: string;
+                        /** Measures */
+                        measures: string;
+                        /** Nature */
+                        nature: string;
+                        /** Record Categories */
+                        record_categories: string;
+                        /** Subject Categories */
+                        subject_categories: string;
+                    }[];
+                    /**
+                     * IncidentSeverity
+                     * @description How bad an incident is (docs/operations/incident.md): SEV1 most or all
+                     *     customers get no answers, or personal data left the platform; SEV2 one
+                     *     channel, provider or feature is down for many, or answers are slow;
+                     *     SEV3 a few businesses are affected, or there is a workaround.
+                     * @enum {string}
+                     */
+                    severity: "sev1" | "sev2" | "sev3";
+                    /** Started At */
+                    started_at: number;
+                    /** Title */
+                    title: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncidentView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -10104,6 +10635,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KeyRotationStarted"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_admin_system_v1_admin_system_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSystemView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

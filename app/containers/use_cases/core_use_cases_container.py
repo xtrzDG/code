@@ -18,6 +18,7 @@ from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
+from app.containers.use_cases.reply_speed_use_cases import ReplySpeedUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -26,9 +27,9 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     """
     The edges every use case context draws on and the contexts the others
     build on: accounts (and their two-factor sign-in), the catalog,
-    compliance, knowledge, menu import,
-    scheduling, bookings, the team inbox and follow-ups. `UseCasesContainer`
-    extends it with the contexts that depend on these and reads them as
+    compliance, knowledge, menu import, scheduling, bookings, the team
+    inbox, follow-ups and reply speed. `UseCasesContainer` extends it
+    with the contexts that depend on these and reads them as
     `CoreUseCasesContainer.<name>`; one instance copies all of them
     together, so the overridden edges reach every context.
     """
@@ -138,4 +139,13 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         transformers=transformers,
         utilities=utilities,
         inbox_use_cases=inbox,
+    )
+    # Customers' waits: grouped bursts, the turn deadline, measured replies.
+    reply_speed: ReplySpeedUseCasesContainer = Container(  # type: ignore[assignment]
+        ReplySpeedUseCasesContainer,
+        config=config,
+        facilitators=facilitators,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
     )

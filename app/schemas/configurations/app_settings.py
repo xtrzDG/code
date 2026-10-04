@@ -3,8 +3,8 @@ from pydantic import Field
 
 from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.media_settings import MediaSettings
-from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
+from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane

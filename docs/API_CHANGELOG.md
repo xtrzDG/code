@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — wave 9 together: reply speed, any language, outbox everywhere, platform operations
+
+Spec: `26522d8605b0100d`
+
+No change of its own: the API description with the four entries below
+merged together (reply speed and SLOW_REPLIES, answers in any language
+with the language autotests, every customer message through the outbox
+with its delivery on staff replies, platform health and incidents for the
+admin). Each of those entries names the description of its own change
+alone.
+
 ## 2026-10-04 — reply speed: measured waits, admin p50/p95, SLOW_REPLIES
 
 Spec: `1554f2578d368a1e`

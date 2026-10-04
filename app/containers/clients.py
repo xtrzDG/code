@@ -13,8 +13,8 @@ from app.clients.http.safe_http_fetcher import SafeHttpFetcher
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
-from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient
+from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
