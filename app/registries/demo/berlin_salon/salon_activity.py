@@ -9,7 +9,7 @@ from app.registries.demo.berlin_salon.salon_chats import (
     record_salon_booking_chats,
     salon_guest,
 )
-from app.registries.demo.berlin_salon.salon_foundation import LENA, MEHMET
+from app.registries.demo.berlin_salon.salon_services import LENA, MEHMET
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_autotests import finished_run
 from app.registries.demo.demo_billing import paid_subscription
@@ -95,31 +95,34 @@ def build_salon_activity(
     )
 
     # Regulars who phoned; the owner entered the bookings.
-    for name, resource, visit, minutes, status in (
+    for name, resource, visit, service, status in (
         (
             "Hanna Schulz",
             LENA,
             clock.last_weekday(2, "10:00"),
-            90,
+            story.item("Ansatzfarbe"),
             BookingStatus.COMPLETED,
         ),
         (
             "Felix Wagner",
             MEHMET,
             clock.last_weekday(3, "18:00"),
-            30,
+            story.item("Herrenhaarschnitt"),
             BookingStatus.NO_SHOW,
         ),
         (
             "Clara Neumann",
             LENA,
             clock.next_weekday(5, "11:00"),
-            60,
+            story.item("Damenhaarschnitt"),
             BookingStatus.CONFIRMED,
         ),
     ):
         regular = talk.contact(name, "de", since=clock.ago(days=25))
-        desk.booking(regular, resource, visit, 1, PHONE, status, minutes)
+        minutes = int(service.duration_minutes or 60)
+        desk.booking(
+            regular, resource, visit, 1, PHONE, status, minutes, service=service
+        )
 
     subscription, invoice = paid_subscription(
         plan_registry,

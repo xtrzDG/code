@@ -1,7 +1,7 @@
 """Bookings the Berlin demo salon's guests made in chats (German and English)."""
 
 from app.registries.demo import demo_tool_calls as calls
-from app.registries.demo.berlin_salon.salon_foundation import LENA, MEHMET, SOFIA
+from app.registries.demo.berlin_salon.salon_services import LENA, MEHMET, SOFIA
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_lines import assistant, customer
 from app.schemas.constants.bookings import BookingStatus
@@ -69,6 +69,7 @@ def record_salon_booking_chats(story: DemoActivityBuilder) -> None:
         180,
         chat,
         booking_id=booking_id,
+        service=story.item("Balayage"),
     )
 
     # Tom books a men's haircut with Mehmet for Wednesday.
@@ -109,7 +110,15 @@ def record_salon_booking_chats(story: DemoActivityBuilder) -> None:
         ],
     )
     desk.booking(
-        tom, MEHMET, visit, 1, WEB, minutes=30, conversation=chat, booking_id=booking_id
+        tom,
+        MEHMET,
+        visit,
+        1,
+        WEB,
+        minutes=30,
+        conversation=chat,
+        booking_id=booking_id,
+        service=story.item("Herrenhaarschnitt"),
     )
 
     # Emma asks on Instagram about a lash lift and books Saturday.
@@ -158,6 +167,7 @@ def record_salon_booking_chats(story: DemoActivityBuilder) -> None:
         60,
         chat,
         booking_id=booking_id,
+        service=story.item("Wimpernlifting"),
     )
 
     # Aylin is ill and cancels her colour appointment.
@@ -194,6 +204,7 @@ def record_salon_booking_chats(story: DemoActivityBuilder) -> None:
         90,
         made_at=clock.ago(days=8),
         booking_id=booking_id,
+        service=story.item("Ansatzfarbe"),
     )
 
     # Sophie books a manicure (open conversation).
@@ -240,6 +251,7 @@ def record_salon_booking_chats(story: DemoActivityBuilder) -> None:
         minutes=60,
         conversation=chat,
         booking_id=booking_id,
+        service=story.item("Maniküre"),
     )
 
 
