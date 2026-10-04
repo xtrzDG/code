@@ -125,11 +125,11 @@ export function HoursEditor({
                   }
                   label={<span className="font-medium capitalize">{dayName}</span>}
                 />
-                {!isOpen ? <span className="text-sm text-ink-subtle sm:hidden">{t("onboarding.contacts.closed")}</span> : null}
+                {!isOpen ? <span className="text-sm text-ink-subtle sm:hidden">{t("onboarding.week.closed")}</span> : null}
               </div>
               <div className="min-w-0 flex-1 space-y-2">
                 {!isOpen ? (
-                  <p className="hidden pt-2 text-sm text-ink-subtle sm:block">{t("onboarding.contacts.closed")}</p>
+                  <p className="hidden pt-2 text-sm text-ink-subtle sm:block">{t("onboarding.week.closed")}</p>
                 ) : (
                   day.rows.map((row, index) => {
                     const opens = parseTimeOfDay(row.opens);
@@ -139,7 +139,7 @@ export function HoursEditor({
                       <div key={row.key} className="flex flex-wrap items-center gap-2">
                         <Input
                           type="time"
-                          aria-label={`${dayName}: ${t("onboarding.contacts.opens")}`}
+                          aria-label={`${dayName}: ${t("onboarding.week.opens")}`}
                           aria-invalid={error ? true : undefined}
                           value={row.opens}
                           onChange={(event) =>
@@ -155,7 +155,7 @@ export function HoursEditor({
                         </span>
                         <Input
                           type="time"
-                          aria-label={`${dayName}: ${t("onboarding.contacts.closes")}`}
+                          aria-label={`${dayName}: ${t("onboarding.week.closes")}`}
                           aria-invalid={error ? true : undefined}
                           value={row.closes}
                           onChange={(event) =>
@@ -167,10 +167,10 @@ export function HoursEditor({
                           className="w-32"
                         />
                         {interval && isRoundTheClock(interval) ? (
-                          <span className="text-sm text-ink-muted">{t("onboarding.contacts.roundTheClock")}</span>
+                          <span className="text-sm text-ink-muted">{t("onboarding.week.roundTheClock")}</span>
                         ) : interval && isOvernight(interval) ? (
                           <span className="text-sm text-ink-muted">
-                            {t("onboarding.contacts.overnight", { time: row.closes })}
+                            {t("onboarding.week.overnight", { time: row.closes })}
                           </span>
                         ) : null}
                         <div className="ml-auto flex gap-1">
@@ -178,8 +178,8 @@ export function HoursEditor({
                             <Button
                               variant="ghost"
                               size="sm"
-                              aria-label={`${dayName}: ${t("onboarding.contacts.addInterval")}`}
-                              title={t("onboarding.contacts.addInterval")}
+                              aria-label={`${dayName}: ${t("onboarding.week.addInterval")}`}
+                              title={t("onboarding.week.addInterval")}
                               onClick={() =>
                                 updateDay(day.weekday, [...day.rows, { key: nextRowKey(), opens: "", closes: "" }])
                               }
@@ -190,8 +190,8 @@ export function HoursEditor({
                           <Button
                             variant="ghost"
                             size="sm"
-                            aria-label={`${dayName}: ${t("onboarding.contacts.removeInterval")}`}
-                            title={t("onboarding.contacts.removeInterval")}
+                            aria-label={`${dayName}: ${t("onboarding.week.removeInterval")}`}
+                            title={t("onboarding.week.removeInterval")}
                             onClick={() => updateDay(day.weekday, day.rows.filter((item) => item.key !== row.key))}
                           >
                             <IconTrash className="size-4" aria-hidden />
@@ -208,7 +208,7 @@ export function HoursEditor({
         })}
       </ul>
       <Button variant="ghost" size="sm" onClick={copyFirstDayToAll}>
-        {t("onboarding.contacts.copyToAll")}
+        {t("onboarding.week.copyToAll")}
       </Button>
     </div>
   );

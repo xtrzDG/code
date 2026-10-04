@@ -3,7 +3,8 @@
 /**
  * Step 1 for a business that exists: its name (saved on Continue), its
  * kind (fixed) and the kind's required questions about the business, each
- * answer saved by itself a moment after it is given.
+ * answer saved by itself a moment after it is given. In the edit mode it
+ * is "Business" of Assistant → Business profile (edit/BusinessEdit).
  */
 
 import { useMemo, useState } from "react";
@@ -12,13 +13,19 @@ import { useNiches } from "@/api/catalog";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { answersToSave, BUSINESS_QUESTION_STEPS, requiredQuestions, startingAnswers, wizardQuestions } from "@/lib/tunnel/questions";
 
+import { BusinessEdit } from "../edit/BusinessEdit";
 import { BusinessStep, type BusinessForm } from "../steps/BusinessStep";
+import type { StepMode } from "../stepMode";
 import { useAutosave } from "../useAutosave";
 import type { StepContext } from "./stepContext";
 import { useBusinessSave } from "./useBusinessSave";
 import { useProfilePatch } from "./useProfilePatch";
 
-export function BusinessScreen({ ctx }: { ctx: StepContext }) {
+export function BusinessScreen({ ctx, mode = "tunnel" }: { ctx: StepContext; mode?: StepMode }) {
+  return mode === "edit" ? <BusinessEdit ctx={ctx} /> : <BusinessTunnel ctx={ctx} />;
+}
+
+function BusinessTunnel({ ctx }: { ctx: StepContext }) {
   const { business } = useBusiness();
   const niches = useNiches();
   const questions = useMemo(() => requiredQuestions(wizardQuestions(ctx.wizard), BUSINESS_QUESTION_STEPS), [ctx.wizard]);

@@ -15,7 +15,7 @@ import { useMemo, useState } from "react";
 import { api } from "@/api/client";
 import { unwrap } from "@/api/result";
 import type { Schema } from "@/api/types";
-import { hoursToRows, rowsToHours, type DayRows } from "@/app/b/[businessId]/assistant/profile/_components/HoursEditor";
+import { hoursToRows, rowsToHours, type DayRows } from "./HoursEditor";
 import { useToast } from "@/components/ui";
 import { describeError } from "@/api/errors";
 import { useI18n } from "@/i18n/client";

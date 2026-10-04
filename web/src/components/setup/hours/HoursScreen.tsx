@@ -7,7 +7,7 @@
  * bookings (a hotel's check-in time).
  */
 
-import { HoursEditor } from "@/app/b/[businessId]/assistant/profile/_components/HoursEditor";
+import { HoursEditor } from "./HoursEditor";
 import { useI18n } from "@/i18n/client";
 
 import { QuestionField } from "../fields/QuestionField";

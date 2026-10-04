@@ -4,10 +4,12 @@
  * Autosave's voice in the top bar: every screen hands its saves to
  * `track()` and the bar says "Saving…", "Saved" or "Not saved yet". Saves
  * running at once are counted, so the bar says "Saved" only when all of
- * them are done.
+ * them are done. `onSaved` hears of every save that went through (the
+ * profile editor marks what the assistant knows as changed, so the
+ * "not with your customers yet" banner counts it).
  */
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { SaveState } from "./TunnelHeader";
 
@@ -19,10 +21,14 @@ interface SaveTracker {
 
 const SaveTrackerContext = createContext<SaveTracker | null>(null);
 
-export function SaveTrackerProvider({ children }: { children: (state: SaveState) => ReactNode }) {
+export function SaveTrackerProvider({ children, onSaved }: { children: (state: SaveState) => ReactNode; onSaved?: () => void }) {
   const [state, setState] = useState<SaveState>("idle");
   const running = useRef(0);
   const failed = useRef(false);
+  const savedListener = useRef(onSaved);
+  useEffect(() => {
+    savedListener.current = onSaved;
+  });
 
   const track = useCallback(async (save: Promise<boolean>) => {
     running.current += 1;
@@ -30,6 +36,9 @@ export function SaveTrackerProvider({ children }: { children: (state: SaveState)
     let ok = false;
     try {
       ok = await save;
+      if (ok) {
+        savedListener.current?.();
+      }
     } finally {
       running.current -= 1;
       failed.current = failed.current || !ok;

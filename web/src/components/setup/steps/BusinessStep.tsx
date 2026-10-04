@@ -4,10 +4,13 @@
  * Step 1, "What's your business called?": the name, the kind of business
  * (cards; fixed once the business exists) and the one or two things every
  * customer of that kind asks (the niche's required questions about the
- * business). Checked on Continue; the screen around saves.
+ * business). Checked on Continue; the screen around saves. In the edit
+ * mode (Assistant → Business profile) there is no Continue: the screen
+ * passes the problems of what is typed (`problems`), every question of the
+ * section is asked, and `extra` holds the section's other fields.
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { NicheSummaryView, WizardQuestionView } from "@/api/types";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -21,6 +24,7 @@ import type { AnswerValues } from "@/lib/wizard/answers";
 import { NicheCards } from "../fields/NicheCards";
 import { QuestionField } from "../fields/QuestionField";
 import { StepScreen, type StepActions } from "../StepScreen";
+import type { StepMode } from "../stepMode";
 
 export const MAX_BUSINESS_NAME = 120;
 
@@ -28,6 +32,12 @@ export interface BusinessForm {
   name: string;
   nicheKey: string;
   answers: AnswerValues;
+}
+
+export interface BusinessProblems {
+  name?: MessageKey;
+  niche?: MessageKey;
+  answers: Record<string, MessageKey>;
 }
 
 export interface BusinessStepProps {
@@ -41,11 +51,18 @@ export interface BusinessStepProps {
   onSubmit: () => void;
   onBack?: () => void;
   isBusy?: boolean;
+  mode?: StepMode;
+  /** The edit mode's problems, shown as the owner types (the tunnel shows its own on Continue). */
+  problems?: BusinessProblems;
+  /** More of the section under the questions (the edit mode's links). */
+  extra?: ReactNode;
 }
 
-export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, onSubmit, onBack, isBusy }: BusinessStepProps) {
+export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, onSubmit, onBack, isBusy, mode = "tunnel", problems, extra }: BusinessStepProps) {
   const { t } = useI18n();
-  const [errors, setErrors] = useState<{ name?: MessageKey; niche?: MessageKey; answers: Record<string, MessageKey> }>({ answers: {} });
+  const [checked, setErrors] = useState<BusinessProblems>({ answers: {} });
+  const errors = problems ?? checked;
+  const isEdit = mode === "edit";
   const niche = niches.data?.find((item) => item.key === form.nicheKey);
   const shownNiches = isNicheFixed ? (niche ? [niche] : []) : (niches.data ?? []);
 
@@ -64,10 +81,11 @@ export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, 
   return (
     <StepScreen
       step="business"
-      title={t("tunnelBusiness.business.title")}
-      text={t("tunnelBusiness.business.text")}
-      actions={{ onContinue: submit, onBack, isBusy } satisfies StepActions}
-      aside={<LanguageSwitcher className="justify-center sm:hidden" />}
+      mode={mode}
+      title={isEdit ? t("profileEdit.sections.business.title") : t("tunnelBusiness.business.title")}
+      text={isEdit ? t("profileEdit.sections.business.text") : t("tunnelBusiness.business.text")}
+      actions={(isEdit ? {} : { onContinue: submit, onBack, isBusy }) satisfies StepActions}
+      aside={isEdit ? undefined : <LanguageSwitcher className="justify-center sm:hidden" />}
     >
       <div className="space-y-10">
         <Field label={t("tunnelBusiness.business.name")} required error={errors.name && t(errors.name)}>
@@ -118,7 +136,9 @@ export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, 
           </LoadingRegion>
         ) : questions && questions.length > 0 ? (
           <section className="space-y-5 rounded-2xl border border-line bg-surface/80 p-5 backdrop-blur-sm sm:p-6">
-            <h2 className="text-base font-semibold text-ink">{t("tunnelBusiness.business.detailsTitle")}</h2>
+            <h2 className="text-base font-semibold text-ink">
+              {isEdit ? t("profileEdit.business.questionsTitle") : t("tunnelBusiness.business.detailsTitle")}
+            </h2>
             {questions.map((item) => (
               <QuestionField
                 key={item.question.key}
@@ -136,6 +156,7 @@ export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, 
             ))}
           </section>
         ) : null}
+        {extra}
       </div>
     </StepScreen>
   );
