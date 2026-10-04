@@ -43,8 +43,9 @@ def build_evidence_index(
     is_reading_hour_hints: bool = False,
 ) -> EvidenceIndex:
     """
-    Readings of every mention in the evidence. Parts of dates and times
-    count as numbers too, so "the 5th" is supported by "2026-10-05".
+    Readings of every mention in the evidence, numbers written in words
+    included. Parts of dates and times count as numbers too, so "the 5th"
+    is supported by "2026-10-05".
     """
 
     amounts: set[Decimal] = set()
@@ -55,7 +56,9 @@ def build_evidence_index(
     hour_hints: set[int] = set()
     for evidence_text in evidence_texts:
         normalized_text: str = normalize_digits(evidence_text)
-        for mention in extract_number_mentions(evidence_text, lexicon):
+        for mention in extract_number_mentions(
+            evidence_text, lexicon, reads_plain_number_words=True
+        ):
             amounts.update(mention.amounts)
             times.update(mention.times)
             dates.update(mention.dates)
