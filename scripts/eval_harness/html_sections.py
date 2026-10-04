@@ -192,7 +192,7 @@ def render_sample(sample: SampleResult) -> str:
             if not result.is_passed
         ]
     )
-    if sample.error:
+    if sample.error and not sample.stale_reasons:
         failed.append(f"<li><b>error</b>: {escape(sample.error)}</li>")
 
     stale: str = "".join(
