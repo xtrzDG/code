@@ -13,7 +13,7 @@ import { useState, type FormEvent } from "react";
 import { describeError } from "@/api/errors";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCheckCircle } from "@/components/icons";
-import { Alert, Button, ErrorState, LoadingRegion, Modal, SkeletonText, useToast } from "@/components/ui";
+import { Alert, Button, ErrorState, LoadingRegion, Modal, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { checkFormFromCorrection } from "@/lib/teachingChecks";
 import {
@@ -133,7 +133,6 @@ function FixForm({
   onSaved: (result: CorrectionResult) => void;
 }) {
   const { t } = useI18n();
-  const toast = useToast();
   const { business } = useBusiness();
   const correct = useCorrectAnswer(conversationId);
   const [form, setForm] = useState<CorrectionForm>(() => correctionFormOf(draft));
@@ -154,7 +153,7 @@ function FixForm({
       setError(saved.error);
       return;
     }
-    toast.success(t(saved.data.is_new ? "teaching.fix.saved" : "teaching.fix.updated"));
+    // The dialog itself turns into the saved state: no toast besides it.
     onSaved(saved.data);
   };
 
