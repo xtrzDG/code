@@ -8,7 +8,7 @@
 export const teachingEn = {
   fix: {
     action: "Fix answer",
-    actionLabel: "Fix this answer of the assistant",
+    actionLabel: "Fix answer of the assistant",
     title: "Fix the answer",
     description:
       "Write how the assistant should have answered. It becomes part of what your assistant knows and reaches customers after “Apply changes”.",

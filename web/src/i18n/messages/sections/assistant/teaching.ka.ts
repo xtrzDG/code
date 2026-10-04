@@ -6,7 +6,7 @@ import type { teachingEn } from "./teaching.en";
 export const teachingKa: Translation<typeof teachingEn> = {
   fix: {
     action: "პასუხის გასწორება",
-    actionLabel: "ასისტენტის ამ პასუხის გასწორება",
+    actionLabel: "ასისტენტის პასუხის გასწორება",
     title: "პასუხის გასწორება",
     description:
       "დაწერეთ, როგორ უნდა ეპასუხა ასისტენტს. ეს მისი ცოდნის ნაწილი გახდება და კლიენტებამდე „ცვლილებების გამოყენების“ შემდეგ მივა.",
