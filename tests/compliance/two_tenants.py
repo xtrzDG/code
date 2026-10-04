@@ -1,5 +1,6 @@
 """Two businesses sharing a visitor, with records in both, for data rights tests."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from app.schemas.domain.businesses import BusinessDocument
@@ -25,8 +26,8 @@ class TwoTenants:
     foreign_visitor: SeededVisitor
 
 
-def seed_two_tenants() -> TwoTenants:
-    testbed = build_accounts_testbed()
+def seed_two_tenants(environment: Mapping[str, str] | None = None) -> TwoTenants:
+    testbed = build_accounts_testbed(environment)
     owner = testbed.sign_in_with_phone(GEORGIA_MOBILE)
     staff = testbed.sign_in_with_phone(GERMANY_MOBILE)
     other_owner = testbed.sign_in_with_phone(ISRAEL_MOBILE)
