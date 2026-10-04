@@ -143,7 +143,10 @@
       state.isRequestingPerson = true;
       state.personError = "";
       renderActions();
-      requestJson(handoffUrl, { session_key: state.sessionKey, language: state.language }).then(
+      requestJson(
+        handoffUrl,
+        withVisitSource({ session_key: state.sessionKey, language: state.language })
+      ).then(
         guarded("person", function (result) {
           state.isRequestingPerson = false;
           if (result.ok && result.body) {

@@ -97,13 +97,26 @@ class TestLinkBuilders:
             "https://ig.me/m/cafe.batumi?ref=qr"
         )
 
-    def test_whatsapp_telegram_and_phone_links_stay_untagged(self) -> None:
+    def test_whatsapp_and_telegram_links_carry_the_tag_their_own_way(self) -> None:
         assert build_whatsapp_link(WhatsAppNumberDigits("995555123456")) == (
             "https://wa.me/995555123456"
+        )
+        # The customer sends the greeting with the code; the adapter reads it.
+        assert build_whatsapp_link(
+            WhatsAppNumberDigits("995555123456"), QR, "Здравствуйте!"
+        ) == (
+            "https://wa.me/995555123456?text="
+            "%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5"
+            "%21%20%28%23qr%29"
         )
         assert build_telegram_link(TelegramBotUsername("cafe_batumi_bot")) == (
             "https://t.me/cafe_batumi_bot"
         )
+        assert build_telegram_link(TelegramBotUsername("cafe_batumi_bot"), QR) == (
+            "https://t.me/cafe_batumi_bot?start=src_qr"
+        )
+
+    def test_phone_links_stay_untagged(self) -> None:
         assert build_phone_link(E164PhoneNumber("+995555123456")) == (
             "tel:+995555123456"
         )
@@ -135,7 +148,9 @@ class TestShareLinks:
             CabinetBaseUrl("https://app.example.com"), "cafe-batumi", QR
         )
 
-        links = build_share_links(channels, profile("+995322123456"), hosted, QR)
+        links = build_share_links(
+            channels, profile("+995322123456"), hosted, QR, LanguageTag("ka")
+        )
 
         assert [(link.kind, link.url, link.label) for link in links] == [
             (
@@ -145,7 +160,7 @@ class TestShareLinks:
             ),
             (
                 ShareLinkKind.TELEGRAM,
-                "https://t.me/cafe_batumi_bot",
+                "https://t.me/cafe_batumi_bot?start=src_qr",
                 "@cafe_batumi_bot",
             ),
             (
@@ -153,7 +168,14 @@ class TestShareLinks:
                 "https://ig.me/m/cafe.batumi?ref=qr",
                 "@cafe.batumi",
             ),
-            (ShareLinkKind.WHATSAPP, "https://wa.me/995555123456", "+995555123456"),
+            (
+                ShareLinkKind.WHATSAPP,
+                # "გამარჯობა! (#qr)", the greeting language's greeting.
+                "https://wa.me/995555123456?text="
+                "%E1%83%92%E1%83%90%E1%83%9B%E1%83%90%E1%83%A0%E1%83%AF%E1%83%9D"
+                "%E1%83%91%E1%83%90%21%20%28%23qr%29",
+                "+995555123456",
+            ),
             # The public number forwards unanswered calls to the assistant.
             (ShareLinkKind.PHONE, "tel:+995322123456", "+995322123456"),
         ]

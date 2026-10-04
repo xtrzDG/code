@@ -4,7 +4,10 @@ from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.localization import TextDirection
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.channels.constrained_strings import WidgetSessionKey
+from app.schemas.typings.channels.constrained_strings import (
+    WidgetSessionKey,
+    WidgetSourceInput,
+)
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import IsConversationHandedOff
@@ -18,11 +21,13 @@ class WidgetHandoffRequest(ImmutableDTO):
     """
     HTTP body of "Talk to a person": the visitor's key and the widget's
     interface language (the language staff's notice to the visitor is in
-    when the visitor has not written yet).
+    when the visitor has not written yet), and where the visitor came from
+    (a conversation the request opens keeps it).
     """
 
     session_key: WidgetSessionKey
     language: LanguageTag | None = None
+    source: WidgetSourceInput | None = None
 
 
 class WidgetHandoffCommand(ImmutableDTO):

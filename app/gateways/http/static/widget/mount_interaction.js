@@ -120,10 +120,13 @@
       updateSendButton();
       renderLog();
       showTyping(true);
-      requestJson(messagesUrl, {
-        session_key: state.sessionKey,
-        text: item.text
-      }).then(
+      requestJson(
+        messagesUrl,
+        withVisitSource({
+          session_key: state.sessionKey,
+          text: item.text
+        })
+      ).then(
         guarded("send", function (result) {
           state.isSending = false;
           state.pendingItem = null;

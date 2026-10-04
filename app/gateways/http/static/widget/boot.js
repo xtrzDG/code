@@ -27,6 +27,8 @@
     apiBase + HANDOFF_PATH.replace("{business_id}", encodeURIComponent(businessId));
   var isPageMode = script.getAttribute("data-mode") === PAGE_MODE;
   var storagePrefix = STORAGE_PREFIX + businessId + ":";
+  // Where the visitor came from (the business's reports group by it).
+  var visitSource = loadVisitSource();
 
   start();
 
