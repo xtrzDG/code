@@ -44,7 +44,7 @@ export function useKnowledgeToggle() {
     {
       optimistic: (item, isActive) => saveIntoLists(business.id, { ...item, is_active: isActive }),
       // The profile's gaps and the assistant's go-live checks count the items.
-      stale: [queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id)],
+      stale: [queryKeys.profile.all(business.id), queryKeys.assistant.all(business.id), queryKeys.knowledge.offers(business.id)],
       invalidate: [queryKeys.assistant.pendingAll(business.id)],
     },
   );

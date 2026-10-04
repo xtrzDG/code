@@ -3,7 +3,7 @@
 import { IconClock, IconTrash } from "@/components/icons";
 import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { formatLocalDate, intervalsLabel, type ScheduleExceptionView } from "@/lib/resources";
+import { formatLocalDate, intervalsLabel, type ScheduleExceptionView } from "@/lib/specialDays";
 
 /** One holiday or special-hours day: the date, closed or its hours, what it applies to, and delete. */
 export function ExceptionRow({

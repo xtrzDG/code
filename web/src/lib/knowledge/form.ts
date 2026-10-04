@@ -19,6 +19,14 @@ import {
   parseDecimalInput,
 } from "../format";
 import { kindHasPrice } from "./kinds";
+import {
+  offerCreateFields,
+  offerFormFromItem,
+  offerPatchFields,
+  validateOfferFields,
+  type OfferFieldErrors,
+} from "./offerFields";
+import type { SeasonRow } from "./seasons";
 
 export type KnowledgeItemCreateBody = RequestBody<"/v1/businesses/{business_id}/knowledge", "post">;
 export type KnowledgeItemPatchBody = RequestBody<"/v1/businesses/{business_id}/knowledge/{item_id}", "patch">;
@@ -29,27 +37,46 @@ export const MAX_BODY_LENGTH = 8000;
 export const MIN_DURATION_MINUTES = 5;
 export const MAX_DURATION_MINUTES = 720;
 
-/** The editor's values; price and duration are kept as typed. */
+/**
+ * The editor's values; price, duration and break are kept as typed. A
+ * bookable item also has its performers (resource ids) and, for a room
+ * type, its seasons (see offerFields.ts).
+ */
 export interface KnowledgeForm {
   kind: KnowledgeItemKind;
   title: string;
   body: string;
   price: string;
   duration: string;
+  buffer: string;
+  performerIds: string[];
+  seasons: SeasonRow[];
   languages: string[];
   isActive: boolean;
 }
 
-export type KnowledgeFormErrors = Partial<Record<"title" | "body" | "price" | "duration", MessageKey>>;
+export type KnowledgeFormErrors = Partial<Record<"title" | "body" | "price" | "duration", MessageKey>> & OfferFieldErrors;
 
 export function emptyKnowledgeForm(kind: KnowledgeItemKind): KnowledgeForm {
-  return { kind, title: "", body: "", price: "", duration: "", languages: [], isActive: true };
+  return {
+    kind,
+    title: "",
+    body: "",
+    price: "",
+    duration: "",
+    buffer: "",
+    performerIds: [],
+    seasons: [],
+    languages: [],
+    isActive: true,
+  };
 }
 
-type FormSource = Pick<KnowledgeItemDetails, "kind" | "title" | "body" | "price_minor" | "duration_minutes"> &
-  Partial<Pick<KnowledgeItemDetails, "languages" | "is_active">>;
+/** What the editor opens with for a stored item (the offer fields may be missing on older callers). */
+export type KnowledgeFormSource = Pick<KnowledgeItemDetails, "kind" | "title" | "body" | "price_minor" | "duration_minutes"> &
+  Partial<Pick<KnowledgeItemDetails, "languages" | "is_active" | "buffer_minutes" | "performer_resource_ids" | "seasonal_rates">>;
 
-export function knowledgeFormFromItem(item: FormSource, currency: string): KnowledgeForm {
+export function knowledgeFormFromItem(item: KnowledgeFormSource, currency: string): KnowledgeForm {
   return {
     kind: item.kind,
     title: item.title,
@@ -59,6 +86,7 @@ export function knowledgeFormFromItem(item: FormSource, currency: string): Knowl
         ? ""
         : decimalInputValue(minorToMajor(item.price_minor, currency), currencyFractionDigits(currency)),
     duration: item.duration_minutes ? String(item.duration_minutes) : "",
+    ...offerFormFromItem(item, currency),
     languages: [...(item.languages ?? [])],
     isActive: item.is_active ?? true,
   };
@@ -94,7 +122,7 @@ export function validateKnowledgeForm(form: KnowledgeForm, currency: string): Kn
       errors.duration = "validation.durationRange";
     }
   }
-  return errors;
+  return { ...errors, ...validateOfferFields(form, currency) };
 }
 
 function priceMinor(form: KnowledgeForm, currency: string): number | null {
@@ -118,6 +146,7 @@ export function knowledgeCreateBody(form: KnowledgeForm, currency: string): Know
     body: form.body.trim() || null,
     price_minor: priceMinor(form, currency),
     duration_minutes: durationMinutes(form),
+    ...offerCreateFields(form, currency),
     languages: form.languages,
     is_active: form.isActive,
   };
@@ -129,7 +158,7 @@ function sameLanguages(left: readonly string[], right: readonly string[]): boole
 
 /**
  * Body of PATCH …/knowledge/{id}: only what changed against `initial`
- * (an explicit null clears body, price or duration). Empty when nothing changed.
+ * (an explicit null clears body, price, duration or break). Empty when nothing changed.
  */
 export function knowledgePatchBody(form: KnowledgeForm, initial: KnowledgeForm, currency: string): KnowledgeItemPatchBody {
   const patch: KnowledgeItemPatchBody = {};
@@ -150,6 +179,7 @@ export function knowledgePatchBody(form: KnowledgeForm, initial: KnowledgeForm, 
   if (duration !== durationMinutes(initial)) {
     patch.duration_minutes = duration;
   }
+  Object.assign(patch, offerPatchFields(form, initial, currency));
   if (!sameLanguages(form.languages, initial.languages)) {
     patch.languages = form.languages;
   }

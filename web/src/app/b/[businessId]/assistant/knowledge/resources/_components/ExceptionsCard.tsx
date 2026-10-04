@@ -7,7 +7,7 @@ import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import type { ScheduleExceptionView } from "@/lib/resources";
+import type { ScheduleExceptionView } from "@/lib/specialDays";
 
 import { ExceptionRow } from "./ExceptionRow";
 

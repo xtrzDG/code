@@ -30,6 +30,7 @@ export function KnowledgeGroups({ list }: { list: KnowledgeItemsState }) {
                 <KnowledgeItemRow
                   key={item.id}
                   item={item}
+                  resources={list.resources}
                   onToggle={(isActive) => void list.setActive(item, isActive)}
                   onEdit={() => list.openEditor({ mode: "edit", id: item.id, item })}
                   onDelete={() => list.setDeleting(item)}

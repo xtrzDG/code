@@ -27,6 +27,7 @@ import {
 } from "@/lib/resources";
 
 import { HoursEditor, hoursToRows, rowsToHours, type DayRows } from "../../profile/_components/HoursEditor";
+import { ResourceOfferFields } from "./_components/ResourceOfferFields";
 
 export const RESOURCE_KIND_LABELS: Record<ResourceKind, MessageKey> = {
   table: "onboarding.booking.resourceKinds.table",
@@ -77,8 +78,9 @@ export function ResourceEditor({
   const [hoursErrors, setHoursErrors] = useState<Partial<Record<Weekday, MessageKey>>>({});
   const [hoursMissing, setHoursMissing] = useState(false);
 
-  // What the assistant knows changed: the changes customers do not get yet are read again.
-  const settled = { invalidate: [queryKeys.assistant.pendingAll(business.id)] };
+  // What the assistant knows changed: the changes customers do not get yet are read again;
+  // a resource's services are also its services' performers (item lists, booking offers).
+  const settled = { invalidate: [queryKeys.assistant.pendingAll(business.id)], stale: [queryKeys.knowledge.all(business.id)] };
   const create = useMutation(
     (body: ResourceCreateBody) =>
       api.POST("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } }, body }),
@@ -244,6 +246,8 @@ export function ResourceEditor({
             />
           </div>
         </div>
+
+        <ResourceOfferFields form={form} change={change} />
 
         <Fieldset legend={t("knowledge.resources.hours")} hint={t("knowledge.resources.hoursHint", { timezone: format.timeZone })}>
           <div className="flex flex-wrap gap-x-6 gap-y-2">

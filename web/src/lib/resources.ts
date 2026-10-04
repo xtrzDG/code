@@ -1,23 +1,16 @@
 /**
- * Pure helpers of bookable resources and of holidays / special-hours days
- * (Knowledge -> "Resources and hours").
- *
- * Dates of schedule exceptions are business-local "YYYY-MM-DD" and hours
- * are minutes of that local day (closing may be 1440 = midnight).
+ * Pure helpers of bookable resources (Knowledge -> "Resources and hours"):
+ * the resource editor's form, its API bodies and the list order. Holidays
+ * and special-hours days are in specialDays.ts.
  */
 
-import type { OpeningInterval, RequestBody, ResourceKind, Schema, Weekday } from "@/api/types";
+import type { OpeningInterval, RequestBody, ResourceKind, Schema } from "@/api/types";
 import type { MessageKey } from "@/i18n/translate";
-
-import { formatMinutesOfDay, parseTimeOfDay } from "./format";
-import { dateTimeFormat } from "./intl/formatters";
 
 export type ResourceView = Schema<"ResourceView">;
 export type BookingUnit = Schema<"BookingUnit">;
-export type ScheduleExceptionView = Schema<"ScheduleExceptionView">;
 export type ResourceCreateBody = RequestBody<"/v1/businesses/{business_id}/resources", "post">;
 export type ResourcePatchBody = RequestBody<"/v1/businesses/{business_id}/resources/{resource_id}", "patch">;
-export type ScheduleExceptionCreateBody = RequestBody<"/v1/businesses/{business_id}/schedule-exceptions", "post">;
 
 export const RESOURCE_KINDS: readonly ResourceKind[] = ["table", "room", "staff", "arena", "bay", "vehicle", "slot"];
 export const BOOKING_UNITS: readonly BookingUnit[] = ["time_slot", "night"];
@@ -40,6 +33,10 @@ export interface ResourceForm {
   isActive: boolean;
   /** False: the resource follows the business opening hours. */
   hasOwnSchedule: boolean;
+  /** The services and packages it performs (booked by time). */
+  serviceIds: string[];
+  /** The room type a room is of (booked by the night); "" for none. */
+  roomTypeId: string;
 }
 
 export type ResourceFormErrors = Partial<Record<"name" | "capacity" | "units" | "slotMinutes", MessageKey>>;
@@ -54,6 +51,8 @@ export function emptyResourceForm(kind: ResourceKind, bookingUnit: BookingUnit):
     bookingUnit,
     isActive: true,
     hasOwnSchedule: false,
+    serviceIds: [],
+    roomTypeId: "",
   };
 }
 
@@ -67,6 +66,8 @@ export function resourceFormFromView(resource: ResourceView): ResourceForm {
     bookingUnit: resource.booking_unit,
     isActive: resource.is_active,
     hasOwnSchedule: (resource.schedule ?? []).length > 0,
+    serviceIds: [...(resource.serves_item_ids ?? [])],
+    roomTypeId: resource.room_type_item_id ?? "",
   };
 }
 
@@ -106,8 +107,13 @@ export function validateResourceForm(form: ResourceForm): ResourceFormErrors {
   };
 }
 
-/** Body of POST …/resources; `schedule` is the resource's own weekly hours or empty. */
+/**
+ * Body of POST …/resources; `schedule` is the resource's own weekly hours
+ * or empty. A resource booked by time performs services; one booked by the
+ * night is a room of a room type (the other link is left empty).
+ */
 export function resourceCreateBody(form: ResourceForm, schedule: OpeningInterval[]): ResourceCreateBody {
+  const isNightly = form.bookingUnit === "night";
   return {
     name: form.name.trim(),
     kind: form.kind,
@@ -117,7 +123,13 @@ export function resourceCreateBody(form: ResourceForm, schedule: OpeningInterval
     booking_unit: form.bookingUnit,
     is_active: form.isActive,
     schedule: form.hasOwnSchedule ? schedule : [],
+    serves_item_ids: isNightly ? [] : [...new Set(form.serviceIds)],
+    room_type_item_id: isNightly && form.roomTypeId ? form.roomTypeId : null,
   };
+}
+
+function sameIds(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && [...left].sort().join(",") === [...right].sort().join(",");
 }
 
 function scheduleKey(schedule: readonly OpeningInterval[]): string {
@@ -127,7 +139,11 @@ function scheduleKey(schedule: readonly OpeningInterval[]): string {
     .join(",");
 }
 
-/** Body of PATCH …/resources/{id}: only what changed (an empty schedule = business hours). */
+/**
+ * Body of PATCH …/resources/{id}: only what changed (an empty schedule =
+ * business hours; a new services list is the whole truth, null clears the
+ * room type).
+ */
 export function resourcePatchBody(form: ResourceForm, resource: ResourceView, schedule: OpeningInterval[]): ResourcePatchBody {
   const next = resourceCreateBody(form, schedule);
   const patch: ResourcePatchBody = {};
@@ -156,6 +172,12 @@ export function resourcePatchBody(form: ResourceForm, resource: ResourceView, sc
   if (scheduleKey(nextSchedule) !== scheduleKey(resource.schedule ?? [])) {
     patch.schedule = nextSchedule;
   }
+  if (!sameIds(next.serves_item_ids ?? [], resource.serves_item_ids ?? [])) {
+    patch.serves_item_ids = next.serves_item_ids ?? [];
+  }
+  if ((next.room_type_item_id ?? null) !== (resource.room_type_item_id ?? null)) {
+    patch.room_type_item_id = next.room_type_item_id ?? null;
+  }
   return patch;
 }
 
@@ -165,116 +187,4 @@ export function sortResources(resources: readonly ResourceView[], locale: string
     (left, right) =>
       Number(right.is_active) - Number(left.is_active) || left.name.localeCompare(right.name, locale),
   );
-}
-
-// --- Local dates -------------------------------------------------------------------
-
-const LOCAL_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-/** "2026-02-30" is not a date; "2026-02-28" is. */
-export function isLocalDate(text: string): boolean {
-  const match = LOCAL_DATE.exec(text);
-  if (!match) {
-    return false;
-  }
-  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-}
-
-function utcDate(localDate: string): Date {
-  const [year, month, day] = localDate.split("-").map(Number);
-  return new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1));
-}
-
-/** Today's date in a time zone as "YYYY-MM-DD". */
-export function todayInTimeZone(now: Date, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
-}
-
-/** ISO weekday (Monday = 1) of a local date. */
-export function weekdayOfDate(localDate: string): Weekday {
-  const day = utcDate(localDate).getUTCDay();
-  return (day === 0 ? 7 : day) as Weekday;
-}
-
-/** A local date as text in the UI language: "Thu, 31 Dec 2026". */
-export function formatLocalDate(localDate: string, locale: string): string {
-  return dateTimeFormat(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(utcDate(localDate));
-}
-
-// --- Special hours ----------------------------------------------------------------
-
-export interface TimeRangeRow {
-  key: string;
-  opens: string;
-  closes: string;
-}
-
-export type SpecialHoursResult = { ok: true; intervals: OpeningInterval[] } | { ok: false; error: MessageKey };
-
-/**
- * The intervals of one special-hours day. "00:00" as the closing time means
- * midnight; a day here cannot run past midnight (add the next day too).
- */
-export function specialHoursIntervals(localDate: string, rows: readonly TimeRangeRow[]): SpecialHoursResult {
-  if (rows.length === 0) {
-    return { ok: false, error: "knowledge.exceptions.errors.hoursRequired" };
-  }
-  const weekday = weekdayOfDate(localDate);
-  const intervals: OpeningInterval[] = [];
-  for (const row of rows) {
-    const opens = parseTimeOfDay(row.opens);
-    const closesRaw = parseTimeOfDay(row.closes);
-    if (opens === null || closesRaw === null) {
-      return { ok: false, error: "validation.time" };
-    }
-    const closes = closesRaw === 0 ? 1440 : closesRaw;
-    if (closes <= opens) {
-      return { ok: false, error: "knowledge.exceptions.errors.closesBeforeOpens" };
-    }
-    intervals.push({ weekday, opens_at: opens, closes_at: closes });
-  }
-  intervals.sort((left, right) => left.opens_at - right.opens_at);
-  for (let index = 1; index < intervals.length; index += 1) {
-    const previous = intervals[index - 1];
-    const current = intervals[index];
-    if (previous && current && current.opens_at < previous.closes_at) {
-      return { ok: false, error: "validation.hoursOverlap" };
-    }
-  }
-  return { ok: true, intervals };
-}
-
-/** "10:00–16:00, 18:00–24:00". */
-export function intervalsLabel(intervals: readonly Pick<OpeningInterval, "opens_at" | "closes_at">[]): string {
-  return [...intervals]
-    .sort((left, right) => left.opens_at - right.opens_at)
-    .map((interval) => `${formatMinutesOfDay(interval.opens_at)}–${formatMinutesOfDay(interval.closes_at)}`)
-    .join(", ");
-}
-
-/** Exceptions from today on (soonest first) and past ones (latest first). */
-export function splitExceptions<T extends Pick<ScheduleExceptionView, "date">>(
-  exceptions: readonly T[],
-  today: string,
-): { upcoming: T[]; past: T[] } {
-  const sorted = [...exceptions].sort((left, right) => left.date.localeCompare(right.date));
-  return {
-    upcoming: sorted.filter((item) => item.date >= today),
-    past: sorted.filter((item) => item.date < today).reverse(),
-  };
 }

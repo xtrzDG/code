@@ -8,6 +8,7 @@ import { IconPlus } from "@/components/icons";
 import { BookingStatusBadge, HandoffStatusBadge, HandoffUrgencyBadge, LeadStatusBadge } from "@/components/insights/Badges";
 import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
 import { HANDOFF_REASONS, LEAD_TYPES } from "@/components/insights/labels";
+import { usePartyWording } from "@/components/insights/usePartyWording";
 import type { ConversationDetailView } from "@/components/insights/types";
 import { Button, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -27,7 +28,8 @@ export function LinkedItems({
   /** Null hides the booking button (test conversations). */
   onBook: (() => void) | null;
 }) {
-  const { t, tp, locale } = useI18n();
+  const { t, locale } = useI18n();
+  const party = usePartyWording();
   const { business } = useBusiness();
   const businessId = business.id;
   const handoffs = detail.handoffs ?? [];
@@ -86,7 +88,7 @@ export function LinkedItems({
                   <span dir="auto" className="text-ink-muted">
                     {booking.resource_name}
                   </span>
-                  <span className="text-ink-muted">{tp("bookings.guests", booking.party_size)}</span>
+                  <span className="text-ink-muted">{party.count(booking.party_size, booking.resource_id)}</span>
                   <BookingStatusBadge status={booking.status} />
                 </li>
               ))}

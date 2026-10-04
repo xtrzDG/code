@@ -23,6 +23,9 @@ import { assistantChecksRu } from "./content/assistantChecks.ru";
 import { knowledgeEn } from "./content/knowledge.en";
 import { knowledgeKa } from "./content/knowledge.ka";
 import { knowledgeRu } from "./content/knowledge.ru";
+import { knowledgeOfferEn } from "./content/knowledgeOffer.en";
+import { knowledgeOfferKa } from "./content/knowledgeOffer.ka";
+import { knowledgeOfferRu } from "./content/knowledgeOffer.ru";
 import { knowledgeResourcesEn } from "./content/knowledgeResources.en";
 import { knowledgeResourcesKa } from "./content/knowledgeResources.ka";
 import { knowledgeResourcesRu } from "./content/knowledgeResources.ru";
@@ -31,16 +34,16 @@ import { knowledgeWebsiteKa } from "./content/knowledgeWebsite.ka";
 import { knowledgeWebsiteRu } from "./content/knowledgeWebsite.ru";
 
 export const contentEn = {
-  knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn },
+  knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn, ...knowledgeOfferEn },
   assistant: { ...assistantEn, ...assistantChecksEn, ...assistantChatEn },
 } as const;
 
 export const contentRu: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu, ...knowledgeWebsiteRu },
+  knowledge: { ...knowledgeRu, ...knowledgeResourcesRu, ...knowledgeWebsiteRu, ...knowledgeOfferRu },
   assistant: { ...assistantRu, ...assistantChecksRu, ...assistantChatRu },
 };
 
 export const contentKa: Translation<typeof contentEn> = {
-  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa },
+  knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa, ...knowledgeOfferKa },
   assistant: { ...assistantKa, ...assistantChecksKa, ...assistantChatKa },
 };

@@ -3,31 +3,36 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { useNiche } from "@/api/catalog";
 import { api } from "@/api/client";
+import { useBookableOffers } from "@/api/offers";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS, CUSTOMER_CHANNELS } from "@/components/insights/labels";
 import type { BookingResult, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
-import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { usePartyWording } from "@/components/insights/usePartyWording";
+import { Alert, Button, Field, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { capitalizeFirst } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
+import { bookingValue, sortOffers } from "@/lib/offers";
 
-import {
-  bookingUnitFor,
-  validateBookingForm,
-  type BookingFormErrors,
-  type BookingFormValues,
-} from "../_lib/manualBooking";
+import { bookedOffer, placesForOffer, withOffer } from "../_lib/bookingOffers";
 import { BOOKING_REFUSAL_MESSAGES } from "../_lib/bookingRefusals";
-import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
+import { bookingUnitFor, validateBookingForm, type BookingFormErrors, type BookingFormValues } from "../_lib/manualBooking";
 import { BookingCustomerFields } from "./BookingCustomerFields";
+import { BookingOfferFields } from "./BookingOfferFields";
 import { BookingTimingFields } from "./BookingTimingFields";
+import { BookingValueLine } from "./BookingValueLine";
+import { CustomerLanguageSelect } from "./CustomerLanguageSelect";
 
 /**
  * A booking taken by phone or in person (POST …/bookings). The API checks
  * opening hours and free places; "Show free times" offers slots first.
  * The phone is read in the chosen country (the business country first).
- * From a conversation card the form is prefilled and the booking linked.
+ * Choosing a service fills in its length, offers only those who perform
+ * it and shows what the booking is worth. From a conversation card the
+ * form is prefilled and the booking linked.
  */
 export function BookingForm({
   resources,
@@ -44,9 +49,13 @@ export function BookingForm({
   initialValues?: Partial<BookingFormValues>;
   conversationId?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { business } = useBusiness();
   const businessId = business.id;
+  const niche = useNiche(business.niche_key).data?.niche;
+  const party = usePartyWording();
+  const allOffers = useBookableOffers(businessId).data ?? [];
+  const offers = sortOffers(allOffers, locale);
   const activeResources = resources.filter((resource) => resource.is_active);
 
   const [values, setValues] = useState<BookingFormValues>({
@@ -55,8 +64,10 @@ export function BookingForm({
     date: defaultDate,
     time: "",
     nights: "1",
-    partySize: "2",
+    partySize: "",
     resourceId: "",
+    serviceId: "",
+    duration: "",
     notes: "",
     source: "phone",
     language: business.default_language,
@@ -64,7 +75,20 @@ export function BookingForm({
     ...initialValues,
   });
   const [errors, setErrors] = useState<BookingFormErrors>({});
-  const unit = bookingUnitFor(resources, values.resourceId);
+  // Until staff type a number, a booking is for 2 guests, or for 1 client or participant.
+  const [isPartyTyped, setPartyTyped] = useState(initialValues?.partySize !== undefined);
+  const form = isPartyTyped ? values : { ...values, partySize: party.noun(values.resourceId || null) === "guests" ? "2" : "1" };
+  const chosenOffer = allOffers.find((offer) => offer.id === values.serviceId) ?? null;
+  const unit = bookingUnitFor(resources, values.resourceId, chosenOffer);
+  const places = placesForOffer(chosenOffer, resources, allOffers);
+  const offer = bookedOffer(values, resources, allOffers);
+  const nights = unit === "night" && /^\d+$/.test(values.nights) && Number(values.nights) > 0 ? Number(values.nights) : null;
+  const value = bookingValue(offer, { date: values.date, nights }, business.currency_code);
+  // A business booking one kind of resource names it ("Master", "Table"); a mixed one says "Place".
+  const placeLabel =
+    niche && activeResources.length > 0 && activeResources.every((resource) => resource.kind === niche.resource_kind)
+      ? capitalizeFirst(niche.resource_noun, locale)
+      : t("bookings.form.resource");
 
   const create = useMutation(
     (body: ManualBookingBody) =>
@@ -73,25 +97,31 @@ export function BookingForm({
   );
 
   const set = <Key extends keyof BookingFormValues>(key: Key, value: BookingFormValues[Key]) => {
+    if (key === "partySize") {
+      setPartyTyped(true);
+    }
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
+  const chooseOffer = (offerId: string) => {
+    const next = allOffers.find((item) => item.id === offerId) ?? null;
+    setValues((current) => withOffer(current, next, resources, allOffers));
+    setErrors((current) => ({ ...current, resourceId: undefined, duration: undefined }));
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    const result = validateBookingForm(values, unit);
+    const result = validateBookingForm(form, unit, chosenOffer);
     if (!result.ok) {
       setErrors(result.errors);
       return;
     }
-    const created = await create.run(
-      conversationId ? { ...result.body, conversation_id: conversationId } : result.body,
-    );
+    const created = await create.run(conversationId ? { ...result.body, conversation_id: conversationId } : result.body);
     if (created.ok) {
       onCreated(created.data);
     }
   };
-
 
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
@@ -106,45 +136,24 @@ export function BookingForm({
           </Link>
         </Alert>
       ) : null}
-      <BookingCustomerFields values={values} errors={errors} set={set} />
+      <BookingCustomerFields values={form} errors={errors} set={set} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label={t("bookings.form.date")} error={errors.date && t(errors.date)} required>
-          {(control) => (
-            <Input {...control} type="date" value={values.date} onChange={(event) => set("date", event.target.value)} />
-          )}
-        </Field>
-        <Field label={t("bookings.form.partySize")} error={errors.partySize && t(errors.partySize)} required>
-          {(control) => (
-            <Input
-              {...control}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={10000}
-              value={values.partySize}
-              onChange={(event) => set("partySize", event.target.value)}
-            />
-          )}
-        </Field>
-        <Field label={t("bookings.form.resource")}>
-          {(control) => (
-            <Select {...control} value={values.resourceId} onChange={(event) => set("resourceId", event.target.value)}>
-              <option value="">{t("bookings.form.anyResource")}</option>
-              {activeResources.map((resource) => (
-                <option key={resource.id} value={resource.id}>
-                  {resource.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </div>
+      <BookingOfferFields
+        values={form}
+        errors={errors}
+        offers={offers}
+        places={places}
+        partyLabel={party.label(values.resourceId || places[0]?.id)}
+        placeLabel={placeLabel}
+        set={set}
+        onOffer={chooseOffer}
+      />
 
       <BookingTimingFields
-        values={values}
+        values={form}
         errors={errors}
         unit={unit}
+        usualDuration={chosenOffer?.duration_minutes ?? null}
         set={set}
         onPick={(slot) => {
           setValues((current) => ({
@@ -160,11 +169,7 @@ export function BookingForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("bookings.form.source")}>
           {(control) => (
-            <Select
-              {...control}
-              value={values.source}
-              onChange={(event) => set("source", event.target.value as ChannelKind)}
-            >
+            <Select {...control} value={values.source} onChange={(event) => set("source", event.target.value as ChannelKind)}>
               {CUSTOMER_CHANNELS.map((channel) => (
                 <option key={channel} value={channel}>
                   {t(CHANNEL_LABELS[channel])}
@@ -189,6 +194,8 @@ export function BookingForm({
           />
         )}
       </Field>
+
+      <BookingValueLine offer={offer} value={value} nights={nights} />
 
       <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-4">
         <Button variant="secondary" onClick={onCancel} disabled={create.isPending}>

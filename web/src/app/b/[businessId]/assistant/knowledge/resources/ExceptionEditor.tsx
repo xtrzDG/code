@@ -10,15 +10,15 @@ import { IconPlus, IconTrash } from "@/components/icons";
 import { Button, Field, Fieldset, Input, Modal, Radio, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
+import type { ResourceView } from "@/lib/resources";
 import {
   formatLocalDate,
   isLocalDate,
   specialHoursIntervals,
-  type ResourceView,
   type ScheduleExceptionCreateBody,
   type ScheduleExceptionView,
   type TimeRangeRow,
-} from "@/lib/resources";
+} from "@/lib/specialDays";
 
 const MAX_NOTE_LENGTH = 300;
 

@@ -7,6 +7,7 @@ import { IconChevronRight } from "@/components/icons";
 import { BookingStatusBadge, ChannelBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName, DetailRow, LoadMore, PhoneLink } from "@/components/insights/common";
 import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
+import { usePartyWording } from "@/components/insights/usePartyWording";
 import { useToday } from "@/components/insights/useToday";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { BookingView } from "@/components/insights/types";
@@ -15,7 +16,7 @@ import { languageName } from "@/lib/format";
 import { conversationPath } from "@/lib/navigation";
 import { formatPhone } from "@/lib/phone";
 
-import { groupBookingsByDate, nightsOf, reminderState } from "../_lib/bookingList";
+import { bookingValueText, groupBookingsByDate, nightsOf, reminderState } from "../_lib/bookingList";
 
 /** "20:00–22:00" for slots, "3 nights · until Oct 6" for stays. */
 export function useBookingWhen() {
@@ -92,9 +93,12 @@ export function BookingDays({
 }
 
 function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay: boolean; onOpen: () => void }) {
-  const { t, tp } = useI18n();
+  const { t } = useI18n();
+  const format = useBusinessFormat();
+  const party = usePartyWording();
   const when = useBookingWhen().time(booking, isStay);
   const isInactive = booking.status === "cancelled" || booking.status === "no_show";
+  const value = bookingValueText(booking, format.money);
 
   return (
     <li>
@@ -118,7 +122,15 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
             {booking.is_sandbox ? <TestBadge /> : null}
           </span>
           <span className="mt-0.5 block text-sm text-ink-muted">
-            {[tp("bookings.guests", booking.party_size), booking.resource_name, t(CHANNEL_LABELS[booking.source_channel])].join(
+            {booking.service_title ? (
+              <>
+                <span dir="auto" className="font-medium text-ink">
+                  {booking.service_title}
+                </span>
+                {" · "}
+              </>
+            ) : null}
+            {[party.count(booking.party_size, booking.resource_id), booking.resource_name, t(CHANNEL_LABELS[booking.source_channel])].join(
               " · ",
             )}
             {booking.contact_phone_number ? (
@@ -136,6 +148,17 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
             </span>
           ) : null}
         </span>
+        {value ? (
+          <span
+            className={
+              isInactive
+                ? "mt-0.5 shrink-0 text-sm text-ink-subtle tabular-nums line-through"
+                : "mt-0.5 shrink-0 text-sm font-semibold text-ink tabular-nums"
+            }
+          >
+            {value}
+          </span>
+        ) : null}
         <IconChevronRight className="mt-1 size-4 shrink-0 text-ink-subtle" aria-hidden />
       </button>
     </li>
@@ -144,12 +167,14 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
 
 /** Everything about one booking, as a definition list. */
 export function BookingDetails({ booking, isStay }: { booking: BookingView; isStay: boolean }) {
-  const { t, tp, locale } = useI18n();
+  const { t, locale } = useI18n();
   const { business } = useBusiness();
   const format = useBusinessFormat();
+  const party = usePartyWording();
   const today = useToday(business.timezone);
   const when = useBookingWhen();
   const reminder = reminderState(booking, today);
+  const value = bookingValueText(booking, format.money);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -161,7 +186,13 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
         <DetailRow label={t("bookings.details.place")}>
           <span dir="auto">{booking.resource_name}</span>
         </DetailRow>
-        <DetailRow label={t("bookings.details.party")}>{tp("bookings.guests", booking.party_size)}</DetailRow>
+        {booking.service_title ? (
+          <DetailRow label={t("bookings.details.service")}>
+            <span dir="auto">{booking.service_title}</span>
+          </DetailRow>
+        ) : null}
+        {value ? <DetailRow label={t("bookings.details.value")}>{value}</DetailRow> : null}
+        <DetailRow label={party.label(booking.resource_id)}>{party.count(booking.party_size, booking.resource_id)}</DetailRow>
         <DetailRow label={t("bookings.details.phone")}>
           {booking.contact_phone_number ? <PhoneLink phone={booking.contact_phone_number} /> : "–"}
         </DetailRow>

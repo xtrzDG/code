@@ -36,6 +36,9 @@ describe("booking edit", () => {
       { id: "old", name: "Old", booking_unit: "time_slot" as const, is_active: false },
     ];
     expect(placesForEdit(places, current).map((place) => place.id)).toEqual(["resource_1", "resource_2"]);
+    // A service booking moves only to those who perform the service (its own place stays listed).
+    expect(placesForEdit(places, current, ["resource_2"]).map((place) => place.id)).toEqual(["resource_1", "resource_2"]);
+    expect(placesForEdit(places, current, []).map((place) => place.id)).toEqual(["resource_1"]);
     expect(canChangePlacement("confirmed")).toBe(true);
     expect(canChangePlacement("completed")).toBe(false);
   });

@@ -23,6 +23,21 @@ export function orderKinds(nicheKinds: readonly KnowledgeItemKind[] | undefined)
   return [...first, ...KNOWLEDGE_KINDS.filter((kind) => !first.includes(kind))];
 }
 
+/** Every business may keep questions and rules, whatever its niche (the API's rule). */
+const ALWAYS_ALLOWED_KINDS: readonly KnowledgeItemKind[] = ["faq", "policy"];
+
+/**
+ * The kinds a business may add: its niche's (in their order), then
+ * questions and rules. The API refuses other kinds (a salon has no room
+ * types). Every kind while the niche is not known yet.
+ */
+export function allowedKinds(nicheKinds: readonly KnowledgeItemKind[] | undefined): KnowledgeItemKind[] {
+  if (!nicheKinds) {
+    return [...KNOWLEDGE_KINDS];
+  }
+  return [...nicheKinds, ...ALWAYS_ALLOWED_KINDS].filter((kind, index, list) => list.indexOf(kind) === index);
+}
+
 /** Questions and rules have no price; everything sold does. */
 export function kindHasPrice(kind: KnowledgeItemKind): boolean {
   return kind !== "faq" && kind !== "policy";

@@ -6,7 +6,7 @@ import { useNiche } from "@/api/catalog";
 import type { KnowledgeItemKind } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
 import type { MessageKey } from "@/i18n/translate";
-import { orderKinds } from "@/lib/knowledge/kinds";
+import { allowedKinds } from "@/lib/knowledge/kinds";
 
 /** The business niche (knowledge kinds, resource kind, booking unit), in the UI language. */
 export function useNicheDetails() {
@@ -14,11 +14,11 @@ export function useNicheDetails() {
   return useNiche(business.niche_key);
 }
 
-/** Knowledge kinds with the niche's own kinds first. */
+/** The kinds the business may add: its niche's own, then questions and rules. */
 export function useKnowledgeKinds(): KnowledgeItemKind[] {
   const niche = useNicheDetails();
   const nicheKinds = niche.data?.knowledge_kinds;
-  return useMemo(() => orderKinds(nicheKinds), [nicheKinds]);
+  return useMemo(() => allowedKinds(nicheKinds), [nicheKinds]);
 }
 
 /** One item of a kind (for the editor). */

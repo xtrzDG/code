@@ -22,22 +22,21 @@ import {
   validateKnowledgeForm,
   type KnowledgeForm,
   type KnowledgeFormErrors,
+  type KnowledgeFormSource,
   type KnowledgeItemCreateBody,
   type KnowledgeItemPatchBody,
 } from "@/lib/knowledge/form";
-import { kindHasDuration, kindHasPrice } from "@/lib/knowledge/kinds";
+import { kindHasPrice } from "@/lib/knowledge/kinds";
+import { isBookableKind } from "@/lib/offers";
 
 import { KIND_LABELS } from "./hooks";
+import { OfferFields } from "./OfferFields";
+import { PriceFields } from "./PriceFields";
 
 /** What the editor opens with: a new item of a kind, or an existing item. */
 export type KnowledgeEditorTarget =
   | { mode: "create"; kind: KnowledgeItemKind }
-  | {
-      mode: "edit";
-      id: string;
-      item: Pick<KnowledgeItemDetails, "kind" | "title" | "body" | "price_minor" | "duration_minutes"> &
-        Partial<Pick<KnowledgeItemDetails, "languages" | "is_active">>;
-    };
+  | { mode: "edit"; id: string; item: KnowledgeFormSource };
 
 const TITLE_LABELS: Partial<Record<KnowledgeItemKind, MessageKey>> = {
   faq: "knowledge.form.question",
@@ -80,8 +79,12 @@ export function KnowledgeItemEditor({
   const [form, setForm] = useState<KnowledgeForm>(initial);
   const [errors, setErrors] = useState<KnowledgeFormErrors>({});
 
-  // What the assistant knows changed: the changes customers do not get yet are read again.
-  const settled = { invalidate: [queryKeys.assistant.pendingAll(business.id)] };
+  // What the assistant knows changed: the changes customers do not get yet are read again,
+  // and so are the resources (a performer list changes their services too) and the offers of bookings.
+  const settled = {
+    invalidate: [queryKeys.assistant.pendingAll(business.id), queryKeys.resources.list(business.id)],
+    stale: [queryKeys.knowledge.offers(business.id)],
+  };
   const create = useMutation(
     (body: KnowledgeItemCreateBody) =>
       api.POST("/v1/businesses/{business_id}/knowledge", {
@@ -139,7 +142,6 @@ export function KnowledgeItemEditor({
 
   const isPending = create.isPending || update.isPending;
   const showPrice = kindHasPrice(form.kind);
-  const showDuration = showPrice && (kindHasDuration(form.kind) || form.duration.trim() !== "");
   const kindOptions = kinds.includes(form.kind) ? kinds : [form.kind, ...kinds];
 
   return (
@@ -215,43 +217,8 @@ export function KnowledgeItemEditor({
             />
           )}
         </Field>
-        {showPrice ? (
-          <Field
-            label={t("knowledge.form.price", { currency })}
-            optionalLabel={t("common.optional")}
-            hint={t("knowledge.form.priceHint")}
-            error={errors.price && t(errors.price)}
-            className="sm:col-span-3"
-          >
-            {(control) => (
-              <Input
-                {...control}
-                inputMode="decimal"
-                autoComplete="off"
-                value={form.price}
-                onChange={(event) => change({ price: event.target.value })}
-              />
-            )}
-          </Field>
-        ) : null}
-        {showDuration ? (
-          <Field
-            label={t("knowledge.form.duration")}
-            optionalLabel={t("common.optional")}
-            error={errors.duration && t(errors.duration)}
-            className="sm:col-span-3"
-          >
-            {(control) => (
-              <Input
-                {...control}
-                inputMode="numeric"
-                autoComplete="off"
-                value={form.duration}
-                onChange={(event) => change({ duration: event.target.value })}
-              />
-            )}
-          </Field>
-        ) : null}
+        {showPrice ? <PriceFields form={form} errors={errors} currency={currency} change={change} /> : null}
+        {isBookableKind(form.kind) ? <OfferFields form={form} errors={errors} currency={currency} change={change} /> : null}
         {business.languages.length > 1 ? (
           <Fieldset legend={t("knowledge.form.languages")} hint={t("knowledge.form.languagesHint")} className="sm:col-span-6">
             <div className="flex flex-wrap gap-x-5 gap-y-2">
