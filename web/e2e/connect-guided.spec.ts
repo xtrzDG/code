@@ -87,7 +87,15 @@ test("an owner connects Telegram step by step and sees the bot before connecting
 });
 
 test.describe("for an owner who reads Georgian", () => {
-  test("the live preview speaks Georgian and follows the chosen corner at once", async ({ page, context, request, account }) => {
+  test("the live preview speaks Georgian and follows the chosen corner at once", async ({
+    page,
+    context,
+    request,
+    account,
+    consoleErrors,
+  }) => {
+    // The website chat's embed code needs APP_BASE_URL, which the suite's API does not set.
+    consoleErrors.allow(/status of 502 \(Bad Gateway\).*\/channels\/web\/snippet/);
     const business = await openChatBusiness(request, account.token);
     await context.addCookies([{ name: "aw_locale", value: "ka", url: WEB_URL, sameSite: "Lax" }]);
 

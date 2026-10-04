@@ -47,6 +47,16 @@ describe("WhatsApp templates for late staff replies", () => {
     });
   });
 
+  it("flags a repeated language even when its first row has another mistake", () => {
+    const first = newTemplateRow("de", "Staff Reply");
+    const again = newTemplateRow("de", "staff_reply_pt");
+
+    expect(buildStaffTemplatesBody([first, again])).toEqual({
+      ok: false,
+      errors: { [first.key]: { name: "name" }, [again.key]: { language: "duplicate" } },
+    });
+  });
+
   it("reads a channel saved by the previous release with its single template", () => {
     expect(savedStaffTemplates({ staff_reply_template: template("ru") })).toEqual([template("ru")]);
     expect(savedStaffTemplates({ staff_reply_templates: [template("ka"), template("he")], staff_reply_template: template("ka") })).toEqual(

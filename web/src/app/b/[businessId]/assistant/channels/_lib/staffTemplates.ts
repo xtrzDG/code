@@ -103,6 +103,9 @@ export function buildStaffTemplatesBody(rows: readonly TemplateRow[]): StaffTemp
       rowErrors.language = "language";
     } else if (seen.has(language)) {
       rowErrors.language = "duplicate";
+    } else {
+      // A language is taken by its first row, even when that row has another mistake.
+      seen.add(language);
     }
     if (!name) {
       rowErrors.name = "required";
@@ -113,7 +116,6 @@ export function buildStaffTemplatesBody(rows: readonly TemplateRow[]): StaffTemp
       errors[row.key] = rowErrors;
       continue;
     }
-    seen.add(language);
     templates.push({ language_code: language, name });
   }
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, body: { templates } };
