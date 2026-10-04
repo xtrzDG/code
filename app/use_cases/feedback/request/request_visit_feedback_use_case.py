@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
@@ -78,6 +79,7 @@ class RequestVisitFeedbackUseCase(UseCaseContract[JobTick, JobReport]):
         text_resolver: LocalizedTextResolverContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        suppression_list: SuppressionListContract,
     ) -> None:
         self._review_settings_repo: ReviewSettingsRepoContract = review_settings_repo
         self._feedback_request_repo: FeedbackRequestRepoContract = feedback_request_repo
@@ -96,6 +98,7 @@ class RequestVisitFeedbackUseCase(UseCaseContract[JobTick, JobReport]):
                 text_resolver,
             ),
             live_events=live_events,
+            suppression_list=suppression_list,
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
 

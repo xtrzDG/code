@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
@@ -65,9 +66,10 @@ class AnswerCustomerSignalUseCase(
         text_resolver: LocalizedTextResolverContract,
         wall_clock: WallClock[Microseconds],
         app_base_url: PublicBaseUrl | None,
+        suppression_list: SuppressionListContract,
     ) -> None:
         self._preferences: MessagingPreferences = MessagingPreferences(
-            contact_repo, audit_log_repo, text_resolver
+            contact_repo, audit_log_repo, text_resolver, suppression_list
         )
         self._ratings: VisitRatings = VisitRatings(
             feedback_request_repo,

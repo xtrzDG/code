@@ -1,5 +1,7 @@
+from typing import Self
+
 from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
-from pydantic import Field
+from pydantic import Field, model_validator
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
@@ -64,9 +66,13 @@ class InboundEventDocument(BaseDocument):
     the inbox once per FAILED event; optional).
 
     Version 4: the customer message's `acquisition_source` (optional).
+
+    Version 5: `customer_channel_user_id`, the sender of the customer
+    message kept beside it (filled from it when missing, so older rows read
+    the same), for erasure to find a customer's events by an index.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind
@@ -85,3 +91,13 @@ class InboundEventDocument(BaseDocument):
     outbound_message_id: OutboundMessageId | None = None
     processed_at: Microseconds | None = None
     handoff_requested_at: Microseconds | None = None
+    customer_channel_user_id: ChannelUserId | None = None
+
+    @model_validator(mode="after")
+    def copy_customer_sender(self) -> Self:
+        """The lookup copy of the customer message's sender, when missing."""
+
+        if self.customer_channel_user_id is None and self.customer_message is not None:
+            self.customer_channel_user_id = self.customer_message.channel_user_id
+
+        return self

@@ -53,6 +53,7 @@ from app.use_cases.feedback.request.request_visit_feedback_use_case import (
 from app.utilities.feedback.feedback_keys import review_settings_id_of
 from tests.channels.outbox_reads import outbox_of
 from tests.channels.testbed import ChannelsTestbed
+from tests.privacy.suppression_doubles import build_suppression_list
 
 WHATSAPP_NUMBER_ID: str = "106540352242922"
 TEMPLATE_NAME: str = "visit_feedback"
@@ -102,6 +103,7 @@ class FeedbackSetup:
             InMemoryDocumentCollectionAdapter(ReviewSettingsDocument)
         )
         self.rate_limits = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
+        self.suppression_list = build_suppression_list()
         self.job = RequestVisitFeedbackUseCase(
             review_settings_repo=self.review_settings_repo,
             feedback_request_repo=self.testbed.feedback_request_repo,
@@ -117,6 +119,7 @@ class FeedbackSetup:
             text_resolver=self.testbed.text_resolver,
             live_events=self.testbed.live_events,
             wall_clock=self.testbed.wall_clock,
+            suppression_list=self.suppression_list,
         )
         if has_settings:
             self.save_settings()

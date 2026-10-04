@@ -6,6 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import build_otp_delivery_facilitator
 from app.containers.notification_factories import build_staff_link_signer
+from app.containers.privacy_factories import build_suppression_list
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -52,6 +53,9 @@ from app.facilitators.observability.job_monitor_factory import (
 )
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     SentryErrorReportingFacilitator,
+)
+from app.facilitators.privacy.suppression_list_facilitator import (
+    SuppressionListFacilitator,
 )
 from app.facilitators.product_events.record_product_event_facilitator import (
     RecordProductEventFacilitator,
@@ -250,6 +254,12 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         localized_text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Customers who said STOP, as digests kept through erasure (1113).
+    suppression_list: Singleton[SuppressionListFacilitator] = Singleton(
+        build_suppression_list,
+        settings=config.app_settings,
+        suppression_entry_repo=repositories.suppression_entry_repo,
     )
     # "typing…" while a reply is written (Telegram, WhatsApp, Meta pages).
     # The claim check of the reply guard: a cheap verifier model

@@ -3,9 +3,10 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102 and 1103), each ELEMENT_TEXT
-field a trigger over `workshop.document_lookup_keys`; `document_lookup_fields`
-explains the kinds and checks queries against this catalog.
+1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103 and 1113), each
+ELEMENT_TEXT field a trigger over `workshop.document_lookup_keys`;
+`document_lookup_fields` explains the kinds and checks queries against this
+catalog.
 """
 
 from collections.abc import Mapping
@@ -79,10 +80,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # Every customer message: the contact, its open conversation, the
     # hourly message count and the transcript.
+    # The CSV and full exports page through them by first contact (1113).
     DocumentCollectionName("contacts"): (
         _text("phone_number"),
         _text("verified_phone_number"),
         _element("channel_identities[].channel_user_id"),
+        _integer("created_at"),
     ),
     # The feed newest first (keyset pages), its filters, and the dashboard's
     # counts by channel, language and local day; the team inbox's views by
@@ -193,9 +196,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # still wait (they go out in order).
     # The inbox by arrival (the purge) and by status and arrival (the
     # sweeper of stale events, 1094).
+    # A customer's events by their account and conversations (erasure, 1113).
     DocumentCollectionName("inbound_events"): (
         _integer("created_at"),
         _text("status"),
+        _text("customer_channel_user_id"),
+        _text("conversation_id"),
     ),
     DocumentCollectionName("outbound_messages"): (
         _text("recipient_key"),
@@ -226,7 +232,11 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("push_subscriptions"): (_text("user_id"),),
     # The text-backs of a business newest first (Settings → Calls) and the
     # retention purge (1051).
-    DocumentCollectionName("missed_calls"): (_integer("created_at"),),
+    # A caller's missed calls by their number (erasure, 1113).
+    DocumentCollectionName("missed_calls"): (
+        _integer("created_at"),
+        _text("caller_phone_number"),
+    ),
     # The FAQ of a business: the website chat's starter questions (1052).
     DocumentCollectionName("knowledge_items"): (_text("kind"),),
     # The stored digests and monthly reports of a business, newest period
@@ -272,5 +282,10 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("support_access_grants"): (
         _text("status"),
         _text("admin_user_id"),
+    ),
+    # A business's full exports newest first, the purge of expired ones (1113).
+    DocumentCollectionName("business_exports"): (
+        _integer("created_at"),
+        _integer("expires_at"),
     ),
 }

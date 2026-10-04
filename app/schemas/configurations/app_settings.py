@@ -4,6 +4,7 @@ from pydantic import Field
 from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
+from app.schemas.configurations.privacy_settings import PrivacySettings
 from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
 from app.schemas.configurations.session_settings import SessionSettings
@@ -280,3 +281,6 @@ class AppSettings(ImmutableDTO):
     # When unused and admin sessions end (SESSION_IDLE_TIMEOUT_SECONDS,
     # ADMIN_SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_LIFETIME_SECONDS).
     sessions: SessionSettings = Field(default_factory=SessionSettings)
+    # The suppression list's key and the full exports' link (SUPPRESSION_LIST_KEY,
+    # BUSINESS_EXPORT_LINK_HOURS).
+    privacy: PrivacySettings = Field(default_factory=PrivacySettings)

@@ -7,6 +7,7 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
+from app.repositories.activation_probe_repository import ActivationProbeRepository
 from app.repositories.activation_repositories import (
     NudgeSentRepository,
     OnboardingRequestRepository,
@@ -70,4 +71,11 @@ class LaunchRepositoriesContainer(containers.DeclarativeContainer):
         SetupProbeRepository,
         conversation_collection=probe_collections.conversation_collection,
         booking_collection=probe_collections.booking_collection,
+    )
+    # Whether the business reached its activation milestones (1080).
+    activation_probe_repo: Singleton[ActivationProbeRepository] = Singleton(
+        ActivationProbeRepository,
+        conversation_collection=probe_collections.conversation_collection,
+        booking_collection=probe_collections.booking_collection,
+        handoff_collection=probe_collections.handoff_collection,
     )

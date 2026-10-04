@@ -68,6 +68,7 @@ from app.use_cases.voice.summaries.summarize_call_use_case import (
 )
 from tests.channels.channels_inbox import ChannelsInbox
 from tests.notifications.staff_alert_fakes import build_staff_alerts
+from tests.privacy.suppression_doubles import build_suppression_list
 
 
 class RecordingSmsClient(SmsMessagingClientContract):
@@ -104,6 +105,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
         self.summary_requests: list[LlmRequest] = []
         self.summary_llm = ScriptedLlmAdapter(self._answer_summary)
         self.sms_client = RecordingSmsClient()
+        self.suppression_list = build_suppression_list()
         self.country_registry = CountryRegistry(
             self.language_registry, self.wall_clock, DataRegion.EU, []
         )
@@ -147,6 +149,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.phone_number_parser,
             self.sms_client,
             self.wall_clock,
+            self.suppression_list,
         )
         self.missed_calls = MissedCallOrchestrator(
             self.register_missed_call,

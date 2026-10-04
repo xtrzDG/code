@@ -39,6 +39,7 @@ from tests.operations.builders import DEFAULT_NOW
 from tests.operations.fakes import to_microseconds
 from tests.operations.operations_world import OperationsWorld
 from tests.operations.reminder_outbox import ReminderOutbox
+from tests.privacy.suppression_doubles import build_suppression_list
 
 # DEFAULT_NOW is Monday 2026-10-05 08:00 UTC = 12:00 in Tbilisi (UTC+4).
 TICK: JobTick = JobTick(
@@ -67,6 +68,7 @@ class ReminderScene:
         self.sender = ReminderOutbox(self.world.clock.wall_clock)
         self.sender.connect(self.business.id, not_connected)
         self.rate_limits = RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter())
+        self.suppression_list = build_suppression_list()
         self.reminders = SendBookingRemindersUseCase(
             business_repo=self.world.business_repo,
             business_profile_repo=self.world.profile_repo,
@@ -82,6 +84,7 @@ class ReminderScene:
             reminder_template_transformer=BookingReminderTemplateTransformer(),
             wall_clock=self.world.clock.wall_clock,
             rate_limits=self.rate_limits,
+            suppression_list=self.suppression_list,
             whatsapp_reminder_template=(
                 None
                 if reminder_template is None

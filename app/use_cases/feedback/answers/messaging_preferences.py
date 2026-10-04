@@ -1,8 +1,12 @@
 """
-A customer's STOP (or START) recorded on their contact: messages they did
-not ask for stop in every channel (START brings them back), the change is
-audited (the customer made it, so no actor), and the customer is told what
-changed in their language.
+A customer's STOP (or START) recorded on their contact and on the
+business's suppression list: messages they did not ask for stop in every
+channel (START brings them back), the change is audited (the customer made
+it, so no actor), and the customer is told what changed in their language.
+
+The suppression list keeps a digest of every way to reach the customer
+(their numbers, this account), so the STOP outlives an erasure of their
+data: a new contact with the same number or account is still not messaged.
 """
 
 from dataclasses import dataclass
@@ -10,6 +14,7 @@ from dataclasses import dataclass
 from typed_time_provider import Microseconds
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.schemas.constants.channels import ChannelKind
@@ -20,6 +25,7 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.feedback.customer_signals import CustomerSignalReply
 from app.schemas.dto.localization import LocalizedText
+from app.schemas.dto.privacy.suppression import SuppressedIdentity
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -27,6 +33,10 @@ from app.schemas.typings.compliance.strings import (
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.channels.opt_out import with_opt_out
 from app.utilities.channels.opt_out_texts import OPTED_IN_TEXT, OPTED_OUT_TEXT
+from app.utilities.privacy.suppressed_identities import (
+    channel_identity,
+    contact_identities,
+)
 
 OPT_OUT_ENTITY: AuditEntityName = AuditEntityName("message_opt_out")
 
@@ -36,6 +46,7 @@ class MessagingPreferences:
     contact_repo: ContactRepoContract
     audit_log_repo: AuditLogRepoContract
     text_resolver: LocalizedTextResolverContract
+    suppression_list: SuppressionListContract
 
     def apply(
         self,
@@ -52,15 +63,25 @@ class MessagingPreferences:
         contact: ContactDocument = (
             self.contact_repo.get(turn.business.id, turn.contact.id) or turn.contact
         )
+        identities: list[SuppressedIdentity] = [
+            channel_identity(turn.conversation.channel, turn.conversation.channel_user_id),
+            *contact_identities(contact),
+        ]
         if kind is CustomerSignalKind.OPT_OUT:
+            self.suppression_list.suppress(turn.business.id, identities, now)
             stopped = with_opt_out(contact, turn.conversation.channel)
             if stopped != contact.opted_out_channels:
                 self._store(contact, stopped, AuditAction.CREATE, now)
 
             return self._reply(turn, kind, OPTED_OUT_TEXT)
 
+        lifted: int = self.suppression_list.lift(turn.business.id, identities)
         if not contact.opted_out_channels:
-            return None
+            if lifted == 0:
+                return None
+
+            # STOP said before an erasure: only the list remembered it.
+            return self._reply(turn, kind, OPTED_IN_TEXT)
 
         self._store(contact, [], AuditAction.DELETE, now)
         return self._reply(turn, kind, OPTED_IN_TEXT)

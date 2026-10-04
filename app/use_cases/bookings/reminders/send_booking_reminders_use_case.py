@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
@@ -46,7 +47,7 @@ from app.use_cases.bookings.reminders.reminder_rules import (
     read_cancellation_policy,
     sends_reminders,
 )
-from app.utilities.channels.opt_out import is_opted_out
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 from app.utilities.channels.proactive_limits import (
     PROACTIVE_WINDOW,
     proactive_message_counter,
@@ -86,8 +87,8 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
     twice), and the worker sends it with retries; each delivery is metered
     once.
 
-    A customer who opted out of unrequested messages (STOP) gets no
-    reminder, and every reminder counts against the customer's shared
+    A customer who opted out of unrequested messages (STOP, also as a
+    suppression-list entry that outlived an erasure) gets no reminder, and every reminder counts against the customer's shared
     daily cap of such messages.
 
     The booking is read again right before it is reminded and before it is
@@ -120,6 +121,7 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         ],
         wall_clock: WallClock[Microseconds],
         rate_limits: RequestRateLimitRegistryContract,
+        suppression_list: SuppressionListContract,
         whatsapp_reminder_template: WhatsAppTemplateName | None = None,
         reminder_lead: BookingReminderLeadSeconds = DEFAULT_REMINDER_LEAD,
         unit_of_work: StorageUnitOfWorkContract | None = None,
@@ -142,6 +144,7 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             whatsapp_reminder_template=whatsapp_reminder_template,
         )
         self._rate_limits: RequestRateLimitRegistryContract = rate_limits
+        self._suppression_list: SuppressionListContract = suppression_list
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._reminder_lead: BookingReminderLeadSeconds = reminder_lead
 
@@ -213,7 +216,9 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
             business.id,
             booking.contact_id,
         )
-        if contact is None or is_opted_out(contact):
+        if contact is None or is_messaging_suppressed(
+            self._suppression_list, business.id, contact
+        ):
             return False
 
         identities: list[ChannelIdentity] = choose_reminder_identities(

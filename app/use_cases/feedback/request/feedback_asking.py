@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typed_time_provider import Microseconds
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.repositories.feedback_repositories import (
@@ -33,7 +34,7 @@ from app.use_cases.feedback.request.feedback_sending import (
     FeedbackSender,
     feedback_message_id,
 )
-from app.utilities.channels.opt_out import is_opted_out
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
 from app.utilities.feedback.feedback_keys import (
     feedback_request_id_of,
     new_review_token,
@@ -52,6 +53,7 @@ class FeedbackAsker:
     routing: FeedbackRouting
     sender: FeedbackSender
     live_events: EventPublisherFacilitatorContract
+    suppression_list: SuppressionListContract
 
     def ask(
         self,
@@ -83,7 +85,7 @@ class FeedbackAsker:
         if contact is None or contact.erased_at is not None:
             return self._skip(request, FeedbackSkipReason.NO_CONTACT)
 
-        if is_opted_out(contact):
+        if is_messaging_suppressed(self.suppression_list, business.id, contact):
             return self._skip(request, FeedbackSkipReason.OPTED_OUT)
 
         route: FeedbackRoute | FeedbackSkipReason = self.routing.choose(

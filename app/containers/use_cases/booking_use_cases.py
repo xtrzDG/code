@@ -221,6 +221,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
             ),
             wall_clock=time_provider.microsecond_wall_clock,
             rate_limits=registries.request_rate_limit_registry,
+            suppression_list=facilitators.suppression_list,
             whatsapp_reminder_template=(
                 config.app_settings.provided.whatsapp_reminder_template_name
             ),
