@@ -93,6 +93,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       message_opt_out: "კლიენტის უარი შეტყობინებებზე",
       review_settings: "შეფასებების პარამეტრები",
       feedback_request: "შეფასების მოთხოვნები",
+      incident: "პლატფორმის ინციდენტი",
     },
   },
   roles: {

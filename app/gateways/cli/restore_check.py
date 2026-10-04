@@ -11,8 +11,10 @@ and a throwaway Postgres server with a role that may create databases
 (RESTORE_CHECK_DATABASE_URL), never production's. The checks: the archive
 matches its manifest; every table has the dumped number of rows; the
 migrations are this checkout's; row-level security isolates businesses;
-the newest backup is at most BACKUP_MAX_AGE_HOURS old. Exit codes: 0 the
-backup restores, 1 a check failed or the restore failed, 2 not configured.
+the newest backup is at most BACKUP_MAX_AGE_HOURS old. With DATABASE_URL
+(the weekly Render cron) the drill is recorded for the admin system page.
+Exit codes: 0 the backup restores, 1 a check failed or the restore failed,
+2 not configured.
 """
 
 import argparse
@@ -40,14 +42,24 @@ from app.gateways.cli.backup_wiring import (
     monitored_run,
     work_directory,
 )
+from app.gateways.cli.maintenance_run_log import (
+    RecordRun,
+    describe_failure,
+    record_maintenance_run,
+    record_with_container,
+)
 from app.gateways.cli.migrate import DEFAULT_MIGRATIONS_DIRECTORY
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.monitoring import MaintenanceRunKind, MaintenanceRunOutcome
 from app.schemas.dto.backups import CheckBackupRestoreCommand, RestoreCheckReport
+from app.schemas.dto.maintenance_runs import RecordMaintenanceRunCommand
 from app.schemas.exceptions.backup_errors import RestoreDrillFailedError
 from app.schemas.typings.backups.constrained_strings import BackupObjectKey
+from app.schemas.typings.monitoring.constrained_integers import ArchivedRowCount
+from app.schemas.typings.monitoring.strings import MaintenanceErrorText
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.maintenance.backups.check_backup_restore_use_case import (
@@ -66,6 +78,7 @@ def main(
     environment_variables: Mapping[str, str] | None = None,
     output: TextIO | None = None,
     error_output: TextIO | None = None,
+    record_run: RecordRun = record_with_container,
 ) -> int:
     """Run the drill once; returns the process exit code."""
 
@@ -131,15 +144,28 @@ def main(
             )
 
     monitored = monitored_run(settings, RESTORE_DRILL_JOB, RESTORE_DRILL_INTERVAL)
+    clock = WallClock(preferred_time_unit_type=Microseconds)
+    started_at: Microseconds = clock.now_unix()
     try:
         report: RestoreCheckReport = monitored.run(
             run_drill, lambda result: not result.problems
         )
     except Exception as error:  # noqa: BLE001 - reported, then the exit code
         print(f"Restore drill failed: {error}", file=error_stream)
+        failed = RecordMaintenanceRunCommand(
+            kind=MaintenanceRunKind.RESTORE_DRILL,
+            outcome=MaintenanceRunOutcome.FAILED,
+            started_at=started_at,
+            finished_at=clock.now_unix(),
+            error=describe_failure(error),
+        )
+        record_maintenance_run(settings, failed, error_stream, record_run)
         return EXIT_FAILED
 
     print(describe_drill(report, bool(parsed.keep_database)), file=output_stream)
+    record_maintenance_run(
+        settings, drill_run(report, started_at, clock), error_stream, record_run
+    )
     if report.problems:
         monitored.report_failure(
             RestoreDrillFailedError(
@@ -151,6 +177,38 @@ def main(
         return EXIT_FAILED
 
     return EXIT_OK
+
+
+def drill_run(
+    report: RestoreCheckReport,
+    started_at: Microseconds,
+    clock: WallClock[Microseconds],
+) -> RecordMaintenanceRunCommand:
+    """The finished drill as the system page records it (failed checks: FAILED)."""
+
+    facts = report.restored.facts
+    return RecordMaintenanceRunCommand(
+        kind=MaintenanceRunKind.RESTORE_DRILL,
+        outcome=(
+            MaintenanceRunOutcome.FAILED
+            if report.problems
+            else MaintenanceRunOutcome.SUCCEEDED
+        ),
+        started_at=started_at,
+        finished_at=clock.now_unix(),
+        archive_key=report.archive_key,
+        archive_size=report.manifest.archive_size,
+        row_count=ArchivedRowCount(
+            sum(int(count) for count in facts.row_counts.values())
+        ),
+        error=(
+            MaintenanceErrorText(
+                f"{len(report.problems)} checks failed: {report.problems[0]}"
+            )
+            if report.problems
+            else None
+        ),
+    )
 
 
 def build_argument_parser() -> argparse.ArgumentParser:

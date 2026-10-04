@@ -55,6 +55,9 @@ from app.utilities.config_helpers.app_settings.otp_provider_settings_section imp
 from app.utilities.config_helpers.app_settings.platform_admin_settings_section import (
     read_platform_admin_settings,
 )
+from app.utilities.config_helpers.app_settings.platform_alert_settings_section import (
+    read_platform_alert_settings,
+)
 from app.utilities.config_helpers.app_settings.public_address_settings_section import (
     read_public_address_settings,
 )
@@ -132,4 +135,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_backup_settings(environment_variables),
         **read_media_settings(environment_variables),
         **read_reply_speed_settings(environment_variables, llm_provider),
+        **read_platform_alert_settings(environment_variables),
     )

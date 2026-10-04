@@ -153,8 +153,9 @@ against any stack you seeded (only ever a load-test one).
   of 200 messages a second (12,000 messages) takes one worker about 20
   minutes to drain, ten workers about 2. Raise the `inbound` concurrency
   (keep `DB_POOL_SIZE` and the provider's rate limits in mind) or add
-  workers when the queue's wait grows (admin jobs page; the
-  `inbound` lane's oldest queued job).
+  workers when the queue's wait grows (the admin system page,
+  `/admin/system`: the `inbound` lane's oldest wait; the
+  `inbound_backlog` alert pages above 120 s, `docs/operations/slo.md`).
 - **Database connections.** Every process keeps up to `DB_POOL_SIZE`
   connections (half of `THREADPOOL_SIZE` unless set) and closes those idle
   for `DB_POOL_MAX_IDLE_SECONDS` (300) down to `DB_POOL_MIN_SIZE` (2), so a

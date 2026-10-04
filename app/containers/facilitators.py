@@ -115,6 +115,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         email_client=clients.smtp_email_client,
         platform_admin_emails=config.app_settings.provided.platform_admin_emails,
         wall_clock=time_provider.microsecond_wall_clock,
+        signal_counter=adapters.signal_counter,
     )
     # The cabinet's live updates: use cases publish what changed (ids only);
     # the SSE route opens streams, at most a few per person and process.

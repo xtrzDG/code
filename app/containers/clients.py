@@ -14,6 +14,7 @@ from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClie
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
 from app.clients.meta.meta_typing_client import MetaTypingClient
+from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
@@ -75,6 +76,10 @@ class ClientsContainer(containers.DeclarativeContainer):
     telegram_bot_client: Singleton[TelegramBotClient] = Singleton(TelegramBotClient)
     meta_graph_client: Singleton[MetaGraphClient] = Singleton(MetaGraphClient)
     meta_typing_client: Singleton[MetaTypingClient] = Singleton(MetaTypingClient)
+    # Meta channel tokens' expiry, asked with the platform's app.
+    meta_token_debug_client: Singleton[MetaTokenDebugClient] = Singleton(
+        MetaTokenDebugClient
+    )
     # Files customers send: platform downloads, speech-to-text (EU project).
     meta_media_client: Singleton[MetaMediaClient] = Singleton(MetaMediaClient)
     telegram_file_client: Singleton[TelegramFileClient] = Singleton(TelegramFileClient)

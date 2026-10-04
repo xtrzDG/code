@@ -363,3 +363,24 @@ _.model_config  # scripts/eval_harness/dataset_models.py
 # buckets of migration 1090), the medians by the admin's client page.
 _.reply_latency_ms  # app/schemas/domain/conversations.py (MessageDocument)
 _.p50_ms  # app/schemas/dto/reply_speed.py (ClientReplySpeed, ChannelReplySpeed)
+
+# The platform's own operations (GET /v1/admin/system, /v1/admin/incidents,
+# docs/operations): response fields the admin pages read, the incident
+# kinds an admin picks, and when an alert was last checked (stored for the
+# postmortem); no Python code reads them.
+_.OUTAGE  # app/schemas/constants/incidents.py
+_.DEGRADATION  # app/schemas/constants/incidents.py
+_.checked_at  # app/schemas/domain/platform_alerts.py, app/schemas/dto/admin_system.py
+_.failing_jobs  # app/schemas/dto/admin_system.py (WorkerPulseView)
+_.scheduled  # app/schemas/dto/admin_system.py (LaneView)
+_.dead  # app/schemas/dto/admin_system.py (LaneView)
+_.oldest_wait_seconds  # app/schemas/dto/admin_system.py (LaneView)
+_.row_estimate  # app/schemas/dto/admin_system.py (TableSizeView)
+_.dead_jobs  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.channels_in_error  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.channels_in_error_count  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.expiring_credentials  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.database_bytes  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.last_restore_drill  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.alerts  # app/schemas/dto/admin_system.py (AdminSystemView)
+_.notice_languages  # app/schemas/dto/incidents.py (IncidentView)

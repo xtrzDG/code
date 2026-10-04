@@ -23,6 +23,9 @@ from app.containers.pipelines.notification_pipelines import (
     NotificationPipelinesContainer,
 )
 from app.containers.pipelines.operations_pipelines import OperationsPipelinesContainer
+from app.containers.pipelines.platform_ops_pipelines import (
+    PlatformOpsPipelinesContainer,
+)
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
@@ -106,6 +109,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     platform: PlatformPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformPipelinesContainer,
         platform_orchestrators=orchestrators.platform,
+    )
+    platform_ops: PlatformOpsPipelinesContainer = Container(  # type: ignore[assignment]
+        PlatformOpsPipelinesContainer,
+        platform_ops=orchestrators.platform_ops,
     )
     security: SecurityPipelinesContainer = Container(  # type: ignore[assignment]
         SecurityPipelinesContainer,

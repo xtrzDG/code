@@ -1,0 +1,104 @@
+{
+  "collection": "platform_alert_states",
+  "document_type": "PlatformAlertStateDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "checked_at": {
+        "type": "integer"
+      },
+      "code": {
+        "enum": [
+          "dead_jobs",
+          "inbound_backlog",
+          "outbound_failures",
+          "llm_errors",
+          "handoff_spike",
+          "tool_errors",
+          "stale_worker",
+          "otp_cap_trips"
+        ],
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "detail": {
+        "type": "string"
+      },
+      "figure": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "fired_at": {
+        "type": "integer"
+      },
+      "notification_count": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "notified_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "resolved_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "firing",
+          "resolved"
+        ],
+        "type": "string"
+      },
+      "threshold": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "unit": {
+        "enum": [
+          "count",
+          "seconds",
+          "percent",
+          "ratio"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "code",
+      "status",
+      "figure",
+      "threshold",
+      "unit",
+      "detail",
+      "fired_at",
+      "checked_at"
+    ],
+    "type": "object"
+  }
+}

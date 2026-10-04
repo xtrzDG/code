@@ -1,0 +1,16 @@
+# A worker hung or crashed for good: its pulse is more than 10 minutes old
+# while another worker of the same release beats, and no worker started
+# after it went silent (a restart or deploy replaced it). Pulses are kept a
+# day. When no worker runs at all this check cannot run: the Sentry Crons
+# monitor of `platform_alerts` and the external uptime check of GET /readyz
+# page instead.
+code: stale_worker
+severity: sev2
+summary: A worker of the current release stopped writing its pulse.
+measure: stuck workers of the current release
+threshold: 0
+unit: count
+window_minutes: 1440
+volume_floor: 0
+source: worker_heartbeats (beat_at), migration 1030
+runbook: docs/operations/runbooks/stuck-worker.md

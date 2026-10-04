@@ -16,6 +16,9 @@ from app.containers.adapters.inbox_collections_container import (
 from app.containers.adapters.media_collections_container import (
     MediaCollectionsContainer,
 )
+from app.containers.adapters.operations_collections_container import (
+    OperationsCollectionsContainer,
+)
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
 )
@@ -138,8 +141,18 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The platform's alerts, backups and incidents (1093), one more sibling.
+    operations_collections: OperationsCollectionsContainer = Container(  # type: ignore[assignment]
+        OperationsCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        operations_collections=operations_collections,
+        health_collections=adapters.collections,
         media_collections=media_collections,
         rate_collections=rate_collections,
         analytics_collections=analytics_collections,

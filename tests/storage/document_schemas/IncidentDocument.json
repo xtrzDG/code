@@ -1,0 +1,175 @@
+{
+  "collection": "incidents",
+  "document_type": "IncidentDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "affected_business_ids": {
+        "items": {
+          "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "approximate_record_count": {
+        "anyOf": [
+          {
+            "maximum": 1000000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "approximate_subject_count": {
+        "anyOf": [
+          {
+            "maximum": 1000000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "detected_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^incident_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "outage",
+          "degradation",
+          "data_breach"
+        ],
+        "type": "string"
+      },
+      "notice_texts": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "likely_consequences": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "measures": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "nature": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "record_categories": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "subject_categories": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          "required": [
+            "language",
+            "nature",
+            "subject_categories",
+            "record_categories",
+            "likely_consequences",
+            "measures"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "notified_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "notified_owner_count": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "reported_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "severity": {
+        "enum": [
+          "sev1",
+          "sev2",
+          "sev3"
+        ],
+        "type": "string"
+      },
+      "started_at": {
+        "type": "integer"
+      },
+      "status": {
+        "default": "open",
+        "enum": [
+          "open",
+          "resolved"
+        ],
+        "type": "string"
+      },
+      "title": {
+        "maxLength": 160,
+        "minLength": 3,
+        "pattern": "^\\S(.*\\S)?\\Z",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "kind",
+      "severity",
+      "title",
+      "started_at",
+      "detected_at",
+      "reported_by"
+    ],
+    "type": "object"
+  }
+}

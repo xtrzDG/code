@@ -1,7 +1,7 @@
 {
   "collection": "channels",
   "document_type": "ChannelDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -11,6 +11,28 @@
       },
       "created_at": {
         "type": "integer"
+      },
+      "credential_checked_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "credential_expires_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "encrypted_secret": {
         "anyOf": [
@@ -133,7 +155,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "status": {

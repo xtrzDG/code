@@ -7,8 +7,10 @@ retention keeps 30 daily and 12 monthly copies (BACKUP_KEEP_*).
     uv run python -m app.gateways.cli.backup --work-directory /var/tmp
 
 docs/operations/backup-restore.md has the schedule, the keys and the
-restore runbook. Exit codes: 0 done, 1 the backup failed, 2 the backup is
-not configured (DATABASE_URL, BACKUP_S3_*, BACKUP_AGE_PUBLIC_KEY).
+restore runbook. Every run is recorded in the database it dumped, for the
+admin system page (`maintenance_run_log`). Exit codes: 0 done, 1 the
+backup failed, 2 the backup is not configured (DATABASE_URL, BACKUP_S3_*,
+BACKUP_AGE_PUBLIC_KEY).
 """
 
 import argparse
@@ -32,11 +34,20 @@ from app.gateways.cli.backup_wiring import (
     monitored_run,
     work_directory,
 )
+from app.gateways.cli.maintenance_run_log import (
+    RecordRun,
+    describe_failure,
+    record_maintenance_run,
+    record_with_container,
+)
 from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.monitoring import MaintenanceRunKind, MaintenanceRunOutcome
 from app.schemas.dto.backups import CreateDatabaseBackupCommand, DatabaseBackupReport
+from app.schemas.dto.maintenance_runs import RecordMaintenanceRunCommand
+from app.schemas.typings.monitoring.constrained_integers import ArchivedRowCount
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.maintenance.backups.create_database_backup_use_case import (
@@ -53,6 +64,7 @@ def main(
     environment_variables: Mapping[str, str] | None = None,
     output: TextIO | None = None,
     error_output: TextIO | None = None,
+    record_run: RecordRun = record_with_container,
 ) -> int:
     """Take one backup; returns the process exit code."""
 
@@ -99,16 +111,50 @@ def main(
                 CreateDatabaseBackupCommand(work_directory=directory)
             )
 
+    clock = WallClock(preferred_time_unit_type=Microseconds)
+    started_at: Microseconds = clock.now_unix()
     try:
         report: DatabaseBackupReport = monitored_run(
             settings, BACKUP_JOB, BACKUP_INTERVAL
         ).run(take_backup, lambda _report: True)
     except Exception as error:  # noqa: BLE001 - reported, then the exit code
         print(f"Backup failed: {error}", file=error_stream)
+        failed = RecordMaintenanceRunCommand(
+            kind=MaintenanceRunKind.BACKUP,
+            outcome=MaintenanceRunOutcome.FAILED,
+            started_at=started_at,
+            finished_at=clock.now_unix(),
+            error=describe_failure(error),
+        )
+        record_maintenance_run(settings, failed, error_stream, record_run)
         return EXIT_FAILED
 
     print(describe_backup(report), file=output_stream)
+    record_maintenance_run(
+        settings, backup_run(report, started_at, clock), error_stream, record_run
+    )
     return EXIT_OK
+
+
+def backup_run(
+    report: DatabaseBackupReport,
+    started_at: Microseconds,
+    clock: WallClock[Microseconds],
+) -> RecordMaintenanceRunCommand:
+    """The finished backup as the system page records it."""
+
+    manifest = report.manifest
+    return RecordMaintenanceRunCommand(
+        kind=MaintenanceRunKind.BACKUP,
+        outcome=MaintenanceRunOutcome.SUCCEEDED,
+        started_at=started_at,
+        finished_at=clock.now_unix(),
+        archive_key=manifest.archive_key,
+        archive_size=manifest.archive_size,
+        row_count=ArchivedRowCount(
+            sum(int(count) for count in manifest.facts.row_counts.values())
+        ),
+    )
 
 
 def build_argument_parser() -> argparse.ArgumentParser:

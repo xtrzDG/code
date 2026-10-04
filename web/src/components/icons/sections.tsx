@@ -171,3 +171,10 @@ export const IconKey = (props: IconProps) => (
     <path d="M10.8 12.2L20 3M16.5 6.5l2.5 2.5M14 9l2 2" />
   </Icon>
 );
+
+/** The platform's health (the admin's System page): a pulse line. */
+export const IconPulse = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3 12h4l2.5-6 4 12 2.5-6H21" />
+  </Icon>
+);

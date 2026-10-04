@@ -27,6 +27,7 @@ import {
   MFA_ADMIN_EMAIL,
   PLATFORM_ADMIN_EMAIL,
   REPOSITORY_ROOT,
+  SYSTEM_ADMIN_EMAIL,
   WEB_DIRECTORY,
   WEB_PORT,
   WEB_URL,
@@ -125,9 +126,9 @@ export default defineConfig({
         OTP_VERIFIES_PER_IP_PER_10_MINUTES: "100000",
         OTP_SENDS_PER_COUNTRY_PER_HOUR: "100000",
         // Platform admins for the admin pages (encryption-keys.spec.ts,
-        // admin-metrics.spec.ts, two-factor.spec.ts); they sign in with two
-        // factors (support/admin.ts).
-        PLATFORM_ADMIN_EMAILS: `${PLATFORM_ADMIN_EMAIL},${METRICS_ADMIN_EMAIL},${MFA_ADMIN_EMAIL}`,
+        // admin-metrics.spec.ts, two-factor.spec.ts, admin-system.spec.ts);
+        // they sign in with two factors (support/admin.ts).
+        PLATFORM_ADMIN_EMAILS: `${PLATFORM_ADMIN_EMAIL},${METRICS_ADMIN_EMAIL},${MFA_ADMIN_EMAIL},${SYSTEM_ADMIN_EMAIL}`,
         // Notification links lead to this cabinet; device notifications go
         // to the push service a test starts (notifications.spec.ts).
         CABINET_BASE_URL: WEB_URL,

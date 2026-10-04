@@ -235,5 +235,11 @@ export const queryKeys = {
     encryptionKeys: () => ["admin", "encryptionKeys"] as const,
     /** The founder's growth metrics for one set of filters. */
     metrics: (filters: string) => ["admin", "metrics", filters] as const,
+    /** The platform's health (GET /v1/admin/system). */
+    system: () => ["admin", "system"] as const,
+    /** The dead letters of the background queue. */
+    deadJobs: () => ["admin", "jobs", "dead"] as const,
+    /** The recorded incidents, newest first. */
+    incidents: () => ["admin", "incidents"] as const,
   },
 } satisfies Record<string, Record<string, (...args: never[]) => QueryKey>>;
