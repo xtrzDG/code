@@ -63,8 +63,8 @@ test("the niche's usual hours and ready answers wait until the owner takes them"
     .first();
   const question = ((await chip.textContent()) ?? "").trim();
   await chip.click();
-  const questionField = answers.getByLabel(en.profileEdit.rules.questionOf.replace("{number}", "1"));
-  const answerField = answers.getByLabel(en.profileEdit.rules.answerOf.replace("{number}", "1"));
+  const questionField = page.getByLabel(en.profileEdit.rules.questionOf.replace("{number}", "1"), { exact: true });
+  const answerField = page.getByLabel(en.profileEdit.rules.answerOf.replace("{number}", "1"), { exact: true });
   await expect(questionField).toHaveValue(question);
   // Taken with the niche's answer, or with the owner's own; then changed in place.
   if ((await answerField.inputValue()).trim() === "") {

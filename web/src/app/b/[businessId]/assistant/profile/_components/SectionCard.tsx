@@ -64,7 +64,14 @@ export function SectionCard({ section, href, summary, gaps }: { section: Profile
         <div className="min-w-0 flex-1 space-y-1">
           <h3 className="text-[0.9375rem] font-semibold tracking-tight text-ink">{title}</h3>
           <div id={describedBy} className="text-sm text-ink-muted">
-            {summary === null ? <Skeleton className="mt-1.5 h-3.5 w-40" /> : <p className="line-clamp-2 break-words">{summary}</p>}
+            {summary === null ? (
+              <Skeleton className="mt-1.5 h-3.5 w-40" />
+            ) : (
+              // A preview of what the section holds: two lines at most, the whole of it in the tooltip and for screen readers.
+              <p data-clip="content" title={summary} className="line-clamp-2 break-words">
+                {summary}
+              </p>
+            )}
           </div>
         </div>
         <IconChevronRight className="mt-2.5 size-4 shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />

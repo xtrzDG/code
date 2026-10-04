@@ -45,7 +45,7 @@ for (const [locale, messages] of Object.entries(LANGUAGES)) {
 
     // The tunnel's hours screen as a section of the page: no counter, no way on, no Save.
     await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant/profile/hours$`));
-    await expect(page.getByRole("heading", { level: 2, name: messages.profileEdit.sections.hours.title })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: messages.profileEdit.sections.hours.title, exact: true })).toBeVisible();
     const main = page.getByRole("main");
     await expect(main.getByText(templatePattern(messages.tunnel.stepOf))).toHaveCount(0);
     await expect(main.getByRole("button", { name: messages.tunnel.continue })).toHaveCount(0);
@@ -99,6 +99,6 @@ test("the six-step profile's old addresses open the section that edits their ste
     });
   }
   // A section that does not exist is not found.
-  const missing = await page.request.get(`${base}/assistant/profile/payments`);
-  expect(missing.status()).toBe(404);
+  await page.goto(`${base}/assistant/profile/payments`);
+  await expect(page.getByText(en.errors.notFoundTitle)).toBeVisible();
 });
