@@ -2834,7 +2834,8 @@ export interface components {
         /**
          * AdminClientSummary
          * @description One client in the admin list: subscription, assistant quality, staff
-         *     load, package use in the current period, cost and margin, and health.
+         *     load, package use in the current period, cost and margin, how fast
+         *     customers heard back in the last 7 days, and health.
          *     `setup_option` is how the business is set up; `onboarding_request` the
          *     done-for-you setup its owner asked the platform team for.
          */
@@ -2882,6 +2883,7 @@ export interface components {
             published_at?: number | null;
             /** Published Version Number */
             published_version_number?: number | null;
+            reply_speed?: components["schemas"]["ClientReplySpeed"];
             service_mode: components["schemas"]["ServiceMode"];
             setup_option?: components["schemas"]["SetupOption"] | null;
             subscription_status?: components["schemas"]["SubscriptionStatus"] | null;
@@ -4217,6 +4219,21 @@ export interface components {
          */
         ChannelLinkState: "linked" | "missing_public_address";
         /**
+         * ChannelReplySpeed
+         * @description The replies of one channel: how many were measured, and the median and
+         *     95th percentile of the customer's wait (first unanswered message to the
+         *     stored answer).
+         */
+        ChannelReplySpeed: {
+            channel: components["schemas"]["ChannelKind"];
+            /** P50 Ms */
+            p50_ms: number;
+            /** P95 Ms */
+            p95_ms: number;
+            /** Reply Count */
+            reply_count: number;
+        };
+        /**
          * ChannelStatus
          * @description Connection state of a channel.
          * @enum {string}
@@ -4394,7 +4411,7 @@ export interface components {
          *     asks for a look.
          * @enum {string}
          */
-        ClientHealthIssue: "no_subscription" | "first_payment_pending" | "payment_past_due" | "subscription_cancelled" | "leads_only_mode" | "not_published" | "autotests_failed" | "tool_errors" | "many_handoffs" | "open_questions" | "package_exceeded" | "negative_margin";
+        ClientHealthIssue: "no_subscription" | "first_payment_pending" | "payment_past_due" | "subscription_cancelled" | "leads_only_mode" | "not_published" | "autotests_failed" | "tool_errors" | "many_handoffs" | "open_questions" | "package_exceeded" | "negative_margin" | "slow_replies";
         /**
          * ClientHealthStatus
          * @description Overall state of a client business in the platform admin view.
@@ -4415,6 +4432,26 @@ export interface components {
             summary: components["schemas"]["AdminClientSummary"];
             /** Timezone */
             timezone: string;
+        };
+        /**
+         * ClientReplySpeed
+         * @description Reply speed of a client in the last 7 days, over every channel and per
+         *     channel (the busiest first). Percentiles are None without measured
+         *     replies; replies before measuring began (or of the owner's test chat
+         *     and voice calls) are not measured.
+         */
+        ClientReplySpeed: {
+            /** Channels */
+            channels?: components["schemas"]["ChannelReplySpeed"][];
+            /** P50 Ms */
+            p50_ms?: number | null;
+            /** P95 Ms */
+            p95_ms?: number | null;
+            /**
+             * Reply Count
+             * @default 0
+             */
+            reply_count: number;
         };
         /**
          * CohortRowView
@@ -6703,6 +6740,15 @@ export interface components {
          *     note.
          *
          *     Version 2: `attachments` (optional, so version 1 rows read as they are).
+         *
+         *     Version 3: how an assistant reply was made, for reply-speed metrics:
+         *     `channel` (the conversation's, so latency groups per channel in the
+         *     database), `reply_latency_ms` (from the platform delivering the
+         *     customer's first unanswered message to the reply being stored; None
+         *     when not measured, e.g. test chats and older rows), `llm_round_count`
+         *     and `is_fallback_model` (a model of the other provider answered because
+         *     the version's own failed). All optional, so version 2 rows read as they
+         *     are.
          */
         MessageDocument: {
             /** Attachments */
@@ -6710,6 +6756,7 @@ export interface components {
             author: components["schemas"]["MessageAuthor"];
             /** Business Id */
             business_id: string;
+            channel?: components["schemas"]["ChannelKind"] | null;
             /** Conversation Id */
             conversation_id: string;
             /**
@@ -6730,8 +6777,18 @@ export interface components {
              * @default 0
              */
             input_tokens: number;
+            /**
+             * Is Fallback Model
+             * @default false
+             */
+            is_fallback_model: boolean;
             /** Language */
             language?: string | null;
+            /**
+             * Llm Round Count
+             * @default 0
+             */
+            llm_round_count: number;
             /** Model Id */
             model_id?: string | null;
             /**
@@ -6739,9 +6796,11 @@ export interface components {
              * @default 0
              */
             output_tokens: number;
+            /** Reply Latency Ms */
+            reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 2
+             * @default 3
              */
             schema_version: string;
             /** Sent By */

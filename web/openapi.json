@@ -233,7 +233,7 @@
       },
       "AdminClientSummary": {
         "additionalProperties": false,
-        "description": "One client in the admin list: subscription, assistant quality, staff\nload, package use in the current period, cost and margin, and health.\n`setup_option` is how the business is set up; `onboarding_request` the\ndone-for-you setup its owner asked the platform team for.",
+        "description": "One client in the admin list: subscription, assistant quality, staff\nload, package use in the current period, cost and margin, how fast\ncustomers heard back in the last 7 days, and health.\n`setup_option` is how the business is set up; `onboarding_request` the\ndone-for-you setup its owner asked the platform team for.",
         "properties": {
           "autotest_verdict": {
             "anyOf": [
@@ -396,6 +396,9 @@
               }
             ],
             "title": "Published Version Number"
+          },
+          "reply_speed": {
+            "$ref": "#/components/schemas/ClientReplySpeed"
           },
           "service_mode": {
             "$ref": "#/components/schemas/ServiceMode"
@@ -4043,6 +4046,38 @@
         "title": "ChannelLinkState",
         "type": "string"
       },
+      "ChannelReplySpeed": {
+        "additionalProperties": false,
+        "description": "The replies of one channel: how many were measured, and the median and\n95th percentile of the customer's wait (first unanswered message to the\nstored answer).",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "p50_ms": {
+            "minimum": 0.0,
+            "title": "P50 Ms",
+            "type": "integer"
+          },
+          "p95_ms": {
+            "minimum": 0.0,
+            "title": "P95 Ms",
+            "type": "integer"
+          },
+          "reply_count": {
+            "minimum": 0.0,
+            "title": "Reply Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "channel",
+          "reply_count",
+          "p50_ms",
+          "p95_ms"
+        ],
+        "title": "ChannelReplySpeed",
+        "type": "object"
+      },
       "ChannelStatus": {
         "description": "Connection state of a channel.",
         "enum": [
@@ -4477,7 +4512,8 @@
           "many_handoffs",
           "open_questions",
           "package_exceeded",
-          "negative_margin"
+          "negative_margin",
+          "slow_replies"
         ],
         "title": "ClientHealthIssue",
         "type": "string"
@@ -4533,6 +4569,51 @@
           "timezone"
         ],
         "title": "ClientHealthView",
+        "type": "object"
+      },
+      "ClientReplySpeed": {
+        "additionalProperties": false,
+        "description": "Reply speed of a client in the last 7 days, over every channel and per\nchannel (the busiest first). Percentiles are None without measured\nreplies; replies before measuring began (or of the owner's test chat\nand voice calls) are not measured.",
+        "properties": {
+          "channels": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelReplySpeed"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "p50_ms": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P50 Ms"
+          },
+          "p95_ms": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95 Ms"
+          },
+          "reply_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Reply Count",
+            "type": "integer"
+          }
+        },
+        "title": "ClientReplySpeed",
         "type": "object"
       },
       "CohortRowView": {
@@ -10247,7 +10328,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.",
         "properties": {
           "attachments": {
             "items": {
@@ -10262,6 +10343,16 @@
           "business_id": {
             "title": "Business Id",
             "type": "string"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "conversation_id": {
             "title": "Conversation Id",
@@ -10291,6 +10382,11 @@
             "title": "Input Tokens",
             "type": "integer"
           },
+          "is_fallback_model": {
+            "default": false,
+            "title": "Is Fallback Model",
+            "type": "boolean"
+          },
           "language": {
             "anyOf": [
               {
@@ -10304,6 +10400,12 @@
               }
             ],
             "title": "Language"
+          },
+          "llm_round_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Llm Round Count",
+            "type": "integer"
           },
           "model_id": {
             "anyOf": [
@@ -10325,8 +10427,20 @@
             "title": "Output Tokens",
             "type": "integer"
           },
+          "reply_latency_ms": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply Latency Ms"
+          },
           "schema_version": {
-            "default": "2",
+            "default": "3",
             "title": "Schema Version",
             "type": "string"
           },

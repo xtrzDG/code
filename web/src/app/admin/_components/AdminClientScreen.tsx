@@ -22,6 +22,7 @@ import { FailedAutotestsCard } from "./client/FailedAutotestsCard";
 import { InvoicesCard } from "./client/InvoicesCard";
 import { OverviewCard } from "./client/OverviewCard";
 import { PaymentsCard } from "./client/PaymentsCard";
+import { ReplySpeedCard } from "./client/ReplySpeedCard";
 import { HealthBadge, IssueChips } from "./ClientBits";
 
 /** /admin/clients/[businessId]: one client's health explained, and an audited way into their cabinet. */
@@ -104,6 +105,7 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
               <ClientUsageCard summary={summary} />
             </div>
 
+            <ReplySpeedCard summary={summary} />
             <CostCard summary={summary} timeZone={data.timezone} />
             <FailedAutotestsCard tests={data.failed_autotests ?? []} />
 
