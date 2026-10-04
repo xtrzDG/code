@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-04 — exports and data-subject rights: CSV tables, the full export
 
-Spec: `87300e7c2cea955d`
+Spec: `22e97080fdf6241b`
 
 - **Added** `GET /v1/businesses/{business_id}/exports/{table}` (owners,
   after a recent sign-in or step-up: 401 `step_up_required`): the

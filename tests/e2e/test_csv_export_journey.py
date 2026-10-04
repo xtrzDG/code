@@ -124,5 +124,6 @@ def test_the_owner_downloads_the_full_export_by_its_link(workshop: Workshop) -> 
 
     tampered = client.get(link[:-2] + ("AA" if not link.endswith("AA") else "BB"))
     assert tampered.status_code == 404
+    assert client.get(link.split("?")[0]).status_code == 404
     workshop.clock.advance(25 * 3600)
     assert client.get(link).status_code == 404

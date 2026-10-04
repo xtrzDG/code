@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.openapi_error_contract import standard_error_responses
+from app.gateways.http.operations.query_values import OptionalQuery
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -107,7 +108,7 @@ def build_business_export_router(
         request: Request,
         business_id: str,
         export_id: str,
-        token: str = "",
+        token: OptionalQuery = None,
     ) -> Response:
         download: BusinessExportDownload = download_export.operate(
             BusinessExportDownloadQuery(
@@ -133,11 +134,11 @@ def parse_business(raw_business_id: str) -> BusinessId:
     return parse_path_identifier(raw_business_id, BusinessId, "Business")
 
 
-def parse_token(raw_token: str) -> BusinessExportToken:
-    """A malformed token is the same 404 as a wrong or expired one."""
+def parse_token(raw_token: str | None) -> BusinessExportToken:
+    """A missing or malformed token is the same 404 as a wrong or expired one."""
 
     try:
-        return BusinessExportToken(raw_token)
+        return BusinessExportToken(raw_token or "")
     except ValueError as error:
         raise NotFoundError(
             "This download link is not valid or has expired."

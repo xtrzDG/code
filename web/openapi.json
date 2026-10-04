@@ -24035,9 +24035,15 @@
             "name": "token",
             "required": false,
             "schema": {
-              "default": "",
-              "title": "Token",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
             }
           }
         ],

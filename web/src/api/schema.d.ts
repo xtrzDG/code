@@ -13437,7 +13437,7 @@ export interface operations {
     download_business_export_v1_business_exports__business_id___export_id__download_get: {
         parameters: {
             query?: {
-                token?: string;
+                token?: string | null;
             };
             header?: never;
             path: {
