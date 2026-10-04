@@ -33,6 +33,11 @@ RUN node scripts/check-intl.mjs \
 
 # --- Runtime -----------------------------------------------------------------
 FROM node-base AS runtime
+# Debian security fixes published after the base image was built (the
+# image scan fails on fixed HIGH/CRITICAL findings).
+RUN apt-get update \
+    && apt-get upgrade --yes --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /web
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
