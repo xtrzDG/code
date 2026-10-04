@@ -67,7 +67,9 @@ test("an owner sets up an authenticator app, confirms an action with it and sign
 
   await page.goto("/account/security");
   await expect(page.getByRole("heading", { level: 1, name: en.security.title })).toBeVisible();
-  await expect(page.getByText(en.security.session.oneFactor)).toBeVisible();
+  // Scoped to the page: right after a full load the streamed copy of a card can
+  // still sit hidden outside it, next to the one shown.
+  await expect(page.getByRole("main").getByText(en.security.session.oneFactor)).toBeVisible();
   await page.getByRole("button", { name: en.security.app.setUp }).click();
 
   const setup = page.getByRole("dialog", { name: en.mfa.setup.title });
@@ -129,7 +131,7 @@ test("an owner sets up an authenticator app, confirms an action with it and sign
   const third = await freshTotpCode(key, second.step);
   await phone.getByLabel(en.mfa.secondStep.code).fill(third.code);
   await expect(phone).toHaveURL(/\/account\/security$/);
-  await expect(phone.getByText(en.security.session.twoFactor)).toBeVisible();
+  await expect(phone.getByRole("main").getByText(en.security.session.twoFactor)).toBeVisible();
   await fresh.close();
 });
 
