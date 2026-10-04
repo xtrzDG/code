@@ -84,7 +84,9 @@ def test_every_salon_booking_names_its_service_and_value() -> None:
     assert salon.bookings
     for booking in salon.bookings:
         assert booking.service_item_id is not None
-        assert booking.value_minor == prices[booking.service_item_id]
+        price = prices[booking.service_item_id]
+        assert booking.value_minor is not None and price is not None
+        assert int(booking.value_minor) == int(price)
         assert booking.currency_code == "EUR"
         assert booking.buffer_minutes == 10
 

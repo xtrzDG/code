@@ -8,6 +8,10 @@ duration moves to an attribute of the same name: the assistant still reads
 it in the facts, and nothing is booked by it.
 """
 
+from typing import cast
+
+from base_typed_int import BaseTypedIntError
+
 from app.schemas.typings.knowledge.constrained_integers import ServiceDurationMinutes
 
 DURATION_FIELD_NAME: str = "duration_minutes"
@@ -24,7 +28,7 @@ def upgrade_knowledge_items_from_v1(document: StoredJsonObject) -> StoredJsonObj
     if (
         not isinstance(duration, int)
         or isinstance(duration, bool)
-        or int(ServiceDurationMinutes.ge) <= duration <= int(ServiceDurationMinutes.le)
+        or _is_bookable_duration(duration)
     ):
         return document
 
@@ -32,13 +36,31 @@ def upgrade_knowledge_items_from_v1(document: StoredJsonObject) -> StoredJsonObj
     upgraded[DURATION_FIELD_NAME] = None
     stored_attributes: object = document.get(ATTRIBUTES_FIELD_NAME)
     attributes: list[object] = (
-        list(stored_attributes) if isinstance(stored_attributes, list) else []
+        list(cast(list[object], stored_attributes))
+        if isinstance(stored_attributes, list)
+        else []
     )
-    if not any(
-        isinstance(attribute, dict) and attribute.get("key") == DURATION_FIELD_NAME
-        for attribute in attributes
-    ):
+    if not any(_is_duration_attribute(attribute) for attribute in attributes):
         attributes.append({"key": DURATION_FIELD_NAME, "value": str(duration)})
 
     upgraded[ATTRIBUTES_FIELD_NAME] = attributes
     return upgraded
+
+
+def _is_bookable_duration(duration: int) -> bool:
+    """Whether version 2 keeps the stored duration (5 to 720 minutes)."""
+
+    try:
+        ServiceDurationMinutes(duration)
+    except BaseTypedIntError:
+        return False
+    return True
+
+
+def _is_duration_attribute(attribute: object) -> bool:
+    """Whether a stored attribute already carries the key `duration_minutes`."""
+
+    if not isinstance(attribute, dict):
+        return False
+    stored: StoredJsonObject = cast(StoredJsonObject, attribute)
+    return stored.get("key") == DURATION_FIELD_NAME

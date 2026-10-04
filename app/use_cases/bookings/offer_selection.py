@@ -27,8 +27,10 @@ from app.schemas.typings.bookings.constrained_integers import (
     PartySize,
 )
 from app.schemas.typings.bookings.prefixed_id import ResourceId
+from app.schemas.typings.bookings.strings import ResourceReference
 from app.schemas.typings.knowledge.constrained_integers import BufferMinutes
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
+from app.schemas.typings.knowledge.strings import ServiceReference
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.use_cases.bookings.booking_support import SchedulingInputs
 from app.utilities.bookings.bookable_offers import (
@@ -50,9 +52,9 @@ from app.utilities.scheduling.resource_selection import (
 class OfferRequest(NamedTuple):
     """What a booking request names (each part optional)."""
 
-    service_reference: str | None = None
+    service_reference: ServiceReference | None = None
     service_item_id: KnowledgeItemId | None = None
-    resource_reference: str | None = None
+    resource_reference: ResourceReference | None = None
     resource_id: ResourceId | None = None
     resource_kind: ResourceKind | None = None
     duration_minutes: BookingDurationMinutes | None = None

@@ -16,7 +16,7 @@ from app.utilities.scheduling.zoned_time import (
 
 # A booking that ended before the date can still block its first minutes
 # with its buffer, so the read starts this much earlier.
-LONGEST_BUFFER_SECONDS: int = int(BufferMinutes.le) * SECONDS_PER_MINUTE
+LONGEST_BUFFER_SECONDS: int = (BufferMinutes.le or 0) * SECONDS_PER_MINUTE
 
 
 def bookings_not_over_on(

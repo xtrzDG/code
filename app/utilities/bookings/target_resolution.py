@@ -14,6 +14,8 @@ from app.schemas.constants.bookings import BookingRefusalCode
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.bookings.strings import ResourceReference
+from app.schemas.typings.knowledge.strings import ServiceReference
 from app.utilities.bookings.bookable_offers import bookable_offers
 from app.utilities.bookings.name_matching import NameMatch, best_name_matches
 from app.utilities.scheduling.placement_errors import booking_refusal_reason
@@ -22,7 +24,7 @@ MAX_LISTED_OPTIONS: int = 12
 
 
 def resolve_service(
-    reference: str,
+    reference: ServiceReference,
     items: Sequence[KnowledgeItemDocument],
 ) -> KnowledgeItemDocument:
     """
@@ -35,7 +37,7 @@ def resolve_service(
     """
 
     offers: list[KnowledgeItemDocument] = bookable_offers(items)
-    wanted: str = reference.strip()
+    wanted: str = str(reference).strip()
     for offer in offers:
         if str(offer.id) == wanted:
             return offer
@@ -76,7 +78,7 @@ def resolve_service(
 
 
 def resolve_resource(
-    reference: str,
+    reference: ResourceReference,
     resources: Sequence[ResourceDocument],
 ) -> ResourceDocument:
     """
@@ -91,7 +93,7 @@ def resolve_resource(
         (resource for resource in resources if resource.is_active),
         key=lambda resource: (str(resource.name).casefold(), str(resource.id)),
     )
-    wanted: str = reference.strip()
+    wanted: str = str(reference).strip()
     for resource in active:
         if str(resource.id) == wanted:
             return resource
