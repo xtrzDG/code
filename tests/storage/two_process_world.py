@@ -85,6 +85,9 @@ def process_environment(database_url: str) -> dict[str, str]:
         **{key: E2E_ENVIRONMENT[key] for key in PROCESS_ENVIRONMENT_KEYS},
         "DATABASE_URL": database_url,
         "LLM_PROVIDER": "scripted",
+        # Each message answered on its own, at once: these tests time the
+        # pickup and the order of turns, not the grouping of quick messages.
+        "MESSAGE_COALESCE_SECONDS": "0",
         "DB_POOL_SIZE": "12",
         "THREADPOOL_SIZE": "12",
     }

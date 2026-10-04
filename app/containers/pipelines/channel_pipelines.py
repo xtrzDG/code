@@ -10,9 +10,15 @@ from app.containers.pipelines.conversation_pipelines import (
 from app.containers.provider_chains import orchestrator_pipeline
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
+from app.containers.use_cases.reply_speed_use_cases import (
+    ReplySpeedUseCasesContainer,
+)
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.channels.channel_webhook_orchestrator import (
     ChannelWebhookOrchestrator,
+)
+from app.orchestrators.channels.inbox.inbound_burst_answers import (
+    InboundBurstAnswers,
 )
 from app.orchestrators.channels.inbox.process_inbound_message_orchestrator import (
     ProcessInboundMessageOrchestrator,
@@ -39,6 +45,7 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
     channel_orchestrators: ChannelOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
     channel_use_cases: ChannelUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    reply_speed_use_cases: ReplySpeedUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_pipelines: ConversationPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Messaging webhooks and the website widget: webhooks store their
@@ -68,14 +75,21 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         OrchestratorContract[QueuedJobInput, JobReport]
     ] = Factory(
         ProcessInboundMessageOrchestrator,
-        claim_inbound_event=delivery_use_cases.claim_inbound_event_use_case,
-        recall_inbound_reply=delivery_use_cases.recall_inbound_reply_use_case,
-        customer_message_pipeline=conversation_pipelines.customer_message_pipeline,
-        finish_inbound_event=delivery_use_cases.finish_inbound_event_use_case,
-        release_inbound_event=delivery_use_cases.release_inbound_event_use_case,
-        read_inbound_attachments=(
-            channel_orchestrators.read_inbound_attachments_orchestrator
+        claim_inbound_burst=reply_speed_use_cases.claim_inbound_burst_use_case,
+        answers=Factory(
+            InboundBurstAnswers,
+            recall_inbound_reply=delivery_use_cases.recall_inbound_reply_use_case,
+            customer_message_pipeline=conversation_pipelines.customer_message_pipeline,
+            read_inbound_attachments=(
+                channel_orchestrators.read_inbound_attachments_orchestrator
+            ),
         ),
+        finish_inbound_event=delivery_use_cases.finish_inbound_event_use_case,
+        finish_held_inbound_events=(
+            reply_speed_use_cases.finish_held_inbound_events_use_case
+        ),
+        release_inbound_event=delivery_use_cases.release_inbound_event_use_case,
+        customer_wait=channel_orchestrators.customer_wait,
     )
     telegram_webhook_pipeline = orchestrator_pipeline(telegram_webhook_orchestrator)
     meta_webhook_pipeline = orchestrator_pipeline(meta_webhook_orchestrator)

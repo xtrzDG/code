@@ -1,20 +1,29 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.provider_chains import use_case_orchestrator
+from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
 from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
+from app.containers.use_cases.reply_speed_use_cases import (
+    ReplySpeedUseCasesContainer,
+)
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
+from app.orchestrators.channels.inbox.customer_wait import CustomerWait
 from app.orchestrators.channels.inbox.process_platform_bot_update_orchestrator import (
     ProcessPlatformBotUpdateOrchestrator,
 )
 from app.orchestrators.channels.inbox.read_inbound_attachments_orchestrator import (
     ReadInboundAttachmentsOrchestrator,
 )
+from app.orchestrators.channels.inbox.turn_deadline_watch import TurnDeadlineWatch
 from app.orchestrators.channels.outbox.deliver_outbound_message_orchestrator import (
     DeliverOutboundMessageOrchestrator,
 )
@@ -33,6 +42,11 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
     delivery_use_cases: DeliveryUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    reply_speed_use_cases: ReplySpeedUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Voice notes and photos of a customer message, read by the worker.
     read_inbound_attachments_orchestrator: Factory[
@@ -41,6 +55,23 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
         ReadInboundAttachmentsOrchestrator,
         fetch_inbound_media=delivery_use_cases.fetch_inbound_media_use_case,
         transcribe_voice_note=conversation_use_cases.transcribe_voice_note_use_case,
+    )
+
+    # --- While a customer waits: "typing…" and the turn deadline's
+    # "one moment".
+    turn_deadline_watch: Factory[TurnDeadlineWatch] = Factory(
+        TurnDeadlineWatch,
+        send_holding_reply=reply_speed_use_cases.send_holding_reply_use_case,
+        storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+        deadline_seconds=(
+            config.app_settings.provided.reply_speed.chat_turn_deadline_seconds
+        ),
+    )
+    customer_wait: Factory[CustomerWait] = Factory(
+        CustomerWait,
+        typing_signals=facilitators.typing_signals,
+        deadline_watch=turn_deadline_watch,
     )
 
     # --- Channels: webhooks, widget, cabinet settings, staff links.

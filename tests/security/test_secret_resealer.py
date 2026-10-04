@@ -76,6 +76,11 @@ class RecordingTelegram(TelegramBotApiClientContract):
     ) -> ProviderMessageId | None:
         raise NotImplementedError
 
+    def send_typing_action(
+        self, bot_token: ProviderToken, chat_id: ChannelUserId
+    ) -> None:
+        raise NotImplementedError
+
 
 class RacingChannelRepository(ChannelRepository):
     """The owner reconnects the channel just before the run writes it."""

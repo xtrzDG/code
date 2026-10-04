@@ -8,9 +8,6 @@ from app.contracts.jobs import QueuedJobOperator
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.gateways.worker.background_worker import BackgroundWorker, WorkerTickReport
 from app.operators.pipeline_operator import PipelineOperator
-from app.orchestrators.channels.inbox.process_inbound_message_orchestrator import (
-    ProcessInboundMessageOrchestrator,
-)
 from app.orchestrators.channels.inbox.process_platform_bot_update_orchestrator import (
     ProcessPlatformBotUpdateOrchestrator,
 )
@@ -44,6 +41,7 @@ from tests.channels.channels_fakes import (
 )
 from tests.channels.channels_media import ChannelsMedia
 from tests.platform.worker_fakes import TEST_LANE_CONCURRENCY, RecordingErrorReporter
+from tests.resilience.reply_speed_testbed import process_inbound_message_orchestrator
 
 # Enough ticks to drain chains of jobs (a message, its reply, a retry).
 MAX_WORKER_TICKS: int = 20
@@ -69,14 +67,7 @@ class ChannelsDeliveries(ChannelsMedia):
     def job_operators(self) -> dict[JobName, QueuedJobOperator]:
         return {
             PROCESS_INBOUND_MESSAGE_JOB: as_job_operator(
-                ProcessInboundMessageOrchestrator(
-                    self.claim_inbound_event,
-                    self.recall_inbound_reply,
-                    self.pipeline,
-                    self.finish_inbound_event,
-                    self.release_inbound_event,
-                    self.read_inbound_attachments,
-                )
+                process_inbound_message_orchestrator(self)
             ),
             PROCESS_PLATFORM_BOT_UPDATE_JOB: as_job_operator(
                 ProcessPlatformBotUpdateOrchestrator(

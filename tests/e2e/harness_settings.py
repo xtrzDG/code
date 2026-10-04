@@ -16,6 +16,9 @@ E2E_ENVIRONMENT: dict[str, str] = {
     "CORS_ALLOWED_ORIGINS": CABINET_ORIGIN,
     "ENCRYPTION_KEY": "e2e-encryption-secret-0123456789abcdef",  # gitleaks:allow
     "LLM_PROVIDER": "scripted",
+    # Every message answered at once (the movable clock never runs on by
+    # itself, so a burst would wait forever).
+    "MESSAGE_COALESCE_SECONDS": "0",
     "PLATFORM_ADMIN_EMAILS": ADMIN_EMAIL,
     "TELEGRAM_PLATFORM_BOT_TOKEN": PLATFORM_BOT_TOKEN,
     "ELEVENLABS_API_KEY": "xi-e2e-key",

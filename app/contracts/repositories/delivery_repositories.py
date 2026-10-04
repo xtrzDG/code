@@ -55,6 +55,18 @@ class InboundEventRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
+    def list_created_between(
+        self,
+        business_id: BusinessId,
+        created_from: Microseconds,
+        created_before: Microseconds,
+    ) -> list[InboundEventDocument]:
+        """
+        The business's events stored in a short window, oldest first (the
+        messages a customer sent in a row; an indexed range).
+        """
+        raise NotImplementedError
+
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         raise NotImplementedError
 
