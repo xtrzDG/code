@@ -325,3 +325,7 @@ _.gross_margin_percent  # app/schemas/dto/analytics/revenue_views.py
 _.accounts_without_rate  # app/schemas/dto/analytics/revenue_views.py
 _.mrr  # app/schemas/dto/analytics/revenue_views.py
 _.tunnel_steps  # app/schemas/dto/analytics/telemetry.py
+
+# Pydantic configuration, read by pydantic's metaclass (the evaluation
+# dataset models refuse unknown keys).
+_.model_config  # scripts/eval_harness/dataset_models.py
