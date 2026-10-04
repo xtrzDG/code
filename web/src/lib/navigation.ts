@@ -23,6 +23,7 @@ export const BUSINESS_PAGES = [
   "assistant/profile",
   "assistant/channels",
   "assistant/versions",
+  "assistant/checks",
   "settings",
   "settings/team",
   "settings/notifications",

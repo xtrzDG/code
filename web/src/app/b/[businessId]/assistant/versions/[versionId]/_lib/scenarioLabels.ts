@@ -15,4 +15,5 @@ export const SCENARIO_KIND_LABELS: Record<AutotestScenarioKind, MessageKey> = {
   emergency: "assistant.autotests.kinds.emergency",
   foreign_language: "assistant.autotests.kinds.foreign_language",
   transliterated: "assistant.autotests.kinds.transliterated",
+  owner_check: "assistant.autotests.kinds.owner_check",
 };

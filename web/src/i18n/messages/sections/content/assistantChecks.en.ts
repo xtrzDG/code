@@ -73,6 +73,7 @@ export const assistantChecksEn = {
       emergency: "Emergency",
       foreign_language: "Writes in a language you did not list",
       transliterated: "Writes your language in Latin letters",
+      owner_check: "Your check",
     },
   },
   checklist: {

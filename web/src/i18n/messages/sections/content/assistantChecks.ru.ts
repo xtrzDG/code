@@ -76,6 +76,7 @@ export const assistantChecksRu: Translation<typeof assistantChecksEn> = {
       emergency: "Экстренная ситуация",
       foreign_language: "Пишет на языке не из вашего списка",
       transliterated: "Пишет на вашем языке латиницей",
+      owner_check: "Ваша проверка",
     },
   },
   checklist: {

@@ -21,6 +21,7 @@ export const navigationKa: Translation<typeof navigationEn> = {
     assistantTest: "მისწერეთ ისე, როგორც კლიენტი მისწერდა. რეალურ კლიენტებთან არაფერი გაიგზავნება.",
     assistantProfile: "რა იცის ასისტენტმა ბიზნესზე: ადგილი, შეთავაზება, საათები და ჯავშნები, ადამიანები და წესები. ცვლილებები წერისას ინახება.",
     assistantVersions: "ასისტენტის ყველა განახლება შემოწმებებით, გამოქვეყნებითა და დაბრუნების შესაძლებლობით.",
+    assistantChecks: "კითხვები და ის, რაც პასუხმა უნდა გააკეთოს; მათ ყოველი „ცვლილებების გამოყენება“ სვამს.",
   },
   pages: {
     overviewDashboard: "დაფა",
@@ -30,6 +31,7 @@ export const navigationKa: Translation<typeof navigationEn> = {
     assistantProfile: "ბიზნესის პროფილი",
     assistantChannels: "არხები",
     assistantVersions: "განახლებები და შემოწმებები",
+    assistantChecks: "ჩემი შემოწმებები",
     settingsGeneral: "ბიზნესი",
     settingsTeam: "გუნდი",
     settingsNotifications: "შეტყობინებები",

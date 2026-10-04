@@ -13,7 +13,9 @@ import { AfterHoursBadge, ChannelBadge, ConversationStatusBadge, TestBadge } fro
 import { CustomerName, DetailRow, PhoneLink } from "@/components/insights/common";
 import type { ConversationDetailView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
+import { RatingReasons } from "@/components/teaching/RatingReasons";
 import { languageName } from "@/lib/format";
+import { latestAnswerId } from "@/lib/teaching";
 
 import { fromUsage, usageTotals } from "../../_lib/conversationUsage";
 import { useConversationRating } from "../../_lib/useConversationRating";
@@ -22,11 +24,24 @@ import { CallsCard } from "./CallsCard";
 import { LinkedItems } from "./LinkedItems";
 import { RatingControl } from "./RatingControl";
 
-export function DetailsPanel({ detail, onBook }: { detail: ConversationDetailView; onBook: (() => void) | null }) {
+export function DetailsPanel({
+  detail,
+  onBook,
+  onFixAnswer,
+  onSaveCheck,
+}: {
+  detail: ConversationDetailView;
+  onBook: (() => void) | null;
+  /** Owners: "Fix this answer" on an assistant answer (null: not offered). */
+  onFixAnswer: ((messageId: string) => void) | null;
+  /** Owners: "Save as a check" from the conversation's bad rating. */
+  onSaveCheck: ((messageId: string | null) => void) | null;
+}) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
   const { conversation } = detail;
   const rate = useConversationRating(conversation.id);
+  const ratedAnswer = conversation.rated_message_id ?? latestAnswerId(detail.messages ?? []);
   const totals = detail.usage ? fromUsage(detail.usage) : usageTotals(detail.messages ?? []);
 
   return (
@@ -65,6 +80,15 @@ export function DetailsPanel({ detail, onBook }: { detail: ConversationDetailVie
           isPending={rate.isPending}
           onChange={(rating) => void rate.change(rating)}
         />
+        {conversation.rating === "bad" ? (
+          <RatingReasons
+            value={conversation.rating_reason ?? null}
+            isPending={rate.isPending}
+            onChange={(reason) => void rate.change("bad", reason)}
+            onFix={onFixAnswer && ratedAnswer ? () => onFixAnswer(ratedAnswer) : null}
+            onSaveCheck={onSaveCheck ? () => onSaveCheck(ratedAnswer) : null}
+          />
+        ) : null}
       </div>
 
       <LinkedItems detail={detail} onBook={onBook} />

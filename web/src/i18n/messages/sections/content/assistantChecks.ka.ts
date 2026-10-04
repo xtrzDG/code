@@ -76,6 +76,7 @@ export const assistantChecksKa: Translation<typeof assistantChecksEn> = {
       emergency: "საგანგებო სიტუაცია",
       foreign_language: "წერს ენაზე, რომელიც თქვენს სიაში არ არის",
       transliterated: "თქვენს ენაზე ლათინური ასოებით წერს",
+      owner_check: "თქვენი შემოწმება",
     },
   },
   checklist: {

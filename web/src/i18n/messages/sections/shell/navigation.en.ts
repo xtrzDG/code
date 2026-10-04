@@ -21,6 +21,7 @@ export const navigationEn = {
     assistantTest: "Write as a customer would. Nothing reaches real customers.",
     assistantProfile: "What your assistant knows about the business: the place, the offer, hours and bookings, people and rules. Changes save as you type.",
     assistantVersions: "Every update of the assistant with its checks, publishing and a way back.",
+    assistantChecks: "Questions with what the answer must do, asked in every “Apply changes”.",
   },
   pages: {
     overviewDashboard: "Dashboard",
@@ -30,6 +31,7 @@ export const navigationEn = {
     assistantProfile: "Business profile",
     assistantChannels: "Channels",
     assistantVersions: "Updates and checks",
+    assistantChecks: "My checks",
     settingsGeneral: "Business",
     settingsTeam: "Team",
     settingsNotifications: "Notifications",

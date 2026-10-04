@@ -14,10 +14,13 @@ import { useRef, useState } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
+import { AnswerFixDialog } from "@/components/teaching/AnswerFixDialog";
+import { CheckDialog } from "@/components/teaching/CheckDialog";
 import { Card, ConfirmDialog, ErrorState, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
+import { checkFormFromRating, type CheckForm } from "@/lib/teachingChecks";
 
 import { openHandoffOf, openRequestsOf } from "../../_lib/cardUpdates";
 import { canReplyFromCard } from "../../_lib/conversationModel";
@@ -41,7 +44,7 @@ import { WorkStrip } from "./WorkStrip";
 export function ConversationView({ conversationId }: { conversationId: string }) {
   const { t } = useI18n();
   const toast = useToast();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
   const searchParams = useSearchParams();
   const listQuery = searchParams.toString();
   const backHref = `${businessPath(business.id, "inbox")}${listQuery ? `?${listQuery}` : ""}`;
@@ -51,6 +54,8 @@ export function ConversationView({ conversationId }: { conversationId: string })
   const [isResolveOpen, setResolveOpen] = useState(false);
   const [panel, setPanel] = useState<{ isOpen: boolean; tab: PanelTab }>({ isOpen: false, tab: "details" });
   const [openedAt] = useState(() => Date.now());
+  const [fixing, setFixing] = useState<string | null>(null);
+  const [check, setCheck] = useState<CheckForm | null>(null);
   const isWide = useMediaQuery(WIDE_PANEL_QUERY);
   const scrollArea = useRef<HTMLDivElement>(null);
 
@@ -111,7 +116,12 @@ export function ConversationView({ conversationId }: { conversationId: string })
             isRequestPending={requests.isPending}
             onRequestStatus={(lead, status) => void requests.change(lead, status)}
           />
-          <Transcript messages={card.messages ?? []} earlier={earlier} label={t("conversations.transcript")} />
+          <Transcript
+            messages={card.messages ?? []}
+            earlier={earlier}
+            label={t("conversations.transcript")}
+            onFixAnswer={isOwner ? setFixing : null}
+          />
         </div>
         <Composer
           conversation={conversation}
@@ -142,7 +152,19 @@ export function ConversationView({ conversationId }: { conversationId: string })
         onClose={() => setPanel((current) => ({ ...current, isOpen: false }))}
         isInline={isWide}
         noteCount={noteCount}
-        details={<DetailsPanel detail={card} onBook={canBook ? () => setBooking(true) : null} />}
+        details={
+          <DetailsPanel
+            detail={card}
+            onBook={canBook ? () => setBooking(true) : null}
+            onFixAnswer={isOwner ? setFixing : null}
+            onSaveCheck={
+              isOwner
+                ? (answerId) =>
+                    setCheck(checkFormFromRating(card.messages ?? [], conversation, answerId, business.default_language))
+                : null
+            }
+          />
+        }
         notes={<NotesPanel notes={notes} />}
       />
 
@@ -181,6 +203,18 @@ export function ConversationView({ conversationId }: { conversationId: string })
           }
         }}
       />
+
+      <AnswerFixDialog conversationId={conversationId} messageId={fixing} onClose={() => setFixing(null)} />
+      {check ? (
+        <CheckDialog
+          open
+          initial={check}
+          check={null}
+          title={t("teaching.checks.saveTitle")}
+          description={t("teaching.checks.saveDescription")}
+          onClose={() => setCheck(null)}
+        />
+      ) : null}
 
       <CustomerMessageModal
         open={confirmation !== null}
