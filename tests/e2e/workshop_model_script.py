@@ -7,6 +7,10 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.utilities.assembly.autotest_prompts import DONE_MARKER, JUDGE_SYSTEM_PROMPT
+from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer
+from app.utilities.llm_rehearsal.rehearsal_reading import (
+    last_customer_text as read_customer_words,
+)
 from tests.e2e.harness_settings import JsonObject
 from tests.e2e.model_script_texts import (
     ASSISTANT_TEXTS,
@@ -39,7 +43,8 @@ class WorkshopModelScript:
     (no tools) and the assistant (tools offered). The customer writes one
     message for its scenario goal in the scenario language; the assistant
     answers in the language the customer wrote in, books, quotes prices
-    through get_price and hands off when asked for a manager.
+    through get_price, hands off when asked for a manager and answers a
+    question its fact table answers with that answer.
     """
 
     def __init__(self) -> None:
@@ -79,7 +84,13 @@ class WorkshopModelScript:
         if answered is not None:
             return self._after_tool(*answered, language=language)
 
-        return self._answer(read_turn_texts(request.transcript[-1]), language)
+        return self._answer(
+            read_turn_texts(request.transcript[-1]),
+            language,
+            find_fact_answer(
+                str(request.system_prompt), read_customer_words(request.transcript)
+            ),
+        )
 
     def _play_customer(self, request: LlmRequest) -> ScriptedLlmTurn:
         customer_turns: int = sum(
@@ -101,7 +112,9 @@ class WorkshopModelScript:
             ]
         )
 
-    def _answer(self, customer_text: str, language: str) -> ScriptedLlmTurn:
+    def _answer(
+        self, customer_text: str, language: str, known_answer: str | None
+    ) -> ScriptedLlmTurn:
         if any(word in customer_text for word in HANDOFF_WORDS):
             return self._call(
                 AssistantToolName.HANDOFF_TO_HUMAN,
@@ -127,6 +140,9 @@ class WorkshopModelScript:
 
         if any(word in customer_text for word in PRICE_WORDS):
             return self._call(AssistantToolName.GET_PRICE, {"item_name": "ხაჭაპური"})
+
+        if known_answer is not None:
+            return say(known_answer)
 
         return say(ASSISTANT_TEXTS[language]["greeting"])
 
