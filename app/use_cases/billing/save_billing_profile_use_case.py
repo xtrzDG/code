@@ -23,11 +23,8 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.use_cases.billing.billing_profile_views import view_billing_profile
+from app.utilities.billing.billing_countries import is_billing_country
 from app.utilities.billing.invoicing_keys import derive_billing_profile_id
-from app.utilities.localization.cldr_language_names import (
-    get_english_locale,
-    read_locale_name,
-)
 
 BILLING_PROFILE_ENTITY: AuditEntityName = AuditEntityName("billing_profile")
 
@@ -76,12 +73,7 @@ class SaveBillingProfileUseCase(
             )
         )
         request: BillingProfileRequest = input_data.request
-        if (
-            read_locale_name(
-                get_english_locale().territories, str(request.country_code)
-            )
-            is None
-        ):
+        if not is_billing_country(request.country_code):
             raise ValidationFailedError(
                 f"Unknown country {request.country_code} in the billing details."
             )

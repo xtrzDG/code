@@ -76,6 +76,7 @@ class BillingUseCases(BillingInfrastructure):
             session_assurance=SessionAssuranceContext(),
             app_settings=ACCESS_SETTINGS,
         )
+        self.authorize = authorize
         self.assemble_overview = AssembleBillingOverviewUseCase(
             subscription_repo=self.subscription_repo,
             invoice_repo=self.invoice_repo,
