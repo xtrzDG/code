@@ -100,6 +100,9 @@ class RecordingTransport:
                     if len(route.responses) > 1
                     else route.responses[0]
                 )
+                if isinstance(body, bytes):
+                    # A file download (a bot's photo, a voice note).
+                    return httpx.Response(status_code, content=body)
                 return httpx.Response(status_code, json=body)
 
         return httpx.Response(404, json={"error": "not scripted"})
