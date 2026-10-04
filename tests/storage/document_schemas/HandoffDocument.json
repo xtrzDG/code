@@ -1,7 +1,7 @@
 {
   "collection": "handoffs",
   "document_type": "HandoffDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -70,8 +70,20 @@
         ],
         "default": null
       },
+      "resolved_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "status": {
@@ -83,6 +95,23 @@
           "resolved"
         ],
         "type": "string"
+      },
+      "status_before_resolve": {
+        "anyOf": [
+          {
+            "enum": [
+              "pending",
+              "notified",
+              "notification_failed",
+              "resolved"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "summary": {
         "type": "string"

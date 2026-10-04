@@ -8,7 +8,6 @@ import { useApplyChanges } from "@/components/assistant/ApplyChangesContext";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconSparkles } from "@/components/icons";
 import { SectionFrame } from "@/components/shell/SectionFrame";
-import { Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { liveVersion, sortVersions } from "@/lib/assistant/versions";
 
@@ -39,17 +38,16 @@ export function AssistantFrame({ children }: { children: ReactNode }) {
     <AssistantContext.Provider value={value}>
       <SectionFrame
         section="assistant"
-        actions={
-          isOwner ? (
-            <Button
-              leadingIcon={<IconSparkles className="size-4" aria-hidden />}
-              onClick={applyChanges.open}
-              title={t("applyChanges.hint")}
-              aria-haspopup="dialog"
-            >
-              {t("applyChanges.sheet.apply")}
-            </Button>
-          ) : undefined
+        primaryAction={
+          isOwner
+            ? {
+                label: t("applyChanges.sheet.apply"),
+                icon: IconSparkles,
+                onClick: applyChanges.open,
+                hint: t("applyChanges.hint"),
+                opensDialog: true,
+              }
+            : undefined
         }
         aside={
           versions.data ? (

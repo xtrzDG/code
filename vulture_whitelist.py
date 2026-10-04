@@ -109,6 +109,8 @@ _.last_payment_reference  # app/schemas/domain/payments.py
 _.processed_at  # app/schemas/domain/inbound_events.py
 _.delivered_at  # app/schemas/domain/outbound_messages.py
 _.source_message_id  # app/schemas/domain/outbound_messages.py
+_.changed_by  # app/schemas/domain/bookings.py (BookingStatusChange)
+_.resolved_by  # app/schemas/domain/handoffs.py
 
 # Response fields: serialized to JSON for the cabinet and the widget; the
 # code fills them by keyword, so nothing in Python reads them.

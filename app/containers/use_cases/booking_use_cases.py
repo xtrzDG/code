@@ -28,6 +28,7 @@ from app.schemas.dto.operations.bookings import (
     BookingPage,
     ListBookingsQuery,
     ManualBookingCommand,
+    RevertBookingStatusCommand,
     UpdateBookingCommand,
 )
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
@@ -41,6 +42,9 @@ from app.use_cases.bookings.reminders.send_booking_reminders_use_case import (
     SendBookingRemindersUseCase,
 )
 from app.use_cases.bookings.reschedule_booking_use_case import RescheduleBookingUseCase
+from app.use_cases.bookings.revert_booking_status_use_case import (
+    RevertBookingStatusUseCase,
+)
 from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 
 
@@ -175,6 +179,22 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         schedule_exception_repo=repositories.schedule_exception_repo,
         booking_repo=repositories.booking_repo,
         resource_repo=repositories.resource_repo,
+        contact_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        lock_registry=registries.business_lock_registry,
+        calendar_sync=facilitators.calendar_sync_facilitator,
+        live_events=facilitators.event_publisher,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    revert_booking_status_use_case: Factory[
+        UseCaseContract[RevertBookingStatusCommand, BookingView]
+    ] = Factory(
+        RevertBookingStatusUseCase,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        resource_repo=repositories.resource_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
+        booking_repo=repositories.booking_repo,
         contact_repo=repositories.contact_repo,
         audit_log_repo=repositories.audit_log_repo,
         lock_registry=registries.business_lock_registry,

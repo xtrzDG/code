@@ -21,6 +21,8 @@ class LiveEventKind(StrEnum):
     CONVERSATION_NOTE = "conversation.note"
     HANDOFF_CREATED = "handoff.created"
     HANDOFF_RESOLVED = "handoff.resolved"
+    # A resolved handoff waits for a person again (staff undid "Resolved").
+    HANDOFF_REOPENED = "handoff.reopened"
     KNOWLEDGE_IMPORT_PROGRESS = "knowledge_import.progress"
     LEAD_CHANGED = "lead.changed"
     LEAD_CREATED = "lead.created"

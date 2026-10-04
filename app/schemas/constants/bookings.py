@@ -90,3 +90,23 @@ class BookingRefusalCode(StrEnum):
     AMBIGUOUS_RESOURCE = "ambiguous_resource"
     # The chosen resource does not perform the chosen service.
     NOT_PERFORMED = "not_performed"
+
+
+class BookingUndoRefusalCode(StrEnum):
+    """
+    Why the last status change of a booking could not be undone, as the
+    `reasons[].code` of the error (the cabinet explains it in the user's
+    language).
+    """
+
+    # No status change staff made in the cabinet to undo (none yet, the
+    # customer or the assistant changed it, or it was undone already).
+    NOTHING_TO_UNDO = "nothing_to_undo"
+    # The booking has another status than the one the undo names.
+    STATUS_CHANGED = "status_changed"
+    # The undo window after the change has passed.
+    UNDO_EXPIRED = "undo_expired"
+    # Another booking took the freed time in the meantime.
+    SLOT_TAKEN = "slot_taken"
+    # The booking's place no longer exists.
+    PLACE_GONE = "place_gone"

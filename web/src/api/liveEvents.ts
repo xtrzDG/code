@@ -12,6 +12,7 @@ import { queryKeys } from "./queryKeys";
 export const LIVE_EVENT_NAMES = [
   "handoff.created",
   "handoff.resolved",
+  "handoff.reopened",
   "conversation.message",
   "conversation.assigned",
   "conversation.note",
@@ -109,6 +110,7 @@ export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey
   switch (event.event) {
     case "handoff.created":
     case "handoff.resolved":
+    case "handoff.reopened":
       return [counts, dashboard, queryKeys.handoffs.all(businessId), queryKeys.conversations.all(businessId)];
     case "conversation.message":
       return [

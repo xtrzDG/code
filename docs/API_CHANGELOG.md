@@ -52,6 +52,33 @@ Spec: `17fed056871cbc6c`
   `source` (at most 200 characters; normalized to a tag, an unreadable one
   is ignored).
 
+## 2026-10-04 — Undo for booking statuses and resolved handoffs
+
+Spec: `3429cf21c95a5ea5`
+
+- **Added** `POST /v1/businesses/{business_id}/bookings/{booking_id}/revert-status`
+  with `RevertBookingStatusRequest` (`status`: the status being undone):
+  the booking gets back the status it had before the last change staff
+  made in the cabinet (confirmed, completed, no-show, cancelled), within
+  10 minutes of it and once. A booking that freed its time takes it again
+  only if it is still free; otherwise 409 with the reason `slot_taken`
+  (details: the place's id). Other 409 reasons: `nothing_to_undo` (no
+  staff change to undo, or the customer changed it), `status_changed`
+  (details: the current status), `undo_expired` (details: the window in
+  minutes), `place_gone`. Returns the `BookingView`.
+- **Added** `POST /v1/businesses/{business_id}/handoffs/{handoff_id}/reopen`:
+  a resolved handoff waits for a person again with the status it had
+  before (`notified` when that is unknown), and its conversation goes back
+  to `handoff`. Reopening an open handoff is harmless. Returns the
+  `HandoffListItem`.
+- **Changed** the live event stream gains `handoff.reopened` (the handoff
+  and its conversation); `POST …/bookings/{id}/cancel` from the cabinet
+  and `POST …/handoffs/{id}/resolve` now remember who did it, so it can
+  be undone (resolving is audited).
+- **Changed** `BookingDocument` (schema version 3) gains
+  `last_status_change` and `HandoffDocument` (schema version 3)
+  `status_before_resolve` and `resolved_by` (all optional).
+
 ## 2026-10-04 — wave 9 together: reply speed, any language, outbox everywhere, platform operations
 
 Spec: `26522d8605b0100d`

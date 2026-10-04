@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { SectionTabs, type SectionTab } from "@/components/content/SectionTabs";
 import { IconWrench } from "@/components/icons";
-import { PageHeader, SubPages } from "@/components/ui";
+import { PageHeader, SubPages, type PagePrimaryAction } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { pageBadge } from "@/lib/inboxBadges";
@@ -29,11 +29,14 @@ import { useMemberRole } from "./useMemberRole";
 export function SectionFrame({
   section,
   actions,
+  primaryAction,
   aside,
   children,
 }: {
   section: BusinessSection;
   actions?: ReactNode;
+  /** The section's main action (a floating button on phones, unless a page has its own). */
+  primaryAction?: PagePrimaryAction;
   /** Under the title (the Assistant's live version). */
   aside?: ReactNode;
   children: ReactNode;
@@ -68,7 +71,13 @@ export function SectionFrame({
   return (
     <>
       <div className={cn(isConversationOpen && "hidden lg:block")}>
-        <PageHeader title={label} description={t(SECTION_DESCRIPTIONS[section])} actions={actions} className="sm:mb-6" />
+        <PageHeader
+          title={label}
+          description={t(SECTION_DESCRIPTIONS[section])}
+          actions={actions}
+          primaryAction={primaryAction}
+          tight
+        />
         {aside}
         {tabs.length > 1 ? (
           <SectionTabs

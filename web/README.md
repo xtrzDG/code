@@ -412,6 +412,8 @@ section tabs, page titles and the e2e suite read it):
   least 56 px, above the home indicator) and "More", a sheet with Settings and
   its pages, the business switcher and the account panel. An open
   conversation takes the whole screen (no tab bar, the frame steps aside).
+  Below `lg` a page's header folds into that top bar (see
+  [Front desk on a phone](#front-desk-on-a-phone)).
 - **Section frames** (`components/shell/SectionFrame.tsx`): Assistant and
   Settings show the section's `<h1>`, what it is for and the
   tabs of its pages; a page's own `PageHeader` inside becomes an `<h2>` for
@@ -453,7 +455,7 @@ section tabs, page titles and the e2e suite read it):
 | Overview → Reports | The month so far, stored monthly reports and weekly/daily digests with every number against the period before, the owner's choice of summaries (monthly, weekly, daily) |
 | Inbox | The team's one list: views Needs a person, Requests, Mine, Unassigned and All with live counts; a search and the history filters (period, status, test conversations) look through All; who handles each conversation, its notes, what waits. See [Inbox](#inbox) |
 | Inbox → a conversation | Made for a phone: the transcript under a folded header (customer, channel, who handles it; the rest in Details), what waits above it (the handoff's reason and urgency, open requests with their status), a sticky reply box with Resolve, Call and Book and quick replies after "/"; the assign menu; notes and details in a side panel (a column of their own from 1536 px, a sheet below). Calls with their summary and recording (downloaded once and audited when "Play recording" is pressed), rating, linked bookings, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels), booking for the customer with the confirmation prefilled. Model, tokens, cost and tool calls stay behind "Technical details" (open by default for platform admins) |
-| Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text |
+| Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text; every status change and cancellation has Undo for 5 seconds (the API takes it back within 10 minutes). Phones open on **Today** (`?view=all` is the list): today's arrivals by time with a "now" line and large Arrived / No-show buttons that wait for the start time |
 | Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" opens the sheet with what customers do not get yet |
 | Every page (owners) | The banner "N changes are not with your customers yet · Review and apply" while the profile, knowledge, hours, prices or booking rules differ from what customers get (`GET …/assistant/pending-changes`); its sheet lists them in the owner's words and applies them: the tunnel's three stages over `POST`/`GET …/assistant/apply` and the live event stream, a quick check of what changed, then the toast "Your assistant now knows: …"; a stop says why in plain words with the page that fixes it and the conversation that failed (`versions/{id}?checks=problems`) |
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
@@ -516,6 +518,88 @@ redirect):
   message stay behind a "Technical details" disclosure (open by default for
   platform admins); under each message the requests to the business's data
   read as plain chips with what the assistant did (`TOOL_LABELS`).
+
+### Front desk on a phone
+
+What the front desk does between customers, one-handed: see who comes, mark
+them, answer a person, and take back a wrong tap.
+
+- **Compact chrome** below `lg` (`components/ui/PhoneChrome.tsx`, the store
+  in `lib/phoneChrome.ts`; `ShellFrame` provides it): a page's `PageHeader`
+  puts its title in the top bar (the `<h1>` stays for screen readers), its
+  description behind an (i) button in the top bar (a sheet with the
+  descriptions of the section and the page and the live status line), and
+  its `status` (`LiveStatus`) becomes a dot beside the title. Its
+  `primaryAction` becomes the floating button above the tab bar (`Fab`: the
+  label folds away while scrolling down); the deepest page wins, so
+  Knowledge's "Add an item" replaces the Assistant's "Apply changes" (the
+  banner still offers it). From `lg` the header is the usual row.
+- **Filters** (`FilterSheet`): on phones one "Filters" button with a chip of
+  how many are set opens a sheet with the same fields, "Clear filters" and
+  "Show"; filters apply as they change. Bookings (status, place, test
+  bookings; the dates stay in sight) and Knowledge (kind, status) use it;
+  Inbox has its own sheet; Channels has nothing to filter.
+- **Today** (`bookings/_components/TodayAgenda.tsx`, `_lib/todayAgenda.ts`):
+  phones open Bookings on today's arrivals by time in the business's zone,
+  with the day's tally (to come, arrived, missed, cancelled) and a "now"
+  line. Each card opens the booking, calls the customer, and has large
+  **Arrived** and **No-show** buttons that wait for the start time (a hint
+  says from when; the clock moves every minute). A marked card folds to its
+  result. "All bookings" is the list with its filters (`?view=all`); a link
+  with list filters opens the list.
+- **Undo**: every booking status change and cancellation from the cabinet
+  shows a toast with Undo (5 seconds). Undo calls
+  `POST …/bookings/{id}/revert-status` with the status it undoes; the API
+  accepts it within 10 minutes of a change made in the cabinet and checks
+  under the booking lock that the time is still free, and refuses with a
+  reason the toast reads out: the time was taken (`slot_taken`), too late
+  (`undo_expired`), changed since (`status_changed`, `nothing_to_undo`), the
+  place is gone (`place_gone`). Resolving a handoff shows Undo too:
+  `POST …/handoffs/{id}/reopen` gives it back its earlier status and the
+  conversation goes back to Needs a person (`handoff.reopened` live event).
+  Both are audited.
+- **Tests**: `e2e/phone-loop.spec.ts` at 390×844 (the first card's top above
+  35% of the screen, Undo after Arrived, Undo after Resolve) and the phone
+  pages in `e2e/a11y.spec.ts`.
+
+#### Real-device runbook
+
+Push, home-screen apps and the on-screen keyboard cannot be checked in
+Playwright. Run this on a real iPhone and a real Android phone before a
+release that changes the phone chrome, notifications or the inbox, and note
+the device, OS and browser versions and each step's result in the release's
+PR.
+
+Before you start: a deployment over HTTPS (a service worker and push need
+it) with `WEB_PUSH_VAPID_*` set (see the root README and `docs/LAUNCH.md`),
+a live assistant, a signed-in owner or staff member, and a second device or
+a desktop browser to play the customer on the hosted chat page
+(`/c/{address}`, Assistant → Channels → Share).
+
+1. **Install.** iPhone (iOS 16.4 or later): Safari → the cabinet → Share →
+   Add to Home Screen, then open it from the icon (push works only there).
+   Android: Chrome → More → "Install the app" (or Chrome's menu → Install
+   app). The app opens in its own window on the businesses page.
+2. **Turn on push.** Settings → Notifications → On this device → Enable
+   notifications; allow when asked (Android 13+ asks too). "Send a test"
+   arrives with the screen locked and with the app closed.
+3. **A customer asks for a person.** On the hosted chat page: "I want to
+   talk to a person" (or press "Talk to a person"). A notification arrives
+   within seconds.
+4. **Open it.** Tap the notification: the app opens `/n/{token}` and lands
+   in that conversation (after signing in when the session ended; the link
+   keeps going). The reply box sits above the keyboard and the home
+   indicator.
+5. **Reply.** Send a reply; the customer's page shows it.
+6. **Resolve and Undo.** Press Resolve and confirm; the toast offers Undo.
+   Undo within 5 seconds: the conversation is back under Needs a person and
+   Resolve shows again. Resolve once more and let the toast go.
+7. **Today.** Open Bookings: the first arrival is in the top third of the
+   screen, Arrived and No-show wait for the start time, a tap marks it and
+   Undo puts it back. The floating "New booking" stays above the tab bar,
+   the (i) opens the page's description, the live dot is beside the title.
+8. **Both themes.** Switch the phone to dark and light mode and look again
+   at steps 4 and 7.
 
 ### Create an AI assistant
 
@@ -711,7 +795,9 @@ Each line has a test (`e2e/` or a unit test) that fails if it comes back.
   dialog is visible and can be dismissed. `toast.undoable(title, onUndo)`
   adds an Undo button for 5 seconds (the window runs down under the toast
   and stops while it is pointed at or focused); offer it only where the API
-  has the inverse call (a lead's status), never by faking the change.
+  has the inverse call (a lead's status, a booking's status through
+  `revert-status`, a resolved handoff through `reopen`), never by faking the
+  change.
 - `ConfirmDialog` asks before what cannot be undone or reaches customers;
   `confirmationText` makes the person type a word first. Cancel takes the
   focus; Enter confirms.

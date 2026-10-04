@@ -111,4 +111,5 @@ export const inboxCardEn = {
     confirm: "Resolve",
   },
   resolved: "Marked as resolved. The assistant answers this customer again.",
+  reopened: "The handoff is open again. The assistant stays silent until it is resolved.",
 } as const;

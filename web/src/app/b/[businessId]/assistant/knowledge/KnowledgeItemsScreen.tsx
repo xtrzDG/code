@@ -26,8 +26,9 @@ export function KnowledgeItemsScreen() {
   const base = businessPath(business.id, "assistant/knowledge");
   const all = items.items ?? [];
 
+  // On phones the items come first; trying the search waits below them.
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {openQuestions > 0 ? (
         <Alert
           tone="warning"
@@ -46,7 +47,9 @@ export function KnowledgeItemsScreen() {
         </Alert>
       ) : null}
 
-      <KnowledgeSearch onOpen={list.openById} />
+      <div className="max-lg:order-last">
+        <KnowledgeSearch onOpen={list.openById} />
+      </div>
 
       <Card padded={false}>
         <KnowledgeToolbar list={list} />

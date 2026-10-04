@@ -39,8 +39,10 @@ def test_openapi_schema_lists_every_route() -> None:
 
     paths = set(api.application.openapi()["paths"])
 
-    assert len(paths) == 16
+    assert len(paths) == 18
     assert "/v1/businesses/{business_id}/bookings/{booking_id}/reschedule" in paths
+    assert "/v1/businesses/{business_id}/bookings/{booking_id}/revert-status" in paths
+    assert "/v1/businesses/{business_id}/handoffs/{handoff_id}/reopen" in paths
     # The badges read …/inbox/counts or …/attention-counts (one use case).
     assert "/v1/businesses/{business_id}/inbox-counts" not in paths
     assert GOOGLE_CALENDAR_CALLBACK_PATH in paths

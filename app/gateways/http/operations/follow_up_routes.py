@@ -32,6 +32,7 @@ from app.schemas.dto.operations.handoffs import (
     HandoffListItem,
     HandoffPage,
     ListHandoffsQuery,
+    ReopenHandoffCommand,
     ResolveHandoffCommand,
 )
 from app.schemas.dto.operations.leads import (
@@ -63,6 +64,7 @@ def build_follow_up_routes(
     update_lead_status: OperatorContract[UpdateLeadStatusCommand, LeadView],
     list_handoffs: OperatorContract[ListHandoffsQuery, HandoffPage],
     resolve_handoff: OperatorContract[ResolveHandoffCommand, HandoffListItem],
+    reopen_handoff: OperatorContract[ReopenHandoffCommand, HandoffListItem],
     list_unanswered_questions: OperatorContract[
         ListUnansweredQuestionsQuery, UnansweredQuestionPage
     ],
@@ -149,6 +151,27 @@ def build_follow_up_routes(
         return resolve_handoff.operate(
             ResolveHandoffCommand(
                 business_id=business.id,
+                handoff_id=parse_path_id(handoff_id, HandoffId, "Handoff"),
+                actor_id=user_id,
+            )
+        )
+
+    @router.post(f"{BUSINESS_PREFIX}/handoffs/{{handoff_id}}/reopen")
+    def post_handoff_reopen(
+        business_id: str,
+        handoff_id: str,
+        user_id: Annotated[UserId, Depends(current_user)],
+    ) -> HandoffListItem:
+        """
+        Open a resolved handoff again (the Undo of "Resolved"): it waits for
+        a person and the assistant stays silent in its conversation again.
+        """
+
+        business: BusinessDocument = authorize(user_id, business_id)
+        return reopen_handoff.operate(
+            ReopenHandoffCommand(
+                business_id=business.id,
+                actor_id=user_id,
                 handoff_id=parse_path_id(handoff_id, HandoffId, "Handoff"),
             )
         )

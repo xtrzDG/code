@@ -82,4 +82,22 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("dialog", { name: en.navigation.more })).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
+
+  for (const theme of ["dark", "light"] as const) {
+    test(`the front desk pages, the page's (i) and the filters pass the audit in the ${theme} theme`, async ({ page, owner }) => {
+      test.setTimeout(120_000);
+      await page.context().addCookies([{ name: "aw_theme", value: theme, url: WEB_URL }]);
+      for (const path of ["bookings", "bookings?view=all", "assistant/knowledge", "assistant/channels"]) {
+        await test.step(path, () => audit(page, `/b/${owner.businessId}/${path}`));
+      }
+      await page.getByRole("button", { name: en.chrome.pageInfo }).click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      expect(await seriousViolations(page), "the page's (i)").toEqual([]);
+
+      await page.goto(`/b/${owner.businessId}/bookings?view=all`);
+      await page.getByRole("button", { name: en.chrome.filters.open, exact: true }).click();
+      await expect(page.getByRole("dialog", { name: en.chrome.filters.title })).toBeVisible();
+      expect(await seriousViolations(page), "the filters").toEqual([]);
+    });
+  }
 });

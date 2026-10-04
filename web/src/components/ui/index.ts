@@ -9,10 +9,22 @@ export { Checkbox, Input, Radio, Select, Textarea, type InputProps, type SelectP
 export { Drawer } from "./Drawer";
 export { EmptyState } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
+export { Fab } from "./Fab";
 export { Field, Fieldset, type FieldControlProps } from "./Field";
+export { FilterSheet } from "./FilterSheet";
 export { Modal } from "./Modal";
 export { OverflowMenu, type MenuAction } from "./OverflowMenu";
-export { PageHeader, SubPages, usePageLevel } from "./PageHeader";
+export { PageHeader, SubPages, usePageLevel, type PagePrimaryAction } from "./PageHeader";
+export {
+  PhoneChromeProvider,
+  usePhoneChrome,
+  usePhoneChromeSnapshot,
+  usePhoneDescription,
+  usePhoneFab,
+  usePhoneLive,
+  type PhoneChromeSnapshot,
+  type PhoneFabAction,
+} from "./PhoneChrome";
 export { ScrollRow } from "./ScrollRow";
 export { Sheet } from "./Sheet";
 export { InlineError } from "./InlineError";

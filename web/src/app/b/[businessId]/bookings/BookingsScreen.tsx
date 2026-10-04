@@ -2,48 +2,65 @@
 
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
+import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import { timeZoneLabel } from "@/lib/timeZones";
 
 import { BookingDialogs } from "./_components/BookingDialogs";
 import { BookingFiltersBar } from "./_components/BookingFiltersBar";
 import { BookingDays } from "./_components/BookingList";
 import { BookingDaysSkeleton } from "./_components/BookingsSkeleton";
-import type { BookingFilters } from "./_lib/bookingFilters";
+import { TodayAgenda } from "./_components/TodayAgenda";
+import type { BookingFilters, PhoneBookingsView } from "./_lib/bookingFilters";
 import { useBookingsPage } from "./_lib/useBookingsPage";
 
 /**
  * Bookings in the business time zone (concept /bookings): filters by dates,
  * status and place (applied and paged by the API), a booking added by hand
- * with free slots, status changes, edits (party, place, notes, name),
- * moving and cancelling with the text for the customer.
+ * with free slots, status changes with Undo, edits (party, place, notes,
+ * name), moving and cancelling with the text for the customer. A phone
+ * opens on today's agenda for the front desk ("All bookings" is the list).
  */
 export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilters }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
   const page = useBookingsPage(initialFilters);
-  const { filters, setFilters, rangeValid, bookings, resources, setDialog, isStay } = page;
+  const { filters, setFilters, rangeValid, bookings, agenda, resources, setDialog, isStay } = page;
   const items = bookings.items ?? [];
+  const isToday = filters.phoneView === "today";
+  const openCreate = () => setDialog({ kind: "create" });
+  // The live status of what is on screen: the agenda on a phone's "Today", else the list.
+  const shown = page.isCompact && isToday ? agenda : bookings;
 
   return (
     <>
       <PageHeader
         title={t("nav.bookings")}
         description={t("pages.bookings.description")}
-        actions={
-          <>
-            <LiveStatus updatedAt={bookings.updatedAt} isFetching={bookings.isFetching && bookings.items !== undefined} />
-            <Button leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={() => setDialog({ kind: "create" })}>
-              {t("bookings.newBooking")}
-            </Button>
-          </>
-        }
+        status={<LiveStatus updatedAt={shown.updatedAt} isFetching={shown.isFetching && shown.items !== undefined} />}
+        primaryAction={{ label: t("bookings.newBooking"), icon: IconPlus, onClick: openCreate, opensDialog: true }}
       />
 
-      <div className="space-y-5">
+      <SegmentedControl<PhoneBookingsView>
+        label={t("bookings.views.label")}
+        value={filters.phoneView}
+        onChange={page.setPhoneView}
+        options={[
+          { value: "today", label: t("bookings.views.today") },
+          { value: "all", label: t("bookings.views.all") },
+        ]}
+        className="mb-4 lg:hidden"
+      />
+
+      <div className={cn("lg:hidden", !isToday && "hidden")}>
+        <TodayAgenda page={page} />
+      </div>
+
+      <div className={cn("space-y-5", isToday && "max-lg:hidden")}>
         <BookingFiltersBar
           filters={filters}
           resources={resources}
@@ -70,7 +87,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
               title={t("bookings.emptyTitle")}
               description={t("bookings.emptyDescription")}
               action={
-                <Button variant="secondary" leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={() => setDialog({ kind: "create" })}>
+                <Button variant="secondary" leadingIcon={<IconPlus className="size-4" aria-hidden />} onClick={openCreate}>
                   {t("bookings.newBooking")}
                 </Button>
               }

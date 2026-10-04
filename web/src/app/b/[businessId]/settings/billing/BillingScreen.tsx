@@ -67,7 +67,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
       <PageHeader
         title={t("navigation.pages.settingsBilling")}
         description={t("pages.billing.description")}
-        actions={data ? <LiveStatus updatedAt={overview.updatedAt} isFetching={overview.isFetching} /> : undefined}
+        status={data ? <LiveStatus updatedAt={overview.updatedAt} isFetching={overview.isFetching} /> : undefined}
       />
 
       {isOwnerOnly ? (

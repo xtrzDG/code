@@ -112,4 +112,5 @@ export const inboxCardRu: Translation<typeof inboxCardEn> = {
     confirm: "Решено",
   },
   resolved: "Отмечено как решённое. Помощник снова отвечает этому клиенту.",
+  reopened: "Передача снова открыта. Помощник молчит, пока её не решат.",
 };

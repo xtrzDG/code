@@ -44,6 +44,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class AvailabilityQuery(ImmutableDTO):
@@ -166,7 +167,8 @@ class RescheduleBookingCommand(ImmutableDTO):
 class CancelBookingCommand(ImmutableDTO):
     """
     Cancel a booking found by id, or by contact phone and date (sandbox
-    rule as for rescheduling).
+    rule as for rescheduling). `actor_id` names the staff member who
+    cancels in the cabinet (they may undo it for a short while).
     """
 
     business_id: BusinessId
@@ -176,6 +178,7 @@ class CancelBookingCommand(ImmutableDTO):
     date: LocalDate | None = None
     language: LanguageTag
     is_sandbox: IsSandboxConversation | None = None
+    actor_id: UserId | None = None
 
 
 class BookingView(ImmutableDTO):

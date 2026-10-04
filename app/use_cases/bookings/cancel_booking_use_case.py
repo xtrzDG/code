@@ -45,6 +45,7 @@ from app.use_cases.bookings.booking_support import (
     load_scheduling_inputs,
     notify_staff_about_booking,
 )
+from app.use_cases.bookings.status_undo import note_status_change
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import (
@@ -60,7 +61,9 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
 
     A command that carries the customer's contact or phone is a customer
     request: the booking must be theirs and staff are notified. A command
-    with only a booking id comes from the cabinet. Cancelling twice is
+    with only a booking id comes from the cabinet, where the staff member
+    (`actor_id`) may undo the cancellation for a short while
+    (RevertBookingStatusUseCase). Cancelling twice is
     harmless; completed and no-show bookings cannot be cancelled. The
     confirmation quotes the profile's cancellation policy.
     """
@@ -144,6 +147,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                         "cancelled."
                     )
 
+                note_status_change(booking, booking.status, input_data.actor_id, now)
                 booking.status = BookingStatus.CANCELLED
                 booking.updated_at = now
                 self._booking_repo.save(booking)

@@ -2,10 +2,10 @@
 
 /**
  * The actions on the work of a conversation, from its card: resolving the
- * handoff (the assistant answers the customer again; there is no way back,
- * so no Undo) and moving a request to another status (with Undo). The card
- * changes at once and goes back if the API refuses; the inbox's counts and
- * the dashboard load again.
+ * handoff (the assistant answers the customer again; Undo opens it again,
+ * POST …/handoffs/{id}/reopen) and moving a request to another status
+ * (with Undo). The card changes at once and goes back if the API refuses;
+ * the inbox's counts and the dashboard load again.
  */
 
 import { useState } from "react";
@@ -20,7 +20,7 @@ import type { ConversationDetailView, HandoffListItem, LeadListItem, LeadStatus 
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { cardWithRequestStatus, cardWithResolvedHandoff } from "./cardUpdates";
+import { cardWithReopenedHandoff, cardWithRequestStatus, cardWithResolvedHandoff } from "./cardUpdates";
 
 export function useResolveHandoff(conversationId: string) {
   const { t } = useI18n();
@@ -48,11 +48,36 @@ export function useResolveHandoff(conversationId: string) {
     },
   );
 
+  const reopen = useMutation(
+    (resolved: HandoffListItem, _previous: HandoffListItem) =>
+      api.POST("/v1/businesses/{business_id}/handoffs/{handoff_id}/reopen", {
+        params: { path: { business_id: business.id, handoff_id: resolved.id } },
+      }),
+    {
+      optimistic: (_resolved, previous) =>
+        queryCache.update<ConversationDetailView>(detailKey, (card) => cardWithReopenedHandoff(card, previous)),
+      invalidate: [
+        queryKeys.inbox.all(business.id),
+        queryKeys.dashboard.all(business.id),
+        queryKeys.conversations.inboxAll(business.id),
+      ],
+      stale: [queryKeys.handoffs.all(business.id)],
+    },
+  );
+
+  const undo = async (resolved: HandoffListItem, previous: HandoffListItem) => {
+    const result = await reopen.run(resolved, previous);
+    if (result.ok) {
+      queryCache.update<ConversationDetailView>(detailKey, (card) => cardWithReopenedHandoff(card, result.data));
+      toast.success(t("inboxCard.reopened"));
+    }
+  };
+
   const resolve = async (handoff: HandoffListItem) => {
     const result = await mutation.run(handoff);
     if (result.ok) {
       queryCache.update<ConversationDetailView>(detailKey, (card) => cardWithResolvedHandoff(card, result.data));
-      toast.success(t("inboxCard.resolved"));
+      toast.undoable(t("inboxCard.resolved"), () => void undo(result.data, handoff));
     }
     return result.ok;
   };

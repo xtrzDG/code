@@ -34,6 +34,9 @@ class OperationsPipelinesContainer(containers.DeclarativeContainer):
     update_booking_pipeline = orchestrator_pipeline(
         operations_orchestrators.update_booking_orchestrator
     )
+    revert_booking_status_pipeline = orchestrator_pipeline(
+        operations_orchestrators.revert_booking_status_orchestrator
+    )
     list_leads_pipeline = orchestrator_pipeline(
         operations_orchestrators.list_leads_orchestrator
     )
@@ -45,6 +48,9 @@ class OperationsPipelinesContainer(containers.DeclarativeContainer):
     )
     resolve_handoff_pipeline = orchestrator_pipeline(
         operations_orchestrators.resolve_handoff_orchestrator
+    )
+    reopen_handoff_pipeline = orchestrator_pipeline(
+        operations_orchestrators.reopen_handoff_orchestrator
     )
     list_unanswered_questions_pipeline = orchestrator_pipeline(
         operations_orchestrators.list_unanswered_questions_orchestrator
