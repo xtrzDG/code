@@ -23,7 +23,16 @@ describe("booking refusals in the user's language", () => {
   });
 
   it("covers every refusal code the API sends", () => {
-    for (const code of ["closed", "too_soon", "time_required", "taken", "party_too_large", "no_seating_resource"]) {
+    for (const code of [
+      "closed",
+      "too_soon",
+      "time_required",
+      "taken",
+      "party_too_large",
+      "no_seating_resource",
+      "not_performed",
+      "unknown_service",
+    ]) {
       const error = parseApiError(422, { error: "validation_failed", message: "x", reasons: [{ code, message: "x", details: ["4"] }] });
       const { title } = describeError(error, tRu, undefined, BOOKING_REFUSAL_MESSAGES);
       expect(title).not.toBe(tRu("errors.codes.validation_failed"));

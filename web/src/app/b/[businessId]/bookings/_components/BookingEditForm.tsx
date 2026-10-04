@@ -3,11 +3,14 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/api/client";
+import { useBookableOffers } from "@/api/offers";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import type { BookingUpdateBody, BookingView, ResourceView } from "@/components/insights/types";
+import { usePartyWording } from "@/components/insights/usePartyWording";
 import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { performersOf } from "@/lib/offers";
 
 import {
   bookingEditValues,
@@ -40,8 +43,15 @@ export function BookingEditForm({
   const { business } = useBusiness();
   const [values, setValues] = useState<BookingEditValues>(() => bookingEditValues(booking));
   const [errors, setErrors] = useState<BookingEditErrors>({});
+  const party = usePartyWording();
+  const offers = useBookableOffers(business.id).data ?? [];
+  const service = booking.service_item_id ? offers.find((offer) => offer.id === booking.service_item_id) : undefined;
   const placement = canChangePlacement(booking.status);
-  const places = placesForEdit(resources, booking);
+  const places = placesForEdit(
+    resources,
+    booking,
+    service ? performersOf(service, resources, offers).map((resource) => resource.id) : null,
+  );
 
   const save = useMutation(
     (body: BookingUpdateBody) =>
@@ -91,7 +101,7 @@ export function BookingEditForm({
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label={t("bookings.form.partySize")}
+          label={party.label(values.resourceId)}
           hint={placement ? t("bookings.edit.partyHint") : undefined}
           error={errors.partySize && t(errors.partySize)}
         >

@@ -24,6 +24,10 @@ export interface SlotRequest {
   nights: number | null;
   /** Booked by nights (hotels, rentals): places are offered, not times. */
   isStay: boolean;
+  /** The service, package or room type: only its performers, for its length. */
+  serviceId: string | null;
+  /** A length other than the service's usual one. */
+  durationMinutes: number | null;
 }
 
 type SlotMode = "nearest" | "day";
@@ -67,6 +71,8 @@ export function SlotPicker({
             resource_id: asked?.resourceId || undefined,
             time: asked?.mode === "nearest" && asked.time && isLocalTime(asked.time) ? asked.time : undefined,
             nights: asked?.nights ? String(asked.nights) : undefined,
+            service_item_id: asked?.serviceId ?? undefined,
+            duration_minutes: asked?.durationMinutes ? String(asked.durationMinutes) : undefined,
             full_day: asked?.mode === "day" ? "true" : undefined,
           },
         },
@@ -80,7 +86,9 @@ export function SlotPicker({
     (asked.date !== request.date ||
       asked.partySize !== request.partySize ||
       (asked.resourceId !== null && asked.resourceId !== request.resourceId) ||
-      asked.nights !== request.nights);
+      asked.nights !== request.nights ||
+      asked.serviceId !== request.serviceId ||
+      asked.durationMinutes !== request.durationMinutes);
 
   const ask = (mode: SlotMode) =>
     asked && !isStale && asked.mode === mode && (mode === "day" || asked.time === request.time)

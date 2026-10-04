@@ -122,3 +122,14 @@ export function reminderState(
   const isActive = booking.status === "pending" || booking.status === "confirmed";
   return isActive && booking.date >= today ? "pending" : "none";
 }
+
+/** What a booking is worth, formatted in its currency ("€35"); null without a value. */
+export function bookingValueText(
+  booking: Pick<BookingView, "value_minor" | "currency_code">,
+  money: (minor: number, currency?: string) => string,
+): string | null {
+  if (booking.value_minor === null || booking.value_minor === undefined) {
+    return null;
+  }
+  return money(booking.value_minor, booking.currency_code ?? undefined);
+}

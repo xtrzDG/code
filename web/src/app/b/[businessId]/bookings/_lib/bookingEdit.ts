@@ -31,16 +31,23 @@ export function canChangePlacement(status: BookingStatus): boolean {
   return status === "pending" || status === "confirmed";
 }
 
-/** Places a booking may move to: active ones booked the same way (time slots or nights). */
+/**
+ * Places a booking may move to: active ones booked the same way (time
+ * slots or nights) and, for a booking of a service, only those that
+ * perform it (`performerIds`; null when it books no service).
+ */
 export function placesForEdit(
   resources: readonly Pick<ResourceView, "id" | "booking_unit" | "is_active" | "name">[],
   booking: Pick<BookingView, "resource_id">,
+  performerIds: readonly string[] | null = null,
 ): Pick<ResourceView, "id" | "booking_unit" | "is_active" | "name">[] {
   const current = resources.find((resource) => resource.id === booking.resource_id);
   return resources.filter(
     (resource) =>
       resource.id === booking.resource_id ||
-      (resource.is_active && (!current || resource.booking_unit === current.booking_unit)),
+      (resource.is_active &&
+        (!current || resource.booking_unit === current.booking_unit) &&
+        (performerIds === null || performerIds.includes(resource.id))),
   );
 }
 

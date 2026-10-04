@@ -1,6 +1,8 @@
 /**
  * The manual booking form: how a place is booked (time slots or nights),
- * validation into the POST body, and free slots grouped by place.
+ * validation into the POST body, and free slots grouped by place. A
+ * booking may name a service, package or room type: it sets the unit
+ * (a room type is booked by the night) and the usual length.
  */
 
 import { z } from "@/lib/zod";
@@ -8,10 +10,21 @@ import { z } from "@/lib/zod";
 import { isLocalDate, isLocalTime } from "@/components/insights/dates";
 import type { AvailableSlot, BookingUnit, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
 import type { MessageKey } from "@/i18n/translate";
+import { offerBookingUnit, type OfferItem } from "@/lib/offers";
 import { fieldErrors, messageKey } from "@/lib/validation";
 
-/** How a booking is made: the chosen resource's unit, else nights only when every resource is booked by nights. */
-export function bookingUnitFor(resources: readonly Pick<ResourceView, "id" | "booking_unit" | "is_active">[], resourceId: string): BookingUnit {
+/**
+ * How a booking is made: the chosen offer's unit, else the chosen
+ * resource's, else nights only when every resource is booked by nights.
+ */
+export function bookingUnitFor(
+  resources: readonly Pick<ResourceView, "id" | "booking_unit" | "is_active">[],
+  resourceId: string,
+  offer: Pick<OfferItem, "kind"> | null = null,
+): BookingUnit {
+  if (offer) {
+    return offerBookingUnit(offer.kind);
+  }
   const chosen = resources.find((resource) => resource.id === resourceId);
   if (chosen) {
     return chosen.booking_unit;
@@ -28,6 +41,10 @@ export interface BookingFormValues {
   nights: string;
   partySize: string;
   resourceId: string;
+  /** The service, package or room type booked; "" for none. */
+  serviceId: string;
+  /** A service's length in minutes, as typed (its usual length at first). */
+  duration: string;
   notes: string;
   source: ChannelKind;
   language: string;
@@ -53,20 +70,40 @@ const baseSchema = z.object({
 
 const timeSchema = z.object({ time: z.string().refine(isLocalTime, messageKey("bookings.errors.timeRequired")) });
 const nightsSchema = z.object({ nights: wholeNumber(1, 365, messageKey("bookings.errors.nights")) });
+const durationSchema = z.object({ duration: wholeNumber(5, 43_200, messageKey("bookings.errors.duration")) });
 
 export type BookingFormErrors = Partial<Record<keyof BookingFormValues, MessageKey>>;
+
+/**
+ * The minutes to send for a service: none unless staff typed another
+ * length than its usual one (the API books its usual length by itself).
+ */
+function durationOverride(values: BookingFormValues, unit: BookingUnit, offer: Pick<OfferItem, "duration_minutes"> | null): number | null {
+  const typed = values.duration.trim();
+  if (!values.serviceId || unit === "night" || typed === "") {
+    return null;
+  }
+  return Number(typed) === (offer?.duration_minutes ?? null) ? null : Number(typed);
+}
 
 /** The POST body of a manual booking, or the field errors (message keys). */
 export function validateBookingForm(
   values: BookingFormValues,
   unit: BookingUnit,
+  offer: Pick<OfferItem, "duration_minutes"> | null = null,
 ): { ok: true; body: ManualBookingBody } | { ok: false; errors: BookingFormErrors } {
   const base = baseSchema.safeParse(values);
   const timing = unit === "night" ? nightsSchema.safeParse(values) : timeSchema.safeParse(values);
-  if (!base.success || !timing.success) {
+  const checksDuration = Boolean(values.serviceId) && unit === "time_slot" && values.duration.trim() !== "";
+  const duration = checksDuration ? durationSchema.safeParse(values) : null;
+  if (!base.success || !timing.success || (duration && !duration.success)) {
     return {
       ok: false,
-      errors: { ...fieldErrors(base), ...fieldErrors(timing as z.ZodSafeParseResult<unknown>) } as BookingFormErrors,
+      errors: {
+        ...fieldErrors(base),
+        ...fieldErrors(timing as z.ZodSafeParseResult<unknown>),
+        ...(duration ? fieldErrors(duration as z.ZodSafeParseResult<unknown>) : {}),
+      } as BookingFormErrors,
     };
   }
   return {
@@ -75,6 +112,8 @@ export function validateBookingForm(
       contact_name: base.data.contactName,
       contact_phone_number: base.data.phone || null,
       resource_id: values.resourceId || null,
+      service_item_id: values.serviceId || null,
+      duration_minutes: durationOverride(values, unit, offer),
       date: base.data.date,
       time: unit === "night" ? null : values.time,
       nights: unit === "night" && "nights" in timing.data ? timing.data.nights : null,

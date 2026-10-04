@@ -84,6 +84,8 @@ export function RescheduleForm({
             time: time || null,
             nights: null,
             isStay: false,
+            serviceId: booking.service_item_id ?? null,
+            durationMinutes: null,
           }}
           selected={{ time: time || null, resourceId: booking.resource_id }}
           onPick={(slot) => {

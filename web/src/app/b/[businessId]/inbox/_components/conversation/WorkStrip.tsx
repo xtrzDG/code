@@ -11,6 +11,7 @@ import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { HandoffUrgencyBadge, LeadTypeBadge } from "@/components/insights/Badges";
 import { formatLocalDate, formatRelative } from "@/components/insights/dates";
 import { HANDOFF_REASONS } from "@/components/insights/labels";
+import { usePartyWording } from "@/components/insights/usePartyWording";
 import type { HandoffListItem, LeadListItem, LeadStatus } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -68,10 +69,11 @@ function RequestWork({
   isPending: boolean;
   onStatus: (status: LeadStatus) => void;
 }) {
-  const { t, tp, locale } = useI18n();
+  const { t, locale } = useI18n();
+  const party = usePartyWording();
   const facts = [
     lead.requested_date ? formatLocalDate(lead.requested_date, locale, { weekday: "short", day: "numeric", month: "short" }) : null,
-    lead.party_size ? tp("bookings.guests", lead.party_size) : null,
+    lead.party_size ? party.count(lead.party_size) : null,
   ].filter(Boolean);
   return (
     <section
