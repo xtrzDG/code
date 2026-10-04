@@ -91,7 +91,8 @@ test("a voice message shows its transcript and is fetched only when played", asy
   await openCard(page, owner.businessId);
 
   await expect(page.getByText(TRANSCRIPT)).toBeVisible();
-  await expect(page.getByText("0:07")).toBeVisible();
+  // Exact: a message sent at x0:07 shows "10:07 AM", which also holds "0:07".
+  await expect(page.getByText("0:07", { exact: true })).toBeVisible();
   // The purged voice message keeps its words but cannot be played.
   await expect(page.getByText(PURGED_TRANSCRIPT)).toBeVisible();
   await expect(page.getByText(en.conversationMedia.deleted)).toBeVisible();
