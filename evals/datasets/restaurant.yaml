@@ -1,5 +1,8 @@
 # Evaluation dataset of the restaurant niche: the Tbilisi demo restaurant Mtsvane Ezo in ka, ru, en, he, ar.
-# Eight scenarios per language. `customer` and `assistant` are the reference
+# The restaurant lists ka, ru and en; its Hebrew and Arabic guests write
+# languages it does not list (the platform reads any language), and the last
+# scenarios are a German guest and guests typing Georgian and Russian in
+# Latin letters. Eight scenarios per language. `customer` and `assistant` are the reference
 # conversation the scripted model plays (the seeded cassettes); a live model
 # improvises from the persona and goal and is scored by `expect`
 # (evals/README.md describes every field).
@@ -561,3 +564,45 @@ scenarios:
   expect:
     facts: ['23:00']
     forbidden_tools: [create_booking, create_lead]
+- id: foreign__de
+  language: de
+  kind: foreign_language
+  item: Хачапури по-аджарски
+  persona: {name: Lena, phone: '+4915112345678'}
+  goal: You are a visitor who does not speak the local languages. Ask how much the Adjarian khachapuri costs.
+  customer: ['Hallo! Was kostet das Chatschapuri nach adscharischer Art?']
+  assistant:
+  - call:
+      get_price: {item_name: Хачапури по-аджарски}
+  - {say: 'Das Chatschapuri nach adscharischer Art kostet 22 Lari. Kann ich Ihnen noch helfen?'}
+  expect:
+    prices: ['22']
+    handoff: false
+- id: translit__ka
+  language: ka
+  kind: transliterated
+  item: Хачапури по-аджарски
+  persona: {name: ნინო, phone: '+995555100201'}
+  goal: Ask how much the Adjarian khachapuri costs.
+  customer: ['gamarjoba! acharuli xachapuri ramdeni ghirs?']
+  assistant:
+  - call:
+      get_price: {item_name: Хачапури по-аджарски}
+  - {say: 'აჭარული ხაჭაპური ღირს 22 ლარი. კიდევ რამით შემიძლია დაგეხმაროთ?'}
+  expect:
+    prices: ['22']
+    handoff: false
+- id: translit__ru
+  language: ru
+  kind: transliterated
+  item: Хачапури по-аджарски
+  persona: {name: Анна, phone: '+995555100202'}
+  goal: Ask how much the Adjarian khachapuri costs.
+  customer: ['zdravstvuyte! skolko stoit hachapuri po-adjarski?']
+  assistant:
+  - call:
+      get_price: {item_name: Хачапури по-аджарски}
+  - {say: 'Хачапури по-аджарски стоит 22 лари. Чем ещё могу помочь?'}
+  expect:
+    prices: ['22']
+    handoff: false

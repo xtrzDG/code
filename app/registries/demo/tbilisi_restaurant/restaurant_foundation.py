@@ -106,7 +106,7 @@ def build_restaurant_foundation(
         city=CityName("Tbilisi"),
         timezone=TimezoneName(RESTAURANT_TIMEZONE),
         currency_code=CurrencyCode("GEL"),
-        languages=[LanguageTag(tag) for tag in ("ka", "ru", "en", "he", "ar")],
+        languages=[LanguageTag(tag) for tag in ("ka", "ru", "en")],
         default_language=LanguageTag("ka"),
         owner_language=LanguageTag("ru"),
         plan_key=PlanKey.VOICE_AND_CHAT,

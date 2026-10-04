@@ -60,7 +60,16 @@ def test_a_valid_dataset_loads(tmp_path: Path) -> None:
         (
             "hotel",
             dataset_text(scenarios=SCENARIO.format(id="a", language="ka")),
-            "which the business does not speak",
+            "only a foreign-language scenario",
+        ),
+        (
+            "hotel",
+            dataset_text(
+                scenarios=SCENARIO.format(id="a", language="en").replace(
+                    "price_question", "foreign_language"
+                )
+            ),
+            "only a foreign-language scenario",
         ),
     ],
 )
@@ -71,6 +80,17 @@ def test_malformed_datasets_are_refused(
 
     with pytest.raises(DatasetError, match=message):
         load_dataset(path)
+
+
+def test_a_foreign_language_scenario_is_in_a_language_the_business_lacks(
+    tmp_path: Path,
+) -> None:
+    foreign = SCENARIO.format(id="a", language="de").replace(
+        "price_question", "foreign_language"
+    )
+    path = write(tmp_path, "hotel", dataset_text(scenarios=foreign))
+
+    assert load_dataset(path).scenarios[0].language == "de"
 
 
 def test_asking_for_a_niche_without_dataset_fails(tmp_path: Path) -> None:

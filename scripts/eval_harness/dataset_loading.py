@@ -11,7 +11,7 @@ from typing import cast
 import yaml
 from pydantic import ValidationError
 
-from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
 from app.schemas.dto.billing import Money
 from app.schemas.dto.evaluations import (
     EvalExpectations,
@@ -55,8 +55,8 @@ def list_dataset_paths(directory: Path, niches: Sequence[str] = ()) -> list[Path
 def load_dataset(path: Path) -> EvalDataset:
     """
     One dataset, validated: unique scenario ids, scenario languages among
-    the business languages (when it lists them), a file named after its
-    niche.
+    the business languages when it lists them (a foreign-language scenario
+    in a language it does not list), a file named after its niche.
     """
 
     try:
@@ -75,10 +75,12 @@ def load_dataset(path: Path) -> EvalDataset:
 
         seen.add(scenario.id)
         languages: list[str] = dataset.business.languages
-        if languages and scenario.language not in languages:
+        is_foreign: bool = scenario.kind is AutotestScenarioKind.FOREIGN_LANGUAGE
+        if languages and (scenario.language in languages) is is_foreign:
             raise DatasetError(
-                f"{path}: scenario {scenario.id} is in {scenario.language}, "
-                f"which the business does not speak ({', '.join(languages)})."
+                f"{path}: scenario {scenario.id} is in {scenario.language}; "
+                f"the business speaks {', '.join(languages)}, and only a "
+                "foreign-language scenario is in a language it does not speak."
             )
 
     return dataset
