@@ -11,14 +11,17 @@ from app.contracts.repositories.delivery_repositories import (
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.document_queries import ascending, field_equals, time_range
-from app.schemas.constants.deliveries import OutboundMessageStatus
+from app.schemas.constants.deliveries import InboundEventStatus, OutboundMessageStatus
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
-from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 CREATED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("created_at")
@@ -69,6 +72,23 @@ class InboundEventRepository(InboundEventRepoContract):
             return change(stored)
 
         return self._collection.modify(str(event_id), change_own)
+
+    def list_stale(
+        self,
+        status: InboundEventStatus,
+        created_before: Microseconds,
+        limit: DocumentQueryLimit,
+        created_from: Microseconds | None = None,
+    ) -> list[InboundEventDocument]:
+        return self._collection.list_by_range(
+            time_range(
+                CREATED_AT_FIELD,
+                starting_at=created_from,
+                ending_before=created_before,
+            ),
+            matches=(field_equals(STATUS_FIELD, status),),
+            limit=limit,
+        )
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         return self._collection.delete_by_range(

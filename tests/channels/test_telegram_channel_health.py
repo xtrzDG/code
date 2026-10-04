@@ -1,18 +1,18 @@
 """A Telegram channel whose bot token is refused turns ERROR and heals itself."""
 
-import pytest
-
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.deliveries import (
+    DeliveryFailureReason,
+    OutboundMessageKind,
+    OutboundMessageStatus,
+)
 from app.schemas.constants.handoffs import HandoffSummaryCode
 from app.schemas.dto.handoffs import CodedHandoffSummary
-from app.schemas.exceptions.application_errors import (
-    ChannelCredentialRejectedError,
-    ExternalServiceError,
-)
-from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.utilities.channels.channel_health import summarize_channel_error
 from tests.channels.channels_payloads import bearer, telegram_ok
 from tests.channels.channels_settings import TELEGRAM_BOT_TOKEN
+from tests.channels.customer_outbox import queue_customer_message
+from tests.channels.outbox_reads import outbox_of
 from tests.channels.stored_channels import stored
 from tests.channels.telegram_updates import build_update, connect_bot, post_update
 from tests.channels.testbed import ChannelsTestbed
@@ -89,30 +89,30 @@ class TestTelegramChannelHealth:
         assert isinstance(handoff.summary, CodedHandoffSummary)
         assert handoff.summary.code is HandoffSummaryCode.REPLY_UNDELIVERED
 
-    def test_proactive_messages_also_track_the_channel(self) -> None:
+    def test_messages_the_business_starts_also_track_the_channel(self) -> None:
         testbed = ChannelsTestbed()
         business, channel = connect_bot(testbed)
         testbed.telegram_transport.respond(
             "POST", r"/sendMessage$", REVOKED, status_code=401
         )
 
-        with pytest.raises(ChannelCredentialRejectedError):
-            testbed.channel_message_sender.send(
-                business.id,
-                ChannelKind.TELEGRAM,
-                ChannelUserId("555000111"),
-                MessageText("See you at 19:00."),
-            )
+        queue_customer_message(
+            testbed, channel, "555000111", OutboundMessageKind.CALL_CONFIRMATION
+        )
+        testbed.run_worker()
 
         assert stored(testbed, channel).status is ChannelStatus.ERROR
         testbed.telegram_transport.respond("POST", r"/sendMessage$", telegram_ok({}))
-        testbed.channel_message_sender.send(
-            business.id,
-            ChannelKind.TELEGRAM,
-            ChannelUserId("555000111"),
-            MessageText("See you at 19:00."),
+        queue_customer_message(
+            testbed, channel, "555000111", OutboundMessageKind.BOOKING_REMINDER
         )
+        testbed.run_worker()
         assert stored(testbed, channel).status is ChannelStatus.CONNECTED
+        by_kind = {message.kind: message for message in outbox_of(testbed, business.id)}
+        refused = by_kind[OutboundMessageKind.CALL_CONFIRMATION]
+        assert refused.last_failure_reason is DeliveryFailureReason.CREDENTIAL_REJECTED
+        delivered = by_kind[OutboundMessageKind.BOOKING_REMINDER]
+        assert delivered.status is OutboundMessageStatus.DELIVERED
 
     def test_reconnecting_clears_the_error(self) -> None:
         testbed = ChannelsTestbed()
@@ -144,12 +144,16 @@ class TestTelegramChannelHealth:
         disabled.status = ChannelStatus.DISABLED
         testbed.channel_repo.save(disabled)
 
-        with pytest.raises(ExternalServiceError, match="not connected"):
-            testbed.channel_message_sender.send(
-                business.id,
-                ChannelKind.TELEGRAM,
-                ChannelUserId("555000111"),
-                MessageText("Hello"),
-            )
+        queue_customer_message(
+            testbed, channel, "555000111", OutboundMessageKind.CALL_LINKS
+        )
+        testbed.run_worker()
 
+        [message] = outbox_of(testbed, business.id)
+        assert message.status is OutboundMessageStatus.DEAD
+        assert message.last_failure_reason is (
+            DeliveryFailureReason.CHANNEL_DISCONNECTED
+        )
+        assert "no longer connected" in str(message.last_error)
         assert stored(testbed, channel).status is ChannelStatus.DISABLED
+        assert testbed.telegram_transport.requests_to("/sendMessage") == []

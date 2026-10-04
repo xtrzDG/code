@@ -109,7 +109,9 @@ class OutboundMessageDocument(BaseDocument):
     and what a message to a customer is about besides a conversation: the
     booking a reminder is for (`booking_id`), the call a confirmation or
     its links follow (`call_id`) and the missed call a text-back answers
-    (`missed_call_id`, whose text-back follows the delivery). All optional.
+    (`missed_call_id`, whose text-back follows the delivery), and the
+    moment after which a message is no longer worth sending
+    (`send_before`: it is given up instead). All optional.
     """
 
     schema_version: SchemaVersion = SchemaVersion("4")
@@ -134,6 +136,7 @@ class OutboundMessageDocument(BaseDocument):
     attempts: DeliveryAttemptCount = DeliveryAttemptCount(0)
     delivered_parts: DeliveredMessageCount = DeliveredMessageCount(0)
     next_attempt_at: Microseconds | None = None
+    send_before: Microseconds | None = None
     last_error: DeliveryErrorText | None = None
     last_failure_reason: DeliveryFailureReason | None = None
     provider_message_id: ProviderMessageId | None = None

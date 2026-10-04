@@ -7,7 +7,7 @@ whose worker died is released when its lease ends. Periodic jobs record
 their run per period, so a restart or a second worker never repeats one.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager
 from typing import Protocol
 
@@ -74,6 +74,14 @@ class QueuedJobClaimAdapterContract(AdapterContract, Protocol):
 
     def purge_finished(self, finished_before: Microseconds) -> ProcessedItemCount:
         """Delete DONE, DEAD and DISCARDED jobs last changed before then."""
+        raise NotImplementedError
+
+    def list_active_payloads(
+        self,
+        job_name: JobName,
+        payloads: Sequence[JobPayloadJson],
+    ) -> set[JobPayloadJson]:
+        """The payloads among these of a PENDING or RUNNING job of the name."""
         raise NotImplementedError
 
 
@@ -163,6 +171,17 @@ class QueuedJobRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def purge_finished(self, finished_before: Microseconds) -> ProcessedItemCount:
+        raise NotImplementedError
+
+    def list_active_payloads(
+        self,
+        job_name: JobName,
+        payloads: Sequence[JobPayloadJson],
+    ) -> set[JobPayloadJson]:
+        """
+        The payloads among these that a job of the name still waits or runs
+        with: their work is not lost.
+        """
         raise NotImplementedError
 
 

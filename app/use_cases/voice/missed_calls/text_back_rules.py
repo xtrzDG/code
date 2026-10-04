@@ -54,9 +54,17 @@ CALLER_DAILY_LIMIT: RequestsPerWindow = RequestsPerWindow(1)
 BUSINESS_DAILY_LIMIT: RequestsPerWindow = RequestsPerWindow(200)
 
 
+def text_back_deadline(called_at: Microseconds) -> Microseconds:
+    """The last moment a text-back of this call is still worth sending."""
+
+    return Microseconds(
+        int(called_at)
+        + int(TEXT_BACK_DEADLINE.total_seconds()) * MICROSECONDS_PER_SECOND
+    )
+
+
 def is_too_late(called_at: Microseconds, now: Microseconds) -> bool:
-    deadline: int = int(TEXT_BACK_DEADLINE.total_seconds()) * MICROSECONDS_PER_SECOND
-    return int(now) - int(called_at) > deadline
+    return int(now) > int(text_back_deadline(called_at))
 
 
 def choose_text_back_language(

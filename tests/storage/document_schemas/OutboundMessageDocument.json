@@ -176,7 +176,8 @@
               "template_rejected",
               "channel_disconnected",
               "credential_rejected",
-              "not_configured"
+              "not_configured",
+              "expired"
             ],
             "type": "string"
           },
@@ -294,6 +295,17 @@
       "schema_version": {
         "default": "4",
         "type": "string"
+      },
+      "send_before": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "source_message_id": {
         "anyOf": [

@@ -32,6 +32,7 @@
   },
   "recipient_key": "Sample OutboundRecipientKey",
   "schema_version": "4",
+  "send_before": 1790000000000000,
   "source_message_id": "message_d95087de-d20a-4ae4-9d9a-e96f76467859",
   "staff_contact": {
     "address": "Sample ManagerContactAddress",

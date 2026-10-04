@@ -15,13 +15,17 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
-from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 
 type InboundEventChange = Callable[[InboundEventDocument], InboundEventDocument | None]
 type OutboundMessageChange = Callable[
@@ -52,6 +56,20 @@ class InboundEventRepoContract(RepoContract, Protocol):
         Store what `change` makes of the event as stored now; None, and
         nothing written, when the event is missing, belongs to another
         business, or `change` returns None.
+        """
+        raise NotImplementedError
+
+    def list_stale(
+        self,
+        status: InboundEventStatus,
+        created_before: Microseconds,
+        limit: DocumentQueryLimit,
+        created_from: Microseconds | None = None,
+    ) -> list[InboundEventDocument]:
+        """
+        Events of every business (and the platform's) in this status that
+        arrived before `created_before` (and from `created_from`, when
+        given), oldest first, at most `limit`.
         """
         raise NotImplementedError
 

@@ -21,7 +21,10 @@ from app.schemas.constants.calls import (
     TextBackSkipReason,
     TextBackStatus,
 )
-from app.schemas.constants.deliveries import OutboundMessageStatus
+from app.schemas.constants.deliveries import (
+    DeliveryFailureReason,
+    OutboundMessageStatus,
+)
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
@@ -154,6 +157,9 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
 
         if outbound.status is OutboundMessageStatus.DELIVERED:
             return self._delivered(business, missed, caller)
+
+        if outbound.last_failure_reason is DeliveryFailureReason.EXPIRED:
+            return self._settle.skip(missed, TextBackSkipReason.TOO_LATE)
 
         LOGGER.warning(
             "WhatsApp text-back of %s was refused: %s", missed.id, outbound.last_error

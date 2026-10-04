@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds
 
@@ -12,6 +14,10 @@ from app.adapters.storage.postgres.job_claim_queries import (
     QUEUED_JOBS_COLLECTION,
     RELEASE_EXPIRED_LEASES,
     build_list_page_query,
+)
+from app.adapters.storage.postgres.job_payload_queries import (
+    ACTIVE_JOB_STATUSES,
+    ACTIVE_PAYLOADS,
 )
 from app.adapters.storage.postgres.platform_transaction import (
     platform_transaction,
@@ -29,7 +35,9 @@ from app.schemas.dto.job_queue import (
     QueuedJobPageQuery,
 )
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
+from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
+from app.schemas.typings.platform.strings import JobPayloadJson
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 
 
@@ -156,6 +164,25 @@ class PostgresQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
             purged += max(deleted, 0)
             if deleted < PURGE_BATCH_SIZE:
                 return ProcessedItemCount(purged)
+
+    def list_active_payloads(
+        self,
+        job_name: JobName,
+        payloads: Sequence[JobPayloadJson],
+    ) -> set[JobPayloadJson]:
+        with platform_transaction(
+            self._connection_pool, QUEUED_JOBS_COLLECTION
+        ) as connection:
+            rows: list[TupleRow] = connection.execute(
+                ACTIVE_PAYLOADS,
+                {
+                    "statuses": list(ACTIVE_JOB_STATUSES),
+                    "name": str(job_name),
+                    "payloads": [str(payload) for payload in payloads],
+                },
+            ).fetchall()
+
+        return {JobPayloadJson(str(row[0])) for row in rows}
 
     def _parse(self, rows: list[TupleRow]) -> list[QueuedJobDocument]:
         return [

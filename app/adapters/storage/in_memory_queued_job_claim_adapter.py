@@ -1,4 +1,5 @@
 import threading
+from collections.abc import Sequence
 from functools import partial
 
 from typed_time_provider import Microseconds
@@ -19,10 +20,16 @@ from app.schemas.typings.platform.constrained_integers import (
 )
 from app.schemas.typings.platform.constrained_strings import (
     JobLeaseToken,
+    JobName,
     JobSerialKey,
 )
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
+from app.schemas.typings.platform.strings import JobPayloadJson
 
+ACTIVE_STATUSES: tuple[QueuedJobStatus, ...] = (
+    QueuedJobStatus.PENDING,
+    QueuedJobStatus.RUNNING,
+)
 FINISHED_STATUSES: frozenset[QueuedJobStatus] = frozenset(
     {QueuedJobStatus.DONE, QueuedJobStatus.DEAD, QueuedJobStatus.DISCARDED}
 )
@@ -146,6 +153,20 @@ class InMemoryQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
                     purged += 1
 
         return ProcessedItemCount(purged)
+
+    def list_active_payloads(
+        self,
+        job_name: JobName,
+        payloads: Sequence[JobPayloadJson],
+    ) -> set[JobPayloadJson]:
+        wanted: set[JobPayloadJson] = set(payloads)
+        with self._lock:
+            return {
+                job.payload
+                for status in ACTIVE_STATUSES
+                for job in self._with_status(status)
+                if job.name == job_name and job.payload in wanted
+            }
 
     def _with_status(self, status: QueuedJobStatus) -> list[QueuedJobDocument]:
         # The in-memory twin reads its own dict; status is not a declared

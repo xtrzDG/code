@@ -27,24 +27,32 @@ from app.schemas.dto.deliveries import (
     VerifiedPostCallReport,
 )
 from app.schemas.dto.handoffs import HandoffCommand
-from app.schemas.dto.jobs import QueuedJobInput
+from app.schemas.dto.inbox_sweep import InboundEventHandoffMark, UnansweredInboundEvent
+from app.schemas.dto.jobs import JobTick, QueuedJobInput
 from app.schemas.dto.media_requests import InboundMediaRequest
 from app.schemas.dto.voice_webhooks import (
     FinishedCallReport,
     PostCallWebhookOutcome,
     PostCallWebhookRequest,
 )
+from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.channels.inbox.accept_platform_bot_update_use_case import (
     AcceptPlatformBotUpdateUseCase,
 )
 from app.use_cases.channels.inbox.claim_inbound_event_use_case import (
     ClaimInboundEventUseCase,
 )
+from app.use_cases.channels.inbox.collect_unanswered_inbound_events_use_case import (
+    CollectUnansweredInboundEventsUseCase,
+)
 from app.use_cases.channels.inbox.fetch_inbound_media_use_case import (
     FetchInboundMediaUseCase,
 )
 from app.use_cases.channels.inbox.finish_inbound_event_use_case import (
     FinishInboundEventUseCase,
+)
+from app.use_cases.channels.inbox.mark_inbound_event_handed_off_use_case import (
+    MarkInboundEventHandedOffUseCase,
 )
 from app.use_cases.channels.inbox.read_accepted_post_call_use_case import (
     ReadAcceptedPostCallUseCase,
@@ -54,6 +62,9 @@ from app.use_cases.channels.inbox.recall_inbound_reply_use_case import (
 )
 from app.use_cases.channels.inbox.release_inbound_event_use_case import (
     ReleaseInboundEventUseCase,
+)
+from app.use_cases.channels.inbox.requeue_stale_inbound_events_use_case import (
+    RequeueStaleInboundEventsUseCase,
 )
 from app.use_cases.channels.inbox.store_inbound_messages_use_case import (
     StoreInboundMessagesUseCase,
@@ -166,6 +177,34 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ReadAcceptedPostCallUseCase,
         voice_webhook_adapter=adapters.voice_webhook_adapter,
+    )
+
+    # --- The inbox's sweeper: lost jobs queued again, unanswered messages
+    # handed to staff.
+    requeue_stale_inbound_events_use_case: Factory[
+        UseCaseContract[JobTick, ProcessedItemCount]
+    ] = Factory(
+        RequeueStaleInboundEventsUseCase,
+        inbound_event_repo=repositories.inbound_event_repo,
+        job_repo=repositories.queued_job_repo,
+        job_queue=facilitators.job_queue_facilitator,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    collect_unanswered_inbound_events_use_case: Factory[
+        UseCaseContract[JobTick, list[UnansweredInboundEvent]]
+    ] = Factory(
+        CollectUnansweredInboundEventsUseCase,
+        inbound_event_repo=repositories.inbound_event_repo,
+        business_repo=repositories.business_repo,
+        conversation_repo=repositories.conversation_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    mark_inbound_event_handed_off_use_case: Factory[
+        UseCaseContract[InboundEventHandoffMark, InboundEventDocument | None]
+    ] = Factory(
+        MarkInboundEventHandedOffUseCase,
+        inbound_event_repo=repositories.inbound_event_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
 
     # --- The outbox.

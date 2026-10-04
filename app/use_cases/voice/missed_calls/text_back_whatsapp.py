@@ -35,6 +35,7 @@ from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.use_cases.shared.outbox_queue import queue_outbound_message
 from app.use_cases.voice.missed_calls.text_back_conversation import whatsapp_user_id
+from app.use_cases.voice.missed_calls.text_back_rules import text_back_deadline
 from app.utilities.calls.text_back_texts import TEXT_BACK_MESSAGE_TEXT
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import find_business_channel
@@ -126,6 +127,7 @@ class TextBackWhatsApp:
                     body_parameters=[MessageText(str(business.name))],
                 ),
                 missed_call_id=missed.id,
+                send_before=text_back_deadline(missed.called_at),
                 created_at=now,
                 updated_at=now,
             ),

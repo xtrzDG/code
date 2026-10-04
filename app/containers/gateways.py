@@ -30,6 +30,9 @@ from app.gateways.worker.periodic.send_value_reports import send_value_reports_j
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     sweep_rate_limit_buckets_job,
 )
+from app.gateways.worker.periodic.sweep_stale_inbound_events import (
+    sweep_stale_inbound_events_job,
+)
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.admin.security.key_rotation_views import (
@@ -142,6 +145,12 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             sweep_rate_limit_buckets_job,
             operator=operators.platform.sweep_rate_limit_buckets_operator,
+        ),
+        # The inbox's sweeper: lost jobs queued again, unanswered messages
+        # handed to staff.
+        Factory(
+            sweep_stale_inbound_events_job,
+            operator=operators.channels.sweep_stale_inbound_events_operator,
         ),
         # The owners' digests and monthly reports (09:00 business time).
         Factory(

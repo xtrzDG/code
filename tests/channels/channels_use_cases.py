@@ -1,8 +1,5 @@
 """The channels testbed's use cases and facilitators, wired over its infrastructure."""
 
-from app.facilitators.channels.channel_message_sender_facilitator import (
-    ChannelMessageSenderFacilitator,
-)
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.authorize_business_access_use_case import (
@@ -31,6 +28,7 @@ from app.use_cases.channels.set_whatsapp_staff_template_use_case import (
 from app.use_cases.voice.audit_call_replies_use_case import (
     AuditCallRepliesUseCase,
 )
+from app.use_cases.voice.call_message_outbox import CallMessageOutbox
 from app.use_cases.voice.finished_call.record_finished_call_use_case import (
     RecordFinishedCallUseCase,
 )
@@ -61,17 +59,15 @@ class ChannelsUseCases(ChannelsInfrastructure):
             session_assurance=SessionAssuranceContext(),
             app_settings=ACCESS_SETTINGS,
         )
-        self.channel_message_sender = ChannelMessageSenderFacilitator(
-            self.channel_repo,
-            self.secret_cipher,
-            self.telegram_adapter,
-            self.whatsapp_adapter,
-            self.messenger_adapter,
-            self.instagram_adapter,
-            self.whatsapp_adapter,
-            self.usage_event_repo,
-            self.live_events,
-            self.wall_clock,
+        # Messages to a caller after the call go through the outbox.
+        self.call_messages = CallMessageOutbox(
+            channel_repo=self.channel_repo,
+            conversation_repo=self.conversation_repo,
+            message_repo=self.message_repo,
+            outbound_message_repo=self.outbound_message_repo,
+            job_queue=self.job_queue,
+            unit_of_work=None,
+            wall_clock=self.wall_clock,
         )
         self.receive_telegram_webhook = ReceiveTelegramWebhookUseCase(
             self.channel_repo, self.secret_cipher, self.telegram_adapter
@@ -150,17 +146,15 @@ class ChannelsUseCases(ChannelsInfrastructure):
             self.business_repo,
             self.booking_repo,
             self.contact_repo,
-            self.channel_repo,
-            self.channel_message_sender,
+            self.call_messages,
             self.text_resolver,
         )
         self.send_call_links = SendCallLinksUseCase(
             self.business_repo,
             self.profile_repo,
             self.contact_repo,
-            self.channel_repo,
             self.message_repo,
-            self.channel_message_sender,
+            self.call_messages,
             self.text_resolver,
         )
         # The after-call check of what the assistant said; its handoffs are

@@ -56,7 +56,7 @@ def only_missed_call(setup: VoiceSetup) -> MissedCallDocument:
 
 
 def retry_later(setup: VoiceSetup, times: int = 1) -> None:
-    """Let the job queue try again (its backoff is at most four minutes)."""
+    """Five minutes later, run what is due (one retry of the outbox each)."""
 
     for _ in range(times):
         setup.testbed.clock.advance(5 * 60)
@@ -139,7 +139,8 @@ class TestWhatsApp:
         setup.testbed.run_worker()
         assert only_missed_call(setup).status is TextBackStatus.QUEUED
 
-        retry_later(setup)
+        # The outbox tries again after 10 s, then 20 s.
+        retry_later(setup, times=2)
 
         missed = only_missed_call(setup)
         assert missed.status is TextBackStatus.SENT
@@ -154,13 +155,14 @@ class TestWhatsApp:
         report_missed_call(setup)
         setup.testbed.run_worker()
 
-        retry_later(setup, times=5)
+        retry_later(setup, times=10)
 
         missed = only_missed_call(setup)
         assert missed.status is TextBackStatus.FAILED
         assert missed.last_error is not None
-        # Five attempts, each in Georgian and then in English.
-        assert len(whatsapp_templates(setup)) == 10
+        # The outbox's eight attempts over about 21 minutes; an outage is
+        # not a missing translation, so none of them falls back to English.
+        assert len(whatsapp_templates(setup)) == 8
 
     def test_a_message_hours_late_is_not_sent(self, setup: VoiceSetup) -> None:
         setup.testbed.meta_transport.respond(

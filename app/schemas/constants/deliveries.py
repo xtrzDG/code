@@ -88,8 +88,9 @@ class DeliveryFailureReason(StrEnum):
     (RECIPIENT_REFUSED: a blocked bot, an unknown recipient, a closed
     24-hour window) or the WhatsApp template (TEMPLATE_REJECTED); the
     business's channel was disconnected (CHANNEL_DISCONNECTED) or its
-    credential stopped working (CREDENTIAL_REJECTED); or nothing can carry
-    this kind of message (NOT_CONFIGURED).
+    credential stopped working (CREDENTIAL_REJECTED); nothing can carry
+    this kind of message (NOT_CONFIGURED); or its moment passed before it
+    could go (EXPIRED: "you just called us" hours later).
     """
 
     RATE_LIMITED = "rate_limited"
@@ -99,6 +100,7 @@ class DeliveryFailureReason(StrEnum):
     CHANNEL_DISCONNECTED = "channel_disconnected"
     CREDENTIAL_REJECTED = "credential_rejected"
     NOT_CONFIGURED = "not_configured"
+    EXPIRED = "expired"
 
 
 class OutboundDeliveryState(StrEnum):
