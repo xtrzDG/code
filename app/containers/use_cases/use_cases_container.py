@@ -204,6 +204,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     platform: PlatformUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
@@ -219,6 +220,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
         platform_use_cases=platform,
     )
     sharing: SharingUseCasesContainer = Container(  # type: ignore[assignment]

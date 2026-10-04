@@ -41,7 +41,6 @@ from app.adapters.recordings.cached_recording_storage_adapter import (
 from app.adapters.recordings.recording_storage_factory import (
     build_own_recording_storage,
 )
-from app.adapters.security.secret_cipher_adapter import SecretCipherAdapter
 from app.adapters.voice.elevenlabs_recording_storage_adapter import (
     ElevenLabsRecordingStorageAdapter,
 )
@@ -63,6 +62,9 @@ from app.containers.adapters.notification_collections_container import (
 )
 from app.containers.adapters.process_adapters_container import (
     ProcessAdaptersContainer,
+)
+from app.containers.adapters.security_adapters_container import (
+    SecurityAdaptersContainer,
 )
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
@@ -155,11 +157,12 @@ class AdaptersContainer(containers.DeclarativeContainer):
         listen_database_url=config.app_settings.provided.live_events_database_url,
     )
 
-    # --- Security and recordings.
-    secret_cipher: Singleton[SecretCipherAdapter] = Singleton(
-        SecretCipherAdapter,
-        app_settings=config.app_settings,
+    # --- Security (secrets sealed with the key ring) and recordings.
+    security: SecurityAdaptersContainer = Container(  # type: ignore[assignment]
+        SecurityAdaptersContainer, config=config
     )
+    secret_cipher = security.secret_cipher
+    totp_secret_cipher = security.totp_secret_cipher
     # Recordings the platform keeps itself: EU object storage encrypted per
     # business (RECORDINGS_STORAGE=s3), files of this server in development.
     own_recording_storage: Singleton[RecordingStorageAdapterContract] = Singleton(

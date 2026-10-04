@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.client_health import CabinetSection
 from app.schemas.constants.compliance import AuditAction
@@ -35,7 +36,9 @@ class OpenClientCabinetUseCase(
         business_repo: BusinessRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        step_up: StepUpGuardContract,
     ) -> None:
+        self._step_up: StepUpGuardContract = step_up
         self._authorize_platform_admin: UseCaseContract[UserId, UserDocument] = (
             authorize_platform_admin
         )
@@ -45,6 +48,7 @@ class OpenClientCabinetUseCase(
 
     def run(self, input_data: OpenClientCabinetCommand) -> ClientCabinetAccess:
         admin: UserDocument = self._authorize_platform_admin.run(input_data.user_id)
+        self._step_up.require_recent_authentication()
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id
         )

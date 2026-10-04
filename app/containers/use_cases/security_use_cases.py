@@ -8,6 +8,7 @@ from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.key_rotation import (
@@ -40,6 +41,7 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     platform_use_cases: PlatformUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     get_encryption_keys_use_case: Factory[
@@ -60,6 +62,7 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )
     secret_resealer: Factory[SecretResealer] = Factory(
         SecretResealer,

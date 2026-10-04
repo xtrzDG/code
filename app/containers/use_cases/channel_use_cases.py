@@ -131,6 +131,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         storage_scope=utilities.storage_scope,
         product_events=facilitators.product_events,
+        step_up=utilities.step_up_guard,
     )
     set_whatsapp_staff_template_use_case: Factory[
         UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]

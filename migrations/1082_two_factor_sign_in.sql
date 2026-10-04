@@ -5,8 +5,8 @@
 -- team; sensitive actions confirm the person again (step-up).
 --
 -- totp_factors: a user's authenticator app, its secret sealed with the
---   key ring; at most one per user, found by (doc_user_id) at every sign-in
---   of a user who has one and every step-up.
+--   key ring; at most one per user, stored under the user's id (the
+--   document key), so no lookup column.
 -- recovery_codes: single-use codes of a user with an authenticator, only
 --   their keyed hashes; read and replaced by (doc_user_id).
 -- mfa_challenges: the second step of one sign-in (five minutes); read by
@@ -23,12 +23,6 @@
 select workshop.create_document_collection('totp_factors');
 select workshop.create_document_collection('recovery_codes');
 select workshop.create_document_collection('mfa_challenges');
-
-alter table workshop.totp_factors
-    add column if not exists doc_user_id text
-        generated always as (document ->> 'user_id') stored;
-create index if not exists totp_factors_doc_user_id_idx
-    on workshop.totp_factors (doc_user_id);
 
 alter table workshop.recovery_codes
     add column if not exists doc_user_id text

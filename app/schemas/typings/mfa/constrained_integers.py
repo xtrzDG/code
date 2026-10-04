@@ -10,6 +10,19 @@ class MfaAttemptCount(BaseConstrainedTypedInt):
     le = 100
 
 
+class MfaChallengeLifetimeSeconds(BaseConstrainedTypedInt):
+    """How long the second step of a sign-in stays open, in seconds."""
+
+    ge = 30
+    le = 3600
+
+
+class MemberWithoutTwoFactorCount(BaseConstrainedTypedInt):
+    """How many members of a business have no authenticator set up."""
+
+    ge = 0
+
+
 class RecoveryCodeCount(BaseConstrainedTypedInt):
     """How many recovery codes a user has left (or gets in a new set)."""
 

@@ -9,6 +9,7 @@ from app.contracts.repositories.user_repositories import (
     UserSessionRepoContract,
 )
 from app.repositories.document_queries import time_range
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -161,6 +162,23 @@ class UserSessionRepository(UserSessionRepoContract):
 
     def save(self, session: UserSessionDocument) -> None:
         self._collection.upsert(str(session.id), session)
+
+    def get(self, session_id: UserSessionId) -> UserSessionDocument | None:
+        return self._collection.get(str(session_id))
+
+    def record_authentication(
+        self,
+        session_id: UserSessionId,
+        auth_level: AuthLevel,
+        authenticated_at: Microseconds,
+    ) -> UserSessionDocument | None:
+        def record(session: UserSessionDocument) -> UserSessionDocument:
+            session.auth_level = auth_level
+            session.authenticated_at = authenticated_at
+            session.updated_at = authenticated_at
+            return session
+
+        return self._collection.modify(str(session_id), record)
 
     def find_by_token_hash(
         self,

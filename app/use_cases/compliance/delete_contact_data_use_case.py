@@ -17,6 +17,7 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
@@ -87,7 +88,9 @@ class DeleteContactDataUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         note_repo: ConversationNoteRepoContract,
+        step_up: StepUpGuardContract,
     ) -> None:
+        self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -117,6 +120,7 @@ class DeleteContactDataUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         records: ContactRecords = self._collect_contact_records.run(
             ContactRecordsQuery(
                 business_id=business.id,

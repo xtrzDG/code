@@ -5,22 +5,25 @@ from app.contracts.repositories.user_repositories import (
     UserSessionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.users import UserDocument, UserSessionDocument
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
-from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.utilities.security.access_tokens import hash_access_token
 
 INVALID_SESSION_MESSAGE: str = "The session is invalid or has expired; sign in again."
 
 
-class AuthenticateUserUseCase(UseCaseContract[AccessToken, UserId]):
+class AuthenticateUserUseCase(UseCaseContract[AccessToken, SessionAssurance]):
     """
-    Resolve a bearer token to the signed-in user.
+    Resolve a bearer token to the signed-in session: whose it is, how it
+    was signed in and when its person last proved it is them.
 
     The token is looked up by its hash. An expired session is deleted on
     sight; unknown and expired tokens and deleted users are all reported as
-    AuthenticationRequiredError.
+    AuthenticationRequiredError. A session from before two-factor sign-in
+    (no `auth_level`) counts as one factor, not recently confirmed.
     """
 
     def __init__(
@@ -33,7 +36,7 @@ class AuthenticateUserUseCase(UseCaseContract[AccessToken, UserId]):
         self._user_repo: UserRepoContract = user_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
-    def run(self, input_data: AccessToken) -> UserId:
+    def run(self, input_data: AccessToken) -> SessionAssurance:
         session: UserSessionDocument | None = (
             self._user_session_repo.find_by_token_hash(hash_access_token(input_data))
         )
@@ -49,4 +52,9 @@ class AuthenticateUserUseCase(UseCaseContract[AccessToken, UserId]):
             self._user_session_repo.delete(session.id)
             raise AuthenticationRequiredError(INVALID_SESSION_MESSAGE)
 
-        return user.id
+        return SessionAssurance(
+            user_id=user.id,
+            session_id=session.id,
+            auth_level=session.auth_level or AuthLevel.ONE_FACTOR,
+            authenticated_at=session.authenticated_at,
+        )

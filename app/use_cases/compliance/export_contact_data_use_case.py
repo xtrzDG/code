@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
@@ -37,7 +38,9 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
         collect_contact_records: UseCaseContract[ContactRecordsQuery, ContactRecords],
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        step_up: StepUpGuardContract,
     ) -> None:
+        self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -57,6 +60,7 @@ class ExportContactDataUseCase(UseCaseContract[ContactDataCommand, ContactDataEx
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         records: ContactRecords = self._collect_contact_records.run(
             ContactRecordsQuery(
                 business_id=business.id,

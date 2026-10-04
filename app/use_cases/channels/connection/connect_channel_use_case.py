@@ -11,6 +11,7 @@ from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -103,7 +104,9 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         wall_clock: WallClock[Microseconds],
         storage_scope: StorageScopeContract,
         product_events: RecordProductEventFacilitatorContract,
+        step_up: StepUpGuardContract,
     ) -> None:
+        self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -127,6 +130,7 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         if input_data.channel not in CONNECTABLE_CHANNELS:
             raise ValidationFailedError(
                 f"The {input_data.channel.value} channel cannot be connected yet."

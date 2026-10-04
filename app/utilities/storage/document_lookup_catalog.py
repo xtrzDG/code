@@ -56,9 +56,9 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _integer("expires_at"),
     ),
     DocumentCollectionName("otp_challenges"): (_integer("created_at"),),
-    # Two-factor sign-in (1082): a user's authenticator and recovery codes;
-    # old second steps of a sign-in for the purge.
-    DocumentCollectionName("totp_factors"): (_text("user_id"),),
+    # Two-factor sign-in (1082): a user's recovery codes (an authenticator
+    # is stored under its user's id); old second steps of a sign-in for the
+    # purge.
     DocumentCollectionName("recovery_codes"): (_text("user_id"),),
     DocumentCollectionName("mfa_challenges"): (_integer("created_at"),),
     # The businesses of a signed-in user.
