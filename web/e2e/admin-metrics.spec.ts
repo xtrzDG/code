@@ -70,7 +70,9 @@ test("the platform admin reads the growth metrics and filters them through the a
 
 test("the Metrics page is not there for owners", async ({ page, owner, consoleErrors }) => {
   expect(owner.businessId).toBeTruthy();
-  consoleErrors.allow(/status of 404 \(Not Found\) \(http:\/\/localhost:\d+\/admin\/metrics\)/);
+  // The 404 page itself, and the browser's own /favicon.ico request that a 404
+  // page sometimes draws in a full run.
+  consoleErrors.allow(/status of 404 \(Not Found\) \(http:\/\/localhost:\d+\/(admin\/metrics|favicon\.ico)\)/);
   const response = await page.goto("/admin/metrics");
 
   expect(response?.status()).toBe(404);

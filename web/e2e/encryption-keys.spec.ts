@@ -57,7 +57,9 @@ test("the platform admin re-encrypts every stored token and sees the run finish"
 
 test("the Encryption keys page is not there for owners", async ({ page, owner, consoleErrors }) => {
   expect(owner.businessId).toBeTruthy();
-  consoleErrors.allow(/status of 404 \(Not Found\) \(http:\/\/localhost:\d+\/admin\/security\)/);
+  // The 404 page itself, and the browser's own /favicon.ico request that a 404
+  // page sometimes draws in a full run.
+  consoleErrors.allow(/status of 404 \(Not Found\) \(http:\/\/localhost:\d+\/(admin\/security|favicon\.ico)\)/);
   const response = await page.goto("/admin/security");
 
   expect(response?.status()).toBe(404);
