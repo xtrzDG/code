@@ -16,6 +16,7 @@ from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AutotestRunDocument
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.domain.billing_profiles import BillingProfileDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument
@@ -84,6 +85,7 @@ class DemoActivityBuilder:
         autotest_run: AutotestRunDocument,
         invoices: Sequence[InvoiceDocument] = (),
         audit_log_entries: Sequence[AuditLogEntryDocument] = (),
+        billing_profile: BillingProfileDocument | None = None,
     ) -> DemoBusinessActivity:
         """
         The story with its billing: the usage is what the recorded
@@ -102,6 +104,7 @@ class DemoActivityBuilder:
             handoffs=self.desk.handoffs,
             unanswered_questions=self.desk.questions,
             subscription=subscription,
+            billing_profile=billing_profile,
             invoices=list(invoices),
             usage_events=metered_usage(
                 self.business,

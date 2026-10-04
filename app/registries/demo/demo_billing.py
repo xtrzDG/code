@@ -23,6 +23,10 @@ from app.schemas.domain.billing import (
     SubscriptionDocument,
     UsageEventDocument,
 )
+from app.schemas.domain.billing_profiles import (
+    BillingProfileDocument,
+    PaymentCardSnapshot,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import (
     CallDocument,
@@ -39,7 +43,21 @@ from app.schemas.typings.billing.strings import (
     PaymentProviderReference,
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.invoicing.constrained_strings import (
+    BillingAddressText,
+    BillingLegalName,
+    PaymentCardLastDigits,
+    TaxpayerIdentificationNumber,
+)
+from app.schemas.typings.invoicing.strings import PaymentCardBrand
+from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.billing.billing_periods import add_calendar_months, add_local_days
+from app.utilities.billing.invoicing_keys import derive_billing_profile_id
+
+# The demo card a paid demo invoice was charged to (masked as Flitt reports it).
+DEMO_CARD = PaymentCardSnapshot(
+    brand=PaymentCardBrand("MASTERCARD"), last_digits=PaymentCardLastDigits("4417")
+)
 
 
 def price_of(plan_registry: PlanRegistryContract, business: BusinessDocument) -> Money:
@@ -116,10 +134,35 @@ def paid_subscription(
         period_start=period_start,
         period_end=period_end,
         provider_reference=PaymentProviderReference(f"{reference}-1"),
+        paid_at=period_start,
+        payment_card=DEMO_CARD,
         created_at=period_start,
         updated_at=period_start,
     )
     return subscription, invoice
+
+
+def billing_details(
+    business: BusinessDocument,
+    legal_name: str,
+    tax_id: str,
+    address: str,
+    billing_email: str,
+    saved_at: Microseconds,
+) -> BillingProfileDocument:
+    """What the owner entered in "Billing details", in the business country."""
+
+    return BillingProfileDocument(
+        id=derive_billing_profile_id(business.id),
+        business_id=business.id,
+        legal_name=BillingLegalName(legal_name),
+        tax_id=TaxpayerIdentificationNumber(tax_id),
+        address=BillingAddressText(address),
+        billing_email=EmailAddress(billing_email),
+        country_code=business.country_code,
+        created_at=saved_at,
+        updated_at=saved_at,
+    )
 
 
 def metered_usage(

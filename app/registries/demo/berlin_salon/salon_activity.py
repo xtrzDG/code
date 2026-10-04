@@ -12,7 +12,7 @@ from app.registries.demo.berlin_salon.salon_chats import (
 from app.registries.demo.berlin_salon.salon_services import LENA, MEHMET
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_autotests import finished_run
-from app.registries.demo.demo_billing import paid_subscription
+from app.registries.demo.demo_billing import billing_details, paid_subscription
 from app.registries.demo.demo_lines import assistant, customer
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
@@ -134,6 +134,14 @@ def build_salon_activity(
     published = request.foundation.assistant_versions[0]
     return story.finish(
         subscription=subscription,
+        billing_profile=billing_details(
+            story.business,
+            "Studio Lindenblatt GmbH",
+            "DE123456789",
+            "Lindenstraße 12\n10969 Berlin",
+            "buchhaltung@lindenblatt.example",
+            clock.past(-9, "18:30"),
+        ),
         invoices=[invoice],
         autotest_run=finished_run(
             story.business.id,

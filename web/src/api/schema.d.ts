@@ -698,6 +698,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/billing/invoices/{invoice_id}/documents/{document_kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Billing Document */
+        get: operations["get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/billing/plan": {
         parameters: {
             query?: never;
@@ -709,6 +726,24 @@ export interface paths {
         put?: never;
         /** Change Plan */
         post: operations["change_plan_v1_businesses__business_id__billing_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/billing/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Billing Profile */
+        get: operations["get_billing_profile_v1_businesses__business_id__billing_profile_get"];
+        /** Save Billing Profile */
+        put: operations["save_billing_profile_v1_businesses__business_id__billing_profile_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3792,6 +3827,31 @@ export interface components {
          */
         BillingPeriod: "monthly" | "annual";
         /**
+         * BillingProfileView
+         * @description The billing details as invoices will print them, and the VAT they
+         *     lead to. Before the owner saves any (`is_saved` false) they are the
+         *     business name and country.
+         */
+        BillingProfileView: {
+            /** Address */
+            address?: string | null;
+            /** Billing Email */
+            billing_email?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Country Code */
+            country_code: string;
+            /** Is Saved */
+            is_saved: boolean;
+            /** Legal Name */
+            legal_name: string;
+            /** Tax Id */
+            tax_id?: string | null;
+            /** Tax Rate Basis Points */
+            tax_rate_basis_points: number;
+            tax_treatment: components["schemas"]["TaxTreatment"];
+        };
+        /**
          * BookableOfferView
          * @description One bookable offer as the model tools list it: how long a booking of it
          *     lasts (with the time its performer stays blocked after it), its price
@@ -6778,7 +6838,10 @@ export interface components {
         InvoiceStatus: "issued" | "paid" | "failed" | "void";
         /**
          * InvoiceView
-         * @description One invoice with its amount formatted for the reader.
+         * @description One invoice with its amount (the total, with VAT) formatted for the
+         *     reader; its number once numbered (an invoice from before numbering
+         *     gets one with its first PDF), the VAT in it, when it was paid, and
+         *     whether its receipt can be downloaded.
          */
         InvoiceView: {
             amount: components["schemas"]["QuotedMoney"];
@@ -6786,14 +6849,26 @@ export interface components {
             description: string;
             /** Id */
             id: string;
+            /**
+             * Is Receipt Available
+             * @default false
+             */
+            is_receipt_available: boolean;
             /** Issued At */
             issued_at: number;
             kind: components["schemas"]["InvoiceKind"];
+            /** Number */
+            number?: string | null;
+            /** Paid At */
+            paid_at?: number | null;
             /** Period End */
             period_end: number;
             /** Period Start */
             period_start: number;
             status: components["schemas"]["InvoiceStatus"];
+            tax?: components["schemas"]["QuotedMoney"] | null;
+            /** Tax Rate Basis Points */
+            tax_rate_basis_points?: number | null;
         };
         /**
          * JobLane
@@ -9504,6 +9579,21 @@ export interface components {
             /** Total Bytes */
             total_bytes: number;
         };
+        /**
+         * TaxTreatment
+         * @description How value added tax applies to one invoice (TaxPolicyRegistry decides):
+         *
+         *     - NOT_REGISTERED: the seller is not registered for VAT
+         *       (PLATFORM_VAT_REGISTERED is off), so no VAT is charged.
+         *     - STANDARD: a buyer in the seller's country pays the country's VAT on
+         *       top of the price (Georgia: 18 %).
+         *     - REVERSE_CHARGE: a business abroad with a tax number accounts for the
+         *       VAT itself; the invoice says so and charges none.
+         *     - OUTSIDE_SCOPE: a buyer abroad without a tax number; the service is
+         *       supplied outside the seller's country and carries none of its VAT.
+         * @enum {string}
+         */
+        TaxTreatment: "not_registered" | "standard" | "reverse_charge" | "outside_scope";
         /**
          * TelegramLinkView
          * @description One-time link code. The staff member opens `deep_link` (or sends
@@ -14822,6 +14912,97 @@ export interface operations {
             };
         };
     };
+    get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                invoice_id: string;
+                document_kind: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The invoice or receipt as a PDF file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     change_plan_v1_businesses__business_id__billing_plan_post: {
         parameters: {
             query?: {
@@ -14861,6 +15042,195 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingOverview"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_billing_profile_v1_businesses__business_id__billing_profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingProfileView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    save_billing_profile_v1_businesses__business_id__billing_profile_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Address */
+                    address?: string | null;
+                    /** Billing Email */
+                    billing_email?: string | null;
+                    /** Country Code */
+                    country_code: string;
+                    /** Legal Name */
+                    legal_name: string;
+                    /** Tax Id */
+                    tax_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingProfileView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

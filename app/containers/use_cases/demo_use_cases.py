@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.container_edges import composed_container_edge
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
@@ -45,6 +46,7 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
 
     adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -88,6 +90,8 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         unanswered_question_repo=repositories.unanswered_question_repo,
         subscription_repo=repositories.subscription_repo,
         invoice_repo=repositories.invoice_repo,
+        billing_profile_repo=repositories.billing_profile_repo,
+        invoice_issuing=facilitators.invoice_issuing_facilitator,
         usage_event_repo=repositories.usage_event_repo,
         package_usage_warning_repo=repositories.package_usage_warning_repo,
         dpa_acceptance_repo=repositories.dpa_acceptance_repo,
