@@ -10,7 +10,7 @@ import { unwrap, type ApiResult } from "@/api/result";
 import type { paths } from "@/api/schema";
 import type { BusinessView, CurrentUserView } from "@/api/types";
 import { getLocale } from "@/i18n/server";
-import { ADMIN_PATH, securityPath } from "@/lib/navigation";
+import { ADMIN_PATH, adminClientPath, businessLocation, securityPath } from "@/lib/navigation";
 
 import { PATHNAME_HEADER, buildUpstreamHeaders, getBackendUrl, sanitizeRequestId } from "./backend";
 import { readSessionToken } from "./sessionCookie";
@@ -65,6 +65,13 @@ export async function serverFetch<T>(request: Promise<ApiResult<T>>): Promise<T>
     }
     if (isApiError(error) && error.status === 404) {
       notFound();
+    }
+    if (isApiError(error) && error.status === 403 && error.reasons.some((reason) => reason.code === "support_access_required")) {
+      // A platform admin opens a client's cabinet only with a reason, from the admin pages.
+      const businessId = businessLocation((await headers()).get(PATHNAME_HEADER) ?? "")?.businessId;
+      if (businessId) {
+        redirect(adminClientPath(businessId));
+      }
     }
     if (isApiError(error) && error.status === 403 && error.reasons.some((reason) => reason.code === "mfa_required")) {
       const pathname = (await headers()).get(PATHNAME_HEADER);

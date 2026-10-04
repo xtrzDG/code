@@ -33,7 +33,7 @@ export const supportAccessKa: Translation<typeof supportAccessEn> = {
   support: {
     title: "თქვენ ათვალიერებთ „{name}“-ის კაბინეტს, როგორც პლატფორმის მხარდაჭერა",
     readOnly: "მხოლოდ დათვალიერება: ცვლილებები უარყოფილია.",
-    canWrite: "მფლობელმა ცვლილებები დაუშვა {time}-მდე.",
+    canWrite: "მფლობელმა ცვლილებები დაუშვა {time}-მდე",
     until: "წვდომა დასრულდება {time}-ზე",
     leave: "კაბინეტიდან გასვლა",
     left: "თქვენ გახვედით კაბინეტიდან",

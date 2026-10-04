@@ -35,7 +35,7 @@ export const supportAccessRu: Translation<typeof supportAccessEn> = {
   support: {
     title: "Вы смотрите кабинет «{name}» как поддержка платформы",
     readOnly: "Только просмотр: изменения отклоняются.",
-    canWrite: "Владелец разрешил изменения до {time}.",
+    canWrite: "Владелец разрешил изменения до {time}",
     until: "Доступ закончится в {time}",
     leave: "Выйти из кабинета",
     left: "Вы вышли из кабинета",

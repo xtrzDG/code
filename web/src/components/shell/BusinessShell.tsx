@@ -14,7 +14,9 @@
  * customers do not get yet, with "Apply changes" (components/assistant),
  * and the setup guide's progress ring until the guide is finished; the
  * first customers and bookings are celebrated with a toast (components/
- * setupGuide).
+ * setupGuide). While platform support looks into the cabinet, a banner
+ * over the pages says who, why and until when (components/shell/
+ * SupportBanner).
  */
 
 import { usePathname } from "next/navigation";
@@ -37,6 +39,7 @@ import { OwnersOnlyPage } from "./OwnersOnlyPage";
 import { SetupEntry } from "./setup/SetupEntry";
 import { SetupHero } from "./setup/SetupHero";
 import { ShellFrame } from "./ShellFrame";
+import { SupportBanner } from "./SupportBanner";
 import type { ShellNavItem } from "./types";
 import { useMemberRole } from "./useMemberRole";
 
@@ -126,6 +129,8 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
         <>
           {/* Changes customers do not get yet; an open conversation keeps the whole phone screen. */}
           {isConversationPath(pathname) ? null : <PendingChangesBanner />}
+          {/* Platform support looking in: always shown, the owner must see it. */}
+          <SupportBanner />
           {children}
           <MilestoneCelebrations />
         </>
@@ -158,6 +163,7 @@ function SetupFrame({ initialCollapsed }: { initialCollapsed: boolean }) {
         />
       )}
     >
+      <SupportBanner />
       <SetupHero canSetUp={canSetUp} />
     </ShellFrame>
   );

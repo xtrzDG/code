@@ -37,7 +37,7 @@ export const supportAccessEn = {
   support: {
     title: "You are looking at {name} as platform support",
     readOnly: "Read only: changes are refused.",
-    canWrite: "The owner allowed changes until {time}.",
+    canWrite: "Changes allowed by the owner until {time}",
     until: "Access ends at {time}",
     leave: "Leave the cabinet",
     left: "You left the cabinet",
