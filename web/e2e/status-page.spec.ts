@@ -1,11 +1,17 @@
 /**
  * The public status page and the platform team's announcements: a platform
  * admin announces an outage of Telegram on the System page; anyone sees it
- * on /status (the overall state, the announcement, Telegram "Not working")
- * and owners see it over their cabinet, unable to hide it; once resolved it
+ * on /status (the overall state, the announcement, Telegram "Not working";
+ * the page passes the accessibility audit in that state) and owners see it
+ * over their cabinet, unable to hide it; once resolved it
  * leaves the cabinet and the status page lists it under past incidents.
+ *
+ * The platform's own alerts also set component levels (the suite's fake
+ * messengers fail deliveries, which can mark them down), so the spec checks
+ * what the announcement decides, not that every other part works.
  */
 
+import AxeBuilder from "@axe-core/playwright";
 import type { APIRequestContext } from "@playwright/test";
 
 import { signInAsPlatformAdmin } from "./support/admin";
@@ -65,13 +71,17 @@ test("an announced outage shows on the status page and over the cabinet until it
     await expect(card.getByText(OUTAGE)).toBeVisible();
 
     // Anyone: the status page, without signing in.
-    const visitor = await browser.newPage();
+    const visitorContext = await browser.newContext({ reducedMotion: "reduce" });
+    const visitor = await visitorContext.newPage();
     await visitor.goto("/status");
     await expect(visitor.getByRole("heading", { name: status.overall.outage })).toBeVisible();
-    await expect(visitor.getByRole("region", { name: status.activeTitle, exact: true }).getByText(OUTAGE)).toBeVisible();
+    const now = visitor.getByRole("region", { name: status.activeTitle, exact: true });
+    await expect(now.getByText(OUTAGE)).toBeVisible();
+    await expect(now.getByText(status.affects.replace("{components}", status.components.telegram))).toBeVisible();
     const telegram = visitor.locator("[data-component='telegram']");
     await expect(telegram.getByText(status.levels.outage, { exact: true })).toBeVisible();
-    await expect(visitor.locator("[data-component='chat']").getByText(status.levels.operational, { exact: true })).toBeVisible();
+    const audit = await new AxeBuilder({ page: visitor }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    expect(audit.violations).toEqual([]);
 
     // An owner: over every page, and an outage cannot be hidden.
     await page.goto(`/b/${owner.businessId}/bookings`);
@@ -88,9 +98,9 @@ test("an announced outage shows on the status page and over the cabinet until it
     await waitForNetworkQuiet(page);
     await expect(page.getByRole("region", { name: status.banner.region })).toHaveCount(0);
     await visitor.reload();
-    await expect(visitor.getByRole("heading", { name: status.overall.operational })).toBeVisible();
     await expect(visitor.getByRole("region", { name: status.pastTitle }).getByText(OUTAGE)).toBeVisible();
-    await visitor.close();
+    await expect(now.getByText(OUTAGE)).toHaveCount(0);
+    await visitorContext.close();
   } finally {
     await resolveActive(request, token);
     await context.close();
