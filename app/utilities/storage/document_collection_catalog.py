@@ -6,8 +6,6 @@ checks that `migrations/` creates a table for every entry here and that
 every collection of `DocumentCollectionsContainer` has an entry.
 """
 
-from dataclasses import dataclass
-
 from base_pydantic_schemas import PersistentDocument
 
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
@@ -48,11 +46,6 @@ from app.schemas.domain.jobs import (
 from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
-from app.schemas.domain.mfa import (
-    MfaChallengeDocument,
-    RecoveryCodeDocument,
-    TotpFactorDocument,
-)
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.notification_preferences import (
     UserNotificationPreferencesDocument,
@@ -72,11 +65,6 @@ from app.schemas.domain.setup import (
     SetupStateDocument,
 )
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
-from app.schemas.domain.users import (
-    OtpChallengeDocument,
-    UserDocument,
-    UserSessionDocument,
-)
 from app.schemas.domain.value_reports import ValueReportDocument
 from app.schemas.domain.value_settings import (
     DigestPreferencesDocument,
@@ -86,36 +74,16 @@ from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
-
-
-@dataclass(frozen=True)
-class DocumentCollectionDefinition:
-    """A stored document type and the name of its collection."""
-
-    name: DocumentCollectionName
-    document_type: type[PersistentDocument]
-
+from app.utilities.storage.document_collection_definition import (
+    DocumentCollectionDefinition,
+)
+from app.utilities.storage.sign_in_document_collections import (
+    SIGN_IN_DOCUMENT_COLLECTIONS,
+)
 
 DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
-    # Users and sign-in (platform-wide).
-    DocumentCollectionDefinition(DocumentCollectionName("users"), UserDocument),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("otp_challenges"), OtpChallengeDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("user_sessions"), UserSessionDocument
-    ),
-    # Two-factor sign-in: authenticators, recovery codes and the second
-    # step of a sign-in (1082).
-    DocumentCollectionDefinition(
-        DocumentCollectionName("totp_factors"), TotpFactorDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("recovery_codes"), RecoveryCodeDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("mfa_challenges"), MfaChallengeDocument
-    ),
+    # Users and sign-in (platform-wide), two-factor sign-in included.
+    *SIGN_IN_DOCUMENT_COLLECTIONS,
     # Businesses, their profile and channels.
     DocumentCollectionDefinition(
         DocumentCollectionName("businesses"), BusinessDocument

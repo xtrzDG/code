@@ -6,9 +6,7 @@ from app.registries.localization.call_forwarding_guide_registry import (
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.localization import CallForwardingCondition
-from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
     CallForwardingInstructionsRequest,
@@ -25,6 +23,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import InstructionText
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from tests.foundation.access_support import platform_admin
 from tests.localization.builders import build_business
 from tests.localization.cabinet_builders import (
     CabinetWorld,
@@ -128,11 +127,7 @@ def test_staff_may_read_instructions_and_strangers_may_not() -> None:
 
 def test_platform_admin_access_is_audited() -> None:
     world, business, _, _ = build_georgian_world()
-    admin = UserDocument(
-        login_method=LoginMethod.EMAIL,
-        locale=LanguageTag("ru"),
-        is_platform_admin=True,
-    )
+    admin = platform_admin("ru")
     world.user_repo.save(admin)
 
     request_instructions(world, business, admin.id, "ru")

@@ -1,6 +1,4 @@
-from collections.abc import Generator
-from contextlib import contextmanager
-from contextvars import ContextVar, Token
+from contextvars import ContextVar
 
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.schemas.dto.mfa import SessionAssurance
@@ -29,11 +27,3 @@ class SessionAssuranceContext(SessionAssuranceContract):
     def bind(self, assurance: SessionAssurance) -> None:
         # The request's task ends with the request: nothing to reset.
         self._current.set(assurance)
-
-    @contextmanager
-    def assured(self, assurance: SessionAssurance) -> Generator[SessionAssurance]:
-        token: Token[SessionAssurance | None] = self._current.set(assurance)
-        try:
-            yield assurance
-        finally:
-            self._current.reset(token)

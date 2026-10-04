@@ -19,6 +19,7 @@ from app.use_cases.voice.call_settings.list_text_backs_use_case import (
 from app.use_cases.voice.call_settings.update_call_settings_use_case import (
     UpdateCallSettingsUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.channels.channels_http import wrap, wrap_use_case
 from tests.channels.testbed import ChannelsTestbed
 
@@ -37,7 +38,9 @@ def build_calls_http_client(testbed: ChannelsTestbed) -> TestClient:
     )
     http_application.include_router(
         build_call_settings_router(
-            current_user=build_current_user_dependency(testbed.authentication),
+            current_user=build_current_user_dependency(
+                testbed.authentication, SessionAssuranceContext()
+            ),
             get_settings=wrap_use_case(
                 GetCallSettingsUseCase(
                     testbed.authorize_business_access,

@@ -82,7 +82,7 @@ def test_authenticate_stays_under_5_ms_with_50k_sessions(
     try:
         for run in range(WARM_UP_RUNS + MEASURED_RUNS):
             started: float = time.perf_counter()
-            user_id: UserId = authenticate.run(token)
+            user_id: UserId = authenticate.run(token).user_id
             if run >= WARM_UP_RUNS:
                 durations.append((time.perf_counter() - started) * 1000)
             assert user_id == user.id

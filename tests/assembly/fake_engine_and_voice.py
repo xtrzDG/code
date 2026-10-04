@@ -22,6 +22,7 @@ from app.schemas.dto.conversations import (
     InboundMessage,
     LlmToolDefinition,
 )
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -40,6 +41,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
+from tests.foundation.access_support import signed_in
 
 NO_COST: CostMicroUsd = CostMicroUsd(0)
 
@@ -155,7 +157,7 @@ class FakeAssistantToolCatalog(AssistantToolCatalogContract):
         ]
 
 
-class FakeAuthenticationOperator(OperatorContract[AccessToken, UserId]):
+class FakeAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
     """Bearer tokens are "token-<user id>"."""
 
     def __init__(self) -> None:
@@ -166,9 +168,9 @@ class FakeAuthenticationOperator(OperatorContract[AccessToken, UserId]):
         self._users[token] = user_id
         return token
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         user_id: UserId | None = self._users.get(str(input_data))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 
-        return user_id
+        return signed_in(user_id)

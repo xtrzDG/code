@@ -15,15 +15,23 @@ from app.schemas.domain.mfa import (
     RecoveryCodeDocument,
     TotpFactorDocument,
 )
+from app.schemas.dto.storage_pages import DocumentPagePosition, DocumentPageQuery
 from app.schemas.typings.mfa.constrained_integers import MfaAttemptCount, TotpTimeStep
 from app.schemas.typings.mfa.prefixed_id import MfaChallengeId, RecoveryCodeId
 from app.schemas.typings.mfa.strings import SealedTotpSecret
-from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.integers import DocumentFieldInteger
+from app.schemas.typings.storage.strings import StoredDocumentKey
 from app.schemas.typings.users.prefixed_id import UserId
 
 USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("user_id")
 CREATED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("created_at")
+# Factors the key rotation re-seals per storage read.
+FACTOR_BATCH_SIZE: DocumentQueryLimit = DocumentQueryLimit(200)
 
 
 class TotpFactorRepository(TotpFactorRepoContract):
@@ -104,8 +112,20 @@ class TotpFactorRepository(TotpFactorRepoContract):
     def delete_for_user(self, user_id: UserId) -> None:
         self._collection.delete(str(user_id))
 
-    def list_all(self) -> list[TotpFactorDocument]:
-        return self._collection.list_all()
+    def list_after(self, after: TotpFactorDocument | None) -> list[TotpFactorDocument]:
+        return self._collection.page_by(
+            DocumentPageQuery(
+                sort_fields=(CREATED_AT_FIELD,),
+                is_descending=False,
+                after=None
+                if after is None
+                else DocumentPagePosition(
+                    values=(DocumentFieldInteger(int(after.created_at)),),
+                    document_key=StoredDocumentKey(str(after.user_id)),
+                ),
+                limit=FACTOR_BATCH_SIZE,
+            )
+        )
 
 
 class RecoveryCodeRepository(RecoveryCodeRepoContract):

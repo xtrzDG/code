@@ -40,7 +40,6 @@ from app.repositories.setup_repositories import (
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.jobs import QueuedJobStatus
-from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -55,7 +54,6 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.dto.job_queue import QueuedJobPageQuery
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import (
     PageSize,
     WorkerPollSeconds,
@@ -71,6 +69,7 @@ from tests.assembly.fake_locale_registries import (
     FakeLanguageRegistry,
 )
 from tests.assembly.fake_niche_templates import FakeNicheTemplateRegistry
+from tests.foundation.access_support import platform_admin
 from tests.platform.worker_fakes import (
     TEST_LANE_CONCURRENCY,
     JobStores,
@@ -193,12 +192,7 @@ class AssemblyStore:
         )
 
     def add_platform_admin(self) -> UserId:
-        admin = UserDocument(
-            login_method=LoginMethod.EMAIL,
-            locale=LanguageTag("en"),
-            is_verified=True,
-            is_platform_admin=True,
-        )
+        admin = platform_admin()
         self.user_repo.save(admin)
         return admin.id
 

@@ -47,6 +47,8 @@ from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS, PLATFORM_ADMIN_EMAIL
 from tests.storage.builders import (
     COUNTRY_SAMPLES,
     build_business,
@@ -81,6 +83,8 @@ def test_business_access_for_owner_staff_stranger_and_admin(
                     user_repo=user_repo,
                     audit_log_repo=audit_log_repo,
                     wall_clock=build_fixed_wall_clock(),
+                    session_assurance=SessionAssuranceContext(),
+                    app_settings=ACCESS_SETTINGS,
                 )
             )
         )
@@ -90,7 +94,7 @@ def test_business_access_for_owner_staff_stranger_and_admin(
     business.members.append(
         BusinessMember(user_id=staff.id, role=BusinessMemberRole.STAFF)
     )
-    admin = build_email_user("admin@example.com", "ru")
+    admin = build_email_user(PLATFORM_ADMIN_EMAIL, "ru")
     admin.is_platform_admin = True
     for user in (owner, staff, admin):
         user_repo.save(user)

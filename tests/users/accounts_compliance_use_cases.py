@@ -29,8 +29,12 @@ from tests.users.accounts_user_use_cases import AccountsUserUseCases
 class AccountsComplianceUseCases(AccountsUserUseCases):
     """DPA, audit log, contacts, data rights and recording retention use cases."""
 
-    def __init__(self, environment_variables: Mapping[str, str]) -> None:
-        super().__init__(environment_variables)
+    def __init__(
+        self,
+        environment_variables: Mapping[str, str],
+        enforce_step_up: bool = False,
+    ) -> None:
+        super().__init__(environment_variables, enforce_step_up)
         wall_clock: WallClock[Microseconds] = self.clock.build_wall_clock()
 
         collect_contact_records = CollectContactRecordsUseCase(
@@ -90,6 +94,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             collect_contact_records=collect_contact_records,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            step_up=self.step_up,
         )
         self.delete_contact_data = DeleteContactDataUseCase(
             authorize_business_access=self.authorize_business_access,
@@ -105,6 +110,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             recording_storage=self.recording_storage,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            step_up=self.step_up,
             note_repo=self.conversation_note_repo,
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(

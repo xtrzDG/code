@@ -24,7 +24,9 @@ def test_valid_token_authenticates_its_user() -> None:
     testbed = build_accounts_testbed()
     session = testbed.sign_in_with_phone(GEORGIA_MOBILE)
 
-    assert testbed.authenticate_user.run(session.access_token) == session.user.id
+    assert (
+        testbed.authenticate_user.run(session.access_token).user_id == session.user.id
+    )
 
 
 def test_unknown_token_is_refused() -> None:
@@ -40,7 +42,9 @@ def test_expired_session_is_refused_and_removed() -> None:
     session = testbed.sign_in_with_phone(GEORGIA_MOBILE)
 
     testbed.clock.advance(THIRTY_DAYS_IN_SECONDS - 1)
-    assert testbed.authenticate_user.run(session.access_token) == session.user.id
+    assert (
+        testbed.authenticate_user.run(session.access_token).user_id == session.user.id
+    )
 
     testbed.clock.advance(1)
     with pytest.raises(AuthenticationRequiredError):
@@ -80,7 +84,7 @@ def test_logout_ends_only_the_current_session() -> None:
     with pytest.raises(AuthenticationRequiredError):
         testbed.authenticate_user.run(first_session.access_token)
     assert (
-        testbed.authenticate_user.run(second_session.access_token)
+        testbed.authenticate_user.run(second_session.access_token).user_id
         == second_session.user.id
     )
     with pytest.raises(AuthenticationRequiredError):

@@ -20,7 +20,8 @@ def build_accounts_http_client(testbed: AccountsComplianceUseCases) -> TestClien
     current_user = build_current_user_dependency(
         PipelineOperator(
             OrchestratorPipeline(UseCaseOrchestrator(testbed.authenticate_user))
-        )
+        ),
+        testbed.session_assurance,
     )
     http_application = FastAPI()
     install_error_handlers(http_application)

@@ -28,11 +28,9 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
 )
 from app.schemas.typings.platform.constrained_integers import PageSize
-from app.use_cases.admin.authorize_platform_admin_use_case import (
-    AuthorizePlatformAdminUseCase,
-)
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from tests.billing.admin_world import AdminWorld, build_admin_world
+from tests.foundation.access_support import AuthorizeFlaggedAdmin
 
 
 def test_client_list_shows_health_with_critical_clients_first() -> None:
@@ -232,9 +230,7 @@ class CostOverridingSummarizer(
 def build_costed_list_clients(world: AdminWorld) -> ListClientsUseCase:
     testbed = world.testbed
     return ListClientsUseCase(
-        authorize_platform_admin=AuthorizePlatformAdminUseCase(
-            user_repo=testbed.user_repo
-        ),
+        authorize_platform_admin=AuthorizeFlaggedAdmin(testbed.user_repo),
         business_repo=testbed.business_repo,
         summarize_client=CostOverridingSummarizer(
             testbed.summarize_client,

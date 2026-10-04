@@ -325,3 +325,15 @@ _.gross_margin_percent  # app/schemas/dto/analytics/revenue_views.py
 _.accounts_without_rate  # app/schemas/dto/analytics/revenue_views.py
 _.mrr  # app/schemas/dto/analytics/revenue_views.py
 _.tunnel_steps  # app/schemas/dto/analytics/telemetry.py
+
+# Two-factor sign-in (Account → Security, the sign-in's second step, the
+# step-up dialog, Settings → Team): response fields the cabinet reads.
+_.provisioning_uri  # app/schemas/dto/mfa.py (TotpEnrollmentView)
+_.totp_status  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.totp_confirmed_at  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.totp_last_used_at  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.recovery_codes_left  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.is_mfa_required  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.step_up_valid_until  # app/schemas/dto/mfa.py (SessionAssuranceView)
+_.members_without_two_factor  # app/schemas/dto/mfa.py (BusinessSecurityView)
+_.viewer_auth_level  # app/schemas/dto/mfa.py (BusinessSecurityView)

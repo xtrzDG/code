@@ -22,6 +22,7 @@ from app.use_cases.feedback.settings.list_feedback_requests_use_case import (
 from app.use_cases.feedback.settings.update_review_settings_use_case import (
     UpdateReviewSettingsUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.channels.channels_http import wrap_use_case
 from tests.feedback.feedback_setup import FeedbackSetup
@@ -38,7 +39,9 @@ def build_feedback_http_client(
     install_error_handlers(http_application)
     http_application.include_router(
         build_review_router(
-            current_user=build_current_user_dependency(testbed.authentication),
+            current_user=build_current_user_dependency(
+                testbed.authentication, SessionAssuranceContext()
+            ),
             get_settings=wrap_use_case(
                 GetReviewSettingsUseCase(
                     authorize_business_access=testbed.authorize_business_access,

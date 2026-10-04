@@ -9,6 +9,7 @@ from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.user_authentication import build_current_user_dependency
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.brain.brain_world import BrainWorld
 from tests.brain.cabinet_fakes import CabinetStorage, TokenAuthenticationOperator
 from tests.brain.cabinet_operators import CabinetOperators, build_cabinet_operators
@@ -24,7 +25,7 @@ def build_cabinet_client(
         world, menu_extractor, storage or CabinetStorage()
     )
     current_user = build_current_user_dependency(
-        TokenAuthenticationOperator(users_by_token)
+        TokenAuthenticationOperator(users_by_token), SessionAssuranceContext()
     )
     http_application = FastAPI()
     install_error_handlers(http_application)

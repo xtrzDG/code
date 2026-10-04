@@ -473,7 +473,9 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `WHATSAPP_OTP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_ACCESS_TOKEN`, `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_OTP_TEMPLATE_LANGUAGES` | нет кодов входа в WhatsApp; токен по умолчанию — `WHATSAPP_SYSTEM_USER_TOKEN`, язык шаблона — `en` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` | нет входа по почте; порт по умолчанию — 587 (`starttls`), 465 (`ssl`), 25 (`none`). Без единого провайдера кодов вход работает только вне `production` (коды в логе) |
 | `SESSION_LIFETIME_SECONDS` | сессия кабинета — 30 дней |
-| `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы (права проверяются при каждом входе) |
+| `PLATFORM_ADMIN_EMAILS`, `PLATFORM_ADMIN_PHONE_NUMBERS` | нет админов платформы (списки читаются при каждом запросе: вычеркнутый теряет права сразу; админка требует входа с двумя факторами) |
+| `STEP_UP_MAX_AGE_SECONDS` | 600: выгрузка и удаление данных контакта, изменения команды, подключение канала, вход админа в кабинет клиента и смена ключа требуют входа или кода подтверждения не старше 10 минут (60–86400) |
+| `MFA_ISSUER_NAME` | `Assistant Workshop` — имя, под которым приложение-аутентификатор показывает аккаунт |
 | `RESTRICTED_COUNTRY_CODES` | `CU,IR,KP,SY`: из этих стран нельзя войти по номеру и создать бизнес; пустое значение снимает ограничение (список сверить с юристом) |
 | `DEFAULT_DATA_REGION` | `eu` — регион обработки данных в профилях стран (`eu` или `us`) |
 | `RECORDING_RETENTION_DAYS` | 90 дней хранения записей и расшифровок звонков (бизнес может поменять свой срок) |

@@ -11,6 +11,7 @@ from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_integers import PageSize
+from app.schemas.typings.users.constrained_strings import EmailAddress
 from tests.compliance.business_with_staff import business_with_staff
 from tests.users.accounts_phones import ISRAEL_MOBILE
 from tests.users.accounts_testbed import build_accounts_testbed
@@ -108,10 +109,11 @@ def test_audit_log_filters_run_before_paging_and_name_the_filter_values() -> Non
 
 
 def test_platform_admin_reading_the_audit_log_is_itself_audited() -> None:
-    testbed = build_accounts_testbed()
+    testbed = build_accounts_testbed({"PLATFORM_ADMIN_EMAILS": "ops@example.com"})
     _, _, business = business_with_staff(testbed)
     admin = UserDocument(
         login_method=LoginMethod.EMAIL,
+        email=EmailAddress("ops@example.com"),
         locale=LanguageTag("en"),
         is_platform_admin=True,
     )

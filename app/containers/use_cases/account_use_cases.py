@@ -23,6 +23,7 @@ from app.schemas.dto.businesses import (
 from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
 from app.schemas.dto.login_protection import SendLoginCodeCommand
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.mfa_login import MfaRequiredView
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -119,7 +120,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
     )
     verify_otp_login_use_case: Factory[
-        UseCaseContract[VerifyOtpLoginCommand, LoginSessionView]
+        UseCaseContract[VerifyOtpLoginCommand, LoginSessionView | MfaRequiredView]
     ] = Factory(
         VerifyOtpLoginUseCase,
         otp_challenge_repo=repositories.otp_challenge_repo,

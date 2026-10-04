@@ -9,13 +9,14 @@ from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.user_authentication import build_current_user_dependency
 from app.operators.pipeline_operator import PipelineOperator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.billing.billing_fakes import TokenAuthenticationOperator, build_operator
 from tests.billing.billing_use_cases import BillingUseCases
 
 
 def build_billing_http_client(testbed: BillingUseCases) -> TestClient:
     current_user = build_current_user_dependency(
-        TokenAuthenticationOperator(testbed.user_repo)
+        TokenAuthenticationOperator(testbed.user_repo), SessionAssuranceContext()
     )
     http_application = FastAPI()
     install_error_handlers(http_application)

@@ -24,6 +24,11 @@ from app.repositories.conversation_repositories import (
     MessageRepository,
 )
 from app.repositories.inbox_repositories import ConversationNoteRepository
+from app.repositories.mfa_repositories import (
+    MfaChallengeRepository,
+    RecoveryCodeRepository,
+    TotpFactorRepository,
+)
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -43,6 +48,11 @@ from app.schemas.domain.conversations import (
     MessageDocument,
 )
 from app.schemas.domain.handoffs import HandoffDocument
+from app.schemas.domain.mfa import (
+    MfaChallengeDocument,
+    RecoveryCodeDocument,
+    TotpFactorDocument,
+)
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -51,6 +61,7 @@ from app.schemas.domain.users import (
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.users.accounts_clock import AdjustableClock
 from tests.users.accounts_phones import PhonenumbersParser
 from tests.users.accounts_recorders import (
@@ -137,3 +148,18 @@ class AccountsRepositories:
                 SubscriptionDocument
             )
         )
+        # Two-factor sign-in, and the session the HTTP gateway binds.
+        self.totp_factor_repo = TotpFactorRepository(
+            InMemoryDocumentCollectionAdapter[TotpFactorDocument](TotpFactorDocument)
+        )
+        self.recovery_code_repo = RecoveryCodeRepository(
+            InMemoryDocumentCollectionAdapter[RecoveryCodeDocument](
+                RecoveryCodeDocument
+            )
+        )
+        self.mfa_challenge_repo = MfaChallengeRepository(
+            InMemoryDocumentCollectionAdapter[MfaChallengeDocument](
+                MfaChallengeDocument
+            )
+        )
+        self.session_assurance = SessionAssuranceContext()

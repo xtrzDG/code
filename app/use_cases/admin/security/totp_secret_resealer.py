@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.mfa import TotpSecretCipherAdapterContract
 from app.contracts.repositories.mfa_repositories import TotpFactorRepoContract
+from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.mfa.strings import SealedTotpSecret
 from app.use_cases.admin.security.secret_resealer import RotationTally
@@ -29,24 +30,30 @@ class TotpSecretResealer:
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def reseal_all(self, tally: RotationTally) -> None:
-        for factor in self._totp_factor_repo.list_all():
-            tally.total += 1
-            if self._totp_secret_cipher.is_current(factor.sealed_secret):
-                tally.current += 1
-                continue
+        batch: list[TotpFactorDocument] = self._totp_factor_repo.list_after(None)
+        while batch:
+            for factor in batch:
+                self._reseal(factor, tally)
+            batch = self._totp_factor_repo.list_after(batch[-1])
 
-            try:
-                resealed: SealedTotpSecret = self._totp_secret_cipher.reseal(
-                    factor.sealed_secret
-                )
-            except ValidationFailedError:
-                tally.unreadable += 1
-                continue
+    def _reseal(self, factor: TotpFactorDocument, tally: RotationTally) -> None:
+        tally.total += 1
+        if self._totp_secret_cipher.is_current(factor.sealed_secret):
+            tally.current += 1
+            return
 
-            if self._totp_factor_repo.replace_sealed_secret(
-                factor.user_id,
-                factor.sealed_secret,
-                resealed,
-                self._wall_clock.now_unix(),
-            ):
-                tally.rotated += 1
+        try:
+            resealed: SealedTotpSecret = self._totp_secret_cipher.reseal(
+                factor.sealed_secret
+            )
+        except ValidationFailedError:
+            tally.unreadable += 1
+            return
+
+        if self._totp_factor_repo.replace_sealed_secret(
+            factor.user_id,
+            factor.sealed_secret,
+            resealed,
+            self._wall_clock.now_unix(),
+        ):
+            tally.rotated += 1

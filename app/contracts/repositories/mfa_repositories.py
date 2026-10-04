@@ -75,8 +75,13 @@ class TotpFactorRepoContract(RepoContract, Protocol):
     def delete_for_user(self, user_id: UserId) -> None:
         raise NotImplementedError
 
-    def list_all(self) -> list[TotpFactorDocument]:
-        """Every factor (the key rotation job re-seals their secrets)."""
+    def list_after(self, after: TotpFactorDocument | None) -> list[TotpFactorDocument]:
+        """
+        The next batch of factors in the order they were created, after
+        `after` (from the first when None); an empty list after the last.
+        The key rotation job walks them to re-seal their secrets (a keyset
+        page on the indexed `created_at`, never the whole table at once).
+        """
         raise NotImplementedError
 
 

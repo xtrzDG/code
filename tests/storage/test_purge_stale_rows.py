@@ -18,6 +18,7 @@ from app.repositories.delivery_repositories import (
     InboundEventRepository,
     OutboundMessageRepository,
 )
+from app.repositories.mfa_repositories import MfaChallengeRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserSessionRepository,
@@ -36,6 +37,7 @@ from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.domain.mfa import MfaChallengeDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.users import OtpChallengeDocument, UserSessionDocument
@@ -88,6 +90,15 @@ def challenge(created_at: int) -> OtpChallengeDocument:
         locale=LanguageTag("ka"),
         code_hash=OtpCodeHash("hash"),
         expires_at=Microseconds(created_at + 600_000_000),
+        created_at=Microseconds(created_at),
+        updated_at=Microseconds(created_at),
+    )
+
+
+def second_step(created_at: int) -> MfaChallengeDocument:
+    return MfaChallengeDocument(
+        user_id=UserId(),
+        expires_at=Microseconds(created_at + 300_000_000),
         created_at=Microseconds(created_at),
         updated_at=Microseconds(created_at),
     )
@@ -182,6 +193,12 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     old_missed, fresh_missed = missed_call(NOW - 91 * DAY), missed_call(NOW - 89 * DAY)
     for missed in (old_missed, fresh_missed):
         missed_collection.upsert(str(missed.id), missed)
+    second_steps = MfaChallengeRepository(
+        collections(MfaChallengeDocument, "mfa_challenges")
+    )
+    old_step, fresh_step = second_step(NOW - DAY - 1), second_step(NOW - HOUR)
+    second_steps.save(old_step)
+    second_steps.save(fresh_step)
     use_case = PurgeStaleRowsUseCase(
         user_session_repo=sessions,
         otp_challenge_repo=challenges,
@@ -191,12 +208,13 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
         missed_call_repo=MissedCallRepository(missed_collection),
         audit_log_repo=audit,
         wall_clock=build_fixed_wall_clock(),
+        mfa_challenge_repo=second_steps,
     )
 
     report = use_case.run(TICK)
     second_report = use_case.run(TICK)
 
-    assert report.processed_count == 7
+    assert report.processed_count == 8
     assert second_report.processed_count == 0
     assert sessions.find_by_token_hash(expired.token_hash) is None
     assert sessions.find_by_token_hash(at_expiry.token_hash) is None
@@ -206,10 +224,13 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     assert [e.id for e in event_collection.list_all()] == [fresh_event.id]
     assert [m.id for m in outbox_collection.list_all()] == [fresh_reply.id]
     assert [m.id for m in missed_collection.list_all()] == [fresh_missed.id]
+    assert second_steps.get(old_step.id) is None
+    assert second_steps.get(fresh_step.id) == fresh_step
     entries = audit_collection.list_all()
     assert sorted(str(entry.entity) for entry in entries) == [
         "channel_message_receipt",
         "inbound_event",
+        "mfa_challenge",
         "missed_call",
         "otp_challenge",
         "outbound_message",

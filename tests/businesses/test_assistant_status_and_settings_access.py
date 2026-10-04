@@ -21,6 +21,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName, CityName
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.schemas.typings.users.constrained_strings import EmailAddress
 from tests.businesses.business_settings_steps import georgian_restaurant, update
 from tests.users.accounts_phones import GERMANY_MOBILE, ISRAEL_MOBILE
 from tests.users.accounts_testbed import build_accounts_testbed
@@ -116,10 +117,11 @@ def test_staff_and_strangers_cannot_change_settings() -> None:
 
 
 def test_platform_admin_can_help_and_is_audited() -> None:
-    testbed = build_accounts_testbed()
+    testbed = build_accounts_testbed({"PLATFORM_ADMIN_EMAILS": "ops@example.com"})
     owner_id, business = georgian_restaurant(testbed)
     admin = UserDocument(
         login_method=LoginMethod.EMAIL,
+        email=EmailAddress("ops@example.com"),
         locale=LanguageTag("ru"),
         is_platform_admin=True,
     )

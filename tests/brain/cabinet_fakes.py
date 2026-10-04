@@ -22,6 +22,7 @@ from app.schemas.dto.call_recordings import (
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,
@@ -41,20 +42,21 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.utilities.recordings.recording_byte_ranges import cut_recording_part
+from tests.foundation.access_support import signed_in
 
 
-class TokenAuthenticationOperator(OperatorContract[AccessToken, UserId]):
+class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
     """Bearer token -> user, from a fixed table."""
 
     def __init__(self, users_by_token: dict[str, UserId]) -> None:
         self._users_by_token: dict[str, UserId] = users_by_token
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         user_id: UserId | None = self._users_by_token.get(str(input_data))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 
-        return user_id
+        return signed_in(user_id)
 
 
 class RecordingChannelSender(ChannelMessageSenderFacilitatorContract):

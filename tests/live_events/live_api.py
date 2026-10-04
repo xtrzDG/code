@@ -32,6 +32,8 @@ from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.operations.operations_api import TokenAuthenticator, operator
 from tests.operations.operations_world import OperationsWorld
 
@@ -106,7 +108,8 @@ class LiveApi:
                             STAFF_TOKEN: self.staff_id,
                             OTHER_OWNER_TOKEN: self.other_owner_id,
                         }
-                    )
+                    ),
+                    SessionAssuranceContext(),
                 ),
                 authorize_business_access=operator(
                     AuthorizeBusinessAccessUseCase(
@@ -114,6 +117,8 @@ class LiveApi:
                         user_repo=world.user_repo,
                         audit_log_repo=world.audit_repo,
                         wall_clock=world.clock.wall_clock,
+                        session_assurance=SessionAssuranceContext(),
+                        app_settings=ACCESS_SETTINGS,
                     )
                 ),
                 count_inbox_attention=operator(world.count_attention()),

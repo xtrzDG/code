@@ -3,7 +3,6 @@ How the session of the request being served is signed in, and the step-up
 check of sensitive actions.
 """
 
-from contextlib import AbstractContextManager
 from typing import Protocol
 
 from app.contracts.utility_contract import UtilityContract
@@ -23,12 +22,6 @@ class SessionAssuranceContract(UtilityContract, Protocol):
 
     def bind(self, assurance: SessionAssurance) -> None:
         """Hold `assurance` for the rest of the current request."""
-        raise NotImplementedError
-
-    def assured(
-        self, assurance: SessionAssurance
-    ) -> AbstractContextManager[SessionAssurance]:
-        """Hold `assurance` inside the block only (tests, nested work)."""
         raise NotImplementedError
 
 

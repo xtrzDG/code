@@ -47,6 +47,8 @@ from app.use_cases.inbox.views.list_inbox_use_case import ListInboxUseCase
 from app.use_cases.insights.count_inbox_attention_use_case import (
     CountInboxAttentionUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.inbox.inbox_store import InboxStore
 
 
@@ -59,6 +61,8 @@ class InboxWorld(InboxStore):
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=self.wall_clock,
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         )
 
     def list_inbox(self) -> ListInboxUseCase:

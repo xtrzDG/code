@@ -44,7 +44,9 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.billing.exchange_rate_fixtures import rate_registry
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.notifications.staff_alert_fakes import (
     TEST_ENCRYPTION_KEY,
     preferences_repo,
@@ -118,6 +120,8 @@ class ValueWorld(OperationsWorld):
             user_repo=self.user_repo,
             audit_log_repo=self.audit_repo,
             wall_clock=self.clock.wall_clock,
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         )
 
     def business_value(self) -> GetBusinessValueUseCase:

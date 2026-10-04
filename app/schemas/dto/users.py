@@ -7,7 +7,6 @@ from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.signup_attribution import SignupAttribution
-from app.schemas.dto.mfa_login import MfaChallengeView
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -20,7 +19,6 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
-from app.schemas.typings.mfa.booleans import IsMfaRequired
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.users.booleans import (
     IsNewUser,
@@ -127,23 +125,16 @@ class UserView(ImmutableDTO):
 class LoginSessionView(ImmutableDTO):
     """
     A new session. The bearer token is shown only here; the server keeps
-    nothing but its hash.
-
-    When the person must also give an authenticator code (they set one up,
-    or they are a platform admin), the login code step answers
-    `mfa_required` with the `mfa_challenge` instead, and no token, expiry
-    or user: `POST /v1/auth/mfa/verify` opens the session. A session opened
-    while setting up the authenticator carries the new `recovery_codes`
-    (shown once).
+    nothing but its hash. `auth_level` says how it was signed in; a session
+    opened while setting up an authenticator carries the new
+    `recovery_codes` (shown once).
     """
 
-    access_token: AccessToken | None = None
-    expires_at: Microseconds | None = None
-    user: UserView | None = None
+    access_token: AccessToken
+    expires_at: Microseconds
+    user: UserView
     is_new_user: IsNewUser
-    mfa_required: IsMfaRequired = False
-    mfa_challenge: MfaChallengeView | None = None
-    auth_level: AuthLevel | None = None
+    auth_level: AuthLevel = AuthLevel.ONE_FACTOR
     recovery_codes: list[RecoveryCode] = Field(default_factory=list[RecoveryCode])
 
 

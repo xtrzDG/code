@@ -52,6 +52,11 @@ from app.schemas.domain.jobs import (
     WorkerHeartbeatDocument,
 )
 from app.schemas.domain.key_rotations import KeyRotationDocument
+from app.schemas.domain.mfa import (
+    MfaChallengeDocument,
+    RecoveryCodeDocument,
+    TotpFactorDocument,
+)
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.users import (
@@ -66,8 +71,10 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.storage.document_collection_catalog import (
     DOCUMENT_COLLECTIONS,
-    DocumentCollectionDefinition,
     collection_name_for,
+)
+from app.utilities.storage.document_collection_definition import (
+    DocumentCollectionDefinition,
 )
 from app.utilities.storage.document_tenancy import (
     infer_collection_isolation,
@@ -106,6 +113,11 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # read every business's steps.
         ProductEventDocument,
         WebVitalSampleDocument,
+        # Two-factor sign-in belongs to a person, whatever businesses they
+        # work for.
+        TotpFactorDocument,
+        RecoveryCodeDocument,
+        MfaChallengeDocument,
     }
 )
 

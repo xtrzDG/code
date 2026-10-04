@@ -16,6 +16,7 @@ from app.gateways.http.user_authentication import (
     parse_bearer_token,
 )
 from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
+from app.schemas.dto.mfa_login import MfaRequiredView
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -43,7 +44,7 @@ def build_users_router(
     get_login_options_operator: OperatorContract[LoginOptionsQuery, LoginOptionsView],
     verify_otp_login_operator: OperatorContract[
         VerifyOtpLoginCommand,
-        LoginSessionView,
+        LoginSessionView | MfaRequiredView,
     ],
     logout_operator: OperatorContract[LogoutCommand, None],
     get_current_user_operator: OperatorContract[UserId, CurrentUserView],
@@ -58,6 +59,7 @@ def build_users_router(
         GET   /v1/auth/login-options  working login-code channels (?country_code=GE)
         POST  /v1/auth/otp/start   send a login code (phone of any country or e-mail)
         POST  /v1/auth/otp/verify  check the code, return a bearer token once
+                                   (or `mfa_required`: the second step first)
         POST  /v1/auth/logout      end the current session (204)
         GET   /v1/me               the user and their businesses
         PATCH /v1/me               change display name or interface language
@@ -102,7 +104,7 @@ def build_users_router(
     def verify_otp_login(
         request: Request,
         body: Annotated[VerifyOtpLoginRequest, Depends(read_verify_otp_login_body)],
-    ) -> LoginSessionView:
+    ) -> LoginSessionView | MfaRequiredView:
         return verify_otp_login_operator.operate(
             VerifyOtpLoginCommand(
                 challenge_id=body.challenge_id,

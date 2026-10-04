@@ -37,6 +37,8 @@ from app.use_cases.localization.build_call_forwarding_instructions_use_case impo
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.localization.builders import build_wall_clock
 
 type CallForwardingOperator = OperatorContract[
@@ -72,6 +74,8 @@ def build_cabinet_world() -> CabinetWorld:
             user_repo=user_repo,
             audit_log_repo=audit_log_repo,
             wall_clock=build_wall_clock(),
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         ),
         build_call_forwarding_instructions_use_case=(
             BuildCallForwardingInstructionsUseCase(

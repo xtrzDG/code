@@ -20,7 +20,7 @@ from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.domain.users import OtpChallengeDocument, UserDocument
-from app.schemas.dto.mfa_login import MfaChallengeView
+from app.schemas.dto.mfa_login import MfaChallengeView, MfaRequiredView
 from app.schemas.dto.users import LoginSessionView, UserView, VerifyOtpLoginCommand
 from app.use_cases.users.mfa.mfa_challenges import issue_mfa_challenge
 from app.use_cases.users.otp_login.login_challenge_consumption import (
@@ -33,7 +33,9 @@ from app.use_cases.users.sign_in_completion import SignInCompletion
 from app.utilities.security.platform_admins import is_listed_platform_admin
 
 
-class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionView]):
+class VerifyOtpLoginUseCase(
+    UseCaseContract[VerifyOtpLoginCommand, LoginSessionView | MfaRequiredView]
+):
     """
     Check a one-time code and sign the person in.
 
@@ -85,7 +87,9 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
             product_events,
         )
 
-    def run(self, input_data: VerifyOtpLoginCommand) -> LoginSessionView:
+    def run(
+        self, input_data: VerifyOtpLoginCommand
+    ) -> LoginSessionView | MfaRequiredView:
         now: Microseconds = self._wall_clock.now_unix()
         refuse_too_frequent_code_checks(
             self._rate_limit_registry,
@@ -117,11 +121,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
                 input_data.client_ip_address,
                 requires_enrollment=not has_active_factor,
             )
-            return LoginSessionView(
-                is_new_user=is_new_user,
-                mfa_required=True,
-                mfa_challenge=mfa_challenge,
-            )
+            return MfaRequiredView(mfa_challenge=mfa_challenge, is_new_user=is_new_user)
 
         return self._sign_in.open_session(
             user, AuthLevel.ONE_FACTOR, is_new_user, input_data.client_ip_address

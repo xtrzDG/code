@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.businesses import CreateBusinessCommand, CreateBusinessRequest
+from app.schemas.dto.mfa_login import MfaRequiredView
 from app.schemas.dto.users import (
     LoginSessionView,
     OtpChallengeView,
@@ -63,6 +64,17 @@ class AccountsTestbed(AccountsComplianceUseCases):
         raw_phone_number: str,
         country_hint: str | None = None,
     ) -> LoginSessionView:
+        return self.expect_session(
+            self.verify_phone_code(raw_phone_number, country_hint)
+        )
+
+    def verify_phone_code(
+        self,
+        raw_phone_number: str,
+        country_hint: str | None = None,
+    ) -> LoginSessionView | MfaRequiredView:
+        """The login code step for a phone (a session, or the second step)."""
+
         challenge: OtpChallengeView = self.request_phone_code(
             raw_phone_number,
             country_hint,
@@ -75,6 +87,11 @@ class AccountsTestbed(AccountsComplianceUseCases):
         )
 
     def sign_in_with_email(self, raw_email: str) -> LoginSessionView:
+        return self.expect_session(self.verify_email_code(raw_email))
+
+    def verify_email_code(self, raw_email: str) -> LoginSessionView | MfaRequiredView:
+        """The login code step for an e-mail (a session, or the second step)."""
+
         challenge: OtpChallengeView = self.start_otp_login.run(
             StartOtpLoginCommand(email=RawEmailAddressInput(raw_email))
         )
@@ -84,6 +101,11 @@ class AccountsTestbed(AccountsComplianceUseCases):
                 code=self.otp_delivery.last_code(),
             )
         )
+
+    @staticmethod
+    def expect_session(answer: LoginSessionView | MfaRequiredView) -> LoginSessionView:
+        assert isinstance(answer, LoginSessionView), "a second step was asked for"
+        return answer
 
     def create_restaurant(
         self,

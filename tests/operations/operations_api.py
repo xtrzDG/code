@@ -30,6 +30,7 @@ from app.schemas.domain.calendar import (
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
@@ -49,6 +50,8 @@ from app.use_cases.calendar.get_google_calendar_connection_use_case import (
 from app.use_cases.calendar.start_google_calendar_connection_use_case import (
     StartGoogleCalendarConnectionUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS, signed_in
 from tests.operations.fake_google import FakeGoogle
 from tests.operations.fakes import ReversingSecretCipher
 from tests.operations.operations_world import OperationsWorld
@@ -71,16 +74,16 @@ def operator[InputData, OutputData](
     return PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(use_case)))
 
 
-class TokenAuthenticator(OperatorContract[AccessToken, UserId]):
+class TokenAuthenticator(OperatorContract[AccessToken, SessionAssurance]):
     def __init__(self, users: dict[str, UserId]) -> None:
         self._users: dict[str, UserId] = users
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         user_id: UserId | None = self._users.get(str(input_data))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 
-        return user_id
+        return signed_in(user_id)
 
 
 class Api:
@@ -125,7 +128,8 @@ class Api:
                             STAFF_TOKEN: self.staff_id,
                             STRANGER_TOKEN: UserId(),
                         }
-                    )
+                    ),
+                    SessionAssuranceContext(),
                 ),
                 authorize_business_access=operator(
                     AuthorizeBusinessAccessUseCase(
@@ -133,6 +137,8 @@ class Api:
                         user_repo=world.user_repo,
                         audit_log_repo=world.audit_repo,
                         wall_clock=world.clock.wall_clock,
+                        session_assurance=SessionAssuranceContext(),
+                        app_settings=ACCESS_SETTINGS,
                     )
                 ),
                 check_availability=operator(world.check_availability()),

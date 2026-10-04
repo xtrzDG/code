@@ -10,6 +10,7 @@ from app.adapters.locks.in_memory_advisory_lock_adapter import (
 from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
     InMemoryRateLimitBucketAdapter,
 )
+from app.contracts.session_assurance import StepUpGuardContract
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.high_cost_phone_number_registry import (
     HighCostPhoneNumberRegistry,
@@ -41,7 +42,11 @@ from app.use_cases.users.otp_login.send_login_code_use_case import (
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
+from app.utilities.security.require_recent_authentication import (
+    RequireRecentAuthentication,
+)
 from tests.analytics.recording_product_events import RecordingProductEvents
+from tests.foundation.access_support import AllowStepUp
 from tests.users.accounts_recorders import (
     RecordingAssistantResumption,
     RecordingVoiceAgentRemoval,
@@ -53,7 +58,11 @@ from tests.users.login_protection_fakes import FakeBotCheck, RecordingCapAlerts
 class AccountsUserUseCases(AccountsRepositories):
     """Login, current user, business and team use cases over the repositories."""
 
-    def __init__(self, environment_variables: Mapping[str, str]) -> None:
+    def __init__(
+        self,
+        environment_variables: Mapping[str, str],
+        enforce_step_up: bool = False,
+    ) -> None:
         super().__init__(environment_variables)
         self.product_events = RecordingProductEvents()
         wall_clock: WallClock[Microseconds] = self.clock.build_wall_clock()
@@ -65,6 +74,19 @@ class AccountsUserUseCases(AccountsRepositories):
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            session_assurance=self.session_assurance,
+            app_settings=self.settings,
+        )
+        # Tests of the team and of data rights run their actions without a
+        # signed-in session; tests/users/mfa enforce the real step-up.
+        self.step_up: StepUpGuardContract = (
+            RequireRecentAuthentication(
+                self.session_assurance,
+                wall_clock,
+                self.settings.step_up_max_age_seconds,
+            )
+            if enforce_step_up
+            else AllowStepUp()
         )
 
         self.login_rate_limits = RequestRateLimitRegistry(
@@ -108,6 +130,8 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock=wall_clock,
             rate_limit_registry=self.login_rate_limits,
             product_events=self.product_events,
+            totp_factor_repo=self.totp_factor_repo,
+            mfa_challenge_repo=self.mfa_challenge_repo,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,
@@ -119,6 +143,8 @@ class AccountsUserUseCases(AccountsRepositories):
             user_repo=self.user_repo,
             business_repo=self.business_repo,
             user_view_transformer=user_view_transformer,
+            session_assurance=self.session_assurance,
+            app_settings=self.settings,
         )
         self.update_current_user = UpdateCurrentUserUseCase(
             user_repo=self.user_repo,
@@ -171,6 +197,7 @@ class AccountsUserUseCases(AccountsRepositories):
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
+            step_up=self.step_up,
         )
         self.remove_member = RemoveMemberUseCase(
             authorize_business_access=self.authorize_business_access,
@@ -179,6 +206,7 @@ class AccountsUserUseCases(AccountsRepositories):
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
+            step_up=self.step_up,
         )
         self.change_member_role = ChangeMemberRoleUseCase(
             authorize_business_access=self.authorize_business_access,
@@ -187,4 +215,5 @@ class AccountsUserUseCases(AccountsRepositories):
             audit_log_repo=self.audit_log_repo,
             business_view_transformer=business_view_transformer,
             wall_clock=wall_clock,
+            step_up=self.step_up,
         )

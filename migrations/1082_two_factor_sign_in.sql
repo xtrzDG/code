@@ -6,7 +6,8 @@
 --
 -- totp_factors: a user's authenticator app, its secret sealed with the
 --   key ring; at most one per user, stored under the user's id (the
---   document key), so no lookup column.
+--   document key); the key rotation re-seals them in keyset batches by
+--   (doc_created_at).
 -- recovery_codes: single-use codes of a user with an authenticator, only
 --   their keyed hashes; read and replaced by (doc_user_id).
 -- mfa_challenges: the second step of one sign-in (five minutes); read by
@@ -23,6 +24,12 @@
 select workshop.create_document_collection('totp_factors');
 select workshop.create_document_collection('recovery_codes');
 select workshop.create_document_collection('mfa_challenges');
+
+alter table workshop.totp_factors
+    add column if not exists doc_created_at bigint
+        generated always as ((document ->> 'created_at')::bigint) stored;
+create index if not exists totp_factors_doc_created_at_idx
+    on workshop.totp_factors (doc_created_at);
 
 alter table workshop.recovery_codes
     add column if not exists doc_user_id text
