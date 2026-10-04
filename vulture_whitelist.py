@@ -411,3 +411,15 @@ _.platform_admin_permissions  # app/schemas/dto/users.py (CurrentUserView)
 _.granted_by  # app/schemas/domain/support_access_grants.py
 _.opened_from_ip  # app/schemas/domain/support_access_grants.py
 _.end_reason  # app/schemas/domain/support_access_grants.py
+
+# Help, support contacts and the status page (1111): help topics named by the
+# articles' front matter (docs/help), and response fields the cabinet's help
+# drawer, account panel and the public /status page read; no Python code does.
+_.GETTING_STARTED  # app/schemas/constants/help.py
+_.DAILY_WORK  # app/schemas/constants/help.py
+_.ACCOUNT  # app/schemas/constants/help.py
+_.whatsapp_url  # app/schemas/dto/help.py (SupportContactsView)
+_.telegram_url  # app/schemas/dto/help.py (SupportContactsView)
+_.email_url  # app/schemas/dto/help.py (SupportContactsView)
+_.is_scheduled  # app/schemas/dto/platform_status.py (AnnouncementView)
+_.past_announcements  # app/schemas/dto/platform_status.py (PlatformStatusView)
