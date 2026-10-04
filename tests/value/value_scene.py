@@ -23,12 +23,16 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
+    BookingValueMinor,
     PartySize,
 )
 from app.schemas.typings.bookings.strings import LeadDetails
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.strings import HandoffSummary
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
+    LanguageTag,
+)
 from app.schemas.typings.notifications.constrained_strings import (
     PushAuthSecret,
     PushEndpointUrl,
@@ -135,7 +139,10 @@ class ValueScene:
         status: BookingStatus = BookingStatus.CONFIRMED,
         starts: str = "2026-10-10T19:00:00+04:00",
         is_sandbox: bool = False,
+        value: tuple[int, str] | None = None,
     ) -> None:
+        """`value`: what the booking is worth, in minor units of a currency."""
+
         moment = at(local)
         start_seconds = int(at(starts)) // 1_000_000
         self.world.booking_repo.save(
@@ -150,6 +157,8 @@ class ValueScene:
                 status=status,
                 source_channel=ChannelKind.WHATSAPP,
                 is_sandbox=is_sandbox,
+                value_minor=None if value is None else BookingValueMinor(value[0]),
+                currency_code=None if value is None else CurrencyCode(value[1]),
                 created_at=moment,
                 updated_at=moment,
             )
