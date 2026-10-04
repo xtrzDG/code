@@ -164,7 +164,7 @@ def test_words_of_another_language_do_not_glue_onto_a_number() -> None:
     # "on" is ten in Turkish; "on fifty lari" is fifty, not sixty.
     found = mentions("Pay on fifty lari.", "GEL", "en", "tr")
 
-    assert [(item.text, sorted(item.amounts)) for item in found] == [
+    assert [(item.text, sorted(int(a) for a in item.amounts)) for item in found] == [
         ("fifty lari", [50])
     ]
 

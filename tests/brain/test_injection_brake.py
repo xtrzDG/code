@@ -5,6 +5,9 @@ from datetime import timedelta
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.reply_safety import InjectionSignal
 from app.schemas.domain.conversations import MessageDocument
+from app.schemas.typings.conversations.constrained_integers import (
+    InjectionFlagLimit,
+)
 from app.transformers.conversations.message_view_transformer import (
     MessageViewTransformer,
 )
@@ -61,7 +64,7 @@ def test_the_contact_is_stopped_after_the_limit_and_answered_again_a_day_later()
             say("I can only help with bookings."),
             say("Welcome back! How can I help?"),
         ),
-        guard=GuardOptions(injection_flag_limit=2),
+        guard=GuardOptions(injection_flag_limit=InjectionFlagLimit(2)),
     )
 
     first = world.send(ATTEMPT)
@@ -87,7 +90,7 @@ def test_the_contact_is_stopped_after_the_limit_and_answered_again_a_day_later()
 def test_attempts_below_the_limit_change_nothing() -> None:
     world = build_world(
         scripted(say("I can only help with bookings."), say("Sure, for when?")),
-        guard=GuardOptions(injection_flag_limit=3),
+        guard=GuardOptions(injection_flag_limit=InjectionFlagLimit(3)),
     )
 
     world.send(ATTEMPT)

@@ -2,6 +2,7 @@
 
 import json
 import re
+from typing import cast
 
 from app.schemas.constants.reply_safety import ClaimVerdict
 
@@ -42,17 +43,18 @@ def read_judgements(answer: str | None) -> list[tuple[int, bool]]:
     if not isinstance(payload, dict):
         return []
 
-    verdicts: object = payload.get("verdicts")
+    verdicts: object = cast(dict[str, object], payload).get("verdicts")
     if not isinstance(verdicts, list):
         return []
 
     judgements: list[tuple[int, bool]] = []
-    for verdict in verdicts:
+    for verdict in cast(list[object], verdicts):
         if not isinstance(verdict, dict):
             continue
 
-        claim_id: object = verdict.get("id")
-        is_supported: object = verdict.get("supported")
+        fields: dict[str, object] = cast(dict[str, object], verdict)
+        claim_id: object = fields.get("id")
+        is_supported: object = fields.get("supported")
         if isinstance(claim_id, int) and isinstance(is_supported, bool):
             judgements.append((claim_id, is_supported))
 

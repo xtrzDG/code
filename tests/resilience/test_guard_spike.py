@@ -4,6 +4,8 @@ days, and GUARD_SPIKE when it held back many replies or many messages
 tried prompt injection.
 """
 
+from collections.abc import Sequence
+
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.client_health import ClientHealthIssue, ClientHealthStatus
 from app.schemas.constants.conversations import MessageAuthor, ReplyGuardVerdict
@@ -27,7 +29,7 @@ def georgian_summary(world: AdminWorld) -> AdminClientSummary:
 
 
 def add_replies(
-    world: AdminWorld, verdicts: list[ReplyGuardVerdict | None], days: float = 1
+    world: AdminWorld, verdicts: Sequence[ReplyGuardVerdict | None], days: float = 1
 ) -> None:
     created_at = days_ago(world.testbed, days)
     world.testbed.message_repo.save_many(
@@ -48,7 +50,7 @@ def add_replies(
 
 
 def add_customer_messages(
-    world: AdminWorld, flags: list[InjectionSignal | None], days: float = 1
+    world: AdminWorld, flags: Sequence[InjectionSignal | None], days: float = 1
 ) -> None:
     created_at = days_ago(world.testbed, days)
     world.testbed.message_repo.save_many(
