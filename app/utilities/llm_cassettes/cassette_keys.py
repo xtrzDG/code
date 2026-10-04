@@ -36,7 +36,8 @@ VOLATILE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(toolu_|call_|fc_)[A-Za-z0-9_\-]+\b"), "call"),
 )
 TRANSCRIPT_SEPARATOR: str = "\n␞\n"
-MAX_TAIL_CHARACTERS: int = 1200
+# The end of the last turn: the customer's words or the tool results.
+MAX_TAIL_CHARACTERS: int = 600
 
 
 def canonicalize_transcript(transcript: Sequence[LlmProviderPayload]) -> list[str]:
@@ -127,5 +128,5 @@ def build_cassette_request(request: LlmRequest) -> LlmCassetteRequest:
         instruction_digest=instruction_digest,
         tools_digest=tools_digest,
         transcript_digest=transcript_digest,
-        transcript_tail=LlmTranscriptTail(tail[:MAX_TAIL_CHARACTERS]),
+        transcript_tail=LlmTranscriptTail(tail[-MAX_TAIL_CHARACTERS:]),
     )
