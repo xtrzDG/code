@@ -37,6 +37,13 @@ from app.use_cases.users.otp_login.send_login_code_use_case import (
     SendLoginCodeUseCase,
 )
 from app.use_cases.users.otp_login.start_otp_login_use_case import StartOtpLoginUseCase
+from app.use_cases.users.sessions.list_my_sessions_use_case import (
+    ListMySessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_other_sessions_use_case import (
+    RevokeOtherSessionsUseCase,
+)
+from app.use_cases.users.sessions.revoke_session_use_case import RevokeSessionUseCase
 from app.use_cases.users.update_current_user_use_case import UpdateCurrentUserUseCase
 from app.use_cases.users.verify_otp_login_use_case import VerifyOtpLoginUseCase
 from app.utilities.security.require_recent_authentication import (
@@ -151,6 +158,22 @@ class AccountsUserUseCases(AccountsRepositories):
             app_settings=self.settings,
         )
         self.logout = LogoutUseCase(user_session_repo=self.user_session_repo)
+        self.list_my_sessions = ListMySessionsUseCase(
+            user_session_repo=self.user_session_repo,
+            session_assurance=self.session_assurance,
+            wall_clock=wall_clock,
+        )
+        self.revoke_session = RevokeSessionUseCase(
+            user_session_repo=self.user_session_repo,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+        )
+        self.revoke_other_sessions = RevokeOtherSessionsUseCase(
+            user_session_repo=self.user_session_repo,
+            session_assurance=self.session_assurance,
+            audit_log_repo=self.audit_log_repo,
+            wall_clock=wall_clock,
+        )
         self.get_current_user = GetCurrentUserUseCase(
             user_repo=self.user_repo,
             business_repo=self.business_repo,

@@ -16,6 +16,7 @@ from app.utilities.security.access_tokens import hash_access_token
 from app.utilities.security.session_expiry import (
     is_session_over,
     is_use_recent,
+    legacy_idle_expiry,
     next_activity,
 )
 from app.utilities.security.user_agents import names_a_device
@@ -68,7 +69,7 @@ class AuthenticateUserUseCase(UseCaseContract[SessionCheck, SessionAssurance]):
             raise AuthenticationRequiredError(INVALID_SESSION_MESSAGE)
 
         user: UserDocument | None = self._user_repo.get(session.user_id)
-        if user is None:
+        if user is None or self._is_legacy_session_idle(session, user, now):
             self._user_session_repo.delete(session.id)
             raise AuthenticationRequiredError(INVALID_SESSION_MESSAGE)
 
@@ -80,6 +81,19 @@ class AuthenticateUserUseCase(UseCaseContract[SessionCheck, SessionAssurance]):
             authenticated_at=session.authenticated_at,
             client_ip_address=input_data.client_ip_address,
             access_mode=input_data.access_mode,
+        )
+
+    def _is_legacy_session_idle(
+        self, session: UserSessionDocument, user: UserDocument, now: Microseconds
+    ) -> bool:
+        """A session from before 1103 (no idle expiry stored) unused too long."""
+
+        if session.idle_expires_at is not None:
+            return False
+
+        is_admin: bool = self._platform_admins.role_of(user) is not None
+        return int(now) >= int(
+            legacy_idle_expiry(session, self._app_settings, is_admin)
         )
 
     def _record_use(

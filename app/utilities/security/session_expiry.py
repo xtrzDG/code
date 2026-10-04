@@ -25,6 +25,18 @@ def is_session_over(session: UserSessionDocument, now: Microseconds) -> bool:
     )
 
 
+def legacy_idle_expiry(
+    session: UserSessionDocument, settings: AppSettings, is_admin: bool
+) -> Microseconds:
+    """
+    The idle expiry of a session from before idle expiry was stored: its
+    last use (or sign-in) plus the person's idle timeout.
+    """
+
+    last_use: int = int(session.last_seen_at or session.created_at)
+    return Microseconds(last_use + idle_timeout_microseconds(settings, is_admin))
+
+
 def idle_timeout_microseconds(settings: AppSettings, is_admin: bool) -> int:
     seconds: int = int(
         settings.sessions.admin_idle_timeout_seconds
