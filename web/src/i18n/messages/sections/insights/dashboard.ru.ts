@@ -76,6 +76,14 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     afterHoursHint: "{count} из {total} обращений",
     leads: "Заявки",
     handoffs: "Нужен человек",
+    bookedValue: "Стоимость броней",
+    bookedValueHint: {
+      one: "{count} бронь по своей цене",
+      few: "{count} брони по своим ценам",
+      many: "{count} броней по своим ценам",
+      other: "{count} брони по своим ценам",
+    },
+    bookedValueOther: "и {money}",
   },
   continueSetup: "Продолжить настройку",
   usage: {

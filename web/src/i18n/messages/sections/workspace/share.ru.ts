@@ -21,7 +21,7 @@ export const shareRu: Translation<typeof shareEn> = {
   addressTaken: "Этот адрес занят. Попробуйте другой.",
   addressReserved: "Этот адрес зарезервирован. Попробуйте другой.",
   sourceLabel: "Где вы её разместите?",
-  sourceHint: "Ссылки и QR-код получат метку (?src=), чтобы было видно, откуда пришли клиенты.",
+  sourceHint: "Ссылки и QR-код получат метку (её несут и ссылки Telegram и WhatsApp), и в «Отчётах» будет видно, откуда пришли клиенты.",
   sources: {
     none: "Где угодно (без метки)",
     table: "Карточка на столик",

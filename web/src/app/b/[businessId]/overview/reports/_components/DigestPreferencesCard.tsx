@@ -1,16 +1,15 @@
 "use client";
 
-import Link from "next/link";
-
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Switch } from "@/components/content/Switch";
 import { IconBell } from "@/components/icons";
 import { Card, ErrorState, SkeletonText } from "@/components/ui";
-import { useDigestPreferences } from "@/components/value/useValueQueries";
+import { useDigestPreferences, type DigestPreferencesBody } from "@/components/value/useValueQueries";
 import type { DigestPreferences } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { businessPath } from "@/lib/navigation";
+
+import { DigestChannelsSection, type DigestChannelChange } from "./DigestChannelsSection";
 
 type Choice = "is_daily_digest_on" | "is_weekly_digest_on" | "is_monthly_report_on";
 
@@ -22,26 +21,32 @@ const CHOICES: readonly { field: Choice; label: MessageKey; hint: MessageKey }[]
 
 /**
  * The signed-in owner's summaries (monthly report, weekly and daily
- * digests), each switched on or off at once, and where they arrive: the
- * sign-in e-mail and the devices with notifications on.
+ * digests), each switched on or off at once, and where they arrive:
+ * e-mail, devices, a Telegram chat or WhatsApp.
  */
 export function DigestPreferencesCard() {
-  const { t, tp } = useI18n();
+  const { t } = useI18n();
   const { business } = useBusiness();
   const { preferences, save } = useDigestPreferences(business.id);
   const stored = preferences.data;
 
-  const toggle = async (current: DigestPreferences, field: Choice, isOn: boolean) => {
-    const body = {
+  /** Saves a change shown at once (`shown`), back to what was stored if the API refuses it. */
+  const saveChange = async (current: DigestPreferences, change: Partial<DigestPreferencesBody>, shown: Partial<DigestPreferences>) => {
+    const body: DigestPreferencesBody = {
       is_daily_digest_on: current.is_daily_digest_on,
       is_weekly_digest_on: current.is_weekly_digest_on,
       is_monthly_report_on: current.is_monthly_report_on,
-      [field]: isOn,
+      ...change,
     };
-    preferences.setData({ ...current, [field]: isOn });
+    preferences.setData({ ...current, ...shown });
     const result = await save.run(body);
     preferences.setData(result.ok ? result.data : current);
+    return result.ok;
   };
+
+  const toggle = (current: DigestPreferences, field: Choice, isOn: boolean) => saveChange(current, { [field]: isOn }, { [field]: isOn });
+  const changeChannels = (current: DigestPreferences, change: DigestChannelChange) =>
+    saveChange(current, change, { channels: change.channels });
 
   return (
     <Card
@@ -75,19 +80,11 @@ export function DigestPreferencesCard() {
               </li>
             ))}
           </ul>
-          <div className="space-y-1.5 rounded-xl bg-surface-muted/60 p-3 text-xs text-ink-muted">
-            <p>
-              {stored.email
-                ? stored.is_email_ready
-                  ? t("reports.digests.email", { email: stored.email })
-                  : t("reports.digests.emailNotReady")
-                : t("reports.digests.noEmail")}
-            </p>
-            <p>{stored.device_count > 0 ? tp("reports.digests.devices", stored.device_count) : t("reports.digests.noDevices")}</p>
-            <Link href={businessPath(business.id, "settings/notifications")} className="inline-block font-medium text-accent hover:underline">
-              {t("reports.digests.manageDevices")}
-            </Link>
-          </div>
+          <DigestChannelsSection
+            preferences={stored}
+            isSaving={save.isPending}
+            onSave={(change) => changeChannels(stored, change)}
+          />
         </div>
       )}
     </Card>

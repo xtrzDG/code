@@ -1,9 +1,9 @@
 """
 The rehearsal's grouping of what customers ask about (LLM_PROVIDER=scripted,
 and the demo data): each item goes to the first topic one of its keywords
-names (bookings, prices, opening hours, the address, the menu and
-services), else to other questions; labels in the requested language
-(English for one without labels here).
+names (celebrations, bookings, opening hours, prices, the address, the
+menu and services, complaints), else to other questions; labels in the
+requested language (English for one without labels here).
 """
 
 import json
@@ -17,67 +17,97 @@ FALLBACK_LANGUAGE: str = "en"
 
 
 class RehearsalTopic(StrEnum):
+    EVENTS = "events"
     BOOKING = "booking"
-    PRICES = "prices"
     HOURS = "hours"
+    PRICES = "prices"
     PLACE = "place"
     OFFER = "offer"
+    COMPLAINT = "complaint"
     OTHER = "other"
 
 
+# Checked in this order: a birthday dinner is an event before a booking, a
+# complaint about a dish is a complaint, and "во сколько" (at what time)
+# is about the hours before "стоит" prices.
 KEYWORDS: dict[RehearsalTopic, tuple[str, ...]] = {
-    RehearsalTopic.BOOKING: (
-        "book", "reserv", "table for", "appointment", "termin", "брон",
-        "столик", "запис", "დაჯავშ", "მაგიდ", "ჩაწერ",
+    RehearsalTopic.EVENTS: (
+        "birthday", "party", "group of", "wedding", "corporate", "event",
+        "день рожд", "корпоратив", "банкет", "свадьб", "праздн", "ქორწილ",
+        "დაბადების", "ბანკეტ", "დარბაზ",
     ),
-    RehearsalTopic.PRICES: (
-        "price", "cost", "how much", "preis", "kostet", "цен", "стоит",
-        "сколько", "ფას", "ღირ", "რა ღირს",
+    RehearsalTopic.COMPLAINT: (
+        "disappoint", "waited", "complain", "turned out", "unzufrieden",
+        "разочарован", "ждали", "жалоб", "პასუხი არ", "წუთია",
+    ),
+    RehearsalTopic.BOOKING: (
+        "book", "reserv", "table", "appointment", "termin", "adults",
+        "people", "guests", "cancel", "free on", "absag", "zeit für", "брон",
+        "столик", "стол на", "запис", "прийти", "на двоих", "на троих",
+        "отмен", "დაჯავშ", "ჯავშ", "მაგიდ", "ჩაწერ", "კაცზე", "კაცისთვის",
+        "მოსვლა", "გაუქმ",
     ),
     RehearsalTopic.HOURS: (
-        "open", "hour", "close", "öffnungs", "geöffnet", "работа", "часы",
-        "открыт", "закрыт", "საათ", "ღია", "დაკეტ",
+        "open", "hour", "close", "what time", "öffnungs", "geöffnet",
+        "работа", "часы", "во сколько", "открыт", "открыва", "закрыт",
+        "საათ", "ღია", "იხსნებ", "დაკეტ",
+    ),
+    RehearsalTopic.PRICES: (
+        "price", "cost", "how much", "discount", "corkage", "fee", "preis",
+        "kostet", "rabatt", "цен", "стоит", "почём", "скидк", "ფას", "ღირ",
     ),
     RehearsalTopic.PLACE: (
         "where", "address", "parking", "adresse", "parken", "адрес", "где",
         "парков", "მისამართ", "სად", "პარკინგ",
     ),
     RehearsalTopic.OFFER: (
-        "menu", "vegan", "dish", "service", "speisekarte", "angebot", "меню",
-        "блюд", "веган", "услуг", "მენიუ", "კერძ", "მომსახურ",
+        "menu", "vegan", "vegetarian", "dish", "wine", "khachapuri",
+        "music", "service", "manicure", "lash", "haircut", "colour",
+        "balayage", "schnitt", "haare", "maniküre", "speisekarte", "angebot",
+        "меню", "блюд", "веган", "вегетариан", "хинкали", "музык", "услуг",
+        "стрижк", "маникюр", "окраш", "მენიუ", "კერძ", "ხაჭაპურ", "უგლუტენ",
+        "მუსიკ", "მიტან", "მომსახურ",
     ),
 }  # fmt: skip
 LABELS: dict[str, dict[RehearsalTopic, str]] = {
     "en": {
+        RehearsalTopic.EVENTS: "Celebrations and events",
         RehearsalTopic.BOOKING: "Booking",
         RehearsalTopic.PRICES: "Prices",
         RehearsalTopic.HOURS: "Opening hours",
         RehearsalTopic.PLACE: "Address and parking",
         RehearsalTopic.OFFER: "Menu and services",
+        RehearsalTopic.COMPLAINT: "Complaints",
         RehearsalTopic.OTHER: "Other questions",
     },
     "ru": {
+        RehearsalTopic.EVENTS: "Праздники и банкеты",
         RehearsalTopic.BOOKING: "Бронирование",
         RehearsalTopic.PRICES: "Цены",
         RehearsalTopic.HOURS: "Часы работы",
         RehearsalTopic.PLACE: "Адрес и парковка",
         RehearsalTopic.OFFER: "Меню и услуги",
+        RehearsalTopic.COMPLAINT: "Жалобы",
         RehearsalTopic.OTHER: "Другие вопросы",
     },
     "ka": {
+        RehearsalTopic.EVENTS: "ზეიმები და ბანკეტები",
         RehearsalTopic.BOOKING: "ჯავშანი",
         RehearsalTopic.PRICES: "ფასები",
         RehearsalTopic.HOURS: "სამუშაო საათები",
         RehearsalTopic.PLACE: "მისამართი და პარკინგი",
         RehearsalTopic.OFFER: "მენიუ და მომსახურება",
+        RehearsalTopic.COMPLAINT: "საჩივრები",
         RehearsalTopic.OTHER: "სხვა კითხვები",
     },
     "de": {
+        RehearsalTopic.EVENTS: "Feiern und Veranstaltungen",
         RehearsalTopic.BOOKING: "Buchung",
         RehearsalTopic.PRICES: "Preise",
         RehearsalTopic.HOURS: "Öffnungszeiten",
         RehearsalTopic.PLACE: "Adresse und Parken",
         RehearsalTopic.OFFER: "Angebot und Leistungen",
+        RehearsalTopic.COMPLAINT: "Beschwerden",
         RehearsalTopic.OTHER: "Andere Fragen",
     },
 }

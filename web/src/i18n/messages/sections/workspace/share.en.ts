@@ -22,7 +22,7 @@ export const shareEn = {
   addressTaken: "This address is taken. Try another one.",
   addressReserved: "This address is reserved. Try another one.",
   sourceLabel: "Where will you put it?",
-  sourceHint: "The links and the QR code get a tag (?src=), so you can tell where customers came from.",
+  sourceHint: "The links and the QR code get a tag (Telegram and WhatsApp links carry it too), so Reports show where customers came from.",
   sources: {
     none: "Anywhere (no tag)",
     table: "Table card",

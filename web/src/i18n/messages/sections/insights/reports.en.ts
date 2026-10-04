@@ -72,11 +72,5 @@ export const reportsEn = {
     weeklyHint: "On Mondays at 9:00, about the week before",
     daily: "Daily digest",
     dailyHint: "Every morning at 9:00, about the day before",
-    email: "By e-mail to {email} and to your devices.",
-    emailNotReady: "E-mail is not set up on this platform yet, so summaries go to your devices only.",
-    noEmail: "You sign in by phone, so summaries go to your devices only.",
-    devices: { one: "{count} device has notifications on.", other: "{count} devices have notifications on." },
-    noDevices: "No device has notifications on yet.",
-    manageDevices: "Notification settings",
   },
 } as const;

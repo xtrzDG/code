@@ -131,6 +131,8 @@ export interface InboxRow {
   handoff: InboxHandoffSummary | null;
   request: InboxRequestSummary | null;
   rating: ConversationRating | null;
+  /** Where the customer came from (a link's tag, an ad, the number dialled), when known. */
+  acquisitionSource?: string | null;
 }
 
 export function rowFromInboxItem(item: InboxItemView): InboxRow {
@@ -154,6 +156,7 @@ export function rowFromInboxItem(item: InboxItemView): InboxRow {
     handoff: item.handoff ?? null,
     request: item.request ?? null,
     rating: null,
+    acquisitionSource: item.acquisition_source ?? null,
   };
 }
 

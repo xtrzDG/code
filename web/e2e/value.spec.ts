@@ -49,7 +49,7 @@ test("the owner sees what the assistant is worth, with changes against the perio
   await expect(hero).toBeVisible();
   await expect(hero.getByText(en.value.hero.bookingsLabel)).toBeVisible();
   // The money estimate: the assistant's bookings times the typical check of a restaurant.
-  await expect(hero.getByText(/≈/)).toBeVisible();
+  await expect(hero.getByText(/^≈ GEL/)).toBeVisible();
   await expect(hero.getByText(/Average check GEL\s?120, typical for your kind of business/)).toBeVisible();
   // Every chip says in words how the number moved (or that the period before had nothing to compare).
   const moved = new RegExp(`^(Up .+ vs the previous 30 days|${en.value.delta.firstPeriodHint})$`);

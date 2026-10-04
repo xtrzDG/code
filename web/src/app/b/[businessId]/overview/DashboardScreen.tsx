@@ -28,6 +28,7 @@ import {
   canTakeStep,
   DASHBOARD_PERIODS,
   DEFAULT_DASHBOARD_PERIOD,
+  isLaunched,
   needsStatusCard,
   nextStep,
   periodRange,
@@ -38,6 +39,7 @@ import { PackageCard } from "./_components/PackageCard";
 import { PeriodTiles } from "./_components/PeriodTiles";
 import { SetupGuideCard } from "./_components/setupGuide/SetupGuideCard";
 import { TodayQueue } from "./_components/TodayQueue";
+import { TopicsCard } from "./_components/TopicsCard";
 import { TrendChart } from "./_components/TrendChart";
 import { ValueHero } from "./_components/ValueHero";
 
@@ -212,6 +214,9 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             ) : null}
           </section>
         )}
+
+        {/* What customers asked about in the last 30 days (the period above does not change it). */}
+        {isLaunched(business.status) ? <TopicsCard /> : null}
       </div>
     </>
   );

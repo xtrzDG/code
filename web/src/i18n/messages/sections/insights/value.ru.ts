@@ -47,6 +47,8 @@ export const valueRu: Translation<typeof valueEn> = {
       other: "{count} разговора",
     },
     conversationsHint: "клиенты, которые написали или позвонили",
+    returnMultiple: "≈ {multiple}× стоимость тарифа",
+    returnHint: "Тариф за эти дни стоит {price}.",
   },
   check: {
     owner: "Средний чек {money}",

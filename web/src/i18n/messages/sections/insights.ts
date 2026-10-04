@@ -23,6 +23,9 @@ import { conversationMediaRu } from "./insights/conversationMedia.ru";
 import { conversationsEn } from "./insights/conversations.en";
 import { conversationsKa } from "./insights/conversations.ka";
 import { conversationsRu } from "./insights/conversations.ru";
+import { digestChannelsEn } from "./insights/digestChannels.en";
+import { digestChannelsKa } from "./insights/digestChannels.ka";
+import { digestChannelsRu } from "./insights/digestChannels.ru";
 import { dashboardEn } from "./insights/dashboard.en";
 import { dashboardKa } from "./insights/dashboard.ka";
 import { dashboardRu } from "./insights/dashboard.ru";
@@ -47,6 +50,12 @@ import { reportsRu } from "./insights/reports.ru";
 import { setupGuideEn } from "./insights/setupGuide.en";
 import { setupGuideKa } from "./insights/setupGuide.ka";
 import { setupGuideRu } from "./insights/setupGuide.ru";
+import { sourcesEn } from "./insights/sources.en";
+import { sourcesKa } from "./insights/sources.ka";
+import { sourcesRu } from "./insights/sources.ru";
+import { topicsEn } from "./insights/topics.en";
+import { topicsKa } from "./insights/topics.ka";
+import { topicsRu } from "./insights/topics.ru";
 import { valueEn } from "./insights/value.en";
 import { valueKa } from "./insights/value.ka";
 import { valueRu } from "./insights/value.ru";
@@ -65,6 +74,9 @@ export const insightsEn = {
   inbox: inboxEn,
   inboxCard: inboxCardEn,
   setupGuide: setupGuideEn,
+  sources: sourcesEn,
+  topics: topicsEn,
+  digestChannels: digestChannelsEn,
 } as const;
 
 export const insightsRu: Translation<typeof insightsEn> = {
@@ -81,6 +93,9 @@ export const insightsRu: Translation<typeof insightsEn> = {
   inbox: inboxRu,
   inboxCard: inboxCardRu,
   setupGuide: setupGuideRu,
+  sources: sourcesRu,
+  topics: topicsRu,
+  digestChannels: digestChannelsRu,
 };
 
 export const insightsKa: Translation<typeof insightsEn> = {
@@ -97,4 +112,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
   inbox: inboxKa,
   inboxCard: inboxCardKa,
   setupGuide: setupGuideKa,
+  sources: sourcesKa,
+  topics: topicsKa,
+  digestChannels: digestChannelsKa,
 };

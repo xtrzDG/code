@@ -1,11 +1,19 @@
 "use client";
 
 import type { Schema } from "@/api/types";
-import { useBusinessFormat } from "@/components/business/BusinessContext";
+import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { formatPercent } from "@/components/insights/numbers";
 import { AnimatedNumber } from "@/components/motion";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { hadNoActivity, periodDays, type Polarity, type ValueModel, type ValueTotalsNumber } from "@/components/value/valueModel";
+import {
+  bookedValueIn,
+  formatWholeMoney,
+  hadNoActivity,
+  periodDays,
+  type Polarity,
+  type ValueModel,
+  type ValueTotalsNumber,
+} from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 
 import { StatTile } from "./DashboardWidgets";
@@ -15,7 +23,8 @@ type DashboardStats = Schema<"DashboardStats">;
 /**
  * The period's six headline numbers, each with how it moved since the
  * period before (from the value model of the same dates; no chips until
- * it arrives or while it is for other dates).
+ * it arrives or while it is for other dates), and for owners what the
+ * period's bookings are worth at their own prices (services, stays).
  */
 export function PeriodTiles({
   data,
@@ -26,8 +35,11 @@ export function PeriodTiles({
   value: ValueModel | undefined;
   isBusy: boolean;
 }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
+  const { business, isOwner } = useBusiness();
+  const booked = isOwner ? bookedValueIn(data.booked_value ?? [], business.currency_code) : null;
+  const money = (minor: number, currency: string) => formatWholeMoney(minor, currency, locale);
   const compared = value && value.date_from === data.date_from && value.date_to === data.date_to ? value : null;
   const days = periodDays(data.date_from, data.date_to);
   const isFirstPeriod = compared ? hadNoActivity(compared.previous) : false;
@@ -80,6 +92,31 @@ export function PeriodTiles({
         value={<AnimatedNumber value={data.handoff_count} format={format.number} />}
         chip={chip("handoff_count", "neutral")}
       />
+      {booked ? (
+        <StatTile
+          className="col-span-2 sm:col-span-3"
+          label={t("dashboard.kpi.bookedValue")}
+          value={
+            booked.main ? (
+              <AnimatedNumber value={booked.main.value_minor} format={(minor) => money(minor, business.currency_code)} />
+            ) : (
+              booked.others.map((total) => money(total.value_minor, total.currency_code)).join(" · ")
+            )
+          }
+          hint={[
+            booked.main
+              ? tp("dashboard.kpi.bookedValueHint", booked.main.booking_count, { count: format.number(booked.main.booking_count) })
+              : null,
+            booked.main && booked.others.length > 0
+              ? t("dashboard.kpi.bookedValueOther", {
+                  money: booked.others.map((total) => money(total.value_minor, total.currency_code)).join(", "),
+                })
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
+      ) : null}
     </dl>
   );
 }

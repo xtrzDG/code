@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  bookedValueIn,
   changeLabel,
   changeOf,
   hadNoActivity,
@@ -151,5 +152,24 @@ describe("the line under the money", () => {
   it("has nothing to explain without money", () => {
     expect(moneyFormula("bookings", { ...TOTALS, estimated_revenue_minor: null }, 12_000)).toEqual({ kind: "none" });
     expect(moneyFormula("bookings", TOTALS, null)).toEqual({ kind: "none" });
+  });
+});
+
+describe("bookedValueIn", () => {
+  it("puts the business currency first and keeps the others beside it", () => {
+    const totals = [
+      { currency_code: "USD", value_minor: 9_000, booking_count: 1 },
+      { currency_code: "GEL", value_minor: 48_000, booking_count: 4 },
+    ];
+
+    expect(bookedValueIn(totals, "GEL")).toEqual({
+      main: { currency_code: "GEL", value_minor: 48_000, booking_count: 4 },
+      others: [{ currency_code: "USD", value_minor: 9_000, booking_count: 1 }],
+    });
+  });
+
+  it("has nothing to show without a priced booking", () => {
+    expect(bookedValueIn([], "GEL")).toBeNull();
+    expect(bookedValueIn([{ currency_code: "GEL", value_minor: 0, booking_count: 0 }], "GEL")).toBeNull();
   });
 });

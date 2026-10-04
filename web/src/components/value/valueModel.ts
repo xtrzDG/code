@@ -176,3 +176,24 @@ export function monthSoFar(today: LocalDateText): { from: LocalDateText; to: Loc
 export function dayBefore(date: LocalDateText): LocalDateText {
   return addDays(date, -1);
 }
+
+export type BookedValueTotal = Schema<"BookedValueTotal">;
+
+/**
+ * What the bookings of a period are worth (their own prices): the total in
+ * the business currency, and the totals in other currencies beside it.
+ * Null when no booking of the period has a price.
+ */
+export function bookedValueIn(
+  totals: readonly BookedValueTotal[],
+  currency: string,
+): { main: BookedValueTotal | null; others: BookedValueTotal[] } | null {
+  const priced = totals.filter((total) => total.booking_count > 0);
+  if (priced.length === 0) {
+    return null;
+  }
+  return {
+    main: priced.find((total) => total.currency_code === currency) ?? null,
+    others: priced.filter((total) => total.currency_code !== currency),
+  };
+}

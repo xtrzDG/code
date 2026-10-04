@@ -7,6 +7,7 @@ import { chatApiBase } from "@/server/hostedChat";
 
 import { HostedChatNotice, HostedChatShell } from "./_components/HostedChatShell";
 import { chatLanguage, readHostedChatRequest, visitorLanguage } from "./_lib/hostedChatRequest";
+import { visitSourceOf } from "./_lib/visitSource";
 
 /** The element the widget fills (its data-container). */
 const CONTAINER_ID = "hosted-chat";
@@ -42,9 +43,10 @@ export async function generateViewport(): Promise<Viewport> {
  * codes (no website needed). The proxy has looked the address up, moved
  * older addresses here and allowed the API in the page's policy; the
  * widget (page mode) does the rest with its usual limits. The visitor key
- * stays in the browser's storage, never in the address.
+ * stays in the browser's storage, never in the address; the link's
+ * `?src=` goes to the widget as the visitor's source.
  */
-export default async function HostedChatPage() {
+export default async function HostedChatPage({ searchParams }: PageProps<"/c/[slug]">) {
   const { lookup, acceptLanguage, nonce } = await readHostedChatRequest();
   if (lookup.kind === "missing") {
     notFound();
@@ -71,6 +73,7 @@ export default async function HostedChatPage() {
   }
 
   const apiBase = chatApiBase(view);
+  const source = visitSourceOf(await searchParams);
   return (
     <HostedChatShell page={page} accent={view.accent_color}>
       <div className="hc-frame">
@@ -92,6 +95,7 @@ export default async function HostedChatPage() {
         data-mode="page"
         data-container={CONTAINER_ID}
         data-api-base={apiBase}
+        data-source={source ?? undefined}
       />
     </HostedChatShell>
   );
