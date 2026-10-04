@@ -46,6 +46,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 
 
 class InboundMessage(ImmutableDTO):
@@ -65,6 +66,8 @@ class InboundMessage(ImmutableDTO):
     unanswered message (the reply's latency counts from it; None: not
     measured). `is_reply_deferred`: the customer wrote again right after,
     so this message is stored and answered together with the next one.
+    `acquisition_source` is where the customer came from when the message
+    carried it; a conversation the message starts keeps it.
     """
 
     business_id: BusinessId
@@ -82,6 +85,7 @@ class InboundMessage(ImmutableDTO):
     )
     waiting_since: Microseconds | None = None
     is_reply_deferred: IsReplyDeferred = False
+    acquisition_source: AcquisitionSourceTag | None = None
 
 
 class AssistantReply(ImmutableDTO):

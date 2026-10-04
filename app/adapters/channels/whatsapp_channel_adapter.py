@@ -50,6 +50,10 @@ from app.utilities.channels.json_values import (
 from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
 from app.utilities.channels.whatsapp_attachments import read_whatsapp_attachments
+from app.utilities.sharing.acquisition_sources import (
+    read_greeting_code,
+    read_referral_source,
+)
 
 WEBHOOK_OBJECT: str = "whatsapp_business_account"
 MESSAGES_FIELD: str = "messages"
@@ -216,7 +220,9 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
         messages: list[ChannelInboundMessage] = []
         for message in read_objects(value, "messages"):
             sender: str | None = read_identifier(message, "from")
-            text: str = read_message_text(message) or ""
+            # A click-to-WhatsApp ad, else the code of a tagged wa.me link.
+            coded, text = read_greeting_code(read_message_text(message) or "")
+            source = read_referral_source(read_object(message, "referral")) or coded
             attachments: list[InboundAttachment] = read_whatsapp_attachments(message)
             if sender is None or not has_content(text, attachments):
                 continue
@@ -242,6 +248,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
                         None if message_id is None else ProviderMessageId(message_id)
                     ),
                     attachments=attachments,
+                    acquisition_source=source,
                 )
             )
 

@@ -67,6 +67,7 @@ class InboxItemTransformer(TransformerContract[InboxItemSource, InboxItemView]):
             note_count=input_data.note_count,
             handoff=summarize_handoff(input_data.handoff),
             request=summarize_request(input_data.request),
+            acquisition_source=conversation.acquisition_source,
         )
 
 

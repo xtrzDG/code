@@ -107,6 +107,7 @@ def build_inbound_message(event: InboundEventDocument) -> InboundMessage | None:
         contact_phone_number=customer.contact_phone_number,
         customer_message_id=event.customer_message_id,
         reply_message_id=event.reply_message_id,
+        acquisition_source=customer.acquisition_source,
     )
 
 

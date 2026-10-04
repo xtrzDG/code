@@ -56,6 +56,7 @@ from app.utilities.channels.call_outcomes import (
 )
 from app.utilities.channels.channel_phone_numbers import parse_messaging_phone_number
 from app.utilities.channels.voice_recordings import build_voice_platform_recording_path
+from app.utilities.sharing.acquisition_sources import called_number_source
 
 
 class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall]):
@@ -127,6 +128,7 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             business,
             input_data,
         )
+        self._keep_called_number(conversation, assistant_number)
         bookings: list[BookingDocument] = list_call_bookings(
             self._booking_repo,
             business,
@@ -213,3 +215,17 @@ class RecordFinishedCallUseCase(UseCaseContract[FinishedCallReport, RecordedCall
             booking_ids=[booking.id for booking in bookings],
             language=language,
         )
+
+    def _keep_called_number(
+        self,
+        conversation: ConversationDocument | None,
+        assistant_number: E164PhoneNumber | None,
+    ) -> None:
+        """A call's conversation (opened by a tool) comes from the line dialled."""
+
+        source = called_number_source(assistant_number)
+        if conversation is None or conversation.acquisition_source or source is None:
+            return
+
+        conversation.acquisition_source = source
+        self._conversation_repo.save(conversation)

@@ -21,6 +21,7 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetMessageText,
     WidgetScriptUrl,
     WidgetSessionKey,
+    WidgetSourceInput,
 )
 from app.schemas.typings.channels.strings import (
     WidgetContactNameInput,
@@ -105,11 +106,16 @@ class WidgetConfigView(ImmutableDTO):
 
 
 class WidgetMessageRequest(ImmutableDTO):
-    """HTTP body of a visitor message typed into the widget."""
+    """
+    HTTP body of a visitor message typed into the widget. `source` is where
+    the visitor came from as the widget read it (data-source, `?src=` or
+    `?utm_source=` of the page); a conversation the message starts keeps it.
+    """
 
     session_key: WidgetSessionKey
     text: WidgetMessageText
     contact_name: WidgetContactNameInput | None = None
+    source: WidgetSourceInput | None = None
 
 
 class WidgetMessageCommand(ImmutableDTO):

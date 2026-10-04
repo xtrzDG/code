@@ -4,11 +4,12 @@ chat page, WhatsApp (wa.me), Telegram (t.me), Messenger (m.me), Instagram
 (ig.me/m) and a phone call (tel:).
 
 A source tag (where the link was put: a QR code on the tables, an
-Instagram bio) travels only where the platform carries it without showing
-it to the customer: `?src=` on the hosted page, `?ref=` on m.me and ig.me
-(Meta passes it to the page's webhook). WhatsApp would put it into the
-customer's first message and Telegram would send "/start <tag>" in their
-name, so those links stay untagged.
+Instagram bio) travels the way each platform carries it back
+(`app/utilities/sharing/acquisition_sources.py` reads it): `?src=` on the
+hosted page, `?ref=` on m.me and ig.me (Meta passes it to the page's
+webhook), `?start=src_<tag>` on t.me (the bot gets "/start src_<tag>",
+the customer sees "/start") and, on wa.me, a short code after the
+greeting the customer sends ("Hello! (#qr)").
 """
 
 from urllib.parse import quote, urlencode
@@ -27,6 +28,10 @@ from app.schemas.typings.sharing.constrained_strings import (
     ShareSourceTag,
     WhatsAppNumberDigits,
 )
+from app.utilities.sharing.acquisition_sources import (
+    greeting_with_code,
+    start_parameter,
+)
 
 HOSTED_CHAT_PATH_PREFIX: str = "/c/"
 HOSTED_CHAT_PRIVACY_SUFFIX: str = "/privacy"
@@ -34,6 +39,8 @@ HOSTED_CHAT_SOURCE_PARAMETER: str = "src"
 META_SOURCE_PARAMETER: str = "ref"
 WHATSAPP_LINK_BASE: str = "https://wa.me/"
 TELEGRAM_LINK_BASE: str = "https://t.me/"
+TELEGRAM_START_PARAMETER: str = "start"
+WHATSAPP_TEXT_PARAMETER: str = "text"
 MESSENGER_LINK_BASE: str = "https://m.me/"
 INSTAGRAM_LINK_BASE: str = "https://ig.me/m/"
 
@@ -64,12 +71,37 @@ def build_hosted_privacy_url(cabinet_base_url: CabinetBaseUrl, address: str) -> 
     )
 
 
-def build_whatsapp_link(number: WhatsAppNumberDigits) -> ShareLinkUrl:
-    return ShareLinkUrl(WHATSAPP_LINK_BASE + str(number))
+def build_whatsapp_link(
+    number: WhatsAppNumberDigits,
+    source: ShareSourceTag | None = None,
+    greeting: str = "",
+) -> ShareLinkUrl:
+    """wa.me/{number}, prefilled with "{greeting} (#{source})" when tagged."""
+
+    query: str = (
+        ""
+        if source is None
+        else "?"
+        + urlencode(
+            {WHATSAPP_TEXT_PARAMETER: greeting_with_code(greeting, source).strip()},
+            quote_via=quote,
+        )
+    )
+    return ShareLinkUrl(WHATSAPP_LINK_BASE + str(number) + query)
 
 
-def build_telegram_link(username: TelegramBotUsername) -> ShareLinkUrl:
-    return ShareLinkUrl(TELEGRAM_LINK_BASE + str(username).lstrip("@"))
+def build_telegram_link(
+    username: TelegramBotUsername,
+    source: ShareSourceTag | None = None,
+) -> ShareLinkUrl:
+    """t.me/{bot}, with `?start=src_{source}` when tagged."""
+
+    query: str = (
+        ""
+        if source is None
+        else "?" + urlencode({TELEGRAM_START_PARAMETER: start_parameter(source)})
+    )
+    return ShareLinkUrl(TELEGRAM_LINK_BASE + str(username).lstrip("@") + query)
 
 
 def build_messenger_link(

@@ -25,6 +25,7 @@ from app.utilities.channels.widget_rate_limits import (
     WIDGET_MESSAGE_LIMITS,
     refuse_too_frequent_widget_requests,
 )
+from app.utilities.sharing.acquisition_sources import normalize_source
 
 MAX_CONTACT_NAME_LENGTH: int = 100
 
@@ -38,7 +39,8 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
     ids cannot be probed). Its assistant must be live (409 otherwise, as a
     turn would refuse it): the widget hears it at once instead of waiting
     for an answer that never comes. The visitor is identified by the
-    widget's random session key.
+    widget's random session key; the page's source tag, cut to a tag (or
+    dropped), goes with the message.
 
     The endpoint is public and every message costs a model call, so
     messages are limited per visitor, per client network (an IPv6 /64), per
@@ -98,6 +100,11 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
             channel_user_id=ChannelUserId(str(input_data.request.session_key)),
             text=MessageText(str(input_data.request.text)),
             contact_name=read_contact_name(input_data.request.contact_name),
+            acquisition_source=normalize_source(
+                None
+                if input_data.request.source is None
+                else str(input_data.request.source)
+            ),
         )
 
 

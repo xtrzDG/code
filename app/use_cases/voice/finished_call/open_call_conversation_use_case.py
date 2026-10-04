@@ -21,6 +21,7 @@ from app.schemas.dto.calls.missed_calls import StoredFinishedCall
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.utilities.sharing.acquisition_sources import called_number_source
 
 
 class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCall]):
@@ -29,7 +30,8 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
     has no conversation yet, so staff could not find it, its recording or
     its summary. It gets one now: a phone conversation of the caller (the
     contact whose phone the call proved, else a new one) pinned to the
-    live version, and the call points to it. Calls with a conversation,
+    live version, its source the number the caller dialled, and the call
+    points to it. Calls with a conversation,
     calls nobody spoke in, abandoned calls and calls of a business without
     a live version stay as they are.
     """
@@ -90,6 +92,7 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
             last_message_at=now,
             created_at=now,
             updated_at=now,
+            acquisition_source=called_number_source(call.to_phone_number),
         )
         self._conversation_repo.save(conversation)
 

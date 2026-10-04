@@ -47,6 +47,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.platform.constrained_integers import ListItemCount
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import UserDisplayName
 
@@ -117,6 +118,8 @@ class InboxItemView(ImmutableDTO):
     handoff, the newest open request). No model, cost or tool details,
     no free-text request details and no note texts (only their count).
     `assignment_revision` is what an assignment must name.
+    `acquisition_source` is where the customer came from (a link's tag, an
+    ad, the number dialled), when known.
     """
 
     id: ConversationId
@@ -142,6 +145,7 @@ class InboxItemView(ImmutableDTO):
     note_count: ConversationNoteCount = ConversationNoteCount(0)
     handoff: InboxHandoffSummary | None = None
     request: InboxRequestSummary | None = None
+    acquisition_source: AcquisitionSourceTag | None = None
 
 
 class InboxItemSource(ImmutableDTO):

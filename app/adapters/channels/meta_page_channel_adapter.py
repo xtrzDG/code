@@ -40,6 +40,7 @@ from app.utilities.channels.json_values import (
 from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.meta_page_attachments import read_meta_attachments
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
+from app.utilities.sharing.acquisition_sources import read_referral_source
 
 
 class MetaPageChannelAdapter(ChannelAdapterContract):
@@ -52,7 +53,10 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
     Echoes of the business's own messages, delivery and read receipts and
     reactions are skipped; a tapped button (postback) counts as the customer
     typing its title. Voice clips, photos, places and other files are
-    attachments (`meta_page_attachments`).
+    attachments (`meta_page_attachments`). The `referral` of a tagged link
+    or an ad that came with the message is where the customer came from; a
+    referral to an open thread without a message has nothing to answer
+    and is skipped.
     """
 
     webhook_object: ClassVar[str]
@@ -168,6 +172,9 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
         message_id: str | None = None
         message: JsonObject | None = read_object(event, "message")
         postback: JsonObject | None = read_object(event, "postback")
+        # m.me / ig.me `?ref=` and ads: on the event, the message or the
+        # "Get started" postback of a new thread.
+        referral: JsonObject | None = read_object(event, "referral")
         if message is not None:
             if read_flag(message, "is_echo"):
                 return None
@@ -175,9 +182,11 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             text = read_text(message, "text") or ""
             attachments = read_meta_attachments(message)
             message_id = read_text(message, "mid")
+            referral = referral or read_object(message, "referral")
         elif postback is not None:
             text = read_text(postback, "title") or ""
             message_id = read_text(postback, "mid")
+            referral = referral or read_object(postback, "referral")
 
         if not has_content(text, attachments):
             return None
@@ -191,4 +200,5 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
                 None if message_id is None else ProviderMessageId(message_id)
             ),
             attachments=attachments,
+            acquisition_source=read_referral_source(referral),
         )
