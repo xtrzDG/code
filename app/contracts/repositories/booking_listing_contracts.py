@@ -17,6 +17,7 @@ from app.schemas.dto.listing_filters import BookingListFilter, HandoffListFilter
 from app.schemas.dto.operations.activity_counts import (
     ActivityPeriod,
     BookingActivityCount,
+    BookingValueCount,
     HandoffActivityCount,
 )
 from app.schemas.dto.paging import KeysetSlice
@@ -63,6 +64,19 @@ class BookingListingContract(Protocol):
         self, business_id: BusinessId, period: ActivityPeriod
     ) -> list[BookingActivityCount]:
         """Bookings made in the period per status and segment, no sandbox."""
+        raise NotImplementedError
+
+    def sum_value_made(
+        self,
+        business_id: BusinessId,
+        period: ActivityPeriod,
+        by_staff_only: bool = False,
+    ) -> list[BookingValueCount]:
+        """
+        Bookings made in the period per status, currency and segment with
+        their summed values, no sandbox (summed by the database); with
+        `by_staff_only` only those made outside any conversation.
+        """
         raise NotImplementedError
 
 

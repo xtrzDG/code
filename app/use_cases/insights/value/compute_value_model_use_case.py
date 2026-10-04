@@ -44,9 +44,11 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
     computation for the dashboard, the digests and the monthly report):
 
     - bookings the assistant made in its conversations and kept (not
-      cancelled, not a no-show) times the average check: the owner's, or
-      the niche's typical check in the business currency; for niches that
-      take orders, the requests it took instead of bookings;
+      cancelled, not a no-show) at their own values (the booked service's
+      price, a stay's nightly rates), and those without a value times the
+      average check: the owner's, or the niche's typical check in the
+      business currency; the totals say which (`revenue_source`); for
+      niches that take orders, the requests it took instead of bookings;
     - conversations after hours (flagged, or started while closed);
     - staff minutes saved: the assistant's replies times the niche's
       minutes per reply, plus the calls it answered times its minutes per

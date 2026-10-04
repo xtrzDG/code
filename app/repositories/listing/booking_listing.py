@@ -24,6 +24,7 @@ from app.schemas.dto.listing_filters import BookingListFilter
 from app.schemas.dto.operations.activity_counts import (
     ActivityPeriod,
     BookingActivityCount,
+    BookingValueCount,
 )
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.dto.storage_aggregates import DocumentAggregation
@@ -38,15 +39,19 @@ from app.schemas.typings.bookings.constrained_integers import BookingSearchBound
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.platform.constrained_integers import ListItemCount
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.storage.integers import DocumentFieldInteger
+from app.schemas.typings.value.constrained_integers import BookedValueMinor
 
 STARTS_AT_FIELD: DocumentFieldPath = DocumentFieldPath("starts_at")
 ENDS_AT_FIELD: DocumentFieldPath = DocumentFieldPath("ends_at")
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
 RESOURCE_ID_FIELD: DocumentFieldPath = DocumentFieldPath("resource_id")
 CONVERSATION_ID_FIELD: DocumentFieldPath = DocumentFieldPath("conversation_id")
+CURRENCY_CODE_FIELD: DocumentFieldPath = DocumentFieldPath("currency_code")
+VALUE_FIELD: DocumentFieldPath = DocumentFieldPath("value_minor")
 
 
 def sandbox_exclusion(
@@ -162,6 +167,39 @@ class BookingListing(BusinessScopedRepository[BookingDocument]):
                 status=status,
                 segment=segment_of(group),
                 count=PeriodItemCount(int(group.count)),
+            )
+            for group in groups
+            if (status := parse_choice(BookingStatus, group.values[0])) is not None
+        ]
+
+    def sum_value_made(
+        self,
+        business_id: BusinessId,
+        period: ActivityPeriod,
+        by_staff_only: bool = False,
+    ) -> list[BookingValueCount]:
+        groups = self._aggregate_in_business(
+            business_id,
+            DocumentAggregation(
+                where=DocumentFilter(
+                    excluding=(without_sandbox(),),
+                    ranges=(period_range(CREATED_AT_FIELD, period),),
+                    missing=(CONVERSATION_ID_FIELD,) if by_staff_only else (),
+                ),
+                group_by=(STATUS_FIELD, CURRENCY_CODE_FIELD),
+                buckets=timeline_buckets(CREATED_AT_FIELD, period),
+                totals_of=(VALUE_FIELD,),
+            ),
+        )
+        return [
+            BookingValueCount(
+                status=status,
+                currency_code=(
+                    None if group.values[1] is None else CurrencyCode(group.values[1])
+                ),
+                segment=segment_of(group),
+                count=PeriodItemCount(int(group.count)),
+                value_minor=BookedValueMinor(int(group.totals[0])),
             )
             for group in groups
             if (status := parse_choice(BookingStatus, group.values[0])) is not None

@@ -14,7 +14,11 @@ from app.schemas.typings.insights.constrained_integers import (
     PeriodItemCount,
     TimelineSegment,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
+    LanguageTag,
+)
+from app.schemas.typings.value.constrained_integers import BookedValueMinor
 
 
 class ActivityPeriod(ImmutableDTO):
@@ -46,6 +50,20 @@ class BookingActivityCount(ImmutableDTO):
     status: BookingStatus
     segment: TimelineSegment
     count: PeriodItemCount
+
+
+class BookingValueCount(ImmutableDTO):
+    """
+    Bookings made in one timeline segment with one status and currency, and
+    what they are worth together; `currency_code` None groups the bookings
+    without a value (their `value_minor` is 0).
+    """
+
+    status: BookingStatus
+    currency_code: CurrencyCode | None = None
+    segment: TimelineSegment
+    count: PeriodItemCount
+    value_minor: BookedValueMinor
 
 
 class HandoffActivityCount(ImmutableDTO):

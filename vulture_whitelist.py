@@ -202,6 +202,9 @@ _.handoffs_by_reason  # app/schemas/dto/operations/dashboard.py
 _.handoffs_by_urgency  # app/schemas/dto/operations/dashboard.py
 _.open_unanswered_question_count  # app/schemas/dto/operations/dashboard.py
 _.package  # app/schemas/dto/operations/dashboard.py
+_.booked_value  # app/schemas/dto/operations/dashboard.py
+_.after_hours_booked_value  # app/schemas/dto/operations/dashboard.py
+_.valued_booking_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
 _.open_count  # app/schemas/dto/operations/handoffs.py
 _.resolved_count  # app/schemas/dto/operations/handoffs.py
 _.channel_errors  # app/schemas/dto/inbox/inbox_attention.py

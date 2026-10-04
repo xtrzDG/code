@@ -16,6 +16,15 @@ class AverageCheckMinor(BaseConstrainedTypedInt):
     le = 100_000_000_000
 
 
+class BookedValueMinor(BaseConstrainedTypedInt):
+    """
+    What bookings made in a period are worth by their own values (service
+    prices, stays' nightly rates), summed in minor units of one currency.
+    """
+
+    ge = 0
+
+
 class DigestRecipientCount(BaseConstrainedTypedInt):
     """How many people (e-mail addresses and devices) a report was queued for."""
 

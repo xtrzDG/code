@@ -1,7 +1,7 @@
 {
   "collection": "value_reports",
   "document_type": "ValueReportDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -54,6 +54,18 @@
             "minimum": 0,
             "type": "integer"
           },
+          "booked_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "booking_count": {
             "minimum": 0,
             "type": "integer"
@@ -90,7 +102,28 @@
             "minimum": 0,
             "type": "integer"
           },
+          "revenue_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "booked_values",
+                  "mixed",
+                  "average_check"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "staff_minutes_saved": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "valued_booking_count": {
+            "default": 0,
             "minimum": 0,
             "type": "integer"
           }
@@ -162,6 +195,18 @@
             "minimum": 0,
             "type": "integer"
           },
+          "booked_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "booking_count": {
             "minimum": 0,
             "type": "integer"
@@ -198,7 +243,28 @@
             "minimum": 0,
             "type": "integer"
           },
+          "revenue_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "booked_values",
+                  "mixed",
+                  "average_check"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "staff_minutes_saved": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "valued_booking_count": {
+            "default": 0,
             "minimum": 0,
             "type": "integer"
           }
@@ -234,7 +300,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "starts_at": {

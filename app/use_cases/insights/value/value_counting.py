@@ -32,9 +32,9 @@ from app.schemas.dto.value.value_model import ValueTotals
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
-    EstimatedRevenueMinor,
     StaffMinutesSaved,
     StaffSecondsPerCall,
     StaffSecondsPerReply,
@@ -48,15 +48,17 @@ from app.use_cases.insights.dashboard_timeline import (
     build_timeline,
     timeline_period,
 )
+from app.use_cases.insights.dashboard_values import EARNING_STATUSES
+from app.use_cases.insights.value.value_money import (
+    BookedMoney,
+    MoneyEstimate,
+    assistant_booked_money,
+    estimate_money,
+)
 from app.utilities.scheduling.opening_hours import DayRanges
 from app.utilities.scheduling.zoned_time import local_day_start_microseconds
 
 SECONDS_PER_MINUTE: int = 60
-# Bookings that still bring money: made, confirmed or done (not cancelled,
-# not a no-show).
-EARNING_STATUSES: frozenset[BookingStatus] = frozenset(
-    {BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED}
-)
 # A count of some conversations' items (None: of every conversation).
 type CountOf = Callable[[list[ConversationId] | None], int]
 
@@ -81,6 +83,7 @@ class ValueRates:
     average_check: AverageCheckMinor | None
     seconds_per_reply: StaffSecondsPerReply
     seconds_per_call: StaffSecondsPerCall
+    currency_code: CurrencyCode
 
 
 @dataclass(frozen=True)
@@ -149,6 +152,14 @@ def count_value_totals(
     earning_units: int = (
         max(assistant_bookings, 0) if rates.basis is ValueBasis.BOOKINGS else requests
     )
+    booked: BookedMoney = assistant_booked_money(
+        sources.booking_repo.sum_value_made(business_id, whole),
+        sources.booking_repo.sum_value_made(business_id, whole, by_staff_only=True),
+        rates.currency_code,
+    )
+    money: MoneyEstimate = estimate_money(
+        rates.basis, earning_units, booked, rates.average_check
+    )
     return ValueTotals(
         conversation_count=PeriodItemCount(conversations.total),
         after_hours_conversation_count=PeriodItemCount(conversations.after_hours),
@@ -174,11 +185,10 @@ def count_value_totals(
             )
         ),
         staff_minutes_saved=staff_minutes(replies, calls, rates),
-        estimated_revenue_minor=(
-            None
-            if rates.average_check is None
-            else EstimatedRevenueMinor(earning_units * int(rates.average_check))
-        ),
+        estimated_revenue_minor=money.estimated_revenue_minor,
+        valued_booking_count=PeriodItemCount(booked.count),
+        booked_value_minor=money.booked_value_minor,
+        revenue_source=money.revenue_source,
     )
 
 

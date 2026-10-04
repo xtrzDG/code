@@ -44,6 +44,18 @@ class AverageCheckSource(StrEnum):
     NONE = "none"
 
 
+class RevenueSource(StrEnum):
+    """
+    What the money estimate of a period rests on: the bookings' own values
+    (service prices, stays' nightly rates), those plus the average check
+    for the bookings without one, or the average check alone.
+    """
+
+    BOOKED_VALUES = "booked_values"
+    MIXED = "mixed"
+    AVERAGE_CHECK = "average_check"
+
+
 class ValueBasis(StrEnum):
     """
     What earns the business money in the estimate: bookings the assistant
