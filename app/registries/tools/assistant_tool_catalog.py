@@ -74,6 +74,20 @@ RESOURCE_TYPE: JsonSchema = nullable(
         "What is booked; null for the business's usual resource.",
     )
 )
+SERVICE_ID: JsonSchema = nullable(
+    string_property(
+        "The service, package or room type to book: its id from the facts or "
+        "a tool result, or its name as the customer said it; null when the "
+        "customer names none (restaurant tables)."
+    )
+)
+RESOURCE_ID: JsonSchema = nullable(
+    string_property(
+        "A specific master, doctor, room or table the customer asked for: its "
+        "id or its name as the customer wrote it, in any script; null for "
+        "whoever is free."
+    )
+)
 
 TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
     AssistantToolName.SEARCH_KNOWLEDGE: (
@@ -96,16 +110,29 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
     AssistantToolName.GET_PRICE: (
         "Look up the price of a menu item, service, room or package by name. "
         "Name a price only if it comes from this result or the fact table; "
-        "an empty result means the item is not in the price list.",
+        "an empty result means the item is not in the price list. For a room "
+        "give the check-in date and nights: the result quotes the whole stay "
+        "with each night at its season's rate.",
         object_schema(
-            {"item_name": string_property("Name of the item as the customer said.")}
+            {
+                "item_name": string_property("Name of the item as the customer said."),
+                "check_in_date": nullable(
+                    string_property("Check-in date of a stay. " + DATE_HINT)
+                ),
+                "nights": nullable(integer_property("Number of nights to stay.")),
+            }
         ),
     ),
     AssistantToolName.CHECK_AVAILABILITY: (
         "Check free time slots (or free nights for stays) on a date in the "
-        "business time zone, before offering or creating a booking.",
+        "business time zone, before offering or creating a booking. With a "
+        "service, slots last as long as the service and only its performers "
+        "are offered; a stay of a room type comes with its price. Without a "
+        "service the result lists the bookable services with their ids.",
         object_schema(
             {
+                "service_id": SERVICE_ID,
+                "resource_id": RESOURCE_ID,
                 "resource_type": RESOURCE_TYPE,
                 "date": string_property(DATE_HINT),
                 "time": nullable(string_property(TIME_HINT)),
@@ -118,12 +145,16 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
         ),
     ),
     AssistantToolName.CREATE_BOOKING: (
-        "Create a booking. First repeat the date, time, number of guests and "
-        "the customer's name and get the customer's confirmation.",
+        "Create a booking. First repeat the date, time, number of guests (or "
+        "the service and the master) and the customer's name and get the "
+        "customer's confirmation. Pass the same service_id and resource_id "
+        "as in check_availability.",
         object_schema(
             {
                 "name": string_property("Name the booking is under."),
                 "phone": nullable(string_property(PHONE_HINT)),
+                "service_id": SERVICE_ID,
+                "resource_id": RESOURCE_ID,
                 "resource_type": RESOURCE_TYPE,
                 "date": string_property(DATE_HINT),
                 "time": nullable(string_property(TIME_HINT)),

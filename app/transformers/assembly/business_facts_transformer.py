@@ -13,8 +13,6 @@ from app.utilities.assembly.fact_descriptions import (
     LINK_LABELS,
     RESOURCE_KIND_NOUNS,
     describe_booking_rule_rows,
-    describe_knowledge_item,
-    describe_resource,
     describe_schedule_exception,
     humanize_niche_answer,
 )
@@ -26,6 +24,10 @@ from app.utilities.assembly.fact_formatting import (
     read_english_text,
 )
 from app.utilities.assembly.fact_table import append_fact
+from app.utilities.assembly.offer_facts import (
+    describe_item_fact,
+    describe_resource_fact,
+)
 from app.utilities.knowledge.profile_links import read_profile_links
 
 MAX_SCHEDULE_EXCEPTIONS: int = 30
@@ -211,7 +213,7 @@ class BusinessFactsTransformer(
                 used_keys,
                 f"{item.kind.value}_{ordinals[item.kind]}",
                 f"{KNOWLEDGE_KIND_LABELS[item.kind]}: {item.title}",
-                describe_knowledge_item(item, source.business.currency_code),
+                describe_item_fact(item, source),
             )
 
     def _add_resources(
@@ -234,7 +236,7 @@ class BusinessFactsTransformer(
                 used_keys,
                 f"resource_{ordinal}",
                 f"Bookable {RESOURCE_KIND_NOUNS[resource.kind]}: {resource.name}",
-                describe_resource(resource, source.profile.booking_rules),
+                describe_resource_fact(resource, source),
             )
 
     def _add_booking_rules(

@@ -1,8 +1,12 @@
 from app.contracts.repositories.business_repositories import BusinessRepoContract
-from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+    ResourceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge_admin import KnowledgeItemListQuery, KnowledgeItemPage
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -23,9 +27,11 @@ class ListKnowledgeItemsUseCase(
         self,
         business_repo: BusinessRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        resource_repo: ResourceRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._resource_repo: ResourceRepoContract = resource_repo
 
     def run(self, input_data: KnowledgeItemListQuery) -> KnowledgeItemPage:
         business: BusinessDocument | None = self._business_repo.get(
@@ -47,9 +53,12 @@ class ListKnowledgeItemsUseCase(
             sort_key=lambda item: int(item.created_at),
             item_id=lambda item: str(item.id),
         )
+        resources: list[ResourceDocument] = self._resource_repo.list_by_business(
+            business.id
+        )
         return KnowledgeItemPage(
             items=[
-                to_item_details(item, business.currency_code, language)
+                to_item_details(item, business.currency_code, language, resources)
                 for item in page_items
             ],
             next_cursor=next_cursor,

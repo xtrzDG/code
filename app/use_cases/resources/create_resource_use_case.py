@@ -2,9 +2,13 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
-from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+    ResourceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.resources import CreateResourceCommand, ResourceView
 from app.schemas.exceptions.application_errors import NotFoundError
@@ -17,18 +21,21 @@ class CreateResourceUseCase(UseCaseContract[CreateResourceCommand, ResourceView]
 
     Kind and booking unit default to the niche (hotels and rentals book by
     nights). Names are unique within the business; an own schedule must not
-    overlap itself, and an empty one follows the business hours.
+    overlap itself, and an empty one follows the business hours. The
+    services it performs and its room type must be items of the business.
     """
 
     def __init__(
         self,
         business_repo: BusinessRepoContract,
         resource_repo: ResourceRepoContract,
+        knowledge_item_repo: KnowledgeItemRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._resource_repo: ResourceRepoContract = resource_repo
+        self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -41,12 +48,16 @@ class CreateResourceUseCase(UseCaseContract[CreateResourceCommand, ResourceView]
         if business is None:
             raise NotFoundError(f"Business {input_data.business_id} was not found.")
 
+        items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
+            business.id
+        )
         resource: ResourceDocument = build_resource(
             business=business,
             template=self._niche_template_registry.get(business.niche_key),
             resource_input=input_data.resource,
             existing_resources=self._resource_repo.list_by_business(business.id),
             now=self._wall_clock.now_unix(),
+            items=items,
         )
         self._resource_repo.save(resource)
-        return to_resource_view(resource)
+        return to_resource_view(resource, items)

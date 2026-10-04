@@ -77,6 +77,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
         CreateResourceUseCase,
         business_repo=repositories.business_repo,
         resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -85,6 +86,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         UpdateResourceUseCase,
         resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_resources_use_case: Factory[
@@ -92,6 +94,7 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ListResourcesUseCase,
         resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
     )
     create_schedule_exception_use_case: Factory[
         UseCaseContract[CreateScheduleExceptionCommand, ScheduleExceptionView]

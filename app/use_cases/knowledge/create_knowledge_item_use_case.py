@@ -2,15 +2,20 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
-from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+    ResourceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge_admin import (
     CreateKnowledgeItemCommand,
     KnowledgeItemDetails,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.knowledge.performer_links import check_item_performers
 from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import build_knowledge_item
 
@@ -22,18 +27,21 @@ class CreateKnowledgeItemUseCase(
     Add a fact to the knowledge base (dish, service, room type, FAQ, rule).
 
     The kind must be one the niche uses, and a price must be in the business
-    currency; the assistant can quote it after the next assembly.
+    currency; the assistant can quote it after the next assembly. Its
+    performers must be resources of the business.
     """
 
     def __init__(
         self,
         business_repo: BusinessRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        resource_repo: ResourceRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._resource_repo: ResourceRepoContract = resource_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -53,9 +61,14 @@ class CreateKnowledgeItemUseCase(
             source=input_data.source,
             now=self._wall_clock.now_unix(),
         )
+        resources: list[ResourceDocument] = self._resource_repo.list_by_business(
+            business.id
+        )
+        check_item_performers([item], resources)
         self._knowledge_item_repo.save(item)
         return to_item_details(
             item,
             business.currency_code,
             input_data.language or business.owner_language,
+            resources,
         )

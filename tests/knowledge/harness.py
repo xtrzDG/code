@@ -110,12 +110,14 @@ class KnowledgeHarness(KnowledgeStore):
         self.create_knowledge_item = CreateKnowledgeItemUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
         )
         self.update_knowledge_item = UpdateKnowledgeItemUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
         )
@@ -125,14 +127,17 @@ class KnowledgeHarness(KnowledgeStore):
         self.get_knowledge_item = GetKnowledgeItemUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            resource_repo=self.resource_repo,
         )
         self.list_knowledge_items = ListKnowledgeItemsUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            resource_repo=self.resource_repo,
         )
         self.upsert_knowledge_items = UpsertKnowledgeItemsUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            resource_repo=self.resource_repo,
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
         )
@@ -150,14 +155,19 @@ class KnowledgeHarness(KnowledgeStore):
         self.create_resource = CreateResourceUseCase(
             business_repo=self.business_repo,
             resource_repo=self.resource_repo,
+            knowledge_item_repo=self.knowledge_item_repo,
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
         )
         self.update_resource = UpdateResourceUseCase(
             resource_repo=self.resource_repo,
+            knowledge_item_repo=self.knowledge_item_repo,
             wall_clock=self.wall_clock,
         )
-        self.list_resources = ListResourcesUseCase(resource_repo=self.resource_repo)
+        self.list_resources = ListResourcesUseCase(
+            resource_repo=self.resource_repo,
+            knowledge_item_repo=self.knowledge_item_repo,
+        )
         self.create_schedule_exception = CreateScheduleExceptionUseCase(
             business_repo=self.business_repo,
             resource_repo=self.resource_repo,

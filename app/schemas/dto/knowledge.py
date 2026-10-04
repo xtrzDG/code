@@ -3,10 +3,15 @@ from pydantic import Field
 
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.domain.knowledge import SeasonalNightlyRate
+from app.schemas.dto.bookable_offers import StayQuote
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
+from app.schemas.typings.bookings.constrained_integers import NightCount
+from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.constrained_integers import (
+    BufferMinutes,
     KnowledgeSearchLimit,
     ServiceDurationMinutes,
 )
@@ -34,7 +39,10 @@ class KnowledgeSearchRequest(ImmutableDTO):
 
 
 class KnowledgeItemView(ImmutableDTO):
-    """Knowledge item as shown to the model or the owner."""
+    """
+    Knowledge item as shown to the model or the owner; a room type carries
+    its seasonal nightly rates (`price_minor` outside the seasons).
+    """
 
     id: KnowledgeItemId
     kind: KnowledgeItemKind
@@ -44,6 +52,10 @@ class KnowledgeItemView(ImmutableDTO):
     currency_code: CurrencyCode | None = None
     formatted_price: FormattedMoneyText | None = None
     duration_minutes: ServiceDurationMinutes | None = None
+    buffer_minutes: BufferMinutes | None = None
+    seasonal_rates: list[SeasonalNightlyRate] = Field(
+        default_factory=list[SeasonalNightlyRate]
+    )
     tags: list[KnowledgeTag] = Field(default_factory=list[KnowledgeTag])
 
 
@@ -54,11 +66,17 @@ class KnowledgeSearchResult(ImmutableDTO):
 
 
 class PriceLookupQuery(ImmutableDTO):
-    """Look up a price by item name (concept get_price)."""
+    """
+    Look up a price by item name (concept get_price). With a check-in date
+    (and nights, one by default) a matching room type is quoted for the
+    stay: each night at its season's rate.
+    """
 
     business_id: BusinessId
     item_name: KnowledgeTitle
     language: LanguageTag
+    check_in: LocalDate | None = None
+    nights: NightCount | None = None
 
 
 class PriceLookupResult(ImmutableDTO):
@@ -68,6 +86,7 @@ class PriceLookupResult(ImmutableDTO):
     """
 
     matches: list[KnowledgeItemView] = Field(default_factory=list[KnowledgeItemView])
+    stay_quotes: list[StayQuote] = Field(default_factory=list[StayQuote])
 
 
 class SendLinkQuery(ImmutableDTO):

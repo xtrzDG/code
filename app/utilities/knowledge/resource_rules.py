@@ -10,6 +10,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.dto.resources import (
@@ -23,6 +24,12 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.bookings.constrained_integers import SlotDurationMinutes
 from app.schemas.typings.bookings.strings import ResourceName
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
+from app.utilities.bookings.offer_links import (
+    check_room_type_id,
+    check_service_ids,
+    linked_service_ids,
+)
 from app.utilities.knowledge.opening_hours import validate_opening_intervals
 from app.utilities.knowledge.search_text import fold_words
 
@@ -44,8 +51,12 @@ def build_resource(
     resource_input: ResourceInput,
     existing_resources: Sequence[ResourceDocument],
     now: Microseconds,
+    items: Sequence[KnowledgeItemDocument] = (),
 ) -> ResourceDocument:
-    """A validated new resource with niche defaults for kind and booking unit."""
+    """
+    A validated new resource with niche defaults for kind and booking unit;
+    its services and room type must be items of the business (`items`).
+    """
 
     kind: ResourceKind = (
         resource_input.kind
@@ -70,6 +81,8 @@ def build_resource(
             subject="Resource schedule",
         ),
         is_active=resource_input.is_active,
+        serves_item_ids=check_service_ids(resource_input.serves_item_ids, items),
+        room_type_item_id=check_room_type_id(resource_input.room_type_item_id, items),
         created_at=now,
         updated_at=now,
     )
@@ -80,12 +93,14 @@ def patch_resource(
     patch: ResourcePatch,
     other_resources: Sequence[ResourceDocument],
     now: Microseconds,
+    items: Sequence[KnowledgeItemDocument] = (),
 ) -> ResourceDocument:
     """
     A resource with the fields present in `patch` changed.
 
-    Only `slot_minutes` can be cleared with null; an empty schedule returns
-    the resource to the business hours.
+    Only `slot_minutes` and `room_type_item_id` can be cleared with null; an
+    empty schedule returns the resource to the business hours. Services and
+    the room type must be items of the business (`items`).
     """
 
     provided: set[str] = patch.model_fields_set
@@ -123,6 +138,16 @@ def patch_resource(
             else validate_opening_intervals(patch.schedule, subject="Resource schedule")
         ),
         is_active=existing.is_active if patch.is_active is None else patch.is_active,
+        serves_item_ids=(
+            existing.serves_item_ids
+            if patch.serves_item_ids is None
+            else check_service_ids(patch.serves_item_ids, items)
+        ),
+        room_type_item_id=(
+            check_room_type_id(patch.room_type_item_id, items)
+            if "room_type_item_id" in provided
+            else existing.room_type_item_id
+        ),
         created_at=existing.created_at,
         updated_at=now,
     )
@@ -165,7 +190,13 @@ def check_slot_minutes(
     return slot_minutes
 
 
-def to_resource_view(resource: ResourceDocument) -> ResourceView:
+def to_resource_view(
+    resource: ResourceDocument,
+    items: Sequence[KnowledgeItemDocument] = (),
+) -> ResourceView:
+    """The resource with every service linked to it from either side."""
+
+    served: list[KnowledgeItemId] = linked_service_ids(resource, items)
     return ResourceView(
         id=resource.id,
         business_id=resource.business_id,
@@ -177,6 +208,8 @@ def to_resource_view(resource: ResourceDocument) -> ResourceView:
         slot_minutes=resource.slot_minutes,
         schedule=list(resource.schedule),
         is_active=resource.is_active,
+        serves_item_ids=served,
+        room_type_item_id=resource.room_type_item_id,
         created_at=resource.created_at,
         updated_at=resource.updated_at,
     )
