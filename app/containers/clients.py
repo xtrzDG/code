@@ -13,6 +13,7 @@ from app.clients.http.safe_http_fetcher import SafeHttpFetcher
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
+from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.meta.whatsapp_authentication_client import (
     WhatsAppAuthenticationClient,
 )
@@ -73,6 +74,7 @@ class ClientsContainer(containers.DeclarativeContainer):
     # One Telegram client serves every business bot (token per call).
     telegram_bot_client: Singleton[TelegramBotClient] = Singleton(TelegramBotClient)
     meta_graph_client: Singleton[MetaGraphClient] = Singleton(MetaGraphClient)
+    meta_typing_client: Singleton[MetaTypingClient] = Singleton(MetaTypingClient)
     # Files customers send: platform downloads, speech-to-text (EU project).
     meta_media_client: Singleton[MetaMediaClient] = Singleton(MetaMediaClient)
     telegram_file_client: Singleton[TelegramFileClient] = Singleton(TelegramFileClient)

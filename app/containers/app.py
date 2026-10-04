@@ -191,7 +191,9 @@ class AppContainer(containers.DeclarativeContainer):
         OrchestratorsContainer,
         adapters=adapters,
         config=config,
+        facilitators=facilitators,
         repositories=repositories,
+        time_provider=time_provider,
         use_cases=use_cases,
         utilities=utilities,
     )

@@ -5,6 +5,7 @@ from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.client_health import ClientHealthIssue, ClientHealthStatus
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.dto.admin import AdminClientSummary
+from app.utilities.client_health.reply_speed import is_slow
 
 MANY_HANDOFFS_THRESHOLD: int = 20
 OPEN_QUESTIONS_THRESHOLD: int = 5
@@ -51,6 +52,10 @@ def find_health_issues(
 
     if int(summary.open_unanswered_questions) >= OPEN_QUESTIONS_THRESHOLD:
         issues.append(ClientHealthIssue.OPEN_QUESTIONS)
+
+    # Customers waited: one reply in twenty took over 15 s (last 7 days).
+    if is_slow(summary.reply_speed):
+        issues.append(ClientHealthIssue.SLOW_REPLIES)
 
     is_minutes_exceeded: bool = int(summary.included_voice_minutes) > 0 and int(
         summary.used_voice_minutes

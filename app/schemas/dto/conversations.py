@@ -1,5 +1,6 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
 from app.schemas.constants.channels import ChannelKind
@@ -25,6 +26,7 @@ from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import (
     IsConversationHandedOff,
     IsLlmToolError,
+    IsReplyDeferred,
     IsSandboxConversation,
     ShouldEndCall,
 )
@@ -58,6 +60,11 @@ class InboundMessage(ImmutableDTO):
     that runs again after a crash stores each of them once. `attachments`
     are the voice notes (transcribed), photos (stored) and places the
     worker read from the message, and what it could not read.
+
+    `waiting_since` is when the platform delivered the customer's first
+    unanswered message (the reply's latency counts from it; None: not
+    measured). `is_reply_deferred`: the customer wrote again right after,
+    so this message is stored and answered together with the next one.
     """
 
     business_id: BusinessId
@@ -73,6 +80,8 @@ class InboundMessage(ImmutableDTO):
     attachments: list[MessageAttachment] = Field(
         default_factory=list[MessageAttachment]
     )
+    waiting_since: Microseconds | None = None
+    is_reply_deferred: IsReplyDeferred = False
 
 
 class AssistantReply(ImmutableDTO):
@@ -157,10 +166,19 @@ class LlmRequest(ImmutableDTO):
     # None: the provider client's own timeout and retries (long background
     # work such as autotest judges and menu imports).
     call_limits: LlmCallLimits | None = None
+    # The same transcript in the provider-neutral form (assistant turns as
+    # text and tool calls, without a provider's reasoning): what a model of
+    # another provider is sent when this request's model fails. None: the
+    # transcript is used as it is.
+    fallback_transcript: list[LlmProviderPayload] | None = None
 
 
 class LlmResponse(ImmutableDTO):
-    """Normalized language-model answer plus its verbatim payload to append."""
+    """
+    Normalized language-model answer plus its verbatim payload to append.
+    `fallback_model_id` names the model that answered instead of the
+    requested one (its provider failed or its circuit was open).
+    """
 
     stop_reason: LlmStopReason
     text: MessageText | None = None
@@ -168,6 +186,7 @@ class LlmResponse(ImmutableDTO):
     assistant_turn_payload: LlmProviderPayload
     input_tokens: LlmTokenCount = LlmTokenCount(0)
     output_tokens: LlmTokenCount = LlmTokenCount(0)
+    fallback_model_id: LlmModelId | None = None
 
 
 class CallGreetingRequest(ImmutableDTO):

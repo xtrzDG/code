@@ -29,6 +29,7 @@ class ClientHealthIssue(StrEnum):
     OPEN_QUESTIONS = "open_questions"
     PACKAGE_EXCEEDED = "package_exceeded"
     NEGATIVE_MARGIN = "negative_margin"
+    SLOW_REPLIES = "slow_replies"
 
 
 class AdminClientSort(StrEnum):

@@ -114,16 +114,32 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         ):
             turn: PreparedTurn = self._prepare_turn.run(input_data)
             with bound_log_context(conversation_id=turn.conversation.id):
-                return self._answer(turn)
+                record: ReplyRecord = self._answer(turn, input_data.is_reply_deferred)
+                return self._record_reply.run(
+                    record.model_copy(
+                        update={"waiting_since": input_data.waiting_since}
+                    )
+                )
 
-    def _answer(self, turn: PreparedTurn) -> AssistantReply:
+    def _answer(self, turn: PreparedTurn, is_reply_deferred: bool) -> ReplyRecord:
+        """
+        What to store for the turn. A message the customer followed up
+        right away is only stored (unless it is a signal the platform
+        answers): the next message's reply answers both.
+        """
+
         is_phone: bool = turn.conversation.channel is ChannelKind.PHONE
         signal: CustomerSignalReply | None = self._answer_customer_signal.run(turn)
         if signal is not None:
-            return self._record_reply.run(self._build_signal_record(turn, signal))
+            return self._build_signal_record(turn, signal)
+
+        if is_reply_deferred:
+            return ReplyRecord(
+                turn=turn, is_handed_off=turn.gate is TurnGate.STAFF_SILENCE
+            )
 
         if turn.gate is not TurnGate.ANSWER:
-            return self._record_reply.run(self._build_gated_record(turn, is_phone))
+            return self._build_gated_record(turn, is_phone)
 
         generated: GeneratedReply = self._generate_reply.run(turn)
         text: MessageText | None = generated.text
@@ -134,22 +150,22 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
                 handoff_ids.append(engine_handoff_id)
 
         is_handed_off: bool = bool(handoff_ids)
-        return self._record_reply.run(
-            ReplyRecord(
-                turn=turn,
-                text=text,
-                guard_verdict=generated.guard_verdict,
-                tool_calls=list(generated.tool_calls),
-                created_booking_ids=list(generated.created_booking_ids),
-                created_lead_ids=list(generated.created_lead_ids),
-                created_handoff_ids=handoff_ids,
-                model_id=generated.model_id,
-                input_tokens=generated.input_tokens,
-                output_tokens=generated.output_tokens,
-                is_handed_off=is_handed_off,
-                should_end_call=is_phone
-                and (is_handed_off or is_farewell(str(turn.customer_text))),
-            )
+        return ReplyRecord(
+            turn=turn,
+            text=text,
+            guard_verdict=generated.guard_verdict,
+            tool_calls=list(generated.tool_calls),
+            created_booking_ids=list(generated.created_booking_ids),
+            created_lead_ids=list(generated.created_lead_ids),
+            created_handoff_ids=handoff_ids,
+            model_id=generated.model_id,
+            input_tokens=generated.input_tokens,
+            output_tokens=generated.output_tokens,
+            is_handed_off=is_handed_off,
+            should_end_call=is_phone
+            and (is_handed_off or is_farewell(str(turn.customer_text))),
+            llm_round_count=generated.llm_round_count,
+            is_fallback_model=generated.is_fallback_model,
         )
 
     def _build_gated_record(self, turn: PreparedTurn, is_phone: bool) -> ReplyRecord:

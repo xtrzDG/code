@@ -82,7 +82,12 @@ class TracingLlmAdapter(LlmAdapterContract):
         )
         trace = LlmGenerationTrace(
             trace_id=CorrelationId(str(uuid.uuid4())),
-            model_id=request.model_id,
+            # The model that answered: the fallback when it stood in.
+            model_id=(
+                request.model_id
+                if response is None or response.fallback_model_id is None
+                else response.fallback_model_id
+            ),
             effort=request.effort,
             offered_tools=[tool.name for tool in request.tools],
             called_tools=(

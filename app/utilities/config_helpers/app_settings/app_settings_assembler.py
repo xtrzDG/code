@@ -61,6 +61,9 @@ from app.utilities.config_helpers.app_settings.public_address_settings_section i
 from app.utilities.config_helpers.app_settings.recordings_settings_section import (
     read_recording_storage_settings,
 )
+from app.utilities.config_helpers.app_settings.reply_speed_settings_section import (
+    read_reply_speed_settings,
+)
 from app.utilities.config_helpers.app_settings.runtime_settings_section import (
     read_runtime_settings,
 )
@@ -128,4 +131,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         ),
         **read_backup_settings(environment_variables),
         **read_media_settings(environment_variables),
+        **read_reply_speed_settings(environment_variables, llm_provider),
     )

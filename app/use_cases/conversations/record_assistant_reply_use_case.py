@@ -30,6 +30,7 @@ from app.utilities.conversations.assistant_texts.business_name_placeholder impor
     fill_business_name,
 )
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost
+from app.utilities.conversations.reply_latency import measure_reply_latency
 
 DISCLOSURE_SEPARATOR: str = "\n"
 
@@ -101,6 +102,12 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                     input_tokens=input_data.input_tokens,
                     output_tokens=input_data.output_tokens,
                     cost_micro_usd=cost.total,
+                    channel=turn.conversation.channel,
+                    reply_latency_ms=measure_reply_latency(
+                        input_data.waiting_since, now
+                    ),
+                    llm_round_count=input_data.llm_round_count,
+                    is_fallback_model=input_data.is_fallback_model,
                     created_at=now,
                     updated_at=now,
                 )

@@ -55,6 +55,8 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         "LLM_JUDGE_MODEL_ID",
         # Call summaries use LLM_MODEL_ID when it is unset.
         "LLM_SUMMARY_MODEL_ID",
+        # The default follows LLM_PROVIDER (the other provider's model).
+        "LLM_FALLBACK_MODEL_ID",
         # Development and tests only; refused in production.
         "OTP_LOG_CODES",
         # The default follows APP_ENV (json in production) and THREADPOOL_SIZE.

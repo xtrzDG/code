@@ -11,6 +11,26 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — reply speed: measured waits, admin p50/p95, SLOW_REPLIES
+
+Spec: `1554f2578d368a1e`
+
+- **Changed** `AdminClientSummary` (`GET /v1/admin/clients`,
+  `GET /v1/admin/clients/{business_id}`) gains `reply_speed`
+  (`ClientReplySpeed`: `reply_count`, `p50_ms`, `p95_ms` and `channels`,
+  one `ChannelReplySpeed` per channel, the busiest first): how long the
+  client's customers waited for the assistant in the last 7 days, from
+  their first unanswered message to the stored reply. Percentiles are
+  null without measured replies.
+- **Changed** `ClientHealthIssue` gains `slow_replies`: at least 10
+  measured replies in the last 7 days and a 95th percentile above 15 s.
+- **Changed** `MessageDocument` (schema version 3) gains `channel`,
+  `reply_latency_ms` (null when not measured: test chats, calls, older
+  messages), `llm_round_count` and `is_fallback_model` (another provider's
+  model answered while the version's own was failing). The transcript
+  also shows a short "one moment" assistant message when a reply took
+  longer than `CHAT_TURN_DEADLINE_SECONDS`.
+
 ## 2026-10-04 — wave 8 together: setup guide, customer media, two-factor sign-in, services
 
 Spec: `94b41f2ced788361`

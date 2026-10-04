@@ -36,9 +36,6 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmMaxOutputTokens,
     LlmToolRoundLimit,
 )
-from app.schemas.typings.conversations.constrained_integers import (
-    LlmTurnSequenceNumber,
-)
 from app.schemas.typings.conversations.strings import (
     LlmProviderPayload,
     MessageText,
@@ -48,10 +45,16 @@ from app.use_cases.conversations.replies.customer_turn import build_customer_tur
 from app.use_cases.conversations.replies.reply_evidence import (
     find_unverified_reply_values,
 )
+from app.use_cases.conversations.replies.transcript_turns import (
+    append_response,
+    append_turn,
+)
 from app.use_cases.conversations.replies.turn_progress import (
     TurnProgress,
     build_reply,
+    record_response,
     record_tool_outcome,
+    start_progress,
 )
 from app.utilities.conversations.customer_text_fencing import new_fence_key
 from app.utilities.conversations.turn_context import build_rewrite_note
@@ -113,12 +116,7 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         stored_turns: list[LlmTurnDocument] = self._llm_turn_repo.list_by_conversation(
             input_data.conversation.id
         )
-        progress = TurnProgress(
-            transcript=[turn.payload for turn in stored_turns],
-            next_sequence_number=(
-                0 if not stored_turns else int(stored_turns[-1].sequence_number) + 1
-            ),
-        )
+        progress: TurnProgress = start_progress(stored_turns)
         tools: list[LlmToolDefinition] = self._tool_registry.list_definitions(
             list(input_data.tool_context.available_tools)
         )
@@ -224,16 +222,12 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
                     transcript=list(progress.transcript),
                     max_output_tokens=self._max_output_tokens,
                     effort=self._effort,
+                    fallback_transcript=list(progress.canonical_transcript),
                 )
             )
-            progress.rounds_used += 1
-            progress.input_tokens += int(response.input_tokens)
-            progress.output_tokens += int(response.output_tokens)
-            self._append(
-                turn,
-                progress,
-                LlmTurnRole.ASSISTANT,
-                response.assistant_turn_payload,
+            record_response(progress, response)
+            append_response(
+                self._llm_turn_repo, self._wall_clock, turn, progress, response
             )
             if not response.tool_calls:
                 return response.text
@@ -269,16 +263,6 @@ class GenerateAssistantReplyUseCase(UseCaseContract[PreparedTurn, GeneratedReply
         role: LlmTurnRole,
         payload: LlmProviderPayload,
     ) -> None:
-        now: Microseconds = self._wall_clock.now_unix()
-        self._llm_turn_repo.append(
-            LlmTurnDocument(
-                conversation_id=turn.conversation.id,
-                sequence_number=LlmTurnSequenceNumber(progress.next_sequence_number),
-                role=role,
-                payload=payload,
-                created_at=now,
-                updated_at=now,
-            )
+        append_turn(
+            self._llm_turn_repo, self._wall_clock, turn, progress, role, payload
         )
-        progress.transcript.append(payload)
-        progress.next_sequence_number += 1

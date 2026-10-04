@@ -4,6 +4,7 @@ from dependency_injector.providers import Container, DependenciesContainer
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
 from app.containers.container_edges import composed_container_edge
+from app.containers.facilitators import FacilitatorsContainer
 from app.containers.orchestrators.account_orchestrators import (
     AccountOrchestratorsContainer,
 )
@@ -60,6 +61,7 @@ from app.containers.orchestrators.value_orchestrators import (
     ValueOrchestratorsContainer,
 )
 from app.containers.repositories import RepositoriesContainer
+from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -78,7 +80,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     use_cases: UseCasesContainer = composed_container_edge(UseCasesContainer)  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
@@ -148,6 +152,11 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         delivery_use_cases=use_cases.deliveries,
         follow_up_use_cases=use_cases.follow_ups,
         conversation_use_cases=use_cases.conversations,
+        reply_speed_use_cases=use_cases.reply_speed,
+        config=config,
+        facilitators=facilitators,
+        time_provider=time_provider,
+        utilities=utilities,
     )
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,

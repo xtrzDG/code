@@ -8,7 +8,12 @@ from app.contracts.repositories.delivery_repositories import (
     OutboundMessageRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
-from app.repositories.document_queries import ascending, field_equals, time_range
+from app.repositories.document_queries import (
+    ascending,
+    field_equals,
+    of_business,
+    time_range,
+)
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
@@ -67,6 +72,21 @@ class InboundEventRepository(InboundEventRepoContract):
             return change(stored)
 
         return self._collection.modify(str(event_id), change_own)
+
+    def list_created_between(
+        self,
+        business_id: BusinessId,
+        created_from: Microseconds,
+        created_before: Microseconds,
+    ) -> list[InboundEventDocument]:
+        return self._collection.list_by_range(
+            time_range(
+                CREATED_AT_FIELD,
+                starting_at=created_from,
+                ending_before=created_before,
+            ),
+            (of_business(business_id),),
+        )
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         return self._collection.delete_by_range(

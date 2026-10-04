@@ -26,6 +26,9 @@ from app.containers.use_cases.pending_change_use_cases import (
     PendingChangeUseCasesContainer,
 )
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
+from app.containers.use_cases.reply_speed_use_cases import (
+    ReplySpeedUseCasesContainer,
+)
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
@@ -184,6 +187,14 @@ class UseCasesContainer(CoreUseCasesContainer):
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+    )
+    reply_speed: ReplySpeedUseCasesContainer = Container(  # type: ignore[assignment]
+        ReplySpeedUseCasesContainer,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
     )
     notifications: NotificationUseCasesContainer = Container(  # type: ignore[assignment]
         NotificationUseCasesContainer,

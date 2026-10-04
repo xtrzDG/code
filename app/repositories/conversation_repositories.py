@@ -37,6 +37,7 @@ from app.repositories.listing.contact_listing import ContactListing
 from app.repositories.listing.conversation_listing import ConversationListing
 from app.repositories.listing.inbox_listing import InboxListing
 from app.repositories.listing.message_listing import MessageListing
+from app.repositories.listing.reply_latency_reading import ReplyLatencyReading
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.contacts import ContactDocument
@@ -186,7 +187,7 @@ class ConversationRepository(
         ]
 
 
-class MessageRepository(MessageListing, MessageRepoContract):
+class MessageRepository(MessageListing, ReplyLatencyReading, MessageRepoContract):
     def save(self, message: MessageDocument) -> None:
         self._store(str(message.id), message)
 

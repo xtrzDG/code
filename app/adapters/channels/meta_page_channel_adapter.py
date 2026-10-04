@@ -1,6 +1,9 @@
 from typing import ClassVar
 
-from app.contracts.channel_clients import MetaGraphApiClientContract
+from app.contracts.channel_clients import (
+    MetaGraphApiClientContract,
+    MetaTypingClientContract,
+)
 from app.contracts.channels import ChannelAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
@@ -60,9 +63,11 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
         self,
         meta_client: MetaGraphApiClientContract,
         app_settings: AppSettings,
+        typing_client: MetaTypingClientContract | None = None,
     ) -> None:
         self._meta_client: MetaGraphApiClientContract = meta_client
         self._app_settings: AppSettings = app_settings
+        self._typing_client: MetaTypingClientContract | None = typing_client
 
     def verify_signature(
         self,
@@ -134,6 +139,19 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             delivered=DeliveredMessageCount(len(parts)),
             provider_message_id=provider_message_id,
         )
+
+    def signal_typing(
+        self,
+        target: ChannelDeliveryTarget,
+        replying_to: ProviderMessageId | None,
+    ) -> None:
+        """`sender_action` "typing_on" through the page token."""
+
+        del replying_to
+        if self._typing_client is None or target.credential is None:
+            return
+
+        self._typing_client.show_page_typing(target.credential, target.channel_user_id)
 
     def _read_event(
         self,

@@ -169,6 +169,21 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             provider_message_id=provider_message_id,
         )
 
+    def signal_typing(
+        self,
+        target: ChannelDeliveryTarget,
+        replying_to: ProviderMessageId | None,
+    ) -> None:
+        """`sendChatAction` "typing" (shown for about 5 seconds)."""
+
+        del replying_to
+        if target.credential is None:
+            return
+
+        self._telegram_client.send_typing_action(
+            target.credential, target.channel_user_id
+        )
+
     def _read_own_phone_number(
         self,
         message: JsonObject,

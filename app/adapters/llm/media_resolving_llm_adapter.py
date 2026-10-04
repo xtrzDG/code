@@ -62,14 +62,24 @@ class MediaResolvingLlmAdapter(LlmAdapterContract):
         return self._inner_adapter.build_tool_results_turn(results)
 
     def complete(self, request: LlmRequest) -> LlmResponse:
-        if not any(
-            STORED_MEDIA_SOURCE in str(payload) for payload in request.transcript
+        """
+        The photos of the transcript, and of the provider-neutral one a
+        fallback model would be sent, resolved before the call.
+        """
+
+        update: dict[str, object] = {}
+        if has_stored_media(request.transcript):
+            update["transcript"] = self._resolve(request.transcript)
+
+        if request.fallback_transcript is not None and has_stored_media(
+            request.fallback_transcript
         ):
+            update["fallback_transcript"] = self._resolve(request.fallback_transcript)
+
+        if not update:
             return self._inner_adapter.complete(request)
 
-        return self._inner_adapter.complete(
-            request.model_copy(update={"transcript": self._resolve(request.transcript)})
-        )
+        return self._inner_adapter.complete(request.model_copy(update=update))
 
     def _resolve(
         self, transcript: list[LlmProviderPayload]
@@ -131,6 +141,10 @@ class MediaResolvingLlmAdapter(LlmAdapterContract):
                 "data": base64.b64encode(photo.content).decode("ascii"),
             },
         }
+
+
+def has_stored_media(transcript: list[LlmProviderPayload]) -> bool:
+    return any(STORED_MEDIA_SOURCE in str(payload) for payload in transcript)
 
 
 def is_stored_photo(block: dict[str, object]) -> bool:

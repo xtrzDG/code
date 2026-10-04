@@ -32,6 +32,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostReport
 from app.schemas.dto.paging import PageRequest
+from app.schemas.dto.reply_speed import ClientReplySpeed
 from app.schemas.typings.assistants.booleans import IsAutotestRunPassed
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
 from app.schemas.typings.assistants.constrained_integers import (
@@ -135,7 +136,8 @@ class OnboardingRequestView(ImmutableDTO):
 class AdminClientSummary(ImmutableDTO):
     """
     One client in the admin list: subscription, assistant quality, staff
-    load, package use in the current period, cost and margin, and health.
+    load, package use in the current period, cost and margin, how fast
+    customers heard back in the last 7 days, and health.
     `setup_option` is how the business is set up; `onboarding_request` the
     done-for-you setup its owner asked the platform team for.
     """
@@ -168,6 +170,7 @@ class AdminClientSummary(ImmutableDTO):
     used_dialogs: UsedDialogs
     included_dialogs: IncludedDialogs
     cost: ClientCostReport
+    reply_speed: ClientReplySpeed = Field(default_factory=ClientReplySpeed)
     health_status: ClientHealthStatus
     health_issues: list[ClientHealthIssue] = Field(
         default_factory=list[ClientHealthIssue]
