@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
+from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
@@ -20,6 +21,7 @@ from app.schemas.constants.billing import (
     InvoiceStatus,
 )
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.domain.billing_profiles import InvoiceLineText
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import (
@@ -84,7 +86,13 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
         manager_notifier: ManagerNotificationFacilitatorContract,
         billing_notice_transformer: TransformerContract[BillingNotice, MessageText],
         wall_clock: WallClock[Microseconds],
+        invoice_issuing: InvoiceIssuingFacilitatorContract,
+        invoice_line_texts_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            list[InvoiceLineText],
+        ],
     ) -> None:
+        self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._business_repo: BusinessRepoContract = business_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
@@ -106,6 +114,10 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
             MessageText,
         ] = billing_notice_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._invoice_line_texts_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            list[InvoiceLineText],
+        ] = invoice_line_texts_transformer
 
     def run(self, input_data: JobTick) -> JobReport:
         issued_count: int = 0
@@ -214,22 +226,22 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
 
         amount: Money = multiply_money(price_per_minute, Decimal(int(overage_minutes)))
         now: Microseconds = self._wall_clock.now_unix()
-        invoice = InvoiceDocument(
+        line = InvoiceDescriptionInput(
+            kind=InvoiceKind.USAGE_OVERAGE,
+            language=business.owner_language,
+            timezone=business.timezone,
+            plan_names=plan.names,
+            billing_period=subscription.billing_period,
+            period_start=window_start,
+            period_end=window_end,
+            overage_voice_minutes=overage_minutes,
+        )
+        draft = InvoiceDocument(
             business_id=business.id,
             subscription_id=subscription.id,
             kind=InvoiceKind.USAGE_OVERAGE,
-            description=self._invoice_description_transformer.transform(
-                InvoiceDescriptionInput(
-                    kind=InvoiceKind.USAGE_OVERAGE,
-                    language=business.owner_language,
-                    timezone=business.timezone,
-                    plan_names=plan.names,
-                    billing_period=subscription.billing_period,
-                    period_start=window_start,
-                    period_end=window_end,
-                    overage_voice_minutes=overage_minutes,
-                )
-            ),
+            description=self._invoice_description_transformer.transform(line),
+            line_texts=self._invoice_line_texts_transformer.transform(line),
             amount_minor=amount.amount_minor,
             currency_code=amount.currency_code,
             status=InvoiceStatus.ISSUED,
@@ -238,6 +250,7 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
             created_at=now,
             updated_at=now,
         )
+        invoice: InvoiceDocument = self._invoice_issuing.issue(business, draft)
         self._invoice_repo.save(invoice)
         return invoice
 

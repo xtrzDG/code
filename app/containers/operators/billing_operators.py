@@ -43,6 +43,15 @@ class BillingOperatorsContainer(containers.DeclarativeContainer):
     process_payment_webhook_operator = platform_pipeline_operator(
         billing_pipelines.process_payment_webhook_pipeline, storage_scope
     )
+    get_billing_profile_operator = pipeline_operator(
+        billing_pipelines.get_billing_profile_pipeline, storage_scope
+    )
+    save_billing_profile_operator = pipeline_operator(
+        billing_pipelines.save_billing_profile_pipeline, storage_scope
+    )
+    get_billing_document_operator = pipeline_operator(
+        billing_pipelines.get_billing_document_pipeline, storage_scope
+    )
 
     # --- Periodic jobs of the background worker.
     end_trials_operator = platform_pipeline_operator(

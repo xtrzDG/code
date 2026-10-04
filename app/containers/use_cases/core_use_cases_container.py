@@ -16,6 +16,7 @@ from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesCont
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
+from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
@@ -29,8 +30,8 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     """
     The edges every use case context draws on and the contexts the others
     build on: accounts (and their two-factor sign-in), the catalog,
-    compliance, knowledge, menu import, scheduling, bookings, the team
-    inbox, follow-ups, exports and reply speed. `UseCasesContainer` extends it
+    compliance, invoicing, knowledge, menu import, scheduling, bookings, the
+    team inbox, follow-ups, exports and reply speed. `UseCasesContainer` extends it
     with the contexts that depend on these and reads them as
     `CoreUseCasesContainer.<name>`; one instance copies all of them
     together, so the overridden edges reach every context.
@@ -93,6 +94,16 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         repositories=repositories,
         time_provider=time_provider,
         utilities=utilities,
+        account_use_cases=accounts,
+    )
+    # Billing details and the invoice and receipt PDFs (1114).
+    invoicing: InvoicingUseCasesContainer = Container(  # type: ignore[assignment]
+        InvoicingUseCasesContainer,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        transformers=transformers,
         account_use_cases=accounts,
     )
     knowledge: KnowledgeUseCasesContainer = Container(  # type: ignore[assignment]

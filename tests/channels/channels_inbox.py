@@ -59,6 +59,7 @@ from app.use_cases.widget.queue_widget_message_use_case import (
     QueueWidgetMessageUseCase,
 )
 from tests.channels.channels_use_cases import ChannelsUseCases
+from tests.invoicing.attachment_fakes import StaticBillingAttachments
 from tests.notifications.staff_alert_fakes import push_subscription_repo
 from tests.notifications.web_push_fakes import (
     FakeWebPushClient,
@@ -127,6 +128,7 @@ class ChannelsInbox(ChannelsUseCases):
         self.take_due_outbound_message = TakeDueOutboundMessageUseCase(
             self.outbound_message_repo, self.job_queue, self.wall_clock
         )
+        self.billing_attachments = StaticBillingAttachments()
         self.send_outbound_message = SendOutboundMessageUseCase(
             self.telegram_adapter,
             self.whatsapp_adapter,
@@ -139,6 +141,7 @@ class ChannelsInbox(ChannelsUseCases):
             self.usage_event_repo,
             self.wall_clock,
             self.whatsapp_adapter,
+            self.billing_attachments,
         )
         self.record_outbound_attempt = RecordOutboundAttemptUseCase(
             self.outbound_message_repo,

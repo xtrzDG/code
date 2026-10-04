@@ -13,6 +13,7 @@ from decimal import Decimal
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.schemas.constants.billing import BillingPeriod, PlanKey, SetupOption
+from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote, QuotedMoney
 from app.schemas.exceptions.application_errors import ValidationFailedError
@@ -165,4 +166,13 @@ def quote_money(
         money=money,
         text=format_money(money, language),
         is_estimated=is_estimated,
+    )
+
+
+def subscription_price(subscription: SubscriptionDocument) -> Money:
+    """The price of one period of a subscription, before tax."""
+
+    return Money(
+        amount_minor=subscription.price_minor,
+        currency_code=subscription.currency_code,
     )

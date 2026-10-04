@@ -56,6 +56,7 @@ const invoice = (overrides: Partial<InvoiceView> = {}): InvoiceView => ({
   period_start: NOW,
   period_end: NOW + 30 * DAY,
   issued_at: NOW,
+  is_receipt_available: false,
   ...overrides,
 });
 

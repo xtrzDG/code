@@ -3,6 +3,33 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class EmailAttachmentFileName(BaseConstrainedTypedString):
+    """
+    Name of a file attached to a platform e-mail: Latin letters, digits,
+    dots, dashes and underscores, so every mail client shows it as it is.
+
+    Example:
+        file_name = EmailAttachmentFileName("receipt-AW-2026-000042.pdf")
+    """
+
+    min_length = 3
+    max_length = 120
+    pattern = r"^[A-Za-z0-9][A-Za-z0-9._\-]*\.[A-Za-z0-9]{1,8}$"
+
+
+class EmailAttachmentMediaType(BaseConstrainedTypedString):
+    """
+    Media type of a file attached to a platform e-mail ("type/subtype").
+
+    Example:
+        media_type = EmailAttachmentMediaType("application/pdf")
+    """
+
+    min_length = 3
+    max_length = 100
+    pattern = r"^[a-z]+/[a-z0-9.+\-]+$"
+
+
 class EmailSenderAddress(BaseConstrainedTypedString):
     """
     "From" of platform e-mails: an address, optionally with a display name.

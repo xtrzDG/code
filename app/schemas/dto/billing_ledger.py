@@ -13,6 +13,7 @@ from app.schemas.constants.billing import (
     UsageKind,
 )
 from app.schemas.domain.billing import SubscriptionDocument
+from app.schemas.domain.billing_profiles import PaymentCardSnapshot
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
@@ -46,7 +47,9 @@ class DueInvoicesRequest(ImmutableDTO):
     the one-time setup fee when included and not invoiced yet).
 
     `status` is ISSUED for a bill to pay, PAID for an automatic charge that
-    already succeeded, FAILED for one that was declined.
+    already succeeded (paid with `payment_card` when the provider named
+    it), FAILED for one that was declined. `charged_amount` is what an
+    automatic charge took (or tried to): its invoice totals exactly that.
     """
 
     business: BusinessDocument
@@ -54,6 +57,8 @@ class DueInvoicesRequest(ImmutableDTO):
     period_start: Microseconds
     status: InvoiceStatus = InvoiceStatus.ISSUED
     payment_reference: PaymentProviderReference | None = None
+    payment_card: PaymentCardSnapshot | None = None
+    charged_amount: Money | None = None
     is_setup_fee_included: IsSetupFeeIncluded = False
 
 

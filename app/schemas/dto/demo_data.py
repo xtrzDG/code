@@ -23,6 +23,7 @@ from app.schemas.domain.billing import (
     SubscriptionDocument,
     UsageEventDocument,
 )
+from app.schemas.domain.billing_profiles import BillingProfileDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -178,6 +179,7 @@ class DemoBusinessActivity(ImmutableDTO):
         default_factory=list[UnansweredQuestionDocument]
     )
     subscription: SubscriptionDocument
+    billing_profile: BillingProfileDocument | None = None
     invoices: list[InvoiceDocument] = Field(default_factory=list[InvoiceDocument])
     usage_events: list[UsageEventDocument] = Field(
         default_factory=list[UsageEventDocument]

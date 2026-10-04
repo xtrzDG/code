@@ -1,10 +1,11 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Singleton
+from dependency_injector.providers import Container, DependenciesContainer, Singleton
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.factories import build_otp_delivery_facilitator
+from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
 from app.containers.privacy_factories import build_suppression_list
 from app.containers.registries import RegistriesContainer
@@ -291,3 +292,16 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         event_text_transformer=transformers.calendar_event_text_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # Invoice numbers, VAT and the invoice and receipt PDFs (1114).
+    invoicing: InvoicingFacilitatorsContainer = Container(  # type: ignore[assignment]
+        InvoicingFacilitatorsContainer,
+        adapters=adapters,
+        config=config,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        transformers=transformers,
+    )
+    invoice_issuing_facilitator = invoicing.invoice_issuing_facilitator
+    billing_document_facilitator = invoicing.billing_document_facilitator
+    billing_email_attachments = invoicing.billing_email_attachments_facilitator

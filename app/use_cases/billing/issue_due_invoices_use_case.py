@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.contracts.transformer_contract import TransformerContract
@@ -11,11 +12,13 @@ from app.schemas.constants.billing import (
     SetupOption,
 )
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.domain.billing_profiles import InvoiceLineText
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import DueInvoicesRequest, InvoiceDescriptionInput
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.use_cases.shared.billing_records import OPEN_INVOICE_STATUSES
+from app.use_cases.shared.invoice_payments import record_invoice_payment
 from app.use_cases.shared.subscription_pricing import price_setup_fee
 from app.utilities.billing.billing_periods import add_billing_period
 
@@ -37,8 +40,10 @@ class IssueDueInvoicesUseCase(
     any service period (an annual one included) never gets it again, for
     example after switching from annual to monthly. Issuing is idempotent:
     an existing invoice of the same period is reused, and an open one takes
-    the requested PAID or FAILED status. VAT is not applied yet; after VAT
-    registration (Georgia: 18 % on top) a VAT line will be added here.
+    the requested PAID or FAILED status. A new invoice is numbered, names
+    the seller and the buyer, and carries the VAT of the tax policy on top
+    of the price (`InvoiceIssuingFacilitator`); a paid one records when
+    and with which card.
     """
 
     def __init__(
@@ -50,7 +55,13 @@ class IssueDueInvoicesUseCase(
             InvoiceDescription,
         ],
         wall_clock: WallClock[Microseconds],
+        invoice_issuing: InvoiceIssuingFacilitatorContract,
+        invoice_line_texts_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            list[InvoiceLineText],
+        ],
     ) -> None:
+        self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._plan_registry: PlanRegistryContract = plan_registry
         self._invoice_description_transformer: TransformerContract[
@@ -58,6 +69,10 @@ class IssueDueInvoicesUseCase(
             InvoiceDescription,
         ] = invoice_description_transformer
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._invoice_line_texts_transformer: TransformerContract[
+            InvoiceDescriptionInput,
+            list[InvoiceLineText],
+        ] = invoice_line_texts_transformer
 
     def run(self, input_data: DueInvoicesRequest) -> list[InvoiceDocument]:
         business: BusinessDocument = input_data.business
@@ -110,28 +125,24 @@ class IssueDueInvoicesUseCase(
             subscription.currency_code,
             SetupOption.DONE_FOR_YOU,
         )
+        line: InvoiceDescriptionInput = self._line(
+            input_data, plan, InvoiceKind.SETUP_FEE, now, now
+        )
         invoice = InvoiceDocument(
             business_id=subscription.business_id,
             subscription_id=subscription.id,
             kind=InvoiceKind.SETUP_FEE,
-            description=self._describe(
-                input_data,
-                plan,
-                InvoiceKind.SETUP_FEE,
-                now,
-                now,
-            ),
+            description=self._invoice_description_transformer.transform(line),
+            line_texts=self._invoice_line_texts_transformer.transform(line),
             amount_minor=setup_fee.amount_minor,
             currency_code=setup_fee.currency_code,
-            status=input_data.status,
             period_start=now,
             period_end=now,
             provider_reference=input_data.payment_reference,
             created_at=now,
             updated_at=now,
         )
-        self._invoice_repo.save(invoice)
-        return invoice
+        return self._save_issued(input_data, invoice, now)
 
     def _issue_period_invoice(
         self,
@@ -155,26 +166,47 @@ class IssueDueInvoicesUseCase(
             subscription.billing_period,
             input_data.business.timezone,
         )
-        invoice = InvoiceDocument(
+        line: InvoiceDescriptionInput = self._line(
+            input_data,
+            plan,
+            InvoiceKind.SERVICE_PERIOD,
+            input_data.period_start,
+            period_end,
+        )
+        draft = InvoiceDocument(
             business_id=subscription.business_id,
             subscription_id=subscription.id,
             kind=InvoiceKind.SERVICE_PERIOD,
-            description=self._describe(
-                input_data,
-                plan,
-                InvoiceKind.SERVICE_PERIOD,
-                input_data.period_start,
-                period_end,
-            ),
+            description=self._invoice_description_transformer.transform(line),
+            line_texts=self._invoice_line_texts_transformer.transform(line),
             amount_minor=subscription.price_minor,
             currency_code=subscription.currency_code,
-            status=input_data.status,
             period_start=input_data.period_start,
             period_end=period_end,
             provider_reference=input_data.payment_reference,
             created_at=now,
             updated_at=now,
         )
+        return self._save_issued(input_data, draft, now)
+
+    def _save_issued(
+        self,
+        input_data: DueInvoicesRequest,
+        draft: InvoiceDocument,
+        now: Microseconds,
+    ) -> InvoiceDocument:
+        """Number, parties and VAT, the requested status, then stored."""
+
+        invoice: InvoiceDocument = self._invoice_issuing.issue(
+            input_data.business,
+            draft,
+            charged=(
+                input_data.charged_amount
+                if draft.kind is InvoiceKind.SERVICE_PERIOD
+                else None
+            ),
+        )
+        record_invoice_payment(invoice, input_data.status, input_data.payment_card, now)
         self._invoice_repo.save(invoice)
         return invoice
 
@@ -190,7 +222,7 @@ class IssueDueInvoicesUseCase(
         ):
             return invoice
 
-        invoice.status = input_data.status
+        record_invoice_payment(invoice, input_data.status, input_data.payment_card, now)
         if input_data.payment_reference is not None:
             invoice.provider_reference = input_data.payment_reference
 
@@ -198,22 +230,23 @@ class IssueDueInvoicesUseCase(
         self._invoice_repo.save(invoice)
         return invoice
 
-    def _describe(
+    def _line(
         self,
         input_data: DueInvoicesRequest,
         plan: PlanDefinition,
         kind: InvoiceKind,
         period_start: Microseconds,
         period_end: Microseconds,
-    ) -> InvoiceDescription:
-        return self._invoice_description_transformer.transform(
-            InvoiceDescriptionInput(
-                kind=kind,
-                language=input_data.business.owner_language,
-                timezone=input_data.business.timezone,
-                plan_names=plan.names,
-                billing_period=input_data.subscription.billing_period,
-                period_start=period_start,
-                period_end=period_end,
-            )
+    ) -> InvoiceDescriptionInput:
+        """What the line is about: worded in the owner language and in each
+        language of the PDFs."""
+
+        return InvoiceDescriptionInput(
+            kind=kind,
+            language=input_data.business.owner_language,
+            timezone=input_data.business.timezone,
+            plan_names=plan.names,
+            billing_period=input_data.subscription.billing_period,
+            period_start=period_start,
+            period_end=period_end,
         )

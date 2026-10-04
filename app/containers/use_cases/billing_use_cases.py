@@ -99,6 +99,8 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         plan_registry=registries.plan_registry,
         invoice_description_transformer=transformers.invoice_description_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+        invoice_issuing=facilitators.invoice_issuing_facilitator,
+        invoice_line_texts_transformer=transformers.invoice_line_texts_transformer,
     )
     assemble_billing_overview_use_case: Factory[
         UseCaseContract[BillingOverviewSource, BillingOverview]
@@ -172,6 +174,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         payment_gateway=adapters.payment_gateway,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        invoice_issuing=facilitators.invoice_issuing_facilitator,
     )
     choose_setup_option_use_case: Factory[ChooseSetupOptionUseCase] = Factory(
         ChooseSetupOptionUseCase,
@@ -270,6 +273,8 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
             manager_notifier=facilitators.manager_notification_facilitator,
             billing_notice_transformer=transformers.billing_notice_transformer,
             wall_clock=time_provider.microsecond_wall_clock,
+            invoice_issuing=facilitators.invoice_issuing_facilitator,
+            invoice_line_texts_transformer=transformers.invoice_line_texts_transformer,
         )
     )
     # The day's NBG and ECB rates stored as dated rows (periodic job).

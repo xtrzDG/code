@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
+from app.schemas.configurations.app_settings import AppSettings
 from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCase
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
@@ -61,8 +62,9 @@ class BillingUseCases(BillingInfrastructure):
         self,
         plan_registry: PlanRegistryContract | None = None,
         exchange_rate_registry: ExchangeRateRegistryContract | None = None,
+        settings: AppSettings | None = None,
     ) -> None:
-        super().__init__(plan_registry, exchange_rate_registry)
+        super().__init__(plan_registry, exchange_rate_registry, settings)
         self.product_events = RecordingProductEvents()
         resolver = LocalizedTextResolver()
         wall_clock: WallClock[Microseconds] = self.clock.wall_clock
@@ -74,6 +76,7 @@ class BillingUseCases(BillingInfrastructure):
             session_assurance=SessionAssuranceContext(),
             app_settings=ACCESS_SETTINGS,
         )
+        self.authorize = authorize
         self.assemble_overview = AssembleBillingOverviewUseCase(
             subscription_repo=self.subscription_repo,
             invoice_repo=self.invoice_repo,
@@ -89,6 +92,8 @@ class BillingUseCases(BillingInfrastructure):
             plan_registry=self.plan_registry,
             invoice_description_transformer=self.invoice_description_transformer,
             wall_clock=wall_clock,
+            invoice_issuing=self.invoicing.invoice_issuing,
+            invoice_line_texts_transformer=self.invoice_line_texts_transformer,
         )
         self.get_overview = GetBillingOverviewUseCase(
             authorize_business_access=authorize,
@@ -135,6 +140,7 @@ class BillingUseCases(BillingInfrastructure):
             payment_gateway=self.payment_gateway,
             app_settings=self.settings,
             wall_clock=wall_clock,
+            invoice_issuing=self.invoicing.invoice_issuing,
         )
         self.choose_setup_option = ChooseSetupOptionUseCase(
             subscription_repo=self.subscription_repo,
@@ -220,6 +226,8 @@ class BillingUseCases(BillingInfrastructure):
             manager_notifier=self.notifier,
             billing_notice_transformer=self.notice_transformer,
             wall_clock=wall_clock,
+            invoice_issuing=self.invoicing.invoice_issuing,
+            invoice_line_texts_transformer=self.invoice_line_texts_transformer,
         )
         self.compute_client_cost = ComputeClientCostUseCase(
             business_repo=self.business_repo,

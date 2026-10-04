@@ -78,6 +78,7 @@ from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
+from app.utilities.storage.invoicing_collections import INVOICING_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
@@ -285,6 +286,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *ACCESS_COLLECTIONS,
     *TEACHING_COLLECTIONS,  # The owner's own checks (1112).
     *PRIVACY_COLLECTIONS,
+    *INVOICING_COLLECTIONS,  # Billing details, invoice numbers (1114).
 )
 
 

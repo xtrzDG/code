@@ -242,6 +242,14 @@ services:
         sync: false
       - key: FLITT_SECRET_KEY
         sync: false
+      # the seller on invoices (SELLER_LEGAL_NAME, SELLER_COUNTRY_CODE and
+      # PLATFORM_VAT_REGISTERED have defaults; docs/LAUNCH.md 4.7.1)
+      - key: SELLER_TAX_ID
+        sync: false
+      - key: SELLER_ADDRESS
+        sync: false
+      - key: SELLER_EMAIL
+        sync: false
       # observability
       - key: LANGFUSE_PUBLIC_KEY
         sync: false
@@ -554,6 +562,21 @@ services:
           type: web
           name: workshop-api
           envVarKey: FLITT_SECRET_KEY
+      - key: SELLER_TAX_ID
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_TAX_ID
+      - key: SELLER_ADDRESS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_ADDRESS
+      - key: SELLER_EMAIL
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: SELLER_EMAIL
       - key: LANGFUSE_PUBLIC_KEY
         fromService:
           type: web

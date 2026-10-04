@@ -3,18 +3,25 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
+from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
 from app.contracts.orchestrator_contract import OrchestratorContract
+from app.orchestrators.billing.payment_webhook_orchestrator import (
+    PaymentWebhookOrchestrator,
+)
 from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
 from app.schemas.dto.billing_cabinet import CheckoutSessionView, SubscribeCommand
+from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
 
 
 class BillingOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Orchestrators of billing and payments: the overview, trials, plans,
-    checkout, the payment webhook and the periodic billing jobs.
+    checkout, the payment webhook, the billing details and invoice PDFs,
+    and the periodic billing jobs.
     """
 
     billing_use_cases: BillingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    invoicing_use_cases: InvoicingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Subscribing with payment now: open, switch plan, checkout.
     subscribe_orchestrator: Factory[
@@ -42,8 +49,24 @@ class BillingOrchestratorsContainer(containers.DeclarativeContainer):
     start_checkout_orchestrator = use_case_orchestrator(
         billing_use_cases.start_checkout_use_case
     )
-    process_payment_webhook_orchestrator = use_case_orchestrator(
-        billing_use_cases.process_payment_webhook_use_case
+    # The payment is applied, then each invoice it paid is e-mailed.
+    process_payment_webhook_orchestrator: Factory[
+        OrchestratorContract[PaymentWebhookDelivery, PaymentWebhookReceipt]
+    ] = Factory(
+        PaymentWebhookOrchestrator,
+        process_payment_webhook=billing_use_cases.process_payment_webhook_use_case,
+        send_payment_documents=invoicing_use_cases.send_payment_documents_use_case,
+    )
+
+    # --- Billing details and the invoice and receipt PDFs.
+    get_billing_profile_orchestrator = use_case_orchestrator(
+        invoicing_use_cases.get_billing_profile_use_case
+    )
+    save_billing_profile_orchestrator = use_case_orchestrator(
+        invoicing_use_cases.save_billing_profile_use_case
+    )
+    get_billing_document_orchestrator = use_case_orchestrator(
+        invoicing_use_cases.get_billing_document_use_case
     )
 
     # --- Periodic jobs of the background worker.

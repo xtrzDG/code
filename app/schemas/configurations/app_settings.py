@@ -7,6 +7,7 @@ from app.schemas.configurations.platform_alert_settings import PlatformAlertSett
 from app.schemas.configurations.privacy_settings import PrivacySettings
 from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
+from app.schemas.configurations.seller_settings import SellerSettings
 from app.schemas.configurations.session_settings import SessionSettings
 from app.schemas.configurations.support_settings import SupportSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
@@ -287,3 +288,5 @@ class AppSettings(ImmutableDTO):
     # The suppression list's key and the full exports' link (SUPPRESSION_LIST_KEY,
     # BUSINESS_EXPORT_LINK_HOURS).
     privacy: PrivacySettings = Field(default_factory=PrivacySettings)
+    # The seller on invoices and its VAT (SELLER_*, PLATFORM_VAT_REGISTERED).
+    seller: SellerSettings = Field(default_factory=SellerSettings)

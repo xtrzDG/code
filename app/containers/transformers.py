@@ -39,6 +39,15 @@ from app.transformers.conversations.message_view_transformer import (
     MessageViewTransformer,
 )
 from app.transformers.inbox.inbox_item_transformer import InboxItemTransformer
+from app.transformers.invoicing.billing_document_email_transformer import (
+    BillingDocumentEmailTransformer,
+)
+from app.transformers.invoicing.billing_document_layout_transformer import (
+    BillingDocumentLayoutTransformer,
+)
+from app.transformers.invoicing.invoice_line_texts_transformer import (
+    InvoiceLineTextsTransformer,
+)
 from app.transformers.notifications.booking_cancelled_notification_transformer import (  # noqa: E501
     BookingCancelledNotificationTransformer,
 )
@@ -151,6 +160,23 @@ class TransformersContainer(containers.DeclarativeContainer):
     )
     billing_notice_transformer: Singleton[BillingNoticeTransformer] = Singleton(
         BillingNoticeTransformer,
+        localized_text_resolver=utilities.localized_text_resolver,
+    )
+    # The invoice and receipt PDFs' pages and the e-mail that carries them.
+    billing_document_layout_transformer: Singleton[BillingDocumentLayoutTransformer] = (
+        Singleton(
+            BillingDocumentLayoutTransformer,
+            localized_text_resolver=utilities.localized_text_resolver,
+        )
+    )
+    billing_document_email_transformer: Singleton[BillingDocumentEmailTransformer] = (
+        Singleton(
+            BillingDocumentEmailTransformer,
+            localized_text_resolver=utilities.localized_text_resolver,
+        )
+    )
+    invoice_line_texts_transformer: Singleton[InvoiceLineTextsTransformer] = Singleton(
+        InvoiceLineTextsTransformer,
         localized_text_resolver=utilities.localized_text_resolver,
     )
 

@@ -12,7 +12,11 @@ from app.contracts.repositories.billing_repositories import (
     UsageEventRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import SetupOption, SubscriptionStatus
+from app.schemas.constants.billing import (
+    InvoiceStatus,
+    SetupOption,
+    SubscriptionStatus,
+)
 from app.schemas.domain.billing import (
     InvoiceDocument,
     OnboardingRequestDocument,
@@ -28,8 +32,12 @@ from app.schemas.dto.billing_cabinet import (
     SubscriptionView,
 )
 from app.schemas.dto.billing_ledger import PackageUsageTotals
+from app.schemas.dto.catalog.plan_quotes import QuotedMoney
 from app.schemas.typings.billing.booleans import IsPriceEstimated
-from app.schemas.typings.billing.constrained_integers import OverageVoiceMinutes
+from app.schemas.typings.billing.constrained_integers import (
+    MoneyAmountMinor,
+    OverageVoiceMinutes,
+)
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -53,6 +61,7 @@ from app.use_cases.shared.trial_subscriptions import (
     is_trial_due_at_go_live,
 )
 from app.utilities.billing.billing_periods import find_usage_window
+from app.utilities.billing.invoice_lines import word_invoice_line
 from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.money.money_math import multiply_money
 
@@ -253,20 +262,25 @@ class AssembleBillingOverviewUseCase(
         invoice: InvoiceDocument,
         language: LanguageTag,
     ) -> InvoiceView:
+        def money(amount_minor: MoneyAmountMinor) -> QuotedMoney:
+            return quote_money(
+                Money(amount_minor=amount_minor, currency_code=invoice.currency_code),
+                False,
+                language,
+            )
+
         return InvoiceView(
             id=invoice.id,
             kind=invoice.kind,
-            description=invoice.description,
-            amount=quote_money(
-                Money(
-                    amount_minor=invoice.amount_minor,
-                    currency_code=invoice.currency_code,
-                ),
-                False,
-                language,
-            ),
+            description=word_invoice_line(invoice, language),
+            amount=money(invoice.amount_minor),
             status=invoice.status,
             period_start=invoice.period_start,
             period_end=invoice.period_end,
             issued_at=invoice.created_at,
+            number=invoice.number,
+            tax=money(invoice.tax_minor) if invoice.tax_minor else None,
+            tax_rate_basis_points=invoice.tax_rate_basis_points,
+            paid_at=invoice.paid_at,
+            is_receipt_available=invoice.status is InvoiceStatus.PAID,
         )

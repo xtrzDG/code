@@ -4,6 +4,7 @@ from app.contracts.billing import (
     PaymentGatewayAdapterContract,
     PaymentOrderRepoContract,
 )
+from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -46,7 +47,10 @@ from app.use_cases.shared.billing_records import (
     require_current_subscription,
     sum_invoice_amounts,
 )
-from app.use_cases.shared.subscription_pricing import quote_money
+from app.use_cases.shared.subscription_pricing import (
+    quote_money,
+    subscription_price,
+)
 from app.utilities.billing.billing_periods import (
     get_interval_months,
     to_local_calendar_day,
@@ -69,7 +73,8 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
     nothing to pay. An unpaid period that has already ended is voided and
     a fresh period starting now is billed instead, so a late payment buys
     service from today. Automatic charges of the subscription price start
-    on the local day the paid period ends, never in the past. Every
+    on the local day the paid period ends, never in the past, with the
+    business's VAT on top like its invoices. Every
     checkout is a new provider order, so a payment declined earlier can be
     retried.
     """
@@ -87,7 +92,9 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
         payment_gateway: PaymentGatewayAdapterContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        invoice_issuing: InvoiceIssuingFacilitatorContract,
     ) -> None:
+        self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -138,6 +145,9 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
             ),
         )
         paid_until = max(paid_until, self._wall_clock.now_unix())
+        recurring: Money = self._invoice_issuing.price_with_tax(
+            business, subscription_price(subscription)
+        ).total
         payment_order = PaymentOrderDocument(
             business_id=business.id,
             subscription_id=subscription.id,
@@ -145,7 +155,7 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
             invoice_ids=[invoice.id for invoice in invoices],
             amount_minor=amount.amount_minor,
             currency_code=amount.currency_code,
-            recurring_amount_minor=subscription.price_minor,
+            recurring_amount_minor=recurring.amount_minor,
             recurring_interval_months=get_interval_months(subscription.billing_period),
         )
         session: PaymentCheckoutSession = self._payment_gateway.create_checkout(
@@ -154,10 +164,7 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
                 amount=amount,
                 description=select_order_description(invoices),
                 recurring_charge=RecurringCharge(
-                    amount=Money(
-                        amount_minor=subscription.price_minor,
-                        currency_code=subscription.currency_code,
-                    ),
+                    amount=recurring,
                     interval_months=payment_order.recurring_interval_months,
                     start_date=to_local_calendar_day(paid_until, business.timezone),
                 ),

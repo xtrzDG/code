@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Sequence
 
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.channels import WhatsAppTemplateAdapterContract
@@ -12,8 +13,10 @@ from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.outbound_messages import OutboundTemplate
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.exceptions.application_errors import (
     DeliveryNotConfiguredError,
+    ValidationFailedError,
     WhatsAppTemplateRejectedError,
 )
 from app.schemas.typings.channels.constrained_strings import (
@@ -53,7 +56,8 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
       WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID, in English when Meta refuses
       the staff member's language.
     - E-mail: SMTP (the server of login codes), the first line as subject,
-      a plain and an HTML body with the link as a button.
+      a plain and an HTML body with the link as a button; files attached
+      when the message carries them (invoice and receipt PDFs).
     - SMS: Twilio (the account of login codes), the text as it is.
     - Without the provider of a contact's channel the notification is
       logged (without its text) and counts as delivered outside
@@ -115,6 +119,28 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
 
         self._send_without_provider(contact)
         return None
+
+    def send_with_files(
+        self,
+        contact: ManagerContact,
+        text: MessageText,
+        attachments: Sequence[EmailAttachment],
+    ) -> None:
+        if contact.channel is not ManagerContactChannel.EMAIL:
+            raise ValidationFailedError("Only e-mail carries attached files.")
+
+        if self._email_client is None:
+            self._send_without_provider(contact)
+            return
+
+        email: StaffEmail = build_staff_email(text)
+        self._email_client.send_email(
+            EmailAddress(str(contact.address)),
+            email.subject,
+            email.text_body,
+            email.html_body,
+            attachments,
+        )
 
     def _send_by_telegram(
         self,

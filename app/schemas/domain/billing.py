@@ -12,6 +12,12 @@ from app.schemas.constants.billing import (
     SubscriptionStatus,
     UsageKind,
 )
+from app.schemas.constants.invoicing import TaxTreatment
+from app.schemas.domain.billing_profiles import (
+    InvoiceLineText,
+    InvoiceParty,
+    PaymentCardSnapshot,
+)
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
     MoneyAmountMinor,
@@ -29,6 +35,8 @@ from app.schemas.typings.billing.strings import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.invoicing.constrained_integers import TaxRateBasisPoints
+from app.schemas.typings.invoicing.constrained_strings import InvoiceNumber
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -81,8 +89,19 @@ class InvoiceDocument(BaseDocument):
     """
     Invoice for a service period or the one-time setup fee (concept table
     `invoices`). A setup fee invoice has a zero-length period at its issue time.
+
+    Version 2, the accountant's invoice: its `number` in the seller's
+    yearly series, the `seller` and the `buyer` as they were when it was
+    issued, the price before tax (`subtotal_minor`), the VAT rate, amount
+    and treatment, and once paid when (`paid_at`) and with which card
+    (masked). `amount_minor` stays what is charged: the total with tax.
+    `description` is the line in the owner language as issued;
+    `line_texts` words it in each language the PDFs are written in.
+    All optional: an invoice of version 1 gets its number and parties when
+    its PDF is first asked for, carries no tax, and prints `description`.
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: InvoiceId = Field(default_factory=InvoiceId)
     business_id: BusinessId
     subscription_id: SubscriptionId | None = None
@@ -94,6 +113,16 @@ class InvoiceDocument(BaseDocument):
     period_start: Microseconds
     period_end: Microseconds
     provider_reference: PaymentProviderReference | None = None
+    number: InvoiceNumber | None = None
+    seller: InvoiceParty | None = None
+    buyer: InvoiceParty | None = None
+    subtotal_minor: MoneyAmountMinor | None = None
+    tax_rate_basis_points: TaxRateBasisPoints | None = None
+    tax_minor: MoneyAmountMinor | None = None
+    tax_treatment: TaxTreatment | None = None
+    paid_at: Microseconds | None = None
+    payment_card: PaymentCardSnapshot | None = None
+    line_texts: list[InvoiceLineText] = Field(default_factory=list[InvoiceLineText])
 
 
 class UsageEventDocument(BaseDocument):

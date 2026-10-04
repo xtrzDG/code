@@ -2,6 +2,10 @@ from typed_time_provider import Microseconds
 
 from app.contracts.billing import PackageUsageWarningRepoContract
 from app.contracts.demo_data import DemoDatasetRegistryContract
+from app.contracts.invoicing import (
+    BillingProfileRepoContract,
+    InvoiceIssuingFacilitatorContract,
+)
 from app.contracts.media_storage import MediaStorageAdapterContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
@@ -43,10 +47,13 @@ from app.contracts.repositories.topic_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus
+from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import DpaAcceptanceDocument
+from app.schemas.dto.billing import Money
 from app.schemas.dto.demo_data import (
     DemoActivityRequest,
     DemoActivityStorage,
@@ -72,7 +79,9 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
     phone calls, bookings, leads, handoffs, unanswered questions, feedback
     after visits, the subscription with its usage, the accepted DPA and
     audit entries, the voice notes and photos customers sent, the topics
-    customers asked about, and when each channel last carried a message.
+    customers asked about, and when each channel last carried a message. A
+    paid demo invoice gets its number and VAT as a payment gives them, with
+    the business's billing details.
     """
 
     def __init__(
@@ -91,6 +100,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         unanswered_question_repo: UnansweredQuestionRepoContract,
         subscription_repo: SubscriptionRepoContract,
         invoice_repo: InvoiceRepoContract,
+        billing_profile_repo: BillingProfileRepoContract,
+        invoice_issuing: InvoiceIssuingFacilitatorContract,
         usage_event_repo: UsageEventRepoContract,
         package_usage_warning_repo: PackageUsageWarningRepoContract,
         dpa_acceptance_repo: DpaAcceptanceRepoContract,
@@ -118,6 +129,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._question_repo: UnansweredQuestionRepoContract = unanswered_question_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
+        self._billing_profile_repo: BillingProfileRepoContract = billing_profile_repo
+        self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
         self._warning_repo: PackageUsageWarningRepoContract = package_usage_warning_repo
         self._dpa_acceptance_repo: DpaAcceptanceRepoContract = dpa_acceptance_repo
@@ -147,7 +160,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._store_customers(activity)
         stamp_demo_channels(self._channel_repo, business.id, activity)
         self._store_feedback(activity)
-        self._store_billing(activity)
+        self._store_billing(business, activity)
         self._store_compliance(input_data, activity)
         return business.id
 
@@ -236,14 +249,29 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         for request in activity.feedback_requests:
             self._feedback_request_repo.insert_if_new(request)
 
-    def _store_billing(self, activity: DemoBusinessActivity) -> None:
+    def _store_billing(
+        self, business: BusinessDocument, activity: DemoBusinessActivity
+    ) -> None:
         self._subscription_repo.save(activity.subscription)
+        if activity.billing_profile is not None:
+            self._billing_profile_repo.save(activity.billing_profile)
         for invoice in activity.invoices:
-            self._invoice_repo.save(invoice)
+            self._invoice_repo.save(self._issue_if_paid(business, invoice))
         for event in activity.usage_events:
             self._usage_event_repo.append(event)
         for warning in activity.package_usage_warnings:
             self._warning_repo.save(warning)
+
+    def _issue_if_paid(
+        self, business: BusinessDocument, invoice: InvoiceDocument
+    ) -> InvoiceDocument:
+        if invoice.status is not InvoiceStatus.PAID:
+            return invoice
+
+        charged = Money(
+            amount_minor=invoice.amount_minor, currency_code=invoice.currency_code
+        )
+        return self._invoice_issuing.issue(business, invoice, charged=charged)
 
     def _store_compliance(
         self,

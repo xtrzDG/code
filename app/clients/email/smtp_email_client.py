@@ -1,12 +1,13 @@
 import smtplib
 import ssl
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, parseaddr
 
 from app.contracts.messaging_clients import EmailSenderClientContract
 from app.schemas.constants.messaging import SmtpSecurity
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.exceptions.application_errors import (
     DeliveryNotConfiguredError,
     ExternalServiceError,
@@ -94,10 +95,20 @@ class SmtpEmailClient(EmailSenderClientContract):
         subject: EmailSubject,
         text_body: EmailBodyText,
         html_body: EmailBodyText | None,
+        attachments: Sequence[EmailAttachment] = (),
     ) -> None:
         message: EmailMessage = self._build_message(
             recipient, subject, text_body, html_body
         )
+        for attachment in attachments:
+            main_type, _, sub_type = str(attachment.media_type).partition("/")
+            message.add_attachment(
+                attachment.content,
+                maintype=main_type,
+                subtype=sub_type,
+                filename=str(attachment.file_name),
+            )
+
         try:
             connection: smtplib.SMTP = self._connector(
                 self._host,

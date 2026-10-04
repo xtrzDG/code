@@ -1,6 +1,7 @@
 from app.clients.flitt.flitt_client import FlittClient
 from app.contracts.billing import PaymentGatewayAdapterContract
 from app.schemas.constants.payments import PaymentProvider, PaymentStatus
+from app.schemas.domain.billing_profiles import PaymentCardSnapshot
 from app.schemas.dto.billing import Money
 from app.schemas.dto.payments import (
     PaymentCheckoutRequest,
@@ -20,6 +21,8 @@ from app.schemas.typings.billing.strings import (
     PaymentProviderReference,
 )
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
+from app.schemas.typings.invoicing.constrained_strings import PaymentCardLastDigits
+from app.schemas.typings.invoicing.strings import PaymentCardBrand
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
@@ -57,6 +60,8 @@ FLAG_YES: str = "y"
 SUBSCRIPTION_FLAG: str = "Y"
 MAX_ORDER_DESCRIPTION_LENGTH: int = 1024
 MAX_FAILURE_REASON_LENGTH: int = 300
+MAX_CARD_BRAND_LENGTH: int = 30
+CARD_DIGITS_KEPT: int = 4
 FAILED_STATUSES: frozenset[PaymentStatus] = frozenset(
     {PaymentStatus.DECLINED, PaymentStatus.EXPIRED}
 )
@@ -164,6 +169,7 @@ class FlittPaymentGatewayAdapter(PaymentGatewayAdapterContract):
                 if status in FAILED_STATUSES
                 else None
             ),
+            card=read_card(parameters.get("masked_card"), parameters.get("card_type")),
         )
 
     def stop_recurring(self, provider_reference: PaymentProviderReference) -> None:
@@ -234,3 +240,27 @@ def read_failure_reason(raw_reason: object) -> PaymentFailureReason | None:
         return None
 
     return PaymentFailureReason(raw_reason.strip()[:MAX_FAILURE_REASON_LENGTH])
+
+
+def read_card(
+    raw_masked_card: object, raw_card_type: object
+) -> PaymentCardSnapshot | None:
+    """
+    The payment system and the last four digits of Flitt's masked card
+    ("444455XXXXXX1111", "VISA"); nothing else of the card is kept.
+    """
+
+    last_digits: PaymentCardLastDigits | None = None
+    if isinstance(raw_masked_card, str):
+        tail: str = raw_masked_card.strip()[-CARD_DIGITS_KEPT:]
+        if len(tail) == CARD_DIGITS_KEPT and tail.isascii() and tail.isdigit():
+            last_digits = PaymentCardLastDigits(tail)
+
+    brand: PaymentCardBrand | None = None
+    if isinstance(raw_card_type, str) and raw_card_type.strip() != "":
+        brand = PaymentCardBrand(raw_card_type.strip()[:MAX_CARD_BRAND_LENGTH])
+
+    if last_digits is None and brand is None:
+        return None
+
+    return PaymentCardSnapshot(brand=brand, last_digits=last_digits)

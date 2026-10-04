@@ -289,6 +289,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         DemoUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,

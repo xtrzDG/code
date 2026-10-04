@@ -1,7 +1,7 @@
 {
   "collection": "invoices",
   "document_type": "InvoiceDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -12,6 +12,78 @@
       "business_id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "buyer": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "maxLength": 400,
+                    "minLength": 3,
+                    "pattern": "^[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "country_code": {
+                "maxLength": 2,
+                "minLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              "email": {
+                "anyOf": [
+                  {
+                    "maxLength": 254,
+                    "minLength": 6,
+                    "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "legal_name": {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+                "type": "string"
+              },
+              "tax_id": {
+                "anyOf": [
+                  {
+                    "maxLength": 40,
+                    "minLength": 2,
+                    "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9 ./\\-]*[A-Za-z0-9])?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "legal_name",
+              "country_code"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "created_at": {
         "type": "integer"
@@ -38,6 +110,92 @@
         ],
         "type": "string"
       },
+      "line_texts": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "language",
+            "text"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "number": {
+        "anyOf": [
+          {
+            "maxLength": 30,
+            "minLength": 13,
+            "pattern": "^[A-Z0-9]{1,10}-[0-9]{4}-[0-9]{6,12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "paid_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "payment_card": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "brand": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "last_digits": {
+                "anyOf": [
+                  {
+                    "maxLength": 4,
+                    "minLength": 4,
+                    "pattern": "^[0-9]{4}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "period_end": {
         "type": "integer"
       },
@@ -56,8 +214,80 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
+      },
+      "seller": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "maxLength": 400,
+                    "minLength": 3,
+                    "pattern": "^[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "country_code": {
+                "maxLength": 2,
+                "minLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              "email": {
+                "anyOf": [
+                  {
+                    "maxLength": 254,
+                    "minLength": 6,
+                    "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "legal_name": {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+                "type": "string"
+              },
+              "tax_id": {
+                "anyOf": [
+                  {
+                    "maxLength": 40,
+                    "minLength": 2,
+                    "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9 ./\\-]*[A-Za-z0-9])?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "legal_name",
+              "country_code"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "status": {
         "default": "issued",
@@ -73,6 +303,60 @@
         "anyOf": [
           {
             "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "subtotal_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "tax_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "tax_rate_basis_points": {
+        "anyOf": [
+          {
+            "maximum": 10000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "tax_treatment": {
+        "anyOf": [
+          {
+            "enum": [
+              "not_registered",
+              "standard",
+              "reverse_charge",
+              "outside_scope"
+            ],
             "type": "string"
           },
           {

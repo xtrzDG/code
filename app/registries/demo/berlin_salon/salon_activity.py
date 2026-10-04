@@ -12,7 +12,7 @@ from app.registries.demo.berlin_salon.salon_chats import (
 from app.registries.demo.berlin_salon.salon_services import LENA, MEHMET
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
 from app.registries.demo.demo_autotests import finished_run
-from app.registries.demo.demo_billing import paid_subscription
+from app.registries.demo.demo_billing import billing_details, paid_subscription
 from app.registries.demo.demo_lines import assistant, customer
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
@@ -26,6 +26,14 @@ WHATSAPP = ChannelKind.WHATSAPP
 INSTAGRAM = ChannelKind.INSTAGRAM
 WEB = ChannelKind.WEB_CHAT
 PHONE = ChannelKind.PHONE
+# The paid invoice's line in the languages of the PDFs, as the platform
+# words a monthly Chat period (InvoiceLineTextsTransformer).
+SALON_INVOICE_LINES: dict[str, str] = {
+    "en": "Call and message handling service — Chat, monthly",
+    "ru": "Услуга приёма и обработки обращений — Чат, помесячно",
+    "ka": "ზარებისა და შეტყობინებების მიღებისა და დამუშავების მომსახურება — "
+    "ჩატი, ყოველთვიური",
+}
 
 
 def build_salon_activity(
@@ -129,11 +137,19 @@ def build_salon_activity(
         story.business,
         clock.past(-8, "09:00"),
         "flitt-demo-7781",
-        "Call and message handling service — Chat, monthly",
+        SALON_INVOICE_LINES,
     )
     published = request.foundation.assistant_versions[0]
     return story.finish(
         subscription=subscription,
+        billing_profile=billing_details(
+            story.business,
+            "Studio Lindenblatt GmbH",
+            "DE123456789",
+            "Lindenstraße 12\n10969 Berlin",
+            "buchhaltung@lindenblatt.example",
+            clock.past(-9, "18:30"),
+        ),
         invoices=[invoice],
         autotest_run=finished_run(
             story.business.id,

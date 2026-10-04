@@ -158,6 +158,37 @@ Spec: `22e97080fdf6241b`
   `redacted_outbound_messages`, `redacted_inbound_events`,
   `anonymized_feedback_requests` (additive).
 
+## 2026-10-04 — invoices for the accountant: billing details, numbers, VAT, PDF invoices and receipts
+
+Spec: `4012670dcb9c7de5`
+
+- **Added** `GET /v1/businesses/{business_id}/billing/profile` and
+  `PUT /v1/businesses/{business_id}/billing/profile` (owners):
+  `BillingProfileView`, the details invoices print for the business
+  (`legal_name`, `tax_id`, `address`, `billing_email`, `country_code`),
+  `is_saved` (false: the business name and country stand in) and the VAT
+  they lead to (`tax_treatment`, `TaxTreatment`: `not_registered`,
+  `standard`, `reverse_charge`, `outside_scope`; `tax_rate_basis_points`,
+  1800 = 18 %). The `PUT` body takes the five fields (`tax_id`, `address`
+  and `billing_email` nullable) and answers 422 for a country that is not
+  a country (reason on `country_code`). Saving is audited.
+- **Added** `GET /v1/businesses/{business_id}/billing/invoices/{invoice_id}/documents/{document_kind}`
+  (owners; `document_kind` `invoice` or `receipt`, optional `language`,
+  a BCP 47 tag, else the owner's; written in English, Russian and
+  Georgian, other languages read English): the numbered invoice or the
+  receipt of a paid one as `application/pdf`, with
+  `Content-Disposition: attachment` (`invoice-AW-2026-000042.pdf`) and
+  `Cache-Control: private, no-store`. An invoice issued before numbering
+  gets its number at the first download; 409 for a receipt of an unpaid
+  invoice or a void invoice without a number; 404 for another kind.
+  Every download is audited.
+- **Changed** `InvoiceView` (`GET /billing`) gains `number` (null until
+  issued), `tax` (formatted, null without VAT), `tax_rate_basis_points`,
+  `paid_at` and `is_receipt_available`; its `description` is the line in
+  the display language without its dates (English, Russian or Georgian,
+  worded when the invoice is issued; an older invoice keeps its line as
+  issued).
+
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 
 Spec: `52268d9934c952f6`

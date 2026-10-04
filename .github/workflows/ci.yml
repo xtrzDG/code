@@ -61,6 +61,13 @@ jobs:
           fi
           age --version
 
+      # The invoice and receipt PDFs (WeasyPrint) lay text out with Pango.
+      - name: Install the PDF engine's libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
+
       - name: Install dependencies
         run: uv sync --frozen
 
@@ -218,6 +225,11 @@ jobs:
             exit 1
           fi
           docker rm --force api
+          # The image lays out a Georgian invoice PDF with its own fonts.
+          docker run --rm --entrypoint python assistant-workshop-backend:ci -c \
+            "from weasyprint import HTML; assert HTML(string='<p>ინვოისი Счёт</p>').write_pdf().startswith(b'%PDF')"
+          docker run --rm --entrypoint fc-list assistant-workshop-backend:ci \
+            ':lang=ka' family | grep -q 'Noto Sans Georgian'
 
       # Fails on HIGH and CRITICAL vulnerabilities that have a fix; reviewed
       # exceptions go to .trivyignore with a reason and an expiry date.
@@ -280,6 +292,13 @@ jobs:
           python-version: "3.14"
           enable-cache: true
           cache-dependency-glob: uv.lock
+
+      # The invoice and receipt downloads render PDFs (WeasyPrint, Pango).
+      - name: Install the PDF engine's libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
 
       - name: Install API dependencies
         working-directory: .

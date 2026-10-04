@@ -55,6 +55,9 @@ from app.transformers.billing.billing_notice_transformer import BillingNoticeTra
 from app.transformers.billing.invoice_description_transformer import (
     InvoiceDescriptionTransformer,
 )
+from app.transformers.invoicing.invoice_line_texts_transformer import (
+    InvoiceLineTextsTransformer,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.billing.billing_fakes import AdjustableClock, RecordingNotifier
 from tests.billing.billing_settings import (
@@ -65,6 +68,7 @@ from tests.billing.billing_settings import (
 )
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
+from tests.billing.invoicing_parts import InvoicingParts, build_invoicing_parts
 
 
 class BillingInfrastructure:
@@ -74,11 +78,15 @@ class BillingInfrastructure:
         self,
         plan_registry: PlanRegistryContract | None = None,
         exchange_rate_registry: ExchangeRateRegistryContract | None = None,
+        settings: AppSettings | None = None,
     ) -> None:
         self.clock = AdjustableClock()
         self.notifier = RecordingNotifier()
         self.flitt = FlittSandbox()
-        self.settings: AppSettings = build_settings()
+        self.settings: AppSettings = settings or build_settings()
+        self.invoicing: InvoicingParts = build_invoicing_parts(
+            self.settings.seller, self.clock.wall_clock
+        )
         self.plan_registry: PlanRegistryContract = plan_registry or PlanRegistry()
         self.exchange_rate_registry: ExchangeRateRegistryContract = (
             exchange_rate_registry or rate_registry()
@@ -150,4 +158,5 @@ class BillingInfrastructure:
             app_base_url=PublicBaseUrl(APP_BASE_URL),
         )
         self.invoice_description_transformer = InvoiceDescriptionTransformer(resolver)
+        self.invoice_line_texts_transformer = InvoiceLineTextsTransformer(resolver)
         self.notice_transformer = BillingNoticeTransformer(resolver)

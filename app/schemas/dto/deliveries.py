@@ -12,6 +12,7 @@ from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import (
+    OutboundBillingDocuments,
     OutboundMessageDocument,
     OutboundTemplate,
 )
@@ -132,6 +133,8 @@ class StaffNotification(ImmutableDTO):
     subject: StaffAlertSubject | None = None
     deliver_after: Microseconds | None = None
     template: OutboundTemplate | None = None
+    # PDFs of an invoice attached to an e-mail to the billing contact.
+    billing_documents: OutboundBillingDocuments | None = None
 
 
 class OutboundAttempt(ImmutableDTO):

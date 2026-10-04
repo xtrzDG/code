@@ -8,6 +8,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.registries.access.platform_admin_registry import PlatformAdminRegistry
 from app.registries.billing.exchange_rate_registry import ExchangeRateRegistry
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.billing.tax_policy_registry import TaxPolicyRegistry
 from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
 from app.registries.demo.load_dataset_registry import LoadDatasetRegistry
 from app.registries.help.help_article_registry import HelpArticleRegistry
@@ -80,6 +81,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
         ExchangeRateRegistry,
         exchange_rate_repo=repositories.exchange_rate_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # VAT of the seller's invoices (SELLER_COUNTRY_CODE, PLATFORM_VAT_REGISTERED).
+    tax_policy_registry: Singleton[TaxPolicyRegistry] = Singleton(
+        TaxPolicyRegistry, seller=config.app_settings.provided.seller
     )
     call_forwarding_guide_registry: Singleton[CallForwardingGuideRegistry] = Singleton(
         CallForwardingGuideRegistry
