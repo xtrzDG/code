@@ -7,6 +7,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.bookable_offers import StayQuote
 from app.schemas.dto.knowledge import PriceLookupQuery, PriceLookupResult
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.bookings.constrained_integers import NightCount
 from app.utilities.bookings.stay_quotes import quote_stay
 from app.utilities.knowledge.knowledge_item_views import to_item_view
 from app.utilities.knowledge.ranking.price_matching import rank_price_matches
@@ -83,7 +84,9 @@ class GetPriceUseCase(UseCaseContract[PriceLookupQuery, PriceLookupResult]):
             quote: StayQuote | None = quote_stay(
                 item,
                 parse_local_date(query.check_in),
-                DEFAULT_NIGHT_COUNT if query.nights is None else int(query.nights),
+                NightCount(DEFAULT_NIGHT_COUNT)
+                if query.nights is None
+                else query.nights,
                 business.currency_code,
             )
             if quote is not None:

@@ -216,7 +216,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                 placement,
                 items,
                 local_date,
-                None if input_data.nights is None else int(input_data.nights),
+                input_data.nights,
                 inputs,
             )
             booking = BookingDocument(

@@ -61,7 +61,7 @@ def price_night(item: KnowledgeItemDocument, night: date) -> StayNightPrice | No
 def quote_stay(
     item: KnowledgeItemDocument,
     check_in: date,
-    nights: int,
+    nights: NightCount,
     business_currency_code: CurrencyCode,
 ) -> StayQuote | None:
     """
@@ -70,7 +70,7 @@ def quote_stay(
     """
 
     night_prices: list[StayNightPrice] = []
-    for night in stay_dates(check_in, nights):
+    for night in stay_dates(check_in, int(nights)):
         price: StayNightPrice | None = price_night(item, night)
         if price is None:
             return None
@@ -81,8 +81,8 @@ def quote_stay(
         item_id=item.id,
         item_title=item.title,
         check_in=to_local_date(check_in),
-        check_out=to_local_date(check_in + timedelta(days=nights)),
-        nights=NightCount(nights),
+        check_out=to_local_date(check_in + timedelta(days=int(nights))),
+        nights=nights,
         currency_code=item.currency_code or business_currency_code,
         total_minor=StayPriceMinor(
             sum(int(price.nightly_rate_minor) for price in night_prices)

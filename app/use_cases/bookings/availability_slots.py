@@ -128,7 +128,7 @@ def free_stays(
 ) -> list[AvailableSlot]:
     """Every resource free for the whole stay, with the stay's price when known."""
 
-    nights: int = request.nights or DEFAULT_NIGHT_COUNT
+    nights: NightCount = NightCount(request.nights or DEFAULT_NIGHT_COUNT)
     stays: list[AvailableSlot] = []
     for resource in candidates:
         if resource.booking_unit is not BookingUnit.NIGHT:
@@ -148,7 +148,7 @@ def free_stays(
                 booking_unit=BookingUnit.NIGHT,
                 date=query.date,
                 time=to_time_of_day(request.stay_times.check_in_minute),
-                nights=NightCount(nights),
+                nights=nights,
                 stay_quote=(
                     None
                     if offer is None

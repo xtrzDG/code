@@ -49,6 +49,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
+    NightCount,
 )
 from app.schemas.typings.conversations.strings import MessageText
 from app.use_cases.bookings.booking_support import (
@@ -237,7 +238,7 @@ class RescheduleBookingUseCase(
                 offer,
                 placement.resource.booking_unit,
                 new_date,
-                nights,
+                NightCount(nights),
                 inputs.business.currency_code,
             )
             booking.resource_id = placement.resource.id

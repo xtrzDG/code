@@ -212,7 +212,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                 placement,
                 items,
                 local_date,
-                None if input_data.nights is None else int(input_data.nights),
+                input_data.nights,
                 inputs,
             )
             contact = store_booking_contact(

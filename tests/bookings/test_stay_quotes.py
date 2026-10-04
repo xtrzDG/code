@@ -6,6 +6,7 @@ import pytest
 
 from app.schemas.constants.bookings import BookingRefusalCode
 from app.schemas.exceptions.application_errors import ValidationFailedError
+from app.schemas.typings.bookings.constrained_integers import NightCount
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.bookings.stay_quotes import is_in_season, quote_stay
 from tests.bookings.hotel_fixture import HOLIDAYS, SUMMER, GuestHouse, season
@@ -15,7 +16,7 @@ GEL = CurrencyCode("GEL")
 
 
 def nightly(house: GuestHouse, check_in: date, nights: int) -> list[int]:
-    quote = quote_stay(house.deluxe, check_in, nights, GEL)
+    quote = quote_stay(house.deluxe, check_in, NightCount(nights), GEL)
     assert quote is not None
     return [int(night.nightly_rate_minor) for night in quote.night_prices]
 
@@ -23,7 +24,7 @@ def nightly(house: GuestHouse, check_in: date, nights: int) -> list[int]:
 def test_a_stay_across_two_seasons_is_priced_night_by_night() -> None:
     house = GuestHouse()
 
-    quote = quote_stay(house.deluxe, date(2027, 8, 30), 3, GEL)
+    quote = quote_stay(house.deluxe, date(2027, 8, 30), NightCount(3), GEL)
 
     assert quote is not None
     assert (quote.check_in, quote.check_out, quote.nights) == (
@@ -66,8 +67,8 @@ def test_without_a_base_rate_a_night_outside_every_season_has_no_price() -> None
     house = GuestHouse()
     seasonal_only = house.room_type("Garden suite", None, [season(*SUMMER)])
 
-    assert quote_stay(seasonal_only, date(2027, 8, 1), 2, GEL) is not None
-    assert quote_stay(seasonal_only, date(2027, 8, 31), 2, GEL) is None
+    assert quote_stay(seasonal_only, date(2027, 8, 1), NightCount(2), GEL) is not None
+    assert quote_stay(seasonal_only, date(2027, 8, 31), NightCount(2), GEL) is None
 
 
 def test_get_price_quotes_the_deluxe_room_for_three_nights_in_august() -> None:

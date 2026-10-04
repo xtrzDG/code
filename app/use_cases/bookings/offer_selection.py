@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from datetime import date
 from typing import NamedTuple
 
-from app.schemas.constants.bookings import BookingRefusalCode, BookingUnit, ResourceKind
+from app.schemas.constants.bookings import BookingRefusalCode, ResourceKind
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookable_offers import BookingPrice
@@ -24,6 +24,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
     BookingValueMinor,
+    NightCount,
     PartySize,
 )
 from app.schemas.typings.bookings.prefixed_id import ResourceId
@@ -40,7 +41,6 @@ from app.utilities.bookings.bookable_offers import (
 )
 from app.utilities.bookings.booking_values import offer_of_booking, price_booking
 from app.utilities.bookings.target_resolution import resolve_resource, resolve_service
-from app.utilities.scheduling.booking_placement import DEFAULT_NIGHT_COUNT
 from app.utilities.scheduling.placement import Placement
 from app.utilities.scheduling.placement_errors import booking_refusal_reason
 from app.utilities.scheduling.resource_selection import (
@@ -234,7 +234,7 @@ def price_placement(
     placement: Placement,
     items: Sequence[KnowledgeItemDocument],
     local_date: date,
-    nights: int | None,
+    nights: NightCount | None,
     inputs: SchedulingInputs,
 ) -> BookedOffer:
     """The booked offer (a room's room type when none was named) and its value."""
@@ -248,14 +248,7 @@ def price_placement(
             offer,
             placement.resource.booking_unit,
             local_date,
-            nights_of(placement.resource, nights),
+            nights,
             inputs.business.currency_code,
         ),
     )
-
-
-def nights_of(resource: ResourceDocument, nights: int | None) -> int:
-    if resource.booking_unit is not BookingUnit.NIGHT:
-        return 0
-
-    return nights or DEFAULT_NIGHT_COUNT

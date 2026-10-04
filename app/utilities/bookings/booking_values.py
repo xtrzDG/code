@@ -15,10 +15,14 @@ from app.schemas.constants.bookings import BookingUnit
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookable_offers import BookingPrice, StayQuote
-from app.schemas.typings.bookings.constrained_integers import BookingValueMinor
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingValueMinor,
+    NightCount,
+)
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.bookings.bookable_offers import is_bookable_item
 from app.utilities.bookings.stay_quotes import quote_stay
+from app.utilities.scheduling.booking_placement import DEFAULT_NIGHT_COUNT
 
 
 def offer_of_booking(
@@ -42,17 +46,23 @@ def price_booking(
     offer: KnowledgeItemDocument | None,
     booking_unit: BookingUnit,
     check_in: date,
-    nights: int,
+    nights: NightCount | None,
     business_currency_code: CurrencyCode,
 ) -> BookingPrice | None:
-    """The value of a booking of `offer` (see the module); None without a price."""
+    """
+    The value of a booking of `offer` (see the module); None without a
+    price. A stay is priced for its `nights` (one when not given).
+    """
 
     if offer is None:
         return None
 
     if booking_unit is BookingUnit.NIGHT:
         quote: StayQuote | None = quote_stay(
-            offer, check_in, nights, business_currency_code
+            offer,
+            check_in,
+            NightCount(DEFAULT_NIGHT_COUNT) if nights is None else nights,
+            business_currency_code,
         )
         if quote is None:
             return None

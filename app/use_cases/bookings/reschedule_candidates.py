@@ -12,7 +12,10 @@ from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookable_offers import BookingPrice
-from app.schemas.typings.bookings.constrained_integers import BookingDurationMinutes
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingDurationMinutes,
+    NightCount,
+)
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.bookings.bookable_offers import is_bookable_item, performers_of
 from app.utilities.bookings.booking_values import price_booking
@@ -95,7 +98,7 @@ def reprice_stay(
     offer: KnowledgeItemDocument | None,
     booking_unit: BookingUnit,
     check_in: date,
-    nights: int,
+    nights: NightCount,
     business_currency_code: CurrencyCode,
 ) -> None:
     """A moved stay costs its new nights at their seasonal rates."""
