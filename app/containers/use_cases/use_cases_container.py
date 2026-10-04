@@ -237,7 +237,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     platform_ops: PlatformOpsUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformOpsUseCasesContainer, adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
+        clients=CoreUseCasesContainer.clients, config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,

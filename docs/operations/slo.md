@@ -89,8 +89,10 @@ firing alerts and those resolved within a day, next to everything an
 on-call person needs first: worker pulses, each queue lane's waiting,
 scheduled, running and dead jobs with the oldest wait, the dead letters by
 job (retry or discard them there), channels in ERROR and Meta tokens that
-run out, the database size per table, and the last backup and restore
-drill. Every figure is an indexed count or the system catalog.
+run out within two weeks (the hourly `check_channel_credentials` job asks
+Meta about each token once a day; it needs `META_APP_ID` and
+`META_APP_SECRET`), the database size per table, and the last backup and
+restore drill. Every figure is an indexed count or the system catalog.
 
 **What the job cannot see.** When no worker runs, no check runs. Two
 outside watchers cover that: Sentry Crons expects a check-in of

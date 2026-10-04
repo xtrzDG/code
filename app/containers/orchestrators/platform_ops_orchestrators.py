@@ -34,3 +34,6 @@ class PlatformOpsOrchestratorsContainer(containers.DeclarativeContainer):
     list_incidents_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.list_incidents_use_case
     )
+    check_channel_credentials_orchestrator = use_case_orchestrator(
+        platform_ops_use_cases.check_channel_credentials_use_case
+    )

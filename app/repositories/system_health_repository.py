@@ -5,7 +5,7 @@ from typed_time_provider import Microseconds
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.monitoring import SystemHealthRepoContract
 from app.repositories.document_queries import field_among, field_equals, time_range
-from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -24,6 +24,7 @@ from app.schemas.typings.storage.constrained_integers import (
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
+KIND_FIELD: DocumentFieldPath = DocumentFieldPath("kind")
 LANE_FIELD: DocumentFieldPath = DocumentFieldPath("lane")
 NAME_FIELD: DocumentFieldPath = DocumentFieldPath("name")
 RUN_AT_FIELD: DocumentFieldPath = DocumentFieldPath("run_at")
@@ -38,6 +39,11 @@ OPEN_JOB_STATUSES: tuple[QueuedJobStatus, ...] = (
     QueuedJobStatus.RUNNING,
     QueuedJobStatus.DEAD,
 )
+# Connected channels and those in ERROR (which still get every attempt).
+ACTIVE_CHANNEL_STATUSES: tuple[ChannelStatus, ...] = (
+    ChannelStatus.CONNECTED,
+    ChannelStatus.ERROR,
+)
 MAX_WORKER_PULSES: DocumentQueryLimit = DocumentQueryLimit(50)
 MICROSECOND: int = 1
 
@@ -46,7 +52,8 @@ class SystemHealthRepository(SystemHealthRepoContract):
     """
     The admin system page's reads, platform-wide: queued jobs by the plain
     columns of migration 1093 (doc_status, doc_lane, doc_run_at), worker
-    pulses by beat_at, channels by status and token expiry, and the
+    pulses by beat_at, channels by status and token expiry (and the active
+    Meta channels whose tokens the daily check asks about), and the
     businesses of a few channels by key.
     """
 
@@ -162,6 +169,23 @@ class SystemHealthRepository(SystemHealthRepoContract):
             time_range(CREDENTIAL_EXPIRES_AT_FIELD, ending_before=before),
             limit=limit,
         )
+
+    def list_active_channels(
+        self, kinds: Sequence[ChannelKind], limit: DocumentQueryLimit
+    ) -> list[ChannelDocument]:
+        # The status index selects; the kind only narrows (a filter column).
+        channels: list[ChannelDocument] = []
+        for status in ACTIVE_CHANNEL_STATUSES:
+            for kind in kinds:
+                channels += self._channels.list_by_fields(
+                    [
+                        field_equals(STATUS_FIELD, status),
+                        field_equals(KIND_FIELD, kind),
+                    ],
+                    limit=limit,
+                )
+
+        return channels[: int(limit)]
 
     def get_businesses(
         self, business_ids: Sequence[BusinessId]

@@ -30,3 +30,6 @@ class PlatformOpsPipelinesContainer(containers.DeclarativeContainer):
     list_incidents_pipeline = orchestrator_pipeline(
         platform_ops.list_incidents_orchestrator
     )
+    check_channel_credentials_pipeline = orchestrator_pipeline(
+        platform_ops.check_channel_credentials_orchestrator
+    )

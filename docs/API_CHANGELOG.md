@@ -11,6 +11,33 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — platform health and incidents for the admin
+
+Spec: `3ed157339d00b407`
+
+- **Added** `GET /v1/admin/system` (platform admins): `AdminSystemView`
+  with the platform alerts firing or resolved within a day
+  (`AlertStateView`: code, severity, figure against threshold, runbook),
+  the worker pulses (`WorkerPulseView`, `is_stale`), each queue lane's
+  due, scheduled, running and dead jobs with the oldest wait
+  (`LaneView`), the dead letters per job name (`DeadJobTally`; the jobs
+  themselves stay on `GET /v1/admin/jobs?status=dead`), channels in
+  ERROR and Meta tokens running out within 14 days (`ChannelIssueView`),
+  the database size per table (`TableSizeView`, null `database_bytes`
+  without a database), and the last backup and restore drill
+  (`MaintenanceRunView`, `is_backup_overdue`).
+- **Added** `POST /v1/admin/incidents` (platform admins, step-up): records
+  an outage, a degradation or a personal data breach for the businesses
+  named (`affected_business_ids`), writes an audit entry (`incident`) in
+  each business's log and, for a breach, sends the DPA 12.1 notice to the
+  owners of those businesses (`approximate_subject_count`,
+  `approximate_record_count`, `notice_texts` with English required).
+  Answers `201` with `IncidentView` (`notified_owner_count`,
+  `notice_languages`); `422` when a business does not exist, a time is in
+  the future or the breach notice is incomplete.
+- **Added** `GET /v1/admin/incidents?limit=&cursor=`: the incident log,
+  newest first (`IncidentPage`).
+
 ## 2026-10-04 — wave 8 together: setup guide, customer media, two-factor sign-in, services
 
 Spec: `94b41f2ced788361`

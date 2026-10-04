@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
@@ -34,6 +35,9 @@ from app.use_cases.admin.incidents.create_incident_use_case import (
 )
 from app.use_cases.admin.incidents.list_incidents_use_case import ListIncidentsUseCase
 from app.use_cases.admin.incidents.owner_breach_notices import OwnerBreachNotices
+from app.use_cases.admin.system.check_channel_credentials_use_case import (
+    CheckChannelCredentialsUseCase,
+)
 from app.use_cases.admin.system.get_admin_system_use_case import (
     GetAdminSystemUseCase,
 )
@@ -50,6 +54,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -95,6 +100,19 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         database_size=adapters.database_size,
         backup_max_age=config.app_settings.provided.backup.max_age_hours,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Meta channel tokens that run out (the page's "Tokens running out").
+    check_channel_credentials_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            CheckChannelCredentialsUseCase,
+            system_health_repo=repositories.system_health_repo,
+            channel_repo=repositories.channel_repo,
+            secret_cipher=adapters.secret_cipher,
+            token_client=clients.meta_token_debug_client,
+            meta_app_id=config.app_settings.provided.meta_app_id,
+            meta_app_secret=config.app_settings.provided.meta_app_secret,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     # The backup and restore drill commands report their runs.
     record_maintenance_run_use_case: Factory[

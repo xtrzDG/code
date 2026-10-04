@@ -11,6 +11,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.monitoring import (
     MaintenanceRunKind,
@@ -75,6 +76,12 @@ class SystemHealthRepoContract(RepoContract, Protocol):
         self, before: Microseconds, limit: DocumentQueryLimit
     ) -> list[ChannelDocument]:
         """Channels whose token runs out before then, soonest first."""
+        raise NotImplementedError
+
+    def list_active_channels(
+        self, kinds: Sequence[ChannelKind], limit: DocumentQueryLimit
+    ) -> list[ChannelDocument]:
+        """Connected channels (and those in ERROR) of these kinds, any business."""
         raise NotImplementedError
 
     def get_businesses(

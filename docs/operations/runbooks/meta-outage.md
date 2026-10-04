@@ -31,7 +31,10 @@
   (`WHATSAPP_SYSTEM_USER_TOKEN`), create a new system-user token in Meta
   Business Settings and set it on `workshop-api`; redeploy.
 - **Tokens running out:** `/admin/system` lists Meta tokens that run out
-  within 14 days; ask those owners to reconnect before they do.
+  within 14 days; ask those owners to reconnect before they do. The hourly
+  `check_channel_credentials` job asks Meta (`debug_token`, with
+  `META_APP_ID` and `META_APP_SECRET`) about each token once a day; a
+  token Meta no longer accepts shows as expired.
 - **Throughput:** Meta raises messaging limits by quality and volume; the
   outbox retries with backoff, keep it running.
 

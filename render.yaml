@@ -243,6 +243,11 @@ services:
         sync: false
       - key: SENTRY_DSN
         sync: false
+      # platform alerts to the ops chat and inbox (docs/operations/slo.md)
+      - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+        sync: false
+      - key: PLATFORM_ALERT_EMAILS
+        sync: false
 
   - type: worker
     name: workshop-worker
@@ -553,6 +558,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: SENTRY_DSN
+      - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
+      - key: PLATFORM_ALERT_EMAILS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: PLATFORM_ALERT_EMAILS
 
   - type: cron
     name: workshop-backup
