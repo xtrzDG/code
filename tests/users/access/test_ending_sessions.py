@@ -15,6 +15,7 @@ from app.schemas.dto.sessions import (
     RevokeSessionCommand,
     SessionCheck,
 )
+from app.schemas.dto.users import LoginSessionView
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     NotFoundError,
@@ -42,7 +43,7 @@ ADMIN_SETTINGS: dict[str, str] = {"PLATFORM_ADMIN_EMAILS": "platform-admin@examp
 
 def test_revoke_others_kills_the_other_tokens() -> None:
     testbed = build_accounts_testbed()
-    sessions = []
+    sessions: list[LoginSessionView] = []
     for _ in range(3):
         sessions.append(testbed.sign_in_with_phone(GEORGIA_MOBILE))
         testbed.clock.advance(MINUTE)
