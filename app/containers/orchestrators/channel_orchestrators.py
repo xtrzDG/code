@@ -103,6 +103,12 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
     set_whatsapp_staff_template_orchestrator = use_case_orchestrator(
         channel_use_cases.set_whatsapp_staff_template_use_case
     )
+    set_whatsapp_staff_templates_orchestrator = use_case_orchestrator(
+        channel_use_cases.set_whatsapp_staff_templates_use_case
+    )
+    validate_telegram_token_orchestrator = use_case_orchestrator(
+        channel_use_cases.validate_telegram_token_use_case
+    )
     get_widget_snippet_orchestrator = use_case_orchestrator(
         channel_use_cases.get_widget_snippet_use_case
     )

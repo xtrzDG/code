@@ -132,6 +132,12 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
     set_whatsapp_staff_template_pipeline = orchestrator_pipeline(
         channel_orchestrators.set_whatsapp_staff_template_orchestrator
     )
+    set_whatsapp_staff_templates_pipeline = orchestrator_pipeline(
+        channel_orchestrators.set_whatsapp_staff_templates_orchestrator
+    )
+    validate_telegram_token_pipeline = orchestrator_pipeline(
+        channel_orchestrators.validate_telegram_token_orchestrator
+    )
     get_widget_snippet_pipeline = orchestrator_pipeline(
         channel_orchestrators.get_widget_snippet_orchestrator
     )

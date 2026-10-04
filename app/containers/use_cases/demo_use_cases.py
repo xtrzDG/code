@@ -98,6 +98,7 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         media_storage=adapters.media.media_storage,
         conversation_topics_repo=repositories.conversation_topics_repo,
         app_settings=config.app_settings,
+        channel_repo=repositories.channel_repo,
     )
     # `workshop seed-load`: owners and plans, then each business's bulk history.
     prepare_load_businesses_use_case: Factory[

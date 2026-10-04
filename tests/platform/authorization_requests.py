@@ -41,6 +41,9 @@ REQUEST_BODIES: dict[str, JsonObject] = {
         "name": "staff_reply",
         "language_code": "en",
     },
+    f"POST {B}/channels/telegram/validate-token": {
+        "bot_token": "123456789:AAMatrixBusinessBotTokenForTheTest0123"
+    },
     f"PUT {B}/channels/{{channel}}": {
         "bot_token": "123456789:AAMatrixBusinessBotTokenForTheTest0123"
     },

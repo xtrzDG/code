@@ -223,6 +223,9 @@
 
     applyLanguage();
     exposeApi();
+    if (isLivePreview) {
+      showAsPreview();
+    }
     // data-open only sets the first view of the tab session: once the visitor
     // has opened or closed the chat, their choice is kept on every page (a
     // full-screen panel on a phone must not come back on each page). A

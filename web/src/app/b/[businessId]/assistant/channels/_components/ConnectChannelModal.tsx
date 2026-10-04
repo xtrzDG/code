@@ -5,9 +5,11 @@ import { useState, type FormEvent } from "react";
 import { useCountries } from "@/api/catalog";
 import type { ErrorMessageOverrides } from "@/api/errors";
 import { useBusiness } from "@/components/business/BusinessContext";
+import { IconChevronDown } from "@/components/icons";
 import { Button, Field, Input, Modal, Select } from "@/components/ui";
 import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import { countryFlag } from "@/lib/countries";
 
 import type { ConnectableChannel } from "../_lib/channels";
@@ -20,15 +22,19 @@ import {
   type ConnectFieldError,
   type ConnectForm,
 } from "../_lib/connectForm";
-import { CHANNEL_NAMES, CHANNEL_STEPS, FIELD_ERRORS, FIELD_LABELS } from "./channelMeta";
+import { CHANNEL_NAMES, CHANNEL_STEPS, FIELD_ERRORS, FIELD_LABELS, META_INTROS } from "./channelMeta";
+import { TelegramGuide } from "./TelegramGuide";
 
 const SECRET_FIELDS: ReadonlySet<ConnectField> = new Set(["botToken", "pageAccessToken"]);
 const NUMERIC_FIELDS: ReadonlySet<ConnectField> = new Set(["phoneNumberId", "businessAccountId", "pageId"]);
 const OPTIONAL_FIELDS: ReadonlySet<ConnectField> = new Set(["businessAccountId", "countryHint"]);
 
 /**
- * The connect (or update) form of one channel: the steps to get the
- * credentials and the fields the API needs for it.
+ * The connect (or update) form of one channel. Telegram is a guided walk
+ * through @BotFather with the key checked as it is pasted; Meta's channels
+ * (WhatsApp, Instagram, Messenger) say in plain words what they need and
+ * keep their technical fields behind "Enter details manually"; the phone
+ * asks for its number.
  */
 export function ConnectChannelModal({
   kind,
@@ -56,21 +62,27 @@ export function ConnectChannelModal({
       title={isReconnect ? t("channels.reconnectTitle", { channel: name }) : t("channels.connectTitle", { channel: name })}
       size="md"
     >
-      {kind ? <ConnectChannelForm
+      {kind === "telegram" ? (
+        <TelegramGuide isPending={isPending} error={error} errorOverrides={errorOverrides} onClose={onClose} onSubmit={onSubmit} />
+      ) : kind ? (
+        <ConnectChannelForm
           key={kind}
           kind={kind}
+          isReconnect={isReconnect}
           isPending={isPending}
           error={error}
           errorOverrides={errorOverrides}
           onClose={onClose}
           onSubmit={onSubmit}
-        /> : null}
+        />
+      ) : null}
     </Modal>
   );
 }
 
 function ConnectChannelForm({
   kind,
+  isReconnect,
   isPending,
   error,
   errorOverrides,
@@ -78,6 +90,7 @@ function ConnectChannelForm({
   onSubmit,
 }: {
   kind: ConnectableChannel;
+  isReconnect: boolean;
   isPending: boolean;
   error: unknown;
   errorOverrides?: ErrorMessageOverrides;
@@ -90,6 +103,9 @@ function ConnectChannelForm({
   const steps = CHANNEL_STEPS[kind] ?? [];
   const [form, setForm] = useState<ConnectForm>({ ...EMPTY_CONNECT_FORM, countryHint: business.country_code });
   const [errors, setErrors] = useState<Partial<Record<ConnectField, ConnectFieldError>>>({});
+  const intro = META_INTROS[kind];
+  // Meta's ids and tokens are for those who know them: behind a click, open when updating.
+  const [showManual, setShowManual] = useState(intro === undefined || isReconnect);
 
   const update = (field: ConnectField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -114,69 +130,91 @@ function ConnectChannelForm({
 
   return (
     <form onSubmit={submit} noValidate className="space-y-5">
-      {steps.length > 0 ? (
-        <section aria-labelledby={`connect-${kind}-steps`} className="rounded-xl border border-line bg-surface-muted/60 p-4">
-          <h3 id={`connect-${kind}-steps`} className="text-sm font-semibold text-ink">
-            {t("channels.howTo")}
-          </h3>
-          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-ink-muted marker:text-ink-subtle">
-            {steps.map((step) => (
-              <li key={step}>{t(step)}</li>
-            ))}
-          </ol>
-        </section>
+      {intro ? (
+        <div className="space-y-3">
+          <p className="text-sm text-ink-muted">{t(intro)}</p>
+          <button
+            type="button"
+            aria-expanded={showManual}
+            aria-controls={`connect-${kind}-manual`}
+            onClick={() => setShowManual((current) => !current)}
+            className="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            {showManual ? t("channelSetup.meta.hideManual") : t("channelSetup.meta.manual")}
+            <IconChevronDown aria-hidden className={cn("size-4 transition-transform", showManual && "rotate-180")} />
+          </button>
+        </div>
       ) : null}
 
-      {fields.map((field) => {
-        const labels = FIELD_LABELS[field];
-        const error = errors[field];
-        if (field === "countryHint") {
-          return (
-            <CountryHintField
-              key={field}
-              label={t(labels.label)}
-              hint={t(labels.hint)}
-              value={form.countryHint}
-              onChange={(value) => update("countryHint", value)}
-            />
-          );
-        }
-        return (
-          <Field
-            key={field}
-            label={t(labels.label)}
-            hint={t(labels.hint)}
-            error={error ? t(FIELD_ERRORS[error]) : undefined}
-            required={!OPTIONAL_FIELDS.has(field)}
-            optionalLabel={OPTIONAL_FIELDS.has(field) ? t("common.optional") : undefined}
-          >
-            {(control) => (
-              <Input
-                {...control}
-                type={SECRET_FIELDS.has(field) ? "password" : field === "phoneNumber" ? "tel" : "text"}
-                inputMode={NUMERIC_FIELDS.has(field) ? "numeric" : field === "phoneNumber" ? "tel" : undefined}
-                autoComplete="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                dir="ltr"
-                value={form[field]}
-                onChange={(event) => update(field, event.target.value)}
-              />
-            )}
-          </Field>
-        );
-      })}
+      {showManual ? (
+        <div id={`connect-${kind}-manual`} className="space-y-5">
+          {steps.length > 0 ? (
+            <section aria-labelledby={`connect-${kind}-steps`} className="rounded-xl border border-line bg-surface-muted/60 p-4">
+              <h3 id={`connect-${kind}-steps`} className="text-sm font-semibold text-ink">
+                {t("channels.howTo")}
+              </h3>
+              <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-ink-muted marker:text-ink-subtle">
+                {steps.map((step) => (
+                  <li key={step}>{t(step)}</li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
 
-      {hasSecrets ? <p className="text-xs text-ink-subtle">{t("channels.secretNote")}</p> : null}
+          {fields.map((field) => {
+            const labels = FIELD_LABELS[field];
+            const error = errors[field];
+            if (field === "countryHint") {
+              return (
+                <CountryHintField
+                  key={field}
+                  label={t(labels.label)}
+                  hint={t(labels.hint)}
+                  value={form.countryHint}
+                  onChange={(value) => update("countryHint", value)}
+                />
+              );
+            }
+            return (
+              <Field
+                key={field}
+                label={t(labels.label)}
+                hint={t(labels.hint)}
+                error={error ? t(FIELD_ERRORS[error]) : undefined}
+                required={!OPTIONAL_FIELDS.has(field)}
+                optionalLabel={OPTIONAL_FIELDS.has(field) ? t("common.optional") : undefined}
+              >
+                {(control) => (
+                  <Input
+                    {...control}
+                    type={SECRET_FIELDS.has(field) ? "password" : field === "phoneNumber" ? "tel" : "text"}
+                    inputMode={NUMERIC_FIELDS.has(field) ? "numeric" : field === "phoneNumber" ? "tel" : undefined}
+                    autoComplete="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    dir="ltr"
+                    value={form[field]}
+                    onChange={(event) => update(field, event.target.value)}
+                  />
+                )}
+              </Field>
+            );
+          })}
+
+          {hasSecrets ? <p className="text-xs text-ink-subtle">{t("channels.secretNote")}</p> : null}
+        </div>
+      ) : null}
       <InlineError error={error} overrides={errorOverrides} />
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose} disabled={isPending}>
           {t("common.cancel")}
         </Button>
-        <Button type="submit" isLoading={isPending} loadingText={t("channels.connecting")}>
-          {t("channels.submitConnect")}
-        </Button>
+        {showManual ? (
+          <Button type="submit" isLoading={isPending} loadingText={t("channels.connecting")}>
+            {t("channels.submitConnect")}
+          </Button>
+        ) : null}
       </div>
     </form>
   );

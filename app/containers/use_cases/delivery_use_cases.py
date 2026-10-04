@@ -110,6 +110,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         StoreInboundMessagesUseCase,
         inbound_event_repo=repositories.inbound_event_repo,
         job_queue=facilitators.job_queue_facilitator,
+        channel_repo=repositories.channel_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         unit_of_work=adapters.storage_unit_of_work,
     )
@@ -164,6 +165,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         outbound_message_repo=repositories.outbound_message_repo,
         job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+        channel_repo=repositories.channel_repo,
     )
     release_inbound_event_use_case: Factory[
         UseCaseContract[InboundFailure, InboundEventDocument | None]

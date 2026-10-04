@@ -11,8 +11,13 @@ from app.schemas.constants.channels import MessageDirection
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.conversation_feed.conversation_views import StaffReplyView
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.channels.channel_health import is_channel_active
 from app.utilities.channels.delivery_targets import find_business_channel
+from app.utilities.channels.staff_templates import (
+    channel_staff_templates,
+    choose_staff_template,
+)
 from app.utilities.conversations.staff_replies import (
     CUSTOMER_SERVICE_WINDOW_MICROSECONDS,
     assess_staff_reply,
@@ -24,6 +29,7 @@ def assess_conversation_reply(
     conversation_repo: ConversationRepoContract,
     message_repo: MessageRepoContract,
     channel_repo: ChannelRepoContract,
+    default_language: LanguageTag,
     now: Microseconds,
 ) -> StaffReplyView:
     """
@@ -31,7 +37,9 @@ def assess_conversation_reply(
     connected (a channel in ERROR still gets every delivery attempt, and a
     working one clears the error), and for windowed channels the customer's
     last message in that channel (in this or a later conversation) sets the
-    window; after it, WhatsApp offers the channel's staff template.
+    window; after it, WhatsApp offers the channel's staff template in the
+    conversation's language, else in the business's `default_language`
+    (`choose_staff_template`), so a Hebrew customer gets the Hebrew one.
     """
 
     channel: ChannelDocument | None = find_business_channel(
@@ -42,7 +50,13 @@ def assess_conversation_reply(
         channel is not None and is_channel_active(channel),
         last_customer_message_at(conversation, conversation_repo, message_repo, now),
         now,
-        None if channel is None else channel.whatsapp_staff_template,
+        None
+        if channel is None
+        else choose_staff_template(
+            channel_staff_templates(channel),
+            conversation.language,
+            default_language,
+        ),
     )
 
 

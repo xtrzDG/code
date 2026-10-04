@@ -1,11 +1,13 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.delivery_repositories import (
     InboundEventRepoContract,
     OutboundMessageRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.deliveries import (
     InboundEventKind,
     InboundEventStatus,
@@ -26,6 +28,9 @@ from app.schemas.typings.deliveries.constrained_strings import (
     OutboundRecipientKey,
 )
 from app.schemas.typings.deliveries.prefixed_id import OutboundMessageId
+from app.utilities.channels.channel_activity import (
+    stamp_business_channel_activity,
+)
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
     encode_outbound_message_payload,
@@ -50,7 +55,9 @@ class FinishInboundEventUseCase(
 
     Queuing the reply again is harmless (the outbox keeps one message per
     reply), so an event whose worker died at any step can be processed
-    again.
+    again. A widget answer is the website chat's outgoing message: the
+    channel notes when (`last_outbound_at`, to the minute); the outbox
+    notes it for the other channels once delivered.
     """
 
     def __init__(
@@ -59,7 +66,9 @@ class FinishInboundEventUseCase(
         outbound_message_repo: OutboundMessageRepoContract,
         job_queue: JobQueueFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        channel_repo: ChannelRepoContract,
     ) -> None:
+        self._channel_repo: ChannelRepoContract = channel_repo
         self._inbound_event_repo: InboundEventRepoContract = inbound_event_repo
         self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
@@ -105,7 +114,23 @@ class FinishInboundEventUseCase(
             current.updated_at = now
             return current
 
-        return self._inbound_event_repo.update(event.business_id, event.id, finish)
+        finished: InboundEventDocument | None = self._inbound_event_repo.update(
+            event.business_id, event.id, finish
+        )
+        if (
+            event.channel is ChannelKind.WEB_CHAT
+            and input_data.text is not None
+            and event.business_id is not None
+        ):
+            stamp_business_channel_activity(
+                self._channel_repo,
+                event.business_id,
+                ChannelKind.WEB_CHAT,
+                MessageDirection.OUTBOUND,
+                now,
+            )
+
+        return finished
 
     def _queue_reply(
         self,

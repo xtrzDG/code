@@ -910,6 +910,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/channels/telegram/validate-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate Telegram Token */
+        post: operations["validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/channels/web/snippet": {
         parameters: {
             query?: never;
@@ -937,6 +954,23 @@ export interface paths {
         get?: never;
         /** Set Whatsapp Staff Template */
         put: operations["set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/whatsapp/staff-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Whatsapp Staff Templates */
+        put: operations["set_whatsapp_staff_templates_v1_businesses__business_id__channels_whatsapp_staff_templates_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4625,13 +4659,23 @@ export interface components {
          *     `account_id` is the public account inside the channel: bot username,
          *     WhatsApp phone number id, page id, Instagram account id, or the E.164
          *     number of the assistant line. With status ERROR, `last_error` is the
-         *     platform's short reason (no secrets) and `last_error_at` its time. The
+         *     platform's short reason (no secrets) and `last_error_at` its time; a
+         *     connected channel keeps the reason of a message the platform refused
+         *     for good the same way. `last_error_reason` says what it means in the
+         *     cabinet's terms (`credential_rejected`: reconnect; `template_rejected`:
+         *     check the WhatsApp templates; `recipient_refused`: one customer could
+         *     not be reached; None when unknown). `last_inbound_at` and
+         *     `last_outbound_at` are when the channel last brought a customer message
+         *     and last carried one of ours (to the minute; None: not yet). The
          *     website chat also reports its saved colour and launcher corner (None:
-         *     the widget's defaults). WhatsApp reports the template staff replies use
-         *     once the 24-hour window has closed (None: no template, such replies are
-         *     refused). `link_state` says whether a connected messenger or phone can
-         *     be shared as a link (the same rule the share links follow); None for a
-         *     channel that is not connected or has no link (the website chat).
+         *     the widget's defaults). WhatsApp reports the templates staff replies use
+         *     once the 24-hour window has closed, one per language
+         *     (`staff_reply_templates`, empty: such replies are refused), and in
+         *     `staff_reply_template` the one of the business's default language (else
+         *     the first; the single template of earlier clients). `link_state` says
+         *     whether a connected messenger or phone can be shared as a link (the
+         *     same rule the share links follow); None for a channel that is not
+         *     connected or has no link (the website chat).
          */
         ChannelView: {
             /** Account Id */
@@ -4647,8 +4691,15 @@ export interface components {
             last_error?: string | null;
             /** Last Error At */
             last_error_at?: number | null;
+            last_error_reason?: components["schemas"]["DeliveryFailureReason"] | null;
+            /** Last Inbound At */
+            last_inbound_at?: number | null;
+            /** Last Outbound At */
+            last_outbound_at?: number | null;
             link_state?: components["schemas"]["ChannelLinkState"] | null;
             staff_reply_template?: components["schemas"]["WhatsAppStaffTemplateView"] | null;
+            /** Staff Reply Templates */
+            staff_reply_templates?: components["schemas"]["WhatsAppStaffTemplateView"][];
             status: components["schemas"]["ChannelStatus"];
             /** Updated At */
             updated_at: number;
@@ -9503,6 +9554,20 @@ export interface components {
             table: string;
             /** Total Bytes */
             total_bytes: number;
+        };
+        /**
+         * TelegramBotCheckView
+         * @description The bot a token opens, as customers will see it: its username, its name
+         *     and its profile photo (a small image inlined as a data URL; None when
+         *     the bot has none or Telegram did not hand it out).
+         */
+        TelegramBotCheckView: {
+            /** Avatar Data Url */
+            avatar_data_url?: string | null;
+            /** Display Name */
+            display_name?: string | null;
+            /** Username */
+            username: string;
         };
         /**
          * TelegramLinkView
@@ -16238,6 +16303,100 @@ export interface operations {
             };
         };
     };
+    validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Bot Token */
+                    bot_token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramBotCheckView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_widget_snippet_v1_businesses__business_id__channels_web_snippet_get: {
         parameters: {
             query?: never;
@@ -16343,6 +16502,105 @@ export interface operations {
                     language_code?: string | null;
                     /** Name */
                     name?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_whatsapp_staff_templates_v1_businesses__business_id__channels_whatsapp_staff_templates_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Templates */
+                    templates?: {
+                        /** Language Code */
+                        language_code: string;
+                        /** Name */
+                        name: string;
+                    }[];
                 };
             };
         };

@@ -27,7 +27,8 @@ describe("buildContentSecurityPolicy", () => {
 
     expect(policy.get("script-src")).toBe("'self' 'nonce-abc' 'strict-dynamic' https://challenges.cloudflare.com");
     expect(policy.get("default-src")).toBe("'self'");
-    expect(policy.get("frame-src")).toBe("https://challenges.cloudflare.com");
+    // Its own pages (the Channels page's live chat preview) and Turnstile.
+    expect(policy.get("frame-src")).toBe("'self' https://challenges.cloudflare.com");
     expect(policy.get("connect-src")).toBe("'self' https://challenges.cloudflare.com");
     expect(policy.get("frame-ancestors")).toBe("'none'");
     expect(policy.get("base-uri")).toBe("'none'");
@@ -58,6 +59,15 @@ describe("buildHostedChatPolicy", () => {
     expect(policy.get("form-action")).toBe("'none'");
     expect(policy.get("frame-ancestors")).toBe("'none'");
     expect(policy.has("upgrade-insecure-requests")).toBe(true);
+  });
+
+  it("lets only the cabinet of the same origin frame the live preview", () => {
+    const preview = directives(
+      buildHostedChatPolicy({ nonce: "n", apiOrigin: null, isDevelopment: false, isHttps: true, isPreview: true }),
+    );
+
+    expect(preview.get("frame-ancestors")).toBe("'self'");
+    expect(preview.get("frame-src")).toBe("'none'");
   });
 
   it("leaves the API out when it is unknown and allows eval only in development", () => {

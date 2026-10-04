@@ -14,6 +14,11 @@
  *                          (once the visitor opens or closes it, that choice
  *                          is kept on the next pages)
  *   data-preview="true"    show the widget even while the chat is switched off
+ *   data-preview="live"    the cabinet's live preview (the hosted chat page
+ *                          framed by the Channels page): like "true", and
+ *                          nothing is sent or kept; the framing page of the
+ *                          same origin may change the colour, corner and
+ *                          language on the fly (window.postMessage)
  *   data-api-base="https://<api>"   API origin (default: the script's origin)
  *   data-mode="page"       the chat fills a page instead of a corner (the
  *                          hosted chat page /c/{slug}): no launcher, always
@@ -74,6 +79,10 @@
   var SESSION_KEY_HEADER = "X-Widget-Session-Key";
   var POSITIONS = ["left", "right"];
   var PAGE_MODE = "page";
+  var LIVE_PREVIEW = "live";
+  // Messages between the live preview and the Channels page that frames it.
+  var PREVIEW_LOOK_MESSAGE = "assistant-workshop:preview-look";
+  var PREVIEW_READY_MESSAGE = "assistant-workshop:preview-ready";
   var WEB_LINK_PATTERN = /^https?:\/\/[^\s]+$/;
   var CONTACT_LINK_PATTERN = /^(?:https:\/\/[^\s]+|tel:\+[0-9]{7,15})$/;
   var CONTACT_NAMES = {

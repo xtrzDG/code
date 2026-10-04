@@ -33,6 +33,8 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "mount_polling.js",
     # starter questions, "Talk to a person", "New conversation", the footer,
     "mount_actions.js",
+    # the cabinet's live preview (colour, corner and language on the fly),
+    "mount_preview.js",
     # failures, rate limits, rendering the log and saving the history.
     "mount_rendering.js",
     # Choosing the interface language, accent colour and corner; texts.

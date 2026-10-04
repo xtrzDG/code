@@ -7,7 +7,7 @@ from app.contracts.repositories.business_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessStatus
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import ChannelKind, ChannelStatus, MessageDirection
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.channels.widget import WidgetMessageCommand
@@ -20,6 +20,7 @@ from app.schemas.exceptions.application_errors import (
 from app.schemas.typings.channels.strings import WidgetContactNameInput
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
+from app.utilities.channels.channel_activity import stamp_channel_activity
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_rate_limits import (
     WIDGET_MESSAGE_LIMITS,
@@ -46,7 +47,8 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
     messages are limited per visitor, per client network (an IPv6 /64), per
     business and for the platform before anything is read (429 with
     Retry-After, `WIDGET_MESSAGE_LIMITS`); the caller chooses the session
-    key, so the other limits bound the model spend.
+    key, so the other limits bound the model spend. The website chat notes
+    that a visitor wrote (`last_inbound_at`, to the minute).
     """
 
     def __init__(
@@ -94,6 +96,12 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
         if business.status is not BusinessStatus.LIVE:
             raise ConflictError(f"The assistant of {business.name} is not live.")
 
+        stamp_channel_activity(
+            self._channel_repo,
+            channel,
+            MessageDirection.INBOUND,
+            self._wall_clock.now_unix(),
+        )
         return InboundMessage(
             business_id=business.id,
             channel=ChannelKind.WEB_CHAT,

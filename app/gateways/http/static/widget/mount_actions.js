@@ -137,7 +137,7 @@
     }
 
     function requestPerson() {
-      if (state.isRequestingPerson || state.isHandedOff) {
+      if (state.isRequestingPerson || state.isHandedOff || isLivePreview) {
         return;
       }
       state.isRequestingPerson = true;

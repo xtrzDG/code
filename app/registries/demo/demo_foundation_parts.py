@@ -55,6 +55,11 @@ from app.schemas.typings.sharing.constrained_strings import (
 )
 
 MINUTES_PER_HOUR: int = 60
+# One template for staff replies, approved in every language the demo
+# restaurant's guests write in (the default language first).
+DEMO_STAFF_TEMPLATES: tuple[tuple[str, str], ...] = tuple(
+    ("staff_reply", language) for language in ("ka", "ru", "en", "he", "ar")
+)
 
 
 def minute_of_day(clock: str) -> int:
@@ -85,16 +90,24 @@ def connected_channel(
     since: Microseconds,
     external_id: str | None = None,
     accent_color: str | None = None,
-    staff_template: tuple[str, str] | None = None,
+    staff_templates: Sequence[tuple[str, str]] = (),
     whatsapp_number: str | None = None,
     instagram_username: str | None = None,
 ) -> ChannelDocument:
     """
-    `staff_template`: the WhatsApp template name and its language;
+    `staff_templates`: the WhatsApp templates for staff replies (name and
+    language each, the business's default language first);
     `whatsapp_number` (digits) and `instagram_username`: the address
     customers open a chat with, which a real connection learns from Meta,
     so the share links can offer the channel.
     """
+    templates: list[WhatsAppStaffTemplate] = [
+        WhatsAppStaffTemplate(
+            name=WhatsAppTemplateName(name),
+            language_code=WhatsAppTemplateLanguageCode(language),
+        )
+        for name, language in staff_templates
+    ]
     return ChannelDocument(
         business_id=business.id,
         kind=kind,
@@ -105,14 +118,8 @@ def connected_channel(
             if accent_color is None
             else WebChatAppearance(accent_color=WidgetAccentColor(accent_color))
         ),
-        whatsapp_staff_template=(
-            None
-            if staff_template is None
-            else WhatsAppStaffTemplate(
-                name=WhatsAppTemplateName(staff_template[0]),
-                language_code=WhatsAppTemplateLanguageCode(staff_template[1]),
-            )
-        ),
+        whatsapp_staff_template=templates[0] if templates else None,
+        whatsapp_staff_templates=templates,
         public_profile=(
             None
             if whatsapp_number is None and instagram_username is None

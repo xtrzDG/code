@@ -465,7 +465,7 @@ section tabs, page titles and the e2e suite read it):
 | Every page (owners) | The banner "N changes are not with your customers yet · Review and apply" while the profile, knowledge, hours, prices or booking rules differ from what customers get (`GET …/assistant/pending-changes`); its sheet lists them in the owner's words and applies them: the tunnel's three stages over `POST`/`GET …/assistant/apply` and the live event stream, a quick check of what changed, then the toast "Your assistant now knows: …"; a stop says why in plain words with the page that fixes it and the conversation that failed (`versions/{id}?checks=problems`) |
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
 | Assistant → Business profile | Six cards (Business, Place, Offer, Hours and bookings, People, Rules) with what each holds and what is left to add; each opens the tunnel's screen in its edit mode: no step counter, no Save, every change saved as the owner types ("Saving…", "Saved") and counted by the banner over the page. The offer is a compact table (name, kind, price, minutes; Enter adds a line, lines pasted from a spreadsheet, "From your website" and "From a menu photo or file" beside it); the niche's usual hours, booking rules and ready answers are only offered until the owner takes or changes them |
-| Assistant → Channels | Connect messengers and see why one stopped, WhatsApp's template for staff replies after 24 hours (name and language), website chat snippet, colour and corner, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
+| Assistant → Channels | Connect messengers (Telegram step by step with the bot shown before connecting; Meta's ids behind "Enter details manually"), how each channel is doing (last message each way, a problem in plain words with its fix), WhatsApp templates for late staff replies per language, website chat colour and corner with a live preview, its code with steps for WordPress, Wix, Tilda and Shopify, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
 | Assistant → Channels → Share | The hosted chat page's link (copy, open, a new address for owners: old addresses keep working) and a link per switched-on channel, tagged with where it goes (`?src=`); a QR code made in the browser (`uqr`) as PNG or SVG, and a printable A6 table card in a business language (an iframe preview printed as is) |
 | Hosted chat page (`/c/{address}`) | Public, for customers: the widget in page mode, full screen on phones, in the visitor's language (Accept-Language among the business's), the business's colour; older addresses and the business id move to the current one; `noindex`, a policy that allows only the API; texts in all widget languages (`lib/hostedChat/`); `/c/{address}/privacy` is the platform's default privacy notice (ka, ru, en) |
 | Assistant → Advanced | Versions (and building one by hand), go-live checklist with fix links, autotests with live progress, publish and rollback with reasons; drafts a newer live version left behind are discarded |
@@ -1178,10 +1178,21 @@ engines (the cabinet's pages are `noindex`) and texts in
 
 ## Channels and sign-in
 
-- `/b/[businessId]/channels`: channel cards (a channel in `error` shows when it
-  stopped and what the platform said), the website chat's look (colour, corner,
-  a sketch and a link to the API's `/widget/demo` with the unsaved choices) and
-  embed code, call forwarding, Google Calendar (connection, calendar, last sync
+- `/b/[businessId]/channels`: channel cards with how each is doing (the last
+  customer message and the last reply, a problem in plain words with the
+  button that fixes it, what the platform said one click away), Telegram
+  guided through @BotFather (copyable `/newbot`, name and suggested username,
+  the pasted key checked with `POST …/channels/telegram/validate-token` to show
+  the bot's name and photo before connecting), Meta's channels explained in
+  plain words with their ids behind "Enter details manually", WhatsApp
+  templates for late replies per language under "For advanced users", the
+  website chat's look (colour, corner) beside a live preview — the hosted chat
+  page `/c/{business}?preview=1` framed from the same origin, in the owner's
+  language when the assistant speaks it, following every choice by
+  `postMessage` before saving (`src/lib/hostedChat/preview.ts`; only that page
+  may be framed, by the cabinet: `frame-ancestors 'self'` and
+  `X-Frame-Options: SAMEORIGIN`) — and the code with steps for any site,
+  WordPress, Wix, Tilda and Shopify, call forwarding, Google Calendar (connection, calendar, last sync
   and its error) and staff Telegram links. Google's consent page returns
   (through the API's public callback) to `/integrations/google-calendar/callback`,
   a route handler that finishes connecting with the owner's session (only the

@@ -1,4 +1,4 @@
-/** The website chat's look: its colour and corner, and the live preview link. */
+/** The website chat's look: its colour and corner, and the live preview's language. */
 
 import type { Schema } from "@/api/types";
 
@@ -59,16 +59,15 @@ export function isSameWidgetLook(left: WidgetLook, right: WidgetLook): boolean {
 }
 
 /**
- * The demo page with the chosen (maybe unsaved) colour, corner and the
- * interface language: /widget/demo?business_id=…&color=…&position=…&language=…
+ * The live preview's first language: the owner's interface language when
+ * the assistant speaks it (exactly, else by base language), else the
+ * assistant's main language.
  */
-export function buildWidgetPreviewUrl(demoUrl: string, look: WidgetLook, language: string): string {
-  const url = new URL(demoUrl);
-  const color = normalizeHexColor(look.color);
-  if (color) {
-    url.searchParams.set("color", color);
-  }
-  url.searchParams.set("position", look.position);
-  url.searchParams.set("language", language);
-  return url.toString();
+export function initialPreviewLanguage(locale: string, languages: readonly string[], defaultLanguage: string): string {
+  const base = (tag: string) => tag.split(/[-_]/)[0]?.toLowerCase() ?? tag;
+  return (
+    languages.find((tag) => tag.toLowerCase() === locale.toLowerCase()) ??
+    languages.find((tag) => base(tag) === base(locale)) ??
+    defaultLanguage
+  );
 }

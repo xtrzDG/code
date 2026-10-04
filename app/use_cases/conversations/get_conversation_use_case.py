@@ -217,6 +217,7 @@ class GetConversationUseCase(
                 self._conversation_repo,
                 self._message_repo,
                 self._channel_repo,
+                business.default_language,
                 now,
             ),
             assignment=build_assignment_view(conversation),

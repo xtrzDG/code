@@ -72,6 +72,35 @@ class PublicBaseUrl(BaseConstrainedTypedString):
     pattern = r"^https?://[^\s/]+(/[^\s]*)?$"
 
 
+class TelegramBotAvatarDataUrl(BaseConstrainedTypedString):
+    """
+    A Telegram bot's profile photo, small, inlined as a data URL for the
+    cabinet (its address at Telegram holds the bot token, so it is never
+    handed out).
+
+    Example:
+        avatar = TelegramBotAvatarDataUrl("data:image/jpeg;base64,/9j/4AAQ")
+    """
+
+    min_length = 24
+    max_length = 200_000
+    pattern = r"^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$"
+
+
+class TelegramBotUserId(BaseConstrainedTypedString):
+    """
+    Telegram's numeric id of a bot (getMe `id`), the user whose profile
+    photos the Bot API lists.
+
+    Example:
+        bot_id = TelegramBotUserId("7012345678")
+    """
+
+    min_length = 1
+    max_length = 20
+    pattern = r"^[0-9]{1,20}$"
+
+
 class TelegramBotUsername(BaseConstrainedTypedString):
     """
     Username of a Telegram bot without "@" (5 to 32 characters).

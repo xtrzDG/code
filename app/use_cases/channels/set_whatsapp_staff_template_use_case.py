@@ -3,44 +3,37 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WhatsAppStaffTemplate
-from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.channels.channel_settings import ChannelView
 from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplateCommand,
     WhatsAppStaffTemplateRequest,
 )
-from app.schemas.exceptions.application_errors import (
-    NotFoundError,
-    ValidationFailedError,
-)
-from app.schemas.typings.compliance.strings import (
-    AuditEntityName,
-    AuditEntityReference,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.use_cases.channels.channel_views import build_channel_view
-from app.utilities.channels.delivery_targets import find_business_channel
-
-CHANNEL_ENTITY: AuditEntityName = AuditEntityName("channel")
+from app.use_cases.channels.staff_template_settings import (
+    audit_template_change,
+    store_staff_templates,
+)
 
 
 class SetWhatsAppStaffTemplateUseCase(
     UseCaseContract[SetWhatsAppStaffTemplateCommand, ChannelView]
 ):
     """
-    Owner names the Meta-approved message template that carries staff
+    Owner names the one Meta-approved message template that carries staff
     replies on WhatsApp once the customer's 24-hour window has closed
     (concept section 6): its name and approved language. The template's
     body must have exactly one parameter; the staff text goes into it.
-    Neither field removes the template, and staff replies outside the
-    window are refused again.
+    Neither field removes it, and staff replies outside the window are
+    refused again.
 
-    The setting belongs to the business's WhatsApp channel (kept while the
+    The single-template form of `SetWhatsAppStaffTemplatesUseCase` (one per
+    language): the channel's templates become this one, or none. The
+    setting belongs to the business's WhatsApp channel (kept while the
     channel is switched off); a business that never connected WhatsApp has
     nothing to set. The change is written to the audit log.
     """
@@ -72,29 +65,19 @@ class SetWhatsAppStaffTemplateUseCase(
             )
         )
         template: WhatsAppStaffTemplate | None = read_staff_template(input_data.request)
-        channel: ChannelDocument | None = find_business_channel(
-            self._channel_repo,
-            business.id,
-            ChannelKind.WHATSAPP,
-        )
-        if channel is None:
-            raise NotFoundError("The whatsapp channel is not connected.")
-
         now: Microseconds = self._wall_clock.now_unix()
-        channel.whatsapp_staff_template = template
-        channel.updated_at = now
-        self._channel_repo.save(channel)
-        self._audit_log_repo.append(
-            AuditLogEntryDocument(
-                business_id=business.id,
-                actor_id=input_data.user_id,
-                action=AuditAction.UPDATE,
-                entity=CHANNEL_ENTITY,
-                entity_id=AuditEntityReference(str(channel.id)),
-                ip_address=input_data.client_ip_address,
-                created_at=now,
-                updated_at=now,
-            )
+        channel: ChannelDocument = store_staff_templates(
+            self._channel_repo,
+            business,
+            [] if template is None else [template],
+            now,
+        )
+        audit_template_change(
+            self._audit_log_repo,
+            channel,
+            input_data.user_id,
+            input_data.client_ip_address,
+            now,
         )
         return build_channel_view(channel)
 

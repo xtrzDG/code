@@ -4,10 +4,12 @@ from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
+    TelegramBotUserId,
     TelegramBotUsername,
 )
 from app.schemas.typings.channels.strings import (
     MetaPageName,
+    TelegramBotDisplayName,
     WhatsAppDisplayPhoneNumber,
 )
 from app.schemas.typings.sharing.constrained_strings import (
@@ -17,9 +19,14 @@ from app.schemas.typings.sharing.constrained_strings import (
 
 
 class TelegramBotProfile(ImmutableDTO):
-    """A Telegram bot as getMe describes it."""
+    """
+    A Telegram bot as getMe describes it: its username, its numeric id and
+    the name customers see (None when getMe left them out).
+    """
 
     username: TelegramBotUsername
+    bot_user_id: TelegramBotUserId | None = None
+    display_name: TelegramBotDisplayName | None = None
 
 
 class MetaPageProfile(ImmutableDTO):
