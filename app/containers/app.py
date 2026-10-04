@@ -67,7 +67,9 @@ class AppContainer(containers.DeclarativeContainer):
         TimeProviderContainer
     )
     utilities: UtilitiesContainer = Container(  # type: ignore[assignment]
-        UtilitiesContainer
+        UtilitiesContainer,
+        config=config,
+        time_provider=time_provider,
     )
     clients: ClientsContainer = Container(  # type: ignore[assignment]
         ClientsContainer,

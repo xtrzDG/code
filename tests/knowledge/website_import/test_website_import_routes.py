@@ -9,6 +9,7 @@ from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.user_authentication import build_current_user_dependency
 from app.gateways.http.website_import_routes import build_website_import_router
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.knowledge.fakes import FakeUserAuthenticationOperator
 from tests.knowledge.routes_fixture import OWNER, STAFF, STRANGER, operator
 from tests.knowledge.website_import.website_import_world import WebsiteImportWorld
@@ -22,7 +23,8 @@ def build_client(world: WebsiteImportWorld) -> TestClient:
                 "staff-token": world.staff_id,
                 "stranger-token": UserId(),
             }
-        )
+        ),
+        SessionAssuranceContext(),
     )
     application = FastAPI()
     install_error_handlers(application)

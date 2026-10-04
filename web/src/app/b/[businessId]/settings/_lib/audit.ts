@@ -63,6 +63,7 @@ export const AUDIT_ACTION_TONES: Record<AuditAction, BadgeTone> = {
   login: "neutral",
   retention_purge: "neutral",
   publish_untested: "warning",
+  mfa_changed: "neutral",
 };
 
 /** Who did it: a team member's name, or null for the platform / unknown users. */

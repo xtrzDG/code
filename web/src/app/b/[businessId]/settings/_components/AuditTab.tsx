@@ -55,9 +55,11 @@ const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   login: "settings.audit.actions.login",
   retention_purge: "settings.audit.actions.retention_purge",
   publish_untested: "settings.audit.actions.publish_untested",
+  mfa_changed: "settings.audit.actions.mfa_changed",
 };
 
-const ACTIONS = Object.keys(ACTION_LABELS) as AuditAction[];
+/** Filter choices: two-factor changes belong to a person, never to a business's log. */
+const ACTIONS = (Object.keys(ACTION_LABELS) as AuditAction[]).filter((action) => action !== "mfa_changed");
 
 /** Operations on personal data, newest first, 50 at a time, filtered on the server. */
 export function AuditTab() {

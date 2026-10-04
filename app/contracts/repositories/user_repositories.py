@@ -11,6 +11,7 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -104,6 +105,22 @@ class OtpChallengeRepoContract(RepoContract, Protocol):
 
 class UserSessionRepoContract(RepoContract, Protocol):
     def save(self, session: UserSessionDocument) -> None:
+        raise NotImplementedError
+
+    def get(self, session_id: UserSessionId) -> UserSessionDocument | None:
+        raise NotImplementedError
+
+    def record_authentication(
+        self,
+        session_id: UserSessionId,
+        auth_level: AuthLevel,
+        authenticated_at: Microseconds,
+    ) -> UserSessionDocument | None:
+        """
+        Set how the session is signed in and when its person last proved it
+        is them (a passed step-up, a confirmed or removed authenticator), in
+        one atomic step; None when the session is gone.
+        """
         raise NotImplementedError
 
     def find_by_token_hash(

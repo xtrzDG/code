@@ -156,6 +156,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         collect_contact_records=collect_contact_records_use_case,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )
     delete_contact_data_use_case: Factory[
         UseCaseContract[ContactDataCommand, ContactErasureResult]
@@ -174,6 +175,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         recording_storage=adapters.recording_storage,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
         note_repo=repositories.conversation_note_repo,
         media_storage=adapters.media.media_storage,
         message_media_repo=repositories.message_media_repo,

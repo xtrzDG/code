@@ -339,3 +339,15 @@ _.tunnel_steps  # app/schemas/dto/analytics/telemetry.py
 _.last_message_attachment  # app/schemas/dto/inbox/inbox_views.py, conversation_views.py
 _.map_url  # app/schemas/dto/media.py (MessageAttachmentView)
 _.is_media_deleted  # app/schemas/dto/media.py (MessageAttachmentView)
+
+# Two-factor sign-in (Account → Security, the sign-in's second step, the
+# step-up dialog, Settings → Team): response fields the cabinet reads.
+_.provisioning_uri  # app/schemas/dto/mfa.py (TotpEnrollmentView)
+_.totp_status  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.totp_confirmed_at  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.totp_last_used_at  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.recovery_codes_left  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.is_mfa_required  # app/schemas/dto/mfa.py (AccountSecurityView)
+_.step_up_valid_until  # app/schemas/dto/mfa.py (SessionAssuranceView)
+_.members_without_two_factor  # app/schemas/dto/mfa.py (BusinessSecurityView)
+_.viewer_auth_level  # app/schemas/dto/mfa.py (BusinessSecurityView)

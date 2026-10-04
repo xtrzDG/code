@@ -23,6 +23,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.mfa.booleans import IsMfaRequiredForMembers
 from app.schemas.typings.sharing.constrained_strings import BusinessPublicSlug
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -66,9 +67,12 @@ class BusinessDocument(BaseDocument):
     Version 3: `public_slug`, the address of the hosted chat page
     (`/c/{slug}`; None until the owner first shares the assistant, so older
     rows read as they are). Its uniqueness is kept by the slug claims.
+    Version 4: `require_mfa_for_members` (False by default, so older rows
+    read as they are): the team opens the business only with sessions
+    signed in with two factors.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: BusinessId = Field(default_factory=BusinessId)
     name: BusinessName
     niche_key: NicheKey
@@ -88,4 +92,5 @@ class BusinessDocument(BaseDocument):
     recording_retention_days: RecordingRetentionDays = RecordingRetentionDays(90)
     published_assistant_version_id: AssistantVersionId | None = None
     public_slug: BusinessPublicSlug | None = None
+    require_mfa_for_members: IsMfaRequiredForMembers = False
     revision: BusinessRevision = BusinessRevision(0)

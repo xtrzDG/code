@@ -55,6 +55,11 @@ from app.schemas.domain.jobs import (
     WorkerHeartbeatDocument,
 )
 from app.schemas.domain.key_rotations import KeyRotationDocument
+from app.schemas.domain.mfa import (
+    MfaChallengeDocument,
+    RecoveryCodeDocument,
+    TotpFactorDocument,
+)
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.users import (
@@ -111,6 +116,11 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # read every business's steps.
         ProductEventDocument,
         WebVitalSampleDocument,
+        # Two-factor sign-in belongs to a person, whatever businesses they
+        # work for.
+        TotpFactorDocument,
+        RecoveryCodeDocument,
+        MfaChallengeDocument,
     }
 )
 

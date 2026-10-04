@@ -78,6 +78,11 @@ class CountingResealer:
         tally.total += 1
 
 
+class NoAuthenticators:
+    def reseal_all(self, tally: RotationTally) -> None:
+        del tally
+
+
 class OneKeyRotation:
     def key_count(self) -> EncryptionKeyCount:
         return EncryptionKeyCount(1)
@@ -102,6 +107,7 @@ def use_case(
         secret_rotation=OneKeyRotation(),  # type: ignore[arg-type]
         resealer=CountingResealer(),  # type: ignore[arg-type]
         wall_clock=build_fixed_wall_clock(),
+        totp_resealer=NoAuthenticators(),  # type: ignore[arg-type]
     )
 
 

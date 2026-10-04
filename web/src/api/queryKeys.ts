@@ -183,6 +183,8 @@ export const queryKeys = {
     dpa: (businessId: Id) => ["settings", businessId, "dpa"] as const,
     contacts: (businessId: Id, search: Optional<string>) => ["settings", businessId, "contacts", search] as const,
     audit: (businessId: Id, filters: string) => ["settings", businessId, "audit", filters] as const,
+    /** Settings → Team: whether the team must sign in with two factors. */
+    security: (businessId: Id) => ["settings", businessId, "security"] as const,
   },
 
   calls: {

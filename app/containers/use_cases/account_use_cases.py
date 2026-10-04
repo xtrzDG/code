@@ -22,6 +22,8 @@ from app.schemas.dto.businesses import (
 )
 from app.schemas.dto.login_options import LoginOptionsQuery, LoginOptionsView
 from app.schemas.dto.login_protection import SendLoginCodeCommand
+from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.mfa_login import MfaRequiredView
 from app.schemas.dto.users import (
     CurrentUserView,
     LoginSessionView,
@@ -79,6 +81,8 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         user_repo=repositories.user_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        session_assurance=utilities.session_assurance,
+        app_settings=config.app_settings,
     )
 
     # --- Sign-in and the current user.
@@ -116,7 +120,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
     )
     verify_otp_login_use_case: Factory[
-        UseCaseContract[VerifyOtpLoginCommand, LoginSessionView]
+        UseCaseContract[VerifyOtpLoginCommand, LoginSessionView | MfaRequiredView]
     ] = Factory(
         VerifyOtpLoginUseCase,
         otp_challenge_repo=repositories.otp_challenge_repo,
@@ -128,8 +132,12 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         rate_limit_registry=registries.request_rate_limit_registry,
         product_events=facilitators.product_events,
+        totp_factor_repo=repositories.totp_factor_repo,
+        mfa_challenge_repo=repositories.mfa_challenge_repo,
     )
-    authenticate_user_use_case: Factory[UseCaseContract[AccessToken, UserId]] = Factory(
+    authenticate_user_use_case: Factory[
+        UseCaseContract[AccessToken, SessionAssurance]
+    ] = Factory(
         AuthenticateUserUseCase,
         user_session_repo=repositories.user_session_repo,
         user_repo=repositories.user_repo,
@@ -145,6 +153,8 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
             user_repo=repositories.user_repo,
             business_repo=repositories.business_repo,
             user_view_transformer=transformers.user_view_transformer,
+            session_assurance=utilities.session_assurance,
+            app_settings=config.app_settings,
         )
     )
     update_current_user_use_case: Factory[
@@ -199,6 +209,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )
     change_member_role_use_case: Factory[
         UseCaseContract[ChangeMemberRoleCommand, BusinessView]
@@ -210,6 +221,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )
     remove_member_use_case: Factory[
         UseCaseContract[RemoveMemberCommand, BusinessView]
@@ -221,4 +233,5 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         business_view_transformer=transformers.business_view_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )

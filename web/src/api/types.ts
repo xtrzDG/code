@@ -69,3 +69,14 @@ export type ProfileStepBody = RequestBody<
   "/v1/businesses/{business_id}/profile/steps/{step}",
   "put"
 >;
+
+// Two-factor sign-in and step-up
+export type AuthLevel = Schema<"AuthLevel">;
+export type MfaRequiredView = Schema<"MfaRequiredView">;
+export type MfaChallengeView = Schema<"MfaChallengeView">;
+export type TotpEnrollmentView = Schema<"TotpEnrollmentView">;
+export type RecoveryCodesView = Schema<"RecoveryCodesView">;
+export type AccountSecurityView = Schema<"AccountSecurityView">;
+export type StepUpChallengeView = Schema<"StepUpChallengeView">;
+export type SessionAssuranceView = Schema<"SessionAssuranceView">;
+export type BusinessSecurityView = Schema<"BusinessSecurityView">;

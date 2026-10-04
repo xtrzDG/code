@@ -5,26 +5,29 @@
  * bearer token goes into the httpOnly session cookie (`__Host-aw_session`
  * over HTTPS; never into the response body), the
  * interface language becomes the account's language, and the answer is
- * {"user", "is_new_user", "expires_at"}. Where the visitor first came from
- * (the `aw_attr` cookie) goes along as `signup_attribution` and the cookie
- * is dropped once signed in.
+ * {"user", "is_new_user", "expires_at", "auth_level", "recovery_codes"}
+ * (src/server/sessionOpening.ts). People with an authenticator app (and
+ * every platform admin) get no session yet: the answer is the second step,
+ * {"mfa_required": true, "mfa_challenge", "is_new_user"}, finished by
+ * POST /api/auth/mfa/verify. Where the visitor first came from (the
+ * `aw_attr` cookie) goes along as `signup_attribution`.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import type { LoginSessionView } from "@/api/types";
-import { LOCALE_COOKIE, matchLocale } from "@/i18n/config";
+import type { LoginSessionView, MfaRequiredView } from "@/api/types";
+import { callBackend, jsonError, pickResponseHeaders } from "@/server/backend";
 import {
-  callBackend,
-  dateFromMicroseconds,
-  jsonError,
-  localeCookieOptions,
-  pickResponseHeaders,
-} from "@/server/backend";
-import { forgetAttribution, readAttributionCookie, withSignupAttribution } from "@/server/attributionCookie";
-import { BodyTooLargeError, DEFAULT_BODY_LIMIT_BYTES, readLimitedText } from "@/server/bodyLimits";
+  readAttributionCookie,
+  withSignupAttribution,
+} from "@/server/attributionCookie";
+import {
+  BodyTooLargeError,
+  DEFAULT_BODY_LIMIT_BYTES,
+  readLimitedText,
+} from "@/server/bodyLimits";
 import { prepareBackendCall } from "@/server/relay";
-import { setSessionCookie } from "@/server/sessionCookie";
+import { openSession } from "@/server/sessionOpening";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +56,12 @@ export async function POST(request: NextRequest): Promise<Response> {
       body: withSignupAttribution(body, readAttributionCookie(request)),
     });
   } catch {
-    return jsonError(502, "backend_unavailable", "The API is not reachable.", requestId);
+    return jsonError(
+      502,
+      "backend_unavailable",
+      "The API is not reachable.",
+      requestId,
+    );
   }
 
   if (!upstream.ok) {
@@ -63,16 +71,16 @@ export async function POST(request: NextRequest): Promise<Response> {
     });
   }
 
-  const session = (await upstream.json()) as LoginSessionView;
-  const response = NextResponse.json(
-    { user: session.user, is_new_user: session.is_new_user, expires_at: session.expires_at },
-    { headers: pickResponseHeaders(upstream.headers, requestId) },
-  );
-  setSessionCookie(response, session.access_token, dateFromMicroseconds(session.expires_at));
-  forgetAttribution(response);
-  const accountLocale = matchLocale(session.user.locale);
-  if (accountLocale) {
-    response.cookies.set(LOCALE_COOKIE, accountLocale, localeCookieOptions());
+  const answer = (await upstream.json()) as LoginSessionView | MfaRequiredView;
+  if ("mfa_required" in answer && answer.mfa_required) {
+    return NextResponse.json(
+      {
+        mfa_required: true,
+        mfa_challenge: answer.mfa_challenge,
+        is_new_user: answer.is_new_user,
+      },
+      { headers: pickResponseHeaders(upstream.headers, requestId) },
+    );
   }
-  return response;
+  return openSession(answer as LoginSessionView, upstream.headers, requestId);
 }

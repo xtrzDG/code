@@ -11,7 +11,7 @@
 """
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -21,6 +21,7 @@ from app.containers.app import AppContainer
 from app.gateways.worker.background_worker import WorkerTickReport
 from app.main import build_application
 from tests.e2e.edge_fakes import CapturingOtpDelivery, MovableClock, RecordedHttp
+from tests.e2e.harness_mfa import HarnessAuthenticators
 from tests.e2e.harness_settings import E2E_ENVIRONMENT, START, JsonObject
 from tests.e2e.workshop_container import build_workshop_container
 from tests.e2e.workshop_model_script import WorkshopModelScript
@@ -42,6 +43,7 @@ class Workshop:
     elevenlabs: RecordedHttp
     google: RecordedHttp
     langfuse: RecordedHttp
+    authenticators: HarnessAuthenticators = field(default_factory=HarnessAuthenticators)
 
     def run_queued_jobs(self) -> WorkerTickReport:
         """
@@ -56,14 +58,14 @@ class Workshop:
             "/v1/auth/otp/start", json={"phone_number": raw_phone}
         )
         assert started.status_code == 200, started.text
-        return self._verify(started.json())
+        return self._verify(raw_phone, started.json())
 
     def sign_in_with_email(self, email: str) -> tuple[str, JsonObject]:
         started = self.client.post("/v1/auth/otp/start", json={"email": email})
         assert started.status_code == 200, started.text
-        return self._verify(started.json())
+        return self._verify(email, started.json())
 
-    def _verify(self, challenge: JsonObject) -> tuple[str, JsonObject]:
+    def _verify(self, identity: str, challenge: JsonObject) -> tuple[str, JsonObject]:
         verified = self.client.post(
             "/v1/auth/otp/verify",
             json={
@@ -73,6 +75,11 @@ class Workshop:
         )
         assert verified.status_code == 200, verified.text
         session: JsonObject = verified.json()
+        if session.get("mfa_required"):
+            # People with an authenticator (admins always) take a second step.
+            session = self.authenticators.finish_sign_in(
+                self.client, self.clock, identity, session
+            )
         return str(session["access_token"]), session
 
 

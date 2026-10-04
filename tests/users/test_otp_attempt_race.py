@@ -26,7 +26,7 @@ from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.users.constrained_strings import OtpCode
 from app.schemas.typings.users.prefixed_id import OtpChallengeId
 from app.schemas.typings.users.strings import OtpCodeHash
-from app.use_cases.users import verify_otp_login_use_case
+from app.use_cases.users.otp_login import login_challenge_consumption
 from app.utilities.security.one_time_codes import is_otp_code_matching
 from tests.users.accounts_phones import GEORGIA_MOBILE
 from tests.users.accounts_testbed import AccountsTestbed, build_accounts_testbed
@@ -60,7 +60,7 @@ def count_comparisons(monkeypatch: pytest.MonkeyPatch) -> list[OtpCode]:
         return is_otp_code_matching(challenge_id, code, code_hash)
 
     monkeypatch.setattr(
-        verify_otp_login_use_case, "is_otp_code_matching", counting_compare
+        login_challenge_consumption, "is_otp_code_matching", counting_compare
     )
     return compared
 

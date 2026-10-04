@@ -1,10 +1,12 @@
-import logging
-
-from typed_time_provider import Microseconds, Seconds, WallClock
+from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
+from app.contracts.repositories.mfa_repositories import (
+    MfaChallengeRepoContract,
+    TotpFactorRepoContract,
+)
 from app.contracts.repositories.user_repositories import (
     OtpChallengeRepoContract,
     UserRepoContract,
@@ -13,59 +15,44 @@ from app.contracts.repositories.user_repositories import (
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
 from app.schemas.constants.users import LoginMethod
-from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.domain.signup_attribution import SignupAttribution
-from app.schemas.domain.users import (
-    OtpChallengeDocument,
-    UserDocument,
-    UserSessionDocument,
-)
+from app.schemas.domain.users import OtpChallengeDocument, UserDocument
+from app.schemas.dto.mfa_login import MfaChallengeView, MfaRequiredView
 from app.schemas.dto.users import LoginSessionView, UserView, VerifyOtpLoginCommand
-from app.schemas.exceptions.application_errors import (
-    AuthenticationRequiredError,
-    RateLimitedError,
+from app.use_cases.users.mfa.mfa_challenges import issue_mfa_challenge
+from app.use_cases.users.otp_login.login_challenge_consumption import (
+    consume_login_challenge,
 )
-from app.schemas.typings.compliance.strings import (
-    AuditEntityName,
-    AuditEntityReference,
-)
-from app.schemas.typings.users.constrained_integers import OtpAttemptCount
-from app.schemas.typings.users.strings import AccessToken
 from app.use_cases.users.otp_login.login_check_limits import (
     refuse_too_frequent_code_checks,
 )
-from app.utilities.analytics.product_event_drafts import sign_in_events
-from app.utilities.security.access_tokens import (
-    generate_access_token,
-    hash_access_token,
-)
-from app.utilities.security.one_time_codes import is_otp_code_matching
-
-logger: logging.Logger = logging.getLogger(__name__)
-INVALID_CODE_MESSAGE: str = "The login code is wrong or has expired."
-LOCKED_CHALLENGE_MESSAGE: str = (
-    "Too many wrong codes. Request a new code and try again."
-)
+from app.use_cases.users.sign_in_completion import SignInCompletion
+from app.utilities.security.platform_admins import is_listed_platform_admin
 
 
-class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionView]):
+class VerifyOtpLoginUseCase(
+    UseCaseContract[VerifyOtpLoginCommand, LoginSessionView | MfaRequiredView]
+):
     """
     Check a one-time code and sign the person in.
 
-    Checks are limited per challenge and per client network (ten minutes).
-    After `otp_max_failed_attempts` wrong codes the challenge is locked:
-    every check takes one attempt in one atomic step before the code is
-    compared, so parallel guesses cannot all be compared (at most the limit
-    are), and a matching code consumes the challenge by compare-and-swap,
-    so it opens one session only. The user is found by phone or e-mail, or
+    Checks are limited per challenge and per client network (ten minutes),
+    and a challenge is locked after `otp_max_failed_attempts` wrong codes
+    (`consume_login_challenge`). The user is found by phone or e-mail, or
     created on first login with the language chosen when the code was
-    requested. The platform admin flag follows the admin phone and e-mail
-    lists in the settings. The bearer token is returned once; only its
-    SHA-256 hash is stored. Every login is audited. A new account keeps
-    where its owner came from (the cabinet's attribution, never changed
-    later); sign-ups and sign-ins are product events.
+    requested; the stored platform admin flag follows the admin lists.
+
+    A person with an authenticator, and every platform admin (who sets one
+    up then if they have none), gets no session yet: the answer is
+    `mfa_required` with a five-minute second step, and
+    VerifyMfaLoginUseCase opens a two-factor session. Everyone else gets a
+    one-factor session at once (SignInCompletion: the token is returned
+    once, only its hash is stored, the login is audited and counted). A new
+    account keeps where its owner came from (the cabinet's attribution,
+    never changed later).
     """
 
     def __init__(
@@ -79,22 +66,30 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
         wall_clock: WallClock[Microseconds],
         rate_limit_registry: RequestRateLimitRegistryContract,
         product_events: RecordProductEventFacilitatorContract,
+        totp_factor_repo: TotpFactorRepoContract,
+        mfa_challenge_repo: MfaChallengeRepoContract,
     ) -> None:
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_repo: UserRepoContract = user_repo
-        self._user_session_repo: UserSessionRepoContract = user_session_repo
-        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
-        self._user_view_transformer: TransformerContract[UserDocument, UserView] = (
-            user_view_transformer
-        )
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._rate_limit_registry: RequestRateLimitRegistryContract = (
             rate_limit_registry
         )
-        self._product_events: RecordProductEventFacilitatorContract = product_events
+        self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
+        self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
+        self._sign_in: SignInCompletion = SignInCompletion(
+            user_session_repo,
+            audit_log_repo,
+            user_view_transformer,
+            app_settings,
+            wall_clock,
+            product_events,
+        )
 
-    def run(self, input_data: VerifyOtpLoginCommand) -> LoginSessionView:
+    def run(
+        self, input_data: VerifyOtpLoginCommand
+    ) -> LoginSessionView | MfaRequiredView:
         now: Microseconds = self._wall_clock.now_unix()
         refuse_too_frequent_code_checks(
             self._rate_limit_registry,
@@ -103,102 +98,34 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
             input_data.client_ip_address,
             now,
         )
-        challenge: OtpChallengeDocument = self._consume_challenge(input_data, now)
+        challenge: OtpChallengeDocument = consume_login_challenge(
+            self._otp_challenge_repo,
+            self._app_settings,
+            input_data.challenge_id,
+            input_data.code,
+            now,
+        )
         user, is_new_user = self._find_or_create_user(
             challenge, input_data.signup_attribution, now
         )
-        access_token: AccessToken = generate_access_token()
-        session = UserSessionDocument(
-            user_id=user.id,
-            token_hash=hash_access_token(access_token),
-            expires_at=self._wall_clock.now_unix_with_delta(
-                Seconds(int(self._app_settings.session_lifetime_seconds))
-            ),
-            created_at=now,
-            updated_at=now,
+        factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)
+        has_active_factor: bool = (
+            factor is not None and factor.status is TotpFactorStatus.ACTIVE
         )
-        self._user_session_repo.save(session)
-        self._audit_log_repo.append(
-            AuditLogEntryDocument(
-                actor_id=user.id,
-                action=AuditAction.LOGIN,
-                entity=AuditEntityName("user"),
-                entity_id=AuditEntityReference(str(user.id)),
-                ip_address=input_data.client_ip_address,
-                created_at=now,
-                updated_at=now,
+        if has_active_factor or user.is_platform_admin:
+            mfa_challenge: MfaChallengeView = issue_mfa_challenge(
+                self._mfa_challenge_repo,
+                self._wall_clock,
+                user.id,
+                is_new_user,
+                input_data.client_ip_address,
+                requires_enrollment=not has_active_factor,
             )
+            return MfaRequiredView(mfa_challenge=mfa_challenge, is_new_user=is_new_user)
+
+        return self._sign_in.open_session(
+            user, AuthLevel.ONE_FACTOR, is_new_user, input_data.client_ip_address
         )
-        self._product_events.record(*sign_in_events(user, is_new_user))
-        return LoginSessionView(
-            access_token=access_token,
-            expires_at=session.expires_at,
-            user=self._user_view_transformer.transform(user),
-            is_new_user=is_new_user,
-        )
-
-    def _consume_challenge(
-        self,
-        input_data: VerifyOtpLoginCommand,
-        now: Microseconds,
-    ) -> OtpChallengeDocument:
-        max_attempts: OtpAttemptCount = self._app_settings.otp_max_failed_attempts
-        challenge: OtpChallengeDocument | None = self._otp_challenge_repo.get(
-            input_data.challenge_id
-        )
-        if challenge is None or challenge.is_consumed:
-            raise AuthenticationRequiredError(INVALID_CODE_MESSAGE)
-
-        if challenge.failed_attempts >= max_attempts:
-            raise RateLimitedError(LOCKED_CHALLENGE_MESSAGE)
-
-        if now >= challenge.expires_at:
-            raise AuthenticationRequiredError(INVALID_CODE_MESSAGE)
-
-        # The check counts as failed until the code matches: taking the
-        # attempt first lets no more than `max_attempts` checks through.
-        attempt: OtpAttemptCount | None = (
-            self._otp_challenge_repo.register_failed_attempt(
-                challenge.id, max_attempts, now
-            )
-        )
-        if attempt is None:
-            raise self._refusal_after_lost_race(challenge)
-
-        if not is_otp_code_matching(challenge.id, input_data.code, challenge.code_hash):
-            if attempt >= max_attempts:
-                logger.warning(
-                    "Login code challenge %s locked after %s wrong codes.",
-                    challenge.id,
-                    int(attempt),
-                )
-            raise AuthenticationRequiredError(INVALID_CODE_MESSAGE)
-
-        consumed: OtpChallengeDocument | None = self._otp_challenge_repo.consume(
-            challenge.id, now
-        )
-        if consumed is None:
-            # A parallel check with the same right code opened the session.
-            raise AuthenticationRequiredError(INVALID_CODE_MESSAGE)
-
-        return consumed
-
-    def _refusal_after_lost_race(
-        self,
-        challenge: OtpChallengeDocument,
-    ) -> AuthenticationRequiredError | RateLimitedError:
-        """
-        No attempt was left when this check came to take one: parallel
-        checks used them up, or one of them consumed the challenge.
-        """
-
-        current: OtpChallengeDocument | None = self._otp_challenge_repo.get(
-            challenge.id
-        )
-        if current is None or current.is_consumed:
-            return AuthenticationRequiredError(INVALID_CODE_MESSAGE)
-
-        return RateLimitedError(LOCKED_CHALLENGE_MESSAGE)
 
     def _find_or_create_user(
         self,
@@ -223,7 +150,7 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
         if user.country_code is None:
             user.country_code = challenge.country_code
 
-        user.is_platform_admin = self._is_listed_platform_admin(user)
+        user.is_platform_admin = is_listed_platform_admin(user, self._app_settings)
         user.updated_at = now
         self._user_repo.save(user)
         return user, is_new_user
@@ -239,12 +166,3 @@ class VerifyOtpLoginUseCase(UseCaseContract[VerifyOtpLoginCommand, LoginSessionV
             return None
 
         return self._user_repo.find_by_email(challenge.email)
-
-    def _is_listed_platform_admin(self, user: UserDocument) -> bool:
-        return (
-            user.phone_number is not None
-            and user.phone_number in self._app_settings.platform_admin_phone_numbers
-        ) or (
-            user.email is not None
-            and user.email in self._app_settings.platform_admin_emails
-        )

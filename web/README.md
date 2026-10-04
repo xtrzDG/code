@@ -199,8 +199,11 @@ web/
       robots.ts                robots.txt: only "/" is for search engines
       login/                   sign-in by phone (country picker, only the code channels that work now)
                                or e-mail, 6-digit code: LoginScreen (layout), _components/ (DestinationForm,
-                               PhoneFields, CodeForm), _lib/ (useLoginFlow, useDestination, loginTexts,
-                               loginOptions)
+                               PhoneFields, CodeForm, SecondStepForm: the authenticator or recovery code,
+                               an admin's first setup), _lib/ (useLoginFlow, useSecondStep, useDestination,
+                               loginTexts, loginOptions)
+      account/security/        Account → Security: the authenticator app (QR, recovery codes once,
+                               turning it off), new recovery codes, how this session is signed in
       businesses/              the list of businesses and "New assistant" (an account without one goes
                                straight to /create); a business still being set up opens its tunnel
       create/                  "Create an AI assistant" for a new business: the tunnel's first two
@@ -246,7 +249,8 @@ web/
       admin/                   platform admin: clients (filters, sorts) and clients/[businessId]/;
                                security/ (encryption keys: the key ring and re-encryption runs)
       api/
-        auth/start|verify|logout|expired   sign-in route handlers (cookie handling)
+        auth/start|verify|logout|expired   sign-in route handlers (cookie handling);
+                               auth/mfa/verify|enroll: the second step (server/sessionOpening.ts)
         backend/[...path]      BFF proxy: /api/backend/v1/... -> BACKEND_URL/v1/... (JSON, and audio
                                of call recordings streamed with its type and length; Range and
                                If-Range go up, Accept-Ranges and Content-Range come back; the live
@@ -271,7 +275,10 @@ web/
       catalog.ts               useCountries / useCountryProfile / useNiches / useNiche / usePlans
       errors.ts                ApiError, error codes, localized messages
       result.ts                unwrap(): data or a thrown ApiError
-      auth.ts                  startLogin / verifyLogin (browser)
+      auth.ts                  startLogin / verifyLogin / verifySecondStep (browser)
+      stepUp.ts                "Confirm it is you": a 401 step-up challenge waits for the dialog
+                               (components/security/StepUpDialog, in the root layout), then the
+                               request runs again
     server/                    server-only code
       api.ts                   getServerApi(), serverFetch(), getCurrentUser(), getBusiness()
       theme.ts                 getTheme(): the aw_theme cookie of the request
@@ -325,6 +332,9 @@ web/
                                are not with your customers yet · Review and apply"), ApplyChangesSheet
                                (the changes in the owner's words, the launch's stages, why it stopped
                                with the page that fixes it and the failed conversation), usePendingChanges
+      security/                two-factor sign-in: AuthenticatorSetup, TotpQrCode (drawn in the browser),
+                               RecoveryCodesPanel, OneTimeCodeField, StepUpDialog (its StepUpForm loads
+                               only when a confirmation is asked for)
       theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
                                useResolvedScheme (the scheme showing now, for the WebGL scene)
       business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
@@ -449,6 +459,7 @@ section tabs, page titles and the e2e suite read it):
 | Notification links (`/n/{token}`) | The link at the end of every staff e-mail, SMS, chat message and device notification: signed in first (the proxy sends visitors to `/login?next=…`), then the API says where it leads (a conversation, the requests, the bookings of the booking's day, the notification settings) and the page opens there; an expired (7 days), altered or foreign link says so (`app/n/[token]/page.tsx`, `lib/notificationLinks.ts`) |
 | Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). A conversation's calls show each summary in the reader's language |
 | Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the customer list with export and erasure, the audit log with server filters. Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
+| Account → Security (`/account/security`, account panel) | Everyone: set up an authenticator app (QR code or key, its first code, then ten recovery codes shown once: copy, download, "I saved them"), turn it off, get new recovery codes, see how this session is signed in; a business that requires two factors and the admin pages send people here (`?reason=&next=`). Settings → Team: owners require the app for the whole team (their own two-factor session first) and see who has none |
 | Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet |
 | Admin → Metrics (`/admin/metrics`) | Platform admins (under More on phones): the founder's growth numbers from `GET /v1/admin/metrics` with the filters in the address (`?from=&to=&country=&niche=&source=`, period presets or chosen days): key numbers, the funnel as bars on one scale with both shares as text, the setup tunnel per screen, the MRR bridge (start, signed movements with their accounts, end; currencies without an official rate named), gross margin, a cohort grid that prints every share over a light accent, sources and Web Vitals (p75 with Google's rating) |
 | Admin → Encryption keys (`/admin/security`) | Platform admins: how many keys `ENCRYPTION_KEYS` holds (never the keys), the latest re-encryption run (status, tokens checked, already current, sealed again, unreadable, Telegram webhooks registered again or not) with what it means, and **Re-encrypt stored tokens** after a confirmation (one run at a time; the page follows it until the worker is done). The runbook: `docs/operations/backup-restore.md` |
@@ -1141,4 +1152,15 @@ engines (the cabinet's pages are `noindex`) and texts in
 - The BFF forwards only `/v1/*` paths, an allow-list of headers (never the
   browser's cookies), and refuses cross-site state-changing requests
   (`Origin`/`Sec-Fetch-Site` check) on top of `SameSite=Lax`.
+- Two-factor sign-in: after the login code, people with an authenticator app
+  (and every platform admin, who sets one up at the first sign-in) enter its
+  code or a recovery code (`app/login/_components/SecondStepForm.tsx`); the
+  admin pages want a two-factor session. A sensitive action (exporting or
+  erasing a contact's data, team changes, connecting a channel, the admin's
+  actions) answered with 401 and `WWW-Authenticate: Bearer
+  error="insufficient_user_authentication"` keeps the session cookie: the
+  "Confirm it is you" dialog asks for the app's code (or a login code) and
+  the request runs again (`src/api/stepUp.ts`, `lib/stepUpChallenge.ts`).
+  The e2e suite plays the authenticator (`e2e/support/totp.ts`,
+  `e2e/support/admin.ts`).
 - After sign-in the cabinet only redirects to same-site paths (`safeNextPath`).

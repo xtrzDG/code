@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -64,6 +65,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -77,6 +79,8 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         AuthorizePlatformAdminUseCase,
         user_repo=repositories.user_repo,
+        session_assurance=utilities.session_assurance,
+        app_settings=config.app_settings,
     )
     summarize_client_use_case: Factory[
         UseCaseContract[ClientSummarySource, AdminClientSummary]
@@ -122,6 +126,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )
 
     # --- Observability.
@@ -141,6 +146,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         missed_call_repo=repositories.missed_call_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        mfa_challenge_repo=repositories.mfa_challenge_repo,
     )
     sweep_rate_limit_buckets_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(

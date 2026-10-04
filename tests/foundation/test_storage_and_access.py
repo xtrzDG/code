@@ -14,7 +14,7 @@ from app.repositories.conversation_repositories import ContactRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.users import BusinessMemberRole, LoginMethod
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -28,12 +28,13 @@ from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
-    LanguageTag,
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS, platform_admin
 from tests.foundation.builders import build_business
 
 FIXED_NANOSECONDS: int = 1_790_000_000_000_000_000
@@ -62,6 +63,8 @@ def build_access_use_case() -> tuple[
             preferred_time_unit_type=Microseconds,
             unix_nanosecond_factory=lambda: FIXED_NANOSECONDS,
         ),
+        session_assurance=SessionAssuranceContext(),
+        app_settings=ACCESS_SETTINGS,
     )
     return use_case, business_repo, user_repo, audit_log_repo
 
@@ -85,11 +88,7 @@ def test_owner_staff_stranger_and_platform_admin_access() -> None:
     owner_id, staff_id = UserId(), UserId()
     business = build_business(owner_id, staff_ids=[staff_id])
     business_repo.save(business)
-    admin = UserDocument(
-        login_method=LoginMethod.EMAIL,
-        locale=LanguageTag("ru"),
-        is_platform_admin=True,
-    )
+    admin = platform_admin("ru")
     user_repo.save(admin)
     operator = PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(use_case)))
 

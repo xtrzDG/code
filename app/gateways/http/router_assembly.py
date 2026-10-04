@@ -61,7 +61,8 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     platform = operators.platform
     notifications = operators.notifications
     current_user: CurrentUserDependency = build_current_user_dependency(
-        accounts.authenticate_user_operator()
+        accounts.authenticate_user_operator(),
+        app_container.utilities.session_assurance(),
     )
     business_access_operator = accounts.authorize_business_access_operator()
     return [

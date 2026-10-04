@@ -8,7 +8,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { APIRequestContext } from "@playwright/test";
 
-import { signInByEmail } from "./support/api";
+import { signInAsPlatformAdmin } from "./support/admin";
 import { PLATFORM_ADMIN_EMAIL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en } from "./support/messages";
@@ -20,7 +20,7 @@ let adminToken: Promise<string> | null = null;
 
 /** One sign-in per test worker: the API sends an address a code at most every 30 seconds. */
 function signInAsAdmin(request: APIRequestContext): Promise<string> {
-  adminToken ??= signInByEmail(request, PLATFORM_ADMIN_EMAIL);
+  adminToken ??= signInAsPlatformAdmin(request, PLATFORM_ADMIN_EMAIL);
   return adminToken;
 }
 

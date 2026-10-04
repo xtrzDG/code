@@ -47,6 +47,8 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
+from app.schemas.typings.mfa.constrained_integers import StepUpMaxAgeSeconds
+from app.schemas.typings.mfa.strings import TotpIssuerName
 from app.schemas.typings.notifications.constrained_strings import (
     VapidPublicKey,
     VapidSubject,
@@ -159,6 +161,10 @@ class AppSettings(ImmutableDTO):
     turnstile_secret_key: PlatformSecret | None = None
     is_otp_code_logging_enabled: IsOtpCodeLoggingEnabled
     session_lifetime_seconds: SessionLifetimeSeconds
+    # Two-factor sign-in: how long a sign-in or a confirmation covers
+    # sensitive actions, and the name authenticator apps show.
+    step_up_max_age_seconds: StepUpMaxAgeSeconds = StepUpMaxAgeSeconds(600)
+    mfa_issuer_name: TotpIssuerName = TotpIssuerName("Assistant Workshop")
     restricted_country_codes: list[CountryCode]
     default_data_region: DataRegion
     default_recording_retention_days: RecordingRetentionDays

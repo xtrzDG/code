@@ -3,13 +3,14 @@
 /**
  * The two steps of signing in: send a code to the destination, then check
  * the code (with resend and "send by another channel" on the way). A
- * successful check loads `next` in full, which picks up the session and the
+ * successful check (or its second step, SecondStepForm) loads `next` in
+ * full, which picks up the session and the
  * account's language.
  */
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { startLogin, verifyLogin } from "@/api/auth";
+import { needsSecondStep, startLogin, verifyLogin, type SecondStepRequired } from "@/api/auth";
 import { toApiError } from "@/api/errors";
 import type { OtpChallengeView, OtpDeliveryChannel } from "@/api/types";
 import { useToast } from "@/components/ui";
@@ -46,6 +47,8 @@ export function useLoginFlow(next: string) {
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<MessageKey | null>(null);
   const [isVerifying, setVerifying] = useState(false);
+  /** The code was right; the account asks for its authenticator (or to set one up). */
+  const [secondStep, setSecondStep] = useState<SecondStepRequired | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const codeInputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +134,12 @@ export function useLoginFlow(next: string) {
     setCodeError(null);
     setVerifying(true);
     try {
-      await verifyLogin({ challenge_id: codeStage.challenge.challenge_id, code: parsed.data });
+      const answer = await verifyLogin({ challenge_id: codeStage.challenge.challenge_id, code: parsed.data });
+      if (needsSecondStep(answer)) {
+        setSecondStep(answer);
+        setVerifying(false);
+        return;
+      }
       // A full load picks up the account language and the new session.
       window.location.assign(next);
     } catch (caught) {
@@ -198,7 +206,10 @@ export function useLoginFlow(next: string) {
     verify,
     resend,
     sendByOtherChannel,
+    secondStep,
+    destinationLabel: destination.method === "phone" ? destination.phoneNumber : destination.email,
     changeDestination: () => {
+      setSecondStep(null);
       setCodeStage(null);
       setBotCheck(null);
       clearCode();

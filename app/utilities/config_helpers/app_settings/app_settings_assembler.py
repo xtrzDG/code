@@ -41,6 +41,9 @@ from app.utilities.config_helpers.app_settings.login_settings_section import (
 from app.utilities.config_helpers.app_settings.media_settings_section import (
     read_media_settings,
 )
+from app.utilities.config_helpers.app_settings.mfa_settings_section import (
+    read_mfa_settings,
+)
 from app.utilities.config_helpers.app_settings.observability_settings_section import (
     read_observability_settings,
 )
@@ -103,6 +106,7 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **key_ring,
         **read_llm_settings(environment_variables, llm_provider),
         **read_login_settings(environment_variables, is_otp_code_logging_enabled),
+        **read_mfa_settings(environment_variables),
         **read_compliance_settings(environment_variables),
         **read_platform_admin_settings(environment_variables),
         **read_otp_provider_settings(environment_variables, smtp_security),

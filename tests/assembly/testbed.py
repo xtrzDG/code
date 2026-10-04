@@ -36,6 +36,7 @@ from app.schemas.typings.assistants.constrained_integers import (
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.assembly.assembly_publish_wiring import AssemblyPublishWiring
 
 
@@ -160,7 +161,9 @@ class AssemblyTestbed(AssemblyPublishWiring):
                 rollback_assistant_version_operator=PipelineOperator(
                     OrchestratorPipeline(UseCaseOrchestrator(self.rollback_use_case))
                 ),
-                current_user=build_current_user_dependency(self.authentication),
+                current_user=build_current_user_dependency(
+                    self.authentication, SessionAssuranceContext()
+                ),
             )
         )
         return TestClient(http_application)

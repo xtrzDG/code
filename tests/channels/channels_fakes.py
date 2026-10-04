@@ -19,6 +19,7 @@ from app.schemas.dto.conversations import (
     VoiceToolCallResult,
 )
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ValidationFailedError,
@@ -30,6 +31,7 @@ from app.schemas.typings.handoffs.prefixed_id import HandoffId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
+from tests.foundation.access_support import signed_in
 
 NANOSECONDS_PER_SECOND: int = 1_000_000_000
 
@@ -123,16 +125,16 @@ class FakeCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting]
         )
 
 
-class FakeAuthenticationOperator(OperatorContract[AccessToken, UserId]):
+class FakeAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
     def __init__(self) -> None:
         self.users_by_token: dict[str, UserId] = {}
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         user_id: UserId | None = self.users_by_token.get(str(input_data))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 
-        return user_id
+        return signed_in(user_id)
 
 
 class RecordingHandoffToHuman(UseCaseContract[HandoffCommand, HandoffResult]):

@@ -39,9 +39,6 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
-from app.use_cases.admin.authorize_platform_admin_use_case import (
-    AuthorizePlatformAdminUseCase,
-)
 from app.use_cases.admin.metrics.get_admin_metrics_use_case import (
     GetAdminMetricsUseCase,
 )
@@ -52,6 +49,7 @@ from tests.analytics.analytics_fakes import (
 )
 from tests.analytics.metric_events import at_day
 from tests.billing.exchange_rate_fixtures import StoredRate, rate_registry
+from tests.foundation.access_support import AuthorizeFlaggedAdmin
 
 # Two lari and 1.25 US dollars a euro, so the numbers stay round (no
 # fallback catalog: only these rates and their inverses exist).
@@ -104,7 +102,7 @@ class MetricsWorld:
         self.costs = FixedClientCosts()
         self.admin = self.add_user(0, is_platform_admin=True)
         self.use_case = GetAdminMetricsUseCase(
-            authorize_platform_admin=AuthorizePlatformAdminUseCase(self.users),
+            authorize_platform_admin=AuthorizeFlaggedAdmin(self.users),
             user_repo=self.users,
             business_repo=self.businesses,
             product_event_repo=self.events,

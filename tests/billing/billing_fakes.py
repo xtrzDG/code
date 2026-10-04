@@ -11,6 +11,7 @@ from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.deliveries import StaffNotification
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import MessageText
@@ -22,6 +23,7 @@ from tests.billing.billing_settings import (
     NANOSECONDS_PER_MICROSECOND,
     START_NANOSECONDS,
 )
+from tests.foundation.access_support import signed_in
 
 
 class RecordingVoiceAgentRemoval:
@@ -72,13 +74,13 @@ class RecordingNotifier(ManagerNotificationFacilitatorContract):
         return [str(text) for _, text in self.sent]
 
 
-class TokenAuthenticationOperator(OperatorContract[AccessToken, UserId]):
+class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
     """Bearer token = user id of a known user (tests only)."""
 
     def __init__(self, user_repo: UserRepository) -> None:
         self._user_repo: UserRepository = user_repo
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         try:
             user_id = UserId(str(input_data))
         except ValueError as error:
@@ -87,7 +89,7 @@ class TokenAuthenticationOperator(OperatorContract[AccessToken, UserId]):
         if self._user_repo.get(user_id) is None:
             raise AuthenticationRequiredError("Unknown token.")
 
-        return user_id
+        return signed_in(user_id)
 
 
 def build_operator[InputData, OutputData](

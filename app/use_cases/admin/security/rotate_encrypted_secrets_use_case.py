@@ -17,6 +17,7 @@ from app.schemas.typings.security.constrained_integers import (
     WebhookRegistrationCount,
 )
 from app.use_cases.admin.security.secret_resealer import RotationTally, SecretResealer
+from app.use_cases.admin.security.totp_secret_resealer import TotpSecretResealer
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_ERROR_LENGTH: int = 500
@@ -27,7 +28,8 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     The `rotate_encrypted_secrets` job: walk every business and seal each
     stored secret (channel credentials, Google Calendar tokens) with the
     current key of the ring, then register Telegram webhooks again with the
-    current key's secret when the ring holds older keys. The run's record
+    current key's secret when the ring holds older keys, and finally seal
+    the secrets of people's authenticators (two-factor sign-in) anew. The run's record
     shows the counts; a previous key may be dropped once a run ends DONE
     with nothing unreadable and no failed webhook.
 
@@ -43,7 +45,9 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         secret_rotation: SecretRotationAdapterContract,
         resealer: SecretResealer,
         wall_clock: WallClock[Microseconds],
+        totp_resealer: TotpSecretResealer,
     ) -> None:
+        self._totp_resealer: TotpSecretResealer = totp_resealer
         self._business_repo: BusinessRepoContract = business_repo
         self._key_rotation_repo: KeyRotationRepoContract = key_rotation_repo
         self._secret_rotation: SecretRotationAdapterContract = secret_rotation
@@ -73,6 +77,7 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         try:
             for business in self._business_repo.list_all():
                 self._resealer.reseal_business(business.id, tally)
+            self._totp_resealer.reseal_all(tally)
         except Exception as error:
             self._finish(started, tally, KeyRotationStatus.FAILED, error)
             raise

@@ -81,8 +81,10 @@ from app.use_cases.autotests.run_autotest_scenario_use_case import (
 from app.use_cases.autotests.start_autotest_run_use_case import StartAutotestRunUseCase
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
 from tests.assembly.deferred_use_case import DeferredUseCase
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
@@ -99,6 +101,8 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.user_repo,
             self.audit_repo,
             self.wall_clock,
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         )
         details_transformer = self.details_transformer = (
             AssistantVersionDetailsTransformer()

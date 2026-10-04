@@ -8,6 +8,7 @@ from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.key_rotation import (
@@ -26,6 +27,7 @@ from app.use_cases.admin.security.secret_resealer import SecretResealer
 from app.use_cases.admin.security.start_key_rotation_use_case import (
     StartKeyRotationUseCase,
 )
+from app.use_cases.admin.security.totp_secret_resealer import TotpSecretResealer
 
 
 class SecurityUseCasesContainer(containers.DeclarativeContainer):
@@ -40,6 +42,7 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     platform_use_cases: PlatformUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     get_encryption_keys_use_case: Factory[
@@ -60,6 +63,7 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
     )
     secret_resealer: Factory[SecretResealer] = Factory(
         SecretResealer,
@@ -70,6 +74,12 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
         telegram_client=clients.telegram_bot_client,
         app_settings=config.app_settings,
     )
+    totp_secret_resealer: Factory[TotpSecretResealer] = Factory(
+        TotpSecretResealer,
+        totp_factor_repo=repositories.totp_factor_repo,
+        totp_secret_cipher=adapters.totp_secret_cipher,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
     rotate_encrypted_secrets_use_case: Factory[
         UseCaseContract[QueuedJobInput, JobReport]
     ] = Factory(
@@ -79,4 +89,5 @@ class SecurityUseCasesContainer(containers.DeclarativeContainer):
         secret_rotation=adapters.secret_cipher,
         resealer=secret_resealer,
         wall_clock=time_provider.microsecond_wall_clock,
+        totp_resealer=totp_secret_resealer,
     )

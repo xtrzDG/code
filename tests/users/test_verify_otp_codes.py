@@ -61,8 +61,12 @@ def test_right_code_after_some_wrong_ones_still_signs_in() -> None:
             )
         )
 
-    session = testbed.verify_otp_login.run(
-        VerifyOtpLoginCommand(challenge_id=challenge.challenge_id, code=correct_code)
+    session = testbed.expect_session(
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=challenge.challenge_id, code=correct_code
+            )
+        )
     )
 
     assert session.user.phone_number == "+995555123456"
@@ -88,10 +92,12 @@ def test_code_valid_until_just_before_expiry() -> None:
     challenge = testbed.request_phone_code(GEORGIA_MOBILE)
 
     testbed.clock.advance(119)
-    session = testbed.verify_otp_login.run(
-        VerifyOtpLoginCommand(
-            challenge_id=challenge.challenge_id,
-            code=testbed.otp_delivery.last_code(),
+    session = testbed.expect_session(
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=challenge.challenge_id,
+                code=testbed.otp_delivery.last_code(),
+            )
         )
     )
 
@@ -140,10 +146,12 @@ def test_code_of_one_challenge_does_not_open_another() -> None:
             )
         )
 
-    session = testbed.verify_otp_login.run(
-        VerifyOtpLoginCommand(
-            challenge_id=georgian_challenge.challenge_id,
-            code=georgian_code,
+    session = testbed.expect_session(
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=georgian_challenge.challenge_id,
+                code=georgian_code,
+            )
         )
     )
     assert session.user.country_code == "GE"

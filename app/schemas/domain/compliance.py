@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -24,6 +24,10 @@ class AuditLogEntryDocument(BaseDocument):
     `actor_id` is null for automatic jobs such as retention purges.
     """
 
+    # 2: the action `mfa_changed`. Its entries are about a person, not a
+    # business (no `business_id`), and every reader of the previous release
+    # lists entries by business, so it never meets one.
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
     actor_id: UserId | None = None

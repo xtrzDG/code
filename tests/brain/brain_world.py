@@ -86,6 +86,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.brain.brain_business_seed import seed_business
 from tests.brain.brain_orchestrators import build_brain_orchestrators
 from tests.brain.brain_repositories import build_brain_repositories
@@ -99,6 +100,7 @@ from tests.brain.fake_contact_tools import (
 )
 from tests.brain.fake_knowledge_tools import FakeGetPrice, FakeSearchKnowledge
 from tests.brain.manual_clock import ManualClock
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 CUSTOMER_PHONE: E164PhoneNumber = E164PhoneNumber("+995555123456")
@@ -278,6 +280,8 @@ def build_world(
             user_repo=repos.user_repo,
             audit_log_repo=repos.audit_log_repo,
             wall_clock=wall_clock,
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         ),
         orchestrator=orchestrators.orchestrator,
         pipeline=CustomerMessagePipeline(

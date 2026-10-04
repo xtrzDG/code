@@ -17,6 +17,7 @@ from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContain
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
+from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -24,7 +25,8 @@ from app.containers.utilities import UtilitiesContainer
 class CoreUseCasesContainer(containers.DeclarativeContainer):
     """
     The edges every use case context draws on and the contexts the others
-    build on: accounts, the catalog, compliance, knowledge, menu import,
+    build on: accounts (and their two-factor sign-in), the catalog,
+    compliance, knowledge, menu import,
     scheduling, bookings, the team inbox and follow-ups. `UseCasesContainer`
     extends it with the contexts that depend on these and reads them as
     `CoreUseCasesContainer.<name>`; one instance copies all of them
@@ -50,6 +52,19 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         transformers=transformers,
         utilities=utilities,
+    )
+    # Two-factor sign-in and step-up (accounts' send of login codes).
+    mfa: MfaUseCasesContainer = Container(  # type: ignore[assignment]
+        MfaUseCasesContainer,
+        adapters=adapters,
+        config=config,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        transformers=transformers,
+        utilities=utilities,
+        account_use_cases=accounts,
     )
     catalog: CatalogUseCasesContainer = Container(  # type: ignore[assignment]
         CatalogUseCasesContainer,

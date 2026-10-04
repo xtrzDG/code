@@ -1,7 +1,7 @@
 {
   "collection": "audit_log_entries",
   "document_type": "AuditLogEntryDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -15,7 +15,8 @@
           "admin_access",
           "login",
           "retention_purge",
-          "publish_untested"
+          "publish_untested",
+          "mfa_changed"
         ],
         "type": "string"
       },
@@ -76,7 +77,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {

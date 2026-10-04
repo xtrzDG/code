@@ -14,6 +14,7 @@ from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
@@ -26,7 +27,9 @@ from app.use_cases.localization.parse_phone_number_use_case import (
 )
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.billing.exchange_rate_fixtures import rate_registry
+from tests.foundation.access_support import signed_in
 from tests.localization.builders import (
     JULY_2026_NANOSECONDS,
     build_business,
@@ -42,18 +45,18 @@ OWNER_TOKEN: str = "owner-token"
 STRANGER_TOKEN: str = "stranger-token"
 
 
-class TokenTableAuthenticationOperator(OperatorContract[AccessToken, UserId]):
+class TokenTableAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
     """Fake authentication: a fixed token -> user table."""
 
     def __init__(self, users_by_token: dict[str, UserId]) -> None:
         self._users_by_token: dict[str, UserId] = users_by_token
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         user_id: UserId | None = self._users_by_token.get(str(input_data))
         if user_id is None:
             raise AuthenticationRequiredError("Session is not valid.")
 
-        return user_id
+        return signed_in(user_id)
 
 
 def build_client() -> tuple[TestClient, BusinessDocument]:
@@ -67,7 +70,8 @@ def build_client() -> tuple[TestClient, BusinessDocument]:
     current_user = build_current_user_dependency(
         TokenTableAuthenticationOperator(
             {OWNER_TOKEN: owner_id, STRANGER_TOKEN: UserId()}
-        )
+        ),
+        SessionAssuranceContext(),
     )
     router = build_catalog_router(
         list_countries_operator=PipelineOperator(

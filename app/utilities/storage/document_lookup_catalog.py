@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074 and 1081), each ELEMENT_TEXT field a trigger over
+1074, 1081 and 1082), each ELEMENT_TEXT field a trigger over
 `workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
 and checks queries against this catalog.
 """
@@ -56,6 +56,12 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _integer("expires_at"),
     ),
     DocumentCollectionName("otp_challenges"): (_integer("created_at"),),
+    # Two-factor sign-in (1082): authenticators (stored under their user's
+    # id) in creation order for the key rotation's batches; a user's
+    # recovery codes; old second steps of a sign-in for the purge.
+    DocumentCollectionName("totp_factors"): (_integer("created_at"),),
+    DocumentCollectionName("recovery_codes"): (_text("user_id"),),
+    DocumentCollectionName("mfa_challenges"): (_integer("created_at"),),
     # The businesses of a signed-in user.
     DocumentCollectionName("businesses"): (_element("members[].user_id"),),
     # Webhook routing: the channel of an incoming message; channels in

@@ -66,6 +66,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       login: "შესვლა",
       retention_purge: "წაიშალა შენახვის ვადის გამო",
       publish_untested: "გამოქვეყნდა შემოწმებაგაუვლელი განახლება",
+      mfa_changed: "შეიცვალა ორსაფეხურიანი შესვლა",
     },
     entities: {
       contact: "მომხმარებელი",

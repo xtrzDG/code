@@ -8,6 +8,7 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.businesses import InviteStaffCommand, InviteStaffRequest
+from app.schemas.dto.mfa_login import MfaRequiredView
 from app.schemas.dto.users import StartOtpLoginCommand, VerifyOtpLoginCommand
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import (
@@ -93,11 +94,13 @@ def test_login_is_audited_with_the_client_address() -> None:
     testbed = build_accounts_testbed()
     challenge = testbed.request_phone_code(GEORGIA_MOBILE)
 
-    session = testbed.verify_otp_login.run(
-        VerifyOtpLoginCommand(
-            challenge_id=challenge.challenge_id,
-            code=testbed.otp_delivery.last_code(),
-            client_ip_address=ClientIpAddress("203.0.113.7"),
+    session = testbed.expect_session(
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=challenge.challenge_id,
+                code=testbed.otp_delivery.last_code(),
+                client_ip_address=ClientIpAddress("203.0.113.7"),
+            )
         )
     )
 
@@ -126,10 +129,12 @@ def test_second_login_finds_the_same_user_and_keeps_their_language() -> None:
             locale=LanguageTag("ru"),
         )
     )
-    second_session = testbed.verify_otp_login.run(
-        VerifyOtpLoginCommand(
-            challenge_id=challenge.challenge_id,
-            code=testbed.otp_delivery.last_code(),
+    second_session = testbed.expect_session(
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=challenge.challenge_id,
+                code=testbed.otp_delivery.last_code(),
+            )
         )
     )
 
@@ -148,10 +153,12 @@ def test_new_user_gets_the_language_requested_with_the_code() -> None:
         )
     )
 
-    session = testbed.verify_otp_login.run(
-        VerifyOtpLoginCommand(
-            challenge_id=challenge.challenge_id,
-            code=testbed.otp_delivery.last_code(),
+    session = testbed.expect_session(
+        testbed.verify_otp_login.run(
+            VerifyOtpLoginCommand(
+                challenge_id=challenge.challenge_id,
+                code=testbed.otp_delivery.last_code(),
+            )
         )
     )
 
@@ -180,12 +187,22 @@ def test_platform_admins_are_bootstrapped_from_settings() -> None:
         }
     )
 
-    email_admin = testbed.sign_in_with_email("DANI@example.com")
-    phone_admin = testbed.sign_in_with_phone("555 12 34 56", "GE")
+    email_admin = testbed.verify_email_code("DANI@example.com")
+    phone_admin = testbed.verify_phone_code("555 12 34 56", "GE")
     regular_user = testbed.sign_in_with_phone(GERMANY_MOBILE)
 
-    assert email_admin.user.is_platform_admin is True
-    assert phone_admin.user.is_platform_admin is True
+    # Admins always take the second step: setting up an authenticator first.
+    for answer in (email_admin, phone_admin):
+        assert isinstance(answer, MfaRequiredView)
+        assert answer.mfa_challenge.requires_enrollment is True
+    admins = [
+        testbed.user_repo.find_by_email(EmailAddress("dani@example.com")),
+        testbed.user_repo.find_by_phone_number(E164PhoneNumber("+995555123456")),
+    ]
+    assert [admin is not None and admin.is_platform_admin for admin in admins] == [
+        True,
+        True,
+    ]
     assert regular_user.user.is_platform_admin is False
 
 

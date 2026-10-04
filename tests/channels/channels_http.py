@@ -40,6 +40,7 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
     AuthenticateVoiceToolCallUseCase,
 )
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
 
 
@@ -127,7 +128,9 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                 )
             ),
             create_telegram_link_operator=wrap_use_case(testbed.create_telegram_link),
-            current_user=build_current_user_dependency(testbed.authentication),
+            current_user=build_current_user_dependency(
+                testbed.authentication, SessionAssuranceContext()
+            ),
             set_whatsapp_staff_template_operator=wrap_use_case(
                 testbed.set_whatsapp_staff_template
             ),

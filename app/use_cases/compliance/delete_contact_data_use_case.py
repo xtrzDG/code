@@ -19,6 +19,7 @@ from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
 from app.contracts.repositories.media_repositories import MessageMediaRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
@@ -93,7 +94,9 @@ class DeleteContactDataUseCase(
         note_repo: ConversationNoteRepoContract,
         media_storage: MediaStorageAdapterContract,
         message_media_repo: MessageMediaRepoContract,
+        step_up: StepUpGuardContract,
     ) -> None:
+        self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -125,6 +128,7 @@ class DeleteContactDataUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         records: ContactRecords = self._collect_contact_records.run(
             ContactRecordsQuery(
                 business_id=business.id,

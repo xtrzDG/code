@@ -63,11 +63,6 @@ from app.schemas.domain.setup import (
     SetupStateDocument,
 )
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
-from app.schemas.domain.users import (
-    OtpChallengeDocument,
-    UserDocument,
-    UserSessionDocument,
-)
 from app.schemas.domain.value_reports import ValueReportDocument
 from app.schemas.domain.value_settings import (
     DigestPreferencesDocument,
@@ -81,16 +76,13 @@ from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
+from app.utilities.storage.sign_in_document_collections import (
+    SIGN_IN_DOCUMENT_COLLECTIONS,
+)
 
 DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
-    # Users and sign-in (platform-wide).
-    DocumentCollectionDefinition(DocumentCollectionName("users"), UserDocument),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("otp_challenges"), OtpChallengeDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("user_sessions"), UserSessionDocument
-    ),
+    # Users and sign-in (platform-wide), two-factor sign-in included.
+    *SIGN_IN_DOCUMENT_COLLECTIONS,
     # Businesses, their profile and channels.
     DocumentCollectionDefinition(
         DocumentCollectionName("businesses"), BusinessDocument

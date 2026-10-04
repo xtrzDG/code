@@ -5,9 +5,6 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
-from app.use_cases.admin.authorize_platform_admin_use_case import (
-    AuthorizePlatformAdminUseCase,
-)
 from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCase
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
@@ -43,9 +40,15 @@ from app.use_cases.billing.payment_webhook.process_payment_webhook_use_case impo
 from app.use_cases.billing.start_checkout_use_case import StartCheckoutUseCase
 from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.billing.billing_fakes import RecordingVoiceAgentRemoval
 from tests.billing.billing_infrastructure import BillingInfrastructure
+from tests.foundation.access_support import (
+    ACCESS_SETTINGS,
+    AllowStepUp,
+    AuthorizeFlaggedAdmin,
+)
 
 
 class BillingUseCases(BillingInfrastructure):
@@ -65,6 +68,8 @@ class BillingUseCases(BillingInfrastructure):
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         )
         self.assemble_overview = AssembleBillingOverviewUseCase(
             subscription_repo=self.subscription_repo,
@@ -221,7 +226,7 @@ class BillingUseCases(BillingInfrastructure):
             message_repo=self.message_repo,
             exchange_rate_registry=self.exchange_rate_registry,
         )
-        authorize_admin = AuthorizePlatformAdminUseCase(user_repo=self.user_repo)
+        authorize_admin = AuthorizeFlaggedAdmin(self.user_repo)
         summarize_client = SummarizeClientUseCase(
             subscription_repo=self.subscription_repo,
             assistant_version_repo=self.assistant_version_repo,
@@ -255,4 +260,5 @@ class BillingUseCases(BillingInfrastructure):
             business_repo=self.business_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
+            step_up=AllowStepUp(),
         )

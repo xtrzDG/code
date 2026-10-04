@@ -3,8 +3,8 @@
 /**
  * Who is signed in and their preferences: the interface language, the
  * theme, the chime when someone needs a person, installing the cabinet as
- * an app, all businesses, the platform
- * admin (for admins) and signing out. Shown by the user menu at the bottom
+ * an app, all businesses, Account → Security (the authenticator app), the
+ * platform admin (for admins) and signing out. Shown by the user menu at the bottom
  * of the sidebar, and inside "More" on phones.
  */
 
@@ -14,10 +14,10 @@ import { useId, useState } from "react";
 import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { ADMIN_PATH, HOME_PATH } from "@/lib/navigation";
+import { ACCOUNT_SECURITY_PATH, ADMIN_PATH, HOME_PATH } from "@/lib/navigation";
 
 import { LanguageSwitcher } from "../LanguageSwitcher";
-import { IconBuilding, IconDownload, IconShield } from "../icons";
+import { IconBuilding, IconDownload, IconKey, IconShield } from "../icons";
 import { ThemeSwitcher } from "../theme/ThemeSwitcher";
 import { ChimeSetting } from "./ChimeSetting";
 import { SignOutButton } from "./SignOutButton";
@@ -97,6 +97,10 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
         <Link href={HOME_PATH} onClick={onNavigate} className={ROW}>
           <IconBuilding className="size-4 shrink-0" aria-hidden />
           {t("account.businesses")}
+        </Link>
+        <Link href={ACCOUNT_SECURITY_PATH} onClick={onNavigate} className={ROW}>
+          <IconKey className="size-4 shrink-0" aria-hidden />
+          {t("security.menu")}
         </Link>
         {me.user.is_platform_admin ? (
           <Link href={ADMIN_PATH} onClick={onNavigate} className={ROW}>

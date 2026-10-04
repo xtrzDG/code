@@ -4,6 +4,7 @@ from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
+from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
@@ -59,7 +60,9 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
             BusinessView,
         ],
         wall_clock: WallClock[Microseconds],
+        step_up: StepUpGuardContract,
     ) -> None:
+        self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -82,6 +85,7 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
                 required_role=BusinessMemberRole.OWNER,
             )
         )
+        self._step_up.require_recent_authentication()
         invitation: InviteStaffRequest = input_data.invitation
         display_name: UserDisplayName | None = invitation.display_name
         if display_name is not None:

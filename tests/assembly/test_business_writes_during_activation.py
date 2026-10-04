@@ -39,8 +39,10 @@ from app.use_cases.businesses.update_business_settings_use_case import (
     UpdateBusinessSettingsUseCase,
 )
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.users.accounts_testbed import PhonenumbersParser
 
 LEVAN = ManagerContact(
@@ -88,6 +90,8 @@ def build_settings(testbed: AssemblyTestbed) -> UpdateBusinessSettingsUseCase:
             testbed.user_repo,
             testbed.audit_repo,
             testbed.wall_clock,
+            session_assurance=SessionAssuranceContext(),
+            app_settings=ACCESS_SETTINGS,
         ),
         business_repo=testbed.business_repo,
         user_repo=testbed.user_repo,

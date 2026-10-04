@@ -100,10 +100,12 @@ def test_the_admin_rotates_every_secret_to_the_new_key(rotating: Workshop) -> No
             "webhooks_failed",
         )
     } == {
+        # The admin's authenticator secret, sealed at sign-in with the new
+        # key, is already current.
         "key_count": 2,
-        "secrets_total": 4,
+        "secrets_total": 5,
         "secrets_rotated": 3,
-        "secrets_current": 0,
+        "secrets_current": 1,
         "secrets_unreadable": 1,
         "webhooks_renewed": 1,
         "webhooks_failed": 0,
@@ -136,6 +138,6 @@ def test_a_second_run_finds_everything_current(rotating: Workshop) -> None:
         rotation["secrets_rotated"],
     ) == (
         "done",
-        1,
+        2,  # the bot token and the admin's authenticator secret
         0,
     )

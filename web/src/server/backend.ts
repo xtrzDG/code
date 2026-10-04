@@ -159,6 +159,8 @@ const FORWARDED_RESPONSE_HEADERS = [
   "content-disposition",
   "cache-control",
   "retry-after",
+  // A 401 asking to confirm a sensitive action says so here (step-up).
+  "www-authenticate",
   "x-content-type-options",
   // A media player seeks and (Safari, iOS) plays only with byte ranges.
   "accept-ranges",

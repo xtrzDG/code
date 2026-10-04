@@ -77,6 +77,54 @@ Spec: `76e1e3904dd01540`
 - **Changed** (additive) `UsageKind`: `transcription_seconds` (voice
   messages transcribed) in admin usage views.
 
+## 2026-10-04 — two-factor sign-in, step-up, admin rights read per request
+
+Spec: `9e7869ca5b5edff3`
+
+- **Breaking** (`api-breaking`) `POST /v1/auth/otp/verify` answers either
+  the session (`LoginSessionView`, unchanged for people without an
+  authenticator) or, for people with an authenticator and for every
+  platform admin, `MfaRequiredView` (`mfa_required: true`,
+  `mfa_challenge`: id, five-minute lifetime, `requires_enrollment`) and
+  no token. Migration path: when `mfa_required` is true, send the
+  authenticator code (`code`) or a recovery code (`recovery_code`) to
+  **Added** `POST /v1/auth/mfa/verify`, which answers the session; an
+  admin without an authenticator first gets its secret and setup link
+  from **Added** `POST /v1/auth/mfa/enroll`, and the session answer then
+  carries the ten new `recovery_codes` (shown once).
+- **Changed** `LoginSessionView` gains `auth_level` (`one_factor` |
+  `two_factor`) and `recovery_codes`; `CurrentUserView` (`GET /v1/me`)
+  gains `auth_level`.
+- **Added** Account → Security: `GET /v1/me/security`,
+  `POST /v1/me/mfa/totp` (start setting up an authenticator),
+  `POST /v1/me/mfa/totp/confirm` (first code; answers the recovery
+  codes), `DELETE /v1/me/mfa/totp` (`204`) and
+  `POST /v1/me/mfa/recovery-codes` (a new set). Every change is in the
+  audit log as `mfa_changed` (new `AuditAction` value, on entries that
+  name no business: the business audit log never lists them).
+- **Added** step-up: exporting or erasing a contact's data, team changes,
+  connecting a channel (not the website chat, which holds no outside
+  account's credentials), `PUT …/security`, setting up an authenticator,
+  the admin opening a client's cabinet and starting a key rotation answer
+  `401 authentication_required` with the reason `step_up_required`
+  (detail: the window in seconds) and
+  `WWW-Authenticate: Bearer error="insufficient_user_authentication"`
+  when the session last proved its person more than
+  `STEP_UP_MAX_AGE_SECONDS` (600) ago. The session stays valid: confirm
+  with `POST /v1/auth/step-up` (`totp`, or a login code sent to the
+  person's own phone or e-mail) and `POST /v1/auth/step-up/verify`, then
+  repeat the request. A wrong code is `422 validation_failed` with the
+  reason `wrong_code`.
+- **Added** `GET` and `PUT /v1/businesses/{business_id}/security`
+  (`require_mfa_for_members`; changing it is owner-only and turning it on
+  needs the owner's own two-factor session). While it is on, members
+  signed in with one factor get `403 access_denied` with the reason
+  `mfa_required` on the business's routes.
+- **Changed** admin routes (`/v1/admin/…`) refuse a session without two
+  factors with `403 access_denied`, reason `mfa_required`, and read admin
+  rights from `PLATFORM_ADMIN_EMAILS` / `PLATFORM_ADMIN_PHONE_NUMBERS` at
+  every request (someone taken off the lists is refused at once).
+
 ## 2026-10-03 — widget messages are answered by the worker
 
 Spec: `66ff36e8e31c29a8`

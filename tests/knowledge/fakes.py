@@ -13,6 +13,7 @@ from app.contracts.localization_utilities import (
 from app.contracts.operator_contract import OperatorContract
 from app.schemas.constants.localization import PhoneNumberKind
 from app.schemas.dto.localization import LocalizedText, PhoneNumberDetails
+from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     InvalidPhoneNumberError,
@@ -31,6 +32,7 @@ from app.schemas.typings.localization.strings import (
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
+from tests.foundation.access_support import signed_in
 
 
 class FakePhoneNumberParser(PhoneNumberParserContract):
@@ -100,15 +102,15 @@ class FakeLocalizedTextResolver(LocalizedTextResolverContract):
         return next(iter(text.values.values()))
 
 
-class FakeUserAuthenticationOperator(OperatorContract[AccessToken, UserId]):
+class FakeUserAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
     """Maps known bearer tokens to users."""
 
     def __init__(self, users_by_token: dict[str, UserId]) -> None:
         self._users_by_token: dict[str, UserId] = users_by_token
 
-    def operate(self, input_data: AccessToken) -> UserId:
+    def operate(self, input_data: AccessToken) -> SessionAssurance:
         user_id: UserId | None = self._users_by_token.get(input_data)
         if user_id is None:
             raise AuthenticationRequiredError("Unknown access token.")
 
-        return user_id
+        return signed_in(user_id)

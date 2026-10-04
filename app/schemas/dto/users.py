@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -18,6 +19,7 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     RawPhoneNumberInput,
 )
+from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.users.booleans import (
     IsNewUser,
     IsPlatformAdmin,
@@ -123,13 +125,17 @@ class UserView(ImmutableDTO):
 class LoginSessionView(ImmutableDTO):
     """
     A new session. The bearer token is shown only here; the server keeps
-    nothing but its hash.
+    nothing but its hash. `auth_level` says how it was signed in; a session
+    opened while setting up an authenticator carries the new
+    `recovery_codes` (shown once).
     """
 
     access_token: AccessToken
     expires_at: Microseconds
     user: UserView
     is_new_user: IsNewUser
+    auth_level: AuthLevel = AuthLevel.ONE_FACTOR
+    recovery_codes: list[RecoveryCode] = Field(default_factory=list[RecoveryCode])
 
 
 class LogoutCommand(ImmutableDTO):
@@ -149,12 +155,16 @@ class UserMembershipView(ImmutableDTO):
 
 
 class CurrentUserView(ImmutableDTO):
-    """The signed-in user and every business they work in."""
+    """
+    The signed-in user and every business they work in, and how the current
+    session is signed in (None outside a signed-in request).
+    """
 
     user: UserView
     memberships: list[UserMembershipView] = Field(
         default_factory=list[UserMembershipView]
     )
+    auth_level: AuthLevel | None = None
 
 
 class UpdateCurrentUserRequest(ImmutableDTO):

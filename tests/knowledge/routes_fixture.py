@@ -18,6 +18,7 @@ from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.schemas.constants.niches import NicheKey
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.knowledge.fakes import FakeUserAuthenticationOperator
 from tests.knowledge.harness import KnowledgeHarness
 
@@ -65,7 +66,8 @@ def build_fixture(niche_key: NicheKey = NicheKey.RESTAURANT) -> RoutesFixture:
                 "staff-token": staff_id,
                 "stranger-token": stranger_id,
             }
-        )
+        ),
+        SessionAssuranceContext(),
     )
     access_operator = operator(harness.authorize_business_access)
     http_application = FastAPI()

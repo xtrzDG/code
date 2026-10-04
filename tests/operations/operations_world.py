@@ -43,6 +43,8 @@ from app.use_cases.insights.get_dashboard_stats_use_case import GetDashboardStat
 from app.use_cases.leads.create_lead_use_case import CreateLeadUseCase
 from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
+from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.operations.operations_booking_factories import OperationsBookingFactories
 
 
@@ -167,6 +169,8 @@ class OperationsWorld(OperationsBookingFactories):
                 user_repo=self.user_repo,
                 audit_log_repo=self.audit_repo,
                 wall_clock=self.clock.wall_clock,
+                session_assurance=SessionAssuranceContext(),
+                app_settings=ACCESS_SETTINGS,
             ),
             conversation_repo=self.conversation_repo,
             attention_count_repo=self.attention_count_repo,
