@@ -27,10 +27,14 @@ from app.schemas.dto.operations.activity_counts import (
     ConversationTimelineCount,
 )
 from app.schemas.dto.paging import KeysetSlice
+from app.schemas.dto.reply_speed import ReplyLatencyBucketCount
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.constrained_integers import (
+    ReplyLatencyMilliseconds,
+)
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.users.prefixed_id import UserId
@@ -119,6 +123,19 @@ class MessageListingContract(Protocol):
     def list_with_tool_errors(
         self, business_id: BusinessId, since: Microseconds
     ) -> list[MessageDocument]:
+        raise NotImplementedError
+
+    def count_reply_latencies(
+        self,
+        business_id: BusinessId,
+        since: Microseconds,
+        bucket_starts: Sequence[ReplyLatencyMilliseconds],
+    ) -> list[ReplyLatencyBucketCount]:
+        """
+        Assistant replies created at or after `since` with a measured wait,
+        counted by the database per channel and latency bucket (bucket i
+        from `bucket_starts[i]` up to the next start).
+        """
         raise NotImplementedError
 
 

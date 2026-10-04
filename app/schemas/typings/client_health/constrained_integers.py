@@ -33,6 +33,16 @@ class OpenQuestionCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class ReplyLatencyPercentileMilliseconds(BaseConstrainedTypedInt):
+    """
+    A percentile (p50, p95) of how long a client's customers waited for the
+    assistant's replies in a time window, in milliseconds, read from
+    latency buckets.
+    """
+
+    ge = 0
+
+
 class ToolErrorCount(BaseConstrainedTypedInt):
     """Assistant tool calls that ended with an error in a time window."""
 

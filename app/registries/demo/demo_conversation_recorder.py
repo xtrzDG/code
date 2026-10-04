@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_clock import MICROSECONDS_PER_SECOND, DemoClock
 from app.registries.demo.demo_media_lines import record_line_media
+from app.registries.demo.demo_reply_speed import demo_reply_channel, demo_reply_latency
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
     CallGuardVerdict,
@@ -251,6 +252,8 @@ class DemoConversationRecorder:
             tool_calls=list(line.tool_calls),
             attachments=attachments,
             model_id=self._model_id if is_model_reply else None,
+            channel=demo_reply_channel(conversation, line),
+            reply_latency_ms=demo_reply_latency(conversation, line),
             input_tokens=LlmTokenCount(REPLY_INPUT_TOKENS if is_model_reply else 0),
             output_tokens=LlmTokenCount(output_tokens if is_model_reply else 0),
             cost_micro_usd=CostMicroUsd(

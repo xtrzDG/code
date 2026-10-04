@@ -358,3 +358,8 @@ _.viewer_auth_level  # app/schemas/dto/mfa.py (BusinessSecurityView)
 # Pydantic configuration, read by pydantic's metaclass (the evaluation
 # dataset models refuse unknown keys).
 _.model_config  # scripts/eval_harness/dataset_models.py
+
+# Reply speed: a reply's measured wait is read by the database (the latency
+# buckets of migration 1090), the medians by the admin's client page.
+_.reply_latency_ms  # app/schemas/domain/conversations.py (MessageDocument)
+_.p50_ms  # app/schemas/dto/reply_speed.py (ClientReplySpeed, ChannelReplySpeed)

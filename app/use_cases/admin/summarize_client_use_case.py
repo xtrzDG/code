@@ -38,6 +38,9 @@ from app.schemas.typings.client_health.constrained_integers import (
     OpenQuestionCount,
     ToolErrorCount,
 )
+from app.schemas.typings.conversations.constrained_integers import (
+    ReplyLatencyMilliseconds,
+)
 from app.use_cases.admin.active_version import (
     count_failed_scenarios,
     find_active_version,
@@ -50,8 +53,15 @@ from app.use_cases.admin.client_usage_window import (
 )
 from app.use_cases.shared.billing_records import find_current_subscription
 from app.use_cases.shared.package_usage import summarize_package_usage
+from app.utilities.client_health.reply_speed import (
+    REPLY_LATENCY_BUCKET_STARTS,
+    build_client_reply_speed,
+)
 
 RECENT_ACTIVITY_DAYS: int = 7
+REPLY_LATENCY_BUCKETS: tuple[ReplyLatencyMilliseconds, ...] = tuple(
+    ReplyLatencyMilliseconds(start) for start in REPLY_LATENCY_BUCKET_STARTS
+)
 
 
 class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSummary]):
@@ -61,9 +71,10 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
     Subscription and service mode; the published assistant version; the
     autotest verdict of the active version (the published one, else the
     latest tested) exactly as the version stores it; handoffs and tool errors
-    of the last 7 days; open unanswered questions; package use, provider
-    cost and margin in the current billing window (the last 30 days without
-    a subscription); and the health verdict. Leads-only service and a
+    of the last 7 days; how long customers waited for replies in the last
+    7 days (p50 and p95 per channel); open unanswered questions; package
+    use, provider cost and margin in the current billing window (the last
+    30 days without a subscription); and the health verdict. Leads-only service and a
     negative margin are critical; other issues ask for attention. Sandbox
     (test chat) handoffs and questions are not counted. Every count is a
     database count or an indexed read of the few matching documents, so a
@@ -183,6 +194,11 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
             used_dialogs=usage.used_dialogs,
             included_dialogs=plan.included_dialogs,
             cost=cost,
+            reply_speed=build_client_reply_speed(
+                self._message_repo.count_reply_latencies(
+                    business.id, recent_since, REPLY_LATENCY_BUCKETS
+                )
+            ),
             health_status=ClientHealthStatus.HEALTHY,
         )
         issues: list[ClientHealthIssue] = find_health_issues(summary, subscription)
