@@ -177,20 +177,14 @@ class ConversationRows:
 
         rows: list[CsvRow] = []
         for conversation in shown:
-            contact: ContactDocument | None = contacts.get(conversation.contact_id)
-            lead_cells: list[CsvCellText] = [
-                text_cell(conversation.id),
-                text_cell(conversation.channel),
-                text_cell(conversation.status),
-                text_cell(None if contact is None else contact.name),
-                text_cell(None if contact is None else contact.phone_number),
-                moment_cell(conversation.created_at, zone),
-            ]
-            listed: list[MessageDocument | None] = [*messages[conversation.id]]
-            for row_message in listed or [None]:
-                rows.append(
-                    CsvRow(cells=[*lead_cells, *message_cells(row_message, zone)])
+            rows.extend(
+                conversation_rows(
+                    conversation,
+                    contacts.get(conversation.contact_id),
+                    messages[conversation.id],
+                    zone,
                 )
+            )
 
         return CsvExportPage(rows=rows, next_cursor=next_cursor)
 
@@ -235,18 +229,42 @@ class AuditRows:
             item_id=lambda entry: str(entry.id),
         )
         return CsvExportPage(
-            rows=[
-                CsvRow(
-                    cells=[
-                        moment_cell(entry.created_at, zone),
-                        text_cell(entry.action),
-                        text_cell(entry.entity),
-                        text_cell(entry.entity_id),
-                        text_cell(entry.actor_id),
-                        text_cell(entry.ip_address),
-                    ]
-                )
-                for entry in entries
-            ],
+            rows=[audit_row(entry, zone) for entry in entries],
             next_cursor=next_cursor,
         )
+
+
+def conversation_rows(
+    conversation: ConversationDocument,
+    contact: ContactDocument | None,
+    messages: list[MessageDocument],
+    zone: ZoneInfo,
+) -> list[CsvRow]:
+    """One row per message (one with empty message cells when none)."""
+
+    lead_cells: list[CsvCellText] = [
+        text_cell(conversation.id),
+        text_cell(conversation.channel),
+        text_cell(conversation.status),
+        text_cell(None if contact is None else contact.name),
+        text_cell(None if contact is None else contact.phone_number),
+        moment_cell(conversation.created_at, zone),
+    ]
+    listed: list[MessageDocument | None] = [*messages]
+    return [
+        CsvRow(cells=[*lead_cells, *message_cells(message, zone)])
+        for message in listed or [None]
+    ]
+
+
+def audit_row(entry: AuditLogEntryDocument, zone: ZoneInfo) -> CsvRow:
+    return CsvRow(
+        cells=[
+            moment_cell(entry.created_at, zone),
+            text_cell(entry.action),
+            text_cell(entry.entity),
+            text_cell(entry.entity_id),
+            text_cell(entry.actor_id),
+            text_cell(entry.ip_address),
+        ]
+    )

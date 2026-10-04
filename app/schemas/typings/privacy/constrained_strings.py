@@ -6,24 +6,27 @@ from base_typed_string import BaseConstrainedTypedString
 class BusinessExportDownloadPath(BaseConstrainedTypedString):
     """
     API path of the signed, expiring download of one full business export
-    (GET; the token in the query is the permission).
+    (GET without a session; the token in the query is the permission).
 
     Example:
         path = BusinessExportDownloadPath(
-            "/v1/business-exports/business_export_0b5c/download?token=AQ0F"
+            "/v1/business-exports/business_1f/business_export_0b5c/download?token=AQ0F"
         )
     """
 
-    min_length = 30
+    min_length = 40
     max_length = 400
-    pattern = r"^/v1/business-exports/[a-z0-9_\-]+/download\?token=[A-Za-z0-9_\-]+$"
+    pattern = (
+        r"^/v1/business-exports/[a-z0-9_\-]+/[a-z0-9_\-]+/download"
+        r"\?token=[A-Za-z0-9_\-]+$"
+    )
 
 
 class BusinessExportToken(BaseConstrainedTypedString):
     """
     The signed permission to download one export until it expires:
-    base64url without padding of the export id, the business, the expiry
-    and an HMAC-SHA256 under a key derived from ENCRYPTION_KEY.
+    base64url without padding of the expiry and an HMAC-SHA256 over it, the
+    business and the export, under a key derived from ENCRYPTION_KEY.
 
     Example:
         token = BusinessExportToken("AQ0Ff3...")

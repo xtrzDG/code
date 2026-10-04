@@ -3027,6 +3027,128 @@
         "title": "BusinessContacts",
         "type": "object"
       },
+      "BusinessExportList": {
+        "additionalProperties": false,
+        "description": "The business's latest exports, the newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BusinessExportView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "BusinessExportList",
+        "type": "object"
+      },
+      "BusinessExportStatus": {
+        "description": "Where a full export of a business stands: QUEUED for the worker,\nRUNNING while it writes the archive, READY to download until it\nexpires, EXPIRED once its archive was deleted, FAILED with the reason.",
+        "enum": [
+          "queued",
+          "running",
+          "ready",
+          "expired",
+          "failed"
+        ],
+        "title": "BusinessExportStatus",
+        "type": "string"
+      },
+      "BusinessExportView": {
+        "additionalProperties": false,
+        "description": "One export as Settings → Privacy shows it: its state, when it was asked\nfor and finished, its size, and while READY the signed download path\n(relative to the API; it works without the session until\n`expires_at`). `last_error` says why a FAILED export failed.",
+        "properties": {
+          "archive_bytes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archive Bytes"
+          },
+          "download_path": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "minLength": 40,
+                "pattern": "^/v1/business-exports/[a-z0-9_\\-]+/[a-z0-9_\\-]+/download\\?token=[A-Za-z0-9_\\-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Path"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "record_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Count"
+          },
+          "requested_at": {
+            "title": "Requested At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BusinessExportStatus"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "requested_at"
+        ],
+        "title": "BusinessExportView",
+        "type": "object"
+      },
       "BusinessFactView": {
         "additionalProperties": false,
         "description": "One row of the fact table the assistant answers from.",
@@ -5189,7 +5311,7 @@
       },
       "ContactDataExport": {
         "additionalProperties": false,
-        "description": "Machine-readable copy of a visitor's personal data (right of access).",
+        "description": "Machine-readable copy of a visitor's personal data (right of access),\nwith their missed calls, feedback ratings and opt-out state.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -5198,6 +5320,9 @@
           "exported_at": {
             "title": "Exported At",
             "type": "integer"
+          },
+          "opt_out": {
+            "$ref": "#/components/schemas/ContactOptOutState"
           },
           "records": {
             "$ref": "#/components/schemas/ContactRecords"
@@ -5382,6 +5507,26 @@
         "title": "ContactLeadView",
         "type": "object"
       },
+      "ContactOptOutState": {
+        "additionalProperties": false,
+        "description": "Whether the visitor stopped messages they did not ask for: the\nchannels they sent STOP in, and whether one of their numbers or\naccounts is on the business's suppression list.",
+        "properties": {
+          "is_on_suppression_list": {
+            "default": false,
+            "title": "Is On Suppression List",
+            "type": "boolean"
+          },
+          "opted_out_channels": {
+            "items": {
+              "$ref": "#/components/schemas/ChannelKind"
+            },
+            "title": "Opted Out Channels",
+            "type": "array"
+          }
+        },
+        "title": "ContactOptOutState",
+        "type": "object"
+      },
       "ContactPage": {
         "additionalProperties": false,
         "description": "One page of customers; `next_cursor` is None on the last page.",
@@ -5416,7 +5561,7 @@
       },
       "ContactRecords": {
         "additionalProperties": false,
-        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted.",
+        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted. Missed calls are found by the visitor's numbers, the messages\nqueued to them (`outbound_messages`: replies, reminders, text-backs) by\ntheir account in each of the business's channels, the webhook events\nthey sent (`inbound_events`) by their accounts and conversations, and\nthe requests for feedback after their visits by the contact.",
         "properties": {
           "bookings": {
             "items": {
@@ -5442,11 +5587,25 @@
             "title": "Conversations",
             "type": "array"
           },
+          "feedback_requests": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackRequestDocument"
+            },
+            "title": "Feedback Requests",
+            "type": "array"
+          },
           "handoffs": {
             "items": {
               "$ref": "#/components/schemas/HandoffDocument"
             },
             "title": "Handoffs",
+            "type": "array"
+          },
+          "inbound_events": {
+            "items": {
+              "$ref": "#/components/schemas/InboundEventDocument"
+            },
+            "title": "Inbound Events",
             "type": "array"
           },
           "leads": {
@@ -5463,11 +5622,25 @@
             "title": "Messages",
             "type": "array"
           },
+          "missed_calls": {
+            "items": {
+              "$ref": "#/components/schemas/MissedCallDocument"
+            },
+            "title": "Missed Calls",
+            "type": "array"
+          },
           "notes": {
             "items": {
               "$ref": "#/components/schemas/ConversationNoteDocument"
             },
             "title": "Notes",
+            "type": "array"
+          },
+          "outbound_messages": {
+            "items": {
+              "$ref": "#/components/schemas/OutboundMessageDocument"
+            },
+            "title": "Outbound Messages",
             "type": "array"
           }
         },
@@ -6704,6 +6877,30 @@
         "title": "CurrentWebsiteImport",
         "type": "object"
       },
+      "CustomerRecipient": {
+        "additionalProperties": false,
+        "description": "A customer in the business's channel. The credential is read from the\nchannel at send time (never stored here), so a reconnected bot is used.",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "channel_id": {
+            "title": "Channel Id",
+            "type": "string"
+          },
+          "channel_user_id": {
+            "title": "Channel User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel_id",
+          "channel",
+          "channel_user_id"
+        ],
+        "title": "CustomerRecipient",
+        "type": "object"
+      },
       "CustomerSourceKind": {
         "description": "One row of the customer sources report: a source tag, the conversations\nof one channel that came without a tag, or the smallest tags together.",
         "enum": [
@@ -7688,6 +7885,199 @@
           "outcome"
         ],
         "title": "FailedAutotestView",
+        "type": "object"
+      },
+      "FeedbackRequestDocument": {
+        "additionalProperties": false,
+        "description": "The request for feedback after one visit (a booking) and how it went.\n\nThe id derives from the business and the booking, so a visit is asked\nabout once. A SENT request went into the outbox (`outbound_message_id`)\nin `channel` and `language` and waits for the customer's rating; the\noutbox marks it delivered (`delivered_at`) or FAILED. The rating\n(`score`) makes it ANSWERED; a low one also opens a handoff in the\nconversation. Everyone who answers gets the business's review link\nthrough the platform's address with `review_token`, which counts the\ncustomer's visits (`review_clicks`). A SKIPPED request keeps why\n(`skip_reason`). No text the customer wrote is kept here: their words\nstay in the conversation, which an erasure removes.",
+        "properties": {
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "booking_id": {
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "first_clicked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Clicked At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "outbound_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outbound Message Id"
+          },
+          "review_clicks": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Review Clicks",
+            "type": "integer"
+          },
+          "review_token": {
+            "anyOf": [
+              {
+                "maxLength": 22,
+                "minLength": 22,
+                "pattern": "^[A-Za-z0-9_-]{22}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Token"
+          },
+          "schema_version": {
+            "default": "1",
+            "description": "Persistence schema version. This is not the package version or application release version.",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedbackSkipReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/FeedbackRequestStatus"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          },
+          "visit_ended_at": {
+            "title": "Visit Ended At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "business_id",
+          "booking_id",
+          "contact_id",
+          "visit_ended_at",
+          "language",
+          "status"
+        ],
+        "title": "FeedbackRequestDocument",
         "type": "object"
       },
       "FeedbackRequestPage": {
@@ -8862,6 +9252,357 @@
         ],
         "title": "ImportedMenuItemView",
         "type": "object"
+      },
+      "InboundAttachment": {
+        "additionalProperties": false,
+        "description": "One attachment of a customer message as the channel adapter read it from\nthe webhook: what it is, where the platform keeps its file\n(`provider_media_id`, fetched by the worker), the type and size the\nplatform declared, the caption and, for a location, the place. Telegram\ntells a voice note's length; other platforms do not.",
+        "properties": {
+          "caption": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "declared_bytes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Bytes"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AttachmentKind"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime Type"
+          },
+          "provider_media_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Media Id"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "InboundAttachment",
+        "type": "object"
+      },
+      "InboundCustomerMessage": {
+        "additionalProperties": false,
+        "description": "A customer's message as the channel adapter read it from the webhook:\nthe typed text and the attachments (voice notes, photos, places, ...),\nwhose files the worker fetches. `acquisition_source` is where the\ncustomer came from when the message carried it (a tagged link, an ad):\na conversation this message starts keeps it.",
+        "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/InboundAttachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "channel_user_id": {
+            "title": "Channel User Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone Number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel_user_id",
+          "text"
+        ],
+        "title": "InboundCustomerMessage",
+        "type": "object"
+      },
+      "InboundEventDocument": {
+        "additionalProperties": false,
+        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.",
+        "properties": {
+          "attempts": {
+            "default": 0,
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "business_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Id"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "channel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Id"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "customer_channel_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Channel User Id"
+          },
+          "customer_message": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InboundCustomerMessage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "customer_message_id": {
+            "title": "Customer Message Id",
+            "type": "string"
+          },
+          "handoff_requested_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handoff Requested At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/InboundEventKind"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "lease_until": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lease Until"
+          },
+          "outbound_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outbound Message Id"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "processed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processed At"
+          },
+          "provider_message_id": {
+            "title": "Provider Message Id",
+            "type": "string"
+          },
+          "reply_message_id": {
+            "title": "Reply Message Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "5",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InboundEventStatus",
+            "default": "received"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "channel",
+          "provider_message_id"
+        ],
+        "title": "InboundEventDocument",
+        "type": "object"
+      },
+      "InboundEventKind": {
+        "description": "What a webhook brought into the inbox, and so which job processes it.",
+        "enum": [
+          "customer_message",
+          "platform_bot_update",
+          "voice_post_call"
+        ],
+        "title": "InboundEventKind",
+        "type": "string"
+      },
+      "InboundEventStatus": {
+        "description": "Where one inbox event stands.\n\nRECEIVED is stored and queued; PROCESSING is held by a worker (or the\nwidget request) until `lease_until`, after which another may take it\nover; ANSWERED queued a reply (or finished the event); HANDED_OFF ended\nwithout an assistant reply because staff own the conversation; FAILED\ncannot be processed (the business is not live, the payload is invalid,\nor the retries ran out).",
+        "enum": [
+          "received",
+          "processing",
+          "answered",
+          "handed_off",
+          "failed"
+        ],
+        "title": "InboundEventStatus",
+        "type": "string"
       },
       "InboxAssigneeList": {
         "additionalProperties": false,
@@ -11124,6 +11865,62 @@
         "title": "MaintenanceRunView",
         "type": "object"
       },
+      "ManagerContact": {
+        "additionalProperties": false,
+        "description": "Staff contact that receives handoffs, bookings and leads, in their\nlanguage. `preferences` (None: every event, at any hour) choose which\nevents reach them and their quiet hours; `telegram_username` is the\n@username of a chat linked through the platform bot, shown instead of\nthe chat id.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ManagerContactChannel"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffNotificationPreferences"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "telegram_username": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 4,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Username"
+          }
+        },
+        "required": [
+          "name",
+          "channel",
+          "address",
+          "language"
+        ],
+        "title": "ManagerContact",
+        "type": "object"
+      },
       "ManagerContactChannel": {
         "description": "Where staff receive handoffs, bookings and leads.",
         "enum": [
@@ -12078,6 +12875,150 @@
         "title": "MfaRequiredView",
         "type": "object"
       },
+      "MissedCallDocument": {
+        "additionalProperties": false,
+        "description": "A call whose caller did not get through (no answer, busy, hung up\nbefore the assistant, a failed start, a transfer nobody picked up) and\nthe message that tells them the business will continue in writing\n(the text-back).\n\nThe id derives from the business, the source and the provider's call\nid, so a repeated report is the same missed call and is texted once.\n`language` is the caller's (detected on the call) or their country's\nwhen the business speaks it. A WhatsApp text-back opens the\nconversation (`conversation_id`) the caller's reply continues in.\nRows are purged after 90 days.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Call Id"
+          },
+          "called_at": {
+            "title": "Called At",
+            "type": "integer"
+          },
+          "caller_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caller Phone Number"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextBackChannel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "provider_call_id": {
+            "title": "Provider Call Id",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/MissedCallReason"
+          },
+          "schema_version": {
+            "default": "1",
+            "description": "Persistence schema version. This is not the package version or application release version.",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextBackSkipReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/MissedCallSource"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TextBackStatus"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "business_id",
+          "source",
+          "provider_call_id",
+          "reason",
+          "called_at",
+          "language",
+          "status"
+        ],
+        "title": "MissedCallDocument",
+        "type": "object"
+      },
       "MissedCallReason": {
         "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up).",
         "enum": [
@@ -12735,6 +13676,278 @@
         "title": "OutboundDeliveryState",
         "type": "string"
       },
+      "OutboundMessageDocument": {
+        "additionalProperties": false,
+        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.",
+        "properties": {
+          "attempts": {
+            "default": 0,
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Call Id"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomerRecipient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "delivered_parts": {
+            "default": 0,
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Delivered Parts",
+            "type": "integer"
+          },
+          "feedback_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Request Id"
+          },
+          "handoff_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handoff Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/OutboundMessageKind"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_failure_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryFailureReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missed_call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missed Call Id"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "provider_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Message Id"
+          },
+          "push": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PushRecipient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recipient_key": {
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Recipient Key",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "4",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "send_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Send Before"
+          },
+          "source_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Message Id"
+          },
+          "staff_contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ManagerContact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/OutboundMessageStatus",
+            "default": "pending"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutboundTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "business_id",
+          "kind",
+          "idempotency_key",
+          "recipient_key",
+          "text"
+        ],
+        "title": "OutboundMessageDocument",
+        "type": "object"
+      },
+      "OutboundMessageKind": {
+        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK).",
+        "enum": [
+          "customer_reply",
+          "staff_notification",
+          "staff_reply",
+          "booking_reminder",
+          "call_confirmation",
+          "call_links",
+          "text_back"
+        ],
+        "title": "OutboundMessageKind",
+        "type": "string"
+      },
       "OutboundMessageStatus": {
         "description": "Delivery state of an outbox message: PENDING waits for its next attempt,\nDELIVERED reached the platform, DEAD was refused for good (a 4xx, no\nprovider) or ran out of attempts.",
         "enum": [
@@ -12744,6 +13957,39 @@
         ],
         "title": "OutboundMessageStatus",
         "type": "string"
+      },
+      "OutboundTemplate": {
+        "additionalProperties": false,
+        "description": "A Meta-approved WhatsApp template. Its body parameters are\n`body_parameters` when named (a customer's template message), else the\nmessage text (a staff notification).",
+        "properties": {
+          "body_parameters": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Body Parameters",
+            "type": "array"
+          },
+          "language_code": {
+            "maxLength": 8,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$",
+            "title": "Language Code",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]{1,512}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "language_code"
+        ],
+        "title": "OutboundTemplate",
+        "type": "object"
       },
       "PackageUsageView": {
         "additionalProperties": false,
@@ -14052,6 +15298,63 @@
           "created_at"
         ],
         "title": "PushDeviceView",
+        "type": "object"
+      },
+      "PushRecipient": {
+        "additionalProperties": false,
+        "description": "A cabinet user's device (Web Push subscription) and what its\nnotification shows besides the text: the title, the page it opens, the\ntag a newer notification about the same thing replaces it by, and how\nsoon the device should wake. The subscription's keys are read at send\ntime (never copied here).",
+        "properties": {
+          "subscription_id": {
+            "title": "Subscription Id",
+            "type": "string"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "pattern": "^[a-z_]+:[A-Za-z0-9_:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "urgency": {
+            "$ref": "#/components/schemas/WebPushUrgency",
+            "default": "normal"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/]+/n/[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscription_id",
+          "user_id",
+          "title"
+        ],
+        "title": "PushRecipient",
         "type": "object"
       },
       "QuestionAnswerType": {
@@ -17965,6 +19268,15 @@
         ],
         "title": "VisitScoreCount",
         "type": "object"
+      },
+      "WebPushUrgency": {
+        "description": "How soon a push service should wake the device (RFC 8030 Urgency).",
+        "enum": [
+          "normal",
+          "high"
+        ],
+        "title": "WebPushUrgency",
+        "type": "string"
       },
       "WebVitalName": {
         "description": "A Core Web Vital: Largest Contentful Paint and Interaction to Next\nPaint in milliseconds, Cumulative Layout Shift in ten-thousandths.",
@@ -22693,6 +24005,127 @@
         "summary": "Verify Step Up",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/v1/business-exports/{business_id}/{export_id}/download": {
+      "get": {
+        "operationId": "download_business_export_v1_business_exports__business_id___export_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "export_id",
+            "required": true,
+            "schema": {
+              "title": "Export Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "token",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The export's ZIP archive."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Download Business Export",
+        "tags": [
+          "exports"
         ]
       }
     },
@@ -27937,6 +29370,269 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/business-exports": {
+      "get": {
+        "operationId": "list_business_exports_v1_businesses__business_id__business_exports_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessExportList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Business Exports",
+        "tags": [
+          "exports"
+        ]
+      },
+      "post": {
+        "operationId": "start_business_export_v1_businesses__business_id__business_exports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "`language`: of the CSV tables' headings (the cabinet's language).",
+                "properties": {
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  }
+                },
+                "title": "StartBusinessExportRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessExportView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Start Business Export",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/call-forwarding-instructions": {
       "get": {
         "operationId": "get_call_forwarding_instructions_v1_businesses__business_id__call_forwarding_instructions_get",
@@ -32215,6 +33911,373 @@
         "summary": "Stream Live Events",
         "tags": [
           "live"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/exports/{table}": {
+      "get": {
+        "operationId": "export_table_v1_businesses__business_id__exports__table__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "table",
+            "required": true,
+            "schema": {
+              "title": "Table",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "resource_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_sandbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Include Sandbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "View"
+            }
+          },
+          {
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Channel"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The table as CSV (UTF-8 with a byte order mark)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Export Table",
+        "tags": [
+          "exports"
         ]
       }
     },

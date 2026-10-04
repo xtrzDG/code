@@ -398,6 +398,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/business-exports/{business_id}/{export_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Business Export */
+        get: operations["download_business_export_v1_business_exports__business_id___export_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses": {
         parameters: {
             query?: never;
@@ -841,6 +858,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/business-exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Business Exports */
+        get: operations["list_business_exports_v1_businesses__business_id__business_exports_get"];
+        put?: never;
+        /** Start Business Export */
+        post: operations["start_business_export_v1_businesses__business_id__business_exports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/call-forwarding-instructions": {
         parameters: {
             query?: never;
@@ -1219,6 +1254,23 @@ export interface paths {
          *     normal routes, which check access and audit views.
          */
         get: operations["stream_live_events_v1_businesses__business_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/exports/{table}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Table */
+        get: operations["export_table_v1_businesses__business_id__exports__table__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4087,6 +4139,48 @@ export interface components {
             public_phone_number?: string | null;
         };
         /**
+         * BusinessExportList
+         * @description The business's latest exports, the newest first.
+         */
+        BusinessExportList: {
+            /** Items */
+            items?: components["schemas"]["BusinessExportView"][];
+        };
+        /**
+         * BusinessExportStatus
+         * @description Where a full export of a business stands: QUEUED for the worker,
+         *     RUNNING while it writes the archive, READY to download until it
+         *     expires, EXPIRED once its archive was deleted, FAILED with the reason.
+         * @enum {string}
+         */
+        BusinessExportStatus: "queued" | "running" | "ready" | "expired" | "failed";
+        /**
+         * BusinessExportView
+         * @description One export as Settings → Privacy shows it: its state, when it was asked
+         *     for and finished, its size, and while READY the signed download path
+         *     (relative to the API; it works without the session until
+         *     `expires_at`). `last_error` says why a FAILED export failed.
+         */
+        BusinessExportView: {
+            /** Archive Bytes */
+            archive_bytes?: number | null;
+            /** Download Path */
+            download_path?: string | null;
+            /** Expires At */
+            expires_at?: number | null;
+            /** Finished At */
+            finished_at?: number | null;
+            /** Id */
+            id: string;
+            /** Last Error */
+            last_error?: string | null;
+            /** Record Count */
+            record_count?: number | null;
+            /** Requested At */
+            requested_at: number;
+            status: components["schemas"]["BusinessExportStatus"];
+        };
+        /**
          * BusinessFactView
          * @description One row of the fact table the assistant answers from.
          */
@@ -4962,13 +5056,15 @@ export interface components {
         };
         /**
          * ContactDataExport
-         * @description Machine-readable copy of a visitor's personal data (right of access).
+         * @description Machine-readable copy of a visitor's personal data (right of access),
+         *     with their missed calls, feedback ratings and opt-out state.
          */
         ContactDataExport: {
             /** Business Id */
             business_id: string;
             /** Exported At */
             exported_at: number;
+            opt_out?: components["schemas"]["ContactOptOutState"];
             records: components["schemas"]["ContactRecords"];
         };
         /**
@@ -5050,6 +5146,21 @@ export interface components {
             status: components["schemas"]["LeadStatus"];
         };
         /**
+         * ContactOptOutState
+         * @description Whether the visitor stopped messages they did not ask for: the
+         *     channels they sent STOP in, and whether one of their numbers or
+         *     accounts is on the business's suppression list.
+         */
+        ContactOptOutState: {
+            /**
+             * Is On Suppression List
+             * @default false
+             */
+            is_on_suppression_list: boolean;
+            /** Opted Out Channels */
+            opted_out_channels?: components["schemas"]["ChannelKind"][];
+        };
+        /**
          * ContactPage
          * @description One page of customers; `next_cursor` is None on the last page.
          */
@@ -5066,7 +5177,11 @@ export interface components {
          *     Calls belong to the visitor through one of their conversations or their
          *     phone number; `notes` are the team's internal notes on their
          *     conversations. Raw language-model turns repeat the messages and are not
-         *     listed.
+         *     listed. Missed calls are found by the visitor's numbers, the messages
+         *     queued to them (`outbound_messages`: replies, reminders, text-backs) by
+         *     their account in each of the business's channels, the webhook events
+         *     they sent (`inbound_events`) by their accounts and conversations, and
+         *     the requests for feedback after their visits by the contact.
          */
         ContactRecords: {
             /** Bookings */
@@ -5076,14 +5191,22 @@ export interface components {
             contact: components["schemas"]["ContactDocument"];
             /** Conversations */
             conversations?: components["schemas"]["ConversationDocument"][];
+            /** Feedback Requests */
+            feedback_requests?: components["schemas"]["FeedbackRequestDocument"][];
             /** Handoffs */
             handoffs?: components["schemas"]["HandoffDocument"][];
+            /** Inbound Events */
+            inbound_events?: components["schemas"]["InboundEventDocument"][];
             /** Leads */
             leads?: components["schemas"]["LeadDocument"][];
             /** Messages */
             messages?: components["schemas"]["MessageDocument"][];
+            /** Missed Calls */
+            missed_calls?: components["schemas"]["MissedCallDocument"][];
             /** Notes */
             notes?: components["schemas"]["ConversationNoteDocument"][];
+            /** Outbound Messages */
+            outbound_messages?: components["schemas"]["OutboundMessageDocument"][];
         };
         /**
          * ContactSummaryView
@@ -5583,6 +5706,18 @@ export interface components {
             current?: components["schemas"]["WebsiteImportView"] | null;
         };
         /**
+         * CustomerRecipient
+         * @description A customer in the business's channel. The credential is read from the
+         *     channel at send time (never stored here), so a reconnected bot is used.
+         */
+        CustomerRecipient: {
+            channel: components["schemas"]["ChannelKind"];
+            /** Channel Id */
+            channel_id: string;
+            /** Channel User Id */
+            channel_user_id: string;
+        };
+        /**
          * CustomerSourceKind
          * @description One row of the customer sources report: a source tag, the conversations
          *     of one channel that came without a tag, or the smallest tags together.
@@ -6001,6 +6136,77 @@ export interface components {
             outcome: components["schemas"]["AutotestOutcome"];
             /** Scenario Key */
             scenario_key: string;
+        };
+        /**
+         * FeedbackRequestDocument
+         * @description The request for feedback after one visit (a booking) and how it went.
+         *
+         *     The id derives from the business and the booking, so a visit is asked
+         *     about once. A SENT request went into the outbox (`outbound_message_id`)
+         *     in `channel` and `language` and waits for the customer's rating; the
+         *     outbox marks it delivered (`delivered_at`) or FAILED. The rating
+         *     (`score`) makes it ANSWERED; a low one also opens a handoff in the
+         *     conversation. Everyone who answers gets the business's review link
+         *     through the platform's address with `review_token`, which counts the
+         *     customer's visits (`review_clicks`). A SKIPPED request keeps why
+         *     (`skip_reason`). No text the customer wrote is kept here: their words
+         *     stay in the conversation, which an erasure removes.
+         */
+        FeedbackRequestDocument: {
+            /** Answered At */
+            answered_at?: number | null;
+            /** Booking Id */
+            booking_id: string;
+            /** Business Id */
+            business_id: string;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            /** Delivered At */
+            delivered_at?: number | null;
+            /** First Clicked At */
+            first_clicked_at?: number | null;
+            /** Id */
+            id: string;
+            /** Language */
+            language: string;
+            /** Last Error */
+            last_error?: string | null;
+            /** Outbound Message Id */
+            outbound_message_id?: string | null;
+            /**
+             * Review Clicks
+             * @default 0
+             */
+            review_clicks: number;
+            /** Review Token */
+            review_token?: string | null;
+            /**
+             * Schema Version
+             * @description Persistence schema version. This is not the package version or application release version.
+             * @default 1
+             */
+            schema_version: string;
+            /** Score */
+            score?: number | null;
+            /** Sent At */
+            sent_at?: number | null;
+            skip_reason?: components["schemas"]["FeedbackSkipReason"] | null;
+            status: components["schemas"]["FeedbackRequestStatus"];
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+            /** Visit Ended At */
+            visit_ended_at: number;
         };
         /** FeedbackRequestPage */
         FeedbackRequestPage: {
@@ -6456,6 +6662,154 @@ export interface components {
             /** Source Page Url */
             source_page_url?: string | null;
         };
+        /**
+         * InboundAttachment
+         * @description One attachment of a customer message as the channel adapter read it from
+         *     the webhook: what it is, where the platform keeps its file
+         *     (`provider_media_id`, fetched by the worker), the type and size the
+         *     platform declared, the caption and, for a location, the place. Telegram
+         *     tells a voice note's length; other platforms do not.
+         */
+        InboundAttachment: {
+            /** Caption */
+            caption?: string | null;
+            /** Declared Bytes */
+            declared_bytes?: number | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            kind: components["schemas"]["AttachmentKind"];
+            location?: components["schemas"]["SharedLocation"] | null;
+            /** Mime Type */
+            mime_type?: string | null;
+            /** Provider Media Id */
+            provider_media_id?: string | null;
+        };
+        /**
+         * InboundCustomerMessage
+         * @description A customer's message as the channel adapter read it from the webhook:
+         *     the typed text and the attachments (voice notes, photos, places, ...),
+         *     whose files the worker fetches. `acquisition_source` is where the
+         *     customer came from when the message carried it (a tagged link, an ad):
+         *     a conversation this message starts keeps it.
+         */
+        InboundCustomerMessage: {
+            /** Acquisition Source */
+            acquisition_source?: string | null;
+            /** Attachments */
+            attachments?: components["schemas"]["InboundAttachment"][];
+            /** Channel User Id */
+            channel_user_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Contact Phone Number */
+            contact_phone_number?: string | null;
+            /** Text */
+            text: string;
+        };
+        /**
+         * InboundEventDocument
+         * @description One message a platform delivered, kept until it is processed (the inbox
+         *     of reliability: a webhook is acknowledged as soon as its event is
+         *     stored, and the worker does the slow work).
+         *
+         *     The id is derived from the business, the channel and the platform's own
+         *     message id, so a redelivered webhook finds its event instead of making a
+         *     second one. The ids of the customer's message and of the assistant's
+         *     reply are chosen here, once: a turn that runs again after a crash stores
+         *     the same two transcript messages, and a reply that was already stored is
+         *     sent instead of generated again.
+         *
+         *     `business_id` is None for platform events (the staff bot, finished-call
+         *     reports before their business is found). `payload` keeps the verified
+         *     body of those events until the worker reads it.
+         *
+         *     Version 2: the attachments of the customer message (optional, so
+         *     version 1 rows read as they are).
+         *
+         *     Version 3: when staff were asked to answer a customer message the
+         *     assistant never answered (`handoff_requested_at`, set by the sweeper of
+         *     the inbox once per FAILED event; optional).
+         *
+         *     Version 4: the customer message's `acquisition_source` (optional).
+         *
+         *     Version 5: `customer_channel_user_id`, the sender of the customer
+         *     message kept beside it (filled from it when missing, so older rows read
+         *     the same), for erasure to find a customer's events by an index.
+         */
+        InboundEventDocument: {
+            /**
+             * Attempts
+             * @default 0
+             */
+            attempts: number;
+            /** Business Id */
+            business_id?: string | null;
+            channel: components["schemas"]["ChannelKind"];
+            /** Channel Id */
+            channel_id?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            /** Customer Channel User Id */
+            customer_channel_user_id?: string | null;
+            customer_message?: components["schemas"]["InboundCustomerMessage"] | null;
+            /** Customer Message Id */
+            customer_message_id?: string;
+            /** Handoff Requested At */
+            handoff_requested_at?: number | null;
+            /** Id */
+            id: string;
+            kind: components["schemas"]["InboundEventKind"];
+            /** Last Error */
+            last_error?: string | null;
+            /** Lease Until */
+            lease_until?: number | null;
+            /** Outbound Message Id */
+            outbound_message_id?: string | null;
+            /** Payload */
+            payload?: string | null;
+            /** Processed At */
+            processed_at?: number | null;
+            /** Provider Message Id */
+            provider_message_id: string;
+            /** Reply Message Id */
+            reply_message_id?: string;
+            /**
+             * Schema Version
+             * @default 5
+             */
+            schema_version: string;
+            /** @default received */
+            status: components["schemas"]["InboundEventStatus"];
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+        };
+        /**
+         * InboundEventKind
+         * @description What a webhook brought into the inbox, and so which job processes it.
+         * @enum {string}
+         */
+        InboundEventKind: "customer_message" | "platform_bot_update" | "voice_post_call";
+        /**
+         * InboundEventStatus
+         * @description Where one inbox event stands.
+         *
+         *     RECEIVED is stored and queued; PROCESSING is held by a worker (or the
+         *     widget request) until `lease_until`, after which another may take it
+         *     over; ANSWERED queued a reply (or finished the event); HANDED_OFF ended
+         *     without an assistant reply because staff own the conversation; FAILED
+         *     cannot be processed (the business is not live, the payload is invalid,
+         *     or the retries ran out).
+         * @enum {string}
+         */
+        InboundEventStatus: "received" | "processing" | "answered" | "handed_off" | "failed";
         /**
          * InboxAssigneeList
          * @description The members of the business, owners first, then by name.
@@ -7341,6 +7695,26 @@ export interface components {
             started_at: number;
         };
         /**
+         * ManagerContact
+         * @description Staff contact that receives handoffs, bookings and leads, in their
+         *     language. `preferences` (None: every event, at any hour) choose which
+         *     events reach them and their quiet hours; `telegram_username` is the
+         *     @username of a chat linked through the platform bot, shown instead of
+         *     the chat id.
+         */
+        ManagerContact: {
+            /** Address */
+            address: string;
+            channel: components["schemas"]["ManagerContactChannel"];
+            /** Language */
+            language: string;
+            /** Name */
+            name: string;
+            preferences?: components["schemas"]["StaffNotificationPreferences"] | null;
+            /** Telegram Username */
+            telegram_username?: string | null;
+        };
+        /**
          * ManagerContactChannel
          * @description Where staff receive handoffs, bookings and leads.
          * @enum {string}
@@ -7710,6 +8084,63 @@ export interface components {
             mfa_required: boolean;
         };
         /**
+         * MissedCallDocument
+         * @description A call whose caller did not get through (no answer, busy, hung up
+         *     before the assistant, a failed start, a transfer nobody picked up) and
+         *     the message that tells them the business will continue in writing
+         *     (the text-back).
+         *
+         *     The id derives from the business, the source and the provider's call
+         *     id, so a repeated report is the same missed call and is texted once.
+         *     `language` is the caller's (detected on the call) or their country's
+         *     when the business speaks it. A WhatsApp text-back opens the
+         *     conversation (`conversation_id`) the caller's reply continues in.
+         *     Rows are purged after 90 days.
+         */
+        MissedCallDocument: {
+            /** Business Id */
+            business_id: string;
+            /** Call Id */
+            call_id?: string | null;
+            /** Called At */
+            called_at: number;
+            /** Caller Phone Number */
+            caller_phone_number?: string | null;
+            channel?: components["schemas"]["TextBackChannel"] | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            /** Id */
+            id: string;
+            /** Language */
+            language: string;
+            /** Last Error */
+            last_error?: string | null;
+            /** Provider Call Id */
+            provider_call_id: string;
+            reason: components["schemas"]["MissedCallReason"];
+            /**
+             * Schema Version
+             * @description Persistence schema version. This is not the package version or application release version.
+             * @default 1
+             */
+            schema_version: string;
+            /** Sent At */
+            sent_at?: number | null;
+            skip_reason?: components["schemas"]["TextBackSkipReason"] | null;
+            source: components["schemas"]["MissedCallSource"];
+            status: components["schemas"]["TextBackStatus"];
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+        };
+        /**
          * MissedCallReason
          * @description Why a caller did not get through, or got nothing from the call.
          *
@@ -7972,6 +8403,116 @@ export interface components {
          */
         OutboundDeliveryState: "sending" | "retrying" | "delivered" | "failed";
         /**
+         * OutboundMessageDocument
+         * @description One message to send (the outbox): an assistant reply to a customer or a
+         *     notification to staff. Queued once per idempotency key (the id derives
+         *     from it), sent by the worker, retried with backoff until it is
+         *     DELIVERED or DEAD, so its delivery state can be looked up.
+         *
+         *     Long texts go out in several platform messages; `delivered_parts`
+         *     counts those already sent, so a retry continues after them instead of
+         *     repeating them. `recipient_key` names who it goes to: messages of one
+         *     recipient go out in the order they were queued.
+         *
+         *     Version 2: a staff notification may go to a cabinet user's device
+         *     (`push`) instead of a staff contact.
+         *
+         *     Version 3: a message to a customer may be a WhatsApp template with its
+         *     own parameters (`template.body_parameters`; outside the 24-hour
+         *     window), and a request for feedback after a visit names its request
+         *     (`feedback_request_id`), which follows its delivery. Both optional.
+         *
+         *     Version 4: why the last attempt failed in words for the owner
+         *     (`last_failure_reason`, shown next to a staff reply in the cabinet),
+         *     and what a message to a customer is about besides a conversation: the
+         *     booking a reminder is for (`booking_id`), the call a confirmation or
+         *     its links follow (`call_id`) and the missed call a text-back answers
+         *     (`missed_call_id`, whose text-back follows the delivery), and the
+         *     moment after which a message is no longer worth sending
+         *     (`send_before`: it is given up instead). All optional.
+         */
+        OutboundMessageDocument: {
+            /**
+             * Attempts
+             * @default 0
+             */
+            attempts: number;
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Call Id */
+            call_id?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            customer?: components["schemas"]["CustomerRecipient"] | null;
+            /** Delivered At */
+            delivered_at?: number | null;
+            /**
+             * Delivered Parts
+             * @default 0
+             */
+            delivered_parts: number;
+            /** Feedback Request Id */
+            feedback_request_id?: string | null;
+            /** Handoff Id */
+            handoff_id?: string | null;
+            /** Id */
+            id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            kind: components["schemas"]["OutboundMessageKind"];
+            /** Last Error */
+            last_error?: string | null;
+            last_failure_reason?: components["schemas"]["DeliveryFailureReason"] | null;
+            /** Missed Call Id */
+            missed_call_id?: string | null;
+            /** Next Attempt At */
+            next_attempt_at?: number | null;
+            /** Provider Message Id */
+            provider_message_id?: string | null;
+            push?: components["schemas"]["PushRecipient"] | null;
+            /** Recipient Key */
+            recipient_key: string;
+            /**
+             * Schema Version
+             * @default 4
+             */
+            schema_version: string;
+            /** Send Before */
+            send_before?: number | null;
+            /** Source Message Id */
+            source_message_id?: string | null;
+            staff_contact?: components["schemas"]["ManagerContact"] | null;
+            /** @default pending */
+            status: components["schemas"]["OutboundMessageStatus"];
+            template?: components["schemas"]["OutboundTemplate"] | null;
+            /** Text */
+            text: string;
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+        };
+        /**
+         * OutboundMessageKind
+         * @description What an outbox message is: an assistant reply to a customer, a
+         *     notification to staff, or one of the messages a customer gets besides
+         *     the assistant's replies: a staff member's reply written in the cabinet
+         *     (STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written
+         *     confirmation of a booking made on the phone (CALL_CONFIRMATION), the
+         *     links the phone assistant promised (CALL_LINKS) and the message to a
+         *     caller who did not get through (TEXT_BACK).
+         * @enum {string}
+         */
+        OutboundMessageKind: "customer_reply" | "staff_notification" | "staff_reply" | "booking_reminder" | "call_confirmation" | "call_links" | "text_back";
+        /**
          * OutboundMessageStatus
          * @description Delivery state of an outbox message: PENDING waits for its next attempt,
          *     DELIVERED reached the platform, DEAD was refused for good (a 4xx, no
@@ -7979,6 +8520,20 @@ export interface components {
          * @enum {string}
          */
         OutboundMessageStatus: "pending" | "delivered" | "dead";
+        /**
+         * OutboundTemplate
+         * @description A Meta-approved WhatsApp template. Its body parameters are
+         *     `body_parameters` when named (a customer's template message), else the
+         *     message text (a staff notification).
+         */
+        OutboundTemplate: {
+            /** Body Parameters */
+            body_parameters?: string[];
+            /** Language Code */
+            language_code: string;
+            /** Name */
+            name: string;
+        };
         /**
          * PackageUsageView
          * @description Use of the plan package in the current billing period.
@@ -8473,6 +9028,28 @@ export interface components {
             language: string;
             /** Last Error */
             last_error?: string | null;
+        };
+        /**
+         * PushRecipient
+         * @description A cabinet user's device (Web Push subscription) and what its
+         *     notification shows besides the text: the title, the page it opens, the
+         *     tag a newer notification about the same thing replaces it by, and how
+         *     soon the device should wake. The subscription's keys are read at send
+         *     time (never copied here).
+         */
+        PushRecipient: {
+            /** Subscription Id */
+            subscription_id: string;
+            /** Tag */
+            tag?: string | null;
+            /** Title */
+            title: string;
+            /** @default normal */
+            urgency: components["schemas"]["WebPushUrgency"];
+            /** Url */
+            url?: string | null;
+            /** User Id */
+            user_id: string;
         };
         /**
          * QuestionAnswerType
@@ -10078,6 +10655,12 @@ export interface components {
             /** Score */
             score: number;
         };
+        /**
+         * WebPushUrgency
+         * @description How soon a push service should wake the device (RFC 8030 Urgency).
+         * @enum {string}
+         */
+        WebPushUrgency: "normal" | "high";
         /**
          * WebVitalName
          * @description A Core Web Vital: Largest Contentful Paint and Interaction to Next
@@ -12784,6 +13367,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionAssuranceView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    download_business_export_v1_business_exports__business_id___export_id__download_get: {
+        parameters: {
+            query?: {
+                token?: string;
+            };
+            header?: never;
+            path: {
+                business_id: string;
+                export_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The export's ZIP archive. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -15760,6 +16431,187 @@ export interface operations {
             };
         };
     };
+    list_business_exports_v1_businesses__business_id__business_exports_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessExportList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    start_business_export_v1_businesses__business_id__business_exports_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** Language */
+                    language?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessExportView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_call_forwarding_instructions_v1_businesses__business_id__call_forwarding_instructions_get: {
         parameters: {
             query?: {
@@ -18382,6 +19234,110 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    export_table_v1_businesses__business_id__exports__table__get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+                from?: string | null;
+                to?: string | null;
+                status?: string | null;
+                resource_id?: string | null;
+                include_sandbox?: string | null;
+                order?: string | null;
+                search?: string | null;
+                view?: string | null;
+                channel?: string | null;
+                action?: string | null;
+                entity?: string | null;
+                actor_id?: string | null;
+                since?: string | null;
+                until?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                table: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The table as CSV (UTF-8 with a byte order mark). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

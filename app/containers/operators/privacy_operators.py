@@ -2,14 +2,18 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer
 
 from app.containers.pipelines.privacy_pipelines import PrivacyPipelinesContainer
-from app.containers.provider_chains import pipeline_operator
+from app.containers.provider_chains import (
+    pipeline_operator,
+    platform_pipeline_operator,
+)
 from app.containers.utilities import UtilitiesContainer
 
 
 class PrivacyOperatorsContainer(containers.DeclarativeContainer):
     """
     Operators of the exports of a business's data; each runs inside the
-    storage scope of the business it exports.
+    storage scope of the business it exports, except the hourly purge of
+    expired archives, which looks across every business.
     """
 
     privacy_pipelines: PrivacyPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -21,4 +25,19 @@ class PrivacyOperatorsContainer(containers.DeclarativeContainer):
     )
     read_csv_export_page_operator = pipeline_operator(
         privacy_pipelines.read_csv_export_page_pipeline, storage_scope
+    )
+    start_business_export_operator = pipeline_operator(
+        privacy_pipelines.start_business_export_pipeline, storage_scope
+    )
+    list_business_exports_operator = pipeline_operator(
+        privacy_pipelines.list_business_exports_pipeline, storage_scope
+    )
+    run_business_export_operator = pipeline_operator(
+        privacy_pipelines.run_business_export_pipeline, storage_scope
+    )
+    download_business_export_operator = pipeline_operator(
+        privacy_pipelines.download_business_export_pipeline, storage_scope
+    )
+    purge_business_exports_operator = platform_pipeline_operator(
+        privacy_pipelines.purge_business_exports_pipeline, storage_scope
     )

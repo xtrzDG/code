@@ -14,6 +14,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
     {
         f"PATCH {B}",
         f"GET {B}/exports/{{table}}",
+        f"GET {B}/business-exports",
+        f"POST {B}/business-exports",
         f"POST {B}/assistant-versions",
         f"POST {B}/assistant-versions/{{version_id}}/autotests",
         f"POST {B}/assistant-versions/{{version_id}}/publish",

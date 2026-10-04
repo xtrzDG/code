@@ -16,3 +16,18 @@ class PrivacyOrchestratorsContainer(containers.DeclarativeContainer):
     read_csv_export_page_orchestrator = use_case_orchestrator(
         privacy_use_cases.read_csv_export_page_use_case
     )
+    start_business_export_orchestrator = use_case_orchestrator(
+        privacy_use_cases.start_business_export_use_case
+    )
+    list_business_exports_orchestrator = use_case_orchestrator(
+        privacy_use_cases.list_business_exports_use_case
+    )
+    run_business_export_orchestrator = use_case_orchestrator(
+        privacy_use_cases.run_business_export_use_case
+    )
+    download_business_export_orchestrator = use_case_orchestrator(
+        privacy_use_cases.download_business_export_use_case
+    )
+    purge_business_exports_orchestrator = use_case_orchestrator(
+        privacy_use_cases.purge_business_exports_use_case
+    )

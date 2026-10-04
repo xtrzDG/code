@@ -177,23 +177,27 @@ class LeadRows:
             if is_erased(contact):
                 continue
 
-            rows.append(
-                CsvRow(
-                    cells=[
-                        text_cell(lead.id),
-                        moment_cell(lead.created_at, zone),
-                        text_cell(lead.status),
-                        text_cell(lead.lead_type),
-                        text_cell(None if contact is None else contact.name),
-                        text_cell(None if contact is None else contact.phone_number),
-                        text_cell(lead.source_channel),
-                        text_cell(lead.requested_date),
-                        text_cell(lead.party_size),
-                        text_cell(lead.budget),
-                        text_cell(lead.details),
-                        flag_cell(lead.is_sandbox),
-                    ]
-                )
-            )
+            rows.append(lead_row(lead, contact, zone))
 
         return CsvExportPage(rows=rows, next_cursor=next_cursor)
+
+
+def lead_row(
+    lead: LeadDocument, contact: ContactDocument | None, zone: ZoneInfo
+) -> CsvRow:
+    return CsvRow(
+        cells=[
+            text_cell(lead.id),
+            moment_cell(lead.created_at, zone),
+            text_cell(lead.status),
+            text_cell(lead.lead_type),
+            text_cell(None if contact is None else contact.name),
+            text_cell(None if contact is None else contact.phone_number),
+            text_cell(lead.source_channel),
+            text_cell(lead.requested_date),
+            text_cell(lead.party_size),
+            text_cell(lead.budget),
+            text_cell(lead.details),
+            flag_cell(lead.is_sandbox),
+        ]
+    )

@@ -18,3 +18,18 @@ class PrivacyPipelinesContainer(containers.DeclarativeContainer):
     read_csv_export_page_pipeline = orchestrator_pipeline(
         privacy_orchestrators.read_csv_export_page_orchestrator
     )
+    start_business_export_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.start_business_export_orchestrator
+    )
+    list_business_exports_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.list_business_exports_orchestrator
+    )
+    run_business_export_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.run_business_export_orchestrator
+    )
+    download_business_export_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.download_business_export_orchestrator
+    )
+    purge_business_exports_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.purge_business_exports_orchestrator
+    )

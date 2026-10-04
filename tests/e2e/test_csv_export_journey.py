@@ -1,11 +1,14 @@
 """
 End to end over HTTP: the owner downloads the bookings and the inbox's
 conversations as CSV (streamed, UTF-8 with a byte order mark, named after
-the table and the day); staff are refused; a stale sign-in must step up.
+the table and the day) and the full export by its signed link; staff are
+refused; a stale sign-in must step up.
 """
 
 import csv
 import io
+import json
+import zipfile
 
 from tests.e2e.harness import Workshop, bearer
 from tests.e2e.journeys import BOOKING_REQUEST_RU, open_restaurant
@@ -83,3 +86,43 @@ def test_staff_are_refused_and_a_stale_sign_in_steps_up(workshop: Workshop) -> N
         headers=restaurant.headers,
     ).json()["items"]
     assert log == []
+
+
+def test_the_owner_downloads_the_full_export_by_its_link(workshop: Workshop) -> None:
+    client = workshop.client
+    restaurant = open_restaurant(workshop)
+    TelegramCustomer(workshop, restaurant).writes(BOOKING_REQUEST_RU)
+
+    asked = client.post(
+        f"{restaurant.base}/business-exports",
+        json={"language": "ka"},
+        headers=restaurant.headers,
+    )
+    assert asked.status_code == 202, asked.text
+    assert asked.json()["status"] == "queued"
+    assert asked.json()["download_path"] is None
+
+    workshop.run_queued_jobs()
+    [ready] = client.get(
+        f"{restaurant.base}/business-exports", headers=restaurant.headers
+    ).json()["items"]
+    assert ready["status"] == "ready"
+    link: str = ready["download_path"]
+
+    # The link is the permission: no session needed, nothing cached.
+    downloaded = client.get(link)
+    assert downloaded.status_code == 200, downloaded.text
+    assert downloaded.headers["content-type"] == "application/zip"
+    assert downloaded.headers["cache-control"] == "no-store"
+    with zipfile.ZipFile(io.BytesIO(downloaded.content)) as archive:
+        names = set(archive.namelist())
+        bookings_csv = archive.read("csv/bookings.csv").decode("utf-8")
+        contacts = json.loads(archive.read("contacts.json"))
+    assert {"business.json", "messages.json", "csv/conversations.csv"} <= names
+    assert bookings_csv.startswith(BOM + "ჯავშნის ID,")
+    assert [contact["name"] for contact in contacts] == ["Нино"]
+
+    tampered = client.get(link[:-2] + ("AA" if not link.endswith("AA") else "BB"))
+    assert tampered.status_code == 404
+    workshop.clock.advance(25 * 3600)
+    assert client.get(link).status_code == 404
