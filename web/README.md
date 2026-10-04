@@ -152,7 +152,9 @@ npm run e2e -- onboarding         # one file
   the demo restaurant's real widget API and event stream), every page in
   the pseudo-locale at 1440 and 390 px without sideways scrolling or a cut
   control (`e2e/pseudo-locale.spec.ts`; the suite starts the cabinet with
-  `PSEUDO_LOCALE=true`).
+  `PSEUDO_LOCALE=true`), a 45-minute service performed by one master added
+  in the knowledge base, booked by hand and listed with its value, and the
+  demo salon counting clients, not guests (`e2e/services.spec.ts`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -228,13 +230,20 @@ web/
                                none is open; [conversationId]/ the phone-first conversation (folded
                                header, transcript, sticky reply box with Resolve, Call, Book, quick
                                replies after "/", assign menu, notes and details in a panel or sheet)
-        bookings/              server-paged bookings by day ("show more"), manual booking with free
-                               slots (whole-day mode), details, edit, move, cancel
+        bookings/              server-paged bookings by day ("show more") with each booking's service
+                               and value; manual booking with a service (its length filled in, only
+                               those who perform it offered, the value shown before booking) and free
+                               slots (whole-day mode), details, edit, move, cancel; party sizes in the
+                               niche's words (guests, clients, participants: lib/partyNoun.ts)
         assistant/             layout.tsx: the Assistant frame (live or not, "Apply changes", tabs);
                                page.tsx: the test chat ("Try it", `?version=…`)
-          knowledge/           items (layout.tsx: pill tabs; server-paged, filtered by the API) + questions/
-                               (unanswered, server-paged), import/ (menu photo, PDF or link; discard a
-                               whole batch), resources/ (bookable resources, special days)
+          knowledge/           items (layout.tsx: pill tabs; server-paged, filtered by the API; a
+                               service's or package's length, break and who performs it, a room
+                               type's rooms and seasonal nightly rates: lib/offers.ts,
+                               lib/knowledge/offerFields.ts, seasons.ts) + questions/ (unanswered,
+                               server-paged), import/ (menu photo, PDF or link; discard a whole batch),
+                               resources/ (bookable resources with their services or room type,
+                               special days: lib/resources.ts, lib/specialDays.ts)
           profile/             "Hours and rules": the six-step profile wizard (?step=…) and "what to add"
           channels/            chat channels (with the platform's last error; WhatsApp's template for
                                staff replies), website chat code and look, call forwarding, Google

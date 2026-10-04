@@ -44,7 +44,7 @@ test("a 45-minute service performed by Nino is booked by hand and its value show
   await page.getByRole("button", { name: en.knowledge.items.add }).first().click();
   const editor = page.getByRole("dialog", { name: en.knowledge.form.createTitle });
   await editor.getByLabel(en.knowledge.form.kind).selectOption("service");
-  await editor.getByLabel(en.knowledge.form.title, { exact: true }).fill("Ladies' haircut");
+  await editor.getByRole("textbox", { name: en.knowledge.form.title, exact: true }).fill("Ladies' haircut");
   await editor.getByLabel(en.knowledge.form.price.replace("{currency}", "EUR")).fill("35");
   await editor.getByLabel(en.knowledge.form.duration).fill("45");
   await editor.getByLabel(en.knowledge.offer.buffer).fill("10");
@@ -71,8 +71,8 @@ test("a 45-minute service performed by Nino is booked by hand and its value show
   await expect(form.getByText(en.bookings.form.performersOnly)).toBeVisible();
   await expect(form.getByLabel(en.bookings.partyLabel.clients)).toHaveValue("1");
   await form.getByLabel(en.bookings.form.date).fill(tomorrowInBerlin());
-  await form.getByLabel(en.bookings.form.time, { exact: true }).fill("10:00");
-  await expect(form.getByText("€35.00")).toBeVisible();
+  await form.getByLabel(new RegExp(`^${en.bookings.form.time}\\*?$`)).fill("10:00");
+  await expect(form.getByText("€35.00", { exact: true })).toBeVisible();
   await form.getByRole("button", { name: en.bookings.form.submit }).click();
 
   // The confirmation for the customer, then the list: the service, Nino, "1 client" and the value.
@@ -81,7 +81,7 @@ test("a 45-minute service performed by Nino is booked by hand and its value show
   const row = page.getByRole("button", { name: /Mariam Beridze/ });
   await expect(row).toBeVisible();
   await expect(row).toContainText("Ladies' haircut");
-  await expect(row).toContainText(en.bookings.party.clients.one.replace("{count}", "1"));
+  await expect(row).toContainText("1 client");
   await expect(row).toContainText("Nino");
   await expect(row).toContainText("€35.00");
   await expect(row).toContainText("10:00");
@@ -92,7 +92,7 @@ test("a 45-minute service performed by Nino is booked by hand and its value show
   const card = page.getByRole("dialog", { name: "Mariam Beridze" });
   await expect(card.getByText(en.bookings.details.service, { exact: true })).toBeVisible();
   await expect(card.getByText(en.bookings.details.value, { exact: true })).toBeVisible();
-  await expect(card.getByText("€35.00")).toBeVisible();
+  await expect(card.getByText("€35.00", { exact: true })).toBeVisible();
 });
 
 test("the demo salon counts clients, not guests", async ({ page, context, request }) => {
@@ -106,6 +106,7 @@ test("the demo salon counts clients, not guests", async ({ page, context, reques
   await page.goto(`/b/${salon!.id}/bookings?range=upcoming`);
   await waitForNetworkQuiet(page);
   const list = page.getByRole("main");
-  await expect(list.getByText(new RegExp(ru.bookings.party.clients.one.replace("{count}", "1"))).first()).toBeVisible();
+  const oneClient = (ru.bookings.party.clients.one ?? ru.bookings.party.clients.other).replace("{count}", "1");
+  await expect(list.getByText(new RegExp(oneClient)).first()).toBeVisible();
   await expect(list.getByText(/гост(ь|я|ей)/)).toHaveCount(0);
 });
