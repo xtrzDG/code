@@ -41,7 +41,13 @@ def without_money(model: ValueModel) -> ValueModel:
     """The value model with every amount left out (the counts stay)."""
 
     def counts_only(totals: ValueTotals) -> ValueTotals:
-        return totals.model_copy(update={"estimated_revenue_minor": None})
+        return totals.model_copy(
+            update={
+                "estimated_revenue_minor": None,
+                "booked_value_minor": None,
+                "revenue_source": None,
+            }
+        )
 
     return model.model_copy(
         update={

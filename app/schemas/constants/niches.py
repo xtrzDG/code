@@ -37,6 +37,18 @@ class ExampleExchangeKind(StrEnum):
     HANDOFF = "handoff"
 
 
+class BookingScenarioVariant(StrEnum):
+    """
+    A niche's own booking autotest beyond the plain booking: booking a
+    service with a master the customer names, or a room type for several
+    nights. Planned as booking scenarios (kind BOOKING) from the business's
+    own services and rooms.
+    """
+
+    SPECIFIC_PERFORMER = "specific_performer"
+    ROOM_TYPE_STAY = "room_type_stay"
+
+
 class LaunchWave(StrEnum):
     """Go-to-market priority of a niche (A first, C last)."""
 

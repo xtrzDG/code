@@ -102,6 +102,10 @@ describe("the item form", () => {
     expect(validateKnowledgeForm(form({ title: "x", price: "-5" }), "GEL").price).toBe("validation.number");
     expect(validateKnowledgeForm(form({ title: "x", duration: "1.5" }), "GEL").duration).toBe("validation.wholeNumber");
     expect(validateKnowledgeForm(form({ title: "x", duration: "0" }), "GEL").duration).toBe("validation.positive");
+    // One booking of a service lasts 5 to 720 minutes (the API's limit).
+    expect(validateKnowledgeForm(form({ title: "x", duration: "3" }), "GEL").duration).toBe("validation.durationRange");
+    expect(validateKnowledgeForm(form({ title: "x", duration: "1440" }), "GEL").duration).toBe("validation.durationRange");
+    expect(validateKnowledgeForm(form({ title: "x", duration: "720" }), "GEL")).toEqual({});
     expect(validateKnowledgeForm(form({ title: "x".repeat(301) }), "GEL").title).toBe("validation.tooLong");
     expect(validateKnowledgeForm(form({ title: "x", price: "18,50", duration: "60" }), "GEL")).toEqual({});
   });

@@ -17,6 +17,7 @@ from app.utilities.scheduling.opening_hours import (
     resource_ranges_starting_on,
 )
 from app.utilities.scheduling.overlap import BusyRange
+from app.utilities.scheduling.zoned_time import SECONDS_PER_MINUTE
 
 DEFAULT_SLOT_MINUTES: int = 60
 BLOCKING_BOOKING_STATUSES: frozenset[BookingStatus] = frozenset(
@@ -57,13 +58,28 @@ def busy_ranges(
     excluded_booking_id: BookingId | None = None,
     sandbox_conversation_id: ConversationId | None = None,
 ) -> list[BusyRange]:
+    """
+    When the resource's units are taken: each blocking booking from its
+    start to its end plus its buffer (the performer's cleaning or rest
+    time after a service).
+    """
+
     return [
-        BusyRange(int(booking.starts_at), int(booking.ends_at))
+        BusyRange(int(booking.starts_at), blocked_until(booking))
         for booking in bookings
         if booking.resource_id == resource.id
         and booking.id != excluded_booking_id
         and is_blocking(booking, include_sandbox, sandbox_conversation_id)
     ]
+
+
+def blocked_until(booking: BookingDocument) -> int:
+    """UTC seconds the booking's unit is free again: its end plus its buffer."""
+
+    buffer_minutes: int = (
+        0 if booking.buffer_minutes is None else int(booking.buffer_minutes)
+    )
+    return int(booking.ends_at) + buffer_minutes * SECONDS_PER_MINUTE
 
 
 def resource_day_ranges(

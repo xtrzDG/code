@@ -11,7 +11,7 @@ from app.registries.niches.template_parts import (
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
-from app.schemas.constants.niches import LaunchWave, NicheKey
+from app.schemas.constants.niches import BookingScenarioVariant, LaunchWave, NicheKey
 from app.schemas.constants.niches import ProfileWizardStep as Step
 from app.schemas.constants.niches import QuestionAnswerType as Answer
 from app.schemas.dto.niches import NicheTemplate
@@ -176,6 +176,7 @@ def build_beauty_salon_template() -> NicheTemplate:
             ka=["რჩევები კანისა და ჯანმრთელობის სამედიცინო პრობლემებზე"],
         ),
         autotest_kinds=autotest_kinds(),
+        booking_variants=[BookingScenarioVariant.SPECIFIC_PERFORMER],
         integrations=[
             IntegrationName("Google Calendar"),
             IntegrationName("Cal.com"),

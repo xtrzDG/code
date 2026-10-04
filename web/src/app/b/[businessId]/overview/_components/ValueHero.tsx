@@ -8,7 +8,7 @@ import { IconArrowRight, IconChat, IconClock, IconMoon, IconSparkles } from "@/c
 import { AnimatedNumber, TiltCard, TiltLayer } from "@/components/motion";
 import { AverageCheckEditor } from "@/components/value/AverageCheckEditor";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { earningCount, formatWholeMoney, hadNoActivity, periodDays, savedTime, type ValueModel } from "@/components/value/valueModel";
+import { earningCount, formatWholeMoney, hadNoActivity, moneyFormula, periodDays, savedTime, type ValueModel } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
@@ -31,6 +31,7 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
   const estimate = current.estimated_revenue_minor;
   const money = (minor: number) => formatWholeMoney(minor, model.currency_code, locale);
   const first = hadNoActivity(previous);
+  const formula = moneyFormula(model.value_basis, current, model.average_check_minor);
 
   return (
     <section
@@ -98,9 +99,17 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
           </TiltLayer>
           <TiltLayer depth={8} className="mt-auto pt-4">
             <p className="text-sm text-ink-muted">
-              {estimate === null || estimate === undefined || model.average_check_minor == null
+              {formula.kind === "none"
                 ? t("value.hero.noMoney")
-                : t("value.hero.formula", { count: number(count), check: money(model.average_check_minor) })}
+                : formula.kind === "booked"
+                  ? tp("value.hero.formulaBooked", formula.valued, { count: number(formula.valued) })
+                  : formula.kind === "mixed"
+                    ? t("value.hero.formulaMixed", {
+                        booked: money(formula.bookedMinor),
+                        count: number(formula.unvalued),
+                        check: money(formula.checkMinor),
+                      })
+                    : t("value.hero.formula", { count: number(formula.count), check: money(formula.checkMinor) })}
             </p>
           </TiltLayer>
         </TiltCard>

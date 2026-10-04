@@ -72,3 +72,11 @@ class BookingRefusalCode(StrEnum):
     TAKEN = "taken"
     PARTY_TOO_LARGE = "party_too_large"
     NO_SEATING_RESOURCE = "no_seating_resource"
+    # A service, package or room type no name or id matches, or several.
+    UNKNOWN_SERVICE = "unknown_service"
+    AMBIGUOUS_SERVICE = "ambiguous_service"
+    # A master, room or table no name or id matches, or several.
+    UNKNOWN_RESOURCE = "unknown_resource"
+    AMBIGUOUS_RESOURCE = "ambiguous_resource"
+    # The chosen resource does not perform the chosen service.
+    NOT_PERFORMED = "not_performed"

@@ -19,4 +19,15 @@ class KnowledgeTitle(BaseTypedString):
     """Title of a knowledge item: question, dish, service, room type."""
 
 
+class SeasonName(BaseTypedString):
+    """Owner's name of a season of nightly rates ("High season", "Новый год")."""
+
+
+class ServiceReference(BaseTypedString):
+    """
+    How the language model names a bookable service: its id from the facts
+    or a tool result, or its name as the customer wrote it, in any script.
+    """
+
+
 # Keep abc order for all non example types, if possible.

@@ -43,6 +43,8 @@ export const reportsEn = {
     noCheck: "No average check was set, so the report has no money estimate.",
     ownerCheck: "Money estimated with your average check of {money}.",
     typicalCheck: "Money estimated with the typical check of {money} for your kind of business.",
+    bookedPrices: "Money from the prices of what was booked.",
+    mixedCheck: "Money from the prices of what was booked; bookings without a price at the average check of {money}.",
   },
   rows: {
     assistantBookings: "Bookings by the assistant",

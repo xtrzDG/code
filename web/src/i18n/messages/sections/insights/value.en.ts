@@ -14,6 +14,8 @@ export const valueEn = {
     bookingsHint: "made in conversations and still on",
     requestsHint: "orders and requests it took down",
     formula: "{count} × average check {check}",
+    formulaBooked: { one: "{count} booking at its own price", other: "{count} bookings at their own prices" },
+    formulaMixed: "{booked} at their own prices + {count} × average check {check}",
     noMoney: "Set your average check to see what this is worth.",
     afterHours: { one: "{count} after hours", other: "{count} after hours" },
     afterHoursHint: "conversations while you were closed",
@@ -34,7 +36,7 @@ export const valueEn = {
     saved: "The average check is saved",
     cleared: "The typical check is used again",
     positive: "Enter an amount above zero.",
-    hint: "What one booking brings on average. It turns bookings into money; real prices of your services will replace it later.",
+    hint: "What one booking brings on average. Bookings of a service or room with a price count at that price; the average check prices the rest.",
   },
   delta: {
     firstPeriod: "first period",

@@ -10,9 +10,13 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.handoffs import CodedHandoffSummary
-from app.schemas.typings.bookings.constrained_integers import PartySize
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingValueMinor,
+    PartySize,
+)
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.bookings.strings import (
     BookingNote,
@@ -87,7 +91,11 @@ class DemoOperationsRecorder:
         notes: str | None = None,
         made_at: Microseconds | None = None,
         booking_id: BookingId | None = None,
+        service: KnowledgeItemDocument | None = None,
     ) -> BookingDocument:
+        """`service`: what was booked; its price is the booking's value."""
+
+        price = None if service is None else service.price_minor
         created: Microseconds = made_at or (
             conversation.last_message_at
             if conversation is not None
@@ -107,6 +115,10 @@ class DemoOperationsRecorder:
             notes=None if notes is None else BookingNote(notes),
             language=contact.language,
             reminder_sent_at=self._reminder_moment(contact, start, created, status),
+            service_item_id=None if service is None else service.id,
+            buffer_minutes=None if service is None else service.buffer_minutes,
+            value_minor=None if price is None else BookingValueMinor(int(price)),
+            currency_code=None if price is None else self._business.currency_code,
             created_at=created,
             updated_at=created,
         )

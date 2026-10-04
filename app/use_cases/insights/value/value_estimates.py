@@ -86,6 +86,7 @@ def estimate_business_value(
             average_check=owner_check if owner_check is not None else typical,
             seconds_per_reply=defaults.seconds_per_reply,
             seconds_per_call=defaults.seconds_per_call,
+            currency_code=business.currency_code,
         ),
         source=source,
         typical_check=typical,

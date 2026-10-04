@@ -66,6 +66,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         PlanAutotestScenariosUseCase,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         language_registry=registries.language_registry,
     )

@@ -12,7 +12,7 @@ from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
-from app.schemas.constants.niches import LaunchWave, NicheKey
+from app.schemas.constants.niches import BookingScenarioVariant, LaunchWave, NicheKey
 from app.schemas.constants.niches import ProfileWizardStep as Step
 from app.schemas.constants.niches import QuestionAnswerType as Answer
 from app.schemas.dto.niches import NicheTemplate
@@ -228,6 +228,7 @@ def build_clinic_template() -> NicheTemplate:
             ],
         ),
         autotest_kinds=autotest_kinds(AutotestScenarioKind.EMERGENCY),
+        booking_variants=[BookingScenarioVariant.SPECIFIC_PERFORMER],
         integrations=[IntegrationName("Google Calendar")],
         requires_legal_review=True,
     )

@@ -16,6 +16,7 @@ const EMPTY: ValueTotals = {
   handoff_count: 0,
   staff_minutes_saved: 0,
   estimated_revenue_minor: null,
+  valued_booking_count: 0,
 };
 
 describe("a stored report", () => {

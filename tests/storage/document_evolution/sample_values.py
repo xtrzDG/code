@@ -54,6 +54,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "ReferrerHost": "www.google.com",
     "ReleaseVersion": "4718714c0f2e9a1b",
     "ReviewLinkToken": "q3Jd8sLq0Pz-Xb7W2nVc1A",
+    "SeasonDay": "06-15",
     "SignupSourceTag": "qr",
     "TimezoneName": "Asia/Tbilisi",
     "UtmCampaign": "autumn-launch",
@@ -83,9 +84,13 @@ PLAIN_TEXT_SAMPLES: dict[str, str] = {
 INTEGER_SAMPLES: dict[str, int] = {
     "BookingEndsAtUnixSeconds": 1_790_003_600,
     "BookingStartsAtUnixSeconds": 1_790_000_000,
+    "BookingValueMinor": 4_500,
+    "BufferMinutes": 15,
     "ClosingMinuteOfDay": 1_080,
     "ExchangeRateDayNumber": 20_261_002,
     "MoneyAmountMinor": 1_500,
+    "NightlyRateMinor": 25_000,
     "OpeningMinuteOfDay": 540,
+    "ServiceDurationMinutes": 45,
     "SlotDurationMinutes": 30,
 }

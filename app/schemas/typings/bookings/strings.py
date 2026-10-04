@@ -75,6 +75,14 @@ class ResourceName(BaseTypedString):
     """Name of a bookable resource, e.g. "Table 4", "VR arena 2", "Nino"."""
 
 
+class ResourceReference(BaseTypedString):
+    """
+    How the language model names a bookable resource (a master, a doctor, a
+    room): its id from the facts or a tool result, or its name as the
+    customer wrote it, in any script ("Nino", "ნინო", "Нино").
+    """
+
+
 class ScheduleExceptionNote(BaseTypedString):
     """Why a day is closed or has special hours ("Orthodox Christmas")."""
 

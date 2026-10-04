@@ -17,7 +17,6 @@ from app.schemas.dto.knowledge_admin import (
     KnowledgeItemUpsertInput,
 )
 from app.schemas.dto.niches import NicheTemplate
-from app.schemas.dto.profiles.business_profile import FaqEntryInput
 from app.schemas.exceptions.application_errors import (
     NotFoundError,
     ValidationFailedError,
@@ -34,9 +33,19 @@ from app.utilities.knowledge.knowledge_item_checks import (
     unique_languages,
     unique_tags,
 )
+from app.utilities.knowledge.offer_checks import (
+    check_buffer,
+    check_performers_allowed,
+    check_seasonal_rates,
+)
 from app.utilities.knowledge.search_text import fold_words
 
 MAX_UPSERT_ITEMS: int = 500
+BOOKING_FIELDS: tuple[str, ...] = (
+    "buffer_minutes",
+    "performer_resource_ids",
+    "seasonal_rates",
+)
 REQUIRED_PATCH_FIELDS: tuple[str, ...] = (
     "kind",
     "title",
@@ -70,6 +79,11 @@ def build_knowledge_item(
         price_minor=price_minor,
         currency_code=currency_code,
         duration_minutes=item_input.duration_minutes,
+        buffer_minutes=check_buffer(kind, item_input.buffer_minutes),
+        performer_resource_ids=check_performers_allowed(
+            kind, item_input.performer_resource_ids
+        ),
+        seasonal_rates=check_seasonal_rates(kind, item_input.seasonal_rates),
         tags=unique_tags(item_input.tags),
         attributes=check_attributes(item_input.attributes),
         languages=unique_languages(item_input.languages),
@@ -87,12 +101,18 @@ def replace_knowledge_item(
     item_input: KnowledgeItemInput,
     now: Microseconds,
 ) -> KnowledgeItemDocument:
-    """An existing item with all fields replaced; id, source and creation kept."""
+    """An item with every field replaced (id, source, creation and the
+    unset `BOOKING_FIELDS` kept: the wizard re-saves offers without them)."""
 
+    kept: dict[str, object] = {
+        field: getattr(existing, field)
+        for field in BOOKING_FIELDS
+        if field not in item_input.model_fields_set
+    }
     replacement: KnowledgeItemDocument = build_knowledge_item(
         business=business,
         template=template,
-        item_input=item_input,
+        item_input=item_input.model_copy(update=kept),
         source=existing.source,
         now=now,
     )
@@ -130,10 +150,13 @@ def patch_knowledge_item(
             patch.currency_code,
         )
 
+    kind: KnowledgeItemKind = (
+        existing.kind if patch.kind is None else check_kind(template, patch.kind)
+    )
     return KnowledgeItemDocument(
         id=existing.id,
         business_id=existing.business_id,
-        kind=existing.kind if patch.kind is None else check_kind(template, patch.kind),
+        kind=kind,
         title=existing.title if patch.title is None else check_title(patch.title),
         body=check_body(patch.body) if "body" in provided else existing.body,
         price_minor=price_minor,
@@ -142,6 +165,30 @@ def patch_knowledge_item(
             patch.duration_minutes
             if "duration_minutes" in provided
             else existing.duration_minutes
+        ),
+        buffer_minutes=check_buffer(
+            kind,
+            (
+                patch.buffer_minutes
+                if "buffer_minutes" in provided
+                else existing.buffer_minutes
+            ),
+        ),
+        performer_resource_ids=check_performers_allowed(
+            kind,
+            (
+                existing.performer_resource_ids
+                if patch.performer_resource_ids is None
+                else patch.performer_resource_ids
+            ),
+        ),
+        seasonal_rates=check_seasonal_rates(
+            kind,
+            (
+                existing.seasonal_rates
+                if patch.seasonal_rates is None
+                else patch.seasonal_rates
+            ),
         ),
         tags=existing.tags if patch.tags is None else unique_tags(patch.tags),
         attributes=(
@@ -226,18 +273,6 @@ def upsert_knowledge_items(
             saved_ids.append(str(saved.id))
 
     return [working_items[saved_id] for saved_id in saved_ids]
-
-
-def faq_entry_to_upsert_input(entry: FaqEntryInput) -> KnowledgeItemUpsertInput:
-    """A frequent question as a FAQ knowledge item (question as the title)."""
-
-    return KnowledgeItemUpsertInput(
-        id=entry.id,
-        kind=KnowledgeItemKind.FAQ,
-        title=entry.question,
-        body=entry.answer,
-        languages=list(entry.languages),
-    )
 
 
 def find_matching_item(

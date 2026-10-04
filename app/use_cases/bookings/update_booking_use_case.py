@@ -279,5 +279,6 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
                 include_sandbox=booking.is_sandbox,
                 excluded_booking_id=booking.id,
                 sandbox_conversation_id=booking.conversation_id,
+                buffer_minutes=booking.buffer_minutes,
             ),
         )

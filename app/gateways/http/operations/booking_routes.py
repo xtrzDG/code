@@ -50,6 +50,7 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTimeOfDay
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -85,6 +86,7 @@ def build_booking_routes(
         party_size: OptionalQuery = None,
         resource_id: OptionalQuery = None,
         resource_kind: OptionalQuery = None,
+        service_item_id: OptionalQuery = None,
         duration_minutes: OptionalQuery = None,
         nights: OptionalQuery = None,
         full_day: OptionalQuery = None,
@@ -99,6 +101,9 @@ def build_booking_routes(
                 resource_id=parse_optional_text(resource_id, ResourceId, "resource_id"),
                 resource_kind=parse_optional_text(
                     resource_kind, ResourceKind, "resource_kind"
+                ),
+                service_item_id=parse_optional_text(
+                    service_item_id, KnowledgeItemId, "service_item_id"
                 ),
                 duration_minutes=parse_optional_integer(
                     duration_minutes, BookingDurationMinutes, "duration_minutes"
@@ -156,6 +161,7 @@ def build_booking_routes(
                 contact_phone_number=body.contact_phone_number,
                 resource_kind=body.resource_kind,
                 resource_id=body.resource_id,
+                service_item_id=body.service_item_id,
                 date=body.date,
                 time=body.time,
                 duration_minutes=body.duration_minutes,

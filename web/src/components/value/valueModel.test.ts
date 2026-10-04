@@ -8,6 +8,7 @@ import {
   formatMonth,
   formatWholeMoney,
   isReportKind,
+  moneyFormula,
   monthSoFar,
   nextMonthStart,
   periodDays,
@@ -28,6 +29,7 @@ const TOTALS: ValueTotals = {
   handoff_count: 4,
   staff_minutes_saved: 540,
   estimated_revenue_minor: 264_000,
+  valued_booking_count: 0,
 };
 
 const plain = (value: number) => String(value);
@@ -115,5 +117,39 @@ describe("hadNoActivity", () => {
     expect(hadNoActivity(quiet)).toBe(true);
     expect(hadNoActivity({ ...quiet, call_count: 1 })).toBe(false);
     expect(hadNoActivity({ ...quiet, customer_message_count: 3 })).toBe(false);
+  });
+});
+
+describe("the line under the money", () => {
+  it("names the average check when the money rests on it alone", () => {
+    expect(moneyFormula("bookings", { ...TOTALS, revenue_source: "average_check" }, 12_000)).toEqual({
+      kind: "check",
+      count: 22,
+      checkMinor: 12_000,
+    });
+    // Reports stored before bookings had values carry no source.
+    expect(moneyFormula("requests", TOTALS, 12_000)).toEqual({ kind: "check", count: 9, checkMinor: 12_000 });
+  });
+
+  it("says the bookings count at their own prices when every one has a price", () => {
+    const booked = { ...TOTALS, revenue_source: "booked_values" as const, valued_booking_count: 22, booked_value_minor: 264_000 };
+    expect(moneyFormula("bookings", booked, 12_000)).toEqual({ kind: "booked", valued: 22 });
+    // Without an average check the priced bookings still make the money.
+    expect(moneyFormula("bookings", booked, null)).toEqual({ kind: "booked", valued: 22 });
+  });
+
+  it("splits mixed money into the priced bookings and the rest at the check", () => {
+    const mixed = { ...TOTALS, revenue_source: "mixed" as const, valued_booking_count: 20, booked_value_minor: 240_000 };
+    expect(moneyFormula("bookings", mixed, 12_000)).toEqual({
+      kind: "mixed",
+      bookedMinor: 240_000,
+      unvalued: 2,
+      checkMinor: 12_000,
+    });
+  });
+
+  it("has nothing to explain without money", () => {
+    expect(moneyFormula("bookings", { ...TOTALS, estimated_revenue_minor: null }, 12_000)).toEqual({ kind: "none" });
+    expect(moneyFormula("bookings", TOTALS, null)).toEqual({ kind: "none" });
   });
 });

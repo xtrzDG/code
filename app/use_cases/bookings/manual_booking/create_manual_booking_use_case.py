@@ -21,6 +21,7 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
 )
 from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -32,7 +33,7 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.domain.resources import ResourceDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.bookings import BookingResult, BookingView
 from app.schemas.dto.operations.bookings import ManualBookingCommand
 from app.schemas.dto.operations.message_texts import BookingMessageInput
@@ -59,8 +60,10 @@ from app.use_cases.bookings.manual_booking.manual_booking_customer import (
     store_booking_contact,
 )
 from app.use_cases.bookings.manual_booking.manual_booking_resources import (
+    ManualPlacement,
     choose_seating_candidates,
 )
+from app.use_cases.bookings.offer_selection import BookedOffer, price_placement
 from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
@@ -86,7 +89,9 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
     from its channel; otherwise a contact with the phone is reused, else a
     new one is created. Opening hours and capacity are enforced under the
     business lock; the online-booking limits (minimum notice, maximum party)
-    are not. The customer's language (given, else the contact's, else the
+    are not. A service (`service_item_id`) is booked with one of its
+    performers, for its length unless staff give another, with its buffer
+    and its value. The customer's language (given, else the contact's, else the
     business default) is stored for later texts and used for the
     confirmation. The booking and the contact change are audited with the
     staff member.
@@ -99,6 +104,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
         resource_repo: ResourceRepoContract,
         schedule_exception_repo: ScheduleExceptionRepoContract,
         booking_repo: BookingRepoContract,
+        knowledge_item_repo: KnowledgeItemRepoContract,
         contact_repo: ContactRepoContract,
         conversation_repo: ConversationRepoContract,
         audit_log_repo: AuditLogRepoContract,
@@ -116,6 +122,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
             schedule_exception_repo
         )
         self._booking_repo: BookingRepoContract = booking_repo
+        self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
@@ -154,9 +161,10 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
             conversation is not None and conversation.is_sandbox
         )
         local_date: date = parse_local_date(input_data.date)
-        candidates: list[ResourceDocument] = choose_seating_candidates(
-            inputs, input_data
+        items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
+            input_data.business_id
         )
+        chosen: ManualPlacement = choose_seating_candidates(inputs, items, input_data)
         now: Microseconds = self._wall_clock.now_unix()
         contact: ContactDocument = existing_contact or ContactDocument(
             business_id=input_data.business_id,
@@ -168,7 +176,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
         )
         with self._lock_registry.lock_for(input_data.business_id):
             placement: Placement = place_booking(
-                candidates,
+                chosen.candidates,
                 PlacementRequest(
                     local_date=local_date,
                     minute_of_day=(
@@ -176,7 +184,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                         if input_data.time is None
                         else parse_time_of_day(input_data.time)
                     ),
-                    duration_minutes=input_data.duration_minutes,
+                    duration_minutes=chosen.choice.duration_minutes,
                     nights=(
                         None if input_data.nights is None else int(input_data.nights)
                     ),
@@ -196,7 +204,16 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                     sandbox_conversation_id=(
                         None if conversation is None else conversation.id
                     ),
+                    buffer_minutes=chosen.choice.buffer_minutes,
                 ),
+            )
+            booked: BookedOffer = price_placement(
+                chosen.choice,
+                placement,
+                items,
+                local_date,
+                input_data.nights,
+                inputs,
             )
             contact = store_booking_contact(
                 self._contact_repo,
@@ -227,6 +244,10 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                 notes=input_data.notes,
                 is_sandbox=is_sandbox,
                 language=language,
+                service_item_id=booked.service_item_id,
+                buffer_minutes=chosen.choice.buffer_minutes,
+                value_minor=booked.value_minor,
+                currency_code=booked.currency_code,
                 created_at=now,
                 updated_at=now,
             )
@@ -248,6 +269,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
             inputs.zone,
             placement.resource,
             contact,
+            booked.offer,
         )
         self._live_events.publish(
             booking.business_id,

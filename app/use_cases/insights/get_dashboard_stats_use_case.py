@@ -33,6 +33,7 @@ from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.operations.activity_counts import (
     ActivityPeriod,
     BookingActivityCount,
+    BookingValueCount,
     ConversationMixCount,
     HandoffActivityCount,
 )
@@ -67,6 +68,11 @@ from app.use_cases.insights.dashboard_timeline import (
     build_timeline,
     timeline_period,
 )
+from app.use_cases.insights.dashboard_values import (
+    after_hours_groups,
+    booked_value_totals,
+)
+from app.use_cases.insights.value.value_access import sees_money
 from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.opening_hours import DayRanges, business_day_ranges
 from app.utilities.scheduling.zoned_time import (
@@ -86,7 +92,10 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
     or starting outside the weekly hours with holidays applied), bookings by
     status, leads, handoffs by reason and urgency, languages and channels,
     and per local day the conversations, bookings and handoffs (for the
-    trend chart). Also the open unanswered questions, the voice package
+    trend chart), and what the bookings are worth per currency (their
+    services' prices, stays' rates) with the part booked after hours, for
+    owners only (staff see no money). Also
+    the open unanswered questions, the voice package
     minutes used in the period, and the package of the current billing
     window (used and included minutes and dialogs, no prices), which staff
     see too. Sandbox activity is excluded everywhere.
@@ -160,6 +169,14 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         )
         bookings: list[BookingActivityCount] = self._booking_repo.count_made(
             business.id, by_day
+        )
+        # Staff see no money: their dashboard sums no values.
+        values: list[BookingValueCount] = (
+            self._booking_repo.sum_value_made(
+                business.id, timeline_period(stretches, period_end)
+            )
+            if sees_money(business, input_data.user_id)
+            else []
         )
         handoffs: list[HandoffActivityCount] = self._handoff_repo.count_made(
             business.id, by_day
@@ -238,6 +255,10 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
                 self._usage_event_repo,
                 self._wall_clock,
                 business,
+            ),
+            booked_value=booked_value_totals(values),
+            after_hours_booked_value=booked_value_totals(
+                after_hours_groups(values, stretches)
             ),
         )
 

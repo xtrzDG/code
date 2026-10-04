@@ -21,6 +21,7 @@ from app.schemas.typings.bookings.constrained_integers import (
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.schemas.typings.users.prefixed_id import UserId
 from tests.operations.fakes import to_microseconds
 from tests.operations.operations_world import OperationsWorld
 
@@ -141,9 +142,13 @@ class DashboardFixture:
         self,
         date_from: str | None = "2026-10-01",
         date_to: str | None = "2026-10-05",
+        viewer: UserId | None = None,
     ) -> DashboardStats:
+        """The dashboard as `viewer` sees it (by default the owner)."""
+
         return self.world.dashboard().run(
             DashboardStatsQuery(
+                user_id=viewer or self.business.members[0].user_id,
                 business_id=self.business.id,
                 date_from=None if date_from is None else LocalDate(date_from),
                 date_to=None if date_to is None else LocalDate(date_to),

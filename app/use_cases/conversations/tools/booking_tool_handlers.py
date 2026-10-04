@@ -59,6 +59,8 @@ def run_check_availability(
         AvailabilityQuery(
             business_id=context.business_id,
             date=tool_input.date,
+            service_reference=tool_input.service_id,
+            resource_reference=tool_input.resource_id,
             resource_kind=tool_input.resource_type,
             time=tool_input.time,
             party_size=tool_input.party_size,
@@ -94,6 +96,8 @@ def run_create_booking(
             contact_phone_number=resolve_phone(
                 phone_number_parser, tool_input.phone, context
             ),
+            service_reference=tool_input.service_id,
+            resource_reference=tool_input.resource_id,
             resource_kind=tool_input.resource_type,
             date=tool_input.date,
             time=tool_input.time,

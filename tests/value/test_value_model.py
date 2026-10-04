@@ -3,7 +3,12 @@
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import MessageAuthor
-from app.schemas.constants.value import AverageCheckSource, ValueBasis, ValuePeriod
+from app.schemas.constants.value import (
+    AverageCheckSource,
+    RevenueSource,
+    ValueBasis,
+    ValuePeriod,
+)
 from app.schemas.domain.value_settings import ValueSettingsDocument
 from app.schemas.dto.value.value_model import ValueModel, ValueTotals
 from app.schemas.dto.value.value_views import BusinessValueQuery
@@ -86,6 +91,7 @@ def test_the_week_counts_the_assistants_bookings_hours_and_minutes() -> None:
         staff_minutes_saved=StaffMinutesSaved(9),
         # 3 bookings x the typical check of a restaurant (40 EUR = 120 GEL).
         estimated_revenue_minor=EstimatedRevenueMinor(36_000),
+        revenue_source=RevenueSource.AVERAGE_CHECK,
     )
     assert model.previous.assistant_booking_count == 1
     assert model.previous.conversation_count == 1

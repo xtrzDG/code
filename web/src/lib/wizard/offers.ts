@@ -15,6 +15,7 @@ import {
   moneyInputProblem,
   parseDecimalInput,
 } from "../format";
+import { MAX_DURATION_MINUTES, MIN_DURATION_MINUTES } from "../knowledge/form";
 
 /** Kinds of things a business sells (FAQ and rules have their own step). */
 export function offerKinds(knowledgeKinds: readonly KnowledgeItemKind[]): KnowledgeItemKind[] {
@@ -106,6 +107,11 @@ export function validateOfferRow(row: OfferRow, currency: string): OfferRowError
     errors.duration = "validation.wholeNumber";
   } else if (row.duration.trim() !== "" && Number(row.duration) <= 0) {
     errors.duration = "validation.positive";
+  } else if (
+    row.duration.trim() !== "" &&
+    (Number(row.duration) < MIN_DURATION_MINUTES || Number(row.duration) > MAX_DURATION_MINUTES)
+  ) {
+    errors.duration = "validation.durationRange";
   }
   return errors;
 }

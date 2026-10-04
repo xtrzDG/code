@@ -1,6 +1,9 @@
 """A knowledge item as the language model and as the owner see it."""
 
+from collections.abc import Sequence
+
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.dto.knowledge_admin import KnowledgeItemDetails
 from app.schemas.typings.localization.constrained_strings import (
@@ -8,6 +11,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.localization.strings import FormattedMoneyText
+from app.utilities.bookings.offer_links import linked_performer_ids
 from app.utilities.knowledge.money_formatting import format_money_minor
 
 
@@ -47,6 +51,8 @@ def to_item_view(
         ),
         formatted_price=format_item_price(item, fallback_currency_code, language),
         duration_minutes=item.duration_minutes,
+        buffer_minutes=item.buffer_minutes,
+        seasonal_rates=list(item.seasonal_rates),
         tags=list(item.tags),
     )
 
@@ -55,8 +61,12 @@ def to_item_details(
     item: KnowledgeItemDocument,
     fallback_currency_code: CurrencyCode,
     language: LanguageTag,
+    resources: Sequence[ResourceDocument] = (),
 ) -> KnowledgeItemDetails:
-    """The item as the owner sees it in the cabinet."""
+    """
+    The item as the owner sees it in the cabinet, with every resource that
+    performs it (linked from either side) when the resources are given.
+    """
 
     return KnowledgeItemDetails(
         id=item.id,
@@ -68,6 +78,9 @@ def to_item_details(
         currency_code=item.currency_code,
         formatted_price=format_item_price(item, fallback_currency_code, language),
         duration_minutes=item.duration_minutes,
+        buffer_minutes=item.buffer_minutes,
+        performer_resource_ids=linked_performer_ids(item, resources),
+        seasonal_rates=list(item.seasonal_rates),
         tags=list(item.tags),
         attributes=list(item.attributes),
         languages=list(item.languages),

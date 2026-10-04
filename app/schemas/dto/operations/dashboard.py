@@ -28,17 +28,22 @@ from app.schemas.typings.insights.constrained_integers import (
     UsedVoiceMinutes,
 )
 from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.value.constrained_integers import BookedValueMinor
 
 
 class DashboardStatsQuery(ImmutableDTO):
     """
     Dashboard for an inclusive range of local dates in the business time
-    zone. Defaults to the last 30 days including today.
+    zone. Defaults to the last 30 days including today. `user_id` is the
+    member asking: staff see no money (the booked values stay empty).
     """
 
+    user_id: UserId
     business_id: BusinessId
     date_from: LocalDate | None = None
     date_to: LocalDate | None = None
@@ -79,6 +84,17 @@ class ChannelCount(ImmutableDTO):
     count: PeriodItemCount
 
 
+class BookedValueTotal(ImmutableDTO):
+    """
+    What the bookings made in a period are worth in one currency (their
+    service prices and stays' nightly rates), and how many carry a value.
+    """
+
+    currency_code: CurrencyCode
+    value_minor: BookedValueMinor
+    booking_count: PeriodItemCount
+
+
 class DashboardDay(ImmutableDTO):
     """What started on one local day of the dashboard period."""
 
@@ -113,6 +129,12 @@ class DashboardStats(ImmutableDTO):
     a series per local day, and the package of the current billing window
     (None without a subscription).
 
+    `booked_value` is what the bookings made in the period are worth per
+    currency (not cancelled, not a no-show; bookings without a priced
+    service are left out), `after_hours_booked_value` the part booked while
+    the business was closed by its weekly hours. Both stay empty for staff,
+    who see no money.
+
     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
     are ordered by count descending; `daily` has every date of the period,
     oldest first.
@@ -144,3 +166,7 @@ class DashboardStats(ImmutableDTO):
     used_voice_minutes: UsedVoiceMinutes
     daily: list[DashboardDay] = Field(default_factory=list[DashboardDay])
     package: DashboardPackageUsage | None = None
+    booked_value: list[BookedValueTotal] = Field(default_factory=list[BookedValueTotal])
+    after_hours_booked_value: list[BookedValueTotal] = Field(
+        default_factory=list[BookedValueTotal]
+    )

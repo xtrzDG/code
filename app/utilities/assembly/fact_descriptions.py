@@ -1,5 +1,7 @@
 """English fact-table descriptions of profile, knowledge and resource records."""
 
+from collections.abc import Sequence
+
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
@@ -8,6 +10,7 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BookingRules
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.dto.niches import QuestionDefinition
+from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.assembly.fact_formatting import (
     format_compact_weekly_hours,
@@ -95,22 +98,43 @@ def humanize_niche_answer(question: QuestionDefinition, answer_text: str) -> str
 def describe_knowledge_item(
     item: KnowledgeItemDocument,
     business_currency_code: CurrencyCode,
+    performer_names: Sequence[str] = (),
 ) -> str:
     """
-    Body, price, duration, tags and attributes of an item, in that order.
-    Prices without their own currency are in the business currency.
+    Body, price (with seasonal nightly rates), duration and break, who
+    performs it, tags and attributes of an item, in that order. Prices
+    without their own currency are in the business currency.
     """
 
     parts: list[str] = []
     if item.body is not None and item.body.strip() != "":
         parts.append(item.body.strip())
 
+    currency_code: CurrencyCode = item.currency_code or business_currency_code
     if item.price_minor is not None:
-        currency_code: CurrencyCode = item.currency_code or business_currency_code
         parts.append(f"Price: {format_money_amount(item.price_minor, currency_code)}")
+
+    if item.seasonal_rates:
+        parts.append(
+            "Nightly rate by season: "
+            + ", ".join(
+                f"{season.starts_on} to {season.ends_on} "
+                + format_money_amount(
+                    MoneyAmountMinor(int(season.nightly_rate_minor)), currency_code
+                )
+                + ("" if season.name is None else f" ({season.name})")
+                for season in item.seasonal_rates
+            )
+        )
 
     if item.duration_minutes is not None:
         parts.append(f"Duration: {format_minutes(int(item.duration_minutes))}")
+
+    if item.buffer_minutes is not None and int(item.buffer_minutes) > 0:
+        parts.append(f"Break after it: {format_minutes(int(item.buffer_minutes))}")
+
+    if performer_names:
+        parts.append("Performed by: " + ", ".join(performer_names))
 
     if item.tags:
         parts.append("Tags: " + ", ".join(str(tag) for tag in item.tags))
@@ -129,8 +153,12 @@ def describe_knowledge_item(
 def describe_resource(
     resource: ResourceDocument,
     booking_rules: BookingRules | None,
+    offer_titles: Sequence[str] = (),
 ) -> str:
-    """Capacity, units, booking unit or slot length, and own hours of a resource."""
+    """
+    Capacity, units, booking unit or slot length, own hours and the
+    services it performs (or its room type) of a resource.
+    """
 
     parts: list[str] = [f"Up to {format_people(int(resource.capacity))}"]
     if int(resource.unit_count) > 1:
@@ -154,6 +182,9 @@ def describe_resource(
 
     if resource.schedule:
         parts.append(f"Own hours: {format_compact_weekly_hours(resource.schedule)}")
+
+    if offer_titles:
+        parts.append("Performs: " + ", ".join(offer_titles))
 
     return "; ".join(parts)
 

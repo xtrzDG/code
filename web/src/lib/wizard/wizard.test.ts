@@ -125,6 +125,8 @@ describe("offer rows", () => {
     expect(validateOfferRow(blank, "GEL")).toEqual({});
     expect(validateOfferRow({ ...blank, price: "abc" }, "GEL")).toEqual({ title: "validation.required", price: "validation.number" });
     expect(validateOfferRow({ ...blank, title: "Massage", duration: "0" }, "GEL")).toEqual({ duration: "validation.positive" });
+    expect(validateOfferRow({ ...blank, title: "Massage", duration: "2" }, "GEL")).toEqual({ duration: "validation.durationRange" });
+    expect(validateOfferRow({ ...blank, title: "Massage", duration: "45" }, "GEL")).toEqual({});
   });
 
   it("refuse prices that would be stored at the wrong amount", () => {

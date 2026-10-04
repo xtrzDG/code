@@ -1,8 +1,9 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.value import (
     AverageCheckSource,
+    RevenueSource,
     ValueBasis,
     ValueReportDelivery,
     ValueReportKind,
@@ -13,6 +14,7 @@ from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
+    BookedValueMinor,
     DigestRecipientCount,
     EstimatedRevenueMinor,
     StaffMinutesSaved,
@@ -24,8 +26,9 @@ from app.schemas.typings.value.prefixed_id import ValueReportId
 class ValueTotalsSnapshot(PersistentDocument):
     """
     What the assistant did in one period, as a report stored it: the
-    counts of the value model and the money estimate (None when no
-    average check was known). Sandbox activity is never counted.
+    counts of the value model and the money estimate (None when neither
+    booked values nor an average check were known), with what it rests on.
+    Sandbox activity is never counted.
     """
 
     conversation_count: PeriodItemCount
@@ -39,6 +42,9 @@ class ValueTotalsSnapshot(PersistentDocument):
     handoff_count: PeriodItemCount
     staff_minutes_saved: StaffMinutesSaved
     estimated_revenue_minor: EstimatedRevenueMinor | None = None
+    valued_booking_count: PeriodItemCount = PeriodItemCount(0)
+    booked_value_minor: BookedValueMinor | None = None
+    revenue_source: RevenueSource | None = None
 
 
 class ValueReportDocument(BaseDocument):
@@ -56,6 +62,9 @@ class ValueReportDocument(BaseDocument):
     it went out.
     """
 
+    # 2: the totals' `valued_booking_count`, `booked_value_minor` and
+    # `revenue_source` (optional).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: ValueReportId
     business_id: BusinessId
     kind: ValueReportKind

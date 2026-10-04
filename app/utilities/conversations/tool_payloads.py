@@ -22,6 +22,12 @@ from app.schemas.dto.knowledge import (
 )
 from app.schemas.typings.conversations.strings import LlmToolResultJson
 from app.utilities.conversations.llm_transcript import encode_json
+from app.utilities.conversations.offer_payloads import (
+    major_units,
+    render_offer,
+    render_seasons,
+    render_stay_quote,
+)
 from app.utilities.money.money_math import (
     convert_money_to_major_units,
     get_currency_minor_unit_digits,
@@ -45,12 +51,16 @@ def render_price_lookup(result: PriceLookupResult) -> LlmToolResultJson:
             }
         )
 
-    return render(
-        {
-            "found": True,
-            "matches": [render_knowledge_item(item) for item in result.matches],
-        }
-    )
+    payload: dict[str, object] = {
+        "found": True,
+        "matches": [render_knowledge_item(item) for item in result.matches],
+    }
+    if result.stay_quotes:
+        payload["stay_quotes"] = [
+            render_stay_quote(quote) for quote in result.stay_quotes
+        ]
+
+    return render(payload)
 
 
 def render_knowledge_item(item: KnowledgeItemView) -> dict[str, object]:
@@ -72,6 +82,11 @@ def render_knowledge_item(item: KnowledgeItemView) -> dict[str, object]:
 
     if item.duration_minutes is not None:
         rendered["duration_minutes"] = int(item.duration_minutes)
+
+    if item.seasonal_rates and item.currency_code is not None:
+        rendered["seasonal_nightly_rates"] = render_seasons(
+            item.seasonal_rates, item.currency_code
+        )
 
     if item.tags:
         rendered["tags"] = [str(tag) for tag in item.tags]
@@ -100,18 +115,25 @@ def render_availability(
         if slot.nights is not None:
             rendered_slot["nights"] = int(slot.nights)
 
+        if slot.stay_quote is not None:
+            rendered_slot["stay_price"] = render_stay_quote(slot.stay_quote)
+
         slots.append(rendered_slot)
 
-    return render(
-        with_business_today(
-            {
-                "timezone": str(result.timezone),
-                "is_open_on_date": result.is_open_on_date,
-                "slots": slots,
-            },
-            business_today,
-        )
-    )
+    payload: dict[str, object] = {
+        "timezone": str(result.timezone),
+        "is_open_on_date": result.is_open_on_date,
+        "slots": slots,
+    }
+    if result.service is not None:
+        payload["service"] = render_offer(result.service)
+
+    if result.services:
+        payload["bookable_services"] = [
+            render_offer(offer) for offer in result.services
+        ]
+
+    return render(with_business_today(payload, business_today))
 
 
 def render_booking(
@@ -140,6 +162,13 @@ def render_booking(
 
     if booking.contact_phone_number is not None:
         rendered["phone"] = str(booking.contact_phone_number)
+
+    if booking.service_title is not None:
+        rendered["service"] = str(booking.service_title)
+
+    if booking.value_minor is not None and booking.currency_code is not None:
+        rendered["price"] = major_units(int(booking.value_minor), booking.currency_code)
+        rendered["currency"] = str(booking.currency_code)
 
     return render(with_business_today(rendered, business_today))
 

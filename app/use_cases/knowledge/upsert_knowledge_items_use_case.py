@@ -2,16 +2,21 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.registries import NicheTemplateRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
-from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
+from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
+    ResourceRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge_admin import (
     KnowledgeItemList,
     UpsertKnowledgeItemsCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.knowledge.performer_links import check_item_performers
 from app.utilities.knowledge.knowledge_item_views import to_item_details
 from app.utilities.knowledge.knowledge_items import upsert_knowledge_items
 
@@ -31,11 +36,13 @@ class UpsertKnowledgeItemsUseCase(
         self,
         business_repo: BusinessRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        resource_repo: ResourceRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._resource_repo: ResourceRepoContract = resource_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -56,13 +63,17 @@ class UpsertKnowledgeItemsUseCase(
             source=input_data.source,
             now=self._wall_clock.now_unix(),
         )
+        resources: list[ResourceDocument] = self._resource_repo.list_by_business(
+            business.id
+        )
+        check_item_performers(saved_items, resources)
         for item in saved_items:
             self._knowledge_item_repo.save(item)
 
         language: LanguageTag = input_data.language or business.owner_language
         return KnowledgeItemList(
             items=[
-                to_item_details(item, business.currency_code, language)
+                to_item_details(item, business.currency_code, language, resources)
                 for item in saved_items
             ]
         )

@@ -12,7 +12,7 @@ from app.registries.niches.template_parts import (
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
 from app.schemas.constants.knowledge import KnowledgeItemKind
-from app.schemas.constants.niches import LaunchWave, NicheKey
+from app.schemas.constants.niches import BookingScenarioVariant, LaunchWave, NicheKey
 from app.schemas.constants.niches import ProfileWizardStep as Step
 from app.schemas.constants.niches import QuestionAnswerType as Answer
 from app.schemas.dto.niches import NicheTemplate
@@ -173,5 +173,6 @@ def build_short_term_rental_template() -> NicheTemplate:
             ka=["კარის, გასაღების ყუთის ან სეიფის კოდების გაზიარება"],
         ),
         autotest_kinds=autotest_kinds(),
+        booking_variants=[BookingScenarioVariant.ROOM_TYPE_STAY],
         integrations=[IntegrationName("WhatsApp")],
     )

@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 
 from app.schemas.constants.bookings import BookingUnit, ResourceKind
@@ -13,15 +13,22 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.bookings.strings import ResourceName, ScheduleExceptionNote
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 
 
 class ResourceDocument(BaseDocument):
     """
     Something bookable (concept tables `resources` and `schedules`).
 
-    Empty `schedule` means the resource follows the business hours.
+    Empty `schedule` means the resource follows the business hours. A
+    master, a doctor or a bay performs the services of `serves_item_ids`;
+    a room is one of the room type `room_type_item_id` (an item of kind
+    ROOM_TYPE with its nightly rates). Neither set: the resource takes any
+    booking of its kind.
     """
 
+    # 2: `serves_item_ids` and `room_type_item_id` (optional).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: ResourceId = Field(default_factory=ResourceId)
     business_id: BusinessId
     kind: ResourceKind
@@ -32,6 +39,10 @@ class ResourceDocument(BaseDocument):
     slot_minutes: SlotDurationMinutes | None = None
     schedule: list[OpeningInterval] = Field(default_factory=list[OpeningInterval])
     is_active: IsResourceActive = True
+    serves_item_ids: list[KnowledgeItemId] = Field(
+        default_factory=list[KnowledgeItemId]
+    )
+    room_type_item_id: KnowledgeItemId | None = None
 
 
 class ScheduleExceptionDocument(BaseDocument):

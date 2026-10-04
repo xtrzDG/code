@@ -10,12 +10,14 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
-from app.schemas.domain.knowledge import KnowledgeAttribute
+from app.schemas.domain.knowledge import KnowledgeAttribute, SeasonalNightlyRate
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
+from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.booleans import IsKnowledgeItemActive
 from app.schemas.typings.knowledge.constrained_integers import (
+    BufferMinutes,
     KnowledgeSearchLimit,
     ServiceDurationMinutes,
 )
@@ -40,6 +42,12 @@ class KnowledgeItemInput(ImmutableDTO):
 
     `currency_code` may be omitted: prices are always in the business
     currency, and a different code is rejected.
+
+    Services and packages may have a `buffer_minutes` their performer stays
+    blocked afterwards; services, packages and room types name the
+    resources that perform or provide them (`performer_resource_ids`, of
+    this business); room types may have `seasonal_rates` per night (seasons
+    may not overlap; `price_minor` is the rate outside them).
     """
 
     kind: KnowledgeItemKind
@@ -48,6 +56,11 @@ class KnowledgeItemInput(ImmutableDTO):
     price_minor: MoneyAmountMinor | None = None
     currency_code: CurrencyCode | None = None
     duration_minutes: ServiceDurationMinutes | None = None
+    buffer_minutes: BufferMinutes | None = None
+    performer_resource_ids: list[ResourceId] = Field(default_factory=list[ResourceId])
+    seasonal_rates: list[SeasonalNightlyRate] = Field(
+        default_factory=list[SeasonalNightlyRate]
+    )
     tags: list[KnowledgeTag] = Field(default_factory=list[KnowledgeTag])
     attributes: list[KnowledgeAttribute] = Field(
         default_factory=list[KnowledgeAttribute]
@@ -73,8 +86,10 @@ class KnowledgeItemPatch(ImmutableDTO):
     Partial update of a knowledge item.
 
     Only fields present in the request change; an explicit null clears an
-    optional field (body, price, duration). `is_active` switches the item on
-    or off for the assistant without deleting it.
+    optional field (body, price, duration, buffer). `is_active` switches the
+    item on or off for the assistant without deleting it. A new
+    `performer_resource_ids` list is who performs the item from now on: a
+    resource left out no longer lists it among its services either.
     """
 
     kind: KnowledgeItemKind | None = None
@@ -83,6 +98,9 @@ class KnowledgeItemPatch(ImmutableDTO):
     price_minor: MoneyAmountMinor | None = None
     currency_code: CurrencyCode | None = None
     duration_minutes: ServiceDurationMinutes | None = None
+    buffer_minutes: BufferMinutes | None = None
+    performer_resource_ids: list[ResourceId] | None = None
+    seasonal_rates: list[SeasonalNightlyRate] | None = None
     tags: list[KnowledgeTag] | None = None
     attributes: list[KnowledgeAttribute] | None = None
     languages: list[LanguageTag] | None = None
@@ -158,7 +176,12 @@ class KnowledgeSearchInput(ImmutableDTO):
 
 
 class KnowledgeItemDetails(ImmutableDTO):
-    """A knowledge item as the owner sees it, with the price formatted."""
+    """
+    A knowledge item as the owner sees it, with the price formatted. Its
+    `performer_resource_ids` are every resource linked to it, from either
+    side (the item names them, or they list the item as a service or as
+    their room type).
+    """
 
     id: KnowledgeItemId
     business_id: BusinessId
@@ -169,6 +192,11 @@ class KnowledgeItemDetails(ImmutableDTO):
     currency_code: CurrencyCode | None = None
     formatted_price: FormattedMoneyText | None = None
     duration_minutes: ServiceDurationMinutes | None = None
+    buffer_minutes: BufferMinutes | None = None
+    performer_resource_ids: list[ResourceId] = Field(default_factory=list[ResourceId])
+    seasonal_rates: list[SeasonalNightlyRate] = Field(
+        default_factory=list[SeasonalNightlyRate]
+    )
     tags: list[KnowledgeTag] = Field(default_factory=list[KnowledgeTag])
     attributes: list[KnowledgeAttribute] = Field(
         default_factory=list[KnowledgeAttribute]

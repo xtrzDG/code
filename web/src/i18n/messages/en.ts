@@ -192,6 +192,7 @@ export const en = {
     number: "Enter a number",
     positive: "Enter a number greater than zero",
     wholeNumber: "Enter a whole number",
+    durationRange: "Enter from 5 to 720 minutes",
     time: "Enter the time as HH:MM",
     tooLong: "The text is too long",
     hoursOverlap: "The intervals of this day overlap",

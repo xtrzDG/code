@@ -6,6 +6,13 @@ product in another country, currency and pair of languages.
 
 from functools import partial
 
+from app.registries.demo.berlin_salon.salon_services import (
+    LENA,
+    MEHMET,
+    SOFIA,
+    build_salon_services,
+    services_of,
+)
 from app.registries.demo.demo_clock import DemoClock
 from app.registries.demo.demo_foundation_parts import (
     bookable,
@@ -72,16 +79,12 @@ SALON_TIMEZONE: str = "Europe/Berlin"
 SALON_SITE: str = "https://studio-lindenblatt.example"
 # The salon's own number, also its WhatsApp Business number.
 SALON_PUBLIC_NUMBER: str = "+493044012345"
-LENA: str = "Lena – Haare & Farbe"
-MEHMET: str = "Mehmet – Barber"
-SOFIA: str = "Sofia – Nägel & Wimpern"
 TUESDAY_TO_FRIDAY: tuple[Weekday, ...] = (
     Weekday.TUESDAY,
     Weekday.WEDNESDAY,
     Weekday.THURSDAY,
     Weekday.FRIDAY,
 )
-SERVICE = KnowledgeItemKind.SERVICE
 
 
 def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFoundation:
@@ -119,6 +122,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
         *opening_hours((Weekday.SATURDAY,), "10:00", "16:00"),
     ]
     item = partial(knowledge_item, business, since=opened)
+    services = build_salon_services(business, opened)
     return DemoBusinessFoundation(
         key=DemoBusinessKey.BERLIN_SALON,
         business=business,
@@ -177,34 +181,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
             updated_at=business.updated_at,
         ),
         knowledge_items=[
-            item(
-                SERVICE,
-                "Damenhaarschnitt & Föhnen",
-                price_minor=6500,
-                duration_minutes=60,
-            ),
-            item(SERVICE, "Herrenhaarschnitt", price_minor=3500, duration_minutes=30),
-            item(
-                SERVICE, "Bartpflege & Nassrasur", price_minor=2500, duration_minutes=30
-            ),
-            item(
-                SERVICE,
-                "Balayage",
-                price_minor=16000,
-                duration_minutes=180,
-                body="Inklusive Pflege und Föhnen; Preis für mittellanges Haar.",
-            ),
-            item(SERVICE, "Ansatzfarbe", price_minor=7000, duration_minutes=90),
-            item(
-                SERVICE, "Maniküre mit Shellac", price_minor=4200, duration_minutes=60
-            ),
-            item(SERVICE, "Wimpernlifting", price_minor=5500, duration_minutes=60),
-            item(
-                SERVICE,
-                "Augenbrauen zupfen & färben",
-                price_minor=2500,
-                duration_minutes=30,
-            ),
+            *services,
             item(
                 KnowledgeItemKind.FAQ,
                 "Kann ich mit Karte zahlen?",
@@ -227,6 +204,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
                 1,
                 opened,
                 slot_minutes=30,
+                serves=services_of(LENA, services),
                 schedule=hours,
             ),
             bookable(
@@ -236,6 +214,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
                 1,
                 opened,
                 slot_minutes=30,
+                serves=services_of(MEHMET, services),
                 schedule=[
                     *opening_hours(TUESDAY_TO_FRIDAY, "12:00", "20:00"),
                     *opening_hours((Weekday.SATURDAY,), "10:00", "16:00"),
@@ -248,6 +227,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
                 1,
                 opened,
                 slot_minutes=30,
+                serves=services_of(SOFIA, services),
                 schedule=opening_hours(
                     (
                         Weekday.WEDNESDAY,

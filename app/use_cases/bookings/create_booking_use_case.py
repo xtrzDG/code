@@ -17,16 +17,18 @@ from app.contracts.repositories.business_repositories import (
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingRefusalCode, BookingStatus
+from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CreateBookingCommand
 from app.schemas.dto.notifications.staff_alerts import (
@@ -37,7 +39,6 @@ from app.schemas.dto.operations.message_texts import (
     BookingMessageInput,
     BookingStaffNotificationInput,
 )
-from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -49,6 +50,14 @@ from app.use_cases.bookings.booking_support import (
     notify_staff_about_booking,
 )
 from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.offer_selection import (
+    BookedOffer,
+    OfferChoice,
+    OfferRequest,
+    choose_offer,
+    price_placement,
+    require_seating,
+)
 from app.use_cases.shared.operations_support import (
     ContactDetails,
     require_contact,
@@ -57,13 +66,10 @@ from app.use_cases.shared.operations_support import (
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.placement import Placement
-from app.utilities.scheduling.placement_errors import booking_refusal_reason
 from app.utilities.scheduling.placement_request import PlacementRequest
 from app.utilities.scheduling.resource_selection import (
     ensure_party_size_allowed,
     min_notice_seconds,
-    seating_resources,
-    select_resources,
 )
 from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,
@@ -78,11 +84,16 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
 
     The availability check is repeated under the business lock, so two
     customers cannot take the last unit; a taken time raises ConflictError.
-    The contact's name and phone are updated, the booking is CONFIRMED, and
-    the result carries a confirmation in the customer's language repeating
-    the date, time, name and party size in the business time zone. Real
-    (non-sandbox) bookings notify every staff contact and are pushed to the
-    connected calendar; neither can break the booking.
+    A named service (id or name in any script) books its full length with
+    one of its performers (a named one, "Nino" or "ნინო", must perform it)
+    and keeps the performer blocked for its buffer afterwards; the booking
+    stores the service and its value (the price, or a stay's nights at
+    their seasonal rates). The contact's name and phone are updated, the
+    booking is CONFIRMED, and the result carries a confirmation in the
+    customer's language repeating the date, time, name and party size in
+    the business time zone. Real (non-sandbox) bookings notify every staff
+    contact and are pushed to the connected calendar; neither can break the
+    booking.
     """
 
     def __init__(
@@ -92,6 +103,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
         resource_repo: ResourceRepoContract,
         schedule_exception_repo: ScheduleExceptionRepoContract,
         booking_repo: BookingRepoContract,
+        knowledge_item_repo: KnowledgeItemRepoContract,
         contact_repo: ContactRepoContract,
         audit_log_repo: AuditLogRepoContract,
         lock_registry: BusinessLockRegistryContract,
@@ -115,6 +127,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             schedule_exception_repo
         )
         self._booking_repo: BookingRepoContract = booking_repo
+        self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._contact_repo: ContactRepoContract = contact_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._lock_registry: BusinessLockRegistryContract = lock_registry
@@ -146,31 +159,25 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             self._contact_repo, input_data.business_id, input_data.contact_id
         )
         local_date: date = parse_local_date(input_data.date)
-        candidates: list[ResourceDocument] = seating_resources(
-            select_resources(
-                inputs.resources,
-                input_data.resource_id,
-                input_data.resource_kind,
-                inputs.rules,
-            ),
-            input_data.party_size,
+        items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
+            input_data.business_id
         )
-        if not candidates:
-            message: str = (
-                f"No bookable resource seats {int(input_data.party_size)} guests; "
-                "pass the request to a manager."
-            )
-            raise ValidationFailedError(
-                message,
-                reasons=[
-                    booking_refusal_reason(
-                        BookingRefusalCode.NO_SEATING_RESOURCE,
-                        message,
-                        [str(int(input_data.party_size))],
-                    )
-                ],
-            )
-
+        choice: OfferChoice = choose_offer(
+            inputs,
+            items,
+            OfferRequest(
+                service_reference=input_data.service_reference,
+                resource_reference=input_data.resource_reference,
+                resource_id=input_data.resource_id,
+                resource_kind=input_data.resource_kind,
+                duration_minutes=input_data.duration_minutes,
+            ),
+        )
+        candidates: list[ResourceDocument] = require_seating(
+            choice.candidates,
+            input_data.party_size,
+            "; pass the request to a manager",
+        )
         now: Microseconds = self._wall_clock.now_unix()
         with self._lock_registry.lock_for(input_data.business_id):
             placement: Placement = place_booking(
@@ -182,7 +189,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                         if input_data.time is None
                         else parse_time_of_day(input_data.time)
                     ),
-                    duration_minutes=input_data.duration_minutes,
+                    duration_minutes=choice.duration_minutes,
                     nights=None
                     if input_data.nights is None
                     else int(input_data.nights),
@@ -201,7 +208,16 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                     + min_notice_seconds(inputs.rules),
                     include_sandbox=input_data.is_sandbox,
                     sandbox_conversation_id=input_data.conversation_id,
+                    buffer_minutes=choice.buffer_minutes,
                 ),
+            )
+            booked: BookedOffer = price_placement(
+                choice,
+                placement,
+                items,
+                local_date,
+                input_data.nights,
+                inputs,
             )
             booking = BookingDocument(
                 business_id=input_data.business_id,
@@ -216,6 +232,10 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                 notes=input_data.notes,
                 is_sandbox=input_data.is_sandbox,
                 language=input_data.language,
+                service_item_id=booked.service_item_id,
+                buffer_minutes=choice.buffer_minutes,
+                value_minor=booked.value_minor,
+                currency_code=booked.currency_code,
                 created_at=now,
                 updated_at=now,
             )
@@ -235,6 +255,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             inputs.zone,
             placement.resource,
             contact,
+            booked.offer,
         )
         self._live_events.publish(
             booking.business_id,

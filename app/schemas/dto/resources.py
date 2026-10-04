@@ -21,6 +21,7 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.bookings.strings import ResourceName, ScheduleExceptionNote
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 
 
 class ResourceInput(ImmutableDTO):
@@ -29,6 +30,9 @@ class ResourceInput(ImmutableDTO):
 
     `kind` and `booking_unit` default to the niche of the business. An empty
     `schedule` means the resource follows the business opening hours.
+    `serves_item_ids` are the services and packages it performs, and
+    `room_type_item_id` the room type a room belongs to (items of this
+    business); neither set, it takes any booking of its kind.
     """
 
     kind: ResourceKind | None = None
@@ -39,6 +43,10 @@ class ResourceInput(ImmutableDTO):
     slot_minutes: SlotDurationMinutes | None = None
     schedule: list[OpeningInterval] = Field(default_factory=list[OpeningInterval])
     is_active: IsResourceActive = True
+    serves_item_ids: list[KnowledgeItemId] = Field(
+        default_factory=list[KnowledgeItemId]
+    )
+    room_type_item_id: KnowledgeItemId | None = None
 
 
 class ResourcePatch(ImmutableDTO):
@@ -48,7 +56,9 @@ class ResourcePatch(ImmutableDTO):
     Only fields present in the request change; an explicit null clears
     `slot_minutes`, and an empty `schedule` returns to the business hours.
     Resources are switched off with `is_active` instead of being deleted, so
-    past bookings keep their resource.
+    past bookings keep their resource. A new `serves_item_ids` list is what
+    the resource performs from now on: an item left out no longer names it
+    as a performer either; null clears `room_type_item_id`.
     """
 
     kind: ResourceKind | None = None
@@ -59,6 +69,8 @@ class ResourcePatch(ImmutableDTO):
     slot_minutes: SlotDurationMinutes | None = None
     schedule: list[OpeningInterval] | None = None
     is_active: IsResourceActive | None = None
+    serves_item_ids: list[KnowledgeItemId] | None = None
+    room_type_item_id: KnowledgeItemId | None = None
 
 
 class CreateResourceCommand(ImmutableDTO):
@@ -84,7 +96,10 @@ class ResourceListQuery(ImmutableDTO):
 
 
 class ResourceView(ImmutableDTO):
-    """A resource as the owner sees it."""
+    """
+    A resource as the owner sees it; `serves_item_ids` are every service or
+    package linked to it, from either side (it lists them, or they name it).
+    """
 
     id: ResourceId
     business_id: BusinessId
@@ -96,6 +111,10 @@ class ResourceView(ImmutableDTO):
     slot_minutes: SlotDurationMinutes | None = None
     schedule: list[OpeningInterval] = Field(default_factory=list[OpeningInterval])
     is_active: IsResourceActive
+    serves_item_ids: list[KnowledgeItemId] = Field(
+        default_factory=list[KnowledgeItemId]
+    )
+    room_type_item_id: KnowledgeItemId | None = None
     created_at: Microseconds
     updated_at: Microseconds
 

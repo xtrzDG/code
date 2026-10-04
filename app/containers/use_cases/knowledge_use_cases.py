@@ -168,6 +168,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         CreateKnowledgeItemUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -177,6 +178,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         GetKnowledgeItemUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
     )
     list_knowledge_items_use_case: Factory[
         UseCaseContract[KnowledgeItemListQuery, KnowledgeItemPage]
@@ -184,6 +186,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         ListKnowledgeItemsUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
     )
     update_knowledge_item_use_case: Factory[
         UseCaseContract[UpdateKnowledgeItemCommand, KnowledgeItemDetails]
@@ -191,6 +194,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         UpdateKnowledgeItemUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )
@@ -206,6 +210,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         UpsertKnowledgeItemsUseCase,
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        resource_repo=repositories.resource_repo,
         niche_template_registry=registries.niche_template_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )

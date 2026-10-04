@@ -125,6 +125,54 @@ Spec: `9e7869ca5b5edff3`
   rights from `PLATFORM_ADMIN_EMAILS` / `PLATFORM_ADMIN_PHONE_NUMBERS` at
   every request (someone taken off the lists is refused at once).
 
+## 2026-10-04 — bookable services, performers, seasonal rates and booking value
+
+Spec: `8999d057f062d358`
+
+- **Added** knowledge items of kind `service`, `package` and `room_type`
+  say what a booking of them takes: `buffer_minutes` (0 to 240, services
+  and packages: the performer's break after the visit),
+  `performer_resource_ids` (resources of the business that perform it)
+  and, for room types, `seasonal_rates` (`starts_on`/`ends_on` as
+  `"MM-DD"`, every year, over New Year when the end comes first;
+  `nightly_rate_minor`; optional `name`; at most 24, never overlapping).
+  In `POST /v1/businesses/{business_id}/knowledge`,
+  `PATCH …/knowledge/{item_id}`, `PUT …/profile/steps/{step}` and in
+  `KnowledgeItemDetails` / `KnowledgeItemView`. A new performer list is
+  the whole truth: a resource left out stops naming the item too.
+- **Added** resources name the services and packages they perform
+  (`serves_item_ids`) and a room its room type (`room_type_item_id`), in
+  `POST …/resources`, `PATCH …/resources/{resource_id}` (null clears the
+  room type) and `ResourceView`. Both editors show every link, from
+  either side.
+- **Added** `GET …/availability?service_item_id=`: the service sets the
+  visit length and buffer and limits the slots to its performers;
+  `AvailabilityResult.service` names it (with its performers),
+  `AvailabilityResult.services` lists the bookable offers when none is
+  named, and a stay of a priced room type carries `stay_quote` (every
+  night at its season's rate). `POST …/bookings` (manual booking) takes
+  `service_item_id` too.
+- **Added** `BookingView.service_item_id`, `service_title`, `value_minor`
+  and `currency_code`: what was booked and what it is worth (a service's
+  price, a stay's nights at their seasonal rates).
+- **Added** `DashboardStats.booked_value` and `after_hours_booked_value`
+  (per currency: value and number of valued bookings made in the period,
+  cancelled and no-shows left out; owners only, staff get empty lists), and `ValueTotals.valued_booking_count`,
+  `booked_value_minor` and `revenue_source` (`booked_values`, `mixed`,
+  `average_check`) in the value model: bookings with a value count at
+  their value, the others at the average check.
+- **Added** booking refusal reason codes `unknown_service`,
+  `ambiguous_service`, `unknown_resource`, `ambiguous_resource` and
+  `not_performed`; their `details` are ids (the matched offers or
+  resources), never names.
+- **Breaking** (`api-breaking`) `duration_minutes` of a knowledge item is
+  5 to 720 minutes (one booking of a service) instead of 1 to 43200 in
+  the create and update requests. Migration path: a length outside that
+  range (a room type's "1440") goes into an attribute instead
+  (`attributes: [{"key": "duration_minutes", "value": "1440"}]`), as the
+  stored items were moved on read (knowledge items schema version 2).
+  The cabinet sends no such lengths.
+
 ## 2026-10-03 — widget messages are answered by the worker
 
 Spec: `66ff36e8e31c29a8`

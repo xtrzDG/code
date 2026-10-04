@@ -6,7 +6,7 @@ serves the dashboard, the digests and the monthly report.
 
 from base_pydantic_schemas import ImmutableDTO
 
-from app.schemas.constants.value import AverageCheckSource, ValueBasis
+from app.schemas.constants.value import AverageCheckSource, RevenueSource, ValueBasis
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
@@ -16,6 +16,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
+    BookedValueMinor,
     EstimatedRevenueMinor,
     StaffMinutesSaved,
     StaffSecondsPerCall,
@@ -49,9 +50,12 @@ class ValueTotals(ImmutableDTO):
       not a no-show);
     - requests taken and conversations handed to a person;
     - the staff minutes the replies and calls saved (rounded);
-    - the money estimate: the assistant's bookings (or, for niches that
-      take orders instead, its requests) times the average check; None
-      without an average check.
+    - the money estimate: the assistant's bookings at their own values
+      (`booked_value_minor`, for the `valued_booking_count` bookings of a
+      priced service in the business currency) plus the others times the
+      average check (or, for niches that take orders instead, its requests
+      times the average check); `revenue_source` says which; None without
+      either.
     """
 
     conversation_count: PeriodItemCount
@@ -65,6 +69,9 @@ class ValueTotals(ImmutableDTO):
     handoff_count: PeriodItemCount
     staff_minutes_saved: StaffMinutesSaved
     estimated_revenue_minor: EstimatedRevenueMinor | None = None
+    valued_booking_count: PeriodItemCount = PeriodItemCount(0)
+    booked_value_minor: BookedValueMinor | None = None
+    revenue_source: RevenueSource | None = None
 
 
 class ValueModel(ImmutableDTO):

@@ -37,6 +37,7 @@ def build_dashboard_routes(
         business: BusinessDocument = authorize(user_id, business_id)
         return get_dashboard_stats.operate(
             DashboardStatsQuery(
+                user_id=user_id,
                 business_id=business.id,
                 date_from=parse_optional_text(date_from, LocalDate, "from"),
                 date_to=parse_optional_text(date_to, LocalDate, "to"),

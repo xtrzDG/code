@@ -62,6 +62,8 @@ def run_get_price(
             business_id=context.business_id,
             item_name=tool_input.item_name,
             language=context.language,
+            check_in=tool_input.check_in_date,
+            nights=tool_input.nights,
         )
     )
     return success_outcome(call, render_price_lookup(result))

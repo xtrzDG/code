@@ -35,7 +35,10 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetAccentColor,
 )
 from app.schemas.typings.channels.strings import ChannelExternalId
-from app.schemas.typings.knowledge.constrained_integers import ServiceDurationMinutes
+from app.schemas.typings.knowledge.constrained_integers import (
+    BufferMinutes,
+    ServiceDurationMinutes,
+)
 from app.schemas.typings.knowledge.constrained_strings import (
     KnowledgeAttributeKey,
     KnowledgeTag,
@@ -139,6 +142,7 @@ def knowledge_item(
     body: str | None = None,
     price_minor: int | None = None,
     duration_minutes: int | None = None,
+    buffer_minutes: int | None = None,
     tags: Sequence[str] = (),
     attributes: Sequence[tuple[str, str]] = (),
     source: KnowledgeItemSource = KnowledgeItemSource.OWNER,
@@ -155,6 +159,9 @@ def knowledge_item(
             None
             if duration_minutes is None
             else ServiceDurationMinutes(duration_minutes)
+        ),
+        buffer_minutes=(
+            None if buffer_minutes is None else BufferMinutes(buffer_minutes)
         ),
         tags=[KnowledgeTag(tag) for tag in tags],
         attributes=[
@@ -180,7 +187,10 @@ def bookable(
     unit_count: int = 1,
     slot_minutes: int | None = None,
     schedule: Sequence[OpeningInterval] = (),
+    serves: Sequence[KnowledgeItemDocument] = (),
 ) -> ResourceDocument:
+    """`serves`: the services this resource performs (none: any of its unit)."""
+
     return ResourceDocument(
         business_id=business.id,
         kind=kind,
@@ -192,6 +202,7 @@ def bookable(
         if slot_minutes is None
         else SlotDurationMinutes(slot_minutes),
         schedule=list(schedule),
+        serves_item_ids=[item.id for item in serves],
         created_at=since,
         updated_at=since,
     )

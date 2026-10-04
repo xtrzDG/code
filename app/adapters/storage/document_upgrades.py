@@ -46,6 +46,9 @@ from collections.abc import Callable, Mapping
 from base_pydantic_schemas import PersistentDocument, SchemaVersion
 from pydantic.fields import FieldInfo
 
+from app.adapters.storage.knowledge_item_upgrades import (
+    upgrade_knowledge_items_from_v1,
+)
 from app.schemas.exceptions.storage_errors import UnreadableStoredDocumentError
 from app.schemas.typings.storage.constrained_integers import (
     DocumentSchemaVersionNumber,
@@ -65,7 +68,11 @@ type DocumentUpcaster = Callable[[StoredJsonObject], StoredJsonObject]
 DOCUMENT_UPCASTERS: Mapping[
     DocumentCollectionName,
     Mapping[DocumentSchemaVersionNumber, DocumentUpcaster],
-] = {}
+] = {
+    DocumentCollectionName("knowledge_items"): {
+        DocumentSchemaVersionNumber(1): upgrade_knowledge_items_from_v1,
+    },
+}
 NO_UPCASTERS: Mapping[DocumentSchemaVersionNumber, DocumentUpcaster] = {}
 
 

@@ -29,6 +29,7 @@ from app.schemas.typings.bookings.strings import (
     BookingNote,
     LeadBudgetText,
     LeadDetails,
+    ResourceReference,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -46,6 +47,7 @@ from app.schemas.typings.handoffs.strings import (
 from app.schemas.typings.knowledge.strings import (
     KnowledgeSearchQuery,
     KnowledgeTitle,
+    ServiceReference,
 )
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -64,14 +66,24 @@ class SearchKnowledgeToolInput(ImmutableDTO):
 
 
 class GetPriceToolInput(ImmutableDTO):
-    """get_price: name of a menu item, service, room or package."""
+    """
+    get_price: name of a menu item, service, room or package; for a room,
+    the check-in date and nights quote the stay at its seasonal rates.
+    """
 
     item_name: KnowledgeTitle
+    check_in_date: LocalDate | None = None
+    nights: NightCount | None = None
 
 
 class CheckAvailabilityToolInput(ImmutableDTO):
-    """check_availability: a local date (and time) in the business time zone."""
+    """
+    check_availability: a local date (and time) in the business time zone;
+    a service and a resource by id or by name in any script.
+    """
 
+    service_id: ServiceReference | None = None
+    resource_id: ResourceReference | None = None
     resource_type: ResourceKind | None = None
     date: LocalDate
     time: LocalTimeOfDay | None = None
@@ -83,11 +95,14 @@ class CheckAvailabilityToolInput(ImmutableDTO):
 class CreateBookingToolInput(ImmutableDTO):
     """
     create_booking: the confirmed details. A missing phone falls back to the
-    phone the customer contacted us from.
+    phone the customer contacted us from. A service and a resource may be
+    named by id or by name in any script.
     """
 
     name: ContactName
     phone: RawPhoneNumberInput | None = None
+    service_id: ServiceReference | None = None
+    resource_id: ResourceReference | None = None
     resource_type: ResourceKind | None = None
     date: LocalDate
     time: LocalTimeOfDay | None = None
