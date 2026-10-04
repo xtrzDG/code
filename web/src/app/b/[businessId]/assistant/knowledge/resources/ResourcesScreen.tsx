@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { api } from "@/api/client";
+import { useBookableOffers } from "@/api/offers";
 import { queryCache } from "@/api/queryCache";
 import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
@@ -12,14 +13,8 @@ import { ConfirmDialog } from "@/components/ui";
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { Alert, Button, Card, EmptyState, ErrorState, LoadingRegion, SkeletonRows, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import {
-  formatLocalDate,
-  sortResources,
-  splitExceptions,
-  todayInTimeZone,
-  type ResourceView,
-  type ScheduleExceptionView,
-} from "@/lib/resources";
+import { sortResources, type ResourceView } from "@/lib/resources";
+import { formatLocalDate, splitExceptions, todayInTimeZone, type ScheduleExceptionView } from "@/lib/specialDays";
 
 import { useNicheDetails } from "../_components/hooks";
 import { ExceptionsCard } from "./_components/ExceptionsCard";
@@ -43,6 +38,7 @@ export function ResourcesScreen() {
   const exceptions = useQuery(queryKeys.resources.exceptions(business.id), () =>
     api.GET("/v1/businesses/{business_id}/schedule-exceptions", { params: { path: { business_id: business.id } } }),
   );
+  const offers = useBookableOffers(business.id);
   const profile = useQuery(queryKeys.profile.stored(business.id), () =>
     api.GET("/v1/businesses/{business_id}/profile", { params: { path: { business_id: business.id } } }),
   );
@@ -156,6 +152,7 @@ export function ResourcesScreen() {
               <ResourceRow
                 key={resource.id}
                 resource={resource}
+                offers={offers.data ?? []}
                 onToggle={(isActive) => void setActive(resource, isActive)}
                 onEdit={() => setResourceEditor((current) => ({ key: (current?.key ?? 0) + 1, resource }))}
               />
