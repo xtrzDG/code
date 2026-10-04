@@ -4,7 +4,7 @@
  * The frame of a section with pages (Messages, Assistant, Settings): the
  * section's title, what it is for, its actions and the tabs of the pages
  * the viewer's role may open (badges where something waits; the
- * Assistant's advanced page set apart at the end). The pages inside get
+ * Assistant's advanced pages set apart at the end). The pages inside get
  * <h2> headers (SubPages). On a phone an open conversation takes the whole
  * screen, so the frame steps aside there.
  */
@@ -50,15 +50,24 @@ export function SectionFrame({
   const label = t(SECTION_LABELS[section]);
   const isConversationOpen = isConversationPath(pathname);
 
-  const tabs: SectionTab[] = visiblePages(section, role).map((entry) => ({
+  const pages = visiblePages(section, role);
+  // The advanced pages stand apart at the end: one is "Advanced", several go by their names.
+  const advanced = pages.filter((entry) => entry.isAdvanced);
+  const tabs: SectionTab[] = pages.map((entry) => ({
     href: businessPath(business.id, entry.page),
-    isApart: entry.isAdvanced,
-    title: entry.isAdvanced ? t(entry.label) : undefined,
+    isApart: entry === advanced[0],
+    title: entry.isAdvanced && advanced.length === 1 ? t(entry.label) : undefined,
     label: entry.isAdvanced ? (
       <>
-        <IconWrench className="size-4" aria-hidden />
-        <span>{t("navigation.advanced")}</span>
-        <span className="sr-only">: {t(entry.label)}</span>
+        {entry === advanced[0] ? <IconWrench className="size-4" aria-hidden /> : null}
+        {advanced.length > 1 ? (
+          <span>{t(entry.label)}</span>
+        ) : (
+          <>
+            <span>{t("navigation.advanced")}</span>
+            <span className="sr-only">: {t(entry.label)}</span>
+          </>
+        )}
       </>
     ) : (
       <>

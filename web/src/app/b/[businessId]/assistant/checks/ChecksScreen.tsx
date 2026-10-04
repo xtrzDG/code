@@ -70,8 +70,11 @@ export function ChecksScreen() {
         </Card>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-ink-muted">{t("teaching.checks.count", { count: items.length, limit })}</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="max-w-2xl space-y-1">
+              <p className="text-sm text-ink-muted">{t("teaching.checks.description")}</p>
+              <p className="text-xs text-ink-subtle">{t("teaching.checks.count", { count: items.length, limit })}</p>
+            </div>
             {addButton}
           </div>
           {items.length >= limit ? <p className="text-sm text-warning">{t("teaching.checks.limitReached")}</p> : null}
