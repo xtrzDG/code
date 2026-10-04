@@ -12,6 +12,7 @@ from app.schemas.domain.assistants import AutotestTranscriptLine, BusinessFact
 from app.schemas.dto.assistants.autotest_runs import AutotestScenario
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.assistants.strings import SystemPromptText
+from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -71,10 +72,13 @@ def build_customer_persona_prompt(
     scenario: AutotestScenario,
     customer_phone_number: E164PhoneNumber | None,
     facts: Sequence[BusinessFact],
+    customer_name: ContactName | None = None,
 ) -> SystemPromptText:
     """
     The AI customer's instruction: language, goal, identity, the opening
-    hours a customer would know, and when to stop with [DONE].
+    hours a customer would know, and when to stop with [DONE]. Autotests
+    let the customer pick a name; an evaluation persona brings its own
+    (`customer_name`), so the booking it makes can be checked.
     """
 
     phone_line: str = (
@@ -95,8 +99,12 @@ def build_customer_persona_prompt(
         f"{scenario.language_name} (language tag {scenario.language}).",
         f"Your goal: {scenario.goal}",
         phone_line,
-        "When the assistant asks for your name, give a first name that is "
-        f"common among speakers of {scenario.language_name}.",
+        (
+            "When the assistant asks for your name, give a first name that is "
+            f"common among speakers of {scenario.language_name}."
+            if customer_name is None
+            else f"Your name is {customer_name}; give it when the assistant asks."
+        ),
     ]
     if hint_lines:
         lines.append("What you know about the business:")
