@@ -1,10 +1,22 @@
-import { pageMetadata } from "@/components/business/pageMetadata";
+import { redirect } from "next/navigation";
 
-import { OnboardingWizard } from "./OnboardingWizard";
+import { pageMetadata } from "@/components/business/pageMetadata";
+import { profileSectionPath, sectionOfStepParam } from "@/lib/profile/sections";
+
+import { ProfileOverview } from "./ProfileOverview";
 
 export const generateMetadata = pageMetadata("assistant/profile");
 
-/** Hours and rules: the six-step business profile; `?step=offer` opens a step directly. */
-export default function ProfilePage() {
-  return <OnboardingWizard />;
+/**
+ * Assistant → Business profile: the cards of its six sections. Addresses
+ * of the old six-step profile (`?step=booking_rules`) open the section
+ * that edits that step now.
+ */
+export default async function ProfilePage({ params, searchParams }: PageProps<"/b/[businessId]/assistant/profile">) {
+  const [{ businessId }, { step }] = await Promise.all([params, searchParams]);
+  const section = sectionOfStepParam(step);
+  if (section) {
+    redirect(profileSectionPath(businessId, section));
+  }
+  return <ProfileOverview />;
 }

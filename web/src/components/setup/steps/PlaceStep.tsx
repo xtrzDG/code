@@ -4,10 +4,13 @@
  * Step 2, "Where are you?": the country (prefilled from the owner's phone;
  * fixed once the business exists), the city, the address (required for
  * businesses that take bookings: customers need to find them), the
- * customer languages and the time zone. Checked on Continue.
+ * customer languages and the time zone. Checked on Continue. In the edit
+ * mode (Assistant → Business profile) the screen passes the problems of
+ * what is typed, and `extra` holds its other fields (the map link, the
+ * phone for customers) under the address.
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { CountrySelect } from "@/components/CountrySelect";
 import { ErrorState, Field, Input, LoadingRegion, Select, SkeletonText } from "@/components/ui";
@@ -17,9 +20,12 @@ import { timeZoneLabel } from "@/lib/timeZones";
 
 import { LanguageChoice } from "../fields/LanguageChoice";
 import { StepScreen } from "../StepScreen";
+import type { StepMode } from "../stepMode";
 import { forCountry, type PlaceForm, type PlaceValues } from "../usePlace";
 
 type Problem = "country" | "languages" | "address";
+
+export type PlaceProblems = Partial<Record<Problem, boolean>>;
 
 export function PlaceStep({
   form,
@@ -31,6 +37,9 @@ export function PlaceStep({
   onBack,
   isBusy,
   busyLabel,
+  mode = "tunnel",
+  problems: shownProblems,
+  extra,
 }: {
   form: PlaceForm;
   onChange: (form: PlaceForm) => void;
@@ -41,9 +50,16 @@ export function PlaceStep({
   onBack: () => void;
   isBusy?: boolean;
   busyLabel?: string;
+  mode?: StepMode;
+  /** The edit mode's problems, shown as the owner types (the tunnel shows its own on Continue). */
+  problems?: PlaceProblems;
+  /** More of the section under the address (the edit mode's map link and phone). */
+  extra?: ReactNode;
 }) {
   const { t, locale } = useI18n();
-  const [problems, setProblems] = useState<Partial<Record<Problem, boolean>>>({});
+  const [checked, setProblems] = useState<PlaceProblems>({});
+  const problems = shownProblems ?? checked;
+  const isEdit = mode === "edit";
   const { countryCode, defaults, languages } = place;
 
   const submit = () => {
@@ -67,9 +83,10 @@ export function PlaceStep({
   return (
     <StepScreen
       step="place"
-      title={t("tunnelBusiness.place.title")}
-      text={t("tunnelBusiness.place.text")}
-      actions={{ onContinue: submit, onBack, isBusy, busyLabel, canContinue: Boolean(defaults) }}
+      mode={mode}
+      title={isEdit ? t("profileEdit.sections.place.title") : t("tunnelBusiness.place.title")}
+      text={isEdit ? t("profileEdit.sections.place.text") : t("tunnelBusiness.place.text")}
+      actions={isEdit ? {} : { onContinue: submit, onBack, isBusy, busyLabel, canContinue: Boolean(defaults) }}
     >
       {place.countries.error && !place.countries.data ? (
         <ErrorState error={place.countries.error} onRetry={place.countries.reload} />
@@ -144,6 +161,8 @@ export function PlaceStep({
               />
             )}
           </Field>
+
+          {extra}
 
           {!defaults ? (
             <LoadingRegion label={t("common.loading")}>

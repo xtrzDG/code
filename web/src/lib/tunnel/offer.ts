@@ -9,9 +9,11 @@
 
 import type { KnowledgeItemDetails, KnowledgeItemKind, RequestBody, Schema } from "@/api/types";
 import { majorToMinor, parseDecimalInput } from "@/lib/format";
+import { kindHasDuration } from "@/lib/knowledge/kinds";
 import { isOfferRowChanged, newOfferRow, offerRowFromItem, validateOfferRow, type OfferRow } from "@/lib/wizard/offers";
 
 import { exampleRowKey } from "./offerMemory";
+import type { PastedOffer } from "./offerPaste";
 
 /** Kinds that are not on the offer table (they have their own places). */
 const NOT_OFFERS: ReadonlySet<KnowledgeItemKind> = new Set(["faq", "policy"]);
@@ -62,9 +64,18 @@ export function blankOfferRow(kind: KnowledgeItemKind, key: string): TunnelOffer
   return { ...newOfferRow(kind, key), isSuggestion: false };
 }
 
-/** A field typed into: a suggestion becomes the owner's row. */
-export function editOfferRow(row: TunnelOfferRow, patch: Partial<Pick<OfferRow, "title" | "price" | "duration">>): TunnelOfferRow {
-  return { ...row, ...patch, isSuggestion: false };
+/**
+ * A field typed into: a suggestion becomes the owner's row. A kind that
+ * lasts no time (a dish, a product) drops the duration.
+ */
+export function editOfferRow(row: TunnelOfferRow, patch: Partial<Pick<OfferRow, "title" | "price" | "duration" | "kind">>): TunnelOfferRow {
+  const edited = { ...row, ...patch, isSuggestion: false };
+  return kindHasDuration(edited.kind) ? edited : { ...edited, duration: "" };
+}
+
+/** Lines pasted from a spreadsheet as new rows of one kind (`keys` names them). */
+export function pastedOfferRows(pasted: readonly PastedOffer[], kind: KnowledgeItemKind, keys: (index: number) => string): TunnelOfferRow[] {
+  return pasted.map((offer, index) => editOfferRow(blankOfferRow(kind, keys(index)), { title: offer.title, price: offer.price, duration: offer.duration }));
 }
 
 export type KnowledgeItemCreate = RequestBody<"/v1/businesses/{business_id}/knowledge", "post">;

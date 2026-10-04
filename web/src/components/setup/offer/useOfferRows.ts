@@ -8,6 +8,11 @@
  * owner saved as their own line or removed is remembered (offerMemory), so
  * a revisit does not offer it again. Saves of one line queue behind each
  * other, so a line is never created twice.
+ *
+ * In the edit mode (Assistant → Business profile) the examples show only
+ * while nothing is on offer yet, a change to a saved line is also saved a
+ * moment after the typing stops, lines pasted from a spreadsheet are added
+ * and saved at once, and what is left unsaved goes when the page does.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,16 +23,23 @@ import { unwrap } from "@/api/result";
 import { useQuery } from "@/api/useQuery";
 import type { KnowledgeItemDetails, KnowledgeItemKind, Schema } from "@/api/types";
 import { useI18n } from "@/i18n/client";
-import { blankOfferRow, editOfferRow, initialOfferRows, offerSave, savedOfferRow, type TunnelOfferRow } from "@/lib/tunnel/offer";
+import { blankOfferRow, editOfferRow, initialOfferRows, isOfferItem, offerSave, pastedOfferRows, savedOfferRow, type TunnelOfferRow } from "@/lib/tunnel/offer";
 import { browserStorage, exampleKeyOf, readDoneExamples, rememberDoneExample } from "@/lib/tunnel/offerMemory";
+import type { PastedOffer } from "@/lib/tunnel/offerPaste";
 
+import type { LineSaveStatus } from "../fields/SaveMark";
 import { useSaveTracker } from "../SaveTracker";
+import type { StepMode } from "../stepMode";
+import { useLineSaves } from "../useLineSaves";
 
-export type RowStatus = "saving" | "saved" | "failed";
+export type RowStatus = LineSaveStatus;
 
-export function useOfferRows(businessId: string, examples: readonly Schema<"StarterOfferView">[], currency: string, kind: KnowledgeItemKind) {
+export type OfferRowPatch = Partial<Pick<TunnelOfferRow, "title" | "price" | "duration" | "kind">>;
+
+export function useOfferRows(businessId: string, examples: readonly Schema<"StarterOfferView">[], currency: string, kind: KnowledgeItemKind, mode: StepMode = "tunnel") {
   const { locale } = useI18n();
   const track = useSaveTracker();
+  const isEdit = mode === "edit";
   const knowledge = useQuery(
     queryKeys.knowledge.wizardItems(businessId, locale),
     () =>
@@ -44,11 +56,12 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
   const sequence = useRef(0);
   const latest = useRef<TunnelOfferRow[]>([]);
   const ids = useRef(new Map<string, string>());
-  const queue = useRef(new Map<string, Promise<boolean>>());
+  const toSave = useRef<string[]>([]);
 
   const items = knowledge.data?.items;
   if (rows === null && items && knowledge.updatedAt > loadedAfter) {
-    setRows(initialOfferRows(items, examples, currency, readDoneExamples(browserStorage(), businessId)));
+    const suggested = isEdit && items.some(isOfferItem) ? [] : examples;
+    setRows(initialOfferRows(items, suggested, currency, readDoneExamples(browserStorage(), businessId)));
   }
   const shown = rows ?? [];
 
@@ -67,14 +80,6 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
     [businessId],
   );
 
-  const update = (key: string, patch: Partial<Pick<TunnelOfferRow, "title" | "price" | "duration">>) =>
-    setRows((current) => (current ?? []).map((row) => (row.key === key ? editOfferRow(row, patch) : row)));
-
-  const add = () => {
-    sequence.current += 1;
-    setRows((current) => [...(current ?? []), blankOfferRow(kind, `new-${sequence.current}`)]);
-  };
-
   const saveNow = useCallback(
     async (key: string): Promise<boolean> => {
       const found = latest.current.find((item) => item.key === key);
@@ -85,6 +90,10 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
         return true;
       }
       if (plan.kind === "invalid") {
+        // The edit mode has no Continue to show the problems on: the line says so itself.
+        if (isEdit) {
+          setStatus((current) => ({ ...current, [key]: "failed" }));
+        }
         return false;
       }
       setStatus((current) => ({ ...current, [key]: "saving" }));
@@ -111,21 +120,48 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
       setStatus((current) => ({ ...current, [key]: ok ? "saved" : "failed" }));
       return ok;
     },
-    [businessId, currency, markDone, track],
+    [businessId, currency, isEdit, markDone, track],
   );
 
-  /** Save one line (after any save of it still running); false when it is not valid yet or failed. */
-  const save = useCallback(
-    (key: string): Promise<boolean> => {
-      const next = (queue.current.get(key) ?? Promise.resolve(true)).then(() => saveNow(key));
-      queue.current.set(key, next);
-      return next;
-    },
-    [saveNow],
-  );
+  // The edit mode has no Continue: leaving the page saves what is not saved yet.
+  const lines = useLineSaves(saveNow, { flushOnLeave: isEdit, keys: () => latest.current.map((row) => row.key) });
+  const { save } = lines;
+
+  // Lines added in the last render (pasted ones) are saved once the table holds them.
+  useEffect(() => {
+    const keys = toSave.current.splice(0);
+    keys.forEach((key) => void save(key));
+  });
+
+  const update = (key: string, patch: OfferRowPatch) => {
+    setRows((current) => (current ?? []).map((row) => (row.key === key ? editOfferRow(row, patch) : row)));
+    // A change to a saved line is saved a moment later in the edit mode; a new line when the owner leaves it.
+    if (isEdit && (ids.current.has(key) || latest.current.some((row) => row.key === key && row.id !== null))) {
+      lines.later(key);
+    }
+  };
+
+  const add = () => {
+    sequence.current += 1;
+    setRows((current) => [...(current ?? []), blankOfferRow(kind, `new-${sequence.current}`)]);
+  };
+
+  /** Lines pasted from a spreadsheet: they replace the empty line they were pasted into, the rest follow. */
+  const paste = (pasted: readonly PastedOffer[], intoKey: string) => {
+    const base = sequence.current;
+    sequence.current += pasted.length;
+    const added = pastedOfferRows(pasted, kind, (index) => `new-${base + index + 1}`);
+    setRows((current) => {
+      const list = current ?? [];
+      const target = list.findIndex((row) => row.key === intoKey && row.id === null && row.title.trim() === "" && row.price.trim() === "");
+      return target >= 0 ? [...list.slice(0, target), ...added, ...list.slice(target + 1)] : [...list, ...added];
+    });
+    toSave.current.push(...added.map((row) => row.key));
+    return added.length;
+  };
 
   const remove = async (key: string) => {
-    await queue.current.get(key);
+    await lines.settle(key);
     const id = ids.current.get(key) ?? latest.current.find((item) => item.key === key)?.id ?? null;
     setRows((current) => (current ?? []).filter((item) => item.key !== key));
     markDone(key);
@@ -154,7 +190,7 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
     knowledge.reload();
   };
 
-  return { rows: shown, isLoading: rows === null, error: knowledge.error, status, showErrors, update, add, save, remove, saveAll, reload };
+  return { rows: shown, isLoading: rows === null, error: knowledge.error, status, showErrors, update, add, paste, save, remove, saveAll, reload };
 }
 
 export type OfferRows = ReturnType<typeof useOfferRows>;

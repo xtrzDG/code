@@ -6,6 +6,9 @@
  * or Telegram through a one-time link), or someone else; the people
  * already notified with a way to remove them; and when the assistant calls
  * a person (the niche's usual reasons, changed later in the cabinet).
+ * In the edit mode it is "People" of Assistant → Business profile: the
+ * same list and choices, the phone for calls that need a person, and the
+ * reasons to call one in Rules.
  */
 
 import { useRef, useState } from "react";
@@ -20,8 +23,10 @@ import { cn } from "@/lib/cn";
 import { formatContactAddress } from "@/lib/phone";
 import { isAlreadyContact, ownerChoices, ownerName } from "@/lib/tunnel/contacts";
 
+import { PeopleEditExtras } from "../edit/PeopleEditExtras";
 import { StepScreen } from "../StepScreen";
 import type { StepContext } from "../flow/stepContext";
+import type { StepMode } from "../stepMode";
 import { PersonForm } from "./PersonForm";
 import { TelegramLinkPanel } from "./TelegramLinkPanel";
 import { usePeople } from "./usePeople";
@@ -66,8 +71,9 @@ function ContactList({ contacts, onRemove }: { contacts: readonly Schema<"Manage
   );
 }
 
-export function PeopleScreen({ ctx }: { ctx: StepContext }) {
+export function PeopleScreen({ ctx, mode = "tunnel" }: { ctx: StepContext; mode?: StepMode }) {
   const { t } = useI18n();
+  const isEdit = mode === "edit";
   const { me, business } = useBusiness();
   const people = usePeople(ctx.businessId);
   const [isOtherOpen, setOtherOpen] = useState(false);
@@ -109,10 +115,11 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
   return (
     <StepScreen
       step="people"
-      title={t("tunnelTeam.people.title")}
-      text={t("tunnelTeam.people.text")}
+      mode={mode}
+      title={isEdit ? t("profileEdit.sections.people.title") : t("tunnelTeam.people.title")}
+      text={isEdit ? t("profileEdit.sections.people.text") : t("tunnelTeam.people.text")}
       wide
-      actions={{ onContinue: submit, onBack: ctx.back, isBusy: people.isSaving }}
+      actions={isEdit ? {} : { onContinue: submit, onBack: ctx.back, isBusy: people.isSaving }}
     >
       <div className="space-y-8">
         {hasContacts ? <ContactList contacts={people.contacts} onRemove={(contact) => void people.remove(contact)} /> : null}
@@ -189,7 +196,9 @@ export function PeopleScreen({ ctx }: { ctx: StepContext }) {
           ) : null}
         </section>
 
-        {rules.length > 0 ? (
+        {isEdit ? (
+          <PeopleEditExtras ctx={ctx} />
+        ) : rules.length > 0 ? (
           <section aria-labelledby="tunnel-people-rules" className="space-y-2">
             <h2 id="tunnel-people-rules" className="text-base font-semibold text-ink">
               {t("tunnelTeam.people.handoffTitle")}

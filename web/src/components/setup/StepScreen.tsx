@@ -56,8 +56,7 @@ export function isContinueKey(event: Pick<KeyboardEvent, "key" | "shiftKey" | "a
   return type !== "checkbox" && type !== "radio";
 }
 
-export interface StepScreenProps {
-  step: TunnelStep;
+interface ScreenProps {
   title: string;
   text?: ReactNode;
   children?: ReactNode;
@@ -66,16 +65,17 @@ export interface StepScreenProps {
   aside?: ReactNode;
   /** A wider column (the offer table, the test chat). */
   wide?: boolean;
-  /** `edit`: a section of Assistant → Business profile (no counter, no way on). */
-  mode?: StepMode;
 }
+
+/** `edit`: a section of Assistant → Business profile (no counter, no way on), which may be no tunnel step at all. */
+export type StepScreenProps = ScreenProps & ({ mode?: Extract<StepMode, "tunnel">; step: TunnelStep } | { mode: Extract<StepMode, "edit">; step?: TunnelStep });
 
 export function StepScreen(props: StepScreenProps) {
   return props.mode === "edit" ? <EditScreen {...props} /> : <TunnelScreen {...props} />;
 }
 
 /** The edit mode: the section's title and help over its fields, which save themselves. */
-function EditScreen({ title, text, children, aside, wide = false }: StepScreenProps) {
+function EditScreen({ title, text, children, aside, wide = false }: ScreenProps) {
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className={cn("w-full", wide ? "max-w-4xl" : "max-w-3xl")}>
@@ -89,7 +89,7 @@ function EditScreen({ title, text, children, aside, wide = false }: StepScreenPr
   );
 }
 
-function TunnelScreen({ step, title, text, children, actions, aside, wide = false }: StepScreenProps) {
+function TunnelScreen({ step, title, text, children, actions, aside, wide = false }: ScreenProps & { step: TunnelStep }) {
   const { t } = useI18n();
   const heading = useRef<HTMLHeadingElement>(null);
   const screen = useRef<HTMLDivElement>(null);
