@@ -61,7 +61,9 @@ class ReplayLlmAdapter(LlmAdapterContract):
 
     def complete(self, request: LlmRequest) -> LlmResponse:
         cassette_request: LlmCassetteRequest = build_cassette_request(request)
-        entry: LlmCassetteEntry | None = self._cassette_store.find(cassette_request.key)
+        entry: LlmCassetteEntry | None = self._cassette_store.find(
+            cassette_request.request_digest
+        )
         take: LlmCassetteTake | None = (
             None
             if entry is None
@@ -95,7 +97,7 @@ class ReplayLlmAdapter(LlmAdapterContract):
         request: LlmRequest,
         cassette_request: LlmCassetteRequest,
     ) -> LlmCassetteMissReason:
-        if self._cassette_store.find(cassette_request.key) is not None:
+        if self._cassette_store.find(cassette_request.request_digest) is not None:
             return LlmCassetteMissReason(
                 f"The request was recorded, but not for sample "
                 f"{int(self._sample_index) + 1}: record more samples."

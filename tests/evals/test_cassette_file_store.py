@@ -48,7 +48,7 @@ def test_a_saved_cassette_reads_back(tmp_path: Path) -> None:
 
     loaded = LlmCassetteFileStore(path)
 
-    entry = loaded.find(first.key)
+    entry = loaded.find(first.request_digest)
     assert entry is not None
     assert [str(t.response.text) for t in entry.takes] == ["replaced", "again"]
     assert len(loaded.list_entries()) == 2

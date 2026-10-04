@@ -20,8 +20,8 @@ from app.schemas.typings.evaluations.constrained_integers import (
     LlmCassetteFormatVersion,
 )
 from app.schemas.typings.evaluations.constrained_strings import (
-    LlmCassetteKey,
     LlmInstructionDigest,
+    LlmRequestDigest,
     LlmToolsDigest,
 )
 
@@ -52,8 +52,8 @@ class LlmCassetteFileStore(LlmCassetteStoreAdapterContract):
         self._tool_sets: dict[LlmToolsDigest, list[AssistantToolName]] = {
             tool_set.digest: list(tool_set.tool_names) for tool_set in stored.tool_sets
         }
-        self._entries: dict[LlmCassetteKey, LlmCassetteEntry] = {
-            entry.request.key: entry for entry in stored.entries
+        self._entries: dict[LlmRequestDigest, LlmCassetteEntry] = {
+            entry.request.request_digest: entry for entry in stored.entries
         }
 
     def recording(self) -> LlmCassetteRecording | None:
@@ -62,8 +62,8 @@ class LlmCassetteFileStore(LlmCassetteStoreAdapterContract):
     def set_recording(self, recording: LlmCassetteRecording) -> None:
         self._recording = recording
 
-    def find(self, key: LlmCassetteKey) -> LlmCassetteEntry | None:
-        return self._entries.get(key)
+    def find(self, request_digest: LlmRequestDigest) -> LlmCassetteEntry | None:
+        return self._entries.get(request_digest)
 
     def list_entries(self) -> list[LlmCassetteEntry]:
         with self._lock:
@@ -71,14 +71,14 @@ class LlmCassetteFileStore(LlmCassetteStoreAdapterContract):
 
     def record(self, request: LlmCassetteRequest, take: LlmCassetteTake) -> None:
         with self._lock:
-            entry: LlmCassetteEntry | None = self._entries.get(request.key)
+            entry: LlmCassetteEntry | None = self._entries.get(request.request_digest)
             takes: list[LlmCassetteTake] = [
                 kept
                 for kept in ([] if entry is None else entry.takes)
                 if kept.sample_index != take.sample_index
             ]
             takes.append(take)
-            self._entries[request.key] = LlmCassetteEntry(
+            self._entries[request.request_digest] = LlmCassetteEntry(
                 request=request,
                 takes=sorted(takes, key=lambda kept: int(kept.sample_index)),
             )

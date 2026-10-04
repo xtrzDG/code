@@ -13,8 +13,8 @@ from app.schemas.dto.llm_cassettes import (
 )
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.evaluations.constrained_strings import (
-    LlmCassetteKey,
     LlmInstructionDigest,
+    LlmRequestDigest,
     LlmToolsDigest,
 )
 from app.schemas.typings.platform.constrained_integers import ElapsedMilliseconds
@@ -33,7 +33,7 @@ class LlmCassetteStoreAdapterContract(AdapterContract, Protocol):
     def set_recording(self, recording: LlmCassetteRecording) -> None:
         raise NotImplementedError
 
-    def find(self, key: LlmCassetteKey) -> LlmCassetteEntry | None:
+    def find(self, request_digest: LlmRequestDigest) -> LlmCassetteEntry | None:
         raise NotImplementedError
 
     def list_entries(self) -> list[LlmCassetteEntry]:

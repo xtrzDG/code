@@ -20,8 +20,8 @@ from app.schemas.dto.conversations import LlmRequest, LlmToolDefinition
 from app.schemas.dto.llm_cassettes import LlmCassetteRequest
 from app.schemas.typings.conversations.strings import LlmProviderPayload
 from app.schemas.typings.evaluations.constrained_strings import (
-    LlmCassetteKey,
     LlmInstructionDigest,
+    LlmRequestDigest,
     LlmToolsDigest,
     LlmTranscriptDigest,
 )
@@ -109,7 +109,7 @@ def build_cassette_request(request: LlmRequest) -> LlmCassetteRequest:
     transcript_digest = LlmTranscriptDigest(
         digest_text(TRANSCRIPT_SEPARATOR.join(canonical))
     )
-    key = LlmCassetteKey(
+    request_digest = LlmRequestDigest(
         digest_text(
             "\n".join(
                 [
@@ -123,7 +123,7 @@ def build_cassette_request(request: LlmRequest) -> LlmCassetteRequest:
     )
     tail: str = canonical[-1] if canonical else ""
     return LlmCassetteRequest(
-        key=key,
+        request_digest=request_digest,
         model_id=request.model_id,
         instruction_digest=instruction_digest,
         tools_digest=tools_digest,

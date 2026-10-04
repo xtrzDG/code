@@ -5,26 +5,12 @@ from base_typed_string import BaseConstrainedTypedString
 SHA256_HEX_PATTERN: str = r"^[0-9a-f]{64}$"
 
 
-class EvalScenarioId(BaseConstrainedTypedString):
+class LlmInstructionDigest(BaseConstrainedTypedString):
     """
-    Stable id of one scenario of an evaluation dataset, unique in its niche.
+    SHA-256 of the system prompt of a model call.
 
     Example:
-        scenario_id = EvalScenarioId("booking__ka")
-    """
-
-    min_length = 3
-    max_length = 96
-    pattern = r"^[a-z][a-z0-9_\-]*$"
-
-
-class LlmCassetteKey(BaseConstrainedTypedString):
-    """
-    Key of one recorded model call: the SHA-256 of its model, instruction,
-    tools and transcript digests.
-
-    Example:
-        key = LlmCassetteKey("0" * 64)
+        digest = LlmInstructionDigest("0" * 64)
     """
 
     min_length = 64
@@ -32,12 +18,13 @@ class LlmCassetteKey(BaseConstrainedTypedString):
     pattern = SHA256_HEX_PATTERN
 
 
-class LlmInstructionDigest(BaseConstrainedTypedString):
+class LlmRequestDigest(BaseConstrainedTypedString):
     """
-    SHA-256 of the system prompt of a model call.
+    Digest of one recorded model call: the SHA-256 of its model, instruction,
+    tools and transcript digests.
 
     Example:
-        digest = LlmInstructionDigest("0" * 64)
+        request_digest = LlmRequestDigest("0" * 64)
     """
 
     min_length = 64

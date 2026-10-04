@@ -20,7 +20,7 @@ NANOSECONDS_PER_MILLISECOND: int = 1_000_000
 class RecordingLlmAdapter(LlmAdapterContract):
     """
     Decorator of the evaluation harness: every answered model call is
-    stored in the cassette under the key of its request (model,
+    stored in the cassette under the digest of its request (model,
     instruction, tools and canonical transcript), with how long it took,
     for sample `sample_index` of its scenario. Instructions and tool names
     are kept too, so a later replay can show what changed. Failed calls

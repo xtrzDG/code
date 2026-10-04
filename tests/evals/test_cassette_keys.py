@@ -74,8 +74,11 @@ def test_the_key_ignores_ids_but_not_which_record_is_which() -> None:
     )
 
     first = build_cassette_request(same_booking)
-    assert first.key == build_cassette_request(same_booking_again).key
-    assert first.key != build_cassette_request(two_bookings).key
+    assert (
+        first.request_digest
+        == build_cassette_request(same_booking_again).request_digest
+    )
+    assert first.request_digest != build_cassette_request(two_bookings).request_digest
 
 
 def test_every_part_of_the_request_changes_the_key() -> None:
@@ -90,7 +93,9 @@ def test_every_part_of_the_request_changes_the_key() -> None:
         ),
     ]
 
-    keys = {build_cassette_request(request).key for request in [base, *variants]}
+    keys = {
+        build_cassette_request(request).request_digest for request in [base, *variants]
+    }
 
     assert len(keys) == 5
 

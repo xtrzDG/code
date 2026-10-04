@@ -13,19 +13,16 @@ expectations.
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
 from app.schemas.constants.niches import NicheKey
 
 type ToolInput = dict[str, object]
-type FieldValue = str | int | float | bool | None
 
 
-class StrictModel(BaseModel):
+class StrictModel(BaseModel, extra="forbid", frozen=True):
     """Dataset models refuse unknown keys, so a typo fails loudly."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class BusinessSpec(StrictModel):

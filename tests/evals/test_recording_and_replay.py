@@ -80,7 +80,7 @@ def test_recorded_answers_are_replayed_per_sample(tmp_path: Path) -> None:
     assert store.read_tools(cassette.tools_digest) == [
         tool.name for tool in request.tools
     ]
-    entry = store.find(cassette.key)
+    entry = store.find(cassette.request_digest)
     assert entry is not None and len(entry.takes) == 2
 
 

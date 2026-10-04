@@ -16,8 +16,8 @@ from app.schemas.typings.evaluations.constrained_integers import (
     LlmCassetteSampleIndex,
 )
 from app.schemas.typings.evaluations.constrained_strings import (
-    LlmCassetteKey,
     LlmInstructionDigest,
+    LlmRequestDigest,
     LlmToolsDigest,
     LlmTranscriptDigest,
 )
@@ -31,10 +31,11 @@ from app.schemas.typings.platform.constrained_integers import ElapsedMillisecond
 class LlmCassetteRequest(ImmutableDTO):
     """
     What identifies a model call: the model and the digests of its
-    instruction, tools and canonical transcript; `key` hashes all four.
+    instruction, tools and canonical transcript; `request_digest` hashes
+    all four and keys the recording.
     """
 
-    key: LlmCassetteKey
+    request_digest: LlmRequestDigest
     model_id: LlmModelId
     instruction_digest: LlmInstructionDigest
     tools_digest: LlmToolsDigest

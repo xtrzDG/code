@@ -89,6 +89,7 @@ def main(arguments: list[str] | None = None) -> int:
         f"\npass^{options.run.samples} {summary.pass_rate:.1%} "
         f"({summary.passed_count}/{summary.scenario_count}), pass@1 "
         f"{summary.pass_at_1:.1%}, stale {summary.stale_count}, "
+        f"errors {summary.errored_count}, "
         f"cost ${summary.cost_usd:.4f}, model time p50 {summary.latency_p50_ms} ms "
         f"p95 {summary.latency_p95_ms} ms"
     )
