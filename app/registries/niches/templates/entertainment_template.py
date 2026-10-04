@@ -159,8 +159,7 @@ def build_entertainment_template() -> NicheTemplate:
                 hints=text(
                     en="Add each package with its price under Offer.",
                     ru="Каждый пакет с ценой добавьте в раздел «Что вы предлагаете».",
-                    ka="თითოეული პაკეტი ფასით დაამატეთ განყოფილებაში „რას "
-                    "სთავაზობთ“.",
+                    ka="თითოეული პაკეტი ფასით დაამატეთ განყოფილებაში „რას სთავაზობთ“.",
                 ),
             ),
             question(
