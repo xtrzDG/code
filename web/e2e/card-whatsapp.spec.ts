@@ -10,7 +10,7 @@ import type { Schema } from "../src/api/types";
 
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
-import { CONVERSATION_ID, conversationCard, openCard, serveCard } from "./support/conversation-card";
+import { CONVERSATION_ID, conversationCard, HOUR_US, openCard, serveCard } from "./support/conversation-card";
 
 type ChannelView = Schema<"ChannelView">;
 
@@ -60,42 +60,45 @@ test("after 24 hours a WhatsApp reply goes out in the owner's template", async (
   await expect(page.getByText("Sua mesa está reservada. Até sábado!")).toBeVisible();
 });
 
-test("a template WhatsApp refuses points the owner to the Channels page", async ({ page, owner, consoleErrors }) => {
-  consoleErrors.allow(/status of 409/);
-  await serveCard(
-    page,
-    owner.businessId,
-    conversationCard(owner.businessId, {
-      reply: {
-        is_available: false,
-        block: "window_closed",
-        template: { name: "staff_reply", language_code: "en", max_text_length: 1024 },
+test("a template WhatsApp refused shows on the reply and points the owner to the Channels page", async ({
+  page,
+  owner,
+}) => {
+  const card = conversationCard(owner.businessId, {
+    reply: {
+      is_available: false,
+      block: "window_closed",
+      template: { name: "staff_reply", language_code: "en", max_text_length: 1024 },
+    },
+  });
+  // The worker gave the reply up: Meta refused the template (its outbox
+  // message failed with `template_rejected`).
+  await serveCard(page, owner.businessId, {
+    ...card,
+    messages: [
+      ...(card.messages ?? []),
+      {
+        id: "message_6b5a4c3d-2e1f-4a0b-9c8d-7e6f5a4b3c2d",
+        direction: "outbound",
+        author: "staff",
+        text: "Your table is ready.",
+        tool_calls: [],
+        input_tokens: 0,
+        output_tokens: 0,
+        cost_micro_usd: 0,
+        created_at: Date.now() * 1000 - HOUR_US,
+        delivery: { state: "failed", failure_reason: "template_rejected", attempts: 1 },
       },
-    }),
-  );
-  await page.route(`**/conversations/${CONVERSATION_ID}/messages`, (route) =>
-    route.fulfill({
-      status: 409,
-      json: {
-        error: "conflict",
-        message: "WhatsApp did not accept the message template for staff replies.",
-        reasons: [
-          {
-            code: "template_rejected",
-            message: "Meta refused the message template (132001): Template name does not exist in the translation",
-            details: ["staff_reply", "en"],
-          },
-        ],
-      },
-    }),
-  );
+    ],
+  });
 
   await openCard(page, owner.businessId);
-  await page.getByLabel(en.conversations.reply.label).fill("Your table is ready.");
-  await page.getByRole("button", { name: en.conversations.reply.template.send }).click();
 
+  const chip = page.locator('[data-delivery-state="failed"]');
+  await expect(chip).toContainText(en.messageDelivery.states.failed);
+  await expect(chip).toContainText(en.messageDelivery.reasons.template_rejected);
   const rejected = en.conversations.reply.template.rejectedOwner.replace("{name}", "staff_reply");
-  // Not "try again in a minute": the box says what to fix, and keeps the text.
+  // Not "try again": the box says what to fix.
   const inline = page
     .getByRole("alert")
     .filter({ hasText: rejected })
@@ -105,8 +108,6 @@ test("a template WhatsApp refuses points the owner to the Channels page", async 
     "href",
     `/b/${owner.businessId}/assistant/channels`,
   );
-  await expect(page.getByText(en.errors.codes.external_service_error)).toHaveCount(0);
-  await expect(page.getByLabel(en.conversations.reply.label)).toHaveValue("Your table is ready.");
 });
 
 test("without a template the closed window points to the Channels page", async ({ page, owner }) => {
