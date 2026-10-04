@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
+
+Spec: `52268d9934c952f6`
+
+No change of its own: the API description with the four entries below
+merged together (summary channels, return on the plan, customer sources
+and topics; Undo for booking statuses and resolved handoffs; stored reply
+guard verdicts and GUARD_SPIKE; device sessions, the platform admin team
+and time-boxed support access). Each of those entries names the
+description of its own change alone.
+
 ## 2026-10-04 — value where owners read: return on the plan, summary channels, customer sources, topics
 
 Spec: `17fed056871cbc6c`

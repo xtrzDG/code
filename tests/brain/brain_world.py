@@ -2,9 +2,8 @@
 A complete in-memory conversation engine for tests: real repositories over
 InMemoryDocumentCollectionAdapter, the real language detector, phone parser,
 tool registry and localized texts; fake tool use cases, a fake claim check
-(`GuardOptions`) and a scripted language model. The clock is manual. The
-parts are built by brain_repositories, brain_business_seed, brain_tools and
-brain_orchestrators.
+(`GuardOptions`), a scripted language model and a manual clock. Built by
+brain_repositories, brain_business_seed, brain_tools and brain_orchestrators.
 """
 
 from dataclasses import dataclass, field
