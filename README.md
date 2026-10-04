@@ -513,6 +513,8 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `LANGFUSE_CAPTURE_CONTENT` | `false`: тексты сообщений в журнал не пишутся |
 | `SENTRY_DSN` | неожиданные ошибки только в логе |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.05`: доля запросов API, чья трассировка уходит в Sentry (от 0 до 1) |
+| `PLATFORM_ALERT_TELEGRAM_CHAT_IDS`, `PLATFORM_ALERT_EMAILS` | оповещения платформы (`docs/operations/slo.md`) только в логе и на странице «Система» админки. Чаты Telegram (id через запятую, бот платформы в группе; нужен `TELEGRAM_PLATFORM_BOT_TOKEN`) и почты (через `SMTP_*`) получают их через очередь с повторами |
+| `PLATFORM_ALERT_COOLDOWN_MINUTES` | 60: оповещение, которое всё ещё горит, приходит снова не чаще раза в час (5–1440) |
 | `APP_RELEASE`, `RENDER_GIT_COMMIT` | версия сборки в отчётах Sentry и в пульсе воркера; `RENDER_GIT_COMMIT` Render задаёт сам, `APP_RELEASE` — для других платформ |
 | `LOG_FORMAT` | `json` в `production` (одна строка JSON с `request_id`, `business_id`, `conversation_id`, `channel`, `job_name`, `job_id`), `text` в остальных окружениях |
 | `THREADPOOL_SIZE` | 64 обработчика запросов API одновременно (потоки AnyIO); держите больше `DB_POOL_SIZE`: запрос держит соединение мгновение, и подождать его лучше, чем получить отказ |

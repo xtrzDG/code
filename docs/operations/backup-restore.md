@@ -75,6 +75,11 @@ What each scenario costs:
 Every run checks in to Sentry Crons (monitor `database-backup`, daily, an
 hour of margin) and reports a failure to Sentry; the cron's log in Render
 shows the uploaded key, the snapshot's size and what retention deleted.
+Each run is also recorded in the database it dumped (`maintenance_runs`:
+how it ended, the archive, its size and rows, or the first line of the
+error), so `/admin/system` shows the last backup and marks it overdue when
+it failed or is older than `BACKUP_MAX_AGE_HOURS`. Recording is best
+effort: a database that refuses the row never fails the backup.
 Exit codes: 0 done, 1 failed, 2 not configured.
 
 **The bucket.** Private, in the EU, at another provider than Render
@@ -179,8 +184,12 @@ everything new; the others only open and verify what they sealed.
 
 Sentry Crons monitor `restore-drill` (weekly, with margin) gets the
 production drill's check-ins; a failed check is reported as an error with
-the list. Exit codes: 0 the backup restores, 1 a check or the restore
-failed, 2 not configured.
+the list. Where the drill runs with `DATABASE_URL` (a weekly Render cron
+next to production) it records its run for `/admin/system` like the
+backup; the GitHub workflow cannot reach Render's private database, so
+its drills show in Sentry Crons and the workflow's history only. Exit
+codes: 0 the backup restores, 1 a check or the restore failed, 2 not
+configured.
 
 **The workflow** (`.github/workflows/restore-drill.yml`):
 

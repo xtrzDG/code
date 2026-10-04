@@ -19,7 +19,6 @@ from app.contracts.operator_contract import OperatorContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.dto.admin_system import MaintenanceRunView
 from app.schemas.dto.maintenance_runs import RecordMaintenanceRunCommand
-from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.monitoring.strings import MaintenanceErrorText
 
 type RecordRunOperator = OperatorContract[
@@ -68,9 +67,10 @@ def record_maintenance_run(
 
     try:
         record(settings, command)
-    except ApplicationError as error:
+    except Exception as error:  # noqa: BLE001 - the command's outcome stands
         print(
-            f"The run was not recorded for the system page: {error}", file=error_stream
+            f"The run was not recorded for the system page: {error}",
+            file=error_stream,
         )
 
 
