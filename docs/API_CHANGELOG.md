@@ -11,6 +11,18 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
+
+Spec: `8868b933a62e22f4`
+
+No change of its own: the API description with the five entries below
+merged together (the Telegram token check, staff templates per language and
+channel health; the help center, support contacts, coach marks and the
+platform status page; "Fix this answer", bad rating reasons and the owner's
+checks; CSV and full business exports; billing details, numbered invoices
+and their PDFs). Each of those entries names the description of its own
+change alone.
+
 ## 2026-10-04 — guided channels: Telegram token check, staff templates per language, channel health
 
 Spec: `2d10f6638c041f9c`

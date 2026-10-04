@@ -10,9 +10,6 @@ from app.adapters.documents.weasyprint_invoice_document_renderer_adapter import 
     WeasyPrintInvoiceDocumentRendererAdapter,
 )
 from app.adapters.events.live_event_bus_factory import build_live_event_bus_adapter
-from app.adapters.exports.export_archive_storage_factory import (
-    build_export_archive_storage,
-)
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
     CHAT_CALL_RETRY_LIMIT,
@@ -37,21 +34,15 @@ from app.adapters.payments.flitt_payment_gateway_adapter import (
 from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
     build_rate_limit_bucket_adapter,
 )
-from app.adapters.recordings.cached_recording_storage_adapter import (
-    CachedRecordingStorageAdapter,
-)
-from app.adapters.recordings.recording_storage_factory import (
-    build_own_recording_storage,
-)
-from app.adapters.voice.elevenlabs_recording_storage_adapter import (
-    ElevenLabsRecordingStorageAdapter,
-)
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.channel_adapters_container import (
     ChannelAdaptersContainer,
 )
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
+)
+from app.containers.adapters.file_storage_adapters_container import (
+    FileStorageAdaptersContainer,
 )
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
@@ -77,13 +68,11 @@ from app.containers.factories import (
 )
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
-from app.contracts.export_archives import ExportArchiveStorageContract
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
-from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.facilitators.resilience.circuit_breaker_facilitator import (
     CircuitBreakerFacilitator,
 )
@@ -168,36 +157,17 @@ class AdaptersContainer(containers.DeclarativeContainer):
     )
     secret_cipher = security.secret_cipher
     totp_secret_cipher = security.totp_secret_cipher
-    # Recordings the platform keeps itself: EU object storage encrypted per
-    # business (RECORDINGS_STORAGE=s3), files of this server in development.
-    own_recording_storage: Singleton[RecordingStorageAdapterContract] = Singleton(
-        build_own_recording_storage,
-        settings=config.app_settings,
-        object_storage_client=clients.object_storage_client,
+    # Call recordings and the archives of full business exports.
+    files: FileStorageAdaptersContainer = Container(  # type: ignore[assignment]
+        FileStorageAdaptersContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
     )
-    # ElevenLabs keeps call audio in its own (EU) storage until it is
-    # archived; other paths are the platform's own.
-    platform_recording_storage: Singleton[ElevenLabsRecordingStorageAdapter] = (
-        Singleton(
-            ElevenLabsRecordingStorageAdapter,
-            elevenlabs_client=clients.elevenlabs_client,
-            fallback=own_recording_storage,
-        )
-    )
-    # The voice platform hands out a recording only whole, and a player asks
-    # for parts while it plays and seeks: keep a played one in memory for a
-    # few minutes instead of downloading it again.
-    recording_storage: Singleton[CachedRecordingStorageAdapter] = Singleton(
-        CachedRecordingStorageAdapter,
-        storage=platform_recording_storage,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
-    # Archives of full business exports, beside the recordings.
-    export_archive_storage: Singleton[ExportArchiveStorageContract] = Singleton(
-        build_export_archive_storage,
-        settings=config.app_settings,
-        object_storage_client=clients.object_storage_client,
-    )
+    own_recording_storage = files.own_recording_storage
+    platform_recording_storage = files.platform_recording_storage
+    recording_storage = files.recording_storage
+    export_archive_storage = files.export_archive_storage
 
     # --- Voice platform (ElevenLabs Agents), built with the call adapters.
     voice_webhook_adapter = calls.voice_webhook_adapter

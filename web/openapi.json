@@ -1119,6 +1119,265 @@
         "title": "AnnouncementView",
         "type": "object"
       },
+      "AnswerCorrectionDraft": {
+        "additionalProperties": false,
+        "description": "What the dialog opens with: the customer's question before the answer\n(None when the answer opened the conversation), the answer, the kind\nof correction it suggests, and the current fact the answer came from\n(the item an earlier correction of this answer made, else the item the\nassistant looked up or whose title the question names). `guard_reasons`\nsay why the reply guard held the answer back, if it did.",
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "current_fact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CorrectionFactView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "guard_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReplyGuardReason"
+            },
+            "title": "Guard Reasons",
+            "type": "array"
+          },
+          "is_corrected": {
+            "default": false,
+            "title": "Is Corrected",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "suggested_scope": {
+            "$ref": "#/components/schemas/AnswerCorrectionScope"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "message_id",
+          "answer",
+          "suggested_scope"
+        ],
+        "title": "AnswerCorrectionDraft",
+        "type": "object"
+      },
+      "AnswerCorrectionResult": {
+        "additionalProperties": false,
+        "description": "The knowledge item the correction created (`is_new`) or updated; it\nreaches customers with the next \"Apply changes\". `question` and\n`language` are what a check saved from the correction asks.",
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "is_new": {
+            "title": "Is New",
+            "type": "boolean"
+          },
+          "item": {
+            "$ref": "#/components/schemas/CorrectionFactView"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "message_id",
+          "item",
+          "is_new",
+          "question",
+          "language"
+        ],
+        "title": "AnswerCorrectionResult",
+        "type": "object"
+      },
+      "AnswerCorrectionScope": {
+        "description": "What an owner's correction of an assistant answer teaches: a question\nand its answer (FAQ), the price of an offer, the opening hours (a\npolicy line next to the profile's hours) or a rule (policy).",
+        "enum": [
+          "faq",
+          "price",
+          "hours",
+          "rule"
+        ],
+        "title": "AnswerCorrectionScope",
+        "type": "string"
+      },
+      "AnswerToImproveKind": {
+        "description": "One item of the Overview's \"Answers worth improving\": a question the\nassistant could not answer, or a conversation rated bad.",
+        "enum": [
+          "unanswered_question",
+          "bad_rating"
+        ],
+        "title": "AnswerToImproveKind",
+        "type": "string"
+      },
+      "AnswerToImproveView": {
+        "additionalProperties": false,
+        "description": "One answer worth improving. A question the assistant could not answer\n(UNANSWERED_QUESTION) has its `question_id`, `question`, how often it\nwas asked and its language; a conversation rated bad (BAD_RATING) its\n`conversation_id`, the rated answer (`message_id`, `answer`), the\ncustomer's last words (`customer_message`) and the reason given.\n`at` is when it was last asked or written.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "at": {
+            "title": "At",
+            "type": "integer"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "customer_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Message"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AnswerToImproveKind"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "occurrence_count": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurrence Count"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id"
+          },
+          "rating_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationRatingReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "at"
+        ],
+        "title": "AnswerToImproveView",
+        "type": "object"
+      },
       "AnsweredQuestionResult": {
         "additionalProperties": false,
         "description": "The resolved question and the new FAQ item. The assistant must be\nreassembled (and autotested) before customers see the answer.",
@@ -1141,6 +1400,35 @@
           "requires_reassembly"
         ],
         "title": "AnsweredQuestionResult",
+        "type": "object"
+      },
+      "AnswersToImproveView": {
+        "additionalProperties": false,
+        "description": "The bad ratings first (newest first), then the questions without an\nanswer (most asked first), at most `limit` together, and how many of\neach wait in all.",
+        "properties": {
+          "bad_rating_count": {
+            "minimum": 0.0,
+            "title": "Bad Rating Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerToImproveView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "unanswered_count": {
+            "minimum": 0.0,
+            "title": "Unanswered Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "bad_rating_count",
+          "unanswered_count"
+        ],
+        "title": "AnswersToImproveView",
         "type": "object"
       },
       "ApiErrorCode": {
@@ -1942,6 +2230,173 @@
         "title": "AuthLevel",
         "type": "string"
       },
+      "AutotestCaseList": {
+        "additionalProperties": false,
+        "description": "The business's checks, the first written first, and how many it may keep.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCaseView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "AutotestCaseList",
+        "type": "object"
+      },
+      "AutotestCaseResultView": {
+        "additionalProperties": false,
+        "description": "How the check did in the latest finished autotest run that played it:\nthe outcome, why it failed, the assistant's first answer and when.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "assistant_version_number": {
+            "minimum": 1.0,
+            "title": "Assistant Version Number",
+            "type": "integer"
+          },
+          "check_codes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCheckCode"
+            },
+            "title": "Check Codes",
+            "type": "array"
+          },
+          "checked_at": {
+            "title": "Checked At",
+            "type": "integer"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "assistant_version_number",
+          "outcome",
+          "checked_at"
+        ],
+        "title": "AutotestCaseResultView",
+        "type": "object"
+      },
+      "AutotestCaseSource": {
+        "description": "Where an owner check came from: written by hand, saved from a corrected\nanswer, from a question the assistant could not answer, or from a\nconversation rated bad.",
+        "enum": [
+          "owner",
+          "correction",
+          "unanswered_question",
+          "bad_rating"
+        ],
+        "title": "AutotestCaseSource",
+        "type": "string"
+      },
+      "AutotestCaseView": {
+        "additionalProperties": false,
+        "description": "A check as \"My checks\" lists it, with its latest result (None: not run yet).",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "expectation": {
+            "$ref": "#/components/schemas/AutotestExpectation"
+          },
+          "expected_text": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "\\w",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Text"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "last_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AutotestCaseResultView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Question",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/AutotestCaseSource"
+          },
+          "source_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Conversation Id"
+          }
+        },
+        "required": [
+          "id",
+          "question",
+          "expectation",
+          "language",
+          "source",
+          "is_active",
+          "created_at"
+        ],
+        "title": "AutotestCaseView",
+        "type": "object"
+      },
       "AutotestCheckCode": {
         "description": "Why the test harness failed a scenario, as a code each language renders:\na deterministic check of what the assistant did (no booking, no handoff,\nrecords nobody asked for, a reply in another script, the AI disclosure\nin another language than the customer's), or why the\nscenario could not be evaluated at all.",
         "enum": [
@@ -1950,12 +2405,26 @@
           "unexpected_records",
           "wrong_reply_language",
           "wrong_disclosure_language",
+          "expected_text_missing",
+          "forbidden_text_mentioned",
+          "no_lead_created",
           "conversation_failed",
           "no_customer_message",
           "judge_unavailable",
           "judge_unreadable"
         ],
         "title": "AutotestCheckCode",
+        "type": "string"
+      },
+      "AutotestExpectation": {
+        "description": "What an owner check demands of the assistant's answer to its question:\nto contain its expected text, never to contain it, to pass the\nconversation to a person, or to create a request (lead).",
+        "enum": [
+          "must_mention",
+          "must_not_mention",
+          "must_hand_off",
+          "must_create_lead"
+        ],
+        "title": "AutotestExpectation",
         "type": "string"
       },
       "AutotestOutcome": {
@@ -2091,7 +2560,8 @@
           "prompt_injection",
           "emergency",
           "foreign_language",
-          "transliterated"
+          "transliterated",
+          "owner_check"
         ],
         "title": "AutotestScenarioKind",
         "type": "string"
@@ -2100,6 +2570,17 @@
         "additionalProperties": false,
         "description": "Result of one autotest scenario.",
         "properties": {
+          "autotest_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autotest Case Id"
+          },
           "check_codes": {
             "items": {
               "$ref": "#/components/schemas/AutotestCheckCode"
@@ -2333,6 +2814,15 @@
         "title": "AverageCheckSource",
         "type": "string"
       },
+      "BillingDocumentKind": {
+        "description": "The PDF an invoice is printed as: the INVOICE (a bill, numbered, with\nthe tax lines) or, once it is paid, its payment RECEIPT.",
+        "enum": [
+          "invoice",
+          "receipt"
+        ],
+        "title": "BillingDocumentKind",
+        "type": "string"
+      },
       "BillingOverview": {
         "additionalProperties": false,
         "description": "The billing page: plan, status, period, package usage and invoices.\n\n`does_trial_start_at_go_live` is True while the business is not live\nyet and its free trial will start by itself when it goes live.",
@@ -2413,6 +2903,95 @@
         ],
         "title": "BillingPeriod",
         "type": "string"
+      },
+      "BillingProfileView": {
+        "additionalProperties": false,
+        "description": "The billing details as invoices will print them, and the VAT they\nlead to. Before the owner saves any (`is_saved` false) they are the\nbusiness name and country.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "minLength": 3,
+                "pattern": "^[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "billing_email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 6,
+                "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Email"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "is_saved": {
+            "title": "Is Saved",
+            "type": "boolean"
+          },
+          "legal_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "minLength": 2,
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9 ./\\-]*[A-Za-z0-9])?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id"
+          },
+          "tax_rate_basis_points": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Tax Rate Basis Points",
+            "type": "integer"
+          },
+          "tax_treatment": {
+            "$ref": "#/components/schemas/TaxTreatment"
+          }
+        },
+        "required": [
+          "business_id",
+          "is_saved",
+          "legal_name",
+          "country_code",
+          "tax_treatment",
+          "tax_rate_basis_points"
+        ],
+        "title": "BillingProfileView",
+        "type": "object"
       },
       "BookableOfferView": {
         "additionalProperties": false,
@@ -6223,7 +6802,7 @@
       },
       "ConversationDocument": {
         "additionalProperties": false,
-        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (all optional, so version 1 rows read\nas they are).\n\nVersion 3: `acquisition_source`, where the customer came from when the\nconversation started (a shared link's tag, an ad, the number dialled;\n`app/utilities/sharing/acquisition_sources.py`). Set once, never\nchanged; optional, so version 2 rows read as they are.",
+        "description": "Customer conversation in one channel (concept table `conversations`).\n\nPinned to one assistant version so its instruction and tools never change\nmid-conversation. `rating` is the owner's or staff's good / bad verdict.\n\nThe team inbox fields belong to their own operations, and a plain save\nof the conversation keeps their stored values\n(`ConversationRepoContract.save`): the assignment (`assignee_user_id`,\nwho assigned it, when, and `assignment_revision`, the compare-and-set\nversion) changes only through `ConversationTeamRepoContract.assign`,\n`has_open_request` (a request of the conversation is new or in\nprogress) only through `set_open_request`. `awaits_team` is derived on\nevery write: the conversation needs a person (HANDOFF) or has an open\nrequest. `assigned_by` is None for an automatic assignment.\n\nVersion 2: the team inbox fields (all optional, so version 1 rows read\nas they are).\n\nVersion 3: `acquisition_source`, where the customer came from when the\nconversation started (a shared link's tag, an ad, the number dialled;\n`app/utilities/sharing/acquisition_sources.py`). Set once, never\nchanged; optional, so version 2 rows read as they are.\n\nVersion 4: why a bad rating was given (`rating_reason`), the answer it\nis about (`rated_message_id`), when someone acted on it (corrected the\nanswer or saved a check from it: `improved_at`) and, derived on every\nreview write, whether it still waits for that (`awaits_improvement`,\nthe Overview's \"Answers worth improving\"). The review fields change\nonly through `ConversationReviewRepoContract.set_review`; a plain save\nkeeps them as stored. All optional, so version 3 rows read as they are.",
         "properties": {
           "acquisition_source": {
             "anyOf": [
@@ -6282,6 +6861,11 @@
             "title": "Assistant Version Id",
             "type": "string"
           },
+          "awaits_improvement": {
+            "default": false,
+            "title": "Awaits Improvement",
+            "type": "boolean"
+          },
           "awaits_team": {
             "default": false,
             "title": "Awaits Team",
@@ -6315,6 +6899,17 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "improved_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improved At"
           },
           "is_after_hours": {
             "default": false,
@@ -6366,6 +6961,17 @@
             ],
             "title": "Rated By"
           },
+          "rated_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rated Message Id"
+          },
           "rating": {
             "anyOf": [
               {
@@ -6376,8 +6982,18 @@
               }
             ]
           },
+          "rating_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationRatingReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "schema_version": {
-            "default": "3",
+            "default": "4",
             "title": "Schema Version",
             "type": "string"
           },
@@ -6576,6 +7192,17 @@
         "title": "ConversationRating",
         "type": "string"
       },
+      "ConversationRatingReason": {
+        "description": "Why the owner or staff rated a conversation bad: the assistant said\nsomething wrong, should have passed it to a person, struck the wrong\ntone, or wrote too much.",
+        "enum": [
+          "wrong_info",
+          "should_hand_off",
+          "tone",
+          "too_long"
+        ],
+        "title": "ConversationRatingReason",
+        "type": "string"
+      },
       "ConversationStatus": {
         "description": "State of a customer conversation (concept: open, handoff, closed).\n\nWhile a conversation is in HANDOFF the assistant stays silent in chat\nchannels until staff resolve the handoff.",
         "enum": [
@@ -6705,10 +7332,31 @@
             "title": "Message Count",
             "type": "integer"
           },
+          "rated_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rated Message Id"
+          },
           "rating": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ConversationRating"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rating_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationRatingReason"
               },
               {
                 "type": "null"
@@ -6842,6 +7490,67 @@
           }
         },
         "title": "ConversationUsageView",
+        "type": "object"
+      },
+      "CorrectionFactView": {
+        "additionalProperties": false,
+        "description": "A knowledge item as the correction dialog shows it.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KnowledgeItemKind"
+          },
+          "knowledge_item_id": {
+            "title": "Knowledge Item Id",
+            "type": "string"
+          },
+          "price_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Minor"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "knowledge_item_id",
+          "kind",
+          "title"
+        ],
+        "title": "CorrectionFactView",
         "type": "object"
       },
       "CountryList": {
@@ -10930,7 +11639,7 @@
       },
       "InvoiceView": {
         "additionalProperties": false,
-        "description": "One invoice with its amount formatted for the reader.",
+        "description": "One invoice with its line in the reader's language (without its dates,\nwhich `period_start` and `period_end` give; an invoice from before the\nPDFs keeps its line as issued) and its amount (the total, with VAT)\nformatted for the reader; its number once numbered (an invoice from\nbefore numbering gets one with its first PDF), the VAT in it, when it\nwas paid, and whether its receipt can be downloaded.",
         "properties": {
           "amount": {
             "$ref": "#/components/schemas/QuotedMoney"
@@ -10943,12 +11652,42 @@
             "title": "Id",
             "type": "string"
           },
+          "is_receipt_available": {
+            "default": false,
+            "title": "Is Receipt Available",
+            "type": "boolean"
+          },
           "issued_at": {
             "title": "Issued At",
             "type": "integer"
           },
           "kind": {
             "$ref": "#/components/schemas/InvoiceKind"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "minLength": 13,
+                "pattern": "^[A-Z0-9]{1,10}-[0-9]{4}-[0-9]{6,12}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
           },
           "period_end": {
             "title": "Period End",
@@ -10960,6 +11699,29 @@
           },
           "status": {
             "$ref": "#/components/schemas/InvoiceStatus"
+          },
+          "tax": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tax_rate_basis_points": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Rate Basis Points"
           }
         },
         "required": [
@@ -14247,6 +15009,37 @@
         "title": "OtpDeliveryChannel",
         "type": "string"
       },
+      "OutboundBillingDocuments": {
+        "additionalProperties": false,
+        "description": "The PDFs an e-mail to a business's billing contact carries: the\ninvoice and, once it is paid, its receipt, laid out in `language`\nwhen the e-mail is sent (never stored in the outbox).",
+        "properties": {
+          "invoice_id": {
+            "title": "Invoice Id",
+            "type": "string"
+          },
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/BillingDocumentKind"
+            },
+            "title": "Kinds",
+            "type": "array"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoice_id",
+          "kinds",
+          "language"
+        ],
+        "title": "OutboundBillingDocuments",
+        "type": "object"
+      },
       "OutboundDeliveryState": {
         "description": "Where a message to a customer stands, as the cabinet shows it: waiting\nfor its first attempt (SENDING), tried and waiting for the next attempt\nafter a temporary failure (RETRYING), DELIVERED, or given up (FAILED).",
         "enum": [
@@ -14260,7 +15053,7 @@
       },
       "OutboundMessageDocument": {
         "additionalProperties": false,
-        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.",
+        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).",
         "properties": {
           "attempts": {
             "default": 0,
@@ -14268,6 +15061,16 @@
             "minimum": 0.0,
             "title": "Attempts",
             "type": "integer"
+          },
+          "billing_documents": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutboundBillingDocuments"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "booking_id": {
             "anyOf": [
@@ -14445,7 +15248,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "4",
+            "default": "5",
             "title": "Schema Version",
             "type": "string"
           },
@@ -18574,6 +19377,17 @@
         ],
         "title": "TableSizeView",
         "type": "object"
+      },
+      "TaxTreatment": {
+        "description": "How value added tax applies to one invoice (TaxPolicyRegistry decides):\n\n- NOT_REGISTERED: the seller is not registered for VAT\n  (PLATFORM_VAT_REGISTERED is off), so no VAT is charged.\n- STANDARD: a buyer in the seller's country pays the country's VAT on\n  top of the price (Georgia: 18 %).\n- REVERSE_CHARGE: a business abroad with a tax number accounts for the\n  VAT itself; the invoice says so and charges none.\n- OUTSIDE_SCOPE: a buyer abroad without a tax number; the service is\n  supplied outside the seller's country and carries none of its VAT.",
+        "enum": [
+          "not_registered",
+          "standard",
+          "reverse_charge",
+          "outside_scope"
+        ],
+        "title": "TaxTreatment",
+        "type": "string"
       },
       "TelegramBotCheckView": {
         "additionalProperties": false,
@@ -26402,6 +27216,140 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/answers-to-improve": {
+      "get": {
+        "operationId": "get_answers_to_improve_v1_businesses__business_id__answers_to_improve_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswersToImproveView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Answers To Improve",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/assistant-versions": {
       "get": {
         "operationId": "list_assistant_versions_v1_businesses__business_id__assistant_versions_get",
@@ -26576,7 +27524,8 @@
                             "prompt_injection",
                             "emergency",
                             "foreign_language",
-                            "transliterated"
+                            "transliterated",
+                            "owner_check"
                           ],
                           "title": "AutotestScenarioKind",
                           "type": "string"
@@ -27024,7 +27973,8 @@
                             "prompt_injection",
                             "emergency",
                             "foreign_language",
-                            "transliterated"
+                            "transliterated",
+                            "owner_check"
                           ],
                           "title": "AutotestScenarioKind",
                           "type": "string"
@@ -28284,6 +29234,684 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/autotest-cases": {
+      "get": {
+        "operationId": "list_autotest_cases_v1_businesses__business_id__autotest_cases_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutotestCaseList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Autotest Cases",
+        "tags": [
+          "assistants"
+        ]
+      },
+      "post": {
+        "operationId": "create_autotest_case_v1_businesses__business_id__autotest_cases_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a new check. MUST_MENTION and MUST_NOT_MENTION need their\n`expected_text`; the language is the business's default one unless\ngiven. A check saved from a corrected or rated answer names its\nconversation and message; one saved from a question without an answer\nnames the question.",
+                "properties": {
+                  "expectation": {
+                    "description": "What an owner check demands of the assistant's answer to its question:\nto contain its expected text, never to contain it, to pass the\nconversation to a person, or to create a request (lead).",
+                    "enum": [
+                      "must_mention",
+                      "must_not_mention",
+                      "must_hand_off",
+                      "must_create_lead"
+                    ],
+                    "title": "AutotestExpectation",
+                    "type": "string"
+                  },
+                  "expected_text": {
+                    "anyOf": [
+                      {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "pattern": "\\w",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected Text"
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  },
+                  "question": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Question",
+                    "type": "string"
+                  },
+                  "source": {
+                    "default": "owner",
+                    "description": "Where an owner check came from: written by hand, saved from a corrected\nanswer, from a question the assistant could not answer, or from a\nconversation rated bad.",
+                    "enum": [
+                      "owner",
+                      "correction",
+                      "unanswered_question",
+                      "bad_rating"
+                    ],
+                    "title": "AutotestCaseSource",
+                    "type": "string"
+                  },
+                  "source_conversation_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Source Conversation Id"
+                  },
+                  "source_message_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Source Message Id"
+                  },
+                  "source_question_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^unanswered_question_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Source Question Id"
+                  }
+                },
+                "required": [
+                  "question",
+                  "expectation"
+                ],
+                "title": "AutotestCaseInput",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutotestCaseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Autotest Case",
+        "tags": [
+          "assistants"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/autotest-cases/{case_id}": {
+      "delete": {
+        "operationId": "delete_autotest_case_v1_businesses__business_id__autotest_cases__case_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Delete Autotest Case",
+        "tags": [
+          "assistants"
+        ]
+      },
+      "patch": {
+        "operationId": "update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a change to a check; missing fields stay as they are.",
+                "properties": {
+                  "expectation": {
+                    "anyOf": [
+                      {
+                        "description": "What an owner check demands of the assistant's answer to its question:\nto contain its expected text, never to contain it, to pass the\nconversation to a person, or to create a request (lead).",
+                        "enum": [
+                          "must_mention",
+                          "must_not_mention",
+                          "must_hand_off",
+                          "must_create_lead"
+                        ],
+                        "title": "AutotestExpectation",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "expected_text": {
+                    "anyOf": [
+                      {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "pattern": "\\w",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected Text"
+                  },
+                  "is_active": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Active"
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  },
+                  "question": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Question"
+                  }
+                },
+                "title": "AutotestCaseChanges",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutotestCaseView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Autotest Case",
+        "tags": [
+          "assistants"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/availability": {
       "get": {
         "operationId": "get_availability_v1_businesses__business_id__availability_get",
@@ -28970,6 +30598,159 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/billing/invoices/{invoice_id}/documents/{document_kind}": {
+      "get": {
+        "operationId": "get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "document_kind",
+            "required": true,
+            "schema": {
+              "title": "Document Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The invoice or receipt as a PDF file."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Billing Document",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/billing/plan": {
       "post": {
         "operationId": "change_plan_v1_businesses__business_id__billing_plan_post",
@@ -29137,6 +30918,315 @@
           }
         },
         "summary": "Change Plan",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/billing/profile": {
+      "get": {
+        "operationId": "get_billing_profile_v1_businesses__business_id__billing_profile_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Billing Profile",
+        "tags": [
+          "billing"
+        ]
+      },
+      "put": {
+        "operationId": "save_billing_profile_v1_businesses__business_id__billing_profile_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of the billing details. The country decides the VAT; the e-mail\nreceives every invoice and receipt.\n\nExample: {\"legal_name\": \"Mtsvane Ezo LLC\", \"tax_id\": \"405123456\",\n\"address\": \"12 Rustaveli Ave, 0108 Tbilisi\",\n\"billing_email\": \"accounts@mtsvane-ezo.ge\", \"country_code\": \"GE\"}.",
+                "properties": {
+                  "address": {
+                    "anyOf": [
+                      {
+                        "maxLength": 400,
+                        "minLength": 3,
+                        "pattern": "^[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Address"
+                  },
+                  "billing_email": {
+                    "anyOf": [
+                      {
+                        "maxLength": 254,
+                        "minLength": 6,
+                        "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Billing Email"
+                  },
+                  "country_code": {
+                    "maxLength": 2,
+                    "minLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "title": "Country Code",
+                    "type": "string"
+                  },
+                  "legal_name": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+                    "title": "Legal Name",
+                    "type": "string"
+                  },
+                  "tax_id": {
+                    "anyOf": [
+                      {
+                        "maxLength": 40,
+                        "minLength": 2,
+                        "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9 ./\\-]*[A-Za-z0-9])?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tax Id"
+                  }
+                },
+                "required": [
+                  "legal_name",
+                  "country_code"
+                ],
+                "title": "BillingProfileRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingProfileView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Save Billing Profile",
         "tags": [
           "billing"
         ]
@@ -34059,6 +36149,351 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/messages/{message_id}/correction": {
+      "get": {
+        "operationId": "get_answer_correction_draft_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerCorrectionDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Answer Correction Draft",
+        "tags": [
+          "conversations"
+        ]
+      },
+      "post": {
+        "operationId": "correct_assistant_answer_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of \"Fix this answer\". FAQ, HOURS and RULE take the customer's\n`question` (the item title) and the `correct_answer`; PRICE takes the\nnew `price_minor` of the offer `knowledge_item_id`, or of a new offer\nnamed `question` (with `correct_answer` as its description).",
+                "properties": {
+                  "correct_answer": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Correct Answer"
+                  },
+                  "knowledge_item_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Knowledge Item Id"
+                  },
+                  "price_minor": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Price Minor"
+                  },
+                  "question": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Question"
+                  },
+                  "scope": {
+                    "description": "What an owner's correction of an assistant answer teaches: a question\nand its answer (FAQ), the price of an offer, the opening hours (a\npolicy line next to the profile's hours) or a rule (policy).",
+                    "enum": [
+                      "faq",
+                      "price",
+                      "hours",
+                      "rule"
+                    ],
+                    "title": "AnswerCorrectionScope",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "scope"
+                ],
+                "title": "AnswerCorrectionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerCorrectionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Correct Assistant Answer",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/notes": {
       "get": {
         "operationId": "list_conversation_notes_v1_businesses__business_id__conversations__conversation_id__notes_get",
@@ -34668,8 +37103,20 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of rating a conversation; null clears the rating.",
+                "description": "HTTP body of rating a conversation; null clears the rating. A bad\nrating may say why (`reason`) and which assistant answer it is about\n(`message_id`; the latest answer when omitted).",
                 "properties": {
+                  "message_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Message Id"
+                  },
                   "rating": {
                     "anyOf": [
                       {
@@ -34679,6 +37126,24 @@
                           "bad"
                         ],
                         "title": "ConversationRating",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "anyOf": [
+                      {
+                        "description": "Why the owner or staff rated a conversation bad: the assistant said\nsomething wrong, should have passed it to a person, struck the wrong\ntone, or wrote too much.",
+                        "enum": [
+                          "wrong_info",
+                          "should_hand_off",
+                          "tone",
+                          "too_long"
+                        ],
+                        "title": "ConversationRatingReason",
                         "type": "string"
                       },
                       {

@@ -4,16 +4,15 @@ from dependency_injector.providers import Container, DependenciesContainer, Sing
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
-from app.containers.factories import build_otp_delivery_facilitator
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
 from app.containers.privacy_factories import build_suppression_list
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
+from app.containers.sign_in_facilitators import SignInFacilitatorsContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
-from app.contracts.facilitators import OtpDeliveryFacilitatorContract
 from app.contracts.observability import JobMonitorFacilitatorContract
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
@@ -62,13 +61,7 @@ from app.facilitators.product_events.record_product_event_facilitator import (
     RecordProductEventFacilitator,
 )
 from app.facilitators.setup.owner_nudge_facilitator import OwnerNudgeFacilitator
-from app.facilitators.users.login_code_cap_alert_facilitator import (
-    LoginCodeCapAlertFacilitator,
-)
 from app.facilitators.users.sign_in_notice_facilitator import SignInNoticeFacilitator
-from app.facilitators.users.turnstile_bot_check_facilitator import (
-    TurnstileBotCheckFacilitator,
-)
 from app.facilitators.value.owner_digest_facilitator import OwnerDigestFacilitator
 from app.schemas.dto.live_events import LiveStreamLimits
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
@@ -100,32 +93,18 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         build_job_monitor_facilitator,
         error_reporter=error_reporter,
     )
-    # Sign-in codes: Twilio SMS, Telegram Gateway, WhatsApp authentication
-    # template and SMTP e-mail, each when configured; in development and test
-    # the other channels write the code to the log.
-    otp_delivery_facilitator: Singleton[OtpDeliveryFacilitatorContract] = Singleton(
-        build_otp_delivery_facilitator,
-        settings=config.app_settings,
-        sms_client=clients.twilio_messaging_client,
-        telegram_gateway_client=clients.telegram_gateway_client,
-        whatsapp_client=clients.whatsapp_authentication_client,
-        email_client=clients.smtp_email_client,
-        localized_text_resolver=utilities.localized_text_resolver,
+    # Sign-in codes and the login's abuse protection.
+    sign_in: SignInFacilitatorsContainer = Container(  # type: ignore[assignment]
+        SignInFacilitatorsContainer,
+        adapters=adapters,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
     )
-    # Login abuse protection: the Turnstile check of risky code requests
-    # (off without TURNSTILE_* keys) and the alert when a cap refuses sends.
-    bot_check_facilitator: Singleton[TurnstileBotCheckFacilitator] = Singleton(
-        TurnstileBotCheckFacilitator,
-        verification_client=clients.turnstile_verification_client,
-        site_key=config.app_settings.provided.turnstile_site_key,
-    )
-    login_code_cap_alerts: Singleton[LoginCodeCapAlertFacilitator] = Singleton(
-        LoginCodeCapAlertFacilitator,
-        email_client=clients.smtp_email_client,
-        platform_admin_emails=config.app_settings.provided.platform_admin_emails,
-        wall_clock=time_provider.microsecond_wall_clock,
-        signal_counter=adapters.signal_counter,
-    )
+    otp_delivery_facilitator = sign_in.otp_delivery_facilitator
+    bot_check_facilitator = sign_in.bot_check_facilitator
+    login_code_cap_alerts = sign_in.login_code_cap_alerts
     # The cabinet's live updates: use cases publish what changed (ids only);
     # the SSE route opens streams, at most a few per person and process.
     event_publisher: Singleton[EventPublisherFacilitator] = Singleton(
@@ -230,8 +209,6 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # Activation nudges: e-mail, Telegram and devices, once per nudge and
-    # recipient, through the same outbox.
     # A sign-in from a new device: the person's devices and e-mail (1103).
     sign_in_notice_facilitator: Singleton[SignInNoticeFacilitator] = Singleton(
         SignInNoticeFacilitator,
@@ -244,6 +221,8 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # Activation nudges: e-mail, Telegram and devices, once per nudge and
+    # recipient, through the same outbox.
     owner_nudge_facilitator: Singleton[OwnerNudgeFacilitator] = Singleton(
         OwnerNudgeFacilitator,
         user_repo=repositories.user_repo,
@@ -262,7 +241,6 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         settings=config.app_settings,
         suppression_entry_repo=repositories.suppression_entry_repo,
     )
-    # "typing…" while a reply is written (Telegram, WhatsApp, Meta pages).
     # The claim check of the reply guard: a cheap verifier model
     # (LLM_VERIFIER_MODEL_ID; none: the check is off).
     claim_check: Singleton[ClaimCheckFacilitator] = Singleton(
@@ -270,6 +248,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         llm_adapter=adapters.chat_llm_adapter,
         verifier_model_id=config.app_settings.provided.reply_safety.llm_verifier_model_id,
     )
+    # "typing…" while a reply is written (Telegram, WhatsApp, Meta pages).
     typing_signals: Singleton[TypingSignalFacilitator] = Singleton(
         TypingSignalFacilitator,
         channel_repo=repositories.channel_repo,

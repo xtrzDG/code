@@ -486,6 +486,23 @@ export interface paths {
         patch: operations["update_business_settings_v1_businesses__business_id__patch"];
         trace?: never;
     };
+    "/v1/businesses/{business_id}/answers-to-improve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Answers To Improve */
+        get: operations["get_answers_to_improve_v1_businesses__business_id__answers_to_improve_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/assistant-versions": {
         parameters: {
             query?: never;
@@ -682,6 +699,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/autotest-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Autotest Cases */
+        get: operations["list_autotest_cases_v1_businesses__business_id__autotest_cases_get"];
+        put?: never;
+        /** Create Autotest Case */
+        post: operations["create_autotest_case_v1_businesses__business_id__autotest_cases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/autotest-cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Autotest Case */
+        delete: operations["delete_autotest_case_v1_businesses__business_id__autotest_cases__case_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Autotest Case */
+        patch: operations["update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch"];
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/availability": {
         parameters: {
             query?: never;
@@ -750,6 +803,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/billing/invoices/{invoice_id}/documents/{document_kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Billing Document */
+        get: operations["get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/billing/plan": {
         parameters: {
             query?: never;
@@ -761,6 +831,24 @@ export interface paths {
         put?: never;
         /** Change Plan */
         post: operations["change_plan_v1_businesses__business_id__billing_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/billing/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Billing Profile */
+        get: operations["get_billing_profile_v1_businesses__business_id__billing_profile_get"];
+        /** Save Billing Profile */
+        put: operations["save_billing_profile_v1_businesses__business_id__billing_profile_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1181,6 +1269,24 @@ export interface paths {
         put?: never;
         /** Send Staff Message */
         post: operations["send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/messages/{message_id}/correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Answer Correction Draft */
+        get: operations["get_answer_correction_draft_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_get"];
+        put?: never;
+        /** Correct Assistant Answer */
+        post: operations["correct_assistant_answer_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3666,6 +3772,101 @@ export interface components {
             updated_at: number;
         };
         /**
+         * AnswerCorrectionDraft
+         * @description What the dialog opens with: the customer's question before the answer
+         *     (None when the answer opened the conversation), the answer, the kind
+         *     of correction it suggests, and the current fact the answer came from
+         *     (the item an earlier correction of this answer made, else the item the
+         *     assistant looked up or whose title the question names). `guard_reasons`
+         *     say why the reply guard held the answer back, if it did.
+         */
+        AnswerCorrectionDraft: {
+            /** Answer */
+            answer: string;
+            /** Conversation Id */
+            conversation_id: string;
+            current_fact?: components["schemas"]["CorrectionFactView"] | null;
+            /** Guard Reasons */
+            guard_reasons?: components["schemas"]["ReplyGuardReason"][];
+            /**
+             * Is Corrected
+             * @default false
+             */
+            is_corrected: boolean;
+            /** Language */
+            language?: string | null;
+            /** Message Id */
+            message_id: string;
+            /** Question */
+            question?: string | null;
+            suggested_scope: components["schemas"]["AnswerCorrectionScope"];
+        };
+        /**
+         * AnswerCorrectionResult
+         * @description The knowledge item the correction created (`is_new`) or updated; it
+         *     reaches customers with the next "Apply changes". `question` and
+         *     `language` are what a check saved from the correction asks.
+         */
+        AnswerCorrectionResult: {
+            /** Conversation Id */
+            conversation_id: string;
+            /** Is New */
+            is_new: boolean;
+            item: components["schemas"]["CorrectionFactView"];
+            /** Language */
+            language: string;
+            /** Message Id */
+            message_id: string;
+            /** Question */
+            question: string;
+        };
+        /**
+         * AnswerCorrectionScope
+         * @description What an owner's correction of an assistant answer teaches: a question
+         *     and its answer (FAQ), the price of an offer, the opening hours (a
+         *     policy line next to the profile's hours) or a rule (policy).
+         * @enum {string}
+         */
+        AnswerCorrectionScope: "faq" | "price" | "hours" | "rule";
+        /**
+         * AnswerToImproveKind
+         * @description One item of the Overview's "Answers worth improving": a question the
+         *     assistant could not answer, or a conversation rated bad.
+         * @enum {string}
+         */
+        AnswerToImproveKind: "unanswered_question" | "bad_rating";
+        /**
+         * AnswerToImproveView
+         * @description One answer worth improving. A question the assistant could not answer
+         *     (UNANSWERED_QUESTION) has its `question_id`, `question`, how often it
+         *     was asked and its language; a conversation rated bad (BAD_RATING) its
+         *     `conversation_id`, the rated answer (`message_id`, `answer`), the
+         *     customer's last words (`customer_message`) and the reason given.
+         *     `at` is when it was last asked or written.
+         */
+        AnswerToImproveView: {
+            /** Answer */
+            answer?: string | null;
+            /** At */
+            at: number;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Customer Message */
+            customer_message?: string | null;
+            kind: components["schemas"]["AnswerToImproveKind"];
+            /** Language */
+            language?: string | null;
+            /** Message Id */
+            message_id?: string | null;
+            /** Occurrence Count */
+            occurrence_count?: number | null;
+            /** Question */
+            question?: string | null;
+            /** Question Id */
+            question_id?: string | null;
+            rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
+        };
+        /**
          * AnsweredQuestionResult
          * @description The resolved question and the new FAQ item. The assistant must be
          *     reassembled (and autotested) before customers see the answer.
@@ -3676,6 +3877,20 @@ export interface components {
             question: components["schemas"]["UnansweredQuestionDetails"];
             /** Requires Reassembly */
             requires_reassembly: boolean;
+        };
+        /**
+         * AnswersToImproveView
+         * @description The bad ratings first (newest first), then the questions without an
+         *     answer (most asked first), at most `limit` together, and how many of
+         *     each wait in all.
+         */
+        AnswersToImproveView: {
+            /** Bad Rating Count */
+            bad_rating_count: number;
+            /** Items */
+            items?: components["schemas"]["AnswerToImproveView"][];
+            /** Unanswered Count */
+            unanswered_count: number;
         };
         /**
          * ApiErrorCode
@@ -3972,6 +4187,65 @@ export interface components {
          */
         AuthLevel: "one_factor" | "two_factor";
         /**
+         * AutotestCaseList
+         * @description The business's checks, the first written first, and how many it may keep.
+         */
+        AutotestCaseList: {
+            /** Items */
+            items?: components["schemas"]["AutotestCaseView"][];
+            /** Limit */
+            limit: number;
+        };
+        /**
+         * AutotestCaseResultView
+         * @description How the check did in the latest finished autotest run that played it:
+         *     the outcome, why it failed, the assistant's first answer and when.
+         */
+        AutotestCaseResultView: {
+            /** Answer */
+            answer?: string | null;
+            /** Assistant Version Number */
+            assistant_version_number: number;
+            /** Check Codes */
+            check_codes?: components["schemas"]["AutotestCheckCode"][];
+            /** Checked At */
+            checked_at: number;
+            outcome: components["schemas"]["AutotestOutcome"];
+            /** Run Id */
+            run_id: string;
+        };
+        /**
+         * AutotestCaseSource
+         * @description Where an owner check came from: written by hand, saved from a corrected
+         *     answer, from a question the assistant could not answer, or from a
+         *     conversation rated bad.
+         * @enum {string}
+         */
+        AutotestCaseSource: "owner" | "correction" | "unanswered_question" | "bad_rating";
+        /**
+         * AutotestCaseView
+         * @description A check as "My checks" lists it, with its latest result (None: not run yet).
+         */
+        AutotestCaseView: {
+            /** Created At */
+            created_at: number;
+            expectation: components["schemas"]["AutotestExpectation"];
+            /** Expected Text */
+            expected_text?: string | null;
+            /** Id */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Language */
+            language: string;
+            last_result?: components["schemas"]["AutotestCaseResultView"] | null;
+            /** Question */
+            question: string;
+            source: components["schemas"]["AutotestCaseSource"];
+            /** Source Conversation Id */
+            source_conversation_id?: string | null;
+        };
+        /**
          * AutotestCheckCode
          * @description Why the test harness failed a scenario, as a code each language renders:
          *     a deterministic check of what the assistant did (no booking, no handoff,
@@ -3980,7 +4254,15 @@ export interface components {
          *     scenario could not be evaluated at all.
          * @enum {string}
          */
-        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "wrong_disclosure_language" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
+        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "wrong_disclosure_language" | "expected_text_missing" | "forbidden_text_mentioned" | "no_lead_created" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
+        /**
+         * AutotestExpectation
+         * @description What an owner check demands of the assistant's answer to its question:
+         *     to contain its expected text, never to contain it, to pass the
+         *     conversation to a person, or to create a request (lead).
+         * @enum {string}
+         */
+        AutotestExpectation: "must_mention" | "must_not_mention" | "must_hand_off" | "must_create_lead";
         /**
          * AutotestOutcome
          * @description Result of one autotest scenario.
@@ -4041,12 +4323,14 @@ export interface components {
          * @description Scripted test conversation run against every version (concept section 11).
          * @enum {string}
          */
-        AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated";
+        AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check";
         /**
          * AutotestScenarioResultView
          * @description Result of one autotest scenario.
          */
         AutotestScenarioResultView: {
+            /** Autotest Case Id */
+            autotest_case_id?: string | null;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Check Notes */
@@ -4122,6 +4406,13 @@ export interface components {
          */
         AverageCheckSource: "owner" | "niche_default" | "none";
         /**
+         * BillingDocumentKind
+         * @description The PDF an invoice is printed as: the INVOICE (a bill, numbered, with
+         *     the tax lines) or, once it is paid, its payment RECEIPT.
+         * @enum {string}
+         */
+        BillingDocumentKind: "invoice" | "receipt";
+        /**
          * BillingOverview
          * @description The billing page: plan, status, period, package usage and invoices.
          *
@@ -4154,6 +4445,31 @@ export interface components {
          * @enum {string}
          */
         BillingPeriod: "monthly" | "annual";
+        /**
+         * BillingProfileView
+         * @description The billing details as invoices will print them, and the VAT they
+         *     lead to. Before the owner saves any (`is_saved` false) they are the
+         *     business name and country.
+         */
+        BillingProfileView: {
+            /** Address */
+            address?: string | null;
+            /** Billing Email */
+            billing_email?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Country Code */
+            country_code: string;
+            /** Is Saved */
+            is_saved: boolean;
+            /** Legal Name */
+            legal_name: string;
+            /** Tax Id */
+            tax_id?: string | null;
+            /** Tax Rate Basis Points */
+            tax_rate_basis_points: number;
+            tax_treatment: components["schemas"]["TaxTreatment"];
+        };
         /**
          * BookableOfferView
          * @description One bookable offer as the model tools list it: how long a booking of it
@@ -5662,6 +5978,14 @@ export interface components {
          *     conversation started (a shared link's tag, an ad, the number dialled;
          *     `app/utilities/sharing/acquisition_sources.py`). Set once, never
          *     changed; optional, so version 2 rows read as they are.
+         *
+         *     Version 4: why a bad rating was given (`rating_reason`), the answer it
+         *     is about (`rated_message_id`), when someone acted on it (corrected the
+         *     answer or saved a check from it: `improved_at`) and, derived on every
+         *     review write, whether it still waits for that (`awaits_improvement`,
+         *     the Overview's "Answers worth improving"). The review fields change
+         *     only through `ConversationReviewRepoContract.set_review`; a plain save
+         *     keeps them as stored. All optional, so version 3 rows read as they are.
          */
         ConversationDocument: {
             /** Acquisition Source */
@@ -5679,6 +6003,11 @@ export interface components {
             assignment_revision: number;
             /** Assistant Version Id */
             assistant_version_id: string;
+            /**
+             * Awaits Improvement
+             * @default false
+             */
+            awaits_improvement: boolean;
             /**
              * Awaits Team
              * @default false
@@ -5703,6 +6032,8 @@ export interface components {
             has_open_request: boolean;
             /** Id */
             id?: string;
+            /** Improved At */
+            improved_at?: number | null;
             /**
              * Is After Hours
              * @default false
@@ -5721,10 +6052,13 @@ export interface components {
             rated_at?: number | null;
             /** Rated By */
             rated_by?: string | null;
+            /** Rated Message Id */
+            rated_message_id?: string | null;
             rating?: components["schemas"]["ConversationRating"] | null;
+            rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
             /**
              * Schema Version
-             * @default 3
+             * @default 4
              */
             schema_version: string;
             /** @default open */
@@ -5825,6 +6159,14 @@ export interface components {
          */
         ConversationRating: "good" | "bad";
         /**
+         * ConversationRatingReason
+         * @description Why the owner or staff rated a conversation bad: the assistant said
+         *     something wrong, should have passed it to a person, struck the wrong
+         *     tone, or wrote too much.
+         * @enum {string}
+         */
+        ConversationRatingReason: "wrong_info" | "should_hand_off" | "tone" | "too_long";
+        /**
          * ConversationStatus
          * @description State of a customer conversation (concept: open, handoff, closed).
          *
@@ -5870,7 +6212,10 @@ export interface components {
             last_message_text?: string | null;
             /** Message Count */
             message_count: number;
+            /** Rated Message Id */
+            rated_message_id?: string | null;
             rating?: components["schemas"]["ConversationRating"] | null;
+            rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
             status: components["schemas"]["ConversationStatus"];
         };
         /**
@@ -5925,6 +6270,23 @@ export interface components {
              * @default 0
              */
             output_tokens: number;
+        };
+        /**
+         * CorrectionFactView
+         * @description A knowledge item as the correction dialog shows it.
+         */
+        CorrectionFactView: {
+            /** Body */
+            body?: string | null;
+            /** Currency Code */
+            currency_code?: string | null;
+            kind: components["schemas"]["KnowledgeItemKind"];
+            /** Knowledge Item Id */
+            knowledge_item_id: string;
+            /** Price Minor */
+            price_minor?: number | null;
+            /** Title */
+            title: string;
         };
         /**
          * CountryList
@@ -7563,7 +7925,12 @@ export interface components {
         InvoiceStatus: "issued" | "paid" | "failed" | "void";
         /**
          * InvoiceView
-         * @description One invoice with its amount formatted for the reader.
+         * @description One invoice with its line in the reader's language (without its dates,
+         *     which `period_start` and `period_end` give; an invoice from before the
+         *     PDFs keeps its line as issued) and its amount (the total, with VAT)
+         *     formatted for the reader; its number once numbered (an invoice from
+         *     before numbering gets one with its first PDF), the VAT in it, when it
+         *     was paid, and whether its receipt can be downloaded.
          */
         InvoiceView: {
             amount: components["schemas"]["QuotedMoney"];
@@ -7571,14 +7938,26 @@ export interface components {
             description: string;
             /** Id */
             id: string;
+            /**
+             * Is Receipt Available
+             * @default false
+             */
+            is_receipt_available: boolean;
             /** Issued At */
             issued_at: number;
             kind: components["schemas"]["InvoiceKind"];
+            /** Number */
+            number?: string | null;
+            /** Paid At */
+            paid_at?: number | null;
             /** Period End */
             period_end: number;
             /** Period Start */
             period_start: number;
             status: components["schemas"]["InvoiceStatus"];
+            tax?: components["schemas"]["QuotedMoney"] | null;
+            /** Tax Rate Basis Points */
+            tax_rate_basis_points?: number | null;
         };
         /**
          * JobLane
@@ -8826,6 +9205,20 @@ export interface components {
          */
         OtpDeliveryChannel: "sms" | "whatsapp" | "telegram" | "email";
         /**
+         * OutboundBillingDocuments
+         * @description The PDFs an e-mail to a business's billing contact carries: the
+         *     invoice and, once it is paid, its receipt, laid out in `language`
+         *     when the e-mail is sent (never stored in the outbox).
+         */
+        OutboundBillingDocuments: {
+            /** Invoice Id */
+            invoice_id: string;
+            /** Kinds */
+            kinds: components["schemas"]["BillingDocumentKind"][];
+            /** Language */
+            language: string;
+        };
+        /**
          * OutboundDeliveryState
          * @description Where a message to a customer stands, as the cabinet shows it: waiting
          *     for its first attempt (SENDING), tried and waiting for the next attempt
@@ -8861,6 +9254,10 @@ export interface components {
          *     (`missed_call_id`, whose text-back follows the delivery), and the
          *     moment after which a message is no longer worth sending
          *     (`send_before`: it is given up instead). All optional.
+         *
+         *     Version 5: an e-mail to the billing contact may carry the invoice and
+         *     receipt PDFs of an invoice (`billing_documents`, optional; a release
+         *     that does not know it sends the e-mail without them).
          */
         OutboundMessageDocument: {
             /**
@@ -8868,6 +9265,7 @@ export interface components {
              * @default 0
              */
             attempts: number;
+            billing_documents?: components["schemas"]["OutboundBillingDocuments"] | null;
             /** Booking Id */
             booking_id?: string | null;
             /** Business Id */
@@ -8912,7 +9310,7 @@ export interface components {
             recipient_key: string;
             /**
              * Schema Version
-             * @default 4
+             * @default 5
              */
             schema_version: string;
             /** Send Before */
@@ -10576,6 +10974,21 @@ export interface components {
             /** Total Bytes */
             total_bytes: number;
         };
+        /**
+         * TaxTreatment
+         * @description How value added tax applies to one invoice (TaxPolicyRegistry decides):
+         *
+         *     - NOT_REGISTERED: the seller is not registered for VAT
+         *       (PLATFORM_VAT_REGISTERED is off), so no VAT is charged.
+         *     - STANDARD: a buyer in the seller's country pays the country's VAT on
+         *       top of the price (Georgia: 18 %).
+         *     - REVERSE_CHARGE: a business abroad with a tax number accounts for the
+         *       VAT itself; the invoice says so and charges none.
+         *     - OUTSIDE_SCOPE: a buyer abroad without a tax number; the service is
+         *       supplied outside the seller's country and carries none of its VAT.
+         * @enum {string}
+         */
+        TaxTreatment: "not_registered" | "standard" | "reverse_charge" | "outside_scope";
         /**
          * TelegramBotCheckView
          * @description The bot a token opens, as customers will see it: its username, its name
@@ -14758,6 +15171,95 @@ export interface operations {
             };
         };
     };
+    get_answers_to_improve_v1_businesses__business_id__answers_to_improve_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswersToImproveView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_assistant_versions_v1_businesses__business_id__assistant_versions_get: {
         parameters: {
             query?: never;
@@ -14860,7 +15362,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Kinds */
-                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated")[] | null;
+                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check")[] | null;
                     /** Languages */
                     languages?: string[] | null;
                     /**
@@ -15138,7 +15640,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Kinds */
-                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated")[] | null;
+                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check")[] | null;
                     /** Languages */
                     languages?: string[] | null;
                 };
@@ -15940,6 +16442,402 @@ export interface operations {
             };
         };
     };
+    list_autotest_cases_v1_businesses__business_id__autotest_cases_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutotestCaseList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_autotest_case_v1_businesses__business_id__autotest_cases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * AutotestExpectation
+                     * @description What an owner check demands of the assistant's answer to its question:
+                     *     to contain its expected text, never to contain it, to pass the
+                     *     conversation to a person, or to create a request (lead).
+                     * @enum {string}
+                     */
+                    expectation: "must_mention" | "must_not_mention" | "must_hand_off" | "must_create_lead";
+                    /** Expected Text */
+                    expected_text?: string | null;
+                    /** Language */
+                    language?: string | null;
+                    /** Question */
+                    question: string;
+                    /**
+                     * AutotestCaseSource
+                     * @description Where an owner check came from: written by hand, saved from a corrected
+                     *     answer, from a question the assistant could not answer, or from a
+                     *     conversation rated bad.
+                     * @default owner
+                     * @enum {string}
+                     */
+                    source?: "owner" | "correction" | "unanswered_question" | "bad_rating";
+                    /** Source Conversation Id */
+                    source_conversation_id?: string | null;
+                    /** Source Message Id */
+                    source_message_id?: string | null;
+                    /** Source Question Id */
+                    source_question_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutotestCaseView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_autotest_case_v1_businesses__business_id__autotest_cases__case_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expectation?: ("must_mention" | "must_not_mention" | "must_hand_off" | "must_create_lead") | null;
+                    /** Expected Text */
+                    expected_text?: string | null;
+                    /** Is Active */
+                    is_active?: boolean | null;
+                    /** Language */
+                    language?: string | null;
+                    /** Question */
+                    question?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutotestCaseView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_availability_v1_businesses__business_id__availability_get: {
         parameters: {
             query: {
@@ -16311,6 +17209,97 @@ export interface operations {
             };
         };
     };
+    get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                invoice_id: string;
+                document_kind: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The invoice or receipt as a PDF file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     change_plan_v1_businesses__business_id__billing_plan_post: {
         parameters: {
             query?: {
@@ -16350,6 +17339,195 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingOverview"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_billing_profile_v1_businesses__business_id__billing_profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingProfileView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    save_billing_profile_v1_businesses__business_id__billing_profile_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Address */
+                    address?: string | null;
+                    /** Billing Email */
+                    billing_email?: string | null;
+                    /** Country Code */
+                    country_code: string;
+                    /** Legal Name */
+                    legal_name: string;
+                    /** Tax Id */
+                    tax_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingProfileView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -19305,6 +20483,205 @@ export interface operations {
             };
         };
     };
+    get_answer_correction_draft_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                conversation_id: string;
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerCorrectionDraft"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    correct_assistant_answer_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                conversation_id: string;
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Correct Answer */
+                    correct_answer?: string | null;
+                    /** Knowledge Item Id */
+                    knowledge_item_id?: string | null;
+                    /** Price Minor */
+                    price_minor?: number | null;
+                    /** Question */
+                    question?: string | null;
+                    /**
+                     * AnswerCorrectionScope
+                     * @description What an owner's correction of an assistant answer teaches: a question
+                     *     and its answer (FAQ), the price of an offer, the opening hours (a
+                     *     policy line next to the profile's hours) or a rule (policy).
+                     * @enum {string}
+                     */
+                    scope: "faq" | "price" | "hours" | "rule";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerCorrectionResult"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_conversation_notes_v1_businesses__business_id__conversations__conversation_id__notes_get: {
         parameters: {
             query?: {
@@ -19681,7 +21058,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Message Id */
+                    message_id?: string | null;
                     rating: ("good" | "bad") | null;
+                    reason?: ("wrong_info" | "should_hand_off" | "tone" | "too_long") | null;
                 };
             };
         };

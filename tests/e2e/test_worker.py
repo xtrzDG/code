@@ -142,7 +142,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (23, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (24, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep

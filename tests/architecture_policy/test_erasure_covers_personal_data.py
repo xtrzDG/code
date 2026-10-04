@@ -50,6 +50,11 @@ NOT_CUSTOMER_DATA: dict[str, str] = {
     ),
     "digest_preferences": "the owner's own number for digests and reports",
     "platform_admins": "the platform's own team",
+    "billing_profiles": "the business's own details for its invoices (1114)",
+    "invoices": (
+        "the business and the platform as the parties of an invoice, copied "
+        "from the billing details when it is issued (1114)"
+    ),
 }
 
 

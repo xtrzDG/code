@@ -24,7 +24,6 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
-from app.schemas.domain.conversation_topics import ConversationTopicsDocument
 from app.schemas.domain.conversations import (
     CallDocument,
     ConversationDocument,
@@ -64,11 +63,6 @@ from app.schemas.domain.setup import (
     SetupStateDocument,
 )
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
-from app.schemas.domain.value_reports import ValueReportDocument
-from app.schemas.domain.value_settings import (
-    DigestPreferencesDocument,
-    ValueSettingsDocument,
-)
 from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
@@ -85,6 +79,7 @@ from app.utilities.storage.sign_in_document_collections import (
     SIGN_IN_DOCUMENT_COLLECTIONS,
 )
 from app.utilities.storage.teaching_collections import TEACHING_COLLECTIONS
+from app.utilities.storage.value_collections import VALUE_COLLECTIONS
 
 DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     # Users and sign-in (platform-wide), two-factor sign-in included.
@@ -241,21 +236,9 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("website_imports"), WebsiteImportDocument
     ),
-    # What the assistant is worth: the average check, each owner's digest
-    # choices, the stored digests and monthly reports (1061).
-    DocumentCollectionDefinition(
-        DocumentCollectionName("value_settings"), ValueSettingsDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("digest_preferences"), DigestPreferencesDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("value_reports"), ValueReportDocument
-    ),
-    # What customers ask about, grouped every night (1100).
-    DocumentCollectionDefinition(
-        DocumentCollectionName("conversation_topics"), ConversationTopicsDocument
-    ),
+    # What the assistant is worth: value settings, digests and reports
+    # (1061), what customers ask about (1100).
+    *VALUE_COLLECTIONS,
     # Feedback after visits: review settings, the request per visit (1062).
     DocumentCollectionDefinition(
         DocumentCollectionName("review_settings"), ReviewSettingsDocument
@@ -282,10 +265,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *ACTIVATION_COLLECTIONS,
     # Alerts, backups and incidents of the platform itself (1093).
     *OPERATIONS_COLLECTIONS,
-    # Platform admins and support's access (1103); suppression, exports (1113).
+    # Platform admins and support's time-boxed access to a business (1103).
     *ACCESS_COLLECTIONS,
     *TEACHING_COLLECTIONS,  # The owner's own checks (1112).
-    *PRIVACY_COLLECTIONS,
+    *PRIVACY_COLLECTIONS,  # The suppression list, full exports (1113).
     *INVOICING_COLLECTIONS,  # Billing details, invoice numbers (1114).
 )
 

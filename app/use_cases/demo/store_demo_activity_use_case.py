@@ -47,13 +47,10 @@ from app.contracts.repositories.topic_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus
-from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
-from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import DpaAcceptanceDocument
-from app.schemas.dto.billing import Money
 from app.schemas.dto.demo_data import (
     DemoActivityRequest,
     DemoActivityStorage,
@@ -64,6 +61,7 @@ from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.demo.demo_channel_activity import stamp_demo_channels
+from app.use_cases.demo.demo_invoice_issuing import issue_demo_invoice_if_paid
 from app.utilities.assembly.autotest_evaluation import build_verdict
 
 # The owner accepted the DPA this long before the first version went live.
@@ -256,22 +254,13 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         if activity.billing_profile is not None:
             self._billing_profile_repo.save(activity.billing_profile)
         for invoice in activity.invoices:
-            self._invoice_repo.save(self._issue_if_paid(business, invoice))
+            self._invoice_repo.save(
+                issue_demo_invoice_if_paid(self._invoice_issuing, business, invoice)
+            )
         for event in activity.usage_events:
             self._usage_event_repo.append(event)
         for warning in activity.package_usage_warnings:
             self._warning_repo.save(warning)
-
-    def _issue_if_paid(
-        self, business: BusinessDocument, invoice: InvoiceDocument
-    ) -> InvoiceDocument:
-        if invoice.status is not InvoiceStatus.PAID:
-            return invoice
-
-        charged = Money(
-            amount_minor=invoice.amount_minor, currency_code=invoice.currency_code
-        )
-        return self._invoice_issuing.issue(business, invoice, charged=charged)
 
     def _store_compliance(
         self,
