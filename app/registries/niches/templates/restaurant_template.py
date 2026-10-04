@@ -132,10 +132,12 @@ def build_restaurant_template() -> NicheTemplate:
                     ka="გაქვთ მიტანის სერვისი?",
                 ),
                 hints=text(
-                    en="Add the delivery link in the links step: the assistant "
-                    "sends it instead of taking delivery orders.",
-                    ru="Ссылку на доставку добавьте на шаге «Каналы и ссылки»: "
-                    "помощник отправит её вместо приёма заказа.",
+                    en="Add the delivery link under Business → Links: the "
+                    "assistant sends it instead of taking delivery orders.",
+                    ru="Ссылку на доставку добавьте в разделе «Бизнес» → "
+                    "«Ссылки»: помощник отправит её вместо приёма заказа.",
+                    ka="მიტანის ბმული დაამატეთ განყოფილებაში «ბიზნესი» → "
+                    "«ბმულები»: ასისტენტი მას გაგზავნის შეკვეთის მიღების ნაცვლად.",
                 ),
                 choices=[
                     choice(

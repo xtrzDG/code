@@ -44,7 +44,7 @@ export const tunnelTeamRu: Translation<typeof tunnelTeamEn> = {
     telegramLinked: "{name} получает сообщения в Telegram.",
     telegramUnavailable: "Telegram на этом сервере пока не настроен. Выберите другой способ.",
     handoffTitle: "Человека зовут, когда",
-    handoffHint: "Изменить это можно позже: Помощник → Часы и правила.",
+    handoffHint: "Изменить это можно позже: Помощник → Профиль бизнеса → Правила.",
     errors: {
       none: "Добавьте хотя бы одного человека: без того, кого звать, помощник не выйдет в эфир.",
       name: "Напишите имя.",

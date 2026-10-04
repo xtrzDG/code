@@ -4,7 +4,9 @@
  * One line of the offer table: the name, an "Example" tag on the niche's
  * suggestions, the price and a way to remove it; in the profile editor
  * also the kind (when the business sells more than one) and the minutes
- * (for kinds that last a while). Its save state sits at the end.
+ * (for kinds that last a while). Its save state sits at the end. On a
+ * phone a line with those columns takes two rows: the name with its save
+ * state and remove button, then the kind, the price and the minutes.
  */
 
 import type { FocusEvent } from "react";
@@ -54,6 +56,9 @@ export function OfferLine({
   const label = row.title.trim() || String(index + 1);
   const hasDuration = kindHasDuration(row.kind);
   const problem = errors.title ?? errors.price ?? errors.duration;
+  const twoRows = columns.showKind || columns.showDuration;
+  /** On a phone, what goes to the second row. */
+  const lower = twoRows ? "max-sm:order-1" : undefined;
 
   const leave = (event: FocusEvent<HTMLLIElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -71,7 +76,7 @@ export function OfferLine({
       )}
     >
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-        <div className="min-w-0 flex-1 basis-full sm:basis-auto">
+        <div className={cn("min-w-0 flex-1 sm:basis-auto", !twoRows && "basis-full")}>
           <Input
             data-offer-name
             autoFocus={row.key.startsWith("new-") && row.title === ""}
@@ -84,13 +89,18 @@ export function OfferLine({
             className="border-transparent bg-transparent shadow-none focus:border-line-strong"
           />
         </div>
-        {row.isSuggestion ? <Badge tone="neutral">{t("tunnelOffer.offer.suggestion")}</Badge> : null}
+        {twoRows ? <span aria-hidden className="h-0 basis-full sm:hidden max-sm:order-1" /> : null}
+        {row.isSuggestion ? (
+          <Badge tone="neutral" className={lower}>
+            {t("tunnelOffer.offer.suggestion")}
+          </Badge>
+        ) : null}
         {columns.showKind ? (
           <Select
             aria-label={t("profileEdit.offer.kindOf", { name: label })}
             value={row.kind}
             onChange={(event) => onChange({ kind: event.target.value as KnowledgeItemKind })}
-            className="w-36 shrink-0"
+            className="w-36 shrink-0 max-sm:order-1 max-sm:w-auto max-sm:min-w-0 max-sm:flex-1"
           >
             {(columns.kinds.includes(row.kind) ? columns.kinds : [row.kind, ...columns.kinds]).map((kind) => (
               <option key={kind} value={kind}>
@@ -99,7 +109,7 @@ export function OfferLine({
             ))}
           </Select>
         ) : null}
-        <div className="relative w-32 shrink-0">
+        <div className={cn("relative w-32 shrink-0", twoRows && "max-sm:w-28", lower)}>
           <Input
             aria-label={`${t("tunnelOffer.offer.price", { currency })} ${index + 1}`}
             aria-invalid={errors.price ? true : undefined}
@@ -118,10 +128,10 @@ export function OfferLine({
             value={row.duration}
             inputMode="numeric"
             disabled={!hasDuration}
-            placeholder={hasDuration ? "" : "—"}
+            placeholder={hasDuration ? t("profileEdit.offer.durationShort") : "—"}
             title={hasDuration ? undefined : t("profileEdit.offer.noDuration")}
             onChange={(event) => onChange({ duration: event.target.value })}
-            className="w-24 shrink-0 text-end tabular-nums"
+            className={cn("w-24 shrink-0 text-end tabular-nums max-sm:order-1 max-sm:w-20", !hasDuration && "max-sm:hidden")}
           />
         ) : null}
         <SaveMark status={status} />

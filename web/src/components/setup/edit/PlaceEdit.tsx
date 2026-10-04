@@ -15,6 +15,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 import { webLinkSchema } from "@/lib/validation";
 
 import { useBusinessSave } from "../flow/useBusinessSave";
@@ -42,7 +43,7 @@ export function PlaceEdit({ ctx }: { ctx: StepContext }) {
     zoneByCountry: { [country]: business.timezone },
   }));
   const [mapsUrl, setMapsUrl] = useState(profile.address?.maps_url ?? "");
-  const [publicPhone, setPublicPhone] = useState(profile.contacts.public_phone_number ?? "");
+  const [publicPhone, setPublicPhone] = useState(() => formatPhone(profile.contacts.public_phone_number));
   const [answersLanguage, setAnswersLanguage] = useState(profile.answers_language);
   const place = usePlace(form, me.user.country_code);
   const businessSave = useBusinessSave(ctx.businessId);

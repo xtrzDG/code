@@ -108,6 +108,7 @@ export const profileEditRu: Translation<typeof profileEditEn> = {
     kind: "Вид",
     kindOf: "Вид: {name}",
     duration: "Минут",
+    durationShort: "мин",
     durationOf: "Минут: {name}",
     noDuration: "У этого вида нет длительности",
     pasteHint: "Вставьте строки из таблицы: название, цена, минуты. Enter добавляет строку.",

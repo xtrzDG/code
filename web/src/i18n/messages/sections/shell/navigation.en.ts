@@ -19,7 +19,7 @@ export const navigationEn = {
     assistant: "Try your assistant, teach it, choose where it answers and apply your changes.",
     settings: "Your business, team, notifications, quick replies, calls, reviews, plan, privacy and the audit log.",
     assistantTest: "Write as a customer would. Nothing reaches real customers.",
-    assistantProfile: "Contacts, opening hours, what you offer, booking rules and when to call a person: the profile your assistant follows.",
+    assistantProfile: "What your assistant knows about the business: the place, the offer, hours and bookings, people and rules. Changes save as you type.",
     assistantVersions: "Every update of the assistant with its checks, publishing and a way back.",
   },
   pages: {
@@ -27,7 +27,7 @@ export const navigationEn = {
     overviewReports: "Reports",
     assistantTest: "Try it",
     assistantKnowledge: "Knowledge",
-    assistantProfile: "Hours and rules",
+    assistantProfile: "Business profile",
     assistantChannels: "Channels",
     assistantVersions: "Updates and checks",
     settingsGeneral: "Business",

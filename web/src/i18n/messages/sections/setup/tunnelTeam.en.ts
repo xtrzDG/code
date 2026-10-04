@@ -45,7 +45,7 @@ export const tunnelTeamEn = {
     telegramLinked: "{name} gets the messages in Telegram.",
     telegramUnavailable: "Telegram isn't set up on this server yet. Choose another way.",
     handoffTitle: "It calls a person when",
-    handoffHint: "You can change this later in Assistant → Hours and rules.",
+    handoffHint: "You can change this later in Assistant → Business profile → Rules.",
     errors: {
       none: "Add at least one person: the assistant can't go live without someone to call.",
       name: "Write a name.",

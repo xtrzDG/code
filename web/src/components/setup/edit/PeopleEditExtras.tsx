@@ -12,6 +12,7 @@ import { useState } from "react";
 
 import { IconArrowRight } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
+import { formatPhone } from "@/lib/phone";
 import { profileSectionPath } from "@/lib/profile/sections";
 
 import type { StepContext } from "../flow/stepContext";
@@ -20,7 +21,7 @@ import { useProfileField } from "./useProfileField";
 
 export function PeopleEditExtras({ ctx }: { ctx: StepContext }) {
   const { t } = useI18n();
-  const [phone, setPhone] = useState(ctx.wizard.profile.contacts.handoff_phone_number ?? "");
+  const [phone, setPhone] = useState(() => formatPhone(ctx.wizard.profile.contacts.handoff_phone_number));
   const saved = useProfileField(ctx.businessId, phone.trim(), (value) => ({ contacts: { handoff_phone_number: value || null } }));
 
   return (

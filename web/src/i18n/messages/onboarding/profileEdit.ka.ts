@@ -93,6 +93,7 @@ export const profileEditKa: Translation<typeof profileEditEn> = {
     kind: "სახეობა",
     kindOf: "სახეობა: {name}",
     duration: "წუთი",
+    durationShort: "წთ",
     durationOf: "წუთი: {name}",
     noDuration: "ამ სახეობას ხანგრძლივობა არ აქვს",
     pasteHint: "ჩასვით სტრიქონები ცხრილიდან: დასახელება, ფასი, წუთები. Enter ახალ სტრიქონს ამატებს.",

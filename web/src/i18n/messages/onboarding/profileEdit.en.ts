@@ -96,6 +96,7 @@ export const profileEditEn = {
     kind: "Kind",
     kindOf: "Kind of {name}",
     duration: "Minutes",
+    durationShort: "min",
     durationOf: "Minutes of {name}",
     noDuration: "No duration for this kind",
     pasteHint: "Paste lines from a spreadsheet: name, price, minutes. Enter adds a line.",
