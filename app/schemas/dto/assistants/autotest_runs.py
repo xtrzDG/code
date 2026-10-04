@@ -10,6 +10,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.assistants import (
     AssistantVersionStatus,
     AutotestCheckCode,
+    AutotestExpectation,
     AutotestScenarioKind,
 )
 from app.schemas.domain.assistants import (
@@ -29,8 +30,12 @@ from app.schemas.typings.assistants.constrained_floats import (
     AverageJudgeScore,
 )
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
-from app.schemas.typings.assistants.constrained_strings import AutotestScenarioKey
-from app.schemas.typings.assistants.prefixed_id import AutotestRunId
+from app.schemas.typings.assistants.constrained_strings import (
+    AutotestCaseQuestion,
+    AutotestExpectedText,
+    AutotestScenarioKey,
+)
+from app.schemas.typings.assistants.prefixed_id import AutotestCaseId, AutotestRunId
 from app.schemas.typings.assistants.strings import (
     AutotestCheckNote,
     AutotestScenarioGoal,
@@ -53,11 +58,25 @@ class AutotestLanguage(ImmutableDTO):
     script: ScriptCode | None = None
 
 
+class OwnerCheckSpec(ImmutableDTO):
+    """
+    What an owner check plays: its `question`, sent word for word as the
+    customer's first message, and what the answer must do.
+    """
+
+    case_id: AutotestCaseId
+    question: AutotestCaseQuestion
+    expectation: AutotestExpectation
+    expected_text: AutotestExpectedText | None = None
+
+
 class AutotestScenario(ImmutableDTO):
     """
     One scripted test conversation: what the AI customer tries, in which
     language. `language_script` is None when the script is unknown, which
-    turns the reply-language check off.
+    turns the reply-language check off. An owner check (`owner_check`)
+    opens with its question instead of the AI customer's first message and
+    is decided by its expectation, not by the judge.
     """
 
     key: AutotestScenarioKey
@@ -66,6 +85,7 @@ class AutotestScenario(ImmutableDTO):
     language_name: LanguageDisplayName
     language_script: ScriptCode | None = None
     goal: AutotestScenarioGoal
+    owner_check: OwnerCheckSpec | None = None
 
 
 class AutotestRunPlan(ImmutableDTO):

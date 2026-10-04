@@ -12,11 +12,13 @@ from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 KNOWLEDGE_KIND_FIELD: DocumentFieldPath = DocumentFieldPath("kind")
+CORRECTION_OF_FIELD: DocumentFieldPath = DocumentFieldPath("correction_of")
 
 
 class KnowledgeItemRepository(
@@ -59,6 +61,15 @@ class KnowledgeItemRepository(
     ) -> list[KnowledgeItemDocument]:
         return self._list_in_business(
             business_id, [field_equals(KNOWLEDGE_KIND_FIELD, kind)], limit=limit
+        )
+
+    def find_by_correction(
+        self,
+        business_id: BusinessId,
+        message_id: MessageId,
+    ) -> KnowledgeItemDocument | None:
+        return self._find_in_business(
+            business_id, [field_equals(CORRECTION_OF_FIELD, message_id)]
         )
 
     def delete(self, business_id: BusinessId, item_id: KnowledgeItemId) -> None:

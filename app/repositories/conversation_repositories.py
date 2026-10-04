@@ -9,6 +9,9 @@ from app.contracts.repositories.conversation_repositories import (
     LlmTurnRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.conversation_review_contracts import (
+    ConversationReviewRepoContract,
+)
 from app.contracts.repositories.inbox_repositories import (
     ConversationTeamRepoContract,
 )
@@ -26,6 +29,7 @@ from app.repositories.conversation_lookup_fields import (
     STATUS_FIELD,
     VERIFIED_PHONE_NUMBER_FIELD,
 )
+from app.repositories.conversation_review_writes import ConversationReviewWrites
 from app.repositories.conversation_team_writes import ConversationTeamWrites
 from app.repositories.document_queries import (
     ascending,
@@ -122,10 +126,12 @@ class ContactRepository(ContactListing, ContactRepoContract):
 
 class ConversationRepository(
     ConversationTeamWrites,
+    ConversationReviewWrites,
     InboxListing,
     ConversationListing,
     ConversationRepoContract,
     ConversationTeamRepoContract,
+    ConversationReviewRepoContract,
 ):
     def save(self, conversation: ConversationDocument) -> None:
         self._save_keeping_team_fields(conversation)

@@ -8,6 +8,7 @@ AwaitsImprovement = bool
 CanTextCaller = bool
 IncludeSandboxConversations = bool
 IsAfterHours = bool
+IsAnswerCorrected = bool
 IsConversationHandedOff = bool
 IsFallbackModel = bool
 IsFirstAssistantReply = bool

@@ -57,4 +57,6 @@ class ConversationSummaryTransformer(
             last_message_at=conversation.last_message_at,
             created_at=conversation.created_at,
             rating=conversation.rating,
+            rating_reason=conversation.rating_reason,
+            rated_message_id=conversation.rated_message_id,
         )

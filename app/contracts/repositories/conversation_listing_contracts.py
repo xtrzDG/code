@@ -9,6 +9,7 @@ from typing import Protocol
 
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
@@ -37,7 +38,7 @@ from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
     ReplyLatencyMilliseconds,
 )
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -101,6 +102,21 @@ class MessageListingContract(Protocol):
     ) -> dict[ConversationId, MessageDocument]:
         """The newest message of the customer, the assistant or staff of each
         conversation (one indexed probe each; none: left out)."""
+        raise NotImplementedError
+
+    def find_latest_by_author(
+        self,
+        business_id: BusinessId,
+        conversation_ids: Sequence[ConversationId],
+        author: MessageAuthor,
+    ) -> dict[ConversationId, MessageDocument]:
+        """The newest message of one author per conversation (none: left out)."""
+        raise NotImplementedError
+
+    def get_many(
+        self, business_id: BusinessId, message_ids: Sequence[MessageId]
+    ) -> dict[MessageId, MessageDocument]:
+        """The business's messages of these ids in one read."""
         raise NotImplementedError
 
     def sum_usage(

@@ -33,7 +33,7 @@ from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
     LlmTokenCount,
 )
-from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
 from app.schemas.typings.platform.integers import ListSortValue
@@ -165,6 +165,37 @@ class MessageListing(BusinessScopedRepository[MessageDocument]):
             ),
         )
         return {message.conversation_id: message for message in latest}
+
+    def find_latest_by_author(
+        self,
+        business_id: BusinessId,
+        conversation_ids: Sequence[ConversationId],
+        author: MessageAuthor,
+    ) -> dict[ConversationId, MessageDocument]:
+        """The newest message of one author, per conversation."""
+
+        latest: list[MessageDocument] = self._latest_in_business(
+            business_id,
+            DocumentLatestQuery(
+                where=DocumentFilter(matches=(field_equals(AUTHOR_FIELD, author),)),
+                group_field=CONVERSATION_ID_FIELD,
+                groups=tuple(
+                    stored_text(item) for item in dict.fromkeys(conversation_ids)
+                ),
+                sort_field=CREATED_AT_FIELD,
+            ),
+        )
+        return {message.conversation_id: message for message in latest}
+
+    def get_many(
+        self, business_id: BusinessId, message_ids: Sequence[MessageId]
+    ) -> dict[MessageId, MessageDocument]:
+        return {
+            message.id: message
+            for message in self._load_many(
+                business_id, sorted({str(message_id) for message_id in message_ids})
+            )
+        }
 
     def sum_usage(
         self,

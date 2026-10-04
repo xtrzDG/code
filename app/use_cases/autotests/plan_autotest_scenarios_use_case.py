@@ -2,6 +2,9 @@ from app.contracts.registries import (
     LanguageRegistryContract,
     NicheTemplateRegistryContract,
 )
+from app.contracts.repositories.autotest_case_repositories import (
+    AutotestCaseRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessProfileRepoContract
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
@@ -49,6 +52,7 @@ from app.utilities.assembly.language_scenarios import (
     choose_foreign_languages,
     choose_transliterated_languages,
 )
+from app.utilities.assembly.owner_check_scenarios import plan_owner_check_scenarios
 from app.utilities.assembly.smoke_selection import plan_smoke_scenarios
 
 DEFAULT_PRICE_QUESTION_LIMIT: PriceQuestionScenarioLimit = PriceQuestionScenarioLimit(
@@ -75,7 +79,10 @@ class PlanAutotestScenariosUseCase(
     only such a run can show that a version is ready for customers. The
     quick check of an
     apply (`smoke_check`) plans exactly its scenarios instead and never has
-    full coverage.
+    full coverage. Both end with the owner's own active checks ("My
+    checks"), so a corrected answer is checked in every apply: all of them
+    in a quick check, those in the selected languages otherwise (none when
+    the selected kinds leave out `owner_check`).
     """
 
     def __init__(
@@ -83,6 +90,7 @@ class PlanAutotestScenariosUseCase(
         business_profile_repo: BusinessProfileRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
         resource_repo: ResourceRepoContract,
+        autotest_case_repo: AutotestCaseRepoContract,
         niche_template_registry: NicheTemplateRegistryContract,
         language_registry: LanguageRegistryContract,
         price_question_limit: PriceQuestionScenarioLimit = DEFAULT_PRICE_QUESTION_LIMIT,
@@ -90,6 +98,7 @@ class PlanAutotestScenariosUseCase(
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._resource_repo: ResourceRepoContract = resource_repo
+        self._autotest_case_repo: AutotestCaseRepoContract = autotest_case_repo
         self._niche_template_registry: NicheTemplateRegistryContract = (
             niche_template_registry
         )
@@ -118,7 +127,8 @@ class PlanAutotestScenariosUseCase(
                     applicable_kinds,
                     resource_noun,
                     party_size,
-                ),
+                )
+                + self._plan_owner_checks(business, None),
                 is_full_coverage=False,
             )
 
@@ -126,9 +136,23 @@ class PlanAutotestScenariosUseCase(
             version.languages,
             input_data.languages,
         )
-        kinds: list[AutotestScenarioKind] = select_kinds(
-            applicable_kinds,
-            input_data.kinds,
+        requested_kinds: list[AutotestScenarioKind] | None = (
+            None
+            if input_data.kinds is None
+            else [
+                kind
+                for kind in input_data.kinds
+                if kind is not AutotestScenarioKind.OWNER_CHECK
+            ]
+        )
+        kinds: list[AutotestScenarioKind] = (
+            []
+            if requested_kinds == []
+            else select_kinds(applicable_kinds, requested_kinds)
+        )
+        plays_owner_checks: bool = (
+            input_data.kinds is None
+            or AutotestScenarioKind.OWNER_CHECK in input_data.kinds
         )
         items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
             business.id
@@ -164,7 +188,12 @@ class PlanAutotestScenariosUseCase(
                 party_size=party_size,
             )
             + plan_variant_scenarios(autotest_languages, variant_goals)
-            + self._plan_language_scenarios(kinds, version, languages),
+            + self._plan_language_scenarios(kinds, version, languages)
+            + (
+                self._plan_owner_checks(business, languages)
+                if plays_owner_checks
+                else []
+            ),
             is_full_coverage=(
                 set(languages) >= set(version.languages)
                 and set(kinds) >= set(applicable_kinds)
@@ -208,6 +237,29 @@ class PlanAutotestScenariosUseCase(
                 party_size=DEFAULT_PARTY_SIZE,
             )
         ]
+
+    def _plan_owner_checks(
+        self,
+        business: BusinessDocument,
+        languages: list[LanguageTag] | None,
+    ) -> list[AutotestScenario]:
+        """The owner's active checks, in `languages` when they are given."""
+
+        cases = [
+            case
+            for case in self._autotest_case_repo.list_by_business(business.id)
+            if languages is None or case.language in languages
+        ]
+        case_languages: list[LanguageTag] = list(
+            dict.fromkeys(case.language for case in cases)
+        )
+        return plan_owner_check_scenarios(
+            cases,
+            build_autotest_languages(
+                case_languages,
+                collect_language_profiles(self._language_registry, case_languages),
+            ),
+        )
 
     def _party_size(self, business: BusinessDocument) -> int:
         """Two people, or fewer when the booking rules allow fewer."""

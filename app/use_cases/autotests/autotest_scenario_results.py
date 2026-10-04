@@ -59,4 +59,9 @@ def build_scenario_result(
         check_codes=[failure.code for failure in check_failures],
         transcript=list(transcript),
         cost_micro_usd=cost,
+        autotest_case_id=(
+            scenario_run.scenario.owner_check.case_id
+            if scenario_run.scenario.owner_check is not None
+            else None
+        ),
     )
