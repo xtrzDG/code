@@ -17,11 +17,15 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.conversations.booleans import (
     IsConversationHandedOff,
+    IsFallbackModel,
     IsFirstAssistantReply,
     IsNewConversation,
     ShouldEndCall,
 )
-from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
+from app.schemas.typings.conversations.constrained_integers import (
+    LlmRoundCount,
+    LlmTokenCount,
+)
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import (
     MessageText,
@@ -87,6 +91,10 @@ class GeneratedReply(ImmutableDTO):
     model_id: LlmModelId
     input_tokens: LlmTokenCount = LlmTokenCount(0)
     output_tokens: LlmTokenCount = LlmTokenCount(0)
+    # Model calls the reply took, and whether a model of the other provider
+    # answered (the version's own failed); `model_id` is then the fallback's.
+    llm_round_count: LlmRoundCount = LlmRoundCount(0)
+    is_fallback_model: IsFallbackModel = False
 
 
 class ReplyRecord(ImmutableDTO):
@@ -109,6 +117,11 @@ class ReplyRecord(ImmutableDTO):
     output_tokens: LlmTokenCount = LlmTokenCount(0)
     is_handed_off: IsConversationHandedOff = False
     should_end_call: ShouldEndCall = False
+    # Since when the customer waits for this reply (the platform delivered
+    # their first unanswered message); None: not measured (test chats).
+    waiting_since: Microseconds | None = None
+    llm_round_count: LlmRoundCount = LlmRoundCount(0)
+    is_fallback_model: IsFallbackModel = False
 
 
 class VoiceToolCallRecord(ImmutableDTO):

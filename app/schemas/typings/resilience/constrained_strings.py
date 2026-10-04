@@ -14,7 +14,7 @@ class CircuitName(BaseConstrainedTypedString):
 
     min_length = 3
     max_length = 160
-    pattern = r"^[a-z][a-z0-9_]*:[A-Za-z0-9][A-Za-z0-9._:\-]*$"
+    pattern = r"^[a-z][a-z0-9_]*:[A-Za-z0-9][A-Za-z0-9._:@\-]*$"
 
 
 # Keep abc order for all non example types, if possible.

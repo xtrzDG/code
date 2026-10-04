@@ -75,6 +75,9 @@ from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
+from app.facilitators.resilience.circuit_breaker_facilitator import (
+    CircuitBreakerFacilitator,
+)
 from app.schemas.dto.conversations import LlmCallLimits
 
 
@@ -229,7 +232,12 @@ class AdaptersContainer(containers.DeclarativeContainer):
         RoutingLlmAdapter,
         openai_adapter=openai_llm_adapter,
         anthropic_adapter=anthropic_llm_adapter,
+        circuit_breaker=Singleton(
+            CircuitBreakerFacilitator,
+            monotonic_clock=time_provider.monotonic_clock,
+        ),
         scripted_adapter=offline_llm_adapter,
+        fallback_model_id=config.app_settings.provided.reply_speed.llm_fallback_model_id,
     )
     # The quality journal (Langfuse, or nothing without keys). It lives here,
     # not in FacilitatorsContainer, because the LLM adapter below decorates
