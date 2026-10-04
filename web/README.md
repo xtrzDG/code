@@ -161,11 +161,14 @@ npm run e2e -- onboarding         # one file
   Back, the support team's Telegram), the inbox tip shown once across
   reloads, the public help center's search, "What's new" with its dot in
   the account menu, the phone's "?" in the top bar and an axe audit of the
-  help center and status page (`e2e/help-center.spec.ts`), and an outage
+  help center and status page (`e2e/help-center.spec.ts`), an outage
   announced on the System page reaching the public status page and every
   cabinet until it is resolved, a notice hidden by an owner
   (`e2e/status-page.spec.ts`; the suite's API has `SUPPORT_TELEGRAM` and
-  `SUPPORT_EMAIL`).
+  `SUPPORT_EMAIL`), and the owner's exports: tables as CSV from Settings →
+  Privacy, Bookings and the Inbox with their filters, the full export built
+  by the worker and downloaded by its signed link, no export buttons for
+  staff (`e2e/data-exports.spec.ts`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |

@@ -29,6 +29,9 @@ from app.gateways.worker.periodic.growth_analytics import (
     reconcile_product_events_job,
 )
 from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
+from app.gateways.worker.periodic.purge_business_exports import (
+    purge_business_exports_job,
+)
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.gateways.worker.periodic.record_platform_status import (
     record_platform_status_job,
@@ -58,6 +61,7 @@ from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_
 from app.use_cases.knowledge.website_import.start_website_import_use_case import (
     IMPORT_WEBSITE_JOB,
 )
+from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
@@ -222,6 +226,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
             end_expired_support_access_job,
             operator=operators.security.end_expired_support_access_operator,
         ),
+        # Archives of full exports deleted once their link ran out.
+        Factory(
+            purge_business_exports_job,
+            operator=operators.privacy.purge_business_exports_operator,
+        ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases
     # through the job queue facilitator).
@@ -244,6 +253,8 @@ class GatewaysContainer(containers.DeclarativeContainer):
             DELIVER_OUTBOUND_JOB: operators.channels.deliver_outbound_operator,
             # A caller who did not get through: their WhatsApp or SMS.
             SEND_TEXT_BACK_JOB: operators.calls.send_text_back_operator,
+            # A full export of a business written into its archive.
+            BUILD_BUSINESS_EXPORT_JOB: operators.privacy.run_business_export_operator,
             # A business's website read into knowledge drafts.
             IMPORT_WEBSITE_JOB: operators.knowledge.run_website_import_operator,
             # Every stored secret sealed again with the current key.

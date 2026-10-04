@@ -111,6 +111,7 @@ _.delivered_at  # app/schemas/domain/outbound_messages.py
 _.source_message_id  # app/schemas/domain/outbound_messages.py
 _.changed_by  # app/schemas/domain/bookings.py (BookingStatusChange)
 _.resolved_by  # app/schemas/domain/handoffs.py
+_.identity_digest  # app/schemas/domain/suppression.py (the id is derived from it)
 
 # Response fields: serialized to JSON for the cabinet and the widget; the
 # code fills them by keyword, so nothing in Python reads them.
@@ -165,6 +166,7 @@ _.deep_link  # app/schemas/dto/channels/staff_links.py
 _.actor_ids  # app/schemas/dto/compliance.py
 _.anonymized_bookings  # app/schemas/dto/compliance.py
 _.anonymized_conversations  # app/schemas/dto/compliance.py
+_.anonymized_feedback_requests  # app/schemas/dto/compliance.py
 _.anonymized_handoffs  # app/schemas/dto/compliance.py
 _.anonymized_leads  # app/schemas/dto/compliance.py
 _.current_document_version  # app/schemas/dto/compliance.py
@@ -173,8 +175,13 @@ _.deleted_notes  # app/schemas/dto/compliance.py
 _.document_url  # app/schemas/dto/compliance.py
 _.entities  # app/schemas/dto/compliance.py
 _.erased_calls  # app/schemas/dto/compliance.py
+_.erased_missed_calls  # app/schemas/dto/compliance.py
 _.exported_at  # app/schemas/dto/compliance.py
 _.is_current_version_accepted  # app/schemas/dto/compliance.py
+_.is_on_suppression_list  # app/schemas/dto/compliance.py
+_.opt_out  # app/schemas/dto/compliance.py
+_.redacted_inbound_events  # app/schemas/dto/compliance.py
+_.redacted_outbound_messages  # app/schemas/dto/compliance.py
 _.scanned_businesses  # app/schemas/dto/compliance.py
 _.conversation_count  # app/schemas/dto/contacts.py
 _.first_seen_at  # app/schemas/dto/contacts.py

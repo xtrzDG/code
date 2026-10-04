@@ -11,6 +11,7 @@ from app.repositories.aggregate_reading import parse_choice
 from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.document_queries import (
     CREATED_AT_FIELD,
+    ascending,
     field_equals,
     time_range,
 )
@@ -121,6 +122,17 @@ class FeedbackRequestRepository(
         )
         return sorted(
             waiting, key=lambda request: int(request.created_at), reverse=True
+        )
+
+    def list_by_contact(
+        self,
+        business_id: BusinessId,
+        contact_id: ContactId,
+    ) -> list[FeedbackRequestDocument]:
+        return self._list_in_business(
+            business_id,
+            [field_equals(CONTACT_ID_FIELD, contact_id)],
+            order=ascending(CREATED_AT_FIELD),
         )
 
     def find_by_token(self, token: ReviewLinkToken) -> FeedbackRequestDocument | None:

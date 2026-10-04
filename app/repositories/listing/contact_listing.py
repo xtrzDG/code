@@ -1,19 +1,23 @@
-"""Several contacts in one read, and the calls of one conversation."""
+"""Several contacts in one read or a page of them, and a conversation's calls."""
 
 from collections.abc import Sequence
 
 from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.conversation_lookup_fields import CONVERSATION_ID_FIELD
-from app.repositories.document_queries import field_equals
+from app.repositories.document_queries import CREATED_AT_FIELD, field_equals
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import CallDocument
+from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 
 
 class ContactListing(BusinessScopedRepository[ContactDocument]):
-    """The contacts a page of a list names, read together."""
+    """
+    The contacts a page of a list names, read together; the business's
+    contacts a keyset page at a time, the newest first.
+    """
 
     def get_many(
         self,
@@ -26,6 +30,11 @@ class ContactListing(BusinessScopedRepository[ContactDocument]):
                 business_id, [str(contact_id) for contact_id in contact_ids]
             )
         }
+
+    def page_by_business(
+        self, business_id: BusinessId, window: KeysetSlice
+    ) -> list[ContactDocument]:
+        return self._page_in_business(business_id, (CREATED_AT_FIELD,), window)
 
 
 class CallListing(BusinessScopedRepository[CallDocument]):

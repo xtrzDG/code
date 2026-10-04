@@ -37,6 +37,9 @@ from app.gateways.worker.periodic.growth_analytics import (
     RECONCILE_PRODUCT_EVENTS_JOB,
 )
 from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
+from app.gateways.worker.periodic.purge_business_exports import (
+    PURGE_BUSINESS_EXPORTS_JOB,
+)
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
 from app.gateways.worker.periodic.record_platform_status import (
     RECORD_PLATFORM_STATUS_JOB,
@@ -65,6 +68,7 @@ from app.use_cases.autotests.enqueue_autotest_run_use_case import RUN_AUTOTESTS_
 from app.use_cases.knowledge.website_import.start_website_import_use_case import (
     IMPORT_WEBSITE_JOB,
 )
+from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
@@ -117,6 +121,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (CHECK_CHANNEL_CREDENTIALS_JOB, 3_600),
         (RECORD_PLATFORM_STATUS_JOB, 300),
         (END_EXPIRED_SUPPORT_ACCESS_JOB, 600),
+        (PURGE_BUSINESS_EXPORTS_JOB, 3600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -132,6 +137,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ARCHIVE_CALL_RECORDING_JOB,
         DELIVER_OUTBOUND_JOB,
         SEND_TEXT_BACK_JOB,
+        BUILD_BUSINESS_EXPORT_JOB,
         IMPORT_WEBSITE_JOB,
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
@@ -142,9 +148,10 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # Trials, overage, grace periods, reminders, the trace flush, the sweep
     # of rate-limit counters, the inbox sweep, the owners' value reports,
     # the customers' topics, the feedback requests, the milestones, the
-    # activation nudges, the platform alerts, the Meta token check and the
-    # end of expired support access.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (16, 0)
+    # activation nudges, the platform alerts, the Meta token check, the
+    # platform status record, the end of expired support access and the
+    # purge of expired exports.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (17, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

@@ -151,6 +151,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         sms_client=clients.twilio_messaging_client,
         wall_clock=time_provider.microsecond_wall_clock,
+        suppression_list=facilitators.suppression_list,
     )
     notify_missed_call_use_case: Factory[
         UseCaseContract[RegisteredMissedCall | None, DeliveredNotificationCount]

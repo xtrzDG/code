@@ -6,15 +6,24 @@ from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
-from app.repositories.document_queries import CREATED_AT_FIELD, time_range
+from app.repositories.document_queries import (
+    CREATED_AT_FIELD,
+    ascending,
+    field_equals,
+    time_range,
+)
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calls.prefixed_id import MissedCallId
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.storage.booleans import IsDocumentInserted
 from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.utilities.calls.call_follow_up_keys import call_settings_id_of
+
+CALLER_PHONE_NUMBER_FIELD: DocumentFieldPath = DocumentFieldPath("caller_phone_number")
 
 
 class MissedCallRepository(
@@ -51,6 +60,17 @@ class MissedCallRepository(
         window: KeysetSlice,
     ) -> list[MissedCallDocument]:
         return self._page_in_business(business_id, (CREATED_AT_FIELD,), window)
+
+    def list_by_caller(
+        self,
+        business_id: BusinessId,
+        caller_phone_number: E164PhoneNumber,
+    ) -> list[MissedCallDocument]:
+        return self._list_in_business(
+            business_id,
+            (field_equals(CALLER_PHONE_NUMBER_FIELD, caller_phone_number),),
+            order=ascending(CREATED_AT_FIELD),
+        )
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         return self._collection.delete_by_range(

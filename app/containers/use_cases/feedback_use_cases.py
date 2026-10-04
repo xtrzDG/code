@@ -80,6 +80,7 @@ class FeedbackUseCasesContainer(containers.DeclarativeContainer):
             text_resolver=utilities.localized_text_resolver,
             live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,
+            suppression_list=facilitators.suppression_list,
         )
     )
     answer_customer_signal_use_case: Factory[
@@ -94,6 +95,7 @@ class FeedbackUseCasesContainer(containers.DeclarativeContainer):
         text_resolver=utilities.localized_text_resolver,
         wall_clock=time_provider.microsecond_wall_clock,
         app_base_url=app_base_url,
+        suppression_list=facilitators.suppression_list,
     )
     open_review_link_use_case: Factory[
         UseCaseContract[ReviewLinkVisit, ReviewLinkTarget]

@@ -58,6 +58,9 @@ from app.utilities.config_helpers.app_settings.platform_admin_settings_section i
 from app.utilities.config_helpers.app_settings.platform_alert_settings_section import (
     read_platform_alert_settings,
 )
+from app.utilities.config_helpers.app_settings.privacy_settings_section import (
+    read_privacy_settings,
+)
 from app.utilities.config_helpers.app_settings.public_address_settings_section import (
     read_public_address_settings,
 )
@@ -148,4 +151,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_platform_alert_settings(environment_variables),
         **read_session_settings(environment_variables),
         **read_support_settings(environment_variables),
+        **read_privacy_settings(environment_variables),
     )

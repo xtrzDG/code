@@ -4,6 +4,7 @@ import { IconCalendar, IconPlus } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { useBusiness } from "@/components/business/BusinessContext";
+import { ExportCsvButton } from "@/components/exports/ExportCsvButton";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
@@ -15,7 +16,7 @@ import { BookingFiltersBar } from "./_components/BookingFiltersBar";
 import { BookingDays } from "./_components/BookingList";
 import { BookingDaysSkeleton } from "./_components/BookingsSkeleton";
 import { TodayAgenda } from "./_components/TodayAgenda";
-import type { BookingFilters, PhoneBookingsView } from "./_lib/bookingFilters";
+import { bookingApiQuery, type BookingFilters, type PhoneBookingsView } from "./_lib/bookingFilters";
 import { useBookingsPage } from "./_lib/useBookingsPage";
 
 /**
@@ -27,7 +28,7 @@ import { useBookingsPage } from "./_lib/useBookingsPage";
  */
 export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilters }) {
   const { t, locale } = useI18n();
-  const { business } = useBusiness();
+  const { business, isOwner } = useBusiness();
   const page = useBookingsPage(initialFilters);
   const { filters, setFilters, rangeValid, bookings, agenda, resources, setDialog, isStay } = page;
   const items = bookings.items ?? [];
@@ -42,6 +43,16 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         title={t("nav.bookings")}
         description={t("pages.bookings.description")}
         status={<LiveStatus updatedAt={shown.updatedAt} isFetching={shown.isFetching && shown.items !== undefined} />}
+        actions={
+          isOwner ? (
+            <ExportCsvButton
+              table="bookings"
+              query={bookingApiQuery(filters, page.range)}
+              hint={t("dataExports.csv.bookingsHint")}
+              disabled={!rangeValid}
+            />
+          ) : undefined
+        }
         primaryAction={{ label: t("bookings.newBooking"), icon: IconPlus, onClick: openCreate, opensDialog: true }}
       />
 

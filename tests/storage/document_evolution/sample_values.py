@@ -70,6 +70,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     ),
     "SignupSourceTag": "qr",
     "SupportAccessReason": "Owner asked why bookings stopped",
+    "SuppressionDigest": "0123456789abcdef" * 4,
     "TimezoneName": "Asia/Tbilisi",
     "UtmCampaign": "autumn-launch",
     "UtmContent": "hero-button",
@@ -93,6 +94,7 @@ PLAIN_TEXT_SAMPLES: dict[str, str] = {
     "LlmToolInputJson": '{"date": "2026-09-21"}',
     "LlmToolResultJson": '{"ok": true}',
     "RecordingStoragePath": "recordings/2026/09/call-42.mp3",
+    "ExportArchivePath": "business-exports/business_42/export-42.zip",
 }
 
 INTEGER_SAMPLES: dict[str, int] = {

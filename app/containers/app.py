@@ -19,6 +19,9 @@ from app.containers.adapters.media_collections_container import (
 from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
+from app.containers.adapters.privacy_collections_container import (
+    PrivacyCollectionsContainer,
+)
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
 )
@@ -149,8 +152,17 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The suppression list and the full business exports (1113), one more.
+    privacy_collections: PrivacyCollectionsContainer = Container(  # type: ignore[assignment]
+        PrivacyCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        privacy_collections=privacy_collections,
         operations_collections=operations_collections,
         health_collections=adapters.collections,
         media_collections=media_collections,

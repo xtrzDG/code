@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.messaging_clients import SmsMessagingClientContract
+from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import (
     CountryRegistryContract,
     RequestRateLimitRegistryContract,
@@ -62,7 +63,8 @@ from app.utilities.calls.text_back_jobs import (
     encode_text_back_payload,
 )
 from app.utilities.channels.delivery_targets import find_business_channel
-from app.utilities.channels.opt_out import is_opted_out
+from app.utilities.privacy.messaging_suppression import is_messaging_suppressed
+from app.utilities.privacy.suppressed_identities import phone_identity
 
 
 class RegisterMissedCallUseCase(
@@ -77,7 +79,8 @@ class RegisterMissedCallUseCase(
 
     Not texted (SKIPPED, with the reason): text-backs off, a hidden
     number, an assistant that is not live, a report hours late, no
-    channel, a customer who opted out (STOP) or already writes with the
+    channel, a customer who opted out (STOP, on their contact or the
+    suppression list, which outlives an erasure) or already writes with the
     business in a messenger, and a caller texted in the last day (one per
     caller per day, at most 200 per business per day, and within the
     customer's shared daily cap of unrequested messages, counted for every
@@ -99,6 +102,7 @@ class RegisterMissedCallUseCase(
         phone_number_parser: PhoneNumberParserContract,
         sms_client: SmsMessagingClientContract | None,
         wall_clock: WallClock[Microseconds],
+        suppression_list: SuppressionListContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
@@ -112,6 +116,7 @@ class RegisterMissedCallUseCase(
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._sms_client: SmsMessagingClientContract | None = sms_client
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._suppression_list: SuppressionListContract = suppression_list
 
     def run(self, input_data: MissedCallReport) -> RegisteredMissedCall | None:
         business: BusinessDocument | None = find_missed_call_business(
@@ -225,7 +230,9 @@ class RegisterMissedCallUseCase(
         contact: ContactDocument | None = find_caller_contact(
             self._contact_repo, business, caller
         )
-        if is_opted_out(contact):
+        if is_messaging_suppressed(
+            self._suppression_list, business.id, contact, [phone_identity(caller)]
+        ):
             return TextBackSkipReason.OPTED_OUT
 
         if is_in_conversation(self._conversation_repo, business, contact, now):

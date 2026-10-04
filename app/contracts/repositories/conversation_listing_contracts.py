@@ -50,6 +50,12 @@ class ContactListingContract(Protocol):
         """The business's contacts of these ids in one read."""
         raise NotImplementedError
 
+    def page_by_business(
+        self, business_id: BusinessId, window: KeysetSlice
+    ) -> list[ContactDocument]:
+        """One keyset page of the contacts, the newest first (CSV export)."""
+        raise NotImplementedError
+
 
 class ConversationListingContract(Protocol):
     def page_feed(

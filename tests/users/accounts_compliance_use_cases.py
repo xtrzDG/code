@@ -8,8 +8,20 @@ from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
+from app.repositories.business_repositories import ChannelRepository
+from app.repositories.call_follow_up_repositories import MissedCallRepository
+from app.repositories.delivery_repositories import (
+    InboundEventRepository,
+    OutboundMessageRepository,
+)
+from app.repositories.feedback_repositories import FeedbackRequestRepository
 from app.repositories.message_media_repository import MessageMediaRepository
+from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.feedback import FeedbackRequestDocument
+from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.message_media import MessageMediaDocument
+from app.schemas.domain.missed_calls import MissedCallDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.use_cases.compliance.accept_dpa_use_case import AcceptDpaUseCase
 from app.use_cases.compliance.collect_contact_records_use_case import (
     CollectContactRecordsUseCase,
@@ -29,6 +41,7 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from tests.media.media_fakes import InMemoryMediaStorage
+from tests.privacy.suppression_doubles import build_suppression_list
 from tests.users.accounts_user_use_cases import AccountsUserUseCases
 
 
@@ -42,6 +55,23 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
     ) -> None:
         super().__init__(environment_variables, enforce_step_up)
         wall_clock: WallClock[Microseconds] = self.clock.build_wall_clock()
+        # A visitor's traces outside their conversations, and the STOP list.
+        self.channel_repo = ChannelRepository(
+            InMemoryDocumentCollectionAdapter(ChannelDocument)
+        )
+        self.missed_call_repo = MissedCallRepository(
+            InMemoryDocumentCollectionAdapter(MissedCallDocument)
+        )
+        self.outbound_message_repo = OutboundMessageRepository(
+            InMemoryDocumentCollectionAdapter(OutboundMessageDocument)
+        )
+        self.inbound_event_repo = InboundEventRepository(
+            InMemoryDocumentCollectionAdapter(InboundEventDocument)
+        )
+        self.feedback_request_repo = FeedbackRequestRepository(
+            InMemoryDocumentCollectionAdapter(FeedbackRequestDocument)
+        )
+        self.suppression_list = build_suppression_list()
 
         collect_contact_records = CollectContactRecordsUseCase(
             contact_repo=self.contact_repo,
@@ -52,6 +82,11 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             lead_repo=self.lead_repo,
             handoff_repo=self.handoff_repo,
             note_repo=self.conversation_note_repo,
+            channel_repo=self.channel_repo,
+            missed_call_repo=self.missed_call_repo,
+            outbound_message_repo=self.outbound_message_repo,
+            inbound_event_repo=self.inbound_event_repo,
+            feedback_request_repo=self.feedback_request_repo,
         )
         self.legal_document_registry = LegalDocumentRegistry()
         self.accept_dpa = AcceptDpaUseCase(
@@ -101,6 +136,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
             step_up=self.step_up,
+            suppression_list=self.suppression_list,
         )
         # The voice notes and photos customers sent (erased with the data).
         self.media_storage = InMemoryMediaStorage()
@@ -125,6 +161,11 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             note_repo=self.conversation_note_repo,
             media_storage=self.media_storage,
             message_media_repo=self.message_media_repo,
+            suppression_list=self.suppression_list,
+            missed_call_repo=self.missed_call_repo,
+            outbound_message_repo=self.outbound_message_repo,
+            inbound_event_repo=self.inbound_event_repo,
+            feedback_request_repo=self.feedback_request_repo,
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(
             business_repo=self.business_repo,

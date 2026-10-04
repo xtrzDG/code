@@ -34,6 +34,9 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
+from app.containers.adapters.privacy_collections_container import (
+    PrivacyCollectionsContainer,
+)
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
 )
@@ -159,6 +162,7 @@ COLLECTION_CONTAINERS = (
     AnalyticsCollectionsContainer,
     MediaCollectionsContainer,
     OperationsCollectionsContainer,
+    PrivacyCollectionsContainer,
 )
 
 

@@ -1,0 +1,30 @@
+from dependency_injector import containers
+from dependency_injector.providers import DependenciesContainer, Singleton
+
+from app.containers.adapters.privacy_collections_container import (
+    PrivacyCollectionsContainer,
+)
+from app.repositories.privacy_repositories import (
+    BusinessExportRepository,
+    SuppressionEntryRepository,
+)
+
+
+class PrivacyRepositoriesContainer(containers.DeclarativeContainer):
+    """
+    The repositories of data-subject rights (migration 1113): the
+    suppression list and the full business exports. `RepositoriesContainer`
+    extends it, so they are read as `repositories.suppression_entry_repo`
+    like every other repository.
+    """
+
+    privacy_collections: PrivacyCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    suppression_entry_repo: Singleton[SuppressionEntryRepository] = Singleton(
+        SuppressionEntryRepository,
+        collection=privacy_collections.suppression_entry_collection,
+    )
+    business_export_repo: Singleton[BusinessExportRepository] = Singleton(
+        BusinessExportRepository,
+        collection=privacy_collections.business_export_collection,
+    )

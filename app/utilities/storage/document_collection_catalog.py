@@ -79,6 +79,7 @@ from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
+from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
     SIGN_IN_DOCUMENT_COLLECTIONS,
 )
@@ -280,9 +281,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *ACTIVATION_COLLECTIONS,
     # Alerts, backups and incidents of the platform itself (1093).
     *OPERATIONS_COLLECTIONS,
-    # Platform admins and support's time-boxed access to a business (1103).
+    # Platform admins and support's access (1103); suppression, exports (1113).
     *ACCESS_COLLECTIONS,
     *TEACHING_COLLECTIONS,  # The owner's own checks (1112).
+    *PRIVACY_COLLECTIONS,
 )
 
 

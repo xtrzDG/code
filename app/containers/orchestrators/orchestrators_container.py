@@ -51,6 +51,9 @@ from app.containers.orchestrators.platform_ops_orchestrators import (
 from app.containers.orchestrators.platform_orchestrators import (
     PlatformOrchestratorsContainer,
 )
+from app.containers.orchestrators.privacy_orchestrators import (
+    PrivacyOrchestratorsContainer,
+)
 from app.containers.orchestrators.security_orchestrators import (
     SecurityOrchestratorsContainer,
 )
@@ -98,6 +101,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     compliance: ComplianceOrchestratorsContainer = Container(  # type: ignore[assignment]
         ComplianceOrchestratorsContainer,
         compliance_use_cases=use_cases.compliance,
+    )
+    privacy: PrivacyOrchestratorsContainer = Container(  # type: ignore[assignment]
+        PrivacyOrchestratorsContainer,
+        privacy_use_cases=use_cases.privacy,
     )
     inbox: InboxOrchestratorsContainer = Container(  # type: ignore[assignment]
         InboxOrchestratorsContainer,

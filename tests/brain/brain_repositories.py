@@ -26,6 +26,7 @@ from app.repositories.knowledge_repositories import (
     KnowledgeItemRepository,
     ScheduleExceptionRepository,
 )
+from app.repositories.privacy_repositories import SuppressionEntryRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import UsageEventDocument
@@ -44,6 +45,7 @@ from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ScheduleExceptionDocument
+from app.schemas.domain.suppression import SuppressionEntryDocument
 from app.schemas.domain.users import UserDocument
 
 
@@ -65,6 +67,7 @@ class BrainRepositories:
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
     feedback_request_repo: FeedbackRequestRepository
+    suppression_entry_repo: SuppressionEntryRepository
 
 
 def build_brain_repositories() -> BrainRepositories:
@@ -126,5 +129,8 @@ def build_brain_repositories() -> BrainRepositories:
         ),
         feedback_request_repo=FeedbackRequestRepository(
             InMemoryDocumentCollectionAdapter(FeedbackRequestDocument)
+        ),
+        suppression_entry_repo=SuppressionEntryRepository(
+            InMemoryDocumentCollectionAdapter(SuppressionEntryDocument)
         ),
     )

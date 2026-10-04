@@ -7,6 +7,9 @@ from dependency_injector.providers import (
 )
 
 from app.adapters.events.live_event_bus_factory import build_live_event_bus_adapter
+from app.adapters.exports.export_archive_storage_factory import (
+    build_export_archive_storage,
+)
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
     CHAT_CALL_RETRY_LIMIT,
@@ -71,6 +74,7 @@ from app.containers.factories import (
 )
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.export_archives import ExportArchiveStorageContract
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.locks import AdvisoryLockAdapterContract
@@ -184,6 +188,12 @@ class AdaptersContainer(containers.DeclarativeContainer):
         CachedRecordingStorageAdapter,
         storage=platform_recording_storage,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # Archives of full business exports, beside the recordings.
+    export_archive_storage: Singleton[ExportArchiveStorageContract] = Singleton(
+        build_export_archive_storage,
+        settings=config.app_settings,
+        object_storage_client=clients.object_storage_client,
     )
 
     # --- Voice platform (ElevenLabs Agents), built with the call adapters.

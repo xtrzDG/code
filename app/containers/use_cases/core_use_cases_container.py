@@ -19,6 +19,7 @@ from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
+from app.containers.use_cases.privacy_use_cases import PrivacyUseCasesContainer
 from app.containers.use_cases.reply_speed_use_cases import ReplySpeedUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -29,7 +30,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     The edges every use case context draws on and the contexts the others
     build on: accounts (and their two-factor sign-in), the catalog,
     compliance, knowledge, menu import, scheduling, bookings, the team
-    inbox, follow-ups and reply speed. `UseCasesContainer` extends it
+    inbox, follow-ups, exports and reply speed. `UseCasesContainer` extends it
     with the contexts that depend on these and reads them as
     `CoreUseCasesContainer.<name>`; one instance copies all of them
     together, so the overridden edges reach every context.
@@ -148,6 +149,17 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         transformers=transformers,
         utilities=utilities,
         inbox_use_cases=inbox,
+    )
+    # Exports: the cabinet's tables as CSV, the full export of a business.
+    privacy: PrivacyUseCasesContainer = Container(  # type: ignore[assignment]
+        PrivacyUseCasesContainer,
+        adapters=adapters,
+        config=config,
+        facilitators=facilitators,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
     )
     # Customers' waits: grouped bursts, the turn deadline, measured replies.
     reply_speed: ReplySpeedUseCasesContainer = Container(  # type: ignore[assignment]

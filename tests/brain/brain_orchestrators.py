@@ -49,6 +49,7 @@ from tests.brain.brain_repositories import BrainRepositories
 from tests.brain.brain_tools import BrainTools
 from tests.brain.fake_claim_check import FakeClaimCheck
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
+from tests.privacy.suppression_doubles import build_suppression_list
 
 
 @dataclass(frozen=True)
@@ -131,6 +132,7 @@ def build_brain_orchestrators(
             text_resolver=texts,
             wall_clock=wall_clock,
             app_base_url=app_base_url,
+            suppression_list=build_suppression_list(repos.suppression_entry_repo),
         ),
     )
     voice_orchestrator = VoiceToolCallOrchestrator(

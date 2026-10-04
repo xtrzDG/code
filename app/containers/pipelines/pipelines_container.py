@@ -27,6 +27,7 @@ from app.containers.pipelines.platform_ops_pipelines import (
     PlatformOpsPipelinesContainer,
 )
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
+from app.containers.pipelines.privacy_pipelines import PrivacyPipelinesContainer
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
 from app.containers.pipelines.sharing_pipelines import SharingPipelinesContainer
@@ -59,6 +60,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     compliance: CompliancePipelinesContainer = Container(  # type: ignore[assignment]
         CompliancePipelinesContainer,
         compliance_orchestrators=orchestrators.compliance,
+    )
+    privacy: PrivacyPipelinesContainer = Container(  # type: ignore[assignment]
+        PrivacyPipelinesContainer,
+        privacy_orchestrators=orchestrators.privacy,
     )
     inbox: InboxPipelinesContainer = Container(  # type: ignore[assignment]
         InboxPipelinesContainer,

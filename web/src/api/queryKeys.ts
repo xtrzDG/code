@@ -198,6 +198,8 @@ export const queryKeys = {
     audit: (businessId: Id, filters: string) => ["settings", businessId, "audit", filters] as const,
     /** Settings → Team: whether the team must sign in with two factors. */
     security: (businessId: Id) => ["settings", businessId, "security"] as const,
+    /** Settings → Privacy: the latest full exports of the business. */
+    businessExports: (businessId: Id) => ["settings", businessId, "businessExports"] as const,
   },
 
   calls: {

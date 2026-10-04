@@ -125,6 +125,39 @@ Spec: `1cb3839d3a129574`
   and `autotest_case_id` on `AutotestScenarioResultView` (the check an
   `owner_check` scenario played).
 
+## 2026-10-04 — exports and data-subject rights: CSV tables, the full export
+
+Spec: `22e97080fdf6241b`
+
+- **Added** `GET /v1/businesses/{business_id}/exports/{table}` (owners,
+  after a recent sign-in or step-up: 401 `step_up_required`): the
+  cabinet's tables as CSV, `table` one of `bookings`, `leads`, `contacts`,
+  `conversations` (one row per message), `audit_log`; the lists' filters
+  (`from`, `to`, `status`, `resource_id`, `include_sandbox`, `order`,
+  `search`, `view`, `channel`, `action`, `entity`, `actor_id`, `since`,
+  `until`) and `language` for the headings. Streamed `text/csv` (UTF-8
+  with a byte order mark, values a spreadsheet would run as formulas get
+  a leading apostrophe), `Content-Disposition: attachment;
+  filename="<table>-<local date>.csv"`; erased customers left out;
+  audited once as EXPORT. Unknown `table`: 404.
+- **Added** `POST /v1/businesses/{business_id}/business-exports`
+  (`StartBusinessExportRequest` `{language?}`, owners, step-up): 202
+  `BusinessExportView`; the worker writes a ZIP (a JSON file per
+  collection, the CSV tables, README) into the export storage; while one
+  is queued or running it is returned. `GET …/business-exports`:
+  `BusinessExportList` of the latest ten, a READY one with
+  `download_path` (signed, `BUSINESS_EXPORT_LINK_HOURS`).
+- **Added** `GET /v1/business-exports/{business_id}/{export_id}/download?token=`
+  (no session: the token is the permission): `application/zip`,
+  `Cache-Control: no-store`; 404 for a wrong or expired token or a purged
+  archive. Audited.
+- **Changed** `ContactDataExport` gains `opt_out` (`opted_out_channels`,
+  `is_on_suppression_list`) and `records` gains `missed_calls`,
+  `outbound_messages`, `inbound_events`, `feedback_requests`;
+  `ContactErasureResult` gains `erased_missed_calls`,
+  `redacted_outbound_messages`, `redacted_inbound_events`,
+  `anonymized_feedback_requests` (additive).
+
 ## 2026-10-04 — wave 10 together: value where owners read, the phone loop, reply guard, sessions and support access
 
 Spec: `52268d9934c952f6`

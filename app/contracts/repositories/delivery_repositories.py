@@ -19,6 +19,8 @@ from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
@@ -85,6 +87,18 @@ class InboundEventRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
+    def list_by_customer(
+        self,
+        business_id: BusinessId,
+        channel_user_ids: Sequence[ChannelUserId],
+        conversation_ids: Sequence[ConversationId],
+    ) -> list[InboundEventDocument]:
+        """
+        The business's events a customer sent (from these accounts) or that
+        belong to their conversations, each once, oldest first (erasure).
+        """
+        raise NotImplementedError
+
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:
         raise NotImplementedError
 
@@ -124,6 +138,14 @@ class OutboundMessageRepoContract(RepoContract, Protocol):
         recipient_key: OutboundRecipientKey,
     ) -> list[OutboundMessageDocument]:
         """The recipient's messages still waiting, oldest first."""
+        raise NotImplementedError
+
+    def list_for_recipient(
+        self,
+        business_id: BusinessId,
+        recipient_key: OutboundRecipientKey,
+    ) -> list[OutboundMessageDocument]:
+        """Every message to the recipient, oldest first (export, erasure)."""
         raise NotImplementedError
 
     def delete_created_before(self, created_before: Microseconds) -> DocumentCount:

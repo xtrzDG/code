@@ -49,6 +49,9 @@ envVarGroups:
         value: production
       - key: ENCRYPTION_KEY
         generateValue: true
+      # Key of the STOP list's digests: generated once, never rotated.
+      - key: SUPPRESSION_LIST_KEY
+        generateValue: true
       # Render's proxies and the cabinet (private network) set X-Forwarded-For;
       # the audit log keeps client IPs. Only these hops are trusted, so uvicorn
       # reads the header from the right and a forged left-most entry is ignored
