@@ -44,7 +44,7 @@ export const tunnelTeamKa: Translation<typeof tunnelTeamEn> = {
     telegramLinked: "{name} შეტყობინებებს Telegram-ში იღებს.",
     telegramUnavailable: "Telegram ამ სერვერზე ჯერ არ არის მორგებული. აირჩიეთ სხვა გზა.",
     handoffTitle: "ადამიანს უძახებს, როცა",
-    handoffHint: "ამის შეცვლა მოგვიანებით შეგიძლიათ: ასისტენტი → საათები და წესები.",
+    handoffHint: "ამის შეცვლა მოგვიანებით შეგიძლიათ: ასისტენტი → ბიზნესის პროფილი → წესები.",
     errors: {
       none: "დაამატეთ ერთი ადამიანი მაინც: ვისაც დაუძახებს, მის გარეშე ასისტენტი ეთერში ვერ გავა.",
       name: "დაწერეთ სახელი.",

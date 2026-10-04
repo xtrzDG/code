@@ -127,10 +127,15 @@ def build_hotel_template() -> NicheTemplate:
                     ka="როგორ იცვლება ფასები სეზონების მიხედვით?",
                 ),
                 hints=text(
-                    en="Room prices go into the price list (use the attribute "
-                    "'season'); describe the season dates and rules here.",
-                    ru="Цены номеров — в прайсе (атрибут «season»); здесь опишите "
-                    "даты сезонов и правила.",
+                    en="Nightly prices by season are set on each room type in "
+                    "Assistant → Knowledge; describe the season dates and rules "
+                    "here.",
+                    ru="Цены за ночь по сезонам задаются у каждого типа номера в "
+                    "разделе «Помощник» → «Знания»; здесь опишите даты сезонов и "
+                    "правила.",
+                    ka="ღამის სეზონური ფასები თითოეული ოთახის ტიპს ეთითება "
+                    "განყოფილებაში „ასისტენტი“ → „ცოდნა“; აქ აღწერეთ სეზონების "
+                    "თარიღები და წესები.",
                 ),
             ),
             question(
@@ -194,8 +199,10 @@ def build_hotel_template() -> NicheTemplate:
                     ka="რომელ დაჯავშნის სისტემას (PMS) იყენებთ?",
                 ),
                 hints=text(
-                    en="Add the direct booking link in the links below.",
-                    ru="Ссылку на прямую бронь добавьте в ссылки ниже.",
+                    en="Add the direct booking link under Business → Links.",
+                    ru="Ссылку на прямую бронь добавьте в разделе «Бизнес» → «Ссылки».",
+                    ka="პირდაპირი ჯავშნის ბმული დაამატეთ განყოფილებაში „ბიზნესი“ "
+                    "→ „ბმულები“.",
                 ),
                 choices=[
                     choice(Choice("none"), "None", "Никакой", "არცერთს"),

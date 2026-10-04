@@ -88,6 +88,18 @@ def test_every_question_label_hint_and_choice_has_english_and_russian(
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=template_id)
+def test_every_question_label_and_hint_is_also_in_georgian(
+    template: NicheTemplate,
+) -> None:
+    """The profile's section editors show them in the cabinet's language."""
+
+    for question in template.questions:
+        assert has_languages(question.labels, "ka"), question.key
+        if question.hints is not None:
+            assert has_languages(question.hints, "ka"), question.key
+
+
+@pytest.mark.parametrize("template", TEMPLATES, ids=template_id)
 def test_question_and_fact_keys_are_unique_within_a_niche(
     template: NicheTemplate,
 ) -> None:

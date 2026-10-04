@@ -8,6 +8,7 @@ import {
   initialOfferRows,
   isOfferItem,
   offerSave,
+  pastedOfferRows,
   pricedCount,
   savedOfferRow,
 } from "./offer";
@@ -129,5 +130,33 @@ describe("offer rows", () => {
       editOfferRow(blankOfferRow("service", "x"), { title: "Brows" }),
     ];
     expect(pricedCount(rows, "EUR")).toBe(1);
+  });
+});
+
+describe("rows of the profile editor's offer table", () => {
+  it("drop the duration when the kind lasts no time", () => {
+    const haircut = editOfferRow(blankOfferRow("service", "new-1"), { title: "Haircut", duration: "45" });
+    expect(haircut.duration).toBe("45");
+    expect(editOfferRow(haircut, { kind: "product" }).duration).toBe("");
+    expect(editOfferRow(haircut, { kind: "package" }).duration).toBe("45");
+  });
+
+  it("come from pasted lines as the owner's own rows", () => {
+    const rows = pastedOfferRows(
+      [
+        { title: "Lobio", price: "12", duration: "" },
+        { title: "Supra", price: "90", duration: "180" },
+      ],
+      "menu_item",
+      (index) => `paste-${index}`,
+    );
+    expect(rows.map((row) => [row.key, row.title, row.price, row.duration, row.isSuggestion])).toEqual([
+      ["paste-0", "Lobio", "12", "", false],
+      ["paste-1", "Supra", "90", "", false],
+    ]);
+    expect(offerSave(rows[0]!, "GEL")).toEqual({
+      kind: "create",
+      body: { kind: "menu_item", title: "Lobio", price_minor: 1200, duration_minutes: null, is_active: true },
+    });
   });
 });

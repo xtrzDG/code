@@ -157,8 +157,9 @@ def build_entertainment_template() -> NicheTemplate:
                     ka="გაქვთ დაბადების დღის პაკეტები?",
                 ),
                 hints=text(
-                    en="Add each package with its price to the price list.",
-                    ru="Каждый пакет с ценой добавьте в прайс.",
+                    en="Add each package with its price under Offer.",
+                    ru="Каждый пакет с ценой добавьте в раздел «Что вы предлагаете».",
+                    ka="თითოეული პაკეტი ფასით დაამატეთ განყოფილებაში „რას სთავაზობთ“.",
                 ),
             ),
             question(

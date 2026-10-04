@@ -39,7 +39,7 @@ test("a settings tab from the old hash opens its own page", async ({ page, owner
   await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/settings/team$`));
 });
 
-test("the setup flow's old steps open under Hours and rules once the assistant exists", async ({ page, owner }) => {
+test("the setup flow's old steps open their section of the business profile once the assistant exists", async ({ page, owner }) => {
   await page.goto(`/b/${owner.businessId}/onboarding?step=booking_rules`);
-  await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant/profile\\?step=booking_rules$`));
+  await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant/profile/hours$`));
 });

@@ -81,10 +81,13 @@ def build_restaurant_template() -> NicheTemplate:
                     ka="სულ რამდენი დასაჯდომი ადგილი გაქვთ?",
                 ),
                 hints=text(
-                    en="Tables themselves are added as resources; the total helps "
-                    "to answer questions about groups.",
-                    ru="Сами столы добавляются как ресурсы; общее число помогает "
-                    "отвечать про группы.",
+                    en="Tables themselves are added in What customers book; the "
+                    "total helps to answer questions about groups.",
+                    ru="Сами столы добавляют в разделе «Что бронируют клиенты»; "
+                    "общее число помогает отвечать про группы.",
+                    ka="თავად მაგიდებს ამატებთ გვერდზე „რას ჯავშნიან კლიენტები“; "
+                    "საერთო რაოდენობა ასისტენტს ჯგუფებზე კითხვებზე პასუხში "
+                    "ეხმარება.",
                 ),
             ),
             question(
@@ -132,10 +135,12 @@ def build_restaurant_template() -> NicheTemplate:
                     ka="გაქვთ მიტანის სერვისი?",
                 ),
                 hints=text(
-                    en="Add the delivery link in the links step: the assistant "
-                    "sends it instead of taking delivery orders.",
-                    ru="Ссылку на доставку добавьте на шаге «Каналы и ссылки»: "
-                    "помощник отправит её вместо приёма заказа.",
+                    en="Add the delivery link under Business → Links: the "
+                    "assistant sends it instead of taking delivery orders.",
+                    ru="Ссылку на доставку добавьте в разделе «Бизнес» → "
+                    "«Ссылки»: помощник отправит её вместо приёма заказа.",
+                    ka="მიტანის ბმული დაამატეთ განყოფილებაში „ბიზნესი“ → "
+                    "„ბმულები“: ასისტენტი მას გაგზავნის შეკვეთის მიღების ნაცვლად.",
                 ),
                 choices=[
                     choice(
@@ -234,6 +239,8 @@ def build_restaurant_template() -> NicheTemplate:
                     "allergy question to staff.",
                     ru="Помощник повторяет только этот текст, остальные вопросы об "
                     "аллергии передаёт сотруднику.",
+                    ka="ასისტენტი მხოლოდ ამ ტექსტს იმეორებს, ალერგიაზე ყველა სხვა "
+                    "კითხვას კი თანამშრომელს გადასცემს.",
                 ),
             ),
         ],

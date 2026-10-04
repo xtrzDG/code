@@ -6,6 +6,10 @@
  * value that changed since the last save is sent, only a valid one, and
  * never two saves of the same screen at once (the later waits for the
  * earlier). Saves are reported to the top bar ("Saving…", "Saved").
+ *
+ * With `flushOnLeave` (the profile editor, where nothing waits for a
+ * Continue) what was typed in the last moment is saved when the screen
+ * goes away, and closing the tab before it is saved asks first.
  */
 
 import { useCallback, useEffect, useRef } from "react";
@@ -18,10 +22,12 @@ export interface AutosaveOptions<T> {
   enabled?: boolean;
   /** A value that cannot be saved yet waits (the screen shows why on Continue). */
   isValid?: (value: T) => boolean;
+  /** Save the last change when the screen unmounts, and warn before the tab closes with one unsaved. */
+  flushOnLeave?: boolean;
 }
 
 export function useAutosave<T>(value: T, save: (value: T) => Promise<boolean>, options: AutosaveOptions<T> = {}) {
-  const { delayMs = 900, enabled = true, isValid } = options;
+  const { delayMs = 900, enabled = true, isValid, flushOnLeave = false } = options;
   const track = useSaveTracker();
   const key = JSON.stringify(value);
   const saved = useRef<string | null>(null);
@@ -69,6 +75,25 @@ export function useAutosave<T>(value: T, save: (value: T) => Promise<boolean>, o
       }
     };
   }, [enabled, key, delayMs, run]);
+
+  useEffect(() => {
+    if (!enabled || !flushOnLeave) {
+      return;
+    }
+    const isDirty = () => saved.current !== null && latest.current.key !== saved.current;
+    const warn = (event: BeforeUnloadEvent) => {
+      if (isDirty()) {
+        void run();
+        event.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      // Unchanged or not valid values are not sent (run() checks both).
+      void run();
+    };
+  }, [enabled, flushOnLeave, run]);
 
   /**
    * Save now what is not saved yet, and wait for every save of the screen.

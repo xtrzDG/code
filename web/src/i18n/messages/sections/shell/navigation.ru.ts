@@ -18,7 +18,7 @@ export const navigationRu: Translation<typeof navigationEn> = {
     assistant: "Попробуйте помощника, научите его, выберите, где он отвечает, и примените изменения.",
     settings: "Ваш бизнес, команда, уведомления, быстрые ответы, звонки, отзывы, тариф, приватность и журнал действий.",
     assistantTest: "Пишите так, как написал бы клиент. Настоящим клиентам ничего не уйдёт.",
-    assistantProfile: "Контакты, часы работы, что вы предлагаете, правила брони и когда звать человека — анкета, по которой работает помощник.",
+    assistantProfile: "Что помощник знает о бизнесе: место, предложение, часы и брони, люди и правила. Изменения сохраняются, пока вы печатаете.",
     assistantVersions: "Каждое обновление помощника с проверками, публикацией и возвратом.",
   },
   pages: {
@@ -26,7 +26,7 @@ export const navigationRu: Translation<typeof navigationEn> = {
     overviewReports: "Отчёты",
     assistantTest: "Попробовать",
     assistantKnowledge: "Знания",
-    assistantProfile: "Часы и правила",
+    assistantProfile: "Профиль бизнеса",
     assistantChannels: "Каналы",
     assistantVersions: "Обновления и проверки",
     settingsGeneral: "Бизнес",

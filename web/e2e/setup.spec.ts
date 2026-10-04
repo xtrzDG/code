@@ -29,10 +29,10 @@ test("a new business shows only Create an AI assistant until the assistant exist
   await page.goto(`/b/${newOwner.businessId}/onboarding`);
   await expect(page).toHaveURL(new RegExp(`/b/${newOwner.businessId}/setup$`));
 
-  // The assistant is created: the sections open and the setup flow becomes Hours and rules.
+  // The assistant is created: the sections open and the setup flow's old step opens its section of the business profile.
   await createAssistant(request, newOwner.token, newOwner.businessId);
   await page.goto(`/b/${newOwner.businessId}/onboarding?step=offer`);
-  await expect(page).toHaveURL(new RegExp(`/b/${newOwner.businessId}/assistant/profile\\?step=offer$`));
+  await expect(page).toHaveURL(new RegExp(`/b/${newOwner.businessId}/assistant/profile/offer$`));
   await expect(page.getByRole("heading", { level: 1, name: en.navigation.sections.assistant })).toBeVisible();
   for (const section of Object.values(en.navigation.sections)) {
     await expect(navigation.getByRole("link", { name: section, exact: true })).toBeVisible();

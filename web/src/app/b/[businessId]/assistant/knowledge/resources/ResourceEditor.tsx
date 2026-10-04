@@ -7,6 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import type { OpeningInterval, ResourceKind, Weekday } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { HoursEditor, hoursToRows, rowsToHours, type DayRows } from "@/components/setup/hours/HoursEditor";
 import { Button, Checkbox, Field, Fieldset, Input, Modal, Radio, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
@@ -26,7 +27,6 @@ import {
   type ResourceView,
 } from "@/lib/resources";
 
-import { HoursEditor, hoursToRows, rowsToHours, type DayRows } from "../../profile/_components/HoursEditor";
 import { ResourceOfferFields } from "./_components/ResourceOfferFields";
 
 export const RESOURCE_KIND_LABELS: Record<ResourceKind, MessageKey> = {

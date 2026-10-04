@@ -4,19 +4,26 @@
  * Step 4, "When are you open?": the week prefilled with the usual hours of
  * the niche (or what the business saved), how bookings work for niches
  * that take them, and the niche's required questions about hours and
- * bookings (a hotel's check-in time).
+ * bookings (a hotel's check-in time). In the edit mode it is "Hours and
+ * bookings" of Assistant → Business profile (HoursEdit).
  */
 
-import { HoursEditor } from "@/app/b/[businessId]/assistant/profile/_components/HoursEditor";
 import { useI18n } from "@/i18n/client";
 
 import { QuestionField } from "../fields/QuestionField";
 import { StepScreen } from "../StepScreen";
 import type { StepContext } from "../flow/stepContext";
+import type { StepMode } from "../stepMode";
 import { BookingFields } from "./BookingFields";
+import { HoursEdit } from "./HoursEdit";
+import { HoursEditor } from "./HoursEditor";
 import { useHoursStep } from "./useHoursStep";
 
-export function HoursScreen({ ctx }: { ctx: StepContext }) {
+export function HoursScreen({ ctx, mode = "tunnel" }: { ctx: StepContext; mode?: StepMode }) {
+  return mode === "edit" ? <HoursEdit ctx={ctx} /> : <HoursTunnel ctx={ctx} />;
+}
+
+function HoursTunnel({ ctx }: { ctx: StepContext }) {
   const { t } = useI18n();
   const step = useHoursStep(ctx);
 

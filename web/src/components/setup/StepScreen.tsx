@@ -7,9 +7,13 @@
  * button, a link or a field that keeps Enter for itself (the test chat's
  * box, marked `data-enter="own"`); the question takes the focus when the
  * screen arrives, so keyboard and screen-reader users start at the top.
+ *
+ * In the edit mode (Assistant → Business profile) the same screen is a
+ * section of a cabinet page: its title, a line of help and the fields,
+ * which save themselves; no step counter, no Continue, no Enter to go on.
  */
 
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import { IconArrowLeft, IconArrowRight } from "@/components/icons";
 import { Button } from "@/components/ui";
@@ -17,6 +21,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { stepNumber, TUNNEL_STEPS, type TunnelStep } from "@/lib/tunnel/steps";
 
+import type { StepMode } from "./stepMode";
 import { TunnelVeil } from "./TunnelVeil";
 
 export interface StepActions {
@@ -51,16 +56,7 @@ export function isContinueKey(event: Pick<KeyboardEvent, "key" | "shiftKey" | "a
   return type !== "checkbox" && type !== "radio";
 }
 
-export function StepScreen({
-  step,
-  title,
-  text,
-  children,
-  actions,
-  aside,
-  wide = false,
-}: {
-  step: TunnelStep;
+interface ScreenProps {
   title: string;
   text?: ReactNode;
   children?: ReactNode;
@@ -69,7 +65,31 @@ export function StepScreen({
   aside?: ReactNode;
   /** A wider column (the offer table, the test chat). */
   wide?: boolean;
-}) {
+}
+
+/** `edit`: a section of Assistant → Business profile (no counter, no way on), which may be no tunnel step at all. */
+export type StepScreenProps = ScreenProps & ({ mode?: Extract<StepMode, "tunnel">; step: TunnelStep } | { mode: Extract<StepMode, "edit">; step?: TunnelStep });
+
+export function StepScreen(props: StepScreenProps) {
+  return props.mode === "edit" ? <EditScreen {...props} /> : <TunnelScreen {...props} />;
+}
+
+/** The edit mode: the section's title and help over its fields, which save themselves. */
+function EditScreen({ title, text, children, aside, wide = false }: ScreenProps) {
+  const headingId = useId();
+  return (
+    <section aria-labelledby={headingId} className={cn("w-full", wide ? "max-w-4xl" : "max-w-3xl")}>
+      <h2 id={headingId} className="text-xl font-semibold tracking-tight text-balance text-ink sm:text-2xl">
+        {title}
+      </h2>
+      {text ? <p className="mt-1.5 max-w-2xl text-sm text-pretty text-ink-muted sm:text-base">{text}</p> : null}
+      {children ? <div className="mt-6 sm:mt-8">{children}</div> : null}
+      {aside ? <div className="mt-6">{aside}</div> : null}
+    </section>
+  );
+}
+
+function TunnelScreen({ step, title, text, children, actions, aside, wide = false }: ScreenProps & { step: TunnelStep }) {
   const { t } = useI18n();
   const heading = useRef<HTMLHeadingElement>(null);
   const screen = useRef<HTMLDivElement>(null);

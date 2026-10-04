@@ -96,10 +96,14 @@ def build_beauty_salon_template() -> NicheTemplate:
                     ka="რომელ მომსახურებას ასრულებს თითოეული ოსტატი?",
                 ),
                 hints=text(
-                    en="Masters are added as resources; describe here who does "
-                    "what, for example 'Nino: manicure, pedicure'.",
-                    ru="Мастера добавляются как ресурсы; здесь опишите, кто что "
-                    "делает, например «Нино: маникюр, педикюр».",
+                    en="Masters are added in What customers book; describe here "
+                    "who does what, for example 'Nino: manicure, pedicure'.",
+                    ru="Мастеров добавляют в разделе «Что бронируют клиенты»; "
+                    "здесь опишите, кто что делает, например «Нино: маникюр, "
+                    "педикюр».",
+                    ka="ოსტატებს ამატებთ გვერდზე „რას ჯავშნიან კლიენტები“; აქ "
+                    "აღწერეთ, ვინ რას აკეთებს, მაგალითად: „ნინო: მანიკური, "
+                    "პედიკური“.",
                 ),
             ),
             question(

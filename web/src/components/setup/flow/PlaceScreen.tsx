@@ -3,7 +3,8 @@
 /**
  * Step 2 for a business that exists: its country (fixed), city, languages
  * and time zone (saved on Continue) and the address (saved by itself a
- * moment after it is typed).
+ * moment after it is typed). In the edit mode it is "Place" of Assistant
+ * → Business profile (edit/PlaceEdit).
  */
 
 import { useState } from "react";
@@ -11,14 +12,20 @@ import { useState } from "react";
 import { useNiches } from "@/api/catalog";
 import { useBusiness } from "@/components/business/BusinessContext";
 
+import { PlaceEdit } from "../edit/PlaceEdit";
 import { PlaceStep } from "../steps/PlaceStep";
+import type { StepMode } from "../stepMode";
 import { useAutosave } from "../useAutosave";
 import { usePlace, type PlaceForm } from "../usePlace";
 import type { StepContext } from "./stepContext";
 import { useBusinessSave } from "./useBusinessSave";
 import { useProfilePatch } from "./useProfilePatch";
 
-export function PlaceScreen({ ctx }: { ctx: StepContext }) {
+export function PlaceScreen({ ctx, mode = "tunnel" }: { ctx: StepContext; mode?: StepMode }) {
+  return mode === "edit" ? <PlaceEdit ctx={ctx} /> : <PlaceTunnel ctx={ctx} />;
+}
+
+function PlaceTunnel({ ctx }: { ctx: StepContext }) {
   const { business, me } = useBusiness();
   const niches = useNiches();
   const takesBookings = niches.data?.niches.find((niche) => niche.key === business.niche_key)?.takes_bookings ?? false;

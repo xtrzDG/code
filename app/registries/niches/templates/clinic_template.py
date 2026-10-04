@@ -124,8 +124,12 @@ def build_clinic_template() -> NicheTemplate:
                     ka="ექიმები და მათი სპეციალიზაციები",
                 ),
                 hints=text(
-                    en="Doctors are added as resources; describe here who treats what.",
-                    ru="Врачи добавляются как ресурсы; здесь опишите, кто что лечит.",
+                    en="Doctors are added in What customers book; describe here "
+                    "who treats what.",
+                    ru="Врачей добавляют в разделе «Что бронируют клиенты»; здесь "
+                    "опишите, кто что лечит.",
+                    ka="ექიმებს ამატებთ გვერდზე „რას ჯავშნიან კლიენტები“; აქ "
+                    "აღწერეთ, ვინ რას მკურნალობს.",
                 ),
             ),
             question(
@@ -160,6 +164,8 @@ def build_clinic_template() -> NicheTemplate:
                 hints=text(
                     en="For example: documents to bring, fasting before tests.",
                     ru="Например: какие документы взять, натощак ли сдавать анализы.",
+                    ka="მაგალითად: რა დოკუმენტები წამოიღონ, ანალიზები უზმოზე "
+                    "ჩააბარონ თუ არა.",
                 ),
             ),
             question(
@@ -177,6 +183,8 @@ def build_clinic_template() -> NicheTemplate:
                     "passes the conversation to staff.",
                     ru="Помощник всегда добавляет местный номер экстренной службы "
                     "и передаёт разговор сотруднику.",
+                    ka="ასისტენტი ყოველთვის ამატებს ადგილობრივი გადაუდებელი "
+                    "სამსახურის ნომერს და საუბარს თანამშრომელს გადასცემს.",
                 ),
             ),
         ],
