@@ -14,6 +14,7 @@ import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
+import { BillingDetailsCard } from "./_components/BillingDetailsCard";
 import { BillingDialogs } from "./_components/BillingDialogs";
 import { BillingNotices } from "./_components/BillingNotices";
 import { BillingSkeleton } from "./_components/BillingSkeleton";
@@ -35,7 +36,7 @@ const CHECKOUT_RETURN_POLL_MS = 5_000;
 
 function skipReload(): void {}
 
-/** /billing: subscription, package usage, plans, invoices, payment (owner only). */
+/** /billing: subscription, package usage, plans, invoices with their PDFs, billing details, payment (owner only). */
 export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -138,6 +139,8 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
           <SetupOptionsNote subscription={data.subscription} />
 
           <InvoicesCard invoices={data.invoices} />
+
+          <BillingDetailsCard />
         </div>
       )}
 
