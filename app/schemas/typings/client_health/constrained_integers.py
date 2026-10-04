@@ -21,6 +21,12 @@ class HandoffCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class MeasuredReplyCount(BaseConstrainedTypedInt):
+    """Assistant replies with a measured latency in a time window."""
+
+    ge = 0
+
+
 class OpenQuestionCount(BaseConstrainedTypedInt):
     """Unanswered customer questions not yet resolved by the owner."""
 

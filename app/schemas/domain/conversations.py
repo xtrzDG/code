@@ -21,13 +21,16 @@ from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import (
     IsAfterHours,
+    IsFallbackModel,
     IsLlmToolError,
     IsSandboxConversation,
 )
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
+    LlmRoundCount,
     LlmTokenCount,
     LlmTurnSequenceNumber,
+    ReplyLatencyMilliseconds,
 )
 from app.schemas.typings.conversations.prefixed_id import (
     CallId,
@@ -119,9 +122,18 @@ class MessageDocument(BaseDocument):
     note.
 
     Version 2: `attachments` (optional, so version 1 rows read as they are).
+
+    Version 3: how an assistant reply was made, for reply-speed metrics:
+    `channel` (the conversation's, so latency groups per channel in the
+    database), `reply_latency_ms` (from the platform delivering the
+    customer's first unanswered message to the reply being stored; None
+    when not measured, e.g. test chats and older rows), `llm_round_count`
+    and `is_fallback_model` (a model of the other provider answered because
+    the version's own failed). All optional, so version 2 rows read as they
+    are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId
@@ -138,6 +150,10 @@ class MessageDocument(BaseDocument):
     attachments: list[MessageAttachment] = Field(
         default_factory=list[MessageAttachment]
     )
+    channel: ChannelKind | None = None
+    reply_latency_ms: ReplyLatencyMilliseconds | None = None
+    llm_round_count: LlmRoundCount = LlmRoundCount(0)
+    is_fallback_model: IsFallbackModel = False
 
 
 class LlmTurnDocument(BaseDocument):
@@ -145,13 +161,21 @@ class LlmTurnDocument(BaseDocument):
     One raw language-model turn, stored verbatim and only ever appended.
 
     The turns of a conversation are replayed to the model in order.
+
+    Version 2: `canonical_payload`, the turn in the provider-neutral form
+    (an assistant turn's text and tool calls, without the provider's
+    reasoning or signatures) that a model of another provider is sent when
+    the conversation's own model fails. None: `payload` is already
+    canonical (user and tool-result turns, turns stored before version 2).
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: LlmTurnId = Field(default_factory=LlmTurnId)
     conversation_id: ConversationId
     sequence_number: LlmTurnSequenceNumber
     role: LlmTurnRole
     payload: LlmProviderPayload
+    canonical_payload: LlmProviderPayload | None = None
 
 
 class CallSummary(PersistentDocument):

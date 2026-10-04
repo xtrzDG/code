@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081 and 1082), each ELEMENT_TEXT field a trigger over
+1074, 1081, 1082 and 1090), each ELEMENT_TEXT field a trigger over
 `workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
 and checks queries against this catalog.
 """
@@ -106,6 +106,9 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _integer("output_tokens"),
         _integer("cost_micro_usd"),
         _element("tool_calls[].is_error"),
+        # Reply latency per channel (admin client health, 1090).
+        _filter("channel"),
+        _integer("reply_latency_ms"),
     ),
     DocumentCollectionName("llm_turns"): (
         _text("conversation_id"),

@@ -16,8 +16,25 @@ class ContactMessageLimit(BaseConstrainedTypedInt):
     le = 10000
 
 
+class ChatTurnDeadlineSeconds(BaseConstrainedTypedInt):
+    """
+    Seconds a customer of a messaging channel waits, from their first
+    unanswered message, before the assistant sends a short "one moment"
+    (CHAT_TURN_DEADLINE_SECONDS).
+    """
+
+    ge = 1
+    le = 600
+
+
 class ConversationMessageCount(BaseConstrainedTypedInt):
     """Number of stored messages in one conversation."""
+
+    ge = 0
+
+
+class LlmRoundCount(BaseConstrainedTypedInt):
+    """Language-model calls one assistant reply took (tool rounds and rewrite)."""
 
     ge = 0
 
@@ -34,6 +51,17 @@ class LlmTurnSequenceNumber(BaseConstrainedTypedInt):
     ge = 0
 
 
+class MessageCoalesceSeconds(BaseConstrainedTypedInt):
+    """
+    Quiet seconds the worker waits after a customer's latest message before
+    answering, so quick messages in a row get one reply
+    (MESSAGE_COALESCE_SECONDS; 0 answers at once).
+    """
+
+    ge = 0
+    le = 60
+
+
 class RecordingByteCount(BaseConstrainedTypedInt):
     """How many bytes of a call recording (its length, or a part's)."""
 
@@ -42,6 +70,15 @@ class RecordingByteCount(BaseConstrainedTypedInt):
 
 class RecordingByteOffset(BaseConstrainedTypedInt):
     """Where a byte of a call recording lies, counted from 0."""
+
+    ge = 0
+
+
+class ReplyLatencyMilliseconds(BaseConstrainedTypedInt):
+    """
+    Milliseconds from the platform delivering a customer's (first
+    unanswered) message to the assistant's reply being stored.
+    """
 
     ge = 0
 
