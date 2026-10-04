@@ -12,8 +12,8 @@ from app.containers.utilities import UtilitiesContainer
 class ValueOperatorsContainer(containers.DeclarativeContainer):
     """
     Operators of the value context: the cabinet's endpoints run in the
-    storage scope of their business; the hourly report job walks every
-    business (platform-wide).
+    storage scope of their business; the hourly report and topics jobs walk
+    every business (platform-wide).
     """
 
     value_pipelines: ValuePipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -46,4 +46,13 @@ class ValueOperatorsContainer(containers.DeclarativeContainer):
     )
     send_value_reports_operator = platform_pipeline_operator(
         value_pipelines.send_value_reports_pipeline, storage_scope
+    )
+    get_customer_sources_operator = pipeline_operator(
+        value_pipelines.get_customer_sources_pipeline, storage_scope
+    )
+    get_conversation_topics_operator = pipeline_operator(
+        value_pipelines.get_conversation_topics_pipeline, storage_scope
+    )
+    group_conversation_topics_operator = platform_pipeline_operator(
+        value_pipelines.group_conversation_topics_pipeline, storage_scope
     )

@@ -62,6 +62,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "setup.notice_milestones_operator": "periodic job over every business",
     "setup.send_activation_nudges_operator": "periodic job over every business",
     "value.send_value_reports_operator": "periodic job over every business",
+    "value.group_conversation_topics_operator": "periodic job over every business",
 }
 
 

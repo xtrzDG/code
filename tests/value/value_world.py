@@ -98,19 +98,22 @@ class ValueWorld(OperationsWorld):
             value_settings_repo=self.value_settings_repo,
         )
 
+    def value_sources(self) -> ValueSources:
+        return ValueSources(
+            conversation_repo=self.conversation_repo,
+            message_repo=self.message_repo,
+            booking_repo=self.booking_repo,
+            lead_repo=self.lead_repo,
+            handoff_repo=self.handoff_repo,
+            value_count_repo=self.value_count_repo,
+        )
+
     def compute_value(self) -> ComputeValueModelUseCase:
         return ComputeValueModelUseCase(
             business_repo=self.business_repo,
             business_profile_repo=self.profile_repo,
             schedule_exception_repo=self.exception_repo,
-            sources=ValueSources(
-                conversation_repo=self.conversation_repo,
-                message_repo=self.message_repo,
-                booking_repo=self.booking_repo,
-                lead_repo=self.lead_repo,
-                handoff_repo=self.handoff_repo,
-                value_count_repo=self.value_count_repo,
-            ),
+            sources=self.value_sources(),
             catalogs=self.catalogs(),
         )
 

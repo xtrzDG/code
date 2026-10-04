@@ -9,6 +9,8 @@ assistant in every other chat.
   conversation passed to a person, the reply's script) can fail.
 - The AI customer (its instruction) says one sentence for its goal in the
   scenario language, with its phone number when it books, then [DONE].
+- The topic grouping (its instruction) puts what customers asked into
+  topics by keywords (`rehearsal_topics.py`).
 - The assistant (anything else) answers in the language the platform read
   the customer's message in (the context line), else the one it tells: it
   books the first free time of the next days when asked to book, passes
@@ -53,8 +55,11 @@ from app.utilities.llm_rehearsal.rehearsal_reading import (
     read_blocks,
     read_customer_goal,
     read_reply_language,
+    read_texts,
     read_turn,
 )
+from app.utilities.llm_rehearsal.rehearsal_topics import rehearse_topics
+from app.utilities.value.topic_grouping import TOPIC_SYSTEM_PROMPT
 
 PERFECT_SCORE: int = 5
 REHEARSAL_PARTY_SIZE: int = 1
@@ -80,6 +85,9 @@ def play_rehearsal_turn(request: LlmRequest) -> ScriptedLlmTurn:
 
     if str(request.system_prompt).startswith(CUSTOMER_PERSONA_OPENING):
         return play_customer(request)
+
+    if str(request.system_prompt) == TOPIC_SYSTEM_PROMPT:
+        return say(rehearse_topics(read_texts(request.transcript[-1])))
 
     return play_assistant(request)
 

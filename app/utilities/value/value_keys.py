@@ -1,12 +1,14 @@
 """
 Identities of the value context: the settings of a business, one owner's
-digest choices and one stored report per business, kind and period.
+digest choices, one stored report per business, kind and period, and the
+topics customers of a business ask about.
 """
 
 from uuid import UUID, uuid5
 
 from app.schemas.constants.value import ValueReportKind
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.insights.prefixed_id import ConversationTopicsId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.value.constrained_strings import ValueReportPeriodKey
 from app.schemas.typings.value.prefixed_id import (
@@ -20,6 +22,7 @@ from app.schemas.typings.value.prefixed_id import (
 VALUE_SETTINGS_NAMESPACE: UUID = UUID("2f6b9d14-7c3a-4e85-b1f0-8a4d2c6e9b31")
 DIGEST_PREFERENCES_NAMESPACE: UUID = UUID("c47e2a90-15d8-4b3f-9e6a-0d1f7b8c2e54")
 VALUE_REPORT_NAMESPACE: UUID = UUID("8d3c5f27-a196-4e0b-8c74-5e2b9a1d6f03")
+CONVERSATION_TOPICS_NAMESPACE: UUID = UUID("5a1e8c3d-92f4-4b07-a6d2-7c9e0f4b13a8")
 
 
 def value_settings_id_of(business_id: BusinessId) -> ValueSettingsId:
@@ -49,3 +52,9 @@ def value_report_id_of(
     return ValueReportId(
         uuid5(VALUE_REPORT_NAMESPACE, f"{business_id}|{kind.value}|{period_key}")
     )
+
+
+def conversation_topics_id_of(business_id: BusinessId) -> ConversationTopicsId:
+    """One topics document per business, replaced by every night's grouping."""
+
+    return ConversationTopicsId(uuid5(CONVERSATION_TOPICS_NAMESPACE, str(business_id)))

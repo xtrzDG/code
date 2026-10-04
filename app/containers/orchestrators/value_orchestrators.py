@@ -8,7 +8,8 @@ from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
 class ValueOrchestratorsContainer(containers.DeclarativeContainer):
     """
     Orchestrators of the value context: the value of a period, the average
-    check, digest choices, stored reports, today's queue and the report job.
+    check, digest choices, stored reports, today's queue and the report job;
+    customer sources, the topics and their nightly job.
     """
 
     value_use_cases: ValueUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -39,4 +40,13 @@ class ValueOrchestratorsContainer(containers.DeclarativeContainer):
     )
     send_value_reports_orchestrator = use_case_orchestrator(
         value_use_cases.send_value_reports_use_case
+    )
+    get_customer_sources_orchestrator = use_case_orchestrator(
+        value_use_cases.get_customer_sources_use_case
+    )
+    get_conversation_topics_orchestrator = use_case_orchestrator(
+        value_use_cases.get_conversation_topics_use_case
+    )
+    group_conversation_topics_orchestrator = use_case_orchestrator(
+        value_use_cases.group_conversation_topics_use_case
     )

@@ -96,6 +96,7 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         feedback_request_repo=repositories.feedback_request_repo,
         message_media_repo=repositories.message_media_repo,
         media_storage=adapters.media.media_storage,
+        conversation_topics_repo=repositories.conversation_topics_repo,
         app_settings=config.app_settings,
     )
     # `workshop seed-load`: owners and plans, then each business's bulk history.

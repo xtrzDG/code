@@ -95,15 +95,15 @@ class OperationsStore:
         self.contact_repo = ContactRepository(
             InMemoryDocumentCollectionAdapter[ContactDocument](ContactDocument)
         )
-        self.conversation_repo = ConversationRepository(
-            InMemoryDocumentCollectionAdapter[ConversationDocument](
-                ConversationDocument
-            )
-        )
+        self.conversation_collection = InMemoryDocumentCollectionAdapter[
+            ConversationDocument
+        ](ConversationDocument)
+        self.conversation_repo = ConversationRepository(self.conversation_collection)
         self.message_repo = MessageRepository(
             InMemoryDocumentCollectionAdapter[MessageDocument](MessageDocument)
         )
         lead_collection = InMemoryDocumentCollectionAdapter[LeadDocument](LeadDocument)
+        self.lead_collection = lead_collection
         self.lead_repo = LeadRepository(lead_collection)
         handoff_collection = InMemoryDocumentCollectionAdapter[HandoffDocument](
             HandoffDocument

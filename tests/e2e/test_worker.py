@@ -26,6 +26,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     CHECK_CHANNEL_CREDENTIALS_JOB,
 )
+from app.gateways.worker.periodic.group_conversation_topics import (
+    GROUP_CONVERSATION_TOPICS_JOB,
+)
 from app.gateways.worker.periodic.growth_analytics import (
     PURGE_WEB_VITALS_JOB,
     RECONCILE_PRODUCT_EVENTS_JOB,
@@ -97,6 +100,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SWEEP_RATE_LIMIT_BUCKETS_JOB, 600),
         (SWEEP_STALE_INBOUND_EVENTS_JOB, 300),
         (SEND_VALUE_REPORTS_JOB, 3_600),
+        (GROUP_CONVERSATION_TOPICS_JOB, 3_600),
         (REQUEST_VISIT_FEEDBACK_JOB, 600),
         (REFRESH_EXCHANGE_RATES_JOB, 21_600),
         (PURGE_WEB_VITALS_JOB, 86_400),
@@ -124,14 +128,14 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (20, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (21, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep
     # of rate-limit counters, the inbox sweep, the owners' value reports,
-    # the feedback requests, the milestones, the activation nudges, the
-    # platform alerts and the Meta token check.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (13, 0)
+    # the customers' topics, the feedback requests, the milestones, the
+    # activation nudges, the platform alerts and the Meta token check.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (14, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

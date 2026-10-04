@@ -37,3 +37,12 @@ class ValuePipelinesContainer(containers.DeclarativeContainer):
     send_value_reports_pipeline = orchestrator_pipeline(
         value.send_value_reports_orchestrator
     )
+    get_customer_sources_pipeline = orchestrator_pipeline(
+        value.get_customer_sources_orchestrator
+    )
+    get_conversation_topics_pipeline = orchestrator_pipeline(
+        value.get_conversation_topics_orchestrator
+    )
+    group_conversation_topics_pipeline = orchestrator_pipeline(
+        value.group_conversation_topics_orchestrator
+    )

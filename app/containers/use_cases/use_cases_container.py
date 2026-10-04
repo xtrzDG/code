@@ -255,6 +255,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     value: ValueUseCasesContainer = Container(  # type: ignore[assignment]
         ValueUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,

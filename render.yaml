@@ -217,6 +217,9 @@ services:
       # booking reminders after the customer's 24-hour WhatsApp window
       - key: WHATSAPP_REMINDER_TEMPLATE
         sync: false
+      # owners' summaries in WhatsApp from the platform number
+      - key: WHATSAPP_OWNER_REPORT_TEMPLATE
+        sync: false
       - key: TELEGRAM_PLATFORM_BOT_TOKEN
         sync: false
       # staff notifications on cabinet devices (Web Push, VAPID)
@@ -503,6 +506,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: WHATSAPP_REMINDER_TEMPLATE
+      - key: WHATSAPP_OWNER_REPORT_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_OWNER_REPORT_TEMPLATE
       - key: TELEGRAM_PLATFORM_BOT_TOKEN
         fromService:
           type: web

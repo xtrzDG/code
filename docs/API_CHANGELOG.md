@@ -11,6 +11,47 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-04 — value where owners read: return on the plan, summary channels, customer sources, topics
+
+Spec: `17fed056871cbc6c`
+
+- **Added** `GET /v1/businesses/{business_id}/value/sources` (owners;
+  `period` or `from`/`to` like `/value`): `CustomerSourcesView`, one
+  `CustomerSourceRow` per source of the period (`kind`: `tagged`, a tag
+  with the channels it came through; `untagged`, one channel's
+  conversations without a tag; `other`, the smallest tags folded together
+  with `source_count`) with `conversation_count`, `booking_count` (kept
+  bookings made in the period in the source's conversations),
+  `request_count` and `estimated_value_minor` (own values, the rest at the
+  average check; null when nothing prices them).
+- **Added** `GET /v1/businesses/{business_id}/value/topics` (owners and
+  staff): `ConversationTopicsView`, what customers asked about in the last
+  30 days as the nightly grouping stored it: `TopicLanguageView` per
+  customer language with up to 12 `ConversationTopicView` (`label` in the
+  owner's language, `conversation_count`, `unanswered_count`). Never
+  grouped: no window, no groups.
+- **Changed** `ValueModel` (`GET /value`) and `ValueReportView` gain
+  `plan_cost_minor` (the plan's price for the period's days) and
+  `return_multiple` (the estimate divided by it, one decimal); both null
+  when the plan is priced in another currency or free, and for staff.
+- **Changed** `DigestPreferencesView` gains `channels` (`DigestChannel`:
+  `email`, `push`, `telegram`, `whatsapp`), `telegram_chat`,
+  `telegram_chats` (`DigestTelegramChatView`, the business's chats linked
+  to the platform bot), `is_telegram_ready`, `whatsapp_number`,
+  `suggested_whatsapp_number` and `is_whatsapp_ready`; the
+  `PUT /digest-preferences` body takes optional `channels`,
+  `telegram_chat` and `whatsapp_number` (null keeps what is stored) and
+  answers 422 with reason `telegram_not_available`,
+  `telegram_chat_not_linked`, `whatsapp_not_available` or
+  `whatsapp_number_missing` when a chosen channel cannot reach the owner.
+- **Changed** `InboxItemView` and `ConversationDocument` gain
+  `acquisition_source`, where the customer came from (a link's tag, a QR
+  code, an ad, `tel-<digits>` for the line called).
+- **Changed** the widget's `POST /v1/widget/{business_id}/messages` and
+  `POST /v1/widget/{business_id}/handoff` bodies take an optional
+  `source` (at most 200 characters; normalized to a tag, an unreadable one
+  is ignored).
+
 ## 2026-10-04 — wave 9 together: reply speed, any language, outbox everywhere, platform operations
 
 Spec: `26522d8605b0100d`

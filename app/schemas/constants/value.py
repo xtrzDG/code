@@ -105,3 +105,14 @@ class DigestChannelRefusalCode(StrEnum):
     TELEGRAM_CHAT_NOT_LINKED = "telegram_chat_not_linked"
     WHATSAPP_NOT_AVAILABLE = "whatsapp_not_available"
     WHATSAPP_NUMBER_MISSING = "whatsapp_number_missing"
+
+
+class CustomerSourceKind(StrEnum):
+    """
+    One row of the customer sources report: a source tag, the conversations
+    of one channel that came without a tag, or the smallest tags together.
+    """
+
+    TAGGED = "tagged"
+    UNTAGGED = "untagged"
+    OTHER = "other"

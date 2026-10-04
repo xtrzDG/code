@@ -34,6 +34,9 @@ from app.contracts.repositories.feedback_repositories import (
     ReviewSettingsRepoContract,
 )
 from app.contracts.repositories.media_repositories import MessageMediaRepoContract
+from app.contracts.repositories.topic_repositories import (
+    ConversationTopicsRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantVersionStatus
@@ -64,7 +67,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
     the demo catalog describes: customers, conversations with tool calls,
     phone calls, bookings, leads, handoffs, unanswered questions, feedback
     after visits, the subscription with its usage, the accepted DPA and
-    audit entries, and the voice notes and photos customers sent.
+    audit entries, the voice notes and photos customers sent, and the
+    topics customers asked about.
     """
 
     def __init__(
@@ -91,6 +95,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         feedback_request_repo: FeedbackRequestRepoContract,
         message_media_repo: MessageMediaRepoContract,
         media_storage: MediaStorageAdapterContract,
+        conversation_topics_repo: ConversationTopicsRepoContract,
         app_settings: AppSettings,
     ) -> None:
         self._registry: DemoDatasetRegistryContract = demo_dataset_registry
@@ -115,6 +120,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._feedback_request_repo: FeedbackRequestRepoContract = feedback_request_repo
         self._message_media_repo: MessageMediaRepoContract = message_media_repo
         self._media_storage: MediaStorageAdapterContract = media_storage
+        self._topics_repo: ConversationTopicsRepoContract = conversation_topics_repo
         self._app_settings: AppSettings = app_settings
 
     def run(self, input_data: DemoActivityStorage) -> BusinessId:
@@ -214,6 +220,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
                 StoredMediaFile(content=file.content, media_type=file.media.media_type),
             )
             self._message_media_repo.save(file.media)
+        if activity.conversation_topics is not None:
+            self._topics_repo.save(activity.conversation_topics)
 
     def _store_feedback(self, activity: DemoBusinessActivity) -> None:
         if activity.review_settings is not None:

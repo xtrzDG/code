@@ -18,6 +18,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     check_channel_credentials_job,
 )
+from app.gateways.worker.periodic.group_conversation_topics import (
+    group_conversation_topics_job,
+)
 from app.gateways.worker.periodic.growth_analytics import (
     purge_web_vitals_job,
     reconcile_product_events_job,
@@ -162,6 +165,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         # The owners' digests and monthly reports (09:00 business time).
         Factory(
             send_value_reports_job, operator=operators.value.send_value_reports_operator
+        ),
+        # What customers ask about, grouped once a night (Overview card).
+        Factory(
+            group_conversation_topics_job,
+            operator=operators.value.group_conversation_topics_operator,
         ),
         # Customers asked how their visit went (Settings → Reviews).
         Factory(

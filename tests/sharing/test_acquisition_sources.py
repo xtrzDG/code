@@ -84,7 +84,11 @@ class TestWhatsAppGreetingCode:
 
 class TestMetaReferral:
     def test_the_ref_of_a_link_wins(self) -> None:
-        referral = {"ref": "Instagram Bio", "source": "SHORTLINK", "ad_id": "42"}
+        referral: dict[str, object] = {
+            "ref": "Instagram Bio",
+            "source": "SHORTLINK",
+            "ad_id": "42",
+        }
 
         assert read_referral_source(referral) == "instagram-bio"
 
@@ -93,7 +97,11 @@ class TestMetaReferral:
             "ad-6045246247433"
         )
         # WhatsApp's click-to-chat ads.
-        whatsapp_ad = {"source_type": "ad", "source_id": "120208", "ctwa_clid": "x"}
+        whatsapp_ad: dict[str, object] = {
+            "source_type": "ad",
+            "source_id": "120208",
+            "ctwa_clid": "x",
+        }
         assert read_referral_source(whatsapp_ad) == "ad-120208"
         assert read_referral_source({"source": "ADS"}) == "ad"
 

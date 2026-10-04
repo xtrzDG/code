@@ -159,6 +159,7 @@ class AppContainer(containers.DeclarativeContainer):
         inbox_collections=inbox_collections,
         security_collections=security_collections,
         value_collections=value_collections,
+        insight_collections=adapters.collections,
         feedback_collections=feedback_collections,
         collections=adapters.collections,
         notification_collections=adapters.notification_collections,
