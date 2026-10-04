@@ -195,7 +195,7 @@ def error_response(
     headers: dict[str, str],
 ) -> JSONResponse:
     if status_code == 401:
-        headers = {**headers, "WWW-Authenticate": "Bearer"}
+        headers = {"WWW-Authenticate": "Bearer", **headers}
 
     return JSONResponse(
         status_code=status_code,
