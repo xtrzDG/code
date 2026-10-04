@@ -333,7 +333,8 @@ web/
                                (the changes in the owner's words, the launch's stages, why it stopped
                                with the page that fixes it and the failed conversation), usePendingChanges
       security/                two-factor sign-in: AuthenticatorSetup, TotpQrCode (drawn in the browser),
-                               RecoveryCodesPanel, OneTimeCodeField, StepUpDialog
+                               RecoveryCodesPanel, OneTimeCodeField, StepUpDialog (its StepUpForm loads
+                               only when a confirmation is asked for)
       theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
                                useResolvedScheme (the scheme showing now, for the WebGL scene)
       business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
