@@ -1,8 +1,10 @@
 """
 A message to a customer outside the 24-hour messaging window: the owner's
 approved WhatsApp template from the business's number (a request for
-feedback after a visit), in the customer's language, or in English when
-Meta has no such translation of the template. Metered as one template.
+feedback after a visit, a reminder, a text-back), in the customer's
+language, or in English when Meta has no such translation of the
+template. A staff reply's template is sent only in the one language the
+owner named for it. Metered as one template.
 """
 
 from typed_time_provider import Microseconds
@@ -11,6 +13,7 @@ from app.contracts.channels import WhatsAppTemplateAdapterContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.deliveries import OutboundMessageKind
 from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.outbound_messages import (
@@ -82,7 +85,10 @@ def route_customer_template(
                 parameters,
             )
         except WhatsAppTemplateRejectedError:
-            if template.language_code == FALLBACK_TEMPLATE_LANGUAGE:
+            if (
+                message.kind is OutboundMessageKind.STAFF_REPLY
+                or template.language_code == FALLBACK_TEMPLATE_LANGUAGE
+            ):
                 raise
 
             return whatsapp_templates.send_template(

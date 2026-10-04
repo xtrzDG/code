@@ -1,6 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
@@ -8,6 +8,10 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.repositories.delivery_repositories import (
+    OutboundMessageRepoContract,
+)
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import MessageDirection
@@ -16,12 +20,12 @@ from app.schemas.constants.conversations import (
     MessageAuthor,
     StaffMessageDelivery,
     StaffReplyBlock,
-    StaffReplyRefusalCode,
 )
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.conversation_feed.conversation_actions import (
     SendStaffMessageCommand,
@@ -31,41 +35,26 @@ from app.schemas.dto.conversation_feed.conversation_views import (
     MessageView,
     StaffReplyView,
 )
-from app.schemas.dto.errors import ErrorReason
 from app.schemas.dto.staff_reply_templates import StaffReplyTemplateView
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    NotFoundError,
-    ValidationFailedError,
-    WhatsAppTemplateRejectedError,
-)
+from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.schemas.typings.conversations.constrained_strings import (
-    StaffTemplateReplyText,
-)
 from app.schemas.typings.conversations.strings import MessageText
-from app.schemas.typings.platform.constrained_strings import (
-    ErrorReasonCode,
-    ErrorReasonDetail,
+from app.use_cases.conversations.staff_reply_deliveries import with_staff_deliveries
+from app.use_cases.conversations.staff_reply_outbox import (
+    StaffReplyOutbox,
+    template_reply_text,
 )
-from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.use_cases.conversations.staff_reply_support import (
     assess_conversation_reply,
 )
-from app.utilities.conversations.staff_replies import (
-    describe_block,
-    to_template_parameter,
-)
+from app.use_cases.shared.outbox_queue import queue_outbound_message
+from app.use_cases.shared.storage_transaction import in_unit_of_work
+from app.utilities.conversations.staff_replies import describe_block
 
 MESSAGE_ENTITY: AuditEntityName = AuditEntityName("message")
-TEMPLATE_REJECTED_MESSAGE: str = (
-    "WhatsApp did not accept the message template for staff replies: check "
-    "its name, its language and its one {{1}} variable in the channel "
-    "settings."
-)
 
 
 class SendStaffMessageUseCase(
@@ -76,21 +65,23 @@ class SendStaffMessageUseCase(
     the cabinet (concept section 6: after a handoff a person answers in the
     same channel).
 
-    Telegram, WhatsApp, Instagram and Messenger messages are sent through
-    the business's connected channel right away; WhatsApp, Instagram and
-    Messenger only within 24 hours of the customer's last message there.
-    After that, a WhatsApp message asked to go `as_template` travels in the
-    message template the owner set for staff replies, in its approved
-    language, as its single body parameter: one line (line breaks become
-    spaces) of at most 1024 characters, else ValidationFailedError. A
-    template Meta refuses (no approved template of that name in that
-    language, other variables) is a ConflictError with the reason
-    `template_rejected`: trying again cannot help. Website chat messages
-    are kept for the visitor's widget. Phone and test conversations cannot
-    be written to; every refusal is a ConflictError that says why. The
-    message is stored in the transcript as a STAFF message with its author,
-    the conversation moves up the feed, the assistant is not asked to
-    answer, and the message (personal data) is written to the audit log.
+    Telegram, WhatsApp, Instagram and Messenger messages go into the outbox
+    together with the transcript message, in one storage transaction, and
+    the worker sends them through the business's connected channel with
+    retries (`delivery` on the message says how it goes: sending, retrying,
+    failed with its reason, delivered); WhatsApp, Instagram and Messenger
+    only within 24 hours of the customer's last message there. After that,
+    a WhatsApp message asked to go `as_template` travels in the message
+    template the owner set for staff replies, in its approved language, as
+    its single body parameter: one line (line breaks become spaces) of at
+    most 1024 characters, else ValidationFailedError; a template Meta
+    refuses fails with the reason `template_rejected`. Website chat
+    messages are kept for the visitor's widget. Phone and test
+    conversations cannot be written to; every refusal is a ConflictError
+    that says why. The message is stored in the transcript as a STAFF
+    message with its author, the conversation moves up the feed, the
+    assistant is not asked to answer, and the message (personal data) is
+    written to the audit log.
     """
 
     def __init__(
@@ -102,10 +93,12 @@ class SendStaffMessageUseCase(
         message_repo: MessageRepoContract,
         channel_repo: ChannelRepoContract,
         audit_log_repo: AuditLogRepoContract,
-        channel_message_sender: ChannelMessageSenderFacilitatorContract,
+        outbound_message_repo: OutboundMessageRepoContract,
+        job_queue: JobQueueFacilitatorContract,
         message_transformer: TransformerContract[MessageDocument, MessageView],
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -114,9 +107,10 @@ class SendStaffMessageUseCase(
         self._message_repo: MessageRepoContract = message_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
-        self._channel_message_sender: ChannelMessageSenderFacilitatorContract = (
-            channel_message_sender
-        )
+        self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
+        self._job_queue: JobQueueFacilitatorContract = job_queue
+        self._outbox: StaffReplyOutbox = StaffReplyOutbox(channel_repo)
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._message_transformer: TransformerContract[MessageDocument, MessageView] = (
             message_transformer
         )
@@ -143,21 +137,14 @@ class SendStaffMessageUseCase(
         )
         delivery: StaffMessageDelivery
         text: MessageText
+        template: StaffReplyTemplateView | None = None
         if reply.is_available and reply.delivery is not None:
             delivery = reply.delivery
             text = MessageText(str(input_data.text).strip())
-            if delivery is StaffMessageDelivery.SENT:
-                self._channel_message_sender.send(
-                    business.id,
-                    conversation.channel,
-                    conversation.channel_user_id,
-                    text,
-                )
         elif input_data.as_template and reply.template is not None:
             delivery = StaffMessageDelivery.SENT_AS_TEMPLATE
-            text = self._send_as_template(
-                business, conversation, reply.template, input_data
-            )
+            template = reply.template
+            text = template_reply_text(str(input_data.text), template)
         else:
             raise ConflictError(
                 describe_block(
@@ -178,7 +165,7 @@ class SendStaffMessageUseCase(
             created_at=now,
             updated_at=now,
         )
-        self._message_repo.save(message)
+        self._store(conversation, message, delivery, template, now)
         self._touch_conversation(business, conversation, now)
         self._live_events.publish(
             business.id,
@@ -198,57 +185,41 @@ class SendStaffMessageUseCase(
                 updated_at=now,
             )
         )
-        return StaffMessageResult(
-            message=self._message_transformer.transform(message),
-            delivery=delivery,
+        [view] = with_staff_deliveries(
+            business.id,
+            [message],
+            [self._message_transformer.transform(message)],
+            self._outbound_message_repo,
         )
+        return StaffMessageResult(message=view, delivery=delivery)
 
-    def _send_as_template(
+    def _store(
         self,
-        business: BusinessDocument,
         conversation: ConversationDocument,
-        template: StaffReplyTemplateView,
-        command: SendStaffMessageCommand,
-    ) -> MessageText:
-        """Send the staff text in the owner's template; returns what was sent."""
+        message: MessageDocument,
+        delivery: StaffMessageDelivery,
+        template: StaffReplyTemplateView | None,
+        now: Microseconds,
+    ) -> None:
+        """
+        The transcript message and, for a messenger, its outbox message
+        with the job that sends it: all or nothing.
+        """
 
-        try:
-            parameter: StaffTemplateReplyText = to_template_parameter(str(command.text))
-        except ValueError as error:
-            raise ValidationFailedError(
-                "A message sent as a WhatsApp template may have at most "
-                f"{template.max_text_length} characters (line breaks are sent "
-                "as spaces)."
-            ) from error
-
-        text: MessageText = MessageText(str(parameter))
-        try:
-            self._channel_message_sender.send_whatsapp_template_in_language(
-                business.id,
-                conversation.channel_user_id,
-                template.name,
-                template.language_code,
-                [text],
-            )
-        except WhatsAppTemplateRejectedError as error:
-            # Trying again cannot help: the template setting is wrong.
-            raise ConflictError(
-                TEMPLATE_REJECTED_MESSAGE,
-                reasons=[
-                    ErrorReason(
-                        code=ErrorReasonCode(
-                            StaffReplyRefusalCode.TEMPLATE_REJECTED.value
-                        ),
-                        message=ErrorReasonMessage(str(error)),
-                        details=[
-                            ErrorReasonDetail(str(template.name)),
-                            ErrorReasonDetail(str(template.language_code)),
-                        ],
-                    )
-                ],
-            ) from error
-
-        return text
+        outbound: OutboundMessageDocument | None = (
+            None
+            if delivery is StaffMessageDelivery.STORED_FOR_WIDGET
+            else self._outbox.build(conversation, message, template, now)
+        )
+        with in_unit_of_work(self._unit_of_work):
+            self._message_repo.save(message)
+            if outbound is not None:
+                queue_outbound_message(
+                    self._outbound_message_repo,
+                    self._job_queue,
+                    outbound,
+                    self._unit_of_work,
+                )
 
     def _require_conversation(
         self,

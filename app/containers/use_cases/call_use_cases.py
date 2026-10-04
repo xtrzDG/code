@@ -62,6 +62,8 @@ from app.use_cases.voice.missed_calls.register_missed_call_use_case import (
 from app.use_cases.voice.missed_calls.send_text_back_use_case import (
     SendTextBackUseCase,
 )
+from app.use_cases.voice.missed_calls.text_back_messages import TextBackSms
+from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
 from app.use_cases.voice.summaries.summarize_call_use_case import (
     SummarizeCallUseCase,
 )
@@ -167,13 +169,22 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
             missed_call_repo=repositories.missed_call_repo,
             business_repo=repositories.business_repo,
             call_settings_repo=repositories.call_settings_repo,
-            channel_repo=repositories.channel_repo,
             contact_repo=repositories.contact_repo,
             conversation_repo=repositories.conversation_repo,
             message_repo=repositories.message_repo,
-            channel_message_sender=facilitators.channel_message_sender,
-            sms_client=clients.twilio_messaging_client,
-            text_resolver=utilities.localized_text_resolver,
+            whatsapp=Factory(
+                TextBackWhatsApp,
+                channel_repo=repositories.channel_repo,
+                outbound_message_repo=repositories.outbound_message_repo,
+                job_queue=facilitators.job_queue_facilitator,
+                unit_of_work=adapters.storage_unit_of_work,
+                text_resolver=utilities.localized_text_resolver,
+            ),
+            sms=Factory(
+                TextBackSms,
+                sms_client=clients.twilio_messaging_client,
+                text_resolver=utilities.localized_text_resolver,
+            ),
             live_events=facilitators.event_publisher,
             wall_clock=time_provider.microsecond_wall_clock,
         )

@@ -31,6 +31,7 @@ from app.utilities.channels.delivery_targets import build_whatsapp_usage_event
 from app.utilities.deliveries.retry_policy import (
     classify_delivery_error,
     describe_delivery_error,
+    explain_delivery_error,
     read_retry_after,
 )
 
@@ -94,6 +95,7 @@ class SendOutboundMessageUseCase(
                 delivered_parts=DeliveredMessageCount(delivered),
                 provider_message_id=provider_message_id,
                 failure=classify_delivery_error(error),
+                reason=explain_delivery_error(error),
                 error=describe_delivery_error(error),
                 retry_after_seconds=read_retry_after(error),
                 attempted_at=self._wall_clock.now_unix(),

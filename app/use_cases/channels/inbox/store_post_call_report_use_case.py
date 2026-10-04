@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.delivery_repositories import InboundEventRepoContract
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channel_events import PostCallEventStatus
 from app.schemas.constants.channels import ChannelKind
@@ -39,10 +40,12 @@ class StorePostCallReportUseCase(
         inbound_event_repo: InboundEventRepoContract,
         job_queue: JobQueueFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        unit_of_work: StorageUnitOfWorkContract | None = None,
     ) -> None:
         self._inbound_event_repo: InboundEventRepoContract = inbound_event_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
 
     def run(self, input_data: VerifiedPostCallReport) -> PostCallWebhookOutcome:
         try:
@@ -72,6 +75,7 @@ class StorePostCallReportUseCase(
             event,
             PROCESS_POST_CALL_JOB,
             None,
+            unit_of_work=self._unit_of_work,
         )
         return PostCallWebhookOutcome(
             status=(

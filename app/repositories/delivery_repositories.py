@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -92,6 +94,15 @@ class OutboundMessageRepository(
         message_id: OutboundMessageId,
     ) -> OutboundMessageDocument | None:
         return self._load(business_id, str(message_id))
+
+    def get_many(
+        self,
+        business_id: BusinessId,
+        message_ids: Sequence[OutboundMessageId],
+    ) -> list[OutboundMessageDocument]:
+        return self._load_many(
+            business_id, [str(message_id) for message_id in message_ids]
+        )
 
     def update(
         self,

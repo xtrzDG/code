@@ -4,14 +4,8 @@ import logging
 
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.facilitators import ChannelMessageSenderFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
-from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.messaging_clients import SmsMessagingClientContract
-from app.contracts.repositories.business_repositories import (
-    BusinessRepoContract,
-    ChannelRepoContract,
-)
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.call_follow_up_repositories import (
     CallSettingsRepoContract,
     MissedCallRepoContract,
@@ -27,26 +21,31 @@ from app.schemas.constants.calls import (
     TextBackSkipReason,
     TextBackStatus,
 )
+from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
+from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.calls.prefixed_id import MissedCallId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.voice.missed_calls.text_back_conversation import (
     open_text_back_conversation,
 )
 from app.use_cases.voice.missed_calls.text_back_messages import (
-    TextBackSender,
     TextBackSettlement,
+    TextBackSms,
     is_retryable_failure,
 )
 from app.use_cases.voice.missed_calls.text_back_rules import is_too_late
+from app.use_cases.voice.missed_calls.text_back_whatsapp import TextBackWhatsApp
 from app.utilities.calls.text_back_jobs import decode_text_back_payload
+from app.utilities.deliveries.retry_policy import describe_delivery_error
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -57,13 +56,16 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
 
     WhatsApp: the owner's approved template from the business's number, in
     the caller's language (English when Meta has no such translation), its
-    parameter the business name; the message then opens the WhatsApp
-    conversation the caller's reply continues in. When WhatsApp refuses
-    the message for good (an unknown template, a number without WhatsApp,
-    a broken connection) and SMS is on, an SMS from the platform's sender
-    follows. A temporary failure is tried again by the job queue (the last
-    attempt gives up); a message hours late is not sent. Only a QUEUED
-    missed call is sent, so a job that runs again sends nothing twice.
+    parameter the business name, goes into the outbox (once per missed
+    call) and the worker sends it with retries; the outbox runs this job
+    again when it was delivered (the missed call is SENT and the WhatsApp
+    conversation the caller's reply continues in opens) or refused for
+    good (an unknown template, a number without WhatsApp, a broken
+    connection): then, when SMS is on, an SMS from the platform's sender
+    follows. A temporary SMS failure is tried again by the job queue (the
+    last attempt gives up); a message hours late is not queued. Only a
+    QUEUED missed call is sent, so a job that runs again sends nothing
+    twice.
     """
 
     def __init__(
@@ -71,13 +73,11 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         missed_call_repo: MissedCallRepoContract,
         business_repo: BusinessRepoContract,
         call_settings_repo: CallSettingsRepoContract,
-        channel_repo: ChannelRepoContract,
         contact_repo: ContactRepoContract,
         conversation_repo: ConversationRepoContract,
         message_repo: MessageRepoContract,
-        channel_message_sender: ChannelMessageSenderFacilitatorContract,
-        sms_client: SmsMessagingClientContract | None,
-        text_resolver: LocalizedTextResolverContract,
+        whatsapp: TextBackWhatsApp,
+        sms: TextBackSms,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -87,9 +87,8 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._message_repo: MessageRepoContract = message_repo
-        self._sender: TextBackSender = TextBackSender(
-            channel_repo, channel_message_sender, sms_client, text_resolver
-        )
+        self._whatsapp: TextBackWhatsApp = whatsapp
+        self._sms: TextBackSms = sms
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._settle: TextBackSettlement = TextBackSettlement(
             missed_call_repo, wall_clock
@@ -115,45 +114,89 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         ):
             return JobReport()
 
+        caller: E164PhoneNumber = missed.caller_phone_number
+        settings: CallSettingsDocument | None = (
+            self._call_settings_repo.get_by_business(business.id)
+        )
+        if missed.channel is TextBackChannel.WHATSAPP:
+            missed = self._go_on_whatsapp(business, settings, missed, caller)
+            if (
+                missed.status is not TextBackStatus.QUEUED
+                or missed.channel is TextBackChannel.WHATSAPP
+            ):
+                return JobReport(processed_count=ProcessedItemCount(1))
+
         if is_too_late(missed.called_at, self._wall_clock.now_unix()):
             self._settle.skip(missed, TextBackSkipReason.TOO_LATE)
             return JobReport()
 
-        settings: CallSettingsDocument | None = (
-            self._call_settings_repo.get_by_business(business.id)
-        )
-        caller: E164PhoneNumber = missed.caller_phone_number
-        if missed.channel is TextBackChannel.WHATSAPP:
-            missed = self._try_whatsapp(business, settings, missed, caller, input_data)
-            if missed.status is not TextBackStatus.QUEUED:
-                return JobReport(processed_count=ProcessedItemCount(1))
-
         self._try_sms(business, missed, caller, input_data)
         return JobReport(processed_count=ProcessedItemCount(1))
 
-    def _try_whatsapp(
+    def _go_on_whatsapp(
         self,
         business: BusinessDocument,
         settings: CallSettingsDocument | None,
         missed: MissedCallDocument,
         caller: E164PhoneNumber,
-        job: QueuedJobInput,
     ) -> MissedCallDocument:
-        """Sent (SENT), or the missed call as it should go on (SMS or FAILED)."""
+        """
+        The missed call as it goes on: still waiting for WhatsApp (QUEUED
+        with the WHATSAPP channel), SENT, switched to SMS or FAILED.
+        """
+
+        outbound: OutboundMessageDocument | None = self._whatsapp.queued(missed)
+        if outbound is None:
+            return self._queue_whatsapp(business, settings, missed, caller)
+
+        if outbound.status is OutboundMessageStatus.PENDING:
+            return missed
+
+        if outbound.status is OutboundMessageStatus.DELIVERED:
+            return self._delivered(business, missed, caller)
+
+        LOGGER.warning(
+            "WhatsApp text-back of %s was refused: %s", missed.id, outbound.last_error
+        )
+        return self._refused(settings, missed, outbound.last_error)
+
+    def _queue_whatsapp(
+        self,
+        business: BusinessDocument,
+        settings: CallSettingsDocument | None,
+        missed: MissedCallDocument,
+        caller: E164PhoneNumber,
+    ) -> MissedCallDocument:
+        now: Microseconds = self._wall_clock.now_unix()
+        if is_too_late(missed.called_at, now):
+            return self._settle.skip(missed, TextBackSkipReason.TOO_LATE)
 
         template = None if settings is None else settings.text_back_template_name
         try:
-            text = self._sender.send_whatsapp(business, missed, caller, template)
+            self._whatsapp.queue(business, missed, caller, template, now)
         except ApplicationError as error:
-            if is_retryable_failure(error) and not job.is_final_attempt:
-                raise
-
             LOGGER.warning("WhatsApp text-back of %s failed: %s", missed.id, error)
-            if settings is not None and settings.is_sms_fallback_enabled:
-                return self._settle.switch_to_sms(missed, error)
+            return self._refused(settings, missed, describe_delivery_error(error))
 
-            return self._settle.fail(missed, error)
+        return missed
 
+    def _refused(
+        self,
+        settings: CallSettingsDocument | None,
+        missed: MissedCallDocument,
+        error: DeliveryErrorText | None,
+    ) -> MissedCallDocument:
+        if settings is not None and settings.is_sms_fallback_enabled:
+            return self._settle.switch_to_sms(missed, error)
+
+        return self._settle.fail(missed, error)
+
+    def _delivered(
+        self,
+        business: BusinessDocument,
+        missed: MissedCallDocument,
+        caller: E164PhoneNumber,
+    ) -> MissedCallDocument:
         sent: MissedCallDocument = self._settle.sent(missed, TextBackChannel.WHATSAPP)
         conversation_id: ConversationId | None = open_text_back_conversation(
             self._contact_repo,
@@ -161,7 +204,7 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             self._message_repo,
             business,
             caller,
-            text,
+            self._whatsapp.text(business, missed),
             missed.language,
             self._wall_clock.now_unix(),
         )
@@ -181,13 +224,13 @@ class SendTextBackUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         job: QueuedJobInput,
     ) -> None:
         try:
-            self._sender.send_sms(business, missed, caller)
+            self._sms.send(business, missed, caller)
         except ApplicationError as error:
             if is_retryable_failure(error) and not job.is_final_attempt:
                 raise
 
             LOGGER.warning("SMS text-back of %s failed: %s", missed.id, error)
-            self._settle.fail(missed, error)
+            self._settle.fail(missed, describe_delivery_error(error))
             return
 
         self._settle.sent(missed, TextBackChannel.SMS)

@@ -1,4 +1,8 @@
-"""The 24-hour window in which a messenger accepts free-form messages."""
+"""
+The 24-hour window in which a messenger accepts free-form messages: a
+message the business starts (a reminder, a confirmation after a call)
+goes as free text only inside it.
+"""
 
 from typed_time_provider import Microseconds
 
@@ -33,13 +37,10 @@ def is_messaging_window_open(
     window_start: int = int(now) - (
         CUSTOMER_SERVICE_WINDOW_SECONDS * MICROSECONDS_PER_SECOND
     )
-    for conversation in conversation_repo.list_by_business(business.id):
-        if (
-            conversation.contact_id != contact.id
-            or conversation.channel is not channel
-            or conversation.is_sandbox
-            or int(conversation.last_message_at) < window_start
-        ):
+    for conversation in conversation_repo.list_by_contact(
+        business.id, contact.id, last_message_from=Microseconds(window_start)
+    ):
+        if conversation.channel is not channel or conversation.is_sandbox:
             continue
 
         for message in message_repo.list_by_conversation(business.id, conversation.id):

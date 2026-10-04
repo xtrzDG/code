@@ -22,6 +22,7 @@ from app.schemas.constants.media import AttachmentKind
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.bookings import BookingView
+from app.schemas.dto.conversation_feed.message_deliveries import MessageDeliveryView
 from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationMessageTally,
     ConversationUsageView,
@@ -170,8 +171,10 @@ class ToolCallView(ImmutableDTO):
 class MessageView(ImmutableDTO):
     """
     A message with the model usage behind it; `sent_by` is the owner or
-    staff member who wrote a staff message from the cabinet; `attachments`
-    are a customer's voice notes, photos and places.
+    staff member who wrote a staff message from the cabinet, and
+    `delivery` how that message travels to the customer (None for every
+    other message, and for staff messages kept for the website chat);
+    `attachments` are a customer's voice notes, photos and places.
     """
 
     id: MessageId
@@ -189,6 +192,7 @@ class MessageView(ImmutableDTO):
     attachments: list[MessageAttachmentView] = Field(
         default_factory=list[MessageAttachmentView]
     )
+    delivery: MessageDeliveryView | None = None
 
 
 class CallSummaryView(ImmutableDTO):

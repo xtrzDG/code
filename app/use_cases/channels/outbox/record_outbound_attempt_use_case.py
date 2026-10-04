@@ -21,6 +21,10 @@ from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.deliveries import OutboundAttempt
 from app.schemas.typings.deliveries.constrained_integers import DeliveryAttemptCount
+from app.use_cases.channels.outbox.customer_message_follow_ups import (
+    announce_staff_reply_delivery,
+    continue_text_back,
+)
 from app.use_cases.channels.outbox.delivery_follow_ups import (
     update_channel_health,
     update_feedback_request,
@@ -50,8 +54,10 @@ class RecordOutboundAttemptUseCase(
 
     The channel's health follows its replies (`update_channel_health`), a
     handoff follows its notifications (`update_handoff_notification`), a
-    feedback request its message (`update_feedback_request`), and a staff
-    contact's or device's delivery state follows its own.
+    feedback request its message (`update_feedback_request`), a staff
+    contact's or device's delivery state follows its own, open cabinets
+    hear about a staff reply's state, and a missed call's text-back goes on
+    once its WhatsApp template is settled.
     """
 
     def __init__(
@@ -111,8 +117,10 @@ class RecordOutboundAttemptUseCase(
                 current.status = OutboundMessageStatus.DELIVERED
                 current.delivered_at = now
                 current.last_error = None
+                current.last_failure_reason = None
             else:
                 current.last_error = input_data.error
+                current.last_failure_reason = input_data.reason
                 if next_attempt_at is None:
                     current.status = OutboundMessageStatus.DEAD
 
@@ -139,4 +147,6 @@ class RecordOutboundAttemptUseCase(
         update_handoff_notification(self._handoff_repo, stored, now)
         update_feedback_request(self._feedback_request_repo, stored, now)
         self._delivery_recorder.record(stored)
+        announce_staff_reply_delivery(self._live_events, stored)
+        continue_text_back(self._job_queue, stored)
         return stored

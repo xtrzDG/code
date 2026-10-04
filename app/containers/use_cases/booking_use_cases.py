@@ -1,7 +1,9 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -48,6 +50,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
     booking tools share the business lock registry.
     """
 
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -189,7 +192,9 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
             contact_repo=repositories.contact_repo,
             conversation_repo=repositories.conversation_repo,
             message_repo=repositories.message_repo,
-            channel_message_sender=facilitators.channel_message_sender,
+            channel_repo=repositories.channel_repo,
+            outbound_message_repo=repositories.outbound_message_repo,
+            job_queue=facilitators.job_queue_facilitator,
             reminder_transformer=transformers.booking_reminder_transformer,
             reminder_template_transformer=(
                 transformers.booking_reminder_template_transformer
@@ -199,5 +204,6 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
             whatsapp_reminder_template=(
                 config.app_settings.provided.whatsapp_reminder_template_name
             ),
+            unit_of_work=adapters.storage_unit_of_work,
         )
     )

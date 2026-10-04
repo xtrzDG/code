@@ -112,6 +112,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     )
     bookings: BookingUseCasesContainer = Container(  # type: ignore[assignment]
         BookingUseCasesContainer,
+        adapters=adapters,
         config=config,
         facilitators=facilitators,
         registries=registries,

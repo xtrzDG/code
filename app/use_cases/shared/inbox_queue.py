@@ -4,10 +4,12 @@ from typed_time_provider import Microseconds
 
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.delivery_repositories import InboundEventRepoContract
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.typings.platform.constrained_strings import JobName, JobSerialKey
+from app.use_cases.shared.storage_transaction import in_unit_of_work
 from app.utilities.deliveries.delivery_jobs import encode_inbound_event_payload
 
 
@@ -18,18 +20,22 @@ def store_and_queue(
     job_name: JobName,
     serial_key: JobSerialKey | None,
     run_at: Microseconds | None = None,
+    unit_of_work: StorageUnitOfWorkContract | None = None,
 ) -> bool:
     """
-    Store a new event and queue its job on the inbound lane; True for a new
-    event. A redelivered event is not stored again, but when it is still
-    RECEIVED (the first request may have died between storing and queuing)
-    its job is queued once more: processing an event twice is harmless,
-    the job finds it finished.
+    Store a new event and queue its job on the inbound lane in one unit of
+    work, so a crash between the two leaves neither (the platform then
+    redelivers the webhook) and never an event without its job; True for a
+    new event. A redelivered event is not stored again, but when it is
+    still RECEIVED its job is queued once more: processing an event twice
+    is harmless, the job finds it finished. An event whose job was lost
+    all the same is found by `sweep_stale_inbound_events`.
     """
 
-    if event_repo.insert_if_new(event):
-        queue_inbound_job(job_queue, event, job_name, serial_key, run_at)
-        return True
+    with in_unit_of_work(unit_of_work):
+        if event_repo.insert_if_new(event):
+            queue_inbound_job(job_queue, event, job_name, serial_key, run_at)
+            return True
 
     stored: InboundEventDocument | None = event_repo.get(event.business_id, event.id)
     if stored is not None and stored.status is InboundEventStatus.RECEIVED:

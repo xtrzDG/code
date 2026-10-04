@@ -9,7 +9,7 @@ another process. Changes go through `update`: read, change and write the
 stored document in one step (a row lock on Postgres).
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from typed_time_provider import Microseconds
@@ -69,6 +69,14 @@ class OutboundMessageRepoContract(RepoContract, Protocol):
         business_id: BusinessId,
         message_id: OutboundMessageId,
     ) -> OutboundMessageDocument | None:
+        raise NotImplementedError
+
+    def get_many(
+        self,
+        business_id: BusinessId,
+        message_ids: Sequence[OutboundMessageId],
+    ) -> list[OutboundMessageDocument]:
+        """The business's messages of these ids (missing ones skipped), one read."""
         raise NotImplementedError
 
     def update(

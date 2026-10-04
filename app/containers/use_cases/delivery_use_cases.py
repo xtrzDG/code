@@ -91,7 +91,8 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # --- The inbox: what webhooks store.
+    # --- The inbox: what webhooks store, each event and its job in one
+    # transaction.
     store_inbound_messages_use_case: Factory[
         UseCaseContract[list[RoutedInboundMessage], InboxIntake]
     ] = Factory(
@@ -99,6 +100,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         inbound_event_repo=repositories.inbound_event_repo,
         job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+        unit_of_work=adapters.storage_unit_of_work,
     )
     accept_platform_bot_update_use_case: Factory[
         UseCaseContract[PlatformBotWebhookRequest, PlatformBotWebhookOutcome]
@@ -108,6 +110,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        unit_of_work=adapters.storage_unit_of_work,
     )
     store_post_call_report_use_case: Factory[
         UseCaseContract[VerifiedPostCallReport, PostCallWebhookOutcome]
@@ -116,6 +119,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         inbound_event_repo=repositories.inbound_event_repo,
         job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+        unit_of_work=adapters.storage_unit_of_work,
     )
     # The website widget's messages: into the inbox and queued in one
     # transaction; a worker answers them like every channel's.
