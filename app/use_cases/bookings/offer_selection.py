@@ -173,7 +173,7 @@ def not_performed_error(
             booking_refusal_reason(
                 BookingRefusalCode.NOT_PERFORMED,
                 message,
-                [str(offer.title), *names],
+                [str(offer.id), *(str(performer.id) for performer in performers)],
             )
         ],
     )

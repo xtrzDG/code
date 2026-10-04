@@ -4,7 +4,8 @@ written in any script ("Nino", "ნინო", "Нино"; "стрижку").
 
 An unknown or ambiguous name is refused with a message the model acts on
 (it lists what exists, so the model can ask the customer) and a reason
-code the cabinet translates.
+code the cabinet translates; an ambiguous one names the ids it matched as
+the reason's details (details are machine values, never names).
 """
 
 from collections.abc import Sequence
@@ -55,7 +56,9 @@ def resolve_service(
             message,
             reasons=[
                 booking_refusal_reason(
-                    BookingRefusalCode.AMBIGUOUS_SERVICE, message, names
+                    BookingRefusalCode.AMBIGUOUS_SERVICE,
+                    message,
+                    [str(match.item.id) for match in matches],
                 )
             ],
         )
@@ -68,11 +71,7 @@ def resolve_service(
     )
     raise ValidationFailedError(
         message,
-        reasons=[
-            booking_refusal_reason(
-                BookingRefusalCode.UNKNOWN_SERVICE, message, [wanted]
-            )
-        ],
+        reasons=[booking_refusal_reason(BookingRefusalCode.UNKNOWN_SERVICE, message)],
     )
 
 
@@ -115,7 +114,9 @@ def resolve_resource(
             message,
             reasons=[
                 booking_refusal_reason(
-                    BookingRefusalCode.AMBIGUOUS_RESOURCE, message, names
+                    BookingRefusalCode.AMBIGUOUS_RESOURCE,
+                    message,
+                    [str(match.item.id) for match in matches],
                 )
             ],
         )
@@ -129,11 +130,7 @@ def resolve_resource(
     )
     raise ValidationFailedError(
         message,
-        reasons=[
-            booking_refusal_reason(
-                BookingRefusalCode.UNKNOWN_RESOURCE, message, [wanted]
-            )
-        ],
+        reasons=[booking_refusal_reason(BookingRefusalCode.UNKNOWN_RESOURCE, message)],
     )
 
 
