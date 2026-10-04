@@ -19,7 +19,10 @@ from app.schemas.typings.users.booleans import (
     IsVerifiedLoginDestination,
 )
 from app.schemas.typings.users.constrained_integers import OtpAttemptCount
-from app.schemas.typings.users.constrained_strings import EmailAddress
+from app.schemas.typings.users.constrained_strings import (
+    EmailAddress,
+    SessionUserAgent,
+)
 from app.schemas.typings.users.prefixed_id import (
     OtpChallengeId,
     UserId,
@@ -89,14 +92,28 @@ class UserSessionDocument(BaseDocument):
     person last proved it is them: at sign-in, and again when they confirm
     a sensitive action (step-up). A session of version 1 has neither and
     counts as one factor that must confirm its next sensitive action.
+
+    The device: the User-Agent it was signed in with (`user_agent`, the
+    latest one when it changes) and the address it was opened from
+    (`created_ip`). `last_seen_at` and `last_seen_ip` follow its use, at
+    most every five minutes; each such write also slides `idle_expires_at`
+    (a session unused that long ends: a week for owners and staff, twelve
+    hours for platform admins). `expires_at` is the absolute end (30 days,
+    a day for platform admins). Sessions from before version 3 have none
+    of these and get them at their next use.
     """
 
-    # 2: `auth_level` and `authenticated_at` (optional, so version 1 needs
-    # no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 2: `auth_level` and `authenticated_at`; 3: the device, its last use
+    # and the idle expiry (all optional, so older versions need no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: UserSessionId = Field(default_factory=UserSessionId)
     user_id: UserId
     token_hash: AccessTokenHash
     expires_at: Microseconds
     auth_level: AuthLevel | None = None
     authenticated_at: Microseconds | None = None
+    user_agent: SessionUserAgent | None = None
+    created_ip: ClientIpAddress | None = None
+    last_seen_at: Microseconds | None = None
+    last_seen_ip: ClientIpAddress | None = None
+    idle_expires_at: Microseconds | None = None

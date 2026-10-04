@@ -1,0 +1,11 @@
+{
+  "added_by": "user_fb3f3261-d9f8-49c7-9f57-068717918b41",
+  "created_at": 1790000000000000,
+  "email": "owner@example.com",
+  "id": "platform_admin_cf96261c-a157-4f05-9b2d-238ccf457ace",
+  "login_method": "phone",
+  "phone_number": "+995599123456",
+  "role": "super",
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

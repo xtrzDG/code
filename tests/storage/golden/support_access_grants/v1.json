@@ -1,0 +1,17 @@
+{
+  "admin_user_id": "user_f3f2b1d9-5fa9-40b1-b939-4a6efd8ed224",
+  "business_id": "business_8cbc5aca-acc2-4b65-a0ac-c96e38632006",
+  "created_at": 1790000000000000,
+  "end_reason": "expired",
+  "ended_at": 1790000000000000,
+  "ended_by": "user_8b227697-a873-4bf2-9fc5-fc02c599eeba",
+  "expires_at": 1790000000000000,
+  "granted_by": "user_809906be-11e5-4a44-ae77-37c20e4cc511",
+  "id": "support_access_fcf1e90e-2fe2-478a-9a54-529b19635487",
+  "kind": "session",
+  "opened_from_ip": "203.0.113.7",
+  "reason": "Owner asked why bookings stopped",
+  "schema_version": "1",
+  "status": "open",
+  "updated_at": 1790000000000000
+}

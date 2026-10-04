@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082, 1090, 1093 and 1094), each ELEMENT_TEXT field a trigger over
+1074, 1081, 1082, 1090, 1093, 1094 and 1103), each ELEMENT_TEXT field a trigger over
 `workshop.document_lookup_keys`; `document_lookup_fields` explains the kinds
 and checks queries against this catalog.
 """
@@ -51,9 +51,13 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _text("email"),
         _integer("created_at"),
     ),
+    # A user's sessions (Account → Security, ending the others) and the
+    # purge of sessions unused too long (1103).
     DocumentCollectionName("user_sessions"): (
         _text("token_hash"),
         _integer("expires_at"),
+        _text("user_id"),
+        _integer("idle_expires_at"),
     ),
     DocumentCollectionName("otp_challenges"): (_integer("created_at"),),
     # Two-factor sign-in (1082): authenticators (stored under their user's
@@ -249,5 +253,18 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         _filter("device_class"),
         _integer("value"),
         _integer("created_at"),
+    ),
+    # Platform access (1103): an admin by sign-in phone or e-mail, the
+    # admins of a role (is a SUPER admin recorded?); the open support
+    # grants of a business (its banner) or of everywhere (the job that
+    # ends expired ones), and one admin's grant in a business.
+    DocumentCollectionName("platform_admins"): (
+        _text("phone_number"),
+        _text("email"),
+        _text("role"),
+    ),
+    DocumentCollectionName("support_access_grants"): (
+        _text("status"),
+        _text("admin_user_id"),
     ),
 }

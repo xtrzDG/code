@@ -72,6 +72,7 @@ from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
 from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
@@ -273,6 +274,8 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *ACTIVATION_COLLECTIONS,
     # Alerts, backups and incidents of the platform itself (1093).
     *OPERATIONS_COLLECTIONS,
+    # Platform admins and support's time-boxed access to a business (1103).
+    *ACCESS_COLLECTIONS,
 )
 
 

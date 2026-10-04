@@ -27,7 +27,11 @@ class AuditLogEntryDocument(BaseDocument):
     # 2: the action `mfa_changed`. Its entries are about a person, not a
     # business (no `business_id`), and every reader of the previous release
     # lists entries by business, so it never meets one.
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: the actions `session_revoked` and `platform_admin_changed` (about a
+    # person, no business, like `mfa_changed`) and `support_access_start`
+    # and `support_access_end` (in the business's log; an exception to the
+    # enum rule, docs/operations/deploys.md).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
     actor_id: UserId | None = None

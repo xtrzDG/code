@@ -5,6 +5,7 @@ Example:
 """
 
 IsBotCheckPassed = bool
+IsCurrentSession = bool
 IsEmailLoginAvailable = bool
 IsNewUser = bool
 IsOtpChallengeConsumed = bool

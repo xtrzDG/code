@@ -35,6 +35,21 @@ class OtpCode(BaseConstrainedTypedString):
     pattern = r"^[0-9]{6}$"
 
 
+class SessionUserAgent(BaseConstrainedTypedString):
+    """
+    The User-Agent header a session was signed in or last used with, cut
+    to 512 printable characters at the transport boundary; the sessions
+    list shows the browser and system it names.
+
+    Example:
+        user_agent = SessionUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 ...")
+    """
+
+    min_length = 1
+    max_length = 512
+    pattern = r"^[\x20-\x7e]+$"
+
+
 class TurnstileAction(BaseConstrainedTypedString):
     """
     The action a Turnstile widget was rendered for; Cloudflare echoes it in
