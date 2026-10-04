@@ -25,6 +25,7 @@ from app.gateways.http.launch_router_assembly import build_launch_routers
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
+from app.gateways.http.privacy_router_assembly import build_privacy_routers
 from app.gateways.http.profile_routes import build_profile_router
 from app.gateways.http.resource_routes import build_resource_router
 from app.gateways.http.security_router_assembly import build_security_routers
@@ -292,6 +293,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_security_routers(operators, current_user),
         *build_value_routers(operators, current_user),
         *build_feedback_routers(operators, current_user),
+        *build_privacy_routers(operators, current_user),
         *build_analytics_routers(operators, current_user),
         *build_admin_ops_routers(operators, current_user),
     ]

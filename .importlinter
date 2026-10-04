@@ -67,6 +67,7 @@ modules =
     app.use_cases.contacts
     app.use_cases.conversations
     app.use_cases.demo
+    app.use_cases.exports
     app.use_cases.feedback
     app.use_cases.handoffs
     app.use_cases.inbox

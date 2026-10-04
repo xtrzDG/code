@@ -13,6 +13,7 @@ from tests.platform.authorization_requests import BUSINESS_PREFIX as B
 OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
     {
         f"PATCH {B}",
+        f"GET {B}/exports/{{table}}",
         f"POST {B}/assistant-versions",
         f"POST {B}/assistant-versions/{{version_id}}/autotests",
         f"POST {B}/assistant-versions/{{version_id}}/publish",
