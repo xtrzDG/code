@@ -72,7 +72,7 @@ export const securityEn = {
     },
     everyone: "Everyone has an authenticator app.",
     ownFirst:
-      "Set up your own authenticator app first: open Account → Security.",
+      "First sign in with your own authenticator app: set it up or confirm with it in Account → Security.",
     openSecurity: "Open Security",
     ownerOnly: "Only an owner can change this.",
     saved: "Saved",

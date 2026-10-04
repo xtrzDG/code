@@ -4,6 +4,7 @@ two-factor), recovery codes shown once and regenerated, removing the
 authenticator; every change is in the audit log as MFA_CHANGED.
 """
 
+from app.schemas.typings.mfa.constrained_strings import TotpSecret
 from tests.e2e.harness import Workshop, bearer
 from tests.e2e.harness_settings import ADMIN_EMAIL
 from tests.e2e.journeys import GEORGIAN_OWNER_PHONE
@@ -29,7 +30,7 @@ def test_setting_up_an_authenticator_makes_the_session_two_factor(
 
     started = workshop.client.post("/v1/me/mfa/totp", headers=headers)
     secret: str = started.json()["secret"]
-    workshop.authenticators.secrets[OWNER] = secret
+    workshop.authenticators.secrets[OWNER] = TotpSecret(secret)
     code: str = workshop.authenticators.code_for(OWNER, workshop.clock)
     wrong = workshop.client.post(
         "/v1/me/mfa/totp/confirm", json={"code": wrong_code_for(code)}, headers=headers
