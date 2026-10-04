@@ -37,12 +37,23 @@ from app.utilities.reply_guard.number_readings import (
     is_thousands_grouping,
     is_valid_date,
 )
+from app.utilities.reply_guard.number_word_mentions import (
+    extract_number_word_mentions,
+)
 from app.utilities.reply_guard.numerals import normalize_digits, only_digits
 from app.utilities.reply_guard.plain_number_mentions import read_number
 
 
-def extract_number_mentions(text: str, lexicon: GuardLexicon) -> list[NumberMention]:
-    """Every number-bearing mention of a text, in text order."""
+def extract_number_mentions(
+    text: str,
+    lexicon: GuardLexicon,
+    reads_plain_number_words: bool = False,
+) -> list[NumberMention]:
+    """
+    Every number-bearing mention of a text, in text order. Numbers written
+    in words count as money, percentages and clock hours; with
+    `reads_plain_number_words` (the evidence) every one of them counts.
+    """
 
     normalized_text: str = normalize_digits(text)
     taken: list[tuple[int, int]] = []
@@ -88,6 +99,12 @@ def extract_number_mentions(text: str, lexicon: GuardLexicon) -> list[NumberMent
         for match in pattern.finditer(normalized_text):
             if not overlaps(taken, match.start(), match.end()):
                 claim(read_phone(text, match))
+
+    # Before plain digits: "2 тысячи лари" is 2000 lari, not a count of 2.
+    for mention in extract_number_word_mentions(
+        text, normalized_text, lexicon, reads_plain_number_words
+    ):
+        claim(mention)
 
     for match in NUMBER_PATTERN.finditer(normalized_text):
         if not overlaps(taken, match.start(), match.end()):

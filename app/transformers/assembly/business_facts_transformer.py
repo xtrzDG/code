@@ -1,7 +1,7 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.constants.bookings import ResourceKind
 from app.schemas.constants.businesses import BusinessLinkKind
-from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.constants.knowledge import KnowledgeItemKind, KnowledgeItemSource
 from app.schemas.domain.assistants import BusinessFact
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
@@ -214,6 +214,7 @@ class BusinessFactsTransformer(
                 f"{item.kind.value}_{ordinals[item.kind]}",
                 f"{KNOWLEDGE_KIND_LABELS[item.kind]}: {item.title}",
                 describe_item_fact(item, source),
+                is_imported=item.source is KnowledgeItemSource.MENU_IMPORT,
             )
 
     def _add_resources(

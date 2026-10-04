@@ -28,6 +28,7 @@ from app.utilities.conversations.offer_payloads import (
     render_seasons,
     render_stay_quote,
 )
+from app.utilities.conversations.untrusted_text import wrap_untrusted
 from app.utilities.money.money_math import (
     convert_money_to_major_units,
     get_currency_minor_unit_digits,
@@ -158,7 +159,7 @@ def render_booking(
         rendered["end_time"] = str(booking.end_time)
 
     if booking.contact_name is not None:
-        rendered["name"] = str(booking.contact_name)
+        rendered["name"] = wrap_untrusted(str(booking.contact_name))
 
     if booking.contact_phone_number is not None:
         rendered["phone"] = str(booking.contact_phone_number)

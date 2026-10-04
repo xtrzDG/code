@@ -1,4 +1,7 @@
-"""Whether the assistant answers a message: handoffs and the hourly limit."""
+"""
+Whether the assistant answers a message: handoffs, the injection brake and
+the hourly limit.
+"""
 
 from datetime import timedelta
 
@@ -11,12 +14,15 @@ from app.contracts.repositories.conversation_repositories import (
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversation_engine import TurnGate
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.constants.reply_safety import InjectionSignal
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
+    InjectionFlagLimit,
 )
+from app.use_cases.conversations.turns.injection_brake import choose_injection_gate
 from app.use_cases.shared.turn_time import to_microseconds
 
 CONTACT_LIMIT_WINDOW: timedelta = timedelta(hours=1)
@@ -30,11 +36,14 @@ def choose_turn_gate(
     contact: ContactDocument,
     conversation: ConversationDocument,
     now: Microseconds,
+    injection_flag: InjectionSignal | None,
+    injection_flag_limit: InjectionFlagLimit,
 ) -> TurnGate:
     """
     Staff own a conversation in HANDOFF (silence in chat, a call-back
-    promise on the phone); past the hourly per-contact limit the assistant
-    answers once with a stop message, then stays silent.
+    promise on the phone); a contact who keeps trying prompt injection, or
+    is past the hourly per-contact limit, is answered once with a stop
+    message, then the assistant stays silent.
     """
 
     if conversation.status is ConversationStatus.HANDOFF:
@@ -43,6 +52,18 @@ def choose_turn_gate(
             if conversation.channel is ChannelKind.PHONE
             else TurnGate.STAFF_SILENCE
         )
+
+    injection_gate: TurnGate | None = choose_injection_gate(
+        conversation_repo,
+        message_repo,
+        injection_flag_limit,
+        business,
+        contact,
+        injection_flag,
+        now,
+    )
+    if injection_gate is not None:
+        return injection_gate
 
     recent_message_count: int = count_recent_inbound_messages(
         conversation_repo, message_repo, business, contact, now

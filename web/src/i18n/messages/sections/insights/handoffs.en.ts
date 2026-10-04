@@ -51,7 +51,7 @@ export const handoffsEn = {
     model_declined: "The assistant would not answer this message.",
     model_unavailable: "The assistant was briefly unavailable and could not answer.",
     answer_unfinished: "The assistant could not finish its answer.",
-    unverified_values: "The assistant held back an answer with figures that are not in your business details.",
+    unverified_values: "The assistant held back an answer with figures or statements that are not in your business details.",
     call_booking_unverified_values:
       "On the call the assistant named figures that are not in your business details. Check the booking from this call against the transcript.",
     call_request_unverified_values:
@@ -60,7 +60,7 @@ export const handoffsEn = {
     data_erased: "Details erased at the customer's request.",
   },
   summaryCodesWithValues: {
-    unverified_values: "The assistant held back an answer with figures that are not in your business details ({values}).",
+    unverified_values: "The assistant held back an answer with figures or statements that are not in your business details ({values}).",
     call_booking_unverified_values:
       "On the call the assistant named figures that are not in your business details ({values}). Check the booking from this call against the transcript.",
     call_request_unverified_values:

@@ -12,6 +12,7 @@ from app.schemas.constants.conversations import (
     ConversationRating,
     ConversationStatus,
     MessageAuthor,
+    ReplyGuardVerdict,
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -254,6 +255,7 @@ class DemoConversationRecorder:
             model_id=self._model_id if is_model_reply else None,
             channel=demo_reply_channel(conversation, line),
             reply_latency_ms=demo_reply_latency(conversation, line),
+            guard_verdict=ReplyGuardVerdict.CLEAN if is_model_reply else None,
             input_tokens=LlmTokenCount(REPLY_INPUT_TOKENS if is_model_reply else 0),
             output_tokens=LlmTokenCount(output_tokens if is_model_reply else 0),
             cost_micro_usd=CostMicroUsd(

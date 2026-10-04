@@ -33,6 +33,17 @@ class ConversationMessageCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class InjectionFlagLimit(BaseConstrainedTypedInt):
+    """
+    Messages that look like prompt injection one contact may send in a day
+    before the assistant stops answering them until the day passes
+    (INJECTION_FLAG_LIMIT).
+    """
+
+    ge = 1
+    le = 100
+
+
 class LlmRoundCount(BaseConstrainedTypedInt):
     """Language-model calls one assistant reply took (tool rounds and rewrite)."""
 

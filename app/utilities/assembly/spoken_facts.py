@@ -19,6 +19,7 @@ from decimal import Decimal
 from babel.numbers import get_currency_name
 
 from app.schemas.domain.assistants import BusinessFact
+from app.utilities.conversations.untrusted_text import wrap_untrusted
 
 MONEY_PATTERN: re.Pattern[str] = re.compile(r"(?<![\w.,])(\d+(?:\.\d+)?) ([A-Z]{3})\b")
 TIME_RANGE_PATTERN: re.Pattern[str] = re.compile(
@@ -68,7 +69,13 @@ def speak_facts(facts: Sequence[BusinessFact]) -> SpokenFactTable:
             table.link_labels.append(str(fact.label))
             continue
 
-        table.rows.append((speak_text(str(fact.label)), speak_text(value)))
+        spoken_value: str = speak_text(value)
+        table.rows.append(
+            (
+                speak_text(str(fact.label)),
+                wrap_untrusted(spoken_value) if fact.is_imported else spoken_value,
+            )
+        )
 
     return table
 

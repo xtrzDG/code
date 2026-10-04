@@ -57,6 +57,8 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         "LLM_SUMMARY_MODEL_ID",
         # The default follows LLM_PROVIDER (the other provider's model).
         "LLM_FALLBACK_MODEL_ID",
+        # The default follows LLM_PROVIDER (its cheap model; none: scripted).
+        "LLM_VERIFIER_MODEL_ID",
         # Development and tests only; refused in production.
         "OTP_LOG_CODES",
         # The default follows APP_ENV (json in production) and THREADPOOL_SIZE.

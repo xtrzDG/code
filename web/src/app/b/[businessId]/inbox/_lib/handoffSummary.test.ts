@@ -34,10 +34,10 @@ describe("handoff summary", () => {
     const flagged = { ...base, summary_code: "unverified_values" as const, flagged_values: ["20 GEL", "19:30"] };
 
     expect(handoffSummary(flagged, inLocale("ru")).text).toBe(
-      "Помощник не отправил ответ: в нём были цифры, которых нет в данных бизнеса (20 GEL, 19:30).",
+      "Помощник не отправил ответ: в нём были цифры или утверждения, которых нет в данных бизнеса (20 GEL, 19:30).",
     );
     expect(handoffSummary({ ...flagged, flagged_values: [] }, inLocale("ru")).text).toBe(
-      "Помощник не отправил ответ: в нём были цифры, которых нет в данных бизнеса.",
+      "Помощник не отправил ответ: в нём были цифры или утверждения, которых нет в данных бизнеса.",
     );
   });
 

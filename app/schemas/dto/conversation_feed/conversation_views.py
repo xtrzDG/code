@@ -23,6 +23,7 @@ from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.conversation_feed.message_deliveries import MessageDeliveryView
+from app.schemas.dto.conversation_feed.message_guard import MessageGuardView
 from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationMessageTally,
     ConversationUsageView,
@@ -174,7 +175,9 @@ class MessageView(ImmutableDTO):
     staff member who wrote a staff message from the cabinet, and
     `delivery` how that message travels to the customer (None for every
     other message, and for staff messages kept for the website chat);
-    `attachments` are a customer's voice notes, photos and places.
+    `attachments` are a customer's voice notes, photos and places;
+    `guard` what the reply guard did with it (None: nothing to show, e.g.
+    staff messages and replies stored before the guard recorded verdicts).
     """
 
     id: MessageId
@@ -193,6 +196,7 @@ class MessageView(ImmutableDTO):
         default_factory=list[MessageAttachmentView]
     )
     delivery: MessageDeliveryView | None = None
+    guard: MessageGuardView | None = None
 
 
 class CallSummaryView(ImmutableDTO):

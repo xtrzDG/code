@@ -72,7 +72,9 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
     autotest verdict of the active version (the published one, else the
     latest tested) exactly as the version stores it; handoffs and tool errors
     of the last 7 days; how long customers waited for replies in the last
-    7 days (p50 and p95 per channel); open unanswered questions; package
+    7 days (p50 and p95 per channel) and what the reply guard did (replies
+    rewritten or handed over, messages flagged as prompt injection); open
+    unanswered questions; package
     use, provider cost and margin in the current billing window (the last
     30 days without a subscription); and the health verdict. Leads-only service and a
     negative margin are critical; other issues ask for attention. Sandbox
@@ -198,6 +200,9 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
                 self._message_repo.count_reply_latencies(
                     business.id, recent_since, REPLY_LATENCY_BUCKETS
                 )
+            ),
+            guard_activity=self._message_repo.count_guard_activity(
+                business.id, recent_since
             ),
             health_status=ClientHealthStatus.HEALTHY,
         )

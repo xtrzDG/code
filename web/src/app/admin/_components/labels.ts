@@ -23,6 +23,7 @@ export const ISSUE_LABELS: Record<ClientHealthIssue, MessageKey> = {
   package_exceeded: "admin.issues.package_exceeded",
   negative_margin: "admin.issues.negative_margin",
   slow_replies: "adminReplySpeed.issueLabel",
+  guard_spike: "adminReplyGuard.issueLabel",
 };
 
 export const SORT_LABELS: Record<ClientSort, MessageKey> = {

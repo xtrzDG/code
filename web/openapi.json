@@ -295,6 +295,9 @@
             ],
             "title": "Grace Until"
           },
+          "guard_activity": {
+            "$ref": "#/components/schemas/ClientGuardActivity"
+          },
           "handoffs_last_7_days": {
             "minimum": 0.0,
             "title": "Handoffs Last 7 Days",
@@ -4613,6 +4616,71 @@
         "title": "CheckoutSessionView",
         "type": "object"
       },
+      "ClaimFinding": {
+        "additionalProperties": false,
+        "description": "One policy or availability claim of a reply and what the check found.",
+        "properties": {
+          "claim": {
+            "title": "Claim",
+            "type": "string"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/ClaimTopic"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ClaimVerdict"
+          }
+        },
+        "required": [
+          "claim",
+          "topic",
+          "verdict"
+        ],
+        "title": "ClaimFinding",
+        "type": "object"
+      },
+      "ClaimFindingView": {
+        "additionalProperties": false,
+        "description": "One policy or availability claim of a reply and the verifier's verdict.",
+        "properties": {
+          "claim": {
+            "title": "Claim",
+            "type": "string"
+          },
+          "topic": {
+            "$ref": "#/components/schemas/ClaimTopic"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ClaimVerdict"
+          }
+        },
+        "required": [
+          "claim",
+          "topic",
+          "verdict"
+        ],
+        "title": "ClaimFindingView",
+        "type": "object"
+      },
+      "ClaimTopic": {
+        "description": "The kind of statement the claim check verifies: a policy or a service\nterm (\"parking is free\", \"we take dogs\", \"free cancellation\") or the\navailability of something (\"we have a table\", \"delivery is available\").",
+        "enum": [
+          "policy",
+          "availability"
+        ],
+        "title": "ClaimTopic",
+        "type": "string"
+      },
+      "ClaimVerdict": {
+        "description": "What the verifier said about one claim: the business's facts and tool\nresults back it, they do not, or it could not be checked (the verifier\nfailed or answered something unreadable; the reply is then sent).",
+        "enum": [
+          "supported",
+          "unsupported",
+          "unchecked"
+        ],
+        "title": "ClaimVerdict",
+        "type": "string"
+      },
       "ClientAutotestVerdict": {
         "additionalProperties": false,
         "description": "The autotest verdict of the client's active version (the published one,\nelse the latest tested), exactly as the version stores it, so the admin\nand the version page never disagree. Counts are None for a version\ntested before verdicts were stored: its status says passed or not.",
@@ -4825,6 +4893,38 @@
         "title": "ClientCostReport",
         "type": "object"
       },
+      "ClientGuardActivity": {
+        "additionalProperties": false,
+        "description": "What the reply guard did for one client in a time window: the model's\nreplies it checked, those it had rewritten once or handed to staff, and\nthe customer messages that looked like prompt injection.",
+        "properties": {
+          "checked_replies": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Checked Replies",
+            "type": "integer"
+          },
+          "handed_off_replies": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Handed Off Replies",
+            "type": "integer"
+          },
+          "injection_flags": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Injection Flags",
+            "type": "integer"
+          },
+          "rewritten_replies": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Rewritten Replies",
+            "type": "integer"
+          }
+        },
+        "title": "ClientGuardActivity",
+        "type": "object"
+      },
       "ClientHealthIssue": {
         "description": "One reason a client needs attention.\n\nCritical: the assistant is limited (leads only) or loses money; the rest\nasks for a look.",
         "enum": [
@@ -4840,7 +4940,8 @@
           "open_questions",
           "package_exceeded",
           "negative_margin",
-          "slow_replies"
+          "slow_replies",
+          "guard_spike"
         ],
         "title": "ClientHealthIssue",
         "type": "string"
@@ -9435,6 +9536,18 @@
         "title": "IncidentView",
         "type": "object"
       },
+      "InjectionSignal": {
+        "description": "The kind of prompt-injection attempt a customer message looks like:\ntelling the assistant to drop its instructions, to become someone else,\nto reveal its instructions or other customers' data, or text faking the\nplatform's own lines (system tags, fence keys, platform headers).",
+        "enum": [
+          "instruction_override",
+          "role_change",
+          "prompt_extraction",
+          "data_exfiltration",
+          "fake_platform_text"
+        ],
+        "title": "InjectionSignal",
+        "type": "string"
+      },
       "InvoiceKind": {
         "description": "What an invoice charges for.",
         "enum": [
@@ -11441,7 +11554,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.",
         "properties": {
           "attachments": {
             "items": {
@@ -11467,6 +11580,13 @@
               }
             ]
           },
+          "claim_findings": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimFinding"
+            },
+            "title": "Claim Findings",
+            "type": "array"
+          },
           "conversation_id": {
             "title": "Conversation Id",
             "type": "string"
@@ -11485,9 +11605,36 @@
           "direction": {
             "$ref": "#/components/schemas/MessageDirection"
           },
+          "guard_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReplyGuardReason"
+            },
+            "title": "Guard Reasons",
+            "type": "array"
+          },
+          "guard_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyGuardVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "injection_flag": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InjectionSignal"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "input_tokens": {
             "default": 0,
@@ -11553,7 +11700,7 @@
             "title": "Reply Latency Ms"
           },
           "schema_version": {
-            "default": "3",
+            "default": "4",
             "title": "Schema Version",
             "type": "string"
           },
@@ -11579,6 +11726,13 @@
             "title": "Tool Calls",
             "type": "array"
           },
+          "unverified_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unverified Values",
+            "type": "array"
+          },
           "updated_at": {
             "description": "Last update wall-clock UNIX timestamp in microseconds.",
             "title": "Updated At",
@@ -11593,6 +11747,55 @@
           "text"
         ],
         "title": "MessageDocument",
+        "type": "object"
+      },
+      "MessageGuardView": {
+        "additionalProperties": false,
+        "description": "The reply guard's record of a message: for the assistant's reply its\nverdict (clean, rewritten once, handed to staff), why it held the reply\nback, the values the evidence did not back and the claims it checked;\nfor a customer message the kind of prompt injection it looked like.",
+        "properties": {
+          "claim_findings": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimFindingView"
+            },
+            "title": "Claim Findings",
+            "type": "array"
+          },
+          "injection_flag": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InjectionSignal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReplyGuardReason"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "unverified_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unverified Values",
+            "type": "array"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyGuardVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "MessageGuardView",
         "type": "object"
       },
       "MessagePage": {
@@ -11626,7 +11829,7 @@
       },
       "MessageView": {
         "additionalProperties": false,
-        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet, and\n`delivery` how that message travels to the customer (None for every\nother message, and for staff messages kept for the website chat);\n`attachments` are a customer's voice notes, photos and places.",
+        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet, and\n`delivery` how that message travels to the customer (None for every\nother message, and for staff messages kept for the website chat);\n`attachments` are a customer's voice notes, photos and places;\n`guard` what the reply guard did with it (None: nothing to show, e.g.\nstaff messages and replies stored before the guard recorded verdicts).",
         "properties": {
           "attachments": {
             "items": {
@@ -11659,6 +11862,16 @@
           },
           "direction": {
             "$ref": "#/components/schemas/MessageDirection"
+          },
+          "guard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MessageGuardView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "title": "Id",
@@ -13992,6 +14205,16 @@
         ],
         "title": "RecoveryCodesView",
         "type": "object"
+      },
+      "ReplyGuardReason": {
+        "description": "Why the guard held back a reply (rewritten once or handed over): values\nthe evidence does not back, policy or availability claims it does not\nback, or another person's phone number or e-mail address.",
+        "enum": [
+          "unverified_values",
+          "unsupported_claims",
+          "personal_data"
+        ],
+        "title": "ReplyGuardReason",
+        "type": "string"
       },
       "ReplyGuardVerdict": {
         "description": "Result of the invented-numbers guard on an assistant reply.",

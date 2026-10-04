@@ -1,7 +1,7 @@
 {
   "collection": "assistant_versions",
   "document_type": "AssistantVersionDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -101,6 +101,10 @@
         "items": {
           "additionalProperties": false,
           "properties": {
+            "is_imported": {
+              "default": false,
+              "type": "boolean"
+            },
             "key": {
               "maxLength": 64,
               "minLength": 2,
@@ -195,7 +199,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "status": {

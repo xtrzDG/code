@@ -135,6 +135,7 @@ _.opened_at  # app/schemas/dto/admin.py
 _.payments  # app/schemas/dto/admin.py
 _.subscription_status  # app/schemas/dto/admin.py
 _.version_status  # app/schemas/dto/assistants/assistant_views.py
+_.guard  # app/schemas/dto/conversation_feed/conversation_views.py
 _.item_kind  # app/schemas/dto/setup/pending_changes.py
 _.live_version_number  # app/schemas/dto/setup/pending_changes.py
 _.dialog_usage_percent  # app/schemas/dto/billing_cabinet.py

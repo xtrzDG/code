@@ -19,6 +19,9 @@ from app.facilitators.calendar.google_calendar_sync_facilitator import (
 from app.facilitators.channels.typing_signal_facilitator import (
     TypingSignalFacilitator,
 )
+from app.facilitators.claim_check.claim_check_facilitator import (
+    ClaimCheckFacilitator,
+)
 from app.facilitators.events.event_publisher_facilitator import (
     EventPublisherFacilitator,
 )
@@ -236,6 +239,13 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # "typing…" while a reply is written (Telegram, WhatsApp, Meta pages).
+    # The claim check of the reply guard: a cheap verifier model
+    # (LLM_VERIFIER_MODEL_ID; none: the check is off).
+    claim_check: Singleton[ClaimCheckFacilitator] = Singleton(
+        ClaimCheckFacilitator,
+        llm_adapter=adapters.chat_llm_adapter,
+        verifier_model_id=config.app_settings.provided.reply_safety.llm_verifier_model_id,
+    )
     typing_signals: Singleton[TypingSignalFacilitator] = Singleton(
         TypingSignalFacilitator,
         channel_repo=repositories.channel_repo,

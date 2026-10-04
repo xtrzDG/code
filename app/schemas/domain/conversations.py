@@ -11,6 +11,13 @@ from app.schemas.constants.conversations import (
     ConversationStatus,
     LlmTurnRole,
     MessageAuthor,
+    ReplyGuardVerdict,
+)
+from app.schemas.constants.reply_safety import (
+    ClaimTopic,
+    ClaimVerdict,
+    InjectionSignal,
+    ReplyGuardReason,
 )
 from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
@@ -41,6 +48,7 @@ from app.schemas.typings.conversations.prefixed_id import (
 from app.schemas.typings.conversations.strings import (
     CallTranscriptText,
     ChannelUserId,
+    ClaimText,
     LlmProviderPayload,
     LlmToolInputJson,
     LlmToolResultJson,
@@ -118,6 +126,14 @@ class ToolCallRecord(PersistentDocument):
     is_error: IsLlmToolError = False
 
 
+class ClaimFinding(PersistentDocument):
+    """One policy or availability claim of a reply and what the check found."""
+
+    claim: ClaimText
+    topic: ClaimTopic
+    verdict: ClaimVerdict
+
+
 class MessageDocument(BaseDocument):
     """
     Stored message with model usage and cost (concept table `messages`).
@@ -138,9 +154,18 @@ class MessageDocument(BaseDocument):
     and `is_fallback_model` (a model of the other provider answered because
     the version's own failed). All optional, so version 2 rows read as they
     are.
+
+    Version 4: what the reply guard did (R10). On an assistant reply:
+    `guard_verdict` (clean, rewritten once, handed to staff; None on other
+    messages and older rows), `guard_reasons` (why it was held back),
+    `unverified_values` (values the evidence did not back, as written) and
+    `claim_findings` (each policy or availability claim the verifier
+    checked). On a customer message: `injection_flag`, the kind of prompt
+    injection it looked like (None: none). All optional, so version 3 rows
+    read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId
@@ -161,6 +186,15 @@ class MessageDocument(BaseDocument):
     reply_latency_ms: ReplyLatencyMilliseconds | None = None
     llm_round_count: LlmRoundCount = LlmRoundCount(0)
     is_fallback_model: IsFallbackModel = False
+    guard_verdict: ReplyGuardVerdict | None = None
+    guard_reasons: list[ReplyGuardReason] = Field(
+        default_factory=list[ReplyGuardReason]
+    )
+    unverified_values: list[UnverifiedReplyValue] = Field(
+        default_factory=list[UnverifiedReplyValue]
+    )
+    claim_findings: list[ClaimFinding] = Field(default_factory=list[ClaimFinding])
+    injection_flag: InjectionSignal | None = None
 
 
 class LlmTurnDocument(BaseDocument):

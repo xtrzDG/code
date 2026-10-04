@@ -1,8 +1,37 @@
-"""Digits and numbers as written in any language."""
+"""
+Digits and numbers as written in any language: digits of every numbering
+system, and numbers written in words (`NUMBER_WORDS`) in the languages
+whose number words the guard reads next to currency, percent and time
+words.
+"""
 
 import unicodedata
+from collections.abc import Iterable, Mapping
 from decimal import Decimal, InvalidOperation
 from functools import cache
+
+from app.utilities.reply_guard.number_word_lexicon import (
+    NumberWordLexicon,
+    merge_lexicons,
+)
+from app.utilities.reply_guard.number_words_en_de_tr import (
+    ENGLISH_NUMBER_WORDS,
+    GERMAN_NUMBER_WORDS,
+    TURKISH_NUMBER_WORDS,
+)
+from app.utilities.reply_guard.number_words_fr_es import (
+    FRENCH_NUMBER_WORDS,
+    SPANISH_NUMBER_WORDS,
+)
+from app.utilities.reply_guard.number_words_he_ar import (
+    ARABIC_NUMBER_WORDS,
+    HEBREW_NUMBER_WORDS,
+)
+from app.utilities.reply_guard.number_words_ka import GEORGIAN_NUMBER_WORDS
+from app.utilities.reply_guard.number_words_ru_uk import (
+    RUSSIAN_NUMBER_WORDS,
+    UKRAINIAN_NUMBER_WORDS,
+)
 
 ASCII_DIGITS: str = "0123456789"
 # The Arabic decimal and thousands separators written with Arabic-Indic
@@ -10,6 +39,19 @@ ASCII_DIGITS: str = "0123456789"
 SEPARATOR_REPLACEMENTS: dict[str, str] = {"\u066b": ".", "\u066c": ","}
 DECIMAL_MARKS: frozenset[str] = frozenset({".", ","})
 THOUSANDS_GROUP_LENGTH: int = 3
+# Number words by base language code.
+NUMBER_WORDS: Mapping[str, NumberWordLexicon] = {
+    "en": ENGLISH_NUMBER_WORDS,
+    "ru": RUSSIAN_NUMBER_WORDS,
+    "ka": GEORGIAN_NUMBER_WORDS,
+    "uk": UKRAINIAN_NUMBER_WORDS,
+    "tr": TURKISH_NUMBER_WORDS,
+    "he": HEBREW_NUMBER_WORDS,
+    "ar": ARABIC_NUMBER_WORDS,
+    "de": GERMAN_NUMBER_WORDS,
+    "fr": FRENCH_NUMBER_WORDS,
+    "es": SPANISH_NUMBER_WORDS,
+}
 
 
 def normalize_digits(text: str) -> str:
@@ -86,3 +128,20 @@ def only_digits(text: str) -> str:
 
 def filter_none(values: list[Decimal | None]) -> list[Decimal]:
     return [value for value in values if value is not None]
+
+
+def number_words_for(language_codes: Iterable[str]) -> NumberWordLexicon:
+    """
+    The number words of the given base languages that have a lexicon,
+    merged in their order (the same languages give the same lexicon).
+    """
+
+    known: tuple[str, ...] = tuple(
+        dict.fromkeys(code for code in language_codes if code in NUMBER_WORDS)
+    )
+    return merged_number_words(known)
+
+
+@cache
+def merged_number_words(language_codes: tuple[str, ...]) -> NumberWordLexicon:
+    return merge_lexicons(NUMBER_WORDS[code] for code in language_codes)

@@ -240,6 +240,13 @@ LIST_QUERIES: tuple[ListQuery, ...] = (
         "messages_doc_created_at_idx",
     ),
     ListQuery(
+        "admin: what the reply guard did (GUARD_SPIKE)",
+        lambda r: r.messages.count_guard_activity(BUSINESS, RECENT),
+        "messages",
+        "messages_doc_created_at_idx",
+        ("messages_doc_reply_latency_idx", "messages_doc_author_created_at_idx"),
+    ),
+    ListQuery(
         "admin: recent handoffs",
         lambda r: r.handoffs.count_made_since(BUSINESS, RECENT),
         "handoffs",

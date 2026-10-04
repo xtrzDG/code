@@ -2976,6 +2976,7 @@ export interface components {
             failed_tests: number;
             /** Grace Until */
             grace_until?: number | null;
+            guard_activity?: components["schemas"]["ClientGuardActivity"];
             /** Handoffs Last 7 Days */
             handoffs_last_7_days: number;
             /**
@@ -4568,6 +4569,42 @@ export interface components {
             payment_order_id: string;
         };
         /**
+         * ClaimFinding
+         * @description One policy or availability claim of a reply and what the check found.
+         */
+        ClaimFinding: {
+            /** Claim */
+            claim: string;
+            topic: components["schemas"]["ClaimTopic"];
+            verdict: components["schemas"]["ClaimVerdict"];
+        };
+        /**
+         * ClaimFindingView
+         * @description One policy or availability claim of a reply and the verifier's verdict.
+         */
+        ClaimFindingView: {
+            /** Claim */
+            claim: string;
+            topic: components["schemas"]["ClaimTopic"];
+            verdict: components["schemas"]["ClaimVerdict"];
+        };
+        /**
+         * ClaimTopic
+         * @description The kind of statement the claim check verifies: a policy or a service
+         *     term ("parking is free", "we take dogs", "free cancellation") or the
+         *     availability of something ("we have a table", "delivery is available").
+         * @enum {string}
+         */
+        ClaimTopic: "policy" | "availability";
+        /**
+         * ClaimVerdict
+         * @description What the verifier said about one claim: the business's facts and tool
+         *     results back it, they do not, or it could not be checked (the verifier
+         *     failed or answered something unreadable; the reply is then sent).
+         * @enum {string}
+         */
+        ClaimVerdict: "supported" | "unsupported" | "unchecked";
+        /**
          * ClientAutotestVerdict
          * @description The autotest verdict of the client's active version (the published one,
          *     else the latest tested), exactly as the version stores it, so the admin
@@ -4639,6 +4676,34 @@ export interface components {
             usage_cost_lines?: components["schemas"]["UsageCostLine"][];
         };
         /**
+         * ClientGuardActivity
+         * @description What the reply guard did for one client in a time window: the model's
+         *     replies it checked, those it had rewritten once or handed to staff, and
+         *     the customer messages that looked like prompt injection.
+         */
+        ClientGuardActivity: {
+            /**
+             * Checked Replies
+             * @default 0
+             */
+            checked_replies: number;
+            /**
+             * Handed Off Replies
+             * @default 0
+             */
+            handed_off_replies: number;
+            /**
+             * Injection Flags
+             * @default 0
+             */
+            injection_flags: number;
+            /**
+             * Rewritten Replies
+             * @default 0
+             */
+            rewritten_replies: number;
+        };
+        /**
          * ClientHealthIssue
          * @description One reason a client needs attention.
          *
@@ -4646,7 +4711,7 @@ export interface components {
          *     asks for a look.
          * @enum {string}
          */
-        ClientHealthIssue: "no_subscription" | "first_payment_pending" | "payment_past_due" | "subscription_cancelled" | "leads_only_mode" | "not_published" | "autotests_failed" | "tool_errors" | "many_handoffs" | "open_questions" | "package_exceeded" | "negative_margin" | "slow_replies";
+        ClientHealthIssue: "no_subscription" | "first_payment_pending" | "payment_past_due" | "subscription_cancelled" | "leads_only_mode" | "not_published" | "autotests_failed" | "tool_errors" | "many_handoffs" | "open_questions" | "package_exceeded" | "negative_margin" | "slow_replies" | "guard_spike";
         /**
          * ClientHealthStatus
          * @description Overall state of a client business in the platform admin view.
@@ -6532,6 +6597,15 @@ export interface components {
             title: string;
         };
         /**
+         * InjectionSignal
+         * @description The kind of prompt-injection attempt a customer message looks like:
+         *     telling the assistant to drop its instructions, to become someone else,
+         *     to reveal its instructions or other customers' data, or text faking the
+         *     platform's own lines (system tags, fence keys, platform headers).
+         * @enum {string}
+         */
+        InjectionSignal: "instruction_override" | "role_change" | "prompt_extraction" | "data_exfiltration" | "fake_platform_text";
+        /**
          * InvoiceKind
          * @description What an invoice charges for.
          * @enum {string}
@@ -7282,6 +7356,15 @@ export interface components {
          *     and `is_fallback_model` (a model of the other provider answered because
          *     the version's own failed). All optional, so version 2 rows read as they
          *     are.
+         *
+         *     Version 4: what the reply guard did (R10). On an assistant reply:
+         *     `guard_verdict` (clean, rewritten once, handed to staff; None on other
+         *     messages and older rows), `guard_reasons` (why it was held back),
+         *     `unverified_values` (values the evidence did not back, as written) and
+         *     `claim_findings` (each policy or availability claim the verifier
+         *     checked). On a customer message: `injection_flag`, the kind of prompt
+         *     injection it looked like (None: none). All optional, so version 3 rows
+         *     read as they are.
          */
         MessageDocument: {
             /** Attachments */
@@ -7290,6 +7373,8 @@ export interface components {
             /** Business Id */
             business_id: string;
             channel?: components["schemas"]["ChannelKind"] | null;
+            /** Claim Findings */
+            claim_findings?: components["schemas"]["ClaimFinding"][];
             /** Conversation Id */
             conversation_id: string;
             /**
@@ -7303,8 +7388,12 @@ export interface components {
              */
             created_at?: number;
             direction: components["schemas"]["MessageDirection"];
+            /** Guard Reasons */
+            guard_reasons?: components["schemas"]["ReplyGuardReason"][];
+            guard_verdict?: components["schemas"]["ReplyGuardVerdict"] | null;
             /** Id */
             id?: string;
+            injection_flag?: components["schemas"]["InjectionSignal"] | null;
             /**
              * Input Tokens
              * @default 0
@@ -7333,7 +7422,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 3
+             * @default 4
              */
             schema_version: string;
             /** Sent By */
@@ -7342,11 +7431,30 @@ export interface components {
             text: string;
             /** Tool Calls */
             tool_calls?: components["schemas"]["ToolCallRecord"][];
+            /** Unverified Values */
+            unverified_values?: string[];
             /**
              * Updated At
              * @description Last update wall-clock UNIX timestamp in microseconds.
              */
             updated_at?: number;
+        };
+        /**
+         * MessageGuardView
+         * @description The reply guard's record of a message: for the assistant's reply its
+         *     verdict (clean, rewritten once, handed to staff), why it held the reply
+         *     back, the values the evidence did not back and the claims it checked;
+         *     for a customer message the kind of prompt injection it looked like.
+         */
+        MessageGuardView: {
+            /** Claim Findings */
+            claim_findings?: components["schemas"]["ClaimFindingView"][];
+            injection_flag?: components["schemas"]["InjectionSignal"] | null;
+            /** Reasons */
+            reasons?: components["schemas"]["ReplyGuardReason"][];
+            /** Unverified Values */
+            unverified_values?: string[];
+            verdict?: components["schemas"]["ReplyGuardVerdict"] | null;
         };
         /**
          * MessagePage
@@ -7365,7 +7473,9 @@ export interface components {
          *     staff member who wrote a staff message from the cabinet, and
          *     `delivery` how that message travels to the customer (None for every
          *     other message, and for staff messages kept for the website chat);
-         *     `attachments` are a customer's voice notes, photos and places.
+         *     `attachments` are a customer's voice notes, photos and places;
+         *     `guard` what the reply guard did with it (None: nothing to show, e.g.
+         *     staff messages and replies stored before the guard recorded verdicts).
          */
         MessageView: {
             /** Attachments */
@@ -7377,6 +7487,7 @@ export interface components {
             created_at: number;
             delivery?: components["schemas"]["MessageDeliveryView"] | null;
             direction: components["schemas"]["MessageDirection"];
+            guard?: components["schemas"]["MessageGuardView"] | null;
             /** Id */
             id: string;
             /** Input Tokens */
@@ -8290,6 +8401,14 @@ export interface components {
             /** Recovery Codes */
             recovery_codes: string[];
         };
+        /**
+         * ReplyGuardReason
+         * @description Why the guard held back a reply (rewritten once or handed over): values
+         *     the evidence does not back, policy or availability claims it does not
+         *     back, or another person's phone number or e-mail address.
+         * @enum {string}
+         */
+        ReplyGuardReason: "unverified_values" | "unsupported_claims" | "personal_data";
         /**
          * ReplyGuardVerdict
          * @description Result of the invented-numbers guard on an assistant reply.

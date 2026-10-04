@@ -140,6 +140,14 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
         "messages_doc_conversation_idx",
     ),
     HotQuery(
+        "injection-flagged messages of a conversation (the brake)",
+        lambda r: r.messages.count_injection_flags(
+            BUSINESS_IDS[0], ConversationId(), created_from=NOW
+        ),
+        "messages",
+        "messages_doc_conversation_idx",
+    ),
+    HotQuery(
         "assistant replies of a conversation",
         lambda r: r.messages.count_by_conversation(
             BUSINESS_IDS[0],

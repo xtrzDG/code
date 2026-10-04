@@ -20,6 +20,9 @@ import { adminMetricsEn } from "./workspace/adminMetrics.en";
 import { adminMetricsKa } from "./workspace/adminMetrics.ka";
 import { adminMetricsRu } from "./workspace/adminMetrics.ru";
 import { adminRu } from "./workspace/admin.ru";
+import { adminReplyGuardEn } from "./workspace/adminReplyGuard.en";
+import { adminReplyGuardKa } from "./workspace/adminReplyGuard.ka";
+import { adminReplyGuardRu } from "./workspace/adminReplyGuard.ru";
 import { adminReplySpeedEn } from "./workspace/adminReplySpeed.en";
 import { adminReplySpeedKa } from "./workspace/adminReplySpeed.ka";
 import { adminReplySpeedRu } from "./workspace/adminReplySpeed.ru";
@@ -80,6 +83,7 @@ export const workspaceEn = {
   adminSecurity: adminSecurityEn,
   adminMetrics: adminMetricsEn,
   adminReplySpeed: adminReplySpeedEn,
+  adminReplyGuard: adminReplyGuardEn,
   adminSystem: adminSystemEn,
   adminIncident: adminIncidentEn,
   share: shareEn,
@@ -100,6 +104,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   adminSecurity: adminSecurityRu,
   adminMetrics: adminMetricsRu,
   adminReplySpeed: adminReplySpeedRu,
+  adminReplyGuard: adminReplyGuardRu,
   adminSystem: adminSystemRu,
   adminIncident: adminIncidentRu,
   share: shareRu,
@@ -120,6 +125,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   adminSecurity: adminSecurityKa,
   adminMetrics: adminMetricsKa,
   adminReplySpeed: adminReplySpeedKa,
+  adminReplyGuard: adminReplyGuardKa,
   adminSystem: adminSystemKa,
   adminIncident: adminIncidentKa,
   share: shareKa,

@@ -27,12 +27,14 @@ from app.schemas.dto.operations.activity_counts import (
     ConversationTimelineCount,
 )
 from app.schemas.dto.paging import KeysetSlice
+from app.schemas.dto.reply_safety import ClientGuardActivity
 from app.schemas.dto.reply_speed import ReplyLatencyBucketCount
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import (
+    ConversationMessageCount,
     ReplyLatencyMilliseconds,
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
@@ -136,6 +138,25 @@ class MessageListingContract(Protocol):
         counted by the database per channel and latency bucket (bucket i
         from `bucket_starts[i]` up to the next start).
         """
+        raise NotImplementedError
+
+    def count_guard_activity(
+        self, business_id: BusinessId, since: Microseconds
+    ) -> ClientGuardActivity:
+        """
+        The model's replies created at or after `since` that the reply guard
+        checked, rewrote or handed over, and the customer messages it
+        flagged as prompt injection, in one database count.
+        """
+        raise NotImplementedError
+
+    def count_injection_flags(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+        created_from: Microseconds,
+    ) -> ConversationMessageCount:
+        """Customer messages of the conversation flagged as prompt injection."""
         raise NotImplementedError
 
 

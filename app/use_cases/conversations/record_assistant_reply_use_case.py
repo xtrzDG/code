@@ -8,21 +8,24 @@ from app.contracts.repositories.conversation_repositories import (
     MessageRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.channels import ChannelKind, MessageDirection
-from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
+from app.schemas.constants.conversations import (
+    ConversationStatus,
+    MessageAuthor,
+    ReplyGuardVerdict,
+)
 from app.schemas.constants.live_events import LiveEventKind
-from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
-from app.schemas.typings.billing.constrained_integers import (
-    CostMicroUsd,
-    UsageQuantity,
-)
+from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
+from app.use_cases.conversations.reply_usage import (
+    record_reply_usage,
+    total_verifier_cost,
+)
 from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
 )
@@ -44,8 +47,10 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     the customer writes in, also one the business did not list
     (`reply_language`; phone calls disclose in the call greeting). The
     outbound message keeps the tool calls, model, tokens and cost (from the
-    model price table); usage events record input and output tokens and one
-    dialog per real conversation. The conversation, re-read because tools
+    model price table, the claim check's verifier included) and what the
+    reply guard did (verdict, reasons, flagged values, checked claims; only
+    for a model's reply); usage events record input and output tokens and
+    one dialog per real conversation. The conversation, re-read because tools
     may have changed it, gets its last message time and the HANDOFF status
     when staff now own it. The reply names the version that answered and
     carries the turn's tool calls.
@@ -102,19 +107,25 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                     model_id=input_data.model_id,
                     input_tokens=input_data.input_tokens,
                     output_tokens=input_data.output_tokens,
-                    cost_micro_usd=cost.total,
+                    cost_micro_usd=CostMicroUsd(
+                        int(cost.total) + int(total_verifier_cost(input_data))
+                    ),
                     channel=turn.conversation.channel,
                     reply_latency_ms=measure_reply_latency(
                         input_data.waiting_since, now
                     ),
                     llm_round_count=input_data.llm_round_count,
                     is_fallback_model=input_data.is_fallback_model,
+                    guard_verdict=guard_verdict_of(input_data),
+                    guard_reasons=list(input_data.guard_reasons),
+                    unverified_values=list(input_data.unverified_values),
+                    claim_findings=list(input_data.claim_findings),
                     created_at=now,
                     updated_at=now,
                 )
             )
 
-        self._record_usage(input_data, cost, now)
+        record_reply_usage(self._usage_event_repo, input_data, cost, now)
         conversation: ConversationDocument = (
             self._conversation_repo.get(turn.business.id, turn.conversation.id)
             or turn.conversation
@@ -182,33 +193,8 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             )
         )
 
-    def _record_usage(
-        self,
-        record: ReplyRecord,
-        cost: LlmCallCost,
-        now: Microseconds,
-    ) -> None:
-        turn: PreparedTurn = record.turn
-        usages: list[tuple[UsageKind, int, CostMicroUsd]] = [
-            (UsageKind.LLM_INPUT_TOKENS, int(record.input_tokens), cost.input_cost),
-            (UsageKind.LLM_OUTPUT_TOKENS, int(record.output_tokens), cost.output_cost),
-        ]
-        if turn.is_new_conversation and not turn.conversation.is_sandbox:
-            usages.append((UsageKind.DIALOG, 1, CostMicroUsd(0)))
 
-        for kind, quantity, usage_cost in usages:
-            if quantity == 0:
-                continue
+def guard_verdict_of(record: ReplyRecord) -> ReplyGuardVerdict | None:
+    """The guard's verdict of a model reply; None for the platform's texts."""
 
-            self._usage_event_repo.append(
-                UsageEventDocument(
-                    business_id=turn.business.id,
-                    conversation_id=turn.conversation.id,
-                    kind=kind,
-                    quantity=UsageQuantity(quantity),
-                    cost_micro_usd=usage_cost,
-                    occurred_at=now,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
+    return None if record.model_id is None else record.guard_verdict

@@ -4,13 +4,13 @@ from app.contracts.conversation_flow import ConversationTurnOrchestratorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.storage import StorageScopeContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.conversation_engine import ReplyFailureKind, TurnGate
-from app.schemas.constants.handoffs import (
-    HandoffReason,
-    HandoffSummaryCode,
-    HandoffUrgency,
+from app.orchestrators.conversations.failure_handoffs import (
+    FAILURE_HANDOFF_REASONS,
+    build_failure_summary,
 )
+from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.conversation_engine import TurnGate
+from app.schemas.constants.handoffs import HandoffUrgency
 from app.schemas.dto.conversation_engine import (
     GeneratedReply,
     PreparedTurn,
@@ -18,16 +18,11 @@ from app.schemas.dto.conversation_engine import (
 )
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.dto.feedback.customer_signals import CustomerSignalReply
-from app.schemas.dto.handoffs import (
-    CodedHandoffSummary,
-    HandoffCommand,
-    HandoffResult,
-)
+from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.handoffs.strings import HandoffQuotedText
 from app.utilities.conversations.assistant_texts.attachment_notice_texts import (
     CANNOT_READ_ATTACHMENT,
 )
@@ -40,19 +35,6 @@ from app.utilities.conversations.farewells import is_farewell
 from app.utilities.observability.log_context import bound_log_context
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
-MAX_QUOTED_CUSTOMER_TEXT: int = 300
-FAILURE_HANDOFF_REASONS: dict[ReplyFailureKind, HandoffReason] = {
-    ReplyFailureKind.REFUSAL: HandoffReason.SENSITIVE_TOPIC,
-    ReplyFailureKind.PROVIDER_ERROR: HandoffReason.NON_STANDARD_REQUEST,
-    ReplyFailureKind.NO_ANSWER: HandoffReason.NON_STANDARD_REQUEST,
-    ReplyFailureKind.UNVERIFIED_NUMBERS: HandoffReason.UNVERIFIED_NUMBERS,
-}
-FAILURE_SUMMARY_CODES: dict[ReplyFailureKind, HandoffSummaryCode] = {
-    ReplyFailureKind.REFUSAL: HandoffSummaryCode.MODEL_DECLINED,
-    ReplyFailureKind.PROVIDER_ERROR: HandoffSummaryCode.MODEL_UNAVAILABLE,
-    ReplyFailureKind.NO_ANSWER: HandoffSummaryCode.ANSWER_UNFINISHED,
-    ReplyFailureKind.UNVERIFIED_NUMBERS: HandoffSummaryCode.UNVERIFIED_VALUES,
-}
 
 
 class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
@@ -66,12 +48,13 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     in chat and promise a call back on the phone; past the contact's message
     limit answer once with a polite stop message; a message with nothing the
     assistant can read (a sticker, a file) gets a polite request to write.
-    Otherwise generate the reply with tools and the invented-numbers guard.
-    When the model refuses, is unavailable, cannot finish or keeps
-    unverified numbers, the conversation goes to a colleague (unless the
-    model already handed it over) and the customer hears so in their
-    language. Finally the reply is stored with its usage; on the phone the
-    call ends after a handoff or the caller's goodbye.
+    Otherwise generate the reply with tools and the reply guard (numbers,
+    claims, other people's contact details). When the model refuses, is
+    unavailable, cannot finish or keeps what the guard holds back, the
+    conversation goes to a colleague (unless the model already handed it
+    over) and the customer hears so in their language. Finally the reply is
+    stored with its usage; on the phone the call ends after a handoff or the
+    caller's goodbye.
     """
 
     def __init__(
@@ -154,6 +137,10 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
             turn=turn,
             text=text,
             guard_verdict=generated.guard_verdict,
+            guard_reasons=list(generated.guard_reasons),
+            unverified_values=list(generated.unverified_values),
+            claim_findings=list(generated.claim_findings),
+            verifier_usage=list(generated.verifier_usage),
             tool_calls=list(generated.tool_calls),
             created_booking_ids=list(generated.created_booking_ids),
             created_lead_ids=list(generated.created_lead_ids),
@@ -259,23 +246,3 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         return MessageText(
             self._localized_text_resolver.resolve(text, turn.reply_language)
         )
-
-
-def build_failure_summary(
-    turn: PreparedTurn, generated: GeneratedReply
-) -> CodedHandoffSummary:
-    """
-    Summary for staff: what went wrong (a code each reader's language
-    renders), the values the guard flagged and what the customer wrote.
-    """
-
-    failure: ReplyFailureKind = (
-        ReplyFailureKind.NO_ANSWER if generated.failure is None else generated.failure
-    )
-    return CodedHandoffSummary(
-        code=FAILURE_SUMMARY_CODES[failure],
-        quoted_text=HandoffQuotedText(
-            str(turn.customer_text)[:MAX_QUOTED_CUSTOMER_TEXT]
-        ),
-        flagged_values=list(generated.unverified_values),
-    )

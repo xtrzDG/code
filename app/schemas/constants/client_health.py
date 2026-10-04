@@ -30,6 +30,7 @@ class ClientHealthIssue(StrEnum):
     PACKAGE_EXCEEDED = "package_exceeded"
     NEGATIVE_MARGIN = "negative_margin"
     SLOW_REPLIES = "slow_replies"
+    GUARD_SPIKE = "guard_spike"
 
 
 class AdminClientSort(StrEnum):

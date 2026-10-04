@@ -32,6 +32,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostReport
 from app.schemas.dto.paging import PageRequest
+from app.schemas.dto.reply_safety import ClientGuardActivity
 from app.schemas.dto.reply_speed import ClientReplySpeed
 from app.schemas.typings.assistants.booleans import IsAutotestRunPassed
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
@@ -171,6 +172,8 @@ class AdminClientSummary(ImmutableDTO):
     included_dialogs: IncludedDialogs
     cost: ClientCostReport
     reply_speed: ClientReplySpeed = Field(default_factory=ClientReplySpeed)
+    # What the reply guard did in the last 7 days (GUARD_SPIKE).
+    guard_activity: ClientGuardActivity = Field(default_factory=ClientGuardActivity)
     health_status: ClientHealthStatus
     health_issues: list[ClientHealthIssue] = Field(
         default_factory=list[ClientHealthIssue]

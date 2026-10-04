@@ -45,16 +45,22 @@ from app.schemas.typings.businesses.booleans import IsVoiceEnabled
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.profiles.booleans import IsImportedFact
 from app.schemas.typings.profiles.constrained_strings import FactKey
 from app.schemas.typings.profiles.strings import FactLabel, FactValue
 
 
 class BusinessFact(PersistentDocument):
-    """One row of the fact table the assistant answers from."""
+    """
+    One row of the fact table the assistant answers from. `is_imported`:
+    the row describes knowledge imported from a website or a menu file, so
+    the instruction shows its value as an untrusted block.
+    """
 
     key: FactKey
     label: FactLabel
     value: FactValue
+    is_imported: IsImportedFact = False
 
 
 class AutotestVerdict(PersistentDocument):
@@ -89,7 +95,9 @@ class AssistantVersionDocument(BaseDocument):
     # 3: `autotest_verdict` (optional: a version tested before it existed
     #    has none, and readers fall back to its status).
     # 4: `discarded_at` (optional: a version stored before is not discarded).
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 5: `facts[].is_imported` (optional: older facts read as written by
+    #    the owner).
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

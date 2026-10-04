@@ -50,7 +50,7 @@ export const handoffsKa: Translation<typeof handoffsEn> = {
     model_declined: "ასისტენტმა ამ შეტყობინებას პასუხი არ გასცა.",
     model_unavailable: "ასისტენტი დროებით მიუწვდომელი იყო და პასუხი ვერ გასცა.",
     answer_unfinished: "ასისტენტმა პასუხის დასრულება ვერ მოახერხა.",
-    unverified_values: "ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები, რომლებიც ბიზნესის მონაცემებში არ არის.",
+    unverified_values: "ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები ან მტკიცებები, რომლებიც ბიზნესის მონაცემებში არ არის.",
     call_booking_unverified_values:
       "ზარისას ასისტენტმა დაასახელა ციფრები, რომლებიც ბიზნესის მონაცემებში არ არის. შეადარეთ ამ ზარის ჯავშანი ზარის ტრანსკრიპტს.",
     call_request_unverified_values:
@@ -59,7 +59,7 @@ export const handoffsKa: Translation<typeof handoffsEn> = {
     data_erased: "მონაცემები წაიშალა კლიენტის თხოვნით.",
   },
   summaryCodesWithValues: {
-    unverified_values: "ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები, რომლებიც ბიზნესის მონაცემებში არ არის ({values}).",
+    unverified_values: "ასისტენტმა პასუხი არ გაგზავნა: მასში იყო ციფრები ან მტკიცებები, რომლებიც ბიზნესის მონაცემებში არ არის ({values}).",
     call_booking_unverified_values:
       "ზარისას ასისტენტმა დაასახელა ციფრები, რომლებიც ბიზნესის მონაცემებში არ არის ({values}). შეადარეთ ამ ზარის ჯავშანი ზარის ტრანსკრიპტს.",
     call_request_unverified_values:
