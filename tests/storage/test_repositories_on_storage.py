@@ -44,11 +44,9 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessTokenHash, OtpCodeHash
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS, PLATFORM_ADMIN_EMAIL
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.storage.builders import (
     COUNTRY_SAMPLES,
     build_business,
@@ -78,7 +76,7 @@ def test_business_access_for_owner_staff_stranger_and_admin(
     operator = PipelineOperator(
         OrchestratorPipeline(
             UseCaseOrchestrator(
-                AuthorizeBusinessAccessUseCase(
+                build_authorize_business_access(
                     business_repo=business_repo,
                     user_repo=user_repo,
                     audit_log_repo=audit_log_repo,

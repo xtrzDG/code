@@ -52,9 +52,6 @@ from app.use_cases.assistants.pending_changes.build_assistant_draft_use_case imp
 from app.use_cases.assistants.pending_changes.collect_pending_changes_use_case import (
     CollectPendingChangesUseCase,
 )
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.autotests.abandon_autotest_run_use_case import (
     AbandonAutotestRunUseCase,
 )
@@ -85,6 +82,7 @@ from app.utilities.security.session_assurance_context import SessionAssuranceCon
 from tests.assembly.assembly_scripted_models import AssemblyScriptedModels
 from tests.assembly.deferred_use_case import DeferredUseCase
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 
@@ -96,7 +94,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
         price_question_limit: PriceQuestionScenarioLimit,
         llm_token_prices: Sequence[LlmTokenPrice],
     ) -> None:
-        authorize = self.authorize = AuthorizeBusinessAccessUseCase(
+        authorize = self.authorize = build_authorize_business_access(
             self.business_repo,
             self.user_repo,
             self.audit_repo,

@@ -15,9 +15,6 @@ from app.transformers.notifications.new_lead_notification_transformer import (
 from app.transformers.notifications.staff_alert_brief_transformer import (
     StaffAlertBriefTransformer,
 )
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.handoffs.answer_unanswered_question_use_case import (
     AnswerUnansweredQuestionUseCase,
 )
@@ -45,6 +42,7 @@ from app.use_cases.leads.list_leads_use_case import ListLeadsUseCase
 from app.use_cases.leads.update_lead_status_use_case import UpdateLeadStatusUseCase
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.operations.operations_booking_factories import OperationsBookingFactories
 
 
@@ -164,7 +162,7 @@ class OperationsWorld(OperationsBookingFactories):
 
     def count_attention(self) -> CountInboxAttentionUseCase:
         return CountInboxAttentionUseCase(
-            authorize_business_access=AuthorizeBusinessAccessUseCase(
+            authorize_business_access=build_authorize_business_access(
                 business_repo=self.business_repo,
                 user_repo=self.user_repo,
                 audit_log_repo=self.audit_repo,

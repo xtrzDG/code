@@ -29,11 +29,9 @@ from app.schemas.typings.live_events.constrained_floats import (
 )
 from app.schemas.typings.live_events.constrained_integers import LiveStreamsPerUser
 from app.schemas.typings.users.prefixed_id import UserId
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.operations.operations_api import TokenAuthenticator, operator
 from tests.operations.operations_world import OperationsWorld
 
@@ -112,7 +110,7 @@ class LiveApi:
                     SessionAssuranceContext(),
                 ),
                 authorize_business_access=operator(
-                    AuthorizeBusinessAccessUseCase(
+                    build_authorize_business_access(
                         business_repo=world.business_repo,
                         user_repo=world.user_repo,
                         audit_log_repo=world.audit_repo,

@@ -36,6 +36,7 @@ from app.use_cases.authorize_business_access_use_case import (
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS, platform_admin
 from tests.foundation.builders import build_business
+from tests.foundation.support_access_builders import build_authorize_business_access
 
 FIXED_NANOSECONDS: int = 1_790_000_000_000_000_000
 
@@ -55,7 +56,7 @@ def build_access_use_case() -> tuple[
     audit_log_repo = AuditLogRepository(
         InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](AuditLogEntryDocument)
     )
-    use_case = AuthorizeBusinessAccessUseCase(
+    use_case = build_authorize_business_access(
         business_repo=business_repo,
         user_repo=user_repo,
         audit_log_repo=audit_log_repo,

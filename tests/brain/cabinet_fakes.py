@@ -27,6 +27,7 @@ from app.schemas.dto.call_recordings import (
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.dto.menu_import import MenuExtraction, MenuExtractionRequest
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,
@@ -41,14 +42,15 @@ from tests.platform.worker_fakes import build_job_stores
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 
-class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
+class TokenAuthenticationOperator(OperatorContract[SessionCheck, SessionAssurance]):
     """Bearer token -> user, from a fixed table."""
 
     def __init__(self, users_by_token: dict[str, UserId]) -> None:
         self._users_by_token: dict[str, UserId] = users_by_token
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
-        user_id: UserId | None = self._users_by_token.get(str(input_data))
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
+        user_id: UserId | None = self._users_by_token.get(str(token))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 

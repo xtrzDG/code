@@ -2,9 +2,6 @@
 
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.channels.connection.connect_channel_use_case import (
     ConnectChannelUseCase,
 )
@@ -43,6 +40,7 @@ from tests.brain.fake_contact_tools import FakeHandoff
 from tests.channels.channels_fakes import RecordingVoiceAgentRemoval
 from tests.channels.channels_infrastructure import ChannelsInfrastructure
 from tests.foundation.access_support import ACCESS_SETTINGS, AllowStepUp
+from tests.foundation.support_access_builders import build_authorize_business_access
 
 
 class ChannelsUseCases(ChannelsInfrastructure):
@@ -51,7 +49,7 @@ class ChannelsUseCases(ChannelsInfrastructure):
     def __init__(self, settings: AppSettings | None = None) -> None:
         super().__init__(settings)
         self.product_events = RecordingProductEvents()
-        self.authorize_business_access = AuthorizeBusinessAccessUseCase(
+        self.authorize_business_access = build_authorize_business_access(
             self.business_repo,
             self.user_repo,
             self.audit_log_repo,

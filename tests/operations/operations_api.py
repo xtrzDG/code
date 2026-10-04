@@ -31,13 +31,11 @@ from app.schemas.domain.calendar import (
     CalendarEventLinkDocument,
 )
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.calendar.complete_google_calendar_connection_use_case import (
     CompleteGoogleCalendarConnectionUseCase,
 )
@@ -52,6 +50,7 @@ from app.use_cases.calendar.start_google_calendar_connection_use_case import (
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS, signed_in
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.operations.fake_google import FakeGoogle
 from tests.operations.fakes import ReversingSecretCipher
 from tests.operations.operations_world import OperationsWorld
@@ -74,12 +73,13 @@ def operator[InputData, OutputData](
     return PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(use_case)))
 
 
-class TokenAuthenticator(OperatorContract[AccessToken, SessionAssurance]):
+class TokenAuthenticator(OperatorContract[SessionCheck, SessionAssurance]):
     def __init__(self, users: dict[str, UserId]) -> None:
         self._users: dict[str, UserId] = users
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
-        user_id: UserId | None = self._users.get(str(input_data))
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
+        user_id: UserId | None = self._users.get(str(token))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 
@@ -132,7 +132,7 @@ class Api:
                     SessionAssuranceContext(),
                 ),
                 authorize_business_access=operator(
-                    AuthorizeBusinessAccessUseCase(
+                    build_authorize_business_access(
                         business_repo=world.business_repo,
                         user_repo=world.user_repo,
                         audit_log_repo=world.audit_repo,

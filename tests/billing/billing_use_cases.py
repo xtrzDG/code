@@ -9,9 +9,6 @@ from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCas
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
 from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.billing.assemble_billing_overview_use_case import (
     AssembleBillingOverviewUseCase,
 )
@@ -49,6 +46,12 @@ from tests.foundation.access_support import (
     AllowStepUp,
     AuthorizeFlaggedAdmin,
 )
+from tests.foundation.support_access_builders import (
+    RecordingStaffAlerts,
+    build_authorize_business_access,
+    in_memory_grant_repo,
+    in_memory_platform_admins,
+)
 
 
 class BillingUseCases(BillingInfrastructure):
@@ -63,7 +66,7 @@ class BillingUseCases(BillingInfrastructure):
         self.product_events = RecordingProductEvents()
         resolver = LocalizedTextResolver()
         wall_clock: WallClock[Microseconds] = self.clock.wall_clock
-        authorize = AuthorizeBusinessAccessUseCase(
+        authorize = build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
@@ -255,10 +258,16 @@ class BillingUseCases(BillingInfrastructure):
             payment_order_repo=self.payment_order_repo,
             summarize_client=summarize_client,
         )
+        self.support_grants = in_memory_grant_repo()
+        self.staff_alerts = RecordingStaffAlerts()
         self.open_client_cabinet = OpenClientCabinetUseCase(
             authorize_platform_admin=authorize_admin,
+            platform_admins=in_memory_platform_admins(wall_clock),
             business_repo=self.business_repo,
+            grant_repo=self.support_grants,
             audit_log_repo=self.audit_log_repo,
+            staff_alerts=self.staff_alerts,
+            localized_text_resolver=LocalizedTextResolver(),
             wall_clock=wall_clock,
             step_up=AllowStepUp(),
         )

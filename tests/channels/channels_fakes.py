@@ -20,6 +20,7 @@ from app.schemas.dto.conversations import (
 )
 from app.schemas.dto.handoffs import HandoffCommand, HandoffResult
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ValidationFailedError,
@@ -125,12 +126,13 @@ class FakeCallGreetingUseCase(UseCaseContract[CallGreetingRequest, CallGreeting]
         )
 
 
-class FakeAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
+class FakeAuthenticationOperator(OperatorContract[SessionCheck, SessionAssurance]):
     def __init__(self) -> None:
         self.users_by_token: dict[str, UserId] = {}
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
-        user_id: UserId | None = self.users_by_token.get(str(input_data))
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
+        user_id: UserId | None = self.users_by_token.get(str(token))
         if user_id is None:
             raise AuthenticationRequiredError("Unknown token.")
 

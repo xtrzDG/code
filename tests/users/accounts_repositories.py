@@ -62,6 +62,10 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.foundation.support_access_builders import (
+    in_memory_grant_repo,
+    in_memory_platform_admin_repo,
+)
 from tests.users.accounts_clock import AdjustableClock
 from tests.users.accounts_phones import PhonenumbersParser
 from tests.users.accounts_recorders import (
@@ -163,3 +167,6 @@ class AccountsRepositories:
             )
         )
         self.session_assurance = SessionAssuranceContext()
+        # Platform access: the admin team and support's grants (1103).
+        self.platform_admin_repo = in_memory_platform_admin_repo()
+        self.grant_repo = in_memory_grant_repo()

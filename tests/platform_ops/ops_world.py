@@ -36,6 +36,7 @@ from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.monitoring.constrained_integers import AlertCooldownMinutes
 from app.schemas.typings.monitoring.constrained_strings import AlertChatId
@@ -64,11 +65,11 @@ def put[Stored: BaseDocument](
         collection.upsert(str(vars(document)["id"]), document)
 
 
-class AdminsOnly(UseCaseContract[UserId, UserDocument]):
+class AdminsOnly(UseCaseContract[PlatformAdminAccessRequest, UserDocument]):
     """The platform admin check: ADMIN passes, everyone else is refused."""
 
-    def run(self, input_data: UserId) -> UserDocument:
-        if input_data != ADMIN:
+    def run(self, input_data: PlatformAdminAccessRequest) -> UserDocument:
+        if input_data.user_id != ADMIN:
             raise AccessDeniedError("Platform admins only.")
         return UserDocument.model_construct(id=ADMIN)
 

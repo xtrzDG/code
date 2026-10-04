@@ -39,9 +39,6 @@ from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.booleans import IsFinalJobAttempt
 from app.schemas.typings.users.prefixed_id import UserId
-from app.use_cases.authorize_business_access_use_case import (
-    AuthorizeBusinessAccessUseCase,
-)
 from app.use_cases.knowledge.website_import.get_website_import_use_case import (
     GetWebsiteImportUseCase,
 )
@@ -53,6 +50,7 @@ from app.use_cases.knowledge.website_import.start_website_import_use_case import
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.knowledge_store import KnowledgeStore
 from tests.knowledge.website_import.fake_website import FakeWebsite
 from tests.knowledge.website_import.recording_job_queue import (
@@ -122,7 +120,7 @@ class WebsiteImportWorld(KnowledgeStore):
         )
         self.job_queue = RecordingJobQueue()
         self.events = RecordingEventPublisher()
-        authorize = AuthorizeBusinessAccessUseCase(
+        authorize = build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,

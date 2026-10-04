@@ -101,6 +101,7 @@ from tests.brain.fake_contact_tools import (
 from tests.brain.fake_knowledge_tools import FakeGetPrice, FakeSearchKnowledge
 from tests.brain.manual_clock import ManualClock
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 
 CUSTOMER_PHONE: E164PhoneNumber = E164PhoneNumber("+995555123456")
@@ -275,7 +276,7 @@ def build_world(
         handoff=brain_tools.handoff,
         record_question=brain_tools.record_question,
         run_tool=brain_tools.run_tool,
-        authorize=AuthorizeBusinessAccessUseCase(
+        authorize=build_authorize_business_access(
             business_repo=repos.business_repo,
             user_repo=repos.user_repo,
             audit_log_repo=repos.audit_log_repo,

@@ -47,6 +47,7 @@ from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.notifications.staff_alert_fakes import (
     TEST_ENCRYPTION_KEY,
     preferences_repo,
@@ -115,7 +116,7 @@ class ValueWorld(OperationsWorld):
         )
 
     def authorize(self) -> AuthorizeBusinessAccessUseCase:
-        return AuthorizeBusinessAccessUseCase(
+        return build_authorize_business_access(
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_repo,

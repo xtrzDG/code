@@ -12,6 +12,7 @@ from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.dto.deliveries import StaffNotification
 from app.schemas.dto.mfa import SessionAssurance
+from app.schemas.dto.sessions import SessionCheck
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import MessageText
@@ -74,15 +75,16 @@ class RecordingNotifier(ManagerNotificationFacilitatorContract):
         return [str(text) for _, text in self.sent]
 
 
-class TokenAuthenticationOperator(OperatorContract[AccessToken, SessionAssurance]):
+class TokenAuthenticationOperator(OperatorContract[SessionCheck, SessionAssurance]):
     """Bearer token = user id of a known user (tests only)."""
 
     def __init__(self, user_repo: UserRepository) -> None:
         self._user_repo: UserRepository = user_repo
 
-    def operate(self, input_data: AccessToken) -> SessionAssurance:
+    def operate(self, input_data: SessionCheck) -> SessionAssurance:
+        token: AccessToken = input_data.access_token
         try:
-            user_id = UserId(str(input_data))
+            user_id = UserId(str(token))
         except ValueError as error:
             raise AuthenticationRequiredError("Unknown token.") from error
 

@@ -12,9 +12,13 @@ from app.schemas.dto.admin import (
 )
 from app.schemas.dto.billing_cabinet import StartCheckoutCommand, StartCheckoutRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError, NotFoundError
+from app.schemas.typings.access.constrained_strings import SupportAccessReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from tests.billing.admin_world import build_admin_world
+
+REASON: SupportAccessReason = SupportAccessReason("Owner asked about an invoice")
+HOUR_MICROSECONDS: int = 60 * 60 * 1_000_000
 
 
 def test_admin_pages_are_for_platform_admins_only() -> None:
@@ -33,6 +37,7 @@ def test_admin_pages_are_for_platform_admins_only() -> None:
             OpenClientCabinetCommand(
                 user_id=world.owner.id,
                 business_id=world.georgian.id,
+                reason=REASON,
             )
         )
 
@@ -78,30 +83,42 @@ def test_client_health_of_an_unknown_business_is_not_found() -> None:
 
     with pytest.raises(NotFoundError):
         world.testbed.open_client_cabinet.run(
-            OpenClientCabinetCommand(user_id=world.admin.id, business_id=BusinessId())
+            OpenClientCabinetCommand(
+                user_id=world.admin.id, business_id=BusinessId(), reason=REASON
+            )
         )
 
 
-def test_entering_a_client_cabinet_is_audited() -> None:
+def test_entering_a_client_cabinet_is_audited_time_boxed_and_told() -> None:
     world = build_admin_world()
 
     access = world.testbed.open_client_cabinet.run(
         OpenClientCabinetCommand(
             user_id=world.admin.id,
             business_id=world.italian.id,
+            reason=REASON,
             client_ip_address=ClientIpAddress("203.0.113.7"),
         )
     )
 
     [entry] = world.testbed.audit_log_repo.list_by_business(world.italian.id)
-    assert entry.action is AuditAction.ADMIN_ACCESS
+    assert entry.action is AuditAction.SUPPORT_ACCESS_START
     assert entry.actor_id == world.admin.id
     assert str(entry.ip_address) == "203.0.113.7"
-    assert str(entry.entity) == "business_cabinet"
+    assert str(entry.entity) == "support_access"
+    assert str(entry.entity_id) == str(access.support_access_grant_id)
     assert access.audit_log_entry_id == entry.id
     assert access.sections == list(CabinetSection)
     assert str(access.owner_language) == "it"
     assert access.opened_at == world.testbed.clock.now()
+    # An hour, read-only: the owner has not allowed changes.
+    assert int(access.expires_at) - int(access.opened_at) == HOUR_MICROSECONDS
+    assert access.can_write is False
+    [grant] = world.testbed.support_grants.list_open(world.italian.id)
+    assert grant.reason == REASON
+    [(alert, brief)] = world.testbed.staff_alerts.alerts
+    assert alert.business_id == world.italian.id
+    assert str(REASON) in str(brief.detail)
 
 
 def test_admin_access_follows_the_platform_admin_flag() -> None:
