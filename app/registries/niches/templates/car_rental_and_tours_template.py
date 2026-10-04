@@ -98,8 +98,11 @@ def build_car_rental_and_tours_template() -> NicheTemplate:
                     ka="აღწერეთ ავტოპარკი",
                 ),
                 hints=text(
-                    en="Add each car model with its daily price to the price list.",
-                    ru="Каждую модель с ценой за сутки добавьте в прайс.",
+                    en="Add each car model with its daily price under Offer.",
+                    ru="Каждую модель с ценой за сутки добавьте в раздел «Что вы "
+                    "предлагаете».",
+                    ka="თითოეული მოდელი დღიური ფასით დაამატეთ განყოფილებაში „რას "
+                    "სთავაზობთ“.",
                 ),
             ),
             question(
@@ -134,6 +137,7 @@ def build_car_rental_and_tours_template() -> NicheTemplate:
                 hints=text(
                     en="The amount and how it is returned.",
                     ru="Сумма и как её возвращают.",
+                    ka="თანხა და როგორ უბრუნდება კლიენტს.",
                 ),
             ),
             question(

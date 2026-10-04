@@ -119,6 +119,8 @@ def build_car_service_template() -> NicheTemplate:
                     en="For example: prices are 'from'; the final price is set "
                     "after diagnostics.",
                     ru="Например: цены «от», точная цена — после диагностики.",
+                    ka="მაგალითად: ფასები „დან“, საბოლოო ფასი დიაგნოსტიკის შემდეგ "
+                    "დგინდება.",
                 ),
             ),
             question(

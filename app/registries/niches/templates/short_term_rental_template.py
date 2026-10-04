@@ -109,6 +109,8 @@ def build_short_term_rental_template() -> NicheTemplate:
                     "this text with anyone who asks.",
                     ru="Не пишите сюда коды от дверей и сейфов: помощник отправит "
                     "этот текст любому, кто спросит.",
+                    ka="აქ ნუ ჩაწერთ კარის ან სეიფის კოდებს: ასისტენტი ამ ტექსტს "
+                    "ყველას გაუზიარებს, ვინც იკითხავს.",
                 ),
             ),
             question(
@@ -123,6 +125,7 @@ def build_short_term_rental_template() -> NicheTemplate:
                 hints=text(
                     en="The assistant shares this text with anyone who asks.",
                     ru="Помощник отправит этот текст любому, кто спросит.",
+                    ka="ასისტენტი ამ ტექსტს ყველას გაუზიარებს, ვინც იკითხავს.",
                 ),
             ),
             question(
