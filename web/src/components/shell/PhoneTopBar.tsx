@@ -4,7 +4,7 @@
  * The bar above a page on phones: the mark, the business and where you
  * are, which is also the page's title (its own header steps aside there):
  * a dot beside it says whether the page is live, and an (i) opens what the
- * page is for (PhonePageInfo). The language and theme moved to the account
+ * page is for (PhonePageInfo), and a "?" its help article. The language and theme moved to the account
  * panel ("More"), so the bar stays calm; `action` adds one button at its
  * end (the account, when there is no tab bar), and `ring` the setup
  * guide's progress before it.
@@ -12,7 +12,7 @@
 
 import type { ReactNode } from "react";
 
-import { usePhoneChromeSnapshot } from "@/components/ui";
+import { usePageHelp, usePhoneChromeSnapshot } from "@/components/ui";
 import { HOME_PATH } from "@/lib/navigation";
 
 import { Brand } from "./Brand";
@@ -31,6 +31,7 @@ export function PhoneTopBar({
   ring?: ReactNode;
 }) {
   const { live } = usePhoneChromeSnapshot();
+  const help = usePageHelp();
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-canvas/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden">
       <div className="flex h-14 items-center gap-3 px-4">
@@ -44,6 +45,7 @@ export function PhoneTopBar({
             </p>
           ) : null}
         </div>
+        {help}
         <PageInfoButton title={title} />
         {ring}
         {action}

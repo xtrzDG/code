@@ -6,5 +6,6 @@
 
 export { type IconProps } from "./Icon";
 export * from "./brands";
+export * from "./help";
 export * from "./interface";
 export * from "./sections";

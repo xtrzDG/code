@@ -249,6 +249,24 @@ export const queryKeys = {
     incidents: () => ["admin", "incidents"] as const,
     /** The platform admin team. */
     team: () => ["admin", "team"] as const,
+    /** The status page's announcements, newest first. */
+    announcements: () => ["admin", "announcements"] as const,
+  },
+
+  help: {
+    /** The help center's topics and articles in one language. */
+    center: (locale: Locale) => ["help", "center", locale] as const,
+    article: (locale: Locale, slug: string) => ["help", "article", locale, slug] as const,
+    search: (locale: Locale, text: string) => ["help", "search", locale, text] as const,
+    /** The signed-in person's seen tips and the newest "What's new" entry read. */
+    progress: () => ["help", "progress"] as const,
+    /** How to reach the platform's support. */
+    support: () => ["help", "support"] as const,
+  },
+
+  platformStatus: {
+    /** The public status page in one language. */
+    status: (locale: Locale) => ["platformStatus", locale] as const,
   },
 
   account: {

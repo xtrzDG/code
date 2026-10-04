@@ -3,8 +3,9 @@
 /**
  * Who is signed in and their preferences: the interface language, the
  * theme, the chime when someone needs a person, installing the cabinet as
- * an app, all businesses, Account → Security (the authenticator app), the
- * platform admin (for admins) and signing out. Shown by the user menu at the bottom
+ * an app, help and support (the help center, "What's new", the status
+ * page, the support team's contacts), all businesses, Account → Security
+ * (the authenticator app), the platform admin (for admins) and signing out. Shown by the user menu at the bottom
  * of the sidebar, and inside "More" on phones.
  */
 
@@ -16,6 +17,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { ACCOUNT_SECURITY_PATH, ADMIN_PATH, HOME_PATH } from "@/lib/navigation";
 
+import { HelpSupportSection } from "../help/HelpSupportSection";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { IconBuilding, IconDownload, IconKey, IconShield } from "../icons";
 import { ThemeSwitcher } from "../theme/ThemeSwitcher";
@@ -91,6 +93,8 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
       <div className="border-t border-line pt-2.5">
         <ChimeSetting />
       </div>
+
+      <HelpSupportSection rowClassName={ROW} onNavigate={onNavigate} />
 
       <div className="space-y-0.5 border-t border-line pt-2">
         <InstallRow />

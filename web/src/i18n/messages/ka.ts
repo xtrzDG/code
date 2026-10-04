@@ -6,6 +6,7 @@ import { shellKa } from "./sections/shell";
 import { setupFlowKa } from "./sections/setup";
 import { assistantFlowKa } from "./sections/assistant";
 import { securityFlowKa } from "./sections/security";
+import { helpKa } from "./sections/help";
 import { onboardingKa } from "./onboarding/ka";
 import { landingKa } from "./landing/ka";
 
@@ -197,4 +198,5 @@ export const ka: Messages = {
   ...setupFlowKa,
   ...assistantFlowKa,
   ...securityFlowKa,
+  ...helpKa,
 };

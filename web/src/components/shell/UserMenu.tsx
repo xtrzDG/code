@@ -13,12 +13,14 @@ import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { ChangelogDot } from "../help/HelpSupportSection";
 import { IconChevronDown } from "../icons";
 import { AccountPanel } from "./AccountPanel";
 import { UserAvatar, userContact, userDisplayName } from "./UserAvatar";
 
 const PANEL_WIDTH_PX = 288;
 const GAP_PX = 8;
+const MIN_PANEL_HEIGHT_PX = 240;
 
 export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; collapsed?: boolean }) {
   const { t } = useI18n();
@@ -40,6 +42,7 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
     const left = isRtl ? Math.max(GAP_PX, rect.right - PANEL_WIDTH_PX) : Math.min(rect.left, window.innerWidth - PANEL_WIDTH_PX - GAP_PX);
     panel.style.left = `${Math.max(GAP_PX, left)}px`;
     panel.style.bottom = `${window.innerHeight - rect.top + GAP_PX}px`;
+    panel.style.maxHeight = `${Math.max(MIN_PANEL_HEIGHT_PX, rect.top - GAP_PX * 2)}px`;
   };
 
   const closeAfterNavigation = () => panelRef.current?.hidePopover();
@@ -58,7 +61,10 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
           collapsed ? "justify-center p-1.5" : "px-2 py-1.5",
         )}
       >
-        <UserAvatar user={me.user} />
+        <span className="relative shrink-0">
+          <UserAvatar user={me.user} />
+          <ChangelogDot className="absolute -end-0.5 -top-0.5" />
+        </span>
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">
@@ -76,7 +82,7 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
         popover="auto"
         role="dialog"
         aria-label={t("account.menu")}
-        className="user-menu-panel fixed inset-auto m-0 w-72 rounded-2xl border border-line bg-surface p-2 text-ink shadow-2xl"
+        className="user-menu-panel fixed inset-auto m-0 w-72 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-2 text-ink shadow-2xl"
       >
         <AccountPanel me={me} onNavigate={closeAfterNavigation} />
       </div>

@@ -16,18 +16,22 @@
  * first customers and bookings are celebrated with a toast (components/
  * setupGuide). While platform support looks into the cabinet, a banner
  * over the pages says who, why and until when (components/shell/
- * SupportBanner).
+ * SupportBanner). The "?" beside a page's title opens its help article,
+ * and the Inbox, the Assistant and Channels show a tip once (components/
+ * help).
  */
 
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode } from "react";
 
 import { useI18n } from "@/i18n/client";
+import { helpSlugForPage } from "@/lib/help/helpTopics";
 import { sectionBadge, pageBadge } from "@/lib/inboxBadges";
 import { ADMIN_PATH, businessLocation, businessPath, isConversationPath, type BusinessPage } from "@/lib/navigation";
 import { SECTION_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibleSections, type BusinessSection } from "@/lib/sections";
 
 import { ApplyChangesProvider } from "../assistant/ApplyChangesContext";
+import { CoachMarkSlot } from "../help/CoachMark";
 import { MilestoneCelebrations } from "../setupGuide/MilestoneCelebrations";
 import { SetupRing } from "../setupGuide/SetupRing";
 import { PendingChangesBanner } from "../assistant/PendingChangesBanner";
@@ -113,6 +117,7 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
       showPhoneTopBar={!isConversationPath(pathname)}
       isWide={page === "inbox"}
       ring={(compact) => <SetupRing compact={compact} />}
+      helpSlug={helpSlugForPage(page)}
       switcher={(onNavigate, compact) => (
         <BusinessSwitcher
           memberships={me.memberships ?? []}
@@ -131,6 +136,7 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
           {isConversationPath(pathname) ? null : <PendingChangesBanner />}
           {/* Platform support looking in: always shown, the owner must see it. */}
           <SupportBanner />
+          {isConversationPath(pathname) ? null : <CoachMarkSlot page={page} />}
           {children}
           <MilestoneCelebrations />
         </>
