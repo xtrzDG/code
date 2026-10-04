@@ -110,6 +110,7 @@ class ReplySpeedTestbed(ChannelsTestbed):
                 coalesce_seconds=self.coalesce_seconds,
                 typing_signals=self.typing,
                 send_holding_reply=SendHoldingReplyUseCase(
+                    self.business_repo,
                     self.message_repo,
                     self.conversation_repo,
                     self.outbound_message_repo,

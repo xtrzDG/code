@@ -56,6 +56,7 @@ class ReplySpeedUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[InboundEventDocument, MessageId | None]
     ] = Factory(
         SendHoldingReplyUseCase,
+        business_repo=repositories.business_repo,
         message_repo=repositories.message_repo,
         conversation_repo=repositories.conversation_repo,
         outbound_message_repo=repositories.outbound_message_repo,
