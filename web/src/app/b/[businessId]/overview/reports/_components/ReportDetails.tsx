@@ -90,11 +90,18 @@ export function ReportDetails({ report }: { report: ValueReport }) {
         </TBody>
       </Table>
       <p className="text-xs text-ink-subtle">
-        {report.average_check_minor === null || report.average_check_minor === undefined
-          ? t("reports.details.noCheck")
-          : t(report.average_check_source === "owner" ? "reports.details.ownerCheck" : "reports.details.typicalCheck", {
-              money: formatWholeMoney(report.average_check_minor, report.currency_code, locale),
-            })}
+        {report.current.revenue_source === "booked_values"
+          ? t("reports.details.bookedPrices")
+          : report.average_check_minor === null || report.average_check_minor === undefined
+            ? t("reports.details.noCheck")
+            : t(
+                report.current.revenue_source === "mixed"
+                  ? "reports.details.mixedCheck"
+                  : report.average_check_source === "owner"
+                    ? "reports.details.ownerCheck"
+                    : "reports.details.typicalCheck",
+                { money: formatWholeMoney(report.average_check_minor, report.currency_code, locale) },
+              )}
       </p>
     </div>
   );

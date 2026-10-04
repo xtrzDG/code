@@ -117,6 +117,33 @@ export function earningCount(basis: Schema<"ValueBasis">, totals: ValueTotals): 
   return basis === "requests" ? totals.request_count : totals.assistant_booking_count;
 }
 
+/**
+ * How the money of a period was made, for the line under it: bookings at
+ * their own prices (services, stays' nights), those plus the rest at the
+ * average check, the average check alone, or no money at all.
+ */
+export type MoneyFormula =
+  | { kind: "none" }
+  | { kind: "check"; count: number; checkMinor: number }
+  | { kind: "booked"; valued: number }
+  | { kind: "mixed"; bookedMinor: number; unvalued: number; checkMinor: number };
+
+export function moneyFormula(
+  basis: Schema<"ValueBasis">,
+  totals: ValueTotals,
+  averageCheckMinor: number | null | undefined,
+): MoneyFormula {
+  if (totals.estimated_revenue_minor === null || totals.estimated_revenue_minor === undefined) return { kind: "none" };
+  if (totals.revenue_source === "booked_values") return { kind: "booked", valued: totals.valued_booking_count };
+  const check = averageCheckMinor ?? null;
+  if (check === null) return { kind: "none" };
+  if (totals.revenue_source === "mixed" && totals.booked_value_minor !== null && totals.booked_value_minor !== undefined) {
+    const unvalued = Math.max(earningCount(basis, totals) - totals.valued_booking_count, 0);
+    return { kind: "mixed", bookedMinor: totals.booked_value_minor, unvalued, checkMinor: check };
+  }
+  return { kind: "check", count: earningCount(basis, totals), checkMinor: check };
+}
+
 /** The dates of the month a "YYYY-MM" key names: "2026-09" -> Sep 1 to Sep 30. */
 export function monthOfKey(periodKey: string): { year: number; month: number } | null {
   const match = /^(\d{4})-(\d{2})$/.exec(periodKey);
