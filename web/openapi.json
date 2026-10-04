@@ -12886,8 +12886,19 @@
       },
       "PlatformAdminView": {
         "additionalProperties": false,
-        "description": "One member of the admin team: how they sign in, their role, their name\nonce they have signed in (`user_id` is None before), who added them\n(None: bootstrapped from the PLATFORM_ADMIN_* lists) and when.\n`is_you` marks the viewer.",
+        "description": "One member of the admin team: how they sign in, their role, their name\nonce they have signed in (`user_id` is None before), who added them\n(`added_by` None: bootstrapped from the PLATFORM_ADMIN_* lists; their\nname when they have one) and when. `is_you` marks the viewer.",
         "properties": {
+          "added_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Added By"
+          },
           "added_by_name": {
             "anyOf": [
               {

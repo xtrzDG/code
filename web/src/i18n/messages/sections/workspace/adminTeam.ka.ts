@@ -21,6 +21,7 @@ export const adminTeamKa: Translation<typeof adminTeamEn> = {
   you: "თქვენ",
   notSignedIn: "ჯერ არ შესულა",
   addedBy: "დაამატა {name} {date}",
+  addedOn: "დაემატა გვერდზე „გუნდი“ {date}",
   bootstrapped: "PLATFORM_ADMIN_* სიებიდან {date}",
   role: "როლი",
   roleFor: "როლი: {name}",

@@ -21,6 +21,7 @@ export const adminTeamRu: Translation<typeof adminTeamEn> = {
   you: "Вы",
   notSignedIn: "Ещё не входил",
   addedBy: "Добавил(а) {name} {date}",
+  addedOn: "Добавлен(а) на странице «Команда» {date}",
   bootstrapped: "Из списков PLATFORM_ADMIN_* {date}",
   role: "Роль",
   roleFor: "Роль: {name}",

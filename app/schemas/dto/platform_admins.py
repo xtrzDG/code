@@ -27,8 +27,8 @@ class PlatformAdminView(ImmutableDTO):
     """
     One member of the admin team: how they sign in, their role, their name
     once they have signed in (`user_id` is None before), who added them
-    (None: bootstrapped from the PLATFORM_ADMIN_* lists) and when.
-    `is_you` marks the viewer.
+    (`added_by` None: bootstrapped from the PLATFORM_ADMIN_* lists; their
+    name when they have one) and when. `is_you` marks the viewer.
     """
 
     id: PlatformAdminId
@@ -38,6 +38,7 @@ class PlatformAdminView(ImmutableDTO):
     role: PlatformAdminRole
     user_id: UserId | None = None
     display_name: UserDisplayName | None = None
+    added_by: UserId | None = None
     added_by_name: UserDisplayName | None = None
     created_at: Microseconds
     is_you: IsViewingAdmin = False

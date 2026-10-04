@@ -22,6 +22,7 @@ export const adminTeamEn = {
   you: "You",
   notSignedIn: "Has not signed in yet",
   addedBy: "Added by {name} {date}",
+  addedOn: "Added on the Team page {date}",
   bootstrapped: "From the PLATFORM_ADMIN_* lists {date}",
   role: "Role",
   roleFor: "Role of {name}",

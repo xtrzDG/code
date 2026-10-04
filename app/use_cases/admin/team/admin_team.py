@@ -59,6 +59,7 @@ def team_view(
                 role=admin.role,
                 user_id=None if user is None else user.id,
                 display_name=None if user is None else user.display_name,
+                added_by=admin.added_by,
                 added_by_name=None if adder is None else adder.display_name,
                 created_at=admin.created_at,
                 is_you=user is not None and user.id == viewer_id,

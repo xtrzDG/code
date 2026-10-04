@@ -128,6 +128,7 @@ def test_a_super_admin_adds_people_by_phone_or_email() -> None:
     assert str(team.items[1].phone_number) == "+995555123456"
     assert str(team.items[2].email) == "billing@platform.example"
     assert team.items[2].user_id is None
+    assert (team.items[0].added_by, team.items[2].added_by) == (None, world.support.id)
     assert team_changes(world) == ["billing", "support_readonly"]
 
 

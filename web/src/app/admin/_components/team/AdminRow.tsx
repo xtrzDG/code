@@ -26,6 +26,12 @@ export function AdminRow({
   const destination = adminDestination(admin);
   const name = admin.display_name ?? destination;
   const date = formatDate(admin.created_at, { locale });
+  const addedLine = (member: PlatformAdminView, when: string) =>
+    !member.added_by
+      ? t("adminTeam.bootstrapped", { date: when })
+      : member.added_by_name
+        ? t("adminTeam.addedBy", { name: member.added_by_name, date: when })
+        : t("adminTeam.addedOn", { date: when });
 
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-3 py-4 first:pt-0 last:pb-0">
@@ -40,7 +46,7 @@ export function AdminRow({
         <p className="text-xs text-ink-subtle">
           {[
             admin.user_id ? null : t("adminTeam.notSignedIn"),
-            admin.added_by_name ? t("adminTeam.addedBy", { name: admin.added_by_name, date }) : t("adminTeam.bootstrapped", { date }),
+            addedLine(admin, date),
           ]
             .filter(Boolean)
             .join(" · ")}

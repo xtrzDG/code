@@ -7913,10 +7913,12 @@ export interface components {
          * PlatformAdminView
          * @description One member of the admin team: how they sign in, their role, their name
          *     once they have signed in (`user_id` is None before), who added them
-         *     (None: bootstrapped from the PLATFORM_ADMIN_* lists) and when.
-         *     `is_you` marks the viewer.
+         *     (`added_by` None: bootstrapped from the PLATFORM_ADMIN_* lists; their
+         *     name when they have one) and when. `is_you` marks the viewer.
          */
         PlatformAdminView: {
+            /** Added By */
+            added_by?: string | null;
             /** Added By Name */
             added_by_name?: string | null;
             /** Created At */

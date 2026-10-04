@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-04 — device sessions, the platform admin team, support access
 
-Spec: `4c1e2436f852c60b`
+Spec: `f29245886ba350fb`
 
 - **Added** `GET /v1/me/sessions` (`UserSessionList`): the person's
   signed-in devices (`UserSessionView`: `device` with `kind`, `browser`,
@@ -31,8 +31,9 @@ Spec: `4c1e2436f852c60b`
   Sign-ins from a new device send the person a personal notice (staff
   alert with the deep link target `account_security`).
 - **Added** the platform admin team: `GET·POST /v1/admin/team`
-  (`PlatformAdminTeamView`; add by `phone_number` or `email` with a
-  `role`: `super`, `support_readonly`, `billing`; step-up; the same person
+  (`PlatformAdminTeamView`: each `PlatformAdminView` with `added_by`, null
+  for one bootstrapped from the lists; add by `phone_number` or `email`
+  with a `role`: `super`, `support_readonly`, `billing`; step-up; the same person
   twice: `409`), `PATCH /v1/admin/team/{admin_id}` (`role`) and
   `DELETE /v1/admin/team/{admin_id}` (`204`); leaving the team without a
   `super` admin: `409`. Every change is audited `platform_admin_changed`.
