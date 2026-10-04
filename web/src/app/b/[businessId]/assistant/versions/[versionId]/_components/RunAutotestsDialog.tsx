@@ -35,7 +35,7 @@ export function RunAutotestsDialog({
   const toast = useToast();
   const { business } = useBusiness();
   const niche = useNiche(version.niche_key);
-  const kinds = applicableAutotestKinds(niche.data?.autotest_kinds ?? [], version.tools);
+  const kinds = applicableAutotestKinds(niche.data?.autotest_kinds ?? [], version.tools, version.languages);
   const [languages, setLanguages] = useState<string[]>(version.languages);
   const [excludedKinds, setExcludedKinds] = useState<ReadonlySet<AutotestScenarioKind>>(new Set());
 

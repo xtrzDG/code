@@ -135,6 +135,14 @@ CUSTOMER_PHRASES: dict[str, dict[RehearsalIntent, str]] = {
         RehearsalIntent.OTHER: "مرحبا، لدي سؤال.",
     },
 }
+# The question of the transliteration scenario, typed in Latin letters.
+TRANSLITERATED_PHRASES: dict[str, str] = {
+    "ka": "gamarjoba, xval saghamos ghia xart? ramdeni ghirs?",
+    "ru": "zdravstvuyte, vy zavtra vecherom rabotaete? skolko stoit?",
+    "uk": "dobryi den, vy pratsyuyete zavtra vvecheri? skilky koshtuye?",
+    "hy": "barev dzez, vaghy ereko bac eq? qani arje?",
+    "he": "shalom, atem ptuchim machar baerev? kama ze ole?",
+}
 
 # What a person in a test chat may write to reach a colleague or to book.
 PERSON_KEYWORDS: tuple[str, ...] = (

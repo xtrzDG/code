@@ -31,6 +31,24 @@ Spec: `1554f2578d368a1e`
   also shows a short "one moment" assistant message when a reply took
   longer than `CHAT_TURN_DEADLINE_SECONDS`.
 
+## 2026-10-04 — answers in any language, language autotests
+
+Spec: `fe2d68a30e5c6ddf`
+
+- **Changed** (additive) `AutotestScenarioKind` gains `foreign_language`
+  (the customer writes a language the business did not list) and
+  `transliterated` (a business language typed in Latin letters); niches
+  list them in `autotest_kinds`, and `POST …/autotests` accepts them in
+  `kinds`. `transliterated` applies only when a version language is
+  Georgian, Russian, Ukrainian, Armenian or Hebrew.
+- **Changed** (additive) `AutotestCheckCode` gains
+  `wrong_disclosure_language`: the AI disclosure of the first reply was
+  not in the customer's language.
+- **Changed** the `language` of conversations, messages and test-chat
+  replies is the language the customer writes in, any BCP 47 tag, also
+  one the business did not list (it was always one of the business
+  languages before).
+
 ## 2026-10-04 — wave 8 together: setup guide, customer media, two-factor sign-in, services
 
 Spec: `94b41f2ced788361`

@@ -25,7 +25,19 @@ CUSTOMER_MESSAGES: dict[str, dict[str, str]] = {
         "human": "Let me talk to a manager, please",
         "other": "Hello, I have a question",
     },
+    # Languages the business does not list (the foreign-language scenarios).
+    "he": {"other": "שלום, יש לי שאלה"},
+    "de": {"other": "Hallo, ich habe eine Frage"},
 }
+# What the AI customer of a transliteration scenario writes.
+TRANSLITERATED_MESSAGES: dict[str, str] = {
+    "ka": "gamarjoba, kitxva makvs",
+    "ru": "zdravstvuyte, u menya vopros",
+}
+TRANSLITERATION_MARKER: str = "Latin letters (transliteration)"
+REPLY_LANGUAGE_PATTERN: re.Pattern[str] = re.compile(
+    r"^Reply language: .*\(([a-z]{2,3})(?:-[A-Za-z0-9]+)*\)\.", re.MULTILINE
+)
 
 # What the assistant answers, in the language the customer wrote in.
 ASSISTANT_TEXTS: dict[str, dict[str, str]] = {
@@ -50,6 +62,8 @@ ASSISTANT_TEXTS: dict[str, dict[str, str]] = {
         "no_price": "Sorry, I could not find the price.",
         "fine": "All right.",
     },
+    "he": {"greeting": "שלום! איך אפשר לעזור?", "fine": "בסדר."},
+    "de": {"greeting": "Hallo! Wie kann ich helfen?", "fine": "In Ordnung."},
 }
 HANDOFF_WORDS: tuple[str, ...] = ("менеджер", "მენეჯერ", "manager")
 BOOKING_WORDS: tuple[str, ...] = ("забронировать", "დაჯავშნა", "book a table")
@@ -69,6 +83,16 @@ def read_customer_intent(goal: str) -> str:
         return "human"
 
     return "other"
+
+
+def read_reply_language(context: str) -> str | None:
+    """The language the platform read the customer in (its context line)."""
+
+    found: list[str] = REPLY_LANGUAGE_PATTERN.findall(context)
+    if not found or found[-1] not in ASSISTANT_TEXTS:
+        return None
+
+    return found[-1]
 
 
 def detect_language(text: str) -> str:

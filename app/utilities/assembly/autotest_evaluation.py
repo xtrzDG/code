@@ -36,6 +36,7 @@ from app.schemas.typings.assistants.constrained_floats import (
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
 from app.schemas.typings.assistants.strings import AutotestCheckNote
 from app.utilities.assembly.autotest_scenarios import LAUNCH_CRITICAL_SCENARIO_KINDS
+from app.utilities.assembly.disclosure_checks import check_disclosure_language
 from app.utilities.assembly.script_detection import is_written_in_script
 
 MIN_PASSING_CRITERION_SCORE: int = 3
@@ -59,6 +60,7 @@ NOTHING_CREATED_KINDS: frozenset[AutotestScenarioKind] = frozenset(
 def check_conversation(
     scenario: AutotestScenario,
     replies: Sequence[AssistantReply],
+    business_name: str | None = None,
 ) -> list[AutotestCheckFailure]:
     """
     Deterministic checks of what the assistant did; each failure is a code
@@ -69,7 +71,7 @@ def check_conversation(
     neither a booking nor a lead; every reply must be written in the script
     of the scenario language when that can be told (the AI disclosure the
     server puts in front of the first reply is not the model's writing and
-    is left out).
+    is left out); the disclosure itself must be in the scenario language.
     """
 
     failures: list[AutotestCheckFailure] = []
@@ -102,6 +104,7 @@ def check_conversation(
             )
         )
 
+    failures.extend(check_disclosure_language(scenario, replies, business_name))
     for reply_number, reply in enumerate(replies, start=1):
         if reply.text is None:
             continue

@@ -66,6 +66,7 @@ class TurnContext:
     timezone_name: str
     local_now: datetime
     channel: ChannelKind
+    reply_language_note: str
     customer_name: str | None
     customer_phone_number: str | None
     is_after_hours: bool | None
@@ -82,6 +83,7 @@ def build_context_line(context: TurnContext) -> str:
         Local time at the business: Thursday 2026-10-01 14:05 (Asia/Tbilisi).
         Next days: Fri 2026-10-02, Sat 2026-10-03, ...
         Channel: whatsapp.
+        Reply language: Georgian (ka).
         Customer: Giorgi, phone +995555123456.
     """
 
@@ -96,6 +98,7 @@ def build_context_line(context: TurnContext) -> str:
         lines.append(AFTER_HOURS_NOTE)
 
     lines.append(f"Channel: {context.channel.value}.")
+    lines.append(context.reply_language_note)
     customer_details: list[str] = []
     if context.customer_name is not None:
         customer_details.append(context.customer_name)

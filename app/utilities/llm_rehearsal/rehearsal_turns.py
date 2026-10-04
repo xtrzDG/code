@@ -9,7 +9,8 @@ assistant in every other chat.
   conversation passed to a person, the reply's script) can fail.
 - The AI customer (its instruction) says one sentence for its goal in the
   scenario language, with its phone number when it books, then [DONE].
-- The assistant (anything else) answers in the customer's language: it
+- The assistant (anything else) answers in the language the platform read
+  the customer's message in (the context line), else the one it tells: it
   books the first free time of the next days when asked to book, passes
   the conversation to a colleague when asked for a person or in an
   emergency, and otherwise says that it is a test assistant.
@@ -28,6 +29,7 @@ from app.utilities.assembly.autotest_prompts import (
     CUSTOMER_PERSONA_OPENING,
     DONE_MARKER,
     JUDGE_SYSTEM_PROMPT,
+    TRANSLITERATION_NOTE,
 )
 from app.utilities.llm_rehearsal.assistant_phrases import (
     ASSISTANT_PHRASES,
@@ -39,6 +41,7 @@ from app.utilities.llm_rehearsal.customer_phrases import (
     BOOKING_KEYWORDS,
     CUSTOMER_PHRASES,
     PERSON_KEYWORDS,
+    TRANSLITERATED_PHRASES,
     RehearsalIntent,
 )
 from app.utilities.llm_rehearsal.rehearsal_reading import (
@@ -49,6 +52,7 @@ from app.utilities.llm_rehearsal.rehearsal_reading import (
     next_days,
     read_blocks,
     read_customer_goal,
+    read_reply_language,
     read_turn,
 )
 
@@ -87,10 +91,13 @@ def play_customer(request: LlmRequest) -> ScriptedLlmTurn:
         return say(DONE_MARKER)
 
     language, intent, phone = read_customer_goal(str(request.system_prompt))
-    phrases = (
-        CUSTOMER_PHRASES.get(language.split("-")[0].lower())
-        or CUSTOMER_PHRASES[FALLBACK_LANGUAGE]
-    )
+    base_language: str = language.split("-")[0].lower()
+    if TRANSLITERATION_NOTE in str(request.system_prompt) and (
+        base_language in TRANSLITERATED_PHRASES
+    ):
+        return say(TRANSLITERATED_PHRASES[base_language])
+
+    phrases = CUSTOMER_PHRASES.get(base_language) or CUSTOMER_PHRASES[FALLBACK_LANGUAGE]
     if intent is RehearsalIntent.BOOKING and phone is not None:
         return say(f"{phrases[intent]} {phone}")
 
@@ -99,7 +106,10 @@ def play_customer(request: LlmRequest) -> ScriptedLlmTurn:
 
 def play_assistant(request: LlmRequest) -> ScriptedLlmTurn:
     customer_text: str = last_customer_text(request.transcript)
-    language: str = detect_language(customer_text)
+    # The platform's reading of the customer's language, as a model gets it.
+    language: str = (
+        read_reply_language(request.transcript) or detect_language(customer_text)
+    ).split("-")[0]
     tool_names: set[str] = {str(tool.name) for tool in request.tools}
     answered: tuple[JsonObject, JsonObject] | None = last_tool_exchange(
         request.transcript

@@ -138,7 +138,7 @@ def test_replies_must_be_written_in_the_scenario_script() -> None:
             "hi",
             "Deva",
             "Hindi",
-            "Hello! I am the AI assistant of Delhi Darbar.",
+            "नमस्ते! मैं Delhi Darbar का AI सहायक हूँ।",
             "पनीर टिक्का की कीमत ₹350 है। क्या आप टेबल बुक करना चाहेंगे?",
         ),
     ],

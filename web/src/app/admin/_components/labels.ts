@@ -83,6 +83,8 @@ export const SCENARIO_LABELS: Record<Schema<"AutotestScenarioKind">, MessageKey>
   human_request: "admin.detail.scenarioKinds.human_request",
   prompt_injection: "admin.detail.scenarioKinds.prompt_injection",
   emergency: "admin.detail.scenarioKinds.emergency",
+  foreign_language: "admin.detail.scenarioKinds.foreign_language",
+  transliterated: "admin.detail.scenarioKinds.transliterated",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<Schema<"PaymentStatus">, MessageKey> = {
@@ -118,6 +120,7 @@ export const CHECK_CODE_LABELS: Record<Schema<"AutotestCheckCode">, MessageKey> 
   not_handed_off: "admin.detail.checkCodes.not_handed_off",
   unexpected_records: "admin.detail.checkCodes.unexpected_records",
   wrong_reply_language: "admin.detail.checkCodes.wrong_reply_language",
+  wrong_disclosure_language: "admin.detail.checkCodes.wrong_disclosure_language",
   conversation_failed: "admin.detail.checkCodes.conversation_failed",
   no_customer_message: "admin.detail.checkCodes.no_customer_message",
   judge_unavailable: "admin.detail.checkCodes.judge_unavailable",

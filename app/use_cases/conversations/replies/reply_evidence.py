@@ -94,7 +94,7 @@ def find_unverified_reply_values(
     return find_unverified_values(
         text,
         evidence,
-        [*turn.version.languages, turn.language],
+        [*turn.version.languages, turn.reply_language],
         [turn.business.currency_code],
         customer_texts=customer_texts,
     )

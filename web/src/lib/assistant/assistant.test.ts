@@ -138,13 +138,29 @@ describe("autotests", () => {
 
   it("plans booking scenarios only for versions that book", () => {
     const niche = ["booking", "price_question", "cancellation", "price_question", "emergency"] as const;
-    expect(applicableAutotestKinds(niche, ["search_knowledge", "create_booking"])).toEqual([
+    expect(applicableAutotestKinds(niche, ["search_knowledge", "create_booking"], ["ka"])).toEqual([
       "booking",
       "price_question",
       "cancellation",
       "emergency",
     ]);
-    expect(applicableAutotestKinds(niche, ["search_knowledge", "create_lead"])).toEqual(["price_question", "emergency"]);
+    expect(applicableAutotestKinds(niche, ["search_knowledge", "create_lead"], ["ka"])).toEqual([
+      "price_question",
+      "emergency",
+    ]);
+  });
+
+  it("plans transliteration only for languages typed in Latin letters", () => {
+    const niche = ["price_question", "foreign_language", "transliterated"] as const;
+    expect(applicableAutotestKinds(niche, ["search_knowledge"], ["ka", "en"])).toEqual([
+      "price_question",
+      "foreign_language",
+      "transliterated",
+    ]);
+    expect(applicableAutotestKinds(niche, ["search_knowledge"], ["de", "pt-BR"])).toEqual([
+      "price_question",
+      "foreign_language",
+    ]);
   });
 
   it("sends a narrowed selection only when something was left out", () => {

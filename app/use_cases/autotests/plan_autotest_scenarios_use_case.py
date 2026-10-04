@@ -44,6 +44,11 @@ from app.utilities.assembly.language_profiles import (
     build_autotest_languages,
     collect_language_profiles,
 )
+from app.utilities.assembly.language_scenarios import (
+    LANGUAGE_SCENARIO_KINDS,
+    choose_foreign_languages,
+    choose_transliterated_languages,
+)
 from app.utilities.assembly.smoke_selection import plan_smoke_scenarios
 
 DEFAULT_PRICE_QUESTION_LIMIT: PriceQuestionScenarioLimit = PriceQuestionScenarioLimit(
@@ -60,7 +65,9 @@ class PlanAutotestScenariosUseCase(
 
     Scenarios are the selected version languages crossed with the niche's
     applicable scenario kinds (booking scenarios only for a version that
-    books), plus one price question per priced knowledge item, at most
+    books), the language scenarios (a customer who writes a language the
+    version does not list, and one who types a version language in Latin
+    letters), plus one price question per priced knowledge item, at most
     `price_question_limit`, and the niche's own booking variants (a named
     master, a room type for several nights) from the business's services
     and rooms, asked in the languages in turn. The plan has full coverage
@@ -96,6 +103,7 @@ class PlanAutotestScenariosUseCase(
         applicable_kinds: list[AutotestScenarioKind] = list_applicable_kinds(
             niche.autotest_kinds,
             version.tools,
+            version.languages,
         )
         party_size: int = self._party_size(business)
         resource_noun: str = (
@@ -149,18 +157,57 @@ class PlanAutotestScenariosUseCase(
         return AutotestScenarioPlanning(
             scenarios=plan_scenarios(
                 languages=autotest_languages,
-                kinds=kinds,
+                kinds=[kind for kind in kinds if kind not in LANGUAGE_SCENARIO_KINDS],
                 priced_item_titles=[str(item.title) for item in priced_items],
                 price_question_limit=int(self._price_question_limit),
                 resource_noun=resource_noun,
                 party_size=party_size,
             )
-            + plan_variant_scenarios(autotest_languages, variant_goals),
+            + plan_variant_scenarios(autotest_languages, variant_goals)
+            + self._plan_language_scenarios(kinds, version, languages),
             is_full_coverage=(
                 set(languages) >= set(version.languages)
                 and set(kinds) >= set(applicable_kinds)
             ),
         )
+
+    def _plan_language_scenarios(
+        self,
+        kinds: list[AutotestScenarioKind],
+        version: AssistantVersionDocument,
+        languages: list[LanguageTag],
+    ) -> list[AutotestScenario]:
+        """
+        A customer writing a language the version does not list, and one
+        typing a selected language in Latin letters, when those kinds run.
+        """
+
+        planned: list[tuple[AutotestScenarioKind, list[LanguageTag]]] = [
+            (
+                AutotestScenarioKind.FOREIGN_LANGUAGE,
+                choose_foreign_languages(version.languages),
+            ),
+            (
+                AutotestScenarioKind.TRANSLITERATED,
+                choose_transliterated_languages(languages),
+            ),
+        ]
+        return [
+            scenario
+            for kind, kind_languages in planned
+            if kind in kinds
+            for scenario in plan_scenarios(
+                languages=build_autotest_languages(
+                    kind_languages,
+                    collect_language_profiles(self._language_registry, kind_languages),
+                ),
+                kinds=[kind],
+                priced_item_titles=[],
+                price_question_limit=0,
+                resource_noun="",
+                party_size=DEFAULT_PARTY_SIZE,
+            )
+        ]
 
     def _party_size(self, business: BusinessDocument) -> int:
         """Two people, or fewer when the booking rules allow fewer."""

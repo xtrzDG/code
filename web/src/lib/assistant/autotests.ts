@@ -33,6 +33,8 @@ export const AUTOTEST_KINDS: readonly AutotestScenarioKind[] = [
   "human_request",
   "prompt_injection",
   "emergency",
+  "foreign_language",
+  "transliterated",
 ];
 
 /** The judge's pass mark: a run passes with an average of at least 4 of 5. */
@@ -130,18 +132,28 @@ export function scoreTone(score: number): StatusTone {
 }
 
 const BOOKING_SCENARIO_KINDS: ReadonlySet<AutotestScenarioKind> = new Set(["booking", "booking_out_of_hours", "cancellation"]);
+/** Languages customers often type in Latin letters (the API's transliteration lexicons). */
+const TRANSLITERATED_LANGUAGES: ReadonlySet<string> = new Set(["ka", "ru", "uk", "hy", "he"]);
 
 /**
  * Scenario kinds that apply to a version, as the API plans them: the
- * niche's kinds without repeats, booking ones only when the version books.
+ * niche's kinds without repeats, booking ones only when the version books,
+ * transliteration only when a version language is often typed in Latin letters.
  */
 export function applicableAutotestKinds(
   nicheKinds: readonly AutotestScenarioKind[],
   tools: readonly AssistantToolName[],
+  languages: readonly string[],
 ): AutotestScenarioKind[] {
   const canBook = tools.includes("create_booking");
+  const canBeTransliterated = languages.some((language) =>
+    TRANSLITERATED_LANGUAGES.has((language.split("-")[0] ?? "").toLowerCase()),
+  );
   return nicheKinds.filter(
-    (kind, index) => nicheKinds.indexOf(kind) === index && (canBook || !BOOKING_SCENARIO_KINDS.has(kind)),
+    (kind, index) =>
+      nicheKinds.indexOf(kind) === index &&
+      (canBook || !BOOKING_SCENARIO_KINDS.has(kind)) &&
+      (canBeTransliterated || kind !== "transliterated"),
   );
 }
 

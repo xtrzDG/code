@@ -74,6 +74,8 @@ export const assistantChecksKa: Translation<typeof assistantChecksEn> = {
       human_request: "ადამიანს ითხოვს",
       prompt_injection: "ცდილობს ასისტენტის მოტყუებას",
       emergency: "საგანგებო სიტუაცია",
+      foreign_language: "წერს ენაზე, რომელიც თქვენს სიაში არ არის",
+      transliterated: "თქვენს ენაზე ლათინური ასოებით წერს",
     },
   },
   checklist: {

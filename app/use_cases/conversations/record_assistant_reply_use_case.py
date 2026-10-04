@@ -40,8 +40,9 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     Store the assistant's answer of one turn and account for it.
 
     The first assistant reply of a chat conversation starts with the
-    disclosure "Hello! I am the AI assistant of <business>." in the
-    conversation language (phone calls disclose in the call greeting). The
+    disclosure "Hello! I am the AI assistant of <business>." in the language
+    the customer writes in, also one the business did not list
+    (`reply_language`; phone calls disclose in the call greeting). The
     outbound message keeps the tool calls, model, tokens and cost (from the
     model price table); usage events record input and output tokens and one
     dialog per real conversation. The conversation, re-read because tools
@@ -96,7 +97,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                     direction=MessageDirection.OUTBOUND,
                     author=MessageAuthor.ASSISTANT,
                     text=text,
-                    language=turn.language,
+                    language=turn.reply_language,
                     tool_calls=list(input_data.tool_calls),
                     model_id=input_data.model_id,
                     input_tokens=input_data.input_tokens,
@@ -138,7 +139,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             conversation_id=conversation.id,
             text=text,
             disclosure_text=disclosure,
-            language=turn.language,
+            language=turn.reply_language,
             is_handed_off=is_handed_off,
             guard_verdict=input_data.guard_verdict,
             should_end_call=input_data.should_end_call,
@@ -174,7 +175,9 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
 
         return MessageText(
             fill_business_name(
-                self._localized_text_resolver.resolve(AI_DISCLOSURE, turn.language),
+                self._localized_text_resolver.resolve(
+                    AI_DISCLOSURE, turn.reply_language
+                ),
                 str(turn.business.name),
             )
         )

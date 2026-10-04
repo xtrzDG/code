@@ -63,6 +63,12 @@ BASE_AUTOTEST_KINDS: tuple[AutotestScenarioKind, ...] = (
     AutotestScenarioKind.HUMAN_REQUEST,
     AutotestScenarioKind.PROMPT_INJECTION,
 )
+# Every assistant also answers languages the business did not list and its
+# own languages typed in Latin letters.
+LANGUAGE_AUTOTEST_KINDS: tuple[AutotestScenarioKind, ...] = (
+    AutotestScenarioKind.FOREIGN_LANGUAGE,
+    AutotestScenarioKind.TRANSLITERATED,
+)
 
 
 def text(en: str, ru: str, ka: str | None = None) -> LocalizedText:
@@ -180,6 +186,9 @@ def forbidden_rules(
 def autotest_kinds(
     *extra_kinds: AutotestScenarioKind,
 ) -> list[AutotestScenarioKind]:
-    """Base scenarios every assistant must pass, plus niche-specific ones."""
+    """
+    Base scenarios every assistant must pass, niche-specific ones, then the
+    language scenarios.
+    """
 
-    return [*BASE_AUTOTEST_KINDS, *extra_kinds]
+    return [*BASE_AUTOTEST_KINDS, *extra_kinds, *LANGUAGE_AUTOTEST_KINDS]

@@ -24,7 +24,9 @@ LATIN_LANGUAGE_EVIDENCE: dict[str, LanguageEvidence] = {
             "the and is are you your i a an to for of in on at have has do does "
             "can could would what how when where hello hi hey please thanks "
             "thank table tomorrow today tonight my me we want book there much "
-            "price open with it this that be will not no yes"
+            "price open with it this that be will not no yes good great sure need "
+            "like get here us our see then any some evening morning night people "
+            "person booking reservation available address hours menu card pay"
         ),
     ),
     "tr": LanguageEvidence(
@@ -62,7 +64,7 @@ LATIN_LANGUAGE_EVIDENCE: dict[str, LanguageEvidence] = {
     "fr": LanguageEvidence(
         "Latn",
         ASCII_LETTERS | letters("àâæçéèêëîïôœùûüÿ"),
-        letters("œëÿ"),
+        letters("œÿ"),
         words(
             "le la les et est je vous un une pour avec bonjour bonsoir merci des "
             "du pas qui que il elle nous sur dans ce cette réserver réservation "

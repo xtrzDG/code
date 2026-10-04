@@ -32,7 +32,10 @@ from app.schemas.typings.conversations.strings import (
     UnverifiedReplyValue,
 )
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    LanguageTag,
+    ScriptCode,
+)
 
 
 class PreparedTurn(ImmutableDTO):
@@ -49,13 +52,19 @@ class PreparedTurn(ImmutableDTO):
     photo or a place); `attachments` are those of the message.
     `reply_message_id` is the id the reply must be stored under (chosen by
     the inbox), None for a new one.
+    `reply_language` is the language the customer writes in, any BCP 47
+    tag, also one the business did not list: the AI disclosure, the
+    platform's notices and the reply use it. `script_hint` is set when the
+    customer types that language in another script ("Latn" for Georgian
+    written in Latin letters).
     """
 
     business: BusinessDocument
     version: AssistantVersionDocument
     contact: ContactDocument
     conversation: ConversationDocument
-    language: LanguageTag
+    reply_language: LanguageTag
+    script_hint: ScriptCode | None = None
     gate: TurnGate
     is_new_conversation: IsNewConversation
     is_first_reply: IsFirstAssistantReply

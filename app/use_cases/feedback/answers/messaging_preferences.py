@@ -92,7 +92,7 @@ class MessagingPreferences:
         kind: CustomerSignalKind,
         text: LocalizedText,
     ) -> CustomerSignalReply:
-        template: str = str(self.text_resolver.resolve(text, turn.language))
+        template: str = str(self.text_resolver.resolve(text, turn.reply_language))
         return CustomerSignalReply(
             kind=kind,
             text=MessageText(template.format(business=turn.business.name)),
