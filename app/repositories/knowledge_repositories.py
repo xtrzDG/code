@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
@@ -36,6 +38,18 @@ class KnowledgeItemRepository(
         business_id: BusinessId,
     ) -> list[KnowledgeItemDocument]:
         return self._list_in_business(business_id)
+
+    def get_many(
+        self,
+        business_id: BusinessId,
+        item_ids: Sequence[KnowledgeItemId],
+    ) -> dict[KnowledgeItemId, KnowledgeItemDocument]:
+        return {
+            item.id: item
+            for item in self._load_many(
+                business_id, sorted({str(item_id) for item_id in item_ids})
+            )
+        }
 
     def list_by_kind(
         self,

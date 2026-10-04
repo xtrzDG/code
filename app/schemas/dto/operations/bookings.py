@@ -24,6 +24,7 @@ from app.schemas.typings.bookings.strings import BookingNote
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     LanguageTag,
@@ -67,12 +68,16 @@ class ManualBookingRequest(ImmutableDTO):
     `language` is the customer's language for the confirmation text
     (business default when omitted). `conversation_id` books for the
     customer of that conversation and links the booking to it.
+    `service_item_id` books a service, package or room type: its length
+    (unless `duration_minutes` says otherwise), buffer and value, with one
+    of its performers (`resource_id` must be one).
     """
 
     contact_name: ContactName
     contact_phone_number: RawPhoneNumberInput | None = None
     resource_kind: ResourceKind | None = None
     resource_id: ResourceId | None = None
+    service_item_id: KnowledgeItemId | None = None
     date: LocalDate
     time: LocalTimeOfDay | None = None
     duration_minutes: BookingDurationMinutes | None = None
@@ -98,6 +103,7 @@ class ManualBookingCommand(ImmutableDTO):
     contact_phone_number: RawPhoneNumberInput | None = None
     resource_kind: ResourceKind | None = None
     resource_id: ResourceId | None = None
+    service_item_id: KnowledgeItemId | None = None
     date: LocalDate
     time: LocalTimeOfDay | None = None
     duration_minutes: BookingDurationMinutes | None = None

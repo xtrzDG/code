@@ -6,6 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
@@ -33,6 +34,14 @@ class KnowledgeItemRepoContract(RepoContract, Protocol):
         self,
         business_id: BusinessId,
     ) -> list[KnowledgeItemDocument]:
+        raise NotImplementedError
+
+    def get_many(
+        self,
+        business_id: BusinessId,
+        item_ids: Sequence[KnowledgeItemId],
+    ) -> dict[KnowledgeItemId, KnowledgeItemDocument]:
+        """The business's items of these ids (missing ones left out), one read."""
         raise NotImplementedError
 
     def list_by_kind(

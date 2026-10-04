@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView
 from app.schemas.typings.bookings.strings import ResourceName
@@ -23,9 +24,11 @@ def build_booking_view(
     zone: ZoneInfo,
     resource: ResourceDocument | None,
     contact: ContactDocument | None,
+    service: KnowledgeItemDocument | None = None,
 ) -> BookingView:
     """
-    Local start and end of a booking with its resource and contact.
+    Local start and end of a booking with its resource, contact and the
+    service it books (its title; the value is the booking's own).
 
     A resource deleted after the booking is shown by its id.
     """
@@ -57,4 +60,12 @@ def build_booking_view(
         language=booking.language,
         reminder_sent_at=booking.reminder_sent_at,
         created_at=booking.created_at,
+        service_item_id=booking.service_item_id,
+        service_title=(
+            None
+            if service is None or service.id != booking.service_item_id
+            else service.title
+        ),
+        value_minor=booking.value_minor,
+        currency_code=booking.currency_code,
     )

@@ -27,6 +27,7 @@ from app.utilities.scheduling.placement_errors import (
 from app.utilities.scheduling.placement_request import PlacementRequest
 from app.utilities.scheduling.resource_selection import resolve_duration_minutes
 from app.utilities.scheduling.slots import TimeSlot, fit_slot, generate_slots
+from app.utilities.scheduling.zoned_time import SECONDS_PER_MINUTE
 
 DEFAULT_NIGHT_COUNT: int = 1
 
@@ -57,7 +58,12 @@ def free_time_slots(
             request.local_date, request.zone, day_ranges, duration
         )
         if slot.starts_at >= request.earliest_start
-        and has_free_unit(busy, slot.starts_at, slot.ends_at, int(resource.unit_count))
+        and has_free_unit(
+            busy,
+            slot.starts_at,
+            slot.ends_at + buffer_seconds(request),
+            int(resource.unit_count),
+        )
     ]
 
 
@@ -160,7 +166,21 @@ def place_time_slot(
         request.excluded_booking_id,
         request.sandbox_conversation_id,
     )
-    if not has_free_unit(busy, slot.starts_at, slot.ends_at, int(resource.unit_count)):
+    if not has_free_unit(
+        busy,
+        slot.starts_at,
+        slot.ends_at + buffer_seconds(request),
+        int(resource.unit_count),
+    ):
         return FAILURE_TAKEN
 
     return Placement(resource, slot.starts_at, slot.ends_at)
+
+
+def buffer_seconds(request: PlacementRequest) -> int:
+    """How long after its end the new booking keeps its unit (its buffer)."""
+
+    if request.buffer_minutes is None:
+        return 0
+
+    return int(request.buffer_minutes) * SECONDS_PER_MINUTE

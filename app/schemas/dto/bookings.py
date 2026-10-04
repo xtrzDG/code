@@ -10,9 +10,11 @@ from app.schemas.constants.bookings import (
     ResourceKind,
 )
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.dto.bookable_offers import BookableOfferView, StayQuote
 from app.schemas.typings.bookings.booleans import IsFullDayAvailability, IsOpenOnDate
 from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
+    BookingValueMinor,
     NightCount,
     PartySize,
 )
@@ -26,6 +28,7 @@ from app.schemas.typings.bookings.strings import (
     LeadBudgetText,
     LeadDetails,
     ResourceName,
+    ResourceReference,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
@@ -33,7 +36,10 @@ from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
+from app.schemas.typings.knowledge.strings import KnowledgeTitle, ServiceReference
 from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
     E164PhoneNumber,
     LanguageTag,
     TimezoneName,
@@ -54,12 +60,20 @@ class AvailabilityQuery(ImmutableDTO):
     `full_day` is the staff view: every free slot of the date for every
     matching resource (no nearest-time or count limit), by the cabinet's
     rules (no minimum notice, no online party-size limit).
+
+    A service (`service_reference` from the model: an id or a name in any
+    script; `service_item_id` from the cabinet) sets the length and buffer
+    and limits the slots to its performers; `resource_reference` names a
+    resource the same way ("Nino", "ნინო").
     """
 
     business_id: BusinessId
     date: LocalDate
     resource_kind: ResourceKind | None = None
     resource_id: ResourceId | None = None
+    resource_reference: ResourceReference | None = None
+    service_reference: ServiceReference | None = None
+    service_item_id: KnowledgeItemId | None = None
     time: LocalTimeOfDay | None = None
     party_size: PartySize | None = None
     duration_minutes: BookingDurationMinutes | None = None
@@ -70,7 +84,10 @@ class AvailabilityQuery(ImmutableDTO):
 
 
 class AvailableSlot(ImmutableDTO):
-    """One free slot or stay in the business time zone."""
+    """
+    One free slot or stay in the business time zone; a stay of a priced
+    room type carries its quote (each night at its season's rate).
+    """
 
     resource_id: ResourceId
     resource_name: ResourceName
@@ -79,14 +96,21 @@ class AvailableSlot(ImmutableDTO):
     time: LocalTimeOfDay | None = None
     duration_minutes: BookingDurationMinutes | None = None
     nights: NightCount | None = None
+    stay_quote: StayQuote | None = None
 
 
 class AvailabilityResult(ImmutableDTO):
-    """Free slots for a query; empty when closed or fully booked."""
+    """
+    Free slots for a query; empty when closed or fully booked. `service` is
+    the service the query named; without one, `services` lists the
+    business's bookable offers with their ids, so the model can name one.
+    """
 
     timezone: TimezoneName
     is_open_on_date: IsOpenOnDate
     slots: list[AvailableSlot] = Field(default_factory=list[AvailableSlot])
+    service: BookableOfferView | None = None
+    services: list[BookableOfferView] = Field(default_factory=list[BookableOfferView])
 
 
 class CreateBookingCommand(ImmutableDTO):
@@ -94,7 +118,8 @@ class CreateBookingCommand(ImmutableDTO):
     Book a resource at a local date (and time) of the business.
 
     The contact is resolved by the server; name and phone from the
-    conversation update the contact.
+    conversation update the contact. A service and a resource may be named
+    by id or by a name in any script (as in `AvailabilityQuery`).
     """
 
     business_id: BusinessId
@@ -104,6 +129,8 @@ class CreateBookingCommand(ImmutableDTO):
     contact_phone_number: E164PhoneNumber | None = None
     resource_kind: ResourceKind | None = None
     resource_id: ResourceId | None = None
+    resource_reference: ResourceReference | None = None
+    service_reference: ServiceReference | None = None
     date: LocalDate
     time: LocalTimeOfDay | None = None
     duration_minutes: BookingDurationMinutes | None = None
@@ -158,7 +185,9 @@ class BookingView(ImmutableDTO):
     `conversation_id` is the conversation it was made in (the assistant's
     tools, or staff booking from a conversation card). `language` is the
     customer's language for texts about it. `reminder_sent_at` is when the
-    customer's reminder went out (None: not yet).
+    customer's reminder went out (None: not yet). A booking of a service,
+    package or room type names it and carries its value (`value_minor` in
+    `currency_code`).
     """
 
     id: BookingId
@@ -182,6 +211,10 @@ class BookingView(ImmutableDTO):
     language: LanguageTag | None = None
     reminder_sent_at: Microseconds | None = None
     created_at: Microseconds
+    service_item_id: KnowledgeItemId | None = None
+    service_title: KnowledgeTitle | None = None
+    value_minor: BookingValueMinor | None = None
+    currency_code: CurrencyCode | None = None
 
 
 class BookingResult(ImmutableDTO):

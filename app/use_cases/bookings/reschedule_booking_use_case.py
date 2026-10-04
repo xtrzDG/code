@@ -16,6 +16,7 @@ from app.contracts.repositories.business_repositories import (
 )
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.repositories.knowledge_repositories import (
+    KnowledgeItemRepoContract,
     ResourceRepoContract,
     ScheduleExceptionRepoContract,
 )
@@ -25,6 +26,7 @@ from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.domain.bookings import BookingDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import (
     BookingResult,
@@ -45,7 +47,6 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.bookings.constrained_integers import (
-    BookingDurationMinutes,
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
 )
@@ -59,7 +60,12 @@ from app.use_cases.bookings.booking_support import (
     stay_night_count,
 )
 from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
-from app.use_cases.bookings.reschedule_candidates import reschedule_candidates
+from app.use_cases.bookings.reschedule_candidates import (
+    booked_length,
+    booked_offer,
+    reprice_stay,
+    reschedule_candidates,
+)
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
@@ -67,7 +73,6 @@ from app.utilities.scheduling.placement import Placement
 from app.utilities.scheduling.placement_request import PlacementRequest
 from app.utilities.scheduling.resource_selection import min_notice_seconds
 from app.utilities.scheduling.zoned_time import (
-    SECONDS_PER_MINUTE,
     microseconds_to_seconds,
     parse_local_date,
     parse_time_of_day,
@@ -82,8 +87,10 @@ class RescheduleBookingUseCase(
     date, to a new local date (and time for slots), keeping its length or
     number of nights (model tool reschedule_booking and the cabinet).
 
-    The same resource is preferred; another free resource of the same kind
-    that seats the party is used when it is taken. Availability is checked
+    The same resource is preferred; another free performer of the booked
+    service (or resource of the same kind) that seats the party is used
+    when it is taken, and the service's buffer still applies. A moved stay
+    is priced again for its new nights. Availability is checked
     under the business lock without counting the booking itself. Customer
     requests follow the online-booking notice and notify staff; cabinet
     moves (booking id only) do not. The confirmation quotes the profile's
@@ -97,6 +104,7 @@ class RescheduleBookingUseCase(
         resource_repo: ResourceRepoContract,
         schedule_exception_repo: ScheduleExceptionRepoContract,
         booking_repo: BookingRepoContract,
+        knowledge_item_repo: KnowledgeItemRepoContract,
         contact_repo: ContactRepoContract,
         lock_registry: BusinessLockRegistryContract,
         phone_number_parser: PhoneNumberParserContract,
@@ -119,6 +127,7 @@ class RescheduleBookingUseCase(
             schedule_exception_repo
         )
         self._booking_repo: BookingRepoContract = booking_repo
+        self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
         self._contact_repo: ContactRepoContract = contact_repo
         self._lock_registry: BusinessLockRegistryContract = lock_registry
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
@@ -154,6 +163,9 @@ class RescheduleBookingUseCase(
             else parse_local_date(input_data.old_date)
         )
         new_date: date = parse_local_date(input_data.new_date)
+        items: list[KnowledgeItemDocument] = self._knowledge_item_repo.list_by_business(
+            input_data.business_id
+        )
         now: Microseconds = self._wall_clock.now_unix()
         now_seconds: int = microseconds_to_seconds(int(now))
         with self._lock_registry.lock_for(input_data.business_id):
@@ -185,8 +197,10 @@ class RescheduleBookingUseCase(
             ):
                 raise ValidationFailedError("A new time is required to move a booking.")
 
+            offer: KnowledgeItemDocument | None = booked_offer(booking, items)
+            nights: int = stay_night_count(booking, inputs.zone)
             placement: Placement = place_booking(
-                reschedule_candidates(inputs.resources, booking, current),
+                reschedule_candidates(inputs.resources, booking, current, offer, items),
                 PlacementRequest(
                     local_date=new_date,
                     minute_of_day=(
@@ -194,15 +208,8 @@ class RescheduleBookingUseCase(
                         if input_data.new_time is None
                         else parse_time_of_day(input_data.new_time)
                     ),
-                    duration_minutes=(
-                        BookingDurationMinutes(
-                            (int(booking.ends_at) - int(booking.starts_at))
-                            // SECONDS_PER_MINUTE
-                        )
-                        if current.booking_unit is BookingUnit.TIME_SLOT
-                        else None
-                    ),
-                    nights=stay_night_count(booking, inputs.zone),
+                    duration_minutes=booked_length(booking, current),
+                    nights=nights,
                     zone=inputs.zone,
                     business_hours=inputs.business_hours,
                     exceptions=inputs.exceptions,
@@ -222,7 +229,16 @@ class RescheduleBookingUseCase(
                     include_sandbox=booking.is_sandbox,
                     excluded_booking_id=booking.id,
                     sandbox_conversation_id=booking.conversation_id,
+                    buffer_minutes=booking.buffer_minutes,
                 ),
+            )
+            reprice_stay(
+                booking,
+                offer,
+                placement.resource.booking_unit,
+                new_date,
+                nights,
+                inputs.business.currency_code,
             )
             booking.resource_id = placement.resource.id
             booking.starts_at = BookingStartsAtUnixSeconds(placement.starts_at)
@@ -238,6 +254,7 @@ class RescheduleBookingUseCase(
             inputs.zone,
             placement.resource,
             self._contact_repo.get(input_data.business_id, booking.contact_id),
+            offer,
         )
         self._live_events.publish(
             booking.business_id,

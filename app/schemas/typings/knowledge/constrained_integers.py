@@ -39,4 +39,13 @@ class ServiceDurationMinutes(BaseConstrainedTypedInt):
     le = 720
 
 
+class StayPriceMinor(BaseConstrainedTypedInt):
+    """
+    What a stay in a room type costs, in minor units of the item's
+    currency: the sum of the nightly rates of its nights.
+    """
+
+    ge = 0
+
+
 # Keep abc order for all non example types, if possible.
