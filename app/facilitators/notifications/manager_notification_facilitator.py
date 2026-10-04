@@ -121,6 +121,7 @@ class ManagerNotificationFacilitator(ManagerNotificationFacilitatorContract):
             template=notification.template
             or staff_template(self._app_settings, contact),
             handoff_id=notification.handoff_id,
+            billing_documents=notification.billing_documents,
             next_attempt_at=notification.deliver_after,
             created_at=now,
             updated_at=now,

@@ -3,6 +3,8 @@ The parts of the login abuse protection: cap alerts (e-mail and Sentry),
 the high-cost number registry and the settings.
 """
 
+from collections.abc import Sequence
+
 import pytest
 import sentry_sdk
 from typed_time_provider import Microseconds, WallClock
@@ -15,6 +17,7 @@ from app.registries.localization.high_cost_phone_number_registry import (
 )
 from app.schemas.constants.users import LoginCodeCap
 from app.schemas.dto.login_protection import LoginCodeCapAlert
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.exceptions.application_errors import (
     ExternalServiceError,
     ValidationFailedError,
@@ -52,7 +55,9 @@ class RecordingEmailClient:
         subject: EmailSubject,
         text_body: EmailBodyText,
         html_body: EmailBodyText | None,
+        attachments: Sequence[EmailAttachment] = (),
     ) -> None:
+        del attachments
         del html_body
         if recipient == self.failing_recipient:
             raise ExternalServiceError("SMTP refused the message.")

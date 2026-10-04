@@ -40,7 +40,7 @@ class BillingLegalName(BaseConstrainedTypedString):
         legal_name = BillingLegalName("Mtsvane Ezo LLC")
     """
 
-    min_length = 2
+    min_length = 1
     max_length = 200
     pattern = r"^[^\x00-\x1f\x7f]+$"
 

@@ -164,6 +164,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,
         billing_use_cases=use_cases.billing,
+        invoicing_use_cases=use_cases.invoicing,
     )
     notifications: NotificationOrchestratorsContainer = Container(  # type: ignore[assignment]
         NotificationOrchestratorsContainer,

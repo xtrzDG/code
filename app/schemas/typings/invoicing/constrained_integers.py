@@ -3,6 +3,17 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class BillingEmailCount(BaseConstrainedTypedInt):
+    """
+    How many e-mails with invoice PDFs were queued for one payment.
+
+    Example:
+        queued = BillingEmailCount(2)
+    """
+
+    ge = 0
+
+
 class InvoiceSequenceNumber(BaseConstrainedTypedInt):
     """
     Place of an invoice in its series and year: 1 for the first invoice of

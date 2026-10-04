@@ -7,6 +7,7 @@ from app.containers.adapters.notification_collections_container import (
     NotificationCollectionsContainer,
 )
 from app.containers.analytics_repositories import AnalyticsRepositoriesContainer
+from app.containers.billing_repositories import BillingRepositoriesContainer
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
@@ -77,10 +78,6 @@ from app.repositories.notification_repositories import (
     PushSubscriptionRepository,
     StaffDeliveryStateRepository,
 )
-from app.repositories.payment_repositories import (
-    PackageUsageWarningRepository,
-    PaymentOrderRepository,
-)
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -101,6 +98,7 @@ class RepositoriesContainer(
     AnalyticsRepositoriesContainer,
     MediaRepositoriesContainer,
     OperationsRepositoriesContainer,
+    BillingRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 
@@ -268,14 +266,6 @@ class RepositoriesContainer(
     calendar_event_link_repo: Singleton[CalendarEventLinkRepository] = Singleton(
         CalendarEventLinkRepository,
         collection=collections.calendar_event_link_collection,
-    )
-    payment_order_repo: Singleton[PaymentOrderRepository] = Singleton(
-        PaymentOrderRepository,
-        collection=collections.payment_order_collection,
-    )
-    package_usage_warning_repo: Singleton[PackageUsageWarningRepository] = Singleton(
-        PackageUsageWarningRepository,
-        collection=collections.package_usage_warning_collection,
     )
     # Staff notifications: devices (Web Push), preferences, delivery states.
     push_subscription_repo: Singleton[PushSubscriptionRepository] = Singleton(

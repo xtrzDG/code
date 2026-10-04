@@ -7,6 +7,7 @@ from app.schemas.constants.payments import (
     PaymentStatus,
     PaymentWebhookOutcome,
 )
+from app.schemas.domain.billing_profiles import PaymentCardSnapshot
 from app.schemas.dto.billing import Money
 from app.schemas.typings.billing.constrained_integers import BillingIntervalMonths
 from app.schemas.typings.billing.constrained_strings import (
@@ -67,7 +68,8 @@ class PaymentNotification(ImmutableDTO):
 
     `order_reference` is the order id we sent (an automatic charge may carry
     its own order id and point to ours through `parent_order_reference`);
-    `merchant_reference` is the merchant data we sent, echoed back.
+    `merchant_reference` is the merchant data we sent, echoed back;
+    `card` the masked card of an approved payment, when the provider says.
     """
 
     provider: PaymentProvider
@@ -78,6 +80,7 @@ class PaymentNotification(ImmutableDTO):
     status: PaymentStatus
     amount: Money | None = None
     failure_reason: PaymentFailureReason | None = None
+    card: PaymentCardSnapshot | None = None
 
 
 class PaymentWebhookReceipt(ImmutableDTO):

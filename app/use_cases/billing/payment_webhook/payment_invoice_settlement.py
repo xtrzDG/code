@@ -6,6 +6,7 @@ from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import InvoiceKind, InvoiceStatus
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
+from app.schemas.domain.billing_profiles import PaymentCardSnapshot
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.billing_ledger import DueInvoicesRequest
@@ -16,6 +17,7 @@ from app.use_cases.shared.billing_records import (
     is_superseded_period,
     list_subscription_invoices,
 )
+from app.use_cases.shared.invoice_payments import record_invoice_payment
 
 
 def record_renewal_invoice(
@@ -26,6 +28,8 @@ def record_renewal_invoice(
     status: InvoiceStatus,
     payment_reference: PaymentProviderReference | None,
     now: Microseconds,
+    *,
+    card: PaymentCardSnapshot | None = None,
 ) -> InvoiceDocument:
     """
     Invoice of the period an automatic charge was for. An invoice that
@@ -47,7 +51,7 @@ def record_renewal_invoice(
             continue
 
         if status is InvoiceStatus.PAID and invoice.status in OPEN_INVOICE_STATUSES:
-            invoice.status = InvoiceStatus.PAID
+            record_invoice_payment(invoice, InvoiceStatus.PAID, card, now)
             invoice.updated_at = now
             invoice_repo.save(invoice)
 
@@ -60,6 +64,7 @@ def record_renewal_invoice(
             period_start=find_next_period_start(subscription, invoices),
             status=status,
             payment_reference=payment_reference,
+            payment_card=card,
         )
     )[-1]
 
@@ -71,6 +76,8 @@ def settle_order_invoices(
     status: InvoiceStatus,
     payment_reference: PaymentProviderReference | None,
     now: Microseconds,
+    *,
+    card: PaymentCardSnapshot | None = None,
 ) -> int:
     """
     Mark the checkout's invoices and return how many changed. A payment
@@ -108,7 +115,7 @@ def settle_order_invoices(
             void_open_invoice(invoice_repo, invoice, now)
             continue
 
-        invoice.status = status
+        record_invoice_payment(invoice, status, card, now)
         if payment_reference is not None:
             invoice.provider_reference = payment_reference
 

@@ -225,6 +225,7 @@ class ProcessPaymentWebhookUseCase(
                 InvoiceStatus.PAID,
                 notification.payment_reference,
                 now,
+                card=notification.card,
             )
         else:
             outcome = settle_checkout_payment(
@@ -234,6 +235,7 @@ class ProcessPaymentWebhookUseCase(
                 subscription,
                 notification.payment_reference,
                 now,
+                card=notification.card,
             )
 
         payment_order.status = PaymentStatus.APPROVED

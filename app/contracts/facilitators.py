@@ -1,5 +1,6 @@
 """Narrow side effects towards people outside the system."""
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from app.contracts.facilitator_contract import FacilitatorContract
@@ -7,6 +8,7 @@ from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.outbound_messages import OutboundTemplate
 from app.schemas.dto.deliveries import StaffNotification
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.typings.channels.strings import ProviderMessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import (
@@ -63,5 +65,18 @@ class StaffNotificationSenderContract(FacilitatorContract, Protocol):
         provider's message id when it names one. Raises
         DeliveryNotConfiguredError, ProviderRateLimitedError,
         ProviderRejectedMessageError or ExternalServiceError.
+        """
+        raise NotImplementedError
+
+    def send_with_files(
+        self,
+        contact: ManagerContact,
+        text: MessageText,
+        attachments: Sequence[EmailAttachment],
+    ) -> None:
+        """
+        Send the text with files attached, by e-mail (the only channel that
+        carries files). Raises like `send`, and ValidationFailedError for a
+        contact that is not an e-mail address.
         """
         raise NotImplementedError

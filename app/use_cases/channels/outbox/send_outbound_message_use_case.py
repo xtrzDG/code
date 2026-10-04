@@ -5,6 +5,7 @@ from app.contracts.channels import (
     WhatsAppTemplateAdapterContract,
 )
 from app.contracts.facilitators import StaffNotificationSenderContract
+from app.contracts.invoicing import BillingEmailAttachmentsFacilitatorContract
 from app.contracts.notifications import PushNotificationSenderContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
@@ -24,6 +25,7 @@ from app.use_cases.channels.outbox.customer_templates import (
 from app.use_cases.channels.outbox.outbound_expiry import expired_attempt
 from app.use_cases.channels.outbox.outbound_routes import (
     OutboundRoute,
+    route_billing_email,
     route_customer_reply,
     route_push_notification,
     route_staff_notification,
@@ -49,7 +51,8 @@ class SendOutboundMessageUseCase(
     retry decision. A message past its `send_before` is not sent at all
     (given up as EXPIRED). WhatsApp replies are metered per delivered
     part, a WhatsApp template to a customer (outside the 24-hour window)
-    as one template.
+    as one template. An e-mail to the billing contact attaches its invoice
+    PDFs, made at each attempt.
     """
 
     def __init__(
@@ -65,7 +68,11 @@ class SendOutboundMessageUseCase(
         usage_event_repo: UsageEventRepoContract,
         wall_clock: WallClock[Microseconds],
         whatsapp_templates: WhatsAppTemplateAdapterContract,
+        billing_attachments: BillingEmailAttachmentsFacilitatorContract,
     ) -> None:
+        self._billing_attachments: BillingEmailAttachmentsFacilitatorContract = (
+            billing_attachments
+        )
         self._whatsapp_templates: WhatsAppTemplateAdapterContract = whatsapp_templates
         self._adapters: dict[ChannelKind, ChannelAdapterContract] = {
             ChannelKind.TELEGRAM: telegram_adapter,
@@ -133,6 +140,15 @@ class SendOutboundMessageUseCase(
                 self._channel_repo,
                 self._secret_cipher,
                 self._adapters,
+            )
+
+        if message.staff_contact is not None and message.billing_documents:
+            return route_billing_email(
+                message,
+                message.staff_contact,
+                message.billing_documents,
+                self._staff_sender,
+                self._billing_attachments,
             )
 
         if message.staff_contact is not None:

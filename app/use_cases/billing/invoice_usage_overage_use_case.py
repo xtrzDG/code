@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
+from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
@@ -84,7 +85,9 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
         manager_notifier: ManagerNotificationFacilitatorContract,
         billing_notice_transformer: TransformerContract[BillingNotice, MessageText],
         wall_clock: WallClock[Microseconds],
+        invoice_issuing: InvoiceIssuingFacilitatorContract,
     ) -> None:
+        self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._business_repo: BusinessRepoContract = business_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
@@ -214,7 +217,7 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
 
         amount: Money = multiply_money(price_per_minute, Decimal(int(overage_minutes)))
         now: Microseconds = self._wall_clock.now_unix()
-        invoice = InvoiceDocument(
+        draft = InvoiceDocument(
             business_id=business.id,
             subscription_id=subscription.id,
             kind=InvoiceKind.USAGE_OVERAGE,
@@ -238,6 +241,7 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
             created_at=now,
             updated_at=now,
         )
+        invoice: InvoiceDocument = self._invoice_issuing.issue(business, draft)
         self._invoice_repo.save(invoice)
         return invoice
 

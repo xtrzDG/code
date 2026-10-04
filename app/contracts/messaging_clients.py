@@ -1,8 +1,10 @@
 """Providers that carry login codes: SMS, Telegram Gateway, WhatsApp, e-mail."""
 
+from collections.abc import Sequence
 from typing import Protocol
 
 from app.contracts.client_contract import ClientContract
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateLanguageCode,
 )
@@ -58,6 +60,10 @@ class EmailSenderClientContract(ClientContract, Protocol):
         subject: EmailSubject,
         text_body: EmailBodyText,
         html_body: EmailBodyText | None,
+        attachments: Sequence[EmailAttachment] = (),
     ) -> None:
-        """Send one e-mail. Raises ExternalServiceError when the server refuses."""
+        """
+        Send one e-mail, with files attached when given. Raises
+        ExternalServiceError when the server refuses.
+        """
         raise NotImplementedError

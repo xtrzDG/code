@@ -37,6 +37,15 @@ class BillingPipelinesContainer(containers.DeclarativeContainer):
     process_payment_webhook_pipeline = orchestrator_pipeline(
         billing_orchestrators.process_payment_webhook_orchestrator
     )
+    get_billing_profile_pipeline = orchestrator_pipeline(
+        billing_orchestrators.get_billing_profile_orchestrator
+    )
+    save_billing_profile_pipeline = orchestrator_pipeline(
+        billing_orchestrators.save_billing_profile_orchestrator
+    )
+    get_billing_document_pipeline = orchestrator_pipeline(
+        billing_orchestrators.get_billing_document_orchestrator
+    )
 
     # --- Periodic jobs of the background worker.
     end_trials_pipeline = orchestrator_pipeline(

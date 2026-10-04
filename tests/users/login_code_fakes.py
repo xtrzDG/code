@@ -1,5 +1,6 @@
 """Fake SMS, WhatsApp and email providers and settings for login code delivery."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from app.contracts.facilitators import OtpDeliveryFacilitatorContract
@@ -11,6 +12,7 @@ from app.contracts.messaging_clients import (
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.dto.messaging import EmailAttachment
 from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateLanguageCode,
 )
@@ -103,7 +105,9 @@ class FakeMailer(EmailSenderClientContract):
         subject: EmailSubject,
         text_body: EmailBodyText,
         html_body: EmailBodyText | None,
+        attachments: Sequence[EmailAttachment] = (),
     ) -> None:
+        del attachments
         self.sent.append(SentEmail(recipient, subject, text_body, html_body))
 
 

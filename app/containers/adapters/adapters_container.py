@@ -6,6 +6,9 @@ from dependency_injector.providers import (
     Singleton,
 )
 
+from app.adapters.documents.weasyprint_invoice_document_renderer_adapter import (
+    WeasyPrintInvoiceDocumentRendererAdapter,
+)
 from app.adapters.events.live_event_bus_factory import build_live_event_bus_adapter
 from app.adapters.llm.anthropic_llm_adapter import AnthropicLlmAdapter
 from app.adapters.llm.call_limited_llm_adapter import (
@@ -287,4 +290,8 @@ class AdaptersContainer(containers.DeclarativeContainer):
         FlittPaymentGatewayAdapter,
         flitt_client=clients.flitt_client,
         app_base_url=config.app_settings.provided.app_base_url,
+    )
+    # Invoice and receipt PDFs (WeasyPrint, the system's Noto fonts).
+    invoice_document_renderer: Singleton[WeasyPrintInvoiceDocumentRendererAdapter] = (
+        Singleton(WeasyPrintInvoiceDocumentRendererAdapter)
     )

@@ -8,7 +8,7 @@ from app.gateways.http.admin_ops_router_assembly import build_admin_ops_routers
 from app.gateways.http.admin_routes import build_admin_router
 from app.gateways.http.analytics_router_assembly import build_analytics_routers
 from app.gateways.http.assistant_routes import build_assistant_router
-from app.gateways.http.billing_routes import build_billing_router
+from app.gateways.http.billing_router_assembly import build_billing_routers
 from app.gateways.http.business_routes import build_business_router
 from app.gateways.http.call_router_assembly import build_call_routers
 from app.gateways.http.catalog_routes import build_catalog_router
@@ -57,7 +57,6 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     conversations = operators.conversations
     assistants = operators.assistants
     channels = operators.channels
-    billing = operators.billing
     platform = operators.platform
     notifications = operators.notifications
     current_user: CurrentUserDependency = build_current_user_dependency(
@@ -253,16 +252,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             call_initiation_operator=conversations.start_voice_call_operator(),
             post_call_operator=conversations.post_call_webhook_operator(),
         ),
-        build_billing_router(
-            get_billing_overview_operator=billing.get_billing_overview_operator(),
-            start_trial_operator=billing.start_trial_operator(),
-            change_plan_operator=billing.change_plan_operator(),
-            cancel_subscription_operator=billing.cancel_subscription_operator(),
-            start_checkout_operator=billing.start_checkout_operator(),
-            subscribe_operator=billing.subscribe_operator(),
-            payment_webhook_operator=billing.process_payment_webhook_operator(),
-            current_user=current_user,
-        ),
+        *build_billing_routers(operators, current_user),
         build_admin_router(
             list_clients_operator=platform.list_clients_operator(),
             get_client_health_operator=platform.get_client_health_operator(),

@@ -7,6 +7,7 @@ from app.contracts.repositories.billing_repositories import InvoiceRepoContract
 from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.constants.payments import PaymentWebhookOutcome
 from app.schemas.domain.billing import SubscriptionDocument
+from app.schemas.domain.billing_profiles import PaymentCardSnapshot
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.billing import Money
 from app.schemas.typings.billing.strings import PaymentProviderReference
@@ -28,6 +29,8 @@ def settle_checkout_payment(
     subscription: SubscriptionDocument,
     payment_reference: PaymentProviderReference | None,
     now: Microseconds,
+    *,
+    card: PaymentCardSnapshot | None = None,
 ) -> PaymentWebhookOutcome:
     """
     The checkout's invoices become PAID and its automatic charges replace
@@ -51,6 +54,7 @@ def settle_checkout_payment(
         InvoiceStatus.PAID,
         payment_reference,
         now,
+        card=card,
     )
     # Money that books nothing (a bill paid twice, a second setup
     # fee, a month overlapping a paid one) is owed back.

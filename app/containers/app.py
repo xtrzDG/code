@@ -13,6 +13,9 @@ from app.containers.adapters.feedback_collections_container import (
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
+from app.containers.adapters.invoicing_collections_container import (
+    InvoicingCollectionsContainer,
+)
 from app.containers.adapters.media_collections_container import (
     MediaCollectionsContainer,
 )
@@ -149,8 +152,18 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # Billing details and invoice numbers (1114), one more sibling.
+    invoicing_collections: InvoicingCollectionsContainer = Container(  # type: ignore[assignment]
+        InvoicingCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        invoicing_collections=invoicing_collections,
+        payment_collections=adapters.collections,
         operations_collections=operations_collections,
         health_collections=adapters.collections,
         media_collections=media_collections,

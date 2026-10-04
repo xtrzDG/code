@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from app.contracts.channels import ChannelAdapterContract
 from app.contracts.facilitators import StaffNotificationSenderContract
+from app.contracts.invoicing import BillingEmailAttachmentsFacilitatorContract
 from app.contracts.notifications import PushNotificationSenderContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
@@ -17,6 +18,7 @@ from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.outbound_messages import (
     CustomerRecipient,
+    OutboundBillingDocuments,
     OutboundMessageDocument,
     PushRecipient,
 )
@@ -115,6 +117,26 @@ def route_push_notification(
 
     def send_part(part: MessageText) -> ProviderMessageId | None:
         push_sender.send(message.business_id, recipient, part)
+        return None
+
+    return OutboundRoute(parts=[message.text], send_part=send_part)
+
+
+def route_billing_email(
+    message: OutboundMessageDocument,
+    contact: ManagerContact,
+    documents: OutboundBillingDocuments,
+    staff_sender: StaffNotificationSenderContract,
+    billing_attachments: BillingEmailAttachmentsFacilitatorContract,
+) -> OutboundRoute:
+    """An e-mail to the billing contact with its invoice PDFs, made now."""
+
+    def send_part(part: MessageText) -> ProviderMessageId | None:
+        staff_sender.send_with_files(
+            contact,
+            part,
+            billing_attachments.attach(message.business_id, documents),
+        )
         return None
 
     return OutboundRoute(parts=[message.text], send_part=send_part)
