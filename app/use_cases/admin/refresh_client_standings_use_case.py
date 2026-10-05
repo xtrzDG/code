@@ -4,12 +4,16 @@ from itertools import batched
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.client_care_repositories import (
+    ClientHealthChangeRepoContract,
+)
 from app.contracts.repositories.client_standing_repositories import (
     ClientStandingRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.client_health import AdminClientSort
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.client_health_changes import ClientHealthChangeDocument
 from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.dto.admin import AdminClientSummary, ClientSummarySource
 from app.schemas.dto.client_standings import ClientListPositions
@@ -48,7 +52,9 @@ class RefreshClientStandingsUseCase(UseCaseContract[JobTick, JobReport]):
     in each order of the list (`client_list_order`) and stores the
     positions that changed. Only the order keys of every client stay in
     memory, never every summary. A client whose summary fails keeps its
-    previous standing; the run goes on with the others.
+    previous standing; the run goes on with the others. A client whose
+    health status moved since its last standing gets a health change (its
+    timeline, and the daily digest of clients that turned critical).
     """
 
     def __init__(
@@ -57,7 +63,11 @@ class RefreshClientStandingsUseCase(UseCaseContract[JobTick, JobReport]):
         summarize_client: UseCaseContract[ClientSummarySource, AdminClientSummary],
         client_standing_repo: ClientStandingRepoContract,
         wall_clock: WallClock[Microseconds],
+        client_health_change_repo: ClientHealthChangeRepoContract | None = None,
     ) -> None:
+        self._health_change_repo: ClientHealthChangeRepoContract | None = (
+            client_health_change_repo
+        )
         self._business_repo: BusinessRepoContract = business_repo
         self._summarize_client: UseCaseContract[
             ClientSummarySource, AdminClientSummary
@@ -117,8 +127,34 @@ class RefreshClientStandingsUseCase(UseCaseContract[JobTick, JobReport]):
             )
             stored[business.id] = kept
             standings.append(build_standing(summary, kept, earlier, now))
+            self._record_health_change(summary, earlier, now)
 
         self._client_standing_repo.save_many(standings)
+
+    def _record_health_change(
+        self,
+        summary: AdminClientSummary,
+        earlier: ClientStandingDocument | None,
+        now: Microseconds,
+    ) -> None:
+        if (
+            self._health_change_repo is None
+            or earlier is None
+            or earlier.health_status is summary.health_status
+        ):
+            return
+
+        self._health_change_repo.add(
+            ClientHealthChangeDocument(
+                business_id=summary.business_id,
+                previous_status=earlier.health_status,
+                status=summary.health_status,
+                issues=list(summary.health_issues),
+                changed_at=now,
+                created_at=now,
+                updated_at=now,
+            )
+        )
 
 
 def build_standing(

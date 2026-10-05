@@ -17,6 +17,7 @@ from app.contracts.repositories.booking_repositories import (
 )
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.billing import SetupOption
 from app.schemas.constants.client_health import ClientHealthIssue, ClientHealthStatus
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import SubscriptionDocument
@@ -174,7 +175,7 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
             has_auto_debit=(
                 subscription is not None and subscription.provider_reference is not None
             ),
-            setup_option=None if subscription is None else subscription.setup_option,
+            setup_option=effective_setup_option(subscription),
             onboarding_request=self._onboarding_request(business),
             published_version_number=(
                 None if published_version is None else published_version.version_number
@@ -256,3 +257,19 @@ class SummarizeClientUseCase(UseCaseContract[ClientSummarySource, AdminClientSum
             plan_key=request.plan_key,
             requested_at=request.requested_at,
         )
+
+
+def effective_setup_option(
+    subscription: SubscriptionDocument | None,
+) -> SetupOption | None:
+    """
+    How the client is set up, as its owner's billing page says it: a
+    subscription without a choice (the trial that started at go-live, one
+    from before the choice existed) is set up by the owner, for free, like
+    SELF_SERVE; no subscription, no option yet.
+    """
+
+    if subscription is None:
+        return None
+
+    return subscription.setup_option or SetupOption.SELF_SERVE

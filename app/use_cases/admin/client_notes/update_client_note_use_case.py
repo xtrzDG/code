@@ -8,9 +8,7 @@ from app.schemas.dto.client_story import ClientNoteList, UpdateClientNoteCommand
 from app.use_cases.admin.client_notes.client_note_board import ClientNoteBoard
 
 
-class UpdateClientNoteUseCase(
-    UseCaseContract[UpdateClientNoteCommand, ClientNoteList]
-):
+class UpdateClientNoteUseCase(UseCaseContract[UpdateClientNoteCommand, ClientNoteList]):
     """
     PATCH /v1/admin/clients/{business_id}/notes/{note_id}: new words for a
     note, or pinned to the top (or not); what is left out stays.

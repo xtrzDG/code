@@ -2,14 +2,14 @@
 
 import httpx
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
-)
-from app.adapters.locks.in_memory_advisory_lock_adapter import (
-    InMemoryAdvisoryLockAdapter,
 )
 from app.clients.flitt.flitt_client import FlittClient
 from app.contracts.catalog_registries import ExchangeRateRegistryContract

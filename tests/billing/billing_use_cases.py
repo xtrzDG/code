@@ -13,7 +13,6 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.client_standings import ClientStandingDocument
 from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCase
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
-from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
 from app.use_cases.admin.refresh_client_standings_use_case import (
     RefreshClientStandingsUseCase,
 )
@@ -48,18 +47,15 @@ from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.analytics.recording_product_events import RecordingProductEvents
+from tests.billing.admin_cabinet_parts import build_open_client_cabinet
 from tests.billing.billing_fakes import RecordingVoiceAgentRemoval
 from tests.billing.billing_infrastructure import BillingInfrastructure
 from tests.foundation.access_support import (
     ACCESS_SETTINGS,
-    AllowStepUp,
     AuthorizeFlaggedAdmin,
 )
 from tests.foundation.support_access_builders import (
-    RecordingStaffAlerts,
     build_authorize_business_access,
-    in_memory_grant_repo,
-    in_memory_platform_admins,
 )
 
 
@@ -282,17 +278,12 @@ class BillingUseCases(BillingInfrastructure):
             invoice_repo=self.invoice_repo,
             payment_order_repo=self.payment_order_repo,
             summarize_client=summarize_client,
-        )
-        self.support_grants = in_memory_grant_repo()
-        self.staff_alerts = RecordingStaffAlerts()
-        self.open_client_cabinet = OpenClientCabinetUseCase(
-            authorize_platform_admin=authorize_admin,
-            platform_admins=in_memory_platform_admins(wall_clock),
-            business_repo=self.business_repo,
-            grant_repo=self.support_grants,
-            audit_log_repo=self.audit_log_repo,
-            staff_alerts=self.staff_alerts,
-            localized_text_resolver=LocalizedTextResolver(),
+            subscription_repo=self.subscription_repo,
+            billing_credit_repo=self.billing_credit_repo,
             wall_clock=wall_clock,
-            step_up=AllowStepUp(),
+        )
+        self.support_grants, self.staff_alerts, self.open_client_cabinet = (
+            build_open_client_cabinet(
+                authorize_admin, self.business_repo, self.audit_log_repo, wall_clock
+            )
         )

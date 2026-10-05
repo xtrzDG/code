@@ -9,9 +9,7 @@ from app.schemas.dto.client_story import ClientNoteList, CreateClientNoteCommand
 from app.use_cases.admin.client_notes.client_note_board import ClientNoteBoard
 
 
-class CreateClientNoteUseCase(
-    UseCaseContract[CreateClientNoteCommand, ClientNoteList]
-):
+class CreateClientNoteUseCase(UseCaseContract[CreateClientNoteCommand, ClientNoteList]):
     """
     POST /v1/admin/clients/{business_id}/notes: a platform admin who may
     write notes (SUPER, BILLING) writes one down; the answer is the client's

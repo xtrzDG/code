@@ -14,6 +14,7 @@ from app.schemas.constants.billing import (
     BillingPeriod,
     InvoiceKind,
     InvoiceStatus,
+    ManualPaymentMethod,
     OnboardingRequestStatus,
     PlanKey,
     SetupOption,
@@ -29,6 +30,7 @@ from app.schemas.constants.client_health import (
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.payments import PaymentStatus
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.admin_actions import ClientAccountView
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import ClientCostReport
 from app.schemas.dto.paging import PageRequest
@@ -66,6 +68,7 @@ from app.schemas.typings.client_health.constrained_integers import (
 from app.schemas.typings.client_health.constrained_strings import ClientSearchText
 from app.schemas.typings.compliance.prefixed_id import AuditLogEntryId
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.invoicing.constrained_strings import InvoiceNumber
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     CurrencyCode,
@@ -246,6 +249,8 @@ class AdminInvoiceView(ImmutableDTO):
     status: InvoiceStatus
     period_start: Microseconds
     period_end: Microseconds
+    number: InvoiceNumber | None = None
+    manual_payment_method: ManualPaymentMethod | None = None
 
 
 class AdminPaymentView(ImmutableDTO):
@@ -269,6 +274,7 @@ class ClientHealthView(ImmutableDTO):
     )
     invoices: list[AdminInvoiceView] = Field(default_factory=list[AdminInvoiceView])
     payments: list[AdminPaymentView] = Field(default_factory=list[AdminPaymentView])
+    account: ClientAccountView | None = None
 
 
 class ClientCabinetAccess(ImmutableDTO):
