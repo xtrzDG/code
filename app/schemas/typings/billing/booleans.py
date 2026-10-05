@@ -6,6 +6,7 @@ Example:
 
 HasLocalPriceBook = bool
 IsAutoDebitActive = bool
+IsClientDiscountActive = bool
 IsDerivedExchangeRate = bool
 IsExchangeRateStale = bool
 IsInitialPaymentSettled = bool

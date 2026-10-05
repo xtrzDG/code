@@ -52,10 +52,10 @@ from app.use_cases.billing.payment_webhook.payment_order_rules import (
     is_stray_charge,
     require_expected_amount,
 )
-from app.use_cases.billing.payment_webhook.service_mode_restoration import (
+from app.use_cases.shared.service_mode_restoration import (
     restore_full_service,
 )
-from app.use_cases.billing.payment_webhook.subscription_payment_transitions import (
+from app.use_cases.shared.subscription_payment_transitions import (
     activate_paid_period,
 )
 from app.utilities.analytics.billing_event_drafts import payment_events
