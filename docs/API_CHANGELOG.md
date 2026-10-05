@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-05 — one story for updates: owner checks pending, named failures, drafts, "Check now"
 
-Spec: `14b1f6f07f1450cf`
+Spec: `84a15085e6d9e6ed`
 
 - **Added** `POST /v1/businesses/{business_id}/autotest-cases/{case_id}/check`
   (owners): "Check now" asks the check once of the version customers talk
