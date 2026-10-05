@@ -74,6 +74,7 @@ from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
+from app.utilities.storage.growth_collections import GROWTH_COLLECTIONS
 from app.utilities.storage.invoicing_collections import INVOICING_COLLECTIONS
 from app.utilities.storage.legal_collections import LEGAL_COLLECTIONS
 from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
@@ -124,8 +125,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("unanswered_questions"), UnansweredQuestionDocument
     ),
-    # The team inbox: internal notes on conversations, each business's saved
-    # replies and its auto-assignment settings (1053).
+    # The team inbox: notes, saved replies, auto-assignment settings (1053).
     DocumentCollectionDefinition(
         DocumentCollectionName("conversation_notes"), ConversationNoteDocument
     ),
@@ -282,6 +282,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *CUSTOMER_COLLECTIONS,  # Saved segments, customer settings (1140).
     *SPEND_GUARD_COLLECTIONS,  # Spend limits, allowed chat websites (1142).
     *CLIENT_CARE_COLLECTIONS,  # Credits, notes, health changes, digests (1143).
+    *GROWTH_COLLECTIONS,  # The waitlist and rebooking campaigns (1151).
 )
 
 

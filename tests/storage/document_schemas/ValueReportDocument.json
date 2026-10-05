@@ -1,7 +1,7 @@
 {
   "collection": "value_reports",
   "document_type": "ValueReportDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -74,6 +74,23 @@
             "minimum": 0,
             "type": "integer"
           },
+          "campaign_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "campaign_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "conversation_count": {
             "minimum": 0,
             "type": "integer"
@@ -126,6 +143,23 @@
             "default": 0,
             "minimum": 0,
             "type": "integer"
+          },
+          "waitlist_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "waitlist_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -227,6 +261,23 @@
             "minimum": 0,
             "type": "integer"
           },
+          "campaign_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "campaign_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "conversation_count": {
             "minimum": 0,
             "type": "integer"
@@ -279,6 +330,23 @@
             "default": 0,
             "minimum": 0,
             "type": "integer"
+          },
+          "waitlist_booking_count": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "waitlist_value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -324,7 +392,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "starts_at": {

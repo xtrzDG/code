@@ -60,7 +60,11 @@ class ValueTotals(ImmutableDTO):
       priced service in the business currency) plus the others times the
       average check (or, for niches that take orders instead, its requests
       times the average check); `revenue_source` says which; None without
-      either.
+      either;
+    - of the bookings kept, those the waitlist filled (a freed place a
+      waiting customer took) and those a rebooking campaign brought back,
+      each with their own values in the business currency (None: none had
+      one): the growth the assistant made, not only what came in by itself.
     """
 
     conversation_count: PeriodItemCount
@@ -77,6 +81,10 @@ class ValueTotals(ImmutableDTO):
     valued_booking_count: PeriodItemCount = PeriodItemCount(0)
     booked_value_minor: BookedValueMinor | None = None
     revenue_source: RevenueSource | None = None
+    waitlist_booking_count: PeriodItemCount = PeriodItemCount(0)
+    waitlist_value_minor: BookedValueMinor | None = None
+    campaign_booking_count: PeriodItemCount = PeriodItemCount(0)
+    campaign_value_minor: BookedValueMinor | None = None
 
 
 class ValueModel(ImmutableDTO):

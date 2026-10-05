@@ -2,7 +2,12 @@ from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersio
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.bookings import BookingStatus, LeadStatus, LeadType
+from app.schemas.constants.bookings import (
+    BookingOrigin,
+    BookingStatus,
+    LeadStatus,
+    LeadType,
+)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
@@ -56,11 +61,16 @@ class BookingDocument(BaseDocument):
     `last_status_change` is the last status change staff made in the
     cabinet, which they may undo for a short while; any other change of
     the status (the customer cancelling, an undo) clears it.
+
+    `origin` marks a booking the waitlist filled (a freed place a waiting
+    customer took) or one a rebooking campaign brought back, for the
+    revenue lines of the value report; None for every other booking.
     """
 
     # 2: `service_item_id`, `buffer_minutes`, `value_minor` and
     # `currency_code` (optional). 3: `last_status_change` (optional).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: `origin` (optional).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: BookingId = Field(default_factory=BookingId)
     business_id: BusinessId
     resource_id: ResourceId
@@ -82,6 +92,7 @@ class BookingDocument(BaseDocument):
     value_minor: BookingValueMinor | None = None
     currency_code: CurrencyCode | None = None
     last_status_change: BookingStatusChange | None = None
+    origin: BookingOrigin | None = None
 
 
 class LeadDocument(BaseDocument):

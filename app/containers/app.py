@@ -209,6 +209,7 @@ class AppContainer(containers.DeclarativeContainer):
         spend_guard_collections=spend_guard_collections,
         usage_collections=adapters.collections,
         client_care_collections=client_care_collections,
+        growth_collections=adapters.growth_collections,
         legal_collections=legal_collections,
         privacy_collections=privacy_collections,
         retention_collections=adapters.collections,

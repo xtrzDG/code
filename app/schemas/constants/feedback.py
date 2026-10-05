@@ -38,9 +38,11 @@ class CustomerSignalKind(StrEnum):
     """
     A message the platform answers itself instead of the assistant: the
     customer opts out of (STOP) or back into (START) messages they did
-    not ask for, or rates their visit.
+    not ask for, rates their visit, or answers a waitlist offer.
     """
 
     OPT_OUT = "opt_out"
     OPT_IN = "opt_in"
     VISIT_SCORE = "visit_score"
+    # A yes or no to a place freed for them on the waitlist (never stored).
+    WAITLIST_ANSWER = "waitlist_answer"

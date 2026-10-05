@@ -30,7 +30,9 @@ class ValueTotalsSnapshot(PersistentDocument):
     What the assistant did in one period, as a report stored it: the
     counts of the value model and the money estimate (None when neither
     booked values nor an average check were known), with what it rests on.
-    Sandbox activity is never counted.
+    Sandbox activity is never counted. The waitlist's and the campaigns'
+    bookings (and their values) are kept apart as well, from version 4 of
+    the report on.
     """
 
     conversation_count: PeriodItemCount
@@ -47,6 +49,10 @@ class ValueTotalsSnapshot(PersistentDocument):
     valued_booking_count: PeriodItemCount = PeriodItemCount(0)
     booked_value_minor: BookedValueMinor | None = None
     revenue_source: RevenueSource | None = None
+    waitlist_booking_count: PeriodItemCount = PeriodItemCount(0)
+    waitlist_value_minor: BookedValueMinor | None = None
+    campaign_booking_count: PeriodItemCount = PeriodItemCount(0)
+    campaign_value_minor: BookedValueMinor | None = None
 
 
 class ValueReportDocument(BaseDocument):
@@ -68,7 +74,8 @@ class ValueReportDocument(BaseDocument):
     # `revenue_source` (optional). 3: `plan_cost_minor` and
     # `return_multiple`, the plan's price for the period and how many times
     # the money covered it (optional; None when the currencies differ).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: the totals' waitlist and campaign bookings and values (optional).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: ValueReportId
     business_id: BusinessId
     kind: ValueReportKind

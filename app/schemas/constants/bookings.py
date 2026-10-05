@@ -30,6 +30,19 @@ class BookingStatus(StrEnum):
     COMPLETED = "completed"
 
 
+class BookingOrigin(StrEnum):
+    """
+    Where a booking came from besides the usual ways, for the revenue the
+    assistant brought: a place freed by a cancellation that a customer on
+    the waitlist took (WAITLIST), or a booking a customer made after a
+    rebooking campaign invited them back (CAMPAIGN). None for every other
+    booking.
+    """
+
+    WAITLIST = "waitlist"
+    CAMPAIGN = "campaign"
+
+
 class LeadType(StrEnum):
     """Kind of request passed to a manager."""
 

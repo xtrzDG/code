@@ -1,0 +1,20 @@
+{
+  "anchor_booking_id": "booking_e92ac857-552b-4939-9fcd-988537bcd14a",
+  "booked_at": 1790000000000000,
+  "booking_id": "booking_4beb0a10-37e0-4db4-97c1-b36ec50775d9",
+  "business_id": "business_b702923a-94a0-48ad-a1f8-71f6dfe364e9",
+  "channel": "phone",
+  "contact_id": "contact_0c61021d-6a8b-4c13-bdb3-e10f5f6c6e6e",
+  "conversation_id": "conversation_ec8e70cb-dd6f-4393-9115-75c91b4da1ff",
+  "created_at": 1790000000000000,
+  "id": "campaign_message_18541ebf-d438-5f9b-a611-9324eb763aa7",
+  "language": "ka",
+  "month": "2026-10",
+  "outbound_message_id": "outbound_message_91226315-d52b-5618-9728-61c0b18bd827",
+  "rule_kind": "rebook",
+  "schema_version": "1",
+  "sent_at": 1790000000000000,
+  "skip_reason": "opted_out",
+  "status": "sent",
+  "updated_at": 1790000000000000
+}

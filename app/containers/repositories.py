@@ -11,6 +11,7 @@ from app.containers.billing_repositories import BillingRepositoriesContainer
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.client_care_repositories import ClientCareRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
+from app.containers.growth_repositories import GrowthRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
 from app.containers.legal_repositories import LegalRepositoriesContainer
@@ -88,7 +89,6 @@ from app.repositories.user_repositories import (
     UserRepository,
     UserSessionRepository,
 )
-from app.repositories.value_count_repository import ValueCountRepository
 from app.repositories.worker_heartbeat_repository import WorkerHeartbeatRepository
 
 
@@ -109,6 +109,7 @@ class RepositoriesContainer(
     LegalRepositoriesContainer,
     SpendGuardRepositoriesContainer,
     ClientCareRepositoriesContainer,
+    GrowthRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 
@@ -199,12 +200,6 @@ class RepositoriesContainer(
         AttentionCountRepository,
         booking_collection=collections.booking_collection,
         channel_collection=collections.channel_collection,
-    )
-    # Counts of the value model beyond the dashboard's (1061).
-    value_count_repo: Singleton[ValueCountRepository] = Singleton(
-        ValueCountRepository,
-        booking_collection=collections.booking_collection,
-        message_collection=collections.message_collection,
     )
     unanswered_question_repo: Singleton[UnansweredQuestionRepository] = Singleton(
         UnansweredQuestionRepository,

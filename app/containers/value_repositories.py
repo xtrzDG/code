@@ -8,6 +8,9 @@ from app.containers.adapters.value_collections_container import (
     ValueCollectionsContainer,
 )
 from app.repositories.customer_source_repository import CustomerSourceRepository
+from app.repositories.origin_booking_count_repository import (
+    OriginBookingCountRepository,
+)
 from app.repositories.quality_repositories import (
     ConversationQualityRepository,
     QualitySampleInputRepository,
@@ -17,6 +20,7 @@ from app.repositories.topic_repositories import (
     ConversationTopicsRepository,
     TopicInputRepository,
 )
+from app.repositories.value_count_repository import ValueCountRepository
 from app.repositories.value_repositories import (
     DigestPreferencesRepository,
     ValueReportRepository,
@@ -48,6 +52,12 @@ class ValueRepositoriesContainer(containers.DeclarativeContainer):
         DigestPreferencesRepository,
         collection=value_collections.digest_preferences_collection,
     )
+    # Counts of the value model beyond the dashboard's (1061).
+    value_count_repo: Singleton[ValueCountRepository] = Singleton(
+        ValueCountRepository,
+        booking_collection=insight_collections.booking_collection,
+        message_collection=insight_collections.message_collection,
+    )
     value_report_repo: Singleton[ValueReportRepository] = Singleton(
         ValueReportRepository,
         collection=value_collections.value_report_collection,
@@ -78,4 +88,9 @@ class ValueRepositoriesContainer(containers.DeclarativeContainer):
     quality_sample_input_repo: Singleton[QualitySampleInputRepository] = Singleton(
         QualitySampleInputRepository,
         conversation_collection=insight_collections.conversation_collection,
+    )
+    # The bookings the waitlist and the campaigns brought (1151).
+    origin_booking_count_repo: Singleton[OriginBookingCountRepository] = Singleton(
+        OriginBookingCountRepository,
+        booking_collection=insight_collections.booking_collection,
     )

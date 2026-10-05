@@ -44,6 +44,9 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.file_storage_adapters_container import (
     FileStorageAdaptersContainer,
 )
+from app.containers.adapters.growth_collections_container import (
+    GrowthCollectionsContainer,
+)
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
@@ -107,6 +110,14 @@ class AdaptersContainer(containers.DeclarativeContainer):
     )
     launch_collections: LaunchCollectionsContainer = Container(  # type: ignore[assignment]
         LaunchCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    # The waitlist and the rebooking campaigns (1151).
+    growth_collections: GrowthCollectionsContainer = Container(  # type: ignore[assignment]
+        GrowthCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,
