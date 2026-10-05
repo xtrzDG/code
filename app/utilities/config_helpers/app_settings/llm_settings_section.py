@@ -81,8 +81,9 @@ def read_llm_settings(
 ) -> LlmSettingsSection:
     """
     The chat model defaults to the provider's default model, the judge to
-    the other provider's (see `read_judge_model_id`); call summaries use
-    the chat model unless LLM_SUMMARY_MODEL_ID names a cheaper one.
+    the other provider's (see `read_judge_model_id`); call and conversation
+    summaries use the chat model unless LLM_SUMMARY_MODEL_ID names a cheaper
+    one.
     """
 
     default_model_id: str = DEFAULT_MODEL_IDS[llm_provider]

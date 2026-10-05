@@ -9,8 +9,8 @@ assistant in every other chat.
   conversation passed to a person, the reply's script) can fail.
 - The AI customer (its instruction) says one sentence for its goal in the
   scenario language, with its phone number when it books, then [DONE].
-- The topic grouping (its instruction) puts what customers asked into
-  topics by keywords (`rehearsal_topics.py`).
+- The topic grouping and the conversation summary (their instructions):
+  `rehearsal_background.py`.
 - The assistant (anything else) answers a question of its fact table with
   that answer (`rehearsal_facts.py`), else in the customer's language: it
   books the first free time of the next days when asked to book, passes
@@ -43,6 +43,7 @@ from app.utilities.llm_rehearsal.customer_phrases import (
     PERSON_KEYWORDS,
     RehearsalIntent,
 )
+from app.utilities.llm_rehearsal.rehearsal_background import rehearse_background_task
 from app.utilities.llm_rehearsal.rehearsal_customer import play_customer
 from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer, find_price
 from app.utilities.llm_rehearsal.rehearsal_reading import (
@@ -53,10 +54,7 @@ from app.utilities.llm_rehearsal.rehearsal_reading import (
     next_days,
     read_blocks,
     read_reply_language,
-    read_texts,
 )
-from app.utilities.llm_rehearsal.rehearsal_topics import rehearse_topics
-from app.utilities.value.topic_grouping import TOPIC_SYSTEM_PROMPT
 
 PERFECT_SCORE: int = 5
 REHEARSAL_PARTY_SIZE: int = 1
@@ -83,8 +81,9 @@ def play_rehearsal_turn(request: LlmRequest) -> ScriptedLlmTurn:
     if str(request.system_prompt).startswith(CUSTOMER_PERSONA_OPENING):
         return play_customer(request)
 
-    if str(request.system_prompt) == TOPIC_SYSTEM_PROMPT:
-        return say(rehearse_topics(read_texts(request.transcript[-1])))
+    background: str | None = rehearse_background_task(request)
+    if background is not None:
+        return say(background)
 
     return play_assistant(request)
 

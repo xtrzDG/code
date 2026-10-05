@@ -98,6 +98,7 @@ export const assistantKa: Translation<typeof assistantEn> = {
     create_booking: { name: "დაჯავშნა", description: "ქმნის ჯავშანს კლიენტისთვის." },
     cancel_booking: { name: "ჯავშნის გაუქმება", description: "აუქმებს კლიენტის ჯავშანს." },
     reschedule_booking: { name: "ჯავშნის გადატანა", description: "ჯავშანს სხვა დროზე გადაიტანს." },
+    list_my_bookings: { name: "ჩემი ჯავშნების ნახვა", description: "მომხმარებელს მის საკუთარ მომავალ ჯავშნებს ეუბნება." },
     create_lead: { name: "განაცხადის მიღება", description: "განაცხადს (ბანკეტი, ჯგუფი, შეკვეთა) მენეჯერს გადასცემს." },
     handoff_to_human: { name: "თანამშრომელთან გადამისამართება", description: "საუბარს თქვენს თანამშრომლებს გადასცემს." },
     send_link: { name: "ბმულის გაგზავნა", description: "აგზავნის მენიუს, რუკას, გადახდის ან ჯავშნის გვერდს." },

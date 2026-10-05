@@ -40,6 +40,15 @@ class ConversationMessageCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class EarlierConversationCount(BaseConstrainedTypedInt):
+    """
+    Conversations a customer had with one business before the current one
+    (customer memory: how often they came back).
+    """
+
+    ge = 0
+
+
 class InjectionFlagLimit(BaseConstrainedTypedInt):
     """
     Messages that look like prompt injection one contact may send in a day

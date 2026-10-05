@@ -179,6 +179,26 @@ collection are unknown to the old release, which ignores them. Before
 rolling back past that release, let running autotests finish; the
 quality scores stay and are read again after the next deploy.
 
+The release with the customer memory (migration 1121) also writes a new
+enum value in the release that introduces it, an exception to the enum
+rule below: the assistant tool `list_my_bookings`, in the `tools` of
+assistant versions assembled from it on (`AssistantVersionDocument`
+version 6) and in the `tool_calls` of messages (`MessageDocument` version
+5). An old API instance that reads such a version or message (the version
+page, a conversation card) may fail that request until the overlap ends,
+and an old worker that answers a conversation pinned to such a version
+fails the inbound job, which the queue tries again until a new worker
+takes it: replies are late during the overlap, not lost. The new job
+`summarize_conversation` is queued only by the new release; an old worker
+that claims it fails it the same way (the queue retries it), so summaries
+may come a little late. `summary` and `summarized_at` of conversations and
+the new `assistant_settings` collection are unknown to the old release,
+which ignores them; an old instance that saves a conversation during the
+overlap (a customer turn) writes it without its summary, which the next
+quiet period writes again. Before rolling back past that release, note
+that versions assembled since offer `list_my_bookings`: publish a version
+assembled by the previous release first.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

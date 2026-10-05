@@ -20,6 +20,7 @@ from app.schemas.dto.bookings import (
     CreateBookingCommand,
     RescheduleBookingCommand,
 )
+from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBookingsQuery
 from app.schemas.dto.jobs import (
     JobReport,
     JobTick,
@@ -35,6 +36,9 @@ from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
 from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
+from app.use_cases.bookings.list_customer_bookings_use_case import (
+    ListCustomerBookingsUseCase,
+)
 from app.use_cases.bookings.manual_booking.create_manual_booking_use_case import (
     CreateManualBookingUseCase,
 )
@@ -136,6 +140,18 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The customer's own bookings to come (model tool list_my_bookings).
+    list_customer_bookings_use_case: Factory[
+        UseCaseContract[CustomerBookingsQuery, CustomerBookingList]
+    ] = Factory(
+        ListCustomerBookingsUseCase,
+        business_repo=repositories.business_repo,
+        contact_repo=repositories.contact_repo,
+        booking_repo=repositories.booking_repo,
+        resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     list_bookings_use_case: Factory[UseCaseContract[ListBookingsQuery, BookingPage]] = (

@@ -47,6 +47,7 @@ from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ScheduleExceptionDocument
 from app.schemas.domain.suppression import SuppressionEntryDocument
 from app.schemas.domain.users import UserDocument
+from tests.brain.brain_memory import BrainMemory, build_brain_memory
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,7 @@ class BrainRepositories:
     knowledge_item_repo: KnowledgeItemRepository
     feedback_request_repo: FeedbackRequestRepository
     suppression_entry_repo: SuppressionEntryRepository
+    memory: BrainMemory
 
 
 def build_brain_repositories() -> BrainRepositories:
@@ -133,4 +135,5 @@ def build_brain_repositories() -> BrainRepositories:
         suppression_entry_repo=SuppressionEntryRepository(
             InMemoryDocumentCollectionAdapter(SuppressionEntryDocument)
         ),
+        memory=build_brain_memory(),
     )

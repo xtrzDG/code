@@ -130,6 +130,10 @@ class RescheduleBookingToolInput(ImmutableDTO):
     new_time: LocalTimeOfDay | None = None
 
 
+class ListMyBookingsToolInput(ImmutableDTO):
+    """list_my_bookings: no input; the customer comes from the conversation."""
+
+
 class CreateLeadToolInput(ImmutableDTO):
     """create_lead: a request for a manager (banquet, group, corporate, ...)."""
 

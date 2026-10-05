@@ -390,8 +390,9 @@ Anthropic с `OPENAI_API_KEY`; судья другого семейства ст
 `QUALITY_SAMPLE_PERCENT`, `QUALITY_SAMPLE_PER_BUSINESS`,
 `QUALITY_SAMPLE_BUDGET_CENTS` — доля реальных разговоров, которую судья оценивает
 каждую ночь, предел на бизнес и на стоимость ночи; `LLM_SUMMARY_MODEL_ID` —
-модель итогов звонков для персонала (по умолчанию — `LLM_MODEL_ID`; подойдёт
-более дешёвая, например `gpt-5-nano`); `LLM_CHAT_EFFORT`,
+модель итогов звонков для персонала и сводок разговоров, по которым помощник
+помнит вернувшихся клиентов (по умолчанию — `LLM_MODEL_ID`; подойдёт более
+дешёвая, например `gpt-5-nano`); `LLM_CHAT_EFFORT`,
 `LLM_JUDGE_EFFORT`, `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT`,
 `AUTOTEST_TURN_LIMIT` — значения по умолчанию в таблице «Окружение» `README.md`.
 Другой `OPENAI_BASE_URL` — тоже в группе `workshop-backend`.

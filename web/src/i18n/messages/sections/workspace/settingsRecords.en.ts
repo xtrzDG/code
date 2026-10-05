@@ -94,6 +94,7 @@ export const settingsRecordsEn = {
       inbox_settings: "Auto-assignment",
       message_opt_out: "Customer opt-out of messages",
       review_settings: "Review settings",
+      assistant_settings: "Customer memory",
       feedback_request: "Feedback requests",
       incident: "Platform incident",
     },

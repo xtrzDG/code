@@ -16,6 +16,7 @@ from app.containers.operators.demo_operators import DemoOperatorsContainer
 from app.containers.operators.feedback_operators import FeedbackOperatorsContainer
 from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
+from app.containers.operators.memory_operators import MemoryOperatorsContainer
 from app.containers.operators.notification_operators import (
     NotificationOperatorsContainer,
 )
@@ -63,6 +64,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     inbox: InboxOperatorsContainer = Container(  # type: ignore[assignment]
         InboxOperatorsContainer,
         inbox_pipelines=pipelines.inbox,
+        utilities=utilities,
+    )
+    memory: MemoryOperatorsContainer = Container(  # type: ignore[assignment]
+        MemoryOperatorsContainer,
+        memory_pipelines=pipelines.memory,
         utilities=utilities,
     )
     knowledge: KnowledgeOperatorsContainer = Container(  # type: ignore[assignment]

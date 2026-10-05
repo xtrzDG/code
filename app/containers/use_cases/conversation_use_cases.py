@@ -32,12 +32,19 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.customer_memory.returning_customers import (
+    CustomerMemory,
+    CustomerMemoryRequest,
+)
 from app.schemas.dto.media import (
     VoiceNoteTranscription,
     VoiceNoteTranscriptionRequest,
 )
 from app.use_cases.conversations.build_call_greeting_use_case import (
     BuildCallGreetingUseCase,
+)
+from app.use_cases.conversations.memory.recall_customer_memory_use_case import (
+    RecallCustomerMemoryUseCase,
 )
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
@@ -64,7 +71,7 @@ from app.use_cases.conversations.turns.prepare_conversation_turn_use_case import
 
 class ConversationUseCasesContainer(containers.DeclarativeContainer):
     """
-    The conversation engine: the ten tools of the assistant, then prepare,
+    The conversation engine: the tools of the assistant, then prepare,
     generate and record a turn; the voice turn's pieces and the call greeting.
     """
 
@@ -90,11 +97,26 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         create_booking=booking_use_cases.create_booking_use_case,
         cancel_booking=booking_use_cases.cancel_booking_use_case,
         reschedule_booking=booking_use_cases.reschedule_booking_use_case,
+        list_my_bookings=booking_use_cases.list_customer_bookings_use_case,
         create_lead=follow_up_use_cases.create_lead_use_case,
         handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
         record_unanswered_question=follow_up_use_cases.record_unanswered_question_use_case,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # What the assistant remembers of a returning customer (1121).
+    recall_customer_memory_use_case: Factory[
+        UseCaseContract[CustomerMemoryRequest, CustomerMemory]
+    ] = Factory(
+        RecallCustomerMemoryUseCase,
+        assistant_settings_repo=repositories.assistant_settings_repo,
+        conversation_memory_repo=repositories.conversation_repo,
+        booking_repo=repositories.booking_repo,
+        lead_repo=repositories.lead_repo,
+        resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        note_repo=repositories.conversation_note_repo,
+        job_queue=facilitators.job_queue_facilitator,
     )
     prepare_conversation_turn_use_case: Factory[
         UseCaseContract[InboundMessage, PreparedTurn]
@@ -112,6 +134,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         contact_message_limit=config.app_settings.provided.contact_message_limit_per_hour,
         injection_flag_limit=config.app_settings.provided.reply_safety.injection_flag_limit,
+        recall_customer_memory=recall_customer_memory_use_case,
     )
     generate_assistant_reply_use_case: Factory[
         UseCaseContract[PreparedTurn, GeneratedReply]

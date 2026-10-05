@@ -96,6 +96,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       inbox_settings: "ავტომატური დანიშვნა",
       message_opt_out: "კლიენტის უარი შეტყობინებებზე",
       review_settings: "შეფასებების პარამეტრები",
+      assistant_settings: "მომხმარებლების მეხსიერება",
       feedback_request: "შეფასების მოთხოვნები",
       incident: "პლატფორმის ინციდენტი",
     },

@@ -24,6 +24,9 @@ from app.schemas.typings.conversations.constrained_integers import (
     ContactMessageLimit,
     InjectionFlagLimit,
 )
+from app.use_cases.conversations.memory.recall_customer_memory_use_case import (
+    RecallCustomerMemoryUseCase,
+)
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
 )
@@ -98,6 +101,16 @@ def build_brain_orchestrators(
             wall_clock=wall_clock,
             contact_message_limit=contact_message_limit,
             injection_flag_limit=options.injection_flag_limit,
+            recall_customer_memory=RecallCustomerMemoryUseCase(
+                assistant_settings_repo=repos.memory.settings_repo,
+                conversation_memory_repo=repos.conversation_repo,
+                booking_repo=repos.memory.booking_repo,
+                lead_repo=repos.memory.lead_repo,
+                resource_repo=repos.memory.resource_repo,
+                knowledge_item_repo=repos.knowledge_item_repo,
+                note_repo=repos.memory.note_repo,
+                job_queue=repos.memory.jobs,
+            ),
         ),
         generate_reply=GenerateAssistantReplyUseCase(
             llm_adapter=llm,

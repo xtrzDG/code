@@ -66,6 +66,7 @@ export const TOOL_LABELS: Record<AssistantToolName, MessageKey> = {
   create_booking: "conversations.tools.create_booking",
   cancel_booking: "conversations.tools.cancel_booking",
   reschedule_booking: "conversations.tools.reschedule_booking",
+  list_my_bookings: "conversations.tools.list_my_bookings",
   create_lead: "conversations.tools.create_lead",
   handoff_to_human: "conversations.tools.handoff_to_human",
   send_link: "conversations.tools.send_link",

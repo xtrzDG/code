@@ -12,6 +12,9 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.repositories.conversation_review_contracts import (
     ConversationReviewRepoContract,
 )
+from app.contracts.repositories.customer_memory_repositories import (
+    ConversationMemoryRepoContract,
+)
 from app.contracts.repositories.inbox_repositories import (
     ConversationTeamRepoContract,
 )
@@ -29,6 +32,7 @@ from app.repositories.conversation_lookup_fields import (
     STATUS_FIELD,
     VERIFIED_PHONE_NUMBER_FIELD,
 )
+from app.repositories.conversation_memory_writes import ConversationMemoryWrites
 from app.repositories.conversation_review_writes import ConversationReviewWrites
 from app.repositories.conversation_team_writes import ConversationTeamWrites
 from app.repositories.document_queries import (
@@ -127,11 +131,13 @@ class ContactRepository(ContactListing, ContactRepoContract):
 class ConversationRepository(
     ConversationTeamWrites,
     ConversationReviewWrites,
+    ConversationMemoryWrites,
     InboxListing,
     ConversationListing,
     ConversationRepoContract,
     ConversationTeamRepoContract,
     ConversationReviewRepoContract,
+    ConversationMemoryRepoContract,
 ):
     def save(self, conversation: ConversationDocument) -> None:
         self._save_keeping_team_fields(conversation)

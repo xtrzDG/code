@@ -95,6 +95,7 @@ export const assistantEn = {
     create_booking: { name: "Book", description: "Creates a booking for the customer." },
     cancel_booking: { name: "Cancel a booking", description: "Cancels a customer's booking." },
     reschedule_booking: { name: "Move a booking", description: "Moves a booking to another time." },
+    list_my_bookings: { name: "Look up my bookings", description: "Tells customers their own bookings still to come." },
     create_lead: { name: "Take a request", description: "Passes a request (banquet, group, order) to the manager." },
     handoff_to_human: { name: "Pass to a person", description: "Hands the conversation over to your staff." },
     send_link: { name: "Send a link", description: "Sends the menu, map, payment or booking page." },

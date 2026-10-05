@@ -46,6 +46,25 @@ Spec: `705d0e6d7f63f2a1`
   sample judged the conversation, else its average, the five criteria,
   the judge's notes in the owner's language and when it was judged.
 
+## 2026-10-05 — customer memory: Settings → General's switch, list_my_bookings
+
+Spec: `b7d01d5dad47dd36`
+
+- **Added** `GET /v1/businesses/{business_id}/assistant-settings` (owners
+  and staff): `AssistantSettingsView` — `remembers_customers` (the
+  assistant greets returning customers and knows their upcoming bookings,
+  open requests and what earlier conversations were about; true by
+  default), `shares_team_notes` (the team's internal notes reach that
+  memory; false by default) and `updated_at` (null while the defaults
+  apply).
+- **Added** `PUT /v1/businesses/{business_id}/assistant-settings` (owners;
+  body `{remembers_customers, shares_team_notes}`, both optional with
+  those defaults; audited as an update of `assistant_settings`).
+- **Changed** (additive) the assistant's tool names gain
+  `list_my_bookings` wherever they are listed (an assistant version's
+  `tools`, a message's `tool_calls[].tool_name`, the voice tool route
+  `POST /v1/voice/tools/list_my_bookings`).
+
 ## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
 
 Spec: `8868b933a62e22f4`

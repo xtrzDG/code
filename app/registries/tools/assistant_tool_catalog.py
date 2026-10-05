@@ -1,5 +1,6 @@
 """
-The ten model tools of the concept (section 5) with strict JSON schemas.
+The model tools of the concept (section 5), and list_my_bookings, with strict
+JSON schemas.
 
 Schemas list every property as required and express optional values as
 `null`, the shape strict tool use accepts at both OpenAI and Anthropic, and
@@ -196,6 +197,15 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
                 "new_time": nullable(string_property(TIME_HINT)),
             }
         ),
+    ),
+    AssistantToolName.LIST_MY_BOOKINGS: (
+        "List the customer's own bookings that are still to come (date, time, "
+        "what is booked, guests, status), when they ask about their booking "
+        '("what time is my booking?") or before you move or cancel one. '
+        "Only bookings made in this conversation or under the number the "
+        "customer writes or calls from are listed; an empty list means none "
+        "were found that way.",
+        object_schema({}),
     ),
     AssistantToolName.CREATE_LEAD: (
         "Pass a request that is not a simple booking to a manager: banquets, "

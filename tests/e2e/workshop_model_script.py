@@ -11,6 +11,9 @@ from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer
 from app.utilities.llm_rehearsal.rehearsal_reading import (
     last_customer_text as read_customer_words,
 )
+from app.utilities.memory.conversation_summary_prompt import (
+    CONVERSATION_SUMMARY_SYSTEM_PROMPT,
+)
 from tests.e2e.harness_settings import JsonObject
 from tests.e2e.model_script_texts import (
     ASSISTANT_TEXTS,
@@ -75,6 +78,9 @@ class WorkshopModelScript:
                     }
                 )
             )
+
+        if str(request.system_prompt) == CONVERSATION_SUMMARY_SYSTEM_PROMPT:
+            return say("The customer asked about a table and booked one.")
 
         if not request.tools:
             self.customer_calls += 1

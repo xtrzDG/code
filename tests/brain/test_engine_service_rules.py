@@ -43,10 +43,12 @@ def test_leads_only_mode_offers_only_requests_and_handoff() -> None:
     reply = world.send("Table for 2 tomorrow at 19:00 please")
 
     request = requests_of(world)[0]
+    # A customer may still ask about the bookings they already have.
     assert {tool.name for tool in request.tools} == {
         AssistantToolName.CREATE_LEAD,
         AssistantToolName.HANDOFF_TO_HUMAN,
         AssistantToolName.SEARCH_KNOWLEDGE,
+        AssistantToolName.LIST_MY_BOOKINGS,
     }
     assert "Bookings are paused" in user_turn_text(request.transcript[0])
     assert world.bookings.commands == []

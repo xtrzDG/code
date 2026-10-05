@@ -16,6 +16,23 @@ class ConversationSearchText(BaseConstrainedTypedString):
     max_length = 200
 
 
+class ConversationSummaryText(BaseConstrainedTypedString):
+    """
+    What one conversation was about, in at most 300 characters: written by
+    a cheap model once the conversation has been quiet for two hours, and
+    read by the assistant when the customer comes back (customer memory).
+
+    Example:
+        summary = ConversationSummaryText(
+            "Asked about a table for 4 on Saturday; booked 20:00 by the window."
+        )
+    """
+
+    min_length = 1
+    max_length = 300
+    pattern = r"\S"
+
+
 class OwnerTestChatSessionKey(BaseConstrainedTypedString):
     """
     Key that separates parallel owner test chats of one user, e.g. "tab-2".

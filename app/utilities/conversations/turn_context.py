@@ -72,6 +72,8 @@ class TurnContext:
     is_after_hours: bool | None
     is_leads_only: bool
     is_first_reply: bool
+    # What the assistant remembers of a returning customer (first reply only).
+    memory_lines: tuple[str, ...] = ()
 
 
 def build_context_line(context: TurnContext) -> str:
@@ -115,6 +117,7 @@ def build_context_line(context: TurnContext) -> str:
     if context.is_first_reply:
         lines.append(FIRST_REPLY_NOTE)
 
+    lines.extend(context.memory_lines)
     return "\n".join(lines)
 
 

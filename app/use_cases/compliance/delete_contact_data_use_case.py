@@ -62,10 +62,10 @@ from app.use_cases.compliance.contact_trace_erasure import (
     ContactTraceEraser,
     TraceErasure,
 )
+from app.utilities.privacy.erased_conversations import ERASED_CHANNEL_USER_ID_PREFIX
 from app.utilities.privacy.suppressed_identities import contact_identities
 
 ERASED_TEXT: str = "[erased at the visitor's request]"
-ERASED_CHANNEL_USER_ID_PREFIX: str = "erased-"
 
 
 class DeleteContactDataUseCase(
@@ -248,6 +248,9 @@ class DeleteContactDataUseCase(
                 f"{ERASED_CHANNEL_USER_ID_PREFIX}{conversation.id}"
             )
             conversation.status = ConversationStatus.CLOSED
+            # What the customer memory remembered of it is about this person.
+            conversation.summary = None
+            conversation.summarized_at = None
             conversation.updated_at = now
             self._conversation_repo.save(conversation)
 

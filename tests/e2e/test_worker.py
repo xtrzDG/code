@@ -80,6 +80,7 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
     PROCESS_POST_CALL_JOB,
 )
+from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 from app.worker_main import STOP_SIGNALS, install_stop_signal_handlers, main
 from tests.e2e.harness import start_workshop
 
@@ -143,6 +144,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         IMPORT_WEBSITE_JOB,
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
+        SUMMARIZE_CONVERSATION_JOB,
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (25, 0, 0)
     assert right_after.periodic_runs == 0

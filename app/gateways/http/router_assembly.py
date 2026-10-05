@@ -25,6 +25,7 @@ from app.gateways.http.help_router_assembly import build_help_routers
 from app.gateways.http.inbox_router_assembly import build_inbox_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.launch_router_assembly import build_launch_routers
+from app.gateways.http.memory_router_assembly import build_memory_routers
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
@@ -282,4 +283,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_admin_ops_routers(operators, current_user),
         *build_help_routers(operators, current_user),
         *build_teaching_routers(operators, current_user),
+        *build_memory_routers(operators, current_user),
     ]

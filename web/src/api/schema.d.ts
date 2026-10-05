@@ -520,6 +520,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/assistant-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Assistant Settings */
+        get: operations["get_assistant_settings_v1_businesses__business_id__assistant_settings_get"];
+        /** Update Assistant Settings */
+        put: operations["update_assistant_settings_v1_businesses__business_id__assistant_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/assistant-versions": {
         parameters: {
             query?: never;
@@ -4051,11 +4069,23 @@ export interface components {
             tool_calls?: components["schemas"]["ToolCallView"][];
         };
         /**
+         * AssistantSettingsView
+         * @description The settings as stored; `updated_at` None while the defaults apply.
+         */
+        AssistantSettingsView: {
+            /** Remembers Customers */
+            remembers_customers: boolean;
+            /** Shares Team Notes */
+            shares_team_notes: boolean;
+            /** Updated At */
+            updated_at?: number | null;
+        };
+        /**
          * AssistantToolName
          * @description Tool the language model may call (concept section 5).
          * @enum {string}
          */
-        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
+        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
         /**
          * AssistantVersionDetails
          * @description An assistant version with its frozen instructions and fact table: the
@@ -6137,6 +6167,11 @@ export interface components {
          *     the Overview's "Answers worth improving"). The review fields change
          *     only through `ConversationReviewRepoContract.set_review`; a plain save
          *     keeps them as stored. All optional, so version 3 rows read as they are.
+         *
+         *     Version 5: what the conversation was about (`summary`, at most 300
+         *     characters, written by a cheap model once it was quiet for two hours)
+         *     and when (`summarized_at`), the assistant's memory of a returning
+         *     customer. Optional, so version 4 rows read as they are.
          */
         ConversationDocument: {
             /** Acquisition Source */
@@ -6209,11 +6244,15 @@ export interface components {
             rating_reason?: components["schemas"]["ConversationRatingReason"] | null;
             /**
              * Schema Version
-             * @default 4
+             * @default 5
              */
             schema_version: string;
             /** @default open */
             status: components["schemas"]["ConversationStatus"];
+            /** Summarized At */
+            summarized_at?: number | null;
+            /** Summary */
+            summary?: string | null;
             /**
              * Updated At
              * @description Last update wall-clock UNIX timestamp in microseconds.
@@ -8883,6 +8922,9 @@ export interface components {
          *     checked). On a customer message: `injection_flag`, the kind of prompt
          *     injection it looked like (None: none). All optional, so version 3 rows
          *     read as they are.
+         *
+         *     Version 5: `tool_calls` may name the tool list_my_bookings (a new
+         *     value; version 4 rows read as they are).
          */
         MessageDocument: {
             /** Attachments */
@@ -8940,7 +8982,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 4
+             * @default 5
              */
             schema_version: string;
             /** Sent By */
@@ -15486,6 +15528,195 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnswersToImproveView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_assistant_settings_v1_businesses__business_id__assistant_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_assistant_settings_v1_businesses__business_id__assistant_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Remembers Customers
+                     * @default true
+                     */
+                    remembers_customers?: boolean;
+                    /**
+                     * Shares Team Notes
+                     * @default false
+                     */
+                    shares_team_notes?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantSettingsView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
