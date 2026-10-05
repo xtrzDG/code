@@ -54,6 +54,13 @@ def average_of(totals: QualityTotals) -> AverageJudgeScore | None:
     )
 
 
+def describe_average(totals: QualityTotals) -> str:
+    """The stretch's average as text ("4.6"); "-" when nothing was scored."""
+
+    average: AverageJudgeScore | None = average_of(totals)
+    return "-" if average is None else f"{float(average):.1f}"
+
+
 def drop_percent(recent: QualityTotals, earlier: QualityTotals) -> QualityDropPercent:
     """
     How many percent the recent average is below the earlier one, rounded

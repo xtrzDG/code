@@ -13,7 +13,7 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [voice-outage](voice-outage.md) | Sentry, owners (calls not answered) | SEV2 |
 | [stuck-worker](stuck-worker.md) | `dead_jobs`, `inbound_backlog`, `stale_worker`, Sentry Crons | SEV1-SEV2 |
 | [delivery-failures](delivery-failures.md) | `outbound_failures` | SEV2 |
-| [assistant-quality](assistant-quality.md) | `handoff_spike`, `tool_errors` | SEV2-SEV3 |
+| [assistant-quality](assistant-quality.md) | `handoff_spike`, `tool_errors`, `quality_drop` | SEV2-SEV3 |
 | [sms-pumping](sms-pumping.md) | `otp_cap_trips` | SEV2 |
 | [spend-spike](spend-spike.md) | provider budget e-mails, margin on Admin → Metrics | SEV2 |
 | [bad-deploy](bad-deploy.md) | errors right after a deploy, the smoke test | SEV1-SEV2 |

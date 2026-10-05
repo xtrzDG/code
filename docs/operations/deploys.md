@@ -159,6 +159,26 @@ just before may be lost and the conversation leaves "Answers worth
 improving" (the rating itself stays). Before rolling back past that
 release, let running autotests finish.
 
+The release with deeper autotests and production quality sampling
+(R11-AUTOTEST-DEPTH-QUALITY, migration 1120, `AutotestRunDocument`
+version 5, `PlatformAlertStateDocument` version 2) also writes new enum
+values in the release that introduces them, an exception to the enum
+rule below: autotest runs hold scenarios of the attack kinds
+`prompt_injection_spoof`, `data_exfiltration`, `staff_impersonation` and
+`tool_abuse` and the check codes `price_not_named`, `unsupported_price`,
+`instructions_revealed`, `personal_data_revealed`, `unauthorized_action`
+and `tools_misused`, and the alert job may store the alert code
+`quality_drop`. An old API instance that reads such a run may fail that
+request until the overlap ends, an old worker that plays a run a new
+instance planned fails the job, which the queue tries again until a new
+worker takes it, and an old alert job that reads a `quality_drop` state
+fails that tick and runs again on the next: nothing is lost. The new
+optional fields (`sample_count`, `passed_sample_count` of results,
+`compared_to_run_id` of runs) and the `conversation_quality_scores`
+collection are unknown to the old release, which ignores them. Before
+rolling back past that release, let running autotests finish; the
+quality scores stay and are read again after the next deploy.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

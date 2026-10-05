@@ -90,6 +90,8 @@ DEFAULT_ENVIRONMENT: dict[str, str] = {
     "LLM_PROVIDER": "scripted",
     "APP_BASE_URL": "https://api.example.com",
     "AUTOTEST_TURN_LIMIT": "3",
+    # One play per scenario unless a test asks for pass^k.
+    "AUTOTEST_CRITICAL_SAMPLES": "1",
 }
 
 

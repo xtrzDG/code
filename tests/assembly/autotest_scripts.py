@@ -19,7 +19,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.utilities.money.money_math import convert_money_to_major_units
 
 CHANNEL_USER_PATTERN: re.Pattern[str] = re.compile(
-    r"^autotest-autotest_run_[0-9a-f\-]{36}-(?P<key>[a-z0-9_\-]+)$"
+    r"^autotest-autotest_run_[0-9a-f\-]{36}-(?P<key>[a-z0-9_\-]+?)(?:-play\d+)?$"
 )
 LANGUAGE_TAG_PATTERN: re.Pattern[str] = re.compile(r"language tag ([A-Za-z\-]+)\)")
 SCENARIO_LINE_PATTERN: re.Pattern[str] = re.compile(r"^Scenario: (\S+) ", re.MULTILINE)

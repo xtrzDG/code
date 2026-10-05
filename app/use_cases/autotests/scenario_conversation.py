@@ -67,12 +67,13 @@ class ScenarioConversation:
     def play(self, scenario_run: AutotestScenarioRun, sample_number: int = 1) -> None:
         """
         One play of the scenario; each play (`sample_number`) is a
-        conversation of its own customer.
+        conversation of its own customer (the second one's channel user id
+        ends in "-play2").
         """
 
         self._channel_user_id = ChannelUserId(
             f"autotest-{scenario_run.run_id}-{scenario_run.scenario.key}"
-            + ("" if sample_number == 1 else f"-{sample_number}")
+            + ("" if sample_number == 1 else f"-play{sample_number}")
         )
         turn_limit: int = int(self._settings.autotest_turn_limit)
         owner_check: OwnerCheckSpec | None = scenario_run.scenario.owner_check

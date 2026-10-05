@@ -26,7 +26,7 @@ from app.use_cases.admin.alerts.stale_workers import (
     find_stale_workers,
     pulse_age_seconds,
 )
-from app.utilities.quality.quality_trend import average_of, drop_percent
+from app.utilities.quality.quality_trend import describe_average, drop_percent
 
 logger: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -240,9 +240,9 @@ class PlatformAlertChecks:
             unit=rule.unit,
             detail=AlertDetailText(
                 f"{int(recent.sample_count)} real conversations scored in the "
-                f"last day averaged {average_of(recent) or '-'} of 5; "
+                f"last day averaged {describe_average(recent)} of 5; "
                 f"{int(earlier.sample_count)} of the 7 days before averaged "
-                f"{average_of(earlier) or '-'}."
+                f"{describe_average(earlier)}."
             ),
             is_firing=enough and dropped > int(rule.threshold),
         )

@@ -41,6 +41,7 @@ from app.gateways.worker.periodic.purge_business_exports import (
     PURGE_BUSINESS_EXPORTS_JOB,
 )
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
+from app.gateways.worker.periodic.quality_sampling import QUALITY_SAMPLING_JOB
 from app.gateways.worker.periodic.record_platform_status import (
     RECORD_PLATFORM_STATUS_JOB,
 )
@@ -111,6 +112,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SWEEP_STALE_INBOUND_EVENTS_JOB, 300),
         (SEND_VALUE_REPORTS_JOB, 3_600),
         (GROUP_CONVERSATION_TOPICS_JOB, 3_600),
+        (QUALITY_SAMPLING_JOB, 86_400),
         (REQUEST_VISIT_FEEDBACK_JOB, 600),
         (REFRESH_EXCHANGE_RATES_JOB, 21_600),
         (PURGE_WEB_VITALS_JOB, 86_400),
@@ -142,7 +144,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (24, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (25, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep
