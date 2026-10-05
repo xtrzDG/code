@@ -36,11 +36,12 @@ test("the platform admin reads the growth metrics and filters them through the a
   await expect(page.getByRole("heading", { level: 1, name: texts.title })).toBeVisible();
   await expect(navigation.getByRole("link", { name: texts.nav })).toHaveAttribute("aria-current", "page");
 
-  const funnel = page.getByRole("region", { name: texts.funnel.title });
+  const funnel = page.getByRole("region", { name: texts.funnel.title, exact: true });
   for (const step of Object.values(texts.funnel.steps)) {
     await expect(funnel.getByText(step, { exact: true })).toBeVisible();
   }
-  const tunnel = page.getByRole("region", { name: texts.tunnel.title });
+  // Exact: "Setup tunnel by business" sits next to it.
+  const tunnel = page.getByRole("region", { name: texts.tunnel.title, exact: true });
   await expect(tunnel.getByRole("rowheader", { name: texts.tunnel.steps.hours })).toBeVisible();
   const mrr = page.getByRole("region", { name: texts.mrr.title });
   await expect(mrr.getByRole("rowheader", { name: texts.mrr.start })).toBeVisible();
