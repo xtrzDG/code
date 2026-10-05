@@ -198,7 +198,7 @@ export const TEXTS_EAST: Readonly<Record<string, BookingPageTexts>> = {
     stayFree: "פנוי בתאריכים שלכם.",
     stayTaken: "לא פנוי בתאריכים האלה. נסו תאריך אחר.",
     loadingTimes: "מחפשים שעות פנויות…",
-    moveTo: "העברה ל-{when}",
+    moveTo: "העברה: {when}",
     moving: "מעבירים…",
     close: "סגירה",
     movedNotice: "בוצע! ההזמנה הועברה. לדף הזה יש כתובת חדשה, והקישור החדש נמצא גם בצ׳אט שלכם.",

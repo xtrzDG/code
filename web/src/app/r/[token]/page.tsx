@@ -44,7 +44,7 @@ export default async function BookingPage({ params }: PageProps<"/r/[token]">) {
   const texts = bookingPageTexts(language);
 
   return (
-    <main className="bp-page" lang={language} dir={directionOf(language)}>
+    <main className="bp-page" data-color-scheme="system" lang={language} dir={directionOf(language)}>
       {lookup.kind === "found" ? (
         <ManagedBooking initialView={lookup.view} texts={texts} language={language} />
       ) : (

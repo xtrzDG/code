@@ -34,7 +34,8 @@
   }
 }
 
-:root {
+:root,
+[data-color-scheme="system"] {
   color-scheme: dark;
 
   /* Warm neutrals (graphite and paper): the page, cards, quiet fills. */
@@ -88,6 +89,15 @@
 }
 
 :root[data-theme="system"] {
+  color-scheme: light dark;
+}
+
+/*
+ * A page for a business's customers (a guest's booking page) follows the
+ * visitor's system colours whatever the cabinet's theme cookie says: the
+ * tokens above are declared again on it, so light-dark() reads its scheme.
+ */
+[data-color-scheme="system"] {
   color-scheme: light dark;
 }
 

@@ -1,14 +1,13 @@
 /*
  * A guest's booking page (/r/{token}): a page for a business's customers,
  * not the cabinet. Like the hosted chat page it follows the visitor's
- * system colours (color-scheme: light dark), not the cabinet's theme
- * cookie; every colour is a design token of globals.css, which resolve at
- * the element that uses them. Phones: a card with the page's 16px gutter;
- * wider screens: the same card, centred.
+ * system colours, not the cabinet's theme cookie (data-color-scheme=
+ * "system" declares the design tokens of globals.css again on the page).
+ * Phones: a card with the page's 16px gutter; wider screens: the same
+ * card, centred.
  */
 
 .bp-page {
-  color-scheme: light dark;
   min-height: 100dvh;
   padding: 16px 16px 40px;
   background: var(--canvas);
@@ -374,6 +373,8 @@
 
 .bp-dialog {
   width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
   padding: 22px 20px 20px;
   border: 1px solid var(--line);
   border-radius: 20px;

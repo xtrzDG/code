@@ -5,6 +5,8 @@ import { formatNumber } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 
 const WEB_LINK = /^https?:\/\//i;
+/** Hebrew and Arabic letters: a time written with them reads right to left. */
+const RIGHT_TO_LEFT_LETTERS = /[\u0590-\u08FF]/;
 
 /**
  * What the booking is: when (the visit, or a stay's arrival and departure),
@@ -44,7 +46,8 @@ export function BookingFacts({
             <span>{when.date}</span>
             {when.times ? (
               <span className="bp-time">
-                <bdi>{when.times}</bdi>
+                {/* "19:00 – 21:00" reads left to right on a right-to-left page too. */}
+                <bdi dir={RIGHT_TO_LEFT_LETTERS.test(when.times) ? "rtl" : "ltr"}>{when.times}</bdi>
               </span>
             ) : null}
           </dd>
