@@ -104,7 +104,7 @@ test.describe("on a phone", () => {
     expect(tipBox?.height ?? 0).toBeLessThanOrEqual(56);
     expect((tipBox?.y ?? 0) + (tipBox?.height ?? 0)).toBeLessThanOrEqual(tabBarBox?.y ?? 0);
     // The current sub-tab (Channels) is scrolled into sight in the Assistant's row.
-    await expect(page.locator('nav [aria-current="page"]').filter({ hasText: en.navigation.pages.assistantChannels }).first()).toBeInViewport();
+    await expect(page.getByRole("main").locator('nav [aria-current="page"]').filter({ hasText: en.navigation.pages.assistantChannels })).toBeInViewport();
     await page.getByRole("banner").getByRole("button", { name: help.pageHelp }).click();
     const drawer = page.getByRole("dialog", { name: "Where your customers write and call" });
     await expect(drawer.getByRole("heading", { name: "Guides" })).toBeVisible();

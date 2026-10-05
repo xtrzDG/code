@@ -106,7 +106,7 @@ function CoachCard({ mark, onRead, onClose }: CoachProps) {
   );
 }
 
-/** One line above the tab bar, clear of the page's floating action button. */
+/** One line above the tab bar (and above the page's floating action button, when there is one). */
 function PhoneCoachLine({ mark, onRead, onClose }: CoachProps) {
   const { t } = useI18n();
   const titleId = useId();
@@ -118,8 +118,9 @@ function PhoneCoachLine({ mark, onRead, onClose }: CoachProps) {
       data-coach-mark={mark.key}
       data-coach-line=""
       className={cn(
-        "fixed start-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 flex min-h-11 items-center gap-2 rounded-xl border border-accent/30 bg-surface ps-3 shadow-lg lg:hidden",
-        fab ? "end-[5.25rem]" : "end-3",
+        "fixed inset-x-3 z-30 flex min-h-11 items-center gap-2 rounded-xl border border-accent/30 bg-surface ps-3 shadow-lg lg:hidden",
+        // Right above the tab bar, or above the page's floating action when it has one.
+        fab ? "bottom-[calc(9rem+env(safe-area-inset-bottom))]" : "bottom-[calc(4.75rem+env(safe-area-inset-bottom))]",
       )}
     >
       <IconSparkles className="size-4 shrink-0 text-accent" aria-hidden />
