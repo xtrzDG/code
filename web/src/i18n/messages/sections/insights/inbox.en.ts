@@ -14,6 +14,8 @@ export const inboxEn = {
     unassigned: "Unassigned",
     all: "All",
   },
+  moreViews: "More",
+  moreViewsChosen: "More: {view}",
   viewCount: {
     one: "{count} conversation",
     other: "{count} conversations",

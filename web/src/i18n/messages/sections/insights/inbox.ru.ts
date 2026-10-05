@@ -13,6 +13,8 @@ export const inboxRu: Translation<typeof inboxEn> = {
     unassigned: "Без ответственного",
     all: "Все",
   },
+  moreViews: "Ещё",
+  moreViewsChosen: "Ещё: {view}",
   viewCount: {
     one: "{count} разговор",
     few: "{count} разговора",
