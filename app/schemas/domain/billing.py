@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument, SchemaVersion
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -6,6 +6,7 @@ from app.schemas.constants.billing import (
     BillingPeriod,
     InvoiceKind,
     InvoiceStatus,
+    ManualPaymentMethod,
     OnboardingRequestStatus,
     PlanKey,
     SetupOption,
@@ -18,11 +19,14 @@ from app.schemas.domain.billing_profiles import (
     InvoiceParty,
     PaymentCardSnapshot,
 )
+from app.schemas.typings.billing.booleans import IsSetupFeeWaived
 from app.schemas.typings.billing.constrained_integers import (
+    ClientDiscountPercent,
     CostMicroUsd,
     MoneyAmountMinor,
     UsageQuantity,
 )
+from app.schemas.typings.billing.constrained_strings import ManualPaymentReference
 from app.schemas.typings.billing.prefixed_id import (
     InvoiceId,
     OnboardingRequestId,
@@ -41,6 +45,19 @@ from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.users.prefixed_id import UserId
 
 
+class SubscriptionDiscount(PersistentDocument):
+    """
+    A discount a platform admin gave the client: `percent` off the price of
+    every service period that starts before `ends_at` (the first moment
+    after the last discounted day, in the business's time zone).
+    """
+
+    percent: ClientDiscountPercent
+    ends_at: Microseconds
+    granted_by: UserId
+    granted_at: Microseconds
+
+
 class SubscriptionDocument(BaseDocument):
     """
     Subscription of a business to a plan (concept table `subscriptions`).
@@ -51,9 +68,12 @@ class SubscriptionDocument(BaseDocument):
     starts at go-live), is free.
 
     Version 2: `setup_option` (optional, so version 1 rows read as they are).
+    Version 3: what the platform team granted (R13, optional): a
+    `discount` on the service periods and `is_setup_fee_waived`, the
+    setup fee no longer charged.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: SubscriptionId = Field(default_factory=SubscriptionId)
     business_id: BusinessId
     plan_key: PlanKey
@@ -67,6 +87,8 @@ class SubscriptionDocument(BaseDocument):
     grace_until: Microseconds | None = None
     provider_reference: PaymentProviderReference | None = None
     setup_option: SetupOption | None = None
+    discount: SubscriptionDiscount | None = None
+    is_setup_fee_waived: IsSetupFeeWaived = False
 
 
 class OnboardingRequestDocument(BaseDocument):
@@ -85,6 +107,19 @@ class OnboardingRequestDocument(BaseDocument):
     requested_at: Microseconds
 
 
+class ManualPayment(PersistentDocument):
+    """
+    Money for an invoice that came outside the payment provider, recorded by
+    a platform admin: how (a bank transfer or cash), its reference, who
+    recorded it and when.
+    """
+
+    method: ManualPaymentMethod
+    reference: ManualPaymentReference
+    recorded_by: UserId
+    recorded_at: Microseconds
+
+
 class InvoiceDocument(BaseDocument):
     """
     Invoice for a service period or the one-time setup fee (concept table
@@ -99,9 +134,15 @@ class InvoiceDocument(BaseDocument):
     `line_texts` words it in each language the PDFs are written in.
     All optional: an invoice of version 1 gets its number and parties when
     its PDF is first asked for, carries no tax, and prints `description`.
+
+    Version 3 (R13, optional): what came off the price before tax, the
+    client's `discount_percent` (`discount_minor`) and the credit it used
+    (`credit_minor`), so `subtotal_minor` is the price minus both; and a
+    payment a platform admin recorded by hand (`manual_payment`: a bank
+    transfer or cash, with its reference).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: InvoiceId = Field(default_factory=InvoiceId)
     business_id: BusinessId
     subscription_id: SubscriptionId | None = None
@@ -123,6 +164,10 @@ class InvoiceDocument(BaseDocument):
     paid_at: Microseconds | None = None
     payment_card: PaymentCardSnapshot | None = None
     line_texts: list[InvoiceLineText] = Field(default_factory=list[InvoiceLineText])
+    discount_percent: ClientDiscountPercent | None = None
+    discount_minor: MoneyAmountMinor | None = None
+    credit_minor: MoneyAmountMinor | None = None
+    manual_payment: ManualPayment | None = None
 
 
 class UsageEventDocument(BaseDocument):

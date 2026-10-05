@@ -118,10 +118,12 @@ def build_owner_journeys(
     business_journeys: Sequence[BusinessJourney],
     member_ids: set[UserId],
     events: Sequence[ProductEventDocument],
+    include_platform_admins: bool = False,
 ) -> list[OwnerJourney]:
     """
-    Every owner. Platform admins are left out, and so are invited staff:
-    people who joined a business (`member_ids`) without creating one.
+    Every owner. Invited staff are left out: people who joined a business
+    (`member_ids`) without creating one; so are platform admins, unless
+    `include_platform_admins` (the founder's toggle on the metrics page).
     """
 
     owned: dict[UserId, list[BusinessJourney]] = defaultdict(list)
@@ -142,7 +144,8 @@ def build_owner_journeys(
     journeys: list[OwnerJourney] = []
     for user in users:
         businesses: list[BusinessJourney] = owned.get(user.id, [])
-        if user.is_platform_admin or (not businesses and user.id in member_ids):
+        is_left_out_admin: bool = user.is_platform_admin and not include_platform_admins
+        if is_left_out_admin or (not businesses and user.id in member_ids):
             continue
 
         journeys.append(owner_journey(user, businesses, own_events.get(user.id, [])))

@@ -11,6 +11,7 @@ from app.repositories.aggregate_reading import parse_choice
 from app.repositories.document_queries import (
     CREATED_AT_FIELD,
     field_equals,
+    of_business,
     time_range,
 )
 from app.schemas.constants.analytics import (
@@ -32,10 +33,12 @@ from app.schemas.typings.analytics.constrained_integers import (
     WebVitalValue,
 )
 from app.schemas.typings.analytics.constrained_strings import CabinetRoutePattern
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
 from app.schemas.typings.storage.constrained_integers import (
     DocumentBucketIndex,
     DocumentCount,
+    DocumentQueryLimit,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.storage.integers import DocumentFieldInteger
@@ -85,6 +88,11 @@ class ProductEventRepository(ProductEventRepoContract):
             )
 
         return sorted(events, key=lambda event: (int(event.occurred_at), event.id))
+
+    def list_by_business(
+        self, business_id: BusinessId, limit: DocumentQueryLimit
+    ) -> list[ProductEventDocument]:
+        return self._collection.list_by_fields((of_business(business_id),), limit=limit)
 
 
 class WebVitalSampleRepository(WebVitalSampleRepoContract):

@@ -66,6 +66,27 @@ CARD_UNKNOWN = build_localized_text(
     ru="Оплата картой онлайн",
     ka="ონლაინ გადახდა ბარათით",
 )
+DISCOUNT = build_localized_text(
+    en="Discount {percent}", ru="Скидка {percent}", ka="ფასდაკლება {percent}"
+)
+CREDIT_APPLIED = build_localized_text(
+    en="Credit applied", ru="Зачтён кредит", ka="ჩათვლილი კრედიტი"
+)
+PAID_BY_BANK_TRANSFER = build_localized_text(
+    en="Bank transfer, reference {reference}",
+    ru="Банковский перевод, основание {reference}",
+    ka="საბანკო გადარიცხვა, საფუძველი {reference}",
+)
+PAID_IN_CASH = build_localized_text(
+    en="Cash, receipt {reference}",
+    ru="Наличными, квитанция {reference}",
+    ka="ნაღდი ფულით, ქვითარი {reference}",
+)
+PAID_BY_CREDIT = build_localized_text(
+    en="Covered by discount and credit",
+    ru="Покрыто скидкой и кредитом",
+    ka="დაფარულია ფასდაკლებით და კრედიტით",
+)
 PAY_ONLINE = build_localized_text(
     en="Pay online in the cabinet: Settings → Plan and billing.",
     ru="Оплатите онлайн в кабинете: Настройки → Тариф и оплата.",

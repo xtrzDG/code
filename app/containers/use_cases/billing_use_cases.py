@@ -74,10 +74,8 @@ from app.use_cases.billing.start_trial_use_case import StartTrialUseCase
 
 
 class BillingUseCasesContainer(containers.DeclarativeContainer):
-    """
-    Billing: subscriptions, invoices, checkout, the payment webhook, the
-    periodic billing jobs and the cost of a client.
-    """
+    """Billing: subscriptions, invoices (with the team's discounts and credit),
+    checkout, the payment webhook, the periodic jobs and a client's cost."""
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -101,6 +99,8 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         invoice_issuing=facilitators.invoice_issuing_facilitator,
         invoice_line_texts_transformer=transformers.invoice_line_texts_transformer,
+        billing_credit_repo=repositories.billing_credit_repo,
+        credit_lock=registries.billing_credit_lock_registry,
     )
     assemble_billing_overview_use_case: Factory[
         UseCaseContract[BillingOverviewSource, BillingOverview]

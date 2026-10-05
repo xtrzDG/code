@@ -11,6 +11,18 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — wave 14 together: customers and search, booking confirmations, the spend guard, admin actions
+
+Spec: `81926dbacb20deff`
+
+No change of its own: the API description with the four entries below
+merged together (customer cards, the staff-safe list, blocking, segments
+and search; the guest's booking page and the hosted page's hours and
+address; spend limits, allowed chat websites and request limits; the
+admin's account actions, client notes and timeline and the business-level
+metrics). Each of those entries names the description of its own change
+alone.
+
 ## 2026-10-05 — customers: cards, staff-safe list, blocking, segments, search
 
 Spec: `6c1658cd0245ac54`
@@ -100,6 +112,44 @@ Spec: `6a1f5ebeb3c3ff1a`
   menu import (10 an hour per business) and autotest runs (one running and
   20 a day per business) answer 429 `rate_limited` with `Retry-After` past
   their limits.
+
+## 2026-10-05 — an admin that can act, metrics that count every business
+
+Spec: `e25d82440174a235`
+
+- **Added** account actions on a client, each with a required `reason`
+  (8–300 characters) and an `ADMIN_*` audit entry, for admins whose role
+  manages client billing (SUPER, BILLING; others get 403):
+  `POST /v1/admin/clients/{business_id}/trial-extension` (`days` 1–60),
+  `…/discount` (`percent`, `last_day`), `…/credits` (`amount_minor`),
+  `…/setup-fee-waiver`, `…/invoices/{invoice_id}/manual-payment`
+  (`method` `bank_transfer` or `cash`, `reference`) and `…/plan`
+  (`plan_key`, optional `billing_period`); each answers
+  `AdminActionReceipt`.
+- **Added** the team's notes about a client:
+  `GET·POST /v1/admin/clients/{business_id}/notes`,
+  `PATCH·DELETE …/notes/{note_id}` (`DELETE` answers 204), pinned first;
+  `GET …/timeline?limit=&cursor=` (`ClientTimelinePage`, newest first:
+  audit entries, bills and credit, subscription steps, health changes,
+  setup milestones, the done-for-you request); and
+  `POST …/onboarding-request/done`.
+- **Changed** `ClientHealthView` adds optional `account`
+  (`ClientAccountView`: trial end, discount, credit left, setup fee
+  waived); `AdminInvoiceView` adds optional `number` and
+  `manual_payment_method`; `AdminClientSummary.setup_option` is
+  `self_serve` for a paying trial with no option chosen, as the owner sees
+  it.
+- **Changed** `GET /v1/admin/metrics` takes `include_admins`; `GrowthView`
+  adds `businesses` (`BusinessGrowthView`: businesses created in the
+  period, those of returning owners, their funnel and tunnel),
+  `are_platform_admins_included`, `excluded_platform_admins` and
+  `excluded_admin_businesses`; `MrrView` adds `rates` (the rates MRR was
+  converted with, with their source and day).
+- **Added** `AuditAction` values `admin_trial_extended`,
+  `admin_discount_given`, `admin_credit_granted`, `admin_setup_fee_waived`,
+  `admin_invoice_marked_paid`, `admin_plan_overridden` (in the owner's
+  audit log as well; the admin's reason shows only on the admin's
+  timeline).
 
 ## 2026-10-05 — wave 13 together: day 0, one story for updates, the landing page, trust fixes
 

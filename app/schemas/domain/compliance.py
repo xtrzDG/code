@@ -3,6 +3,7 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.typings.access.constrained_strings import AdminActionReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
@@ -34,8 +35,9 @@ class AuditLogEntryDocument(BaseDocument):
     # enum rule, docs/operations/deploys.md).
     # 4: `record_count`, how many records a purge or a deletion at a
     # sub-processor covered (optional, so version 3 needs no upcaster).
-    # 5: the action `spend_limit_reached` (in the business's log; an
-    # exception to the enum rule, docs/operations/deploys.md).
+    # 5: the actions `spend_limit_reached` (R12) and ADMIN_* on a client's
+    # account (R13; in the business's log, an exception to the enum rule,
+    # docs/operations/deploys.md) and the admin's `reason` (optional).
     schema_version: SchemaVersion = SchemaVersion("5")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
@@ -45,6 +47,7 @@ class AuditLogEntryDocument(BaseDocument):
     entity_id: AuditEntityReference | None = None
     ip_address: ClientIpAddress | None = None
     record_count: AuditRecordCount | None = None
+    reason: AdminActionReason | None = None
 
 
 class DpaAcceptanceDocument(BaseDocument):

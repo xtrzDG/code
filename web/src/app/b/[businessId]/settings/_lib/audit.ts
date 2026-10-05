@@ -69,6 +69,12 @@ export const AUDIT_ACTION_TONES: Record<AuditAction, BadgeTone> = {
   session_revoked: "neutral",
   platform_admin_changed: "neutral",
   spend_limit_reached: "warning",
+  admin_trial_extended: "accent",
+  admin_discount_given: "accent",
+  admin_credit_granted: "accent",
+  admin_setup_fee_waived: "accent",
+  admin_invoice_marked_paid: "accent",
+  admin_plan_overridden: "accent",
 };
 
 /**

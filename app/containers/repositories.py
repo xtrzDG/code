@@ -9,6 +9,7 @@ from app.containers.adapters.notification_collections_container import (
 from app.containers.analytics_repositories import AnalyticsRepositoriesContainer
 from app.containers.billing_repositories import BillingRepositoriesContainer
 from app.containers.call_repositories import CallRepositoriesContainer
+from app.containers.client_care_repositories import ClientCareRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
@@ -107,6 +108,7 @@ class RepositoriesContainer(
     BillingRepositoriesContainer,
     LegalRepositoriesContainer,
     SpendGuardRepositoriesContainer,
+    ClientCareRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 

@@ -114,6 +114,7 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
             summarize_client=summarize_client_use_case,
             client_standing_repo=repositories.client_standing_repo,
             wall_clock=time_provider.microsecond_wall_clock,
+            client_health_change_repo=repositories.client_health_change_repo,
         )
     )
     get_client_health_use_case: Factory[
@@ -127,6 +128,9 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
         invoice_repo=repositories.invoice_repo,
         payment_order_repo=repositories.payment_order_repo,
         summarize_client=summarize_client_use_case,
+        subscription_repo=repositories.subscription_repo,
+        billing_credit_repo=repositories.billing_credit_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     open_client_cabinet_use_case: Factory[
         UseCaseContract[OpenClientCabinetCommand, ClientCabinetAccess]

@@ -5,6 +5,17 @@ from typing import ClassVar, Literal
 from base_typed_id import BasePrefixedTypedId
 
 
+class BillingCreditId(BasePrefixedTypedId):
+    """
+    Identifier of one line of a business's credit ledger: credit a platform
+    admin granted, or credit an invoice used. A used line derives (UUID v5)
+    from its invoice, so an invoice uses credit once.
+    """
+
+    prefix = "billing_credit"
+    uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = None
+
+
 class InvoiceId(BasePrefixedTypedId):
     """Random identifier of an invoice."""
 

@@ -27,6 +27,9 @@ from app.registries.localization.high_cost_phone_number_registry import (
     HighCostPhoneNumberRegistry,
 )
 from app.registries.localization.language_registry import LanguageRegistry
+from app.registries.locks.billing_credit_lock_registry import (
+    BillingCreditLockRegistry,
+)
 from app.registries.locks.business_lock_registry import BusinessLockRegistry
 from app.registries.locks.customer_message_lock_registry import (
     CustomerMessageLockRegistry,
@@ -126,6 +129,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # writes, one per customer around a turn, one for login code sends.
     business_lock_registry: Singleton[BusinessLockRegistry] = Singleton(
         BusinessLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    # One per business around the use of its credit (R13).
+    billing_credit_lock_registry: Singleton[BillingCreditLockRegistry] = Singleton(
+        BillingCreditLockRegistry, advisory_locks=adapters.advisory_locks
     )
     customer_message_lock_registry: Singleton[CustomerMessageLockRegistry] = Singleton(
         CustomerMessageLockRegistry, advisory_locks=adapters.advisory_locks

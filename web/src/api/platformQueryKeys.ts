@@ -33,6 +33,10 @@ export const platformQueryKeys = {
     clients: (filters: string) => ["admin", "clients", filters] as const,
     client: (businessId: Id) => ["admin", "client", businessId] as const,
     clientQuality: (businessId: Id) => ["admin", "client", businessId, "quality"] as const,
+    /** The platform team's notes about one client (under the client: an account action reloads them). */
+    clientNotes: (businessId: Id) => ["admin", "client", businessId, "notes"] as const,
+    /** One client's timeline, newest first. */
+    clientTimeline: (businessId: Id) => ["admin", "client", businessId, "timeline"] as const,
     /** The key ring and the latest re-encryption run. */
     encryptionKeys: () => ["admin", "encryptionKeys"] as const,
     /** The founder's growth metrics for one set of filters. */

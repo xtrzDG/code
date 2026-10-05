@@ -1,14 +1,23 @@
+from typed_time_provider import Microseconds, WallClock
+
 from app.contracts.billing import PaymentOrderRepoContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )
-from app.contracts.repositories.billing_repositories import InvoiceRepoContract
+from app.contracts.repositories.billing_repositories import (
+    InvoiceRepoContract,
+    SubscriptionRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.client_care_repositories import (
+    BillingCreditRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.domain.assistants import AutotestRunDocument
+from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import (
@@ -25,6 +34,8 @@ from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AutotestRunId
 from app.use_cases.admin.active_version import find_active_version, find_verdict_run_id
+from app.use_cases.admin.client_account_view import build_client_account
+from app.use_cases.shared.billing_records import find_current_subscription
 from app.utilities.assembly.autotest_evaluation import MIN_PASSING_CRITERION_SCORE
 
 MAX_LISTED_INVOICES: int = 24
@@ -51,7 +62,13 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
         invoice_repo: InvoiceRepoContract,
         payment_order_repo: PaymentOrderRepoContract,
         summarize_client: UseCaseContract[ClientSummarySource, AdminClientSummary],
+        subscription_repo: SubscriptionRepoContract,
+        billing_credit_repo: BillingCreditRepoContract,
+        wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._subscription_repo: SubscriptionRepoContract = subscription_repo
+        self._billing_credit_repo: BillingCreditRepoContract = billing_credit_repo
+        self._wall_clock: WallClock[Microseconds] = wall_clock
         self._authorize_platform_admin: UseCaseContract[
             PlatformAdminAccessRequest, UserDocument
         ] = authorize_platform_admin
@@ -80,8 +97,17 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
         if business is None:
             raise NotFoundError(f"Business {input_data.business_id} was not found.")
 
+        invoices: list[InvoiceDocument] = self._invoice_repo.list_by_business(
+            business.id
+        )
         return ClientHealthView(
             summary=self._summarize_client.run(ClientSummarySource(business=business)),
+            account=build_client_account(
+                find_current_subscription(self._subscription_repo, business.id),
+                self._billing_credit_repo.list_by_business(business.id),
+                invoices,
+                self._wall_clock.now_unix(),
+            ),
             timezone=business.timezone,
             failed_autotests=self._list_failed_autotests(business),
             invoices=[
@@ -95,10 +121,14 @@ class GetClientHealthUseCase(UseCaseContract[AdminClientQuery, ClientHealthView]
                     status=invoice.status,
                     period_start=invoice.period_start,
                     period_end=invoice.period_end,
+                    number=invoice.number,
+                    manual_payment_method=(
+                        None
+                        if invoice.manual_payment is None
+                        else invoice.manual_payment.method
+                    ),
                 )
-                for invoice in self._invoice_repo.list_by_business(business.id)[
-                    :MAX_LISTED_INVOICES
-                ]
+                for invoice in invoices[:MAX_LISTED_INVOICES]
             ],
             payments=[
                 AdminPaymentView(

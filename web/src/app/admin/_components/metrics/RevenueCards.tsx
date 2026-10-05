@@ -4,7 +4,9 @@ import { Card, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { formatRateDate, formatRateValue } from "../../_lib/clients";
 import { movementSign, type MarginView, type MrrView } from "../../_lib/metrics";
+import { RATE_SOURCE_LABELS } from "../labels";
 import { ScrollingTable } from "./ScrollingTable";
 import type { MetricsFormat } from "./useMetricsFormat";
 
@@ -70,12 +72,47 @@ export function MrrCard({ mrr, format }: { mrr: MrrView; format: MetricsFormat }
           </Tr>
         </TBody>
       </ScrollingTable>
+      <RatesNote mrr={mrr} />
       {mrr.unconverted_currencies.length > 0 ? (
         <p className="border-t border-line px-5 py-3 text-xs text-warning">
           {t("adminMetrics.mrr.unconverted", { currencies: mrr.unconverted_currencies.join(", ") })}
         </p>
       ) : null}
     </Card>
+  );
+}
+
+/**
+ * The rates MRR was converted to euros with, each named truthfully: its
+ * source (the National Bank of Georgia, the ECB or the platform's planning
+ * rate), its day, and a warning when the daily refresh has not brought a
+ * newer one.
+ */
+function RatesNote({ mrr }: { mrr: MrrView }) {
+  const { t, locale } = useI18n();
+  const rates = mrr.rates ?? [];
+  if (rates.length === 0) {
+    return mrr.unconverted_currencies.length === 0 ? (
+      <p className="border-t border-line px-5 py-3 text-xs text-ink-subtle">{t("adminMetrics.mrr.noConversion")}</p>
+    ) : null;
+  }
+  const text = rates
+    .map((rate) => {
+      const sources = (rate.sources ?? []).map((source) => t(RATE_SOURCE_LABELS[source]));
+      const date = formatRateDate(rate.rate_date, locale);
+      const line = t("adminMetrics.mrr.rate", {
+        currency: rate.base_currency_code,
+        value: formatRateValue(rate.rate_value, locale),
+        source: sources.length > 0 ? sources.join(", ") : rate.source,
+        date,
+      });
+      return rate.is_stale ? `${line}, ${t("adminMetrics.mrr.rateStale", { date })}` : line;
+    })
+    .join("; ");
+  return (
+    <p className={cn("border-t border-line px-5 py-3 text-xs", rates.some((rate) => rate.is_stale) ? "text-warning" : "text-ink-subtle")}>
+      {t("adminMetrics.mrr.rates", { rates: text })}
+    </p>
   );
 }
 

@@ -18,8 +18,16 @@ from app.schemas.dto.analytics.admin_metrics_view import AdminMetricsView, WebVi
 from app.schemas.dto.analytics.growth_views import GrowthView
 from app.schemas.dto.analytics.revenue_views import RevenueView
 from app.schemas.dto.billing_ledger import ClientCostQuery, ClientCostReport
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
+from app.schemas.typings.analytics.constrained_integers import OwnerCount
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.admin.metrics.business_growth import (
+    admin_exclusion,
+    build_business_growth,
+    count_excluded_businesses,
+)
 from app.use_cases.admin.metrics.margin_summary import summarize_margin
 from app.use_cases.admin.metrics.metrics_period import MetricsPeriod, resolve_period
 from app.use_cases.admin.metrics.metrics_scope import (
@@ -35,7 +43,7 @@ from app.utilities.analytics.activation_math import (
     build_trial_conversion,
 )
 from app.utilities.analytics.cohort_math import build_cohorts, build_sources
-from app.utilities.analytics.euro_conversion import euro_converter
+from app.utilities.analytics.euro_conversion import euro_converter, rates_to_euro
 from app.utilities.analytics.funnel_math import (
     build_funnel,
     build_tunnel,
@@ -128,14 +136,23 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
             period.start, period.end
         )
         business_journeys = build_business_journeys(businesses, events)
-        owners = build_owner_journeys(
-            signed_up, business_journeys, invited_member_ids(businesses), events
-        )
-        cohort = [owner for owner in owners if keeps_owner(owner, input_data)]
         owner_ids: list[UserId] = sorted(
             {b.owner_id for b in business_journeys if b.owner_id is not None}, key=str
         )
-        sources = owner_sources(self._user_repo.get_many(owner_ids))
+        business_owners: list[UserDocument] = self._user_repo.get_many(owner_ids)
+        exclusion = admin_exclusion(
+            [*signed_up, *business_owners], input_data.include_platform_admins
+        )
+        every_owner = build_owner_journeys(
+            signed_up,
+            business_journeys,
+            invited_member_ids(businesses),
+            events,
+            include_platform_admins=True,
+        )
+        owners = exclusion.owners(every_owner)
+        cohort = [owner for owner in owners if keeps_owner(owner, input_data)]
+        sources = owner_sources(business_owners)
         in_scope = business_scope(business_journeys, sources, input_data)
         return AdminMetricsView(
             generated_at=now,
@@ -149,6 +166,14 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
                 tunnel=build_tunnel(cohort),
                 cohorts=build_cohorts(cohort, billing, now),
                 sources=build_sources(cohort, paying_businesses_at(billing, now)),
+                businesses=build_business_growth(
+                    in_scope, business_journeys, events, cohort, period, exclusion
+                ),
+                are_platform_admins_included=exclusion.is_included,
+                excluded_platform_admins=OwnerCount(len(every_owner) - len(owners)),
+                excluded_admin_businesses=count_excluded_businesses(
+                    in_scope, period, exclusion
+                ),
             ),
             revenue=RevenueView(
                 mrr=build_mrr(
@@ -157,6 +182,8 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
                     period.start,
                     min(period.end, after_now, key=int),
                     euro_converter(self._exchange_rate_registry),
+                ).model_copy(
+                    update={"rates": self._rates(billing, business_ids(in_scope))}
                 ),
                 margin=summarize_margin(
                     sorted(business_ids(in_scope), key=str),
@@ -168,6 +195,21 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
             ),
             web_vitals=self._web_vitals(period),
             choices=filter_choices(business_journeys, owners, sources),
+        )
+
+    def _rates(
+        self, billing: list[ProductEventDocument], in_scope: set[BusinessId]
+    ) -> list[ExchangeRateQuote]:
+        """The rates the period's billing currencies were turned into euros with."""
+
+        return rates_to_euro(
+            self._exchange_rate_registry,
+            [
+                event.properties.currency_code
+                for event in billing
+                if event.properties.currency_code is not None
+                and event.business_id in in_scope
+            ],
         )
 
     def _web_vitals(self, period: MetricsPeriod) -> list[WebVitalView]:

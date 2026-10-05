@@ -2,6 +2,9 @@
 
 import httpx
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
 )
@@ -12,6 +15,9 @@ from app.clients.flitt.flitt_client import FlittClient
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.locks.billing_credit_lock_registry import (
+    BillingCreditLockRegistry,
+)
 from app.repositories.activation_repositories import OnboardingRequestRepository
 from app.repositories.assistant_repositories import (
     AssistantVersionRepository,
@@ -27,6 +33,7 @@ from app.repositories.booking_repositories import (
     UnansweredQuestionRepository,
 )
 from app.repositories.business_repositories import BusinessRepository
+from app.repositories.client_care_repositories import BillingCreditRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import MessageRepository
 from app.repositories.payment_repositories import (
@@ -42,6 +49,7 @@ from app.schemas.domain.billing import (
     SubscriptionDocument,
     UsageEventDocument,
 )
+from app.schemas.domain.billing_credits import BillingCreditDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import MessageDocument
@@ -124,6 +132,12 @@ class BillingInfrastructure:
                 PackageUsageWarningDocument
             )
         )
+        self.billing_credit_repo = BillingCreditRepository(
+            InMemoryDocumentCollectionAdapter[BillingCreditDocument](
+                BillingCreditDocument
+            )
+        )
+        self.credit_lock = BillingCreditLockRegistry(InMemoryAdvisoryLockAdapter())
         self.audit_log_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument

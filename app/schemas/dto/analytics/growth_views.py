@@ -4,11 +4,13 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.constants.analytics import FunnelStep, TunnelStepKey
+from app.schemas.typings.analytics.booleans import IsPlatformAdminIncluded
 from app.schemas.typings.analytics.constrained_floats import (
     CohortPayingPercent,
     ConversionPercent,
 )
 from app.schemas.typings.analytics.constrained_integers import (
+    BusinessCount,
     OwnerCount,
     TimeToLiveSeconds,
     TrialCount,
@@ -93,8 +95,54 @@ class SourceRowView(ImmutableDTO):
     paying: OwnerCount
 
 
+class BusinessFunnelStepView(ImmutableDTO):
+    """
+    Businesses created in the period at one step (and every step before
+    it), their share of the businesses created and of the step before.
+    """
+
+    step: FunnelStep
+    businesses: BusinessCount
+    share_of_created: ConversionPercent | None = None
+    share_of_previous: ConversionPercent | None = None
+
+
+class BusinessTunnelStepView(ImmutableDTO):
+    """
+    One screen of the setup tunnel, counted per business (a setup that has
+    not created its business yet counts once too): entered, went on,
+    skipped, and stopped there without going live.
+    """
+
+    step: TunnelStepKey
+    entered: BusinessCount
+    completed: BusinessCount
+    skipped: BusinessCount
+    stopped_here: BusinessCount
+
+
+class BusinessGrowthView(ImmutableDTO):
+    """
+    Every business created in the period, whoever created it: the
+    `created` count, how many of them belong to owners who had one before
+    (`by_returning_owners`, a second business), their funnel and tunnel.
+    """
+
+    created: BusinessCount
+    by_returning_owners: BusinessCount
+    funnel: list[BusinessFunnelStepView]
+    tunnel: list[BusinessTunnelStepView]
+
+
 class GrowthView(ImmutableDTO):
-    """The funnel of the period's sign-ups and what explains it."""
+    """
+    The funnel of the period's sign-ups and what explains it, and the
+    business-level funnel and tunnel of every business created in the
+    period. Owners who are platform admins (and their businesses) are left
+    out unless `are_platform_admins_included`; `excluded_platform_admins`
+    says how many of the period's sign-ups that left out, and
+    `excluded_admin_businesses` how many of its businesses.
+    """
 
     funnel: list[FunnelStepView]
     median_time_to_live_seconds: TimeToLiveSeconds | None = None
@@ -103,3 +151,7 @@ class GrowthView(ImmutableDTO):
     tunnel: list[TunnelStepView]
     cohorts: list[CohortRowView]
     sources: list[SourceRowView]
+    businesses: BusinessGrowthView | None = None
+    are_platform_admins_included: IsPlatformAdminIncluded = False
+    excluded_platform_admins: OwnerCount = OwnerCount(0)
+    excluded_admin_businesses: BusinessCount = BusinessCount(0)

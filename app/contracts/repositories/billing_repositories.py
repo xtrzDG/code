@@ -81,3 +81,7 @@ class OnboardingRequestRepoContract(RepoContract, Protocol):
         across processes); True when it was stored now.
         """
         raise NotImplementedError
+
+    def save(self, request: OnboardingRequestDocument) -> None:
+        """Store a request's new state (the team marked it done)."""
+        raise NotImplementedError

@@ -4,9 +4,11 @@ exchange-rate registry (a direct pair, or the published opposite pair read
 the other way); never with an invented rate.
 """
 
+from collections.abc import Iterable
 from decimal import Decimal
 
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.analytics.mrr_math import EUR, EuroConverter
 from app.utilities.billing.client_cost_math import (
@@ -48,3 +50,21 @@ def provider_cost_in_euros(
         registry,
     )
     return None if converted is None else to_minor_units(converted[0], EUR)
+
+
+def rates_to_euro(
+    registry: ExchangeRateRegistryContract, currencies: Iterable[CurrencyCode]
+) -> list[ExchangeRateQuote]:
+    """
+    The rate each currency other than the euro is converted with (its
+    source, date, and whether it is derived or stale), by currency; a
+    currency without a rate has none.
+    """
+
+    rates: list[ExchangeRateQuote] = []
+    for currency in sorted(set(currencies) - {EUR}, key=str):
+        rate: ExchangeRateQuote | None = registry.find_rate(currency, EUR)
+        if rate is not None:
+            rates.append(rate)
+
+    return rates

@@ -167,6 +167,35 @@
         "title": "ActivationView",
         "type": "object"
       },
+      "AdminActionReceipt": {
+        "additionalProperties": false,
+        "description": "What an account action recorded: the audit entry and when.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "audit_log_entry_id": {
+            "title": "Audit Log Entry Id",
+            "type": "string"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "action",
+          "audit_log_entry_id",
+          "occurred_at"
+        ],
+        "title": "AdminActionReceipt",
+        "type": "object"
+      },
       "AdminClientPage": {
         "additionalProperties": false,
         "description": "One page of clients; `next_cursor` is None on the last page.\n\n`matching_count` counts the clients that pass the filters (with a\nsearch, the matches among the clients one request looked at); `totals`,\n`countries` and `niches` describe every client (for the summary tiles\nand the filter choices). The summaries are the client standings a\nperiodic job refreshes every 15 minutes; `generated_at` is when the\noldest one on the page was taken.",
@@ -518,6 +547,30 @@
           },
           "kind": {
             "$ref": "#/components/schemas/InvoiceKind"
+          },
+          "manual_payment_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ManualPaymentMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "number": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "minLength": 13,
+                "pattern": "^[A-Z0-9]{1,10}-[0-9]{4}-[0-9]{6,12}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
           },
           "period_end": {
             "title": "Period End",
@@ -2132,7 +2185,7 @@
         "type": "string"
       },
       "AuditAction": {
-        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business. SUPPORT_ACCESS_START and\nSUPPORT_ACCESS_END bound a platform admin's time-boxed look into a\nclient's cabinet (with the reason, the address and how it ended);\nSESSION_REVOKED (a person ended sessions of theirs) and\nPLATFORM_ADMIN_CHANGED (the admin team changed) name no business.\nSPEND_LIMIT_REACHED: the business passed its hard daily spend limit and\nits assistant only takes messages for the team until the day ends.",
+        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business. SUPPORT_ACCESS_START and\nSUPPORT_ACCESS_END bound a platform admin's time-boxed look into a\nclient's cabinet (with the reason, the address and how it ended);\nSESSION_REVOKED (a person ended sessions of theirs) and\nPLATFORM_ADMIN_CHANGED (the admin team changed) name no business.\nSPEND_LIMIT_REACHED: the business passed its hard daily spend limit and\nits assistant only takes messages for the team until the day ends.\nThe ADMIN_* actions are a platform admin's changes to a client's\naccount, each with the admin's reason: a longer trial, a discount,\ncredit, a waived setup fee, an invoice paid by bank transfer or in\ncash, a plan set by hand.",
         "enum": [
           "view",
           "create",
@@ -2148,7 +2201,13 @@
           "support_access_end",
           "session_revoked",
           "platform_admin_changed",
-          "spend_limit_reached"
+          "spend_limit_reached",
+          "admin_trial_extended",
+          "admin_discount_given",
+          "admin_credit_granted",
+          "admin_setup_fee_waived",
+          "admin_invoice_marked_paid",
+          "admin_plan_overridden"
         ],
         "title": "AuditAction",
         "type": "string"
@@ -4458,6 +4517,90 @@
         "title": "BusinessFactView",
         "type": "object"
       },
+      "BusinessFunnelStepView": {
+        "additionalProperties": false,
+        "description": "Businesses created in the period at one step (and every step before\nit), their share of the businesses created and of the step before.",
+        "properties": {
+          "businesses": {
+            "minimum": 0.0,
+            "title": "Businesses",
+            "type": "integer"
+          },
+          "share_of_created": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Created"
+          },
+          "share_of_previous": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Previous"
+          },
+          "step": {
+            "$ref": "#/components/schemas/FunnelStep"
+          }
+        },
+        "required": [
+          "step",
+          "businesses"
+        ],
+        "title": "BusinessFunnelStepView",
+        "type": "object"
+      },
+      "BusinessGrowthView": {
+        "additionalProperties": false,
+        "description": "Every business created in the period, whoever created it: the\n`created` count, how many of them belong to owners who had one before\n(`by_returning_owners`, a second business), their funnel and tunnel.",
+        "properties": {
+          "by_returning_owners": {
+            "minimum": 0.0,
+            "title": "By Returning Owners",
+            "type": "integer"
+          },
+          "created": {
+            "minimum": 0.0,
+            "title": "Created",
+            "type": "integer"
+          },
+          "funnel": {
+            "items": {
+              "$ref": "#/components/schemas/BusinessFunnelStepView"
+            },
+            "title": "Funnel",
+            "type": "array"
+          },
+          "tunnel": {
+            "items": {
+              "$ref": "#/components/schemas/BusinessTunnelStepView"
+            },
+            "title": "Tunnel",
+            "type": "array"
+          }
+        },
+        "required": [
+          "created",
+          "by_returning_owners",
+          "funnel",
+          "tunnel"
+        ],
+        "title": "BusinessGrowthView",
+        "type": "object"
+      },
       "BusinessLink": {
         "additionalProperties": false,
         "description": "A link the assistant may send (menu, map, payment, booking page).",
@@ -4840,6 +4983,44 @@
         ],
         "title": "BusinessStatus",
         "type": "string"
+      },
+      "BusinessTunnelStepView": {
+        "additionalProperties": false,
+        "description": "One screen of the setup tunnel, counted per business (a setup that has\nnot created its business yet counts once too): entered, went on,\nskipped, and stopped there without going live.",
+        "properties": {
+          "completed": {
+            "minimum": 0.0,
+            "title": "Completed",
+            "type": "integer"
+          },
+          "entered": {
+            "minimum": 0.0,
+            "title": "Entered",
+            "type": "integer"
+          },
+          "skipped": {
+            "minimum": 0.0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "step": {
+            "$ref": "#/components/schemas/TunnelStepKey"
+          },
+          "stopped_here": {
+            "minimum": 0.0,
+            "title": "Stopped Here",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "step",
+          "entered",
+          "completed",
+          "skipped",
+          "stopped_here"
+        ],
+        "title": "BusinessTunnelStepView",
+        "type": "object"
       },
       "BusinessView": {
         "additionalProperties": false,
@@ -6236,6 +6417,50 @@
         "title": "ClaimVerdict",
         "type": "string"
       },
+      "ClientAccountView": {
+        "additionalProperties": false,
+        "description": "What the platform team granted the client, for the actions menu: the\ntrial's end, the discount, the credit left (in the subscription's\ncurrency) and whether the setup fee is waived.",
+        "properties": {
+          "credit_balance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientDiscountView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_setup_fee_waived": {
+            "default": false,
+            "title": "Is Setup Fee Waived",
+            "type": "boolean"
+          },
+          "trial_ends_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trial Ends At"
+          }
+        },
+        "title": "ClientAccountView",
+        "type": "object"
+      },
       "ClientAutotestVerdict": {
         "additionalProperties": false,
         "description": "The autotest verdict of the client's active version (the published one,\nelse the latest tested), exactly as the version stores it, so the admin\nand the version page never disagree. Counts are None for a version\ntested before verdicts were stored: its status says passed or not.",
@@ -6463,6 +6688,33 @@
         "title": "ClientCostReport",
         "type": "object"
       },
+      "ClientDiscountView": {
+        "additionalProperties": false,
+        "description": "The client's discount: percent off periods starting before `ends_at`.",
+        "properties": {
+          "ends_at": {
+            "title": "Ends At",
+            "type": "integer"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "percent": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Percent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "percent",
+          "ends_at",
+          "is_active"
+        ],
+        "title": "ClientDiscountView",
+        "type": "object"
+      },
       "ClientGuardActivity": {
         "additionalProperties": false,
         "description": "What the reply guard did for one client in a time window: the model's\nreplies it checked, those it had rewritten once or handed to staff, and\nthe customer messages that looked like prompt injection.",
@@ -6530,6 +6782,16 @@
         "additionalProperties": false,
         "description": "One client in detail: the summary plus what explains it.",
         "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientAccountView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "failed_autotests": {
             "items": {
               "$ref": "#/components/schemas/FailedAutotestView"
@@ -6567,6 +6829,75 @@
           "timezone"
         ],
         "title": "ClientHealthView",
+        "type": "object"
+      },
+      "ClientNoteList": {
+        "additionalProperties": false,
+        "description": "The client's notes: pinned first, then the newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClientNoteView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "ClientNoteList",
+        "type": "object"
+      },
+      "ClientNoteView": {
+        "additionalProperties": false,
+        "description": "A note with its author's name (None for someone without one).",
+        "properties": {
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
+          "author_user_id": {
+            "title": "Author User Id",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_pinned": {
+            "title": "Is Pinned",
+            "type": "boolean"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "pattern": "^\\S[\\s\\S]*$",
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "is_pinned",
+          "author_user_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ClientNoteView",
         "type": "object"
       },
       "ClientQualityView": {
@@ -6699,6 +7030,275 @@
           }
         },
         "title": "ClientReplySpeed",
+        "type": "object"
+      },
+      "ClientTimelineEntry": {
+        "additionalProperties": false,
+        "description": "One line of a client's story: what (`kind`, `event`), when, who (the\naudit log's person) and the facts its event has. AUDIT_ENTRY names the\naudit action and entity; admin actions carry the admin's reason;\nbilling lines the amount, plan, invoice number or payment method;\nhealth changes the statuses and issues; milestones the channel or the\ntunnel screen.",
+        "properties": {
+          "actor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Name"
+          },
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "audit_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditAction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "audit_entity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit Entity"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discount_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Percent"
+          },
+          "event": {
+            "$ref": "#/components/schemas/ClientTimelineEvent"
+          },
+          "health_from": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientHealthStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "health_issues": {
+            "items": {
+              "$ref": "#/components/schemas/ClientHealthIssue"
+            },
+            "title": "Health Issues",
+            "type": "array"
+          },
+          "health_to": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientHealthStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "minLength": 13,
+                "pattern": "^[A-Z0-9]{1,10}-[0-9]{4}-[0-9]{6,12}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ClientTimelineKind"
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "integer"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ManualPaymentMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plan_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previous_plan_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 8,
+                "pattern": "^\\S[\\s\\S]*\\S$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "tunnel_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TunnelStepKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "event",
+          "occurred_at"
+        ],
+        "title": "ClientTimelineEntry",
+        "type": "object"
+      },
+      "ClientTimelineEvent": {
+        "description": "One line of a client's story, a code the admin pages word in their\nlanguage. AUDIT_ENTRY is any other audit log entry (its action and\nentity say what); the rest name the step itself.",
+        "enum": [
+          "audit_entry",
+          "invoice_issued",
+          "invoice_paid",
+          "invoice_failed",
+          "credit_used",
+          "trial_started",
+          "subscribed",
+          "plan_changed",
+          "cancelled",
+          "payment_failed",
+          "health_changed",
+          "business_created",
+          "launch_succeeded",
+          "launch_blocked",
+          "dpa_accepted",
+          "channel_connected",
+          "test_chat_tried",
+          "went_live",
+          "first_real_conversation",
+          "first_booking",
+          "first_handoff",
+          "onboarding_requested"
+        ],
+        "title": "ClientTimelineEvent",
+        "type": "string"
+      },
+      "ClientTimelineKind": {
+        "description": "What a line of a client's story on the admin client page is about:\nthe platform team's ADMIN_ACTIONs on the account, SUPPORT looks into\nthe cabinet, CHANGES the client's team made (from the audit log),\nBILLING (invoices, payments, credit, subscription steps), HEALTH\nchanges, the setup's MILESTONES and the ONBOARDING request.",
+        "enum": [
+          "admin_action",
+          "support",
+          "change",
+          "billing",
+          "health",
+          "milestone",
+          "onboarding"
+        ],
+        "title": "ClientTimelineKind",
+        "type": "string"
+      },
+      "ClientTimelinePage": {
+        "additionalProperties": false,
+        "description": "One page of the story; `next_cursor` is None at its beginning.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClientTimelineEntry"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ClientTimelinePage",
         "type": "object"
       },
       "CohortRowView": {
@@ -11015,10 +11615,25 @@
       },
       "GrowthView": {
         "additionalProperties": false,
-        "description": "The funnel of the period's sign-ups and what explains it.",
+        "description": "The funnel of the period's sign-ups and what explains it, and the\nbusiness-level funnel and tunnel of every business created in the\nperiod. Owners who are platform admins (and their businesses) are left\nout unless `are_platform_admins_included`; `excluded_platform_admins`\nsays how many of the period's sign-ups that left out, and\n`excluded_admin_businesses` how many of its businesses.",
         "properties": {
           "activation": {
             "$ref": "#/components/schemas/ActivationView"
+          },
+          "are_platform_admins_included": {
+            "default": false,
+            "title": "Are Platform Admins Included",
+            "type": "boolean"
+          },
+          "businesses": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BusinessGrowthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cohorts": {
             "items": {
@@ -11026,6 +11641,18 @@
             },
             "title": "Cohorts",
             "type": "array"
+          },
+          "excluded_admin_businesses": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Excluded Admin Businesses",
+            "type": "integer"
+          },
+          "excluded_platform_admins": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Excluded Platform Admins",
+            "type": "integer"
           },
           "funnel": {
             "items": {
@@ -15222,6 +15849,15 @@
         "title": "ManagerContactView",
         "type": "object"
       },
+      "ManualPaymentMethod": {
+        "description": "How money a platform admin recorded by hand arrived, outside the\npayment provider: a BANK_TRANSFER to the platform's account, or CASH.",
+        "enum": [
+          "bank_transfer",
+          "cash"
+        ],
+        "title": "ManualPaymentMethod",
+        "type": "string"
+      },
       "MarginMoney": {
         "additionalProperties": false,
         "description": "Revenue minus provider cost; negative for a loss.",
@@ -16338,7 +16974,7 @@
       },
       "MrrView": {
         "additionalProperties": false,
-        "description": "Monthly recurring revenue at the start and the end of the period and\nthe movements between (start + new + reactivation + expansion -\ncontraction - churn = end), the paying accounts at the end and the\naverage revenue per account. Subscriptions in a currency without an\nofficial rate to euros are left out and named.",
+        "description": "Monthly recurring revenue at the start and the end of the period and\nthe movements between (start + new + reactivation + expansion -\ncontraction - churn = end), the paying accounts at the end and the\naverage revenue per account. Subscriptions in a currency without an\nofficial rate to euros are left out and named; `rates` are the rates\nthe others were converted with (their source and date), so the page\ncan name them truthfully.",
         "properties": {
           "arpa": {
             "anyOf": [
@@ -16368,6 +17004,13 @@
             "minimum": 0.0,
             "title": "Paying Accounts",
             "type": "integer"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/ExchangeRateQuote"
+            },
+            "title": "Rates",
+            "type": "array"
           },
           "start": {
             "$ref": "#/components/schemas/Money"
@@ -18269,7 +18912,9 @@
           "view_metrics",
           "view_operations",
           "manage_operations",
-          "manage_admins"
+          "manage_admins",
+          "manage_client_billing",
+          "write_client_notes"
         ],
         "title": "PlatformAdminPermission",
         "type": "string"
@@ -25843,6 +26488,1151 @@
         ]
       }
     },
+    "/v1/admin/clients/{business_id}/credits": {
+      "post": {
+        "operationId": "grant_credit_v1_admin_clients__business_id__credits_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST …/credits: credit in minor units of the subscription's currency,\ntaken off the price of the next invoices before tax.",
+                "properties": {
+                  "amount_minor": {
+                    "maximum": 10000000,
+                    "minimum": 1,
+                    "title": "Amount Minor",
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount_minor",
+                  "reason"
+                ],
+                "title": "GrantCreditBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Grant Credit",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/discount": {
+      "post": {
+        "operationId": "give_discount_v1_admin_clients__business_id__discount_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST …/discount: `percent` off every service period that starts on or\nbefore `last_day` (in the business's time zone); replaces an earlier\ndiscount.",
+                "properties": {
+                  "last_day": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "title": "Last Day",
+                    "type": "string"
+                  },
+                  "percent": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "title": "Percent",
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "percent",
+                  "last_day",
+                  "reason"
+                ],
+                "title": "GiveDiscountBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Give Discount",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/invoices/{invoice_id}/manual-payment": {
+      "post": {
+        "operationId": "mark_invoice_paid_v1_admin_clients__business_id__invoices__invoice_id__manual_payment_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST …/invoices/{invoice_id}/manual-payment: money that came by hand.",
+                "properties": {
+                  "method": {
+                    "description": "How money a platform admin recorded by hand arrived, outside the\npayment provider: a BANK_TRANSFER to the platform's account, or CASH.",
+                    "enum": [
+                      "bank_transfer",
+                      "cash"
+                    ],
+                    "title": "ManualPaymentMethod",
+                    "type": "string"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  },
+                  "reference": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^\\S(.*\\S)?$",
+                    "title": "Reference",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "method",
+                  "reference",
+                  "reason"
+                ],
+                "title": "MarkInvoicePaidBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Mark Invoice Paid",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/notes": {
+      "get": {
+        "operationId": "list_notes_v1_admin_clients__business_id__notes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientNoteList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Notes",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "create_note_v1_admin_clients__business_id__notes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST /v1/admin/clients/{business_id}/notes: a new note.",
+                "properties": {
+                  "is_pinned": {
+                    "default": false,
+                    "title": "Is Pinned",
+                    "type": "boolean"
+                  },
+                  "text": {
+                    "maxLength": 2000,
+                    "minLength": 1,
+                    "pattern": "^\\S[\\s\\S]*$",
+                    "title": "Text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "title": "ClientNoteBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientNoteList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Note",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/notes/{note_id}": {
+      "delete": {
+        "operationId": "delete_note_v1_admin_clients__business_id__notes__note_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "title": "Note Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Delete Note",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "update_note_v1_admin_clients__business_id__notes__note_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "title": "Note Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "PATCH …/notes/{note_id}: new words, pinned or not (what is sent).",
+                "properties": {
+                  "is_pinned": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Pinned"
+                  },
+                  "text": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2000,
+                        "minLength": 1,
+                        "pattern": "^\\S[\\s\\S]*$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Text"
+                  }
+                },
+                "title": "ClientNoteChange",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientNoteList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Note",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/onboarding-request/done": {
+      "post": {
+        "operationId": "complete_onboarding_v1_admin_clients__business_id__onboarding_request_done_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Complete Onboarding",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/clients/{business_id}/open": {
       "post": {
         "operationId": "open_client_cabinet_v1_admin_clients__business_id__open_post",
@@ -25986,6 +27776,176 @@
         ]
       }
     },
+    "/v1/admin/clients/{business_id}/plan": {
+      "post": {
+        "operationId": "override_plan_v1_admin_clients__business_id__plan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST …/plan: the plan (and billing period; the current one when left\nout) the client is billed for from its next invoice, at the price book's\nprice, without a checkout.",
+                "properties": {
+                  "billing_period": {
+                    "anyOf": [
+                      {
+                        "description": "How often a subscription is charged.",
+                        "enum": [
+                          "monthly",
+                          "annual"
+                        ],
+                        "title": "BillingPeriod",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plan_key": {
+                    "description": "Subscription plan of one assistant (\"employee\").",
+                    "enum": [
+                      "chat",
+                      "voice_and_chat",
+                      "plus"
+                    ],
+                    "title": "PlanKey",
+                    "type": "string"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "plan_key",
+                  "reason"
+                ],
+                "title": "OverridePlanBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Override Plan",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/clients/{business_id}/quality": {
       "get": {
         "operationId": "get_client_quality_route_v1_admin_clients__business_id__quality_get",
@@ -26101,6 +28061,149 @@
         "summary": "Get Client Quality Route",
         "tags": [
           "quality"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/setup-fee-waiver": {
+      "post": {
+        "operationId": "waive_setup_fee_v1_admin_clients__business_id__setup_fee_waiver_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "An action that needs nothing but the admin's reason (a waived fee).",
+                "properties": {
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "title": "AdminReasonBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Waive Setup Fee",
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -26256,6 +28359,306 @@
           }
         },
         "summary": "Set Client Spend Limits",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/timeline": {
+      "get": {
+        "operationId": "get_timeline_v1_admin_clients__business_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientTimelinePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Timeline",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/clients/{business_id}/trial-extension": {
+      "post": {
+        "operationId": "extend_trial_v1_admin_clients__business_id__trial_extension_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "POST …/trial-extension: `days` more of the free trial, and why.",
+                "properties": {
+                  "days": {
+                    "maximum": 60,
+                    "minimum": 1,
+                    "title": "Days",
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "maxLength": 300,
+                    "minLength": 8,
+                    "pattern": "^\\S[\\s\\S]*\\S$",
+                    "title": "Reason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "days",
+                  "reason"
+                ],
+                "title": "ExtendTrialBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminActionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Extend Trial",
         "tags": [
           "admin"
         ]
@@ -27163,6 +29566,22 @@
                 }
               ],
               "title": "Source"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_admins",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Include Admins"
             }
           },
           {

@@ -6,6 +6,9 @@ from app.containers.orchestrators.orchestrators_container import (
     OrchestratorsContainer,
 )
 from app.containers.pipelines.account_pipelines import AccountPipelinesContainer
+from app.containers.pipelines.admin_action_pipelines import (
+    AdminActionPipelinesContainer,
+)
 from app.containers.pipelines.analytics_pipelines import AnalyticsPipelinesContainer
 from app.containers.pipelines.assistant_pipelines import AssistantPipelinesContainer
 from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
@@ -153,6 +156,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     spend_guard: SpendGuardPipelinesContainer = Container(  # type: ignore[assignment]
         SpendGuardPipelinesContainer,
         spend_guard=orchestrators.spend_guard,
+    )
+    admin_actions: AdminActionPipelinesContainer = Container(  # type: ignore[assignment]
+        AdminActionPipelinesContainer,
+        admin_actions=orchestrators.admin_actions,
     )
     security: SecurityPipelinesContainer = Container(  # type: ignore[assignment]
         SecurityPipelinesContainer,

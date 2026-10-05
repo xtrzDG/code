@@ -21,7 +21,13 @@
           "support_access_end",
           "session_revoked",
           "platform_admin_changed",
-          "spend_limit_reached"
+          "spend_limit_reached",
+          "admin_trial_extended",
+          "admin_discount_given",
+          "admin_credit_granted",
+          "admin_setup_fee_waived",
+          "admin_invoice_marked_paid",
+          "admin_plan_overridden"
         ],
         "type": "string"
       },
@@ -73,6 +79,20 @@
       "ip_address": {
         "anyOf": [
           {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "maxLength": 300,
+            "minLength": 8,
+            "pattern": "^\\S[\\s\\S]*\\S$",
             "type": "string"
           },
           {

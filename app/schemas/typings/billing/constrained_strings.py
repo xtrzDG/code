@@ -29,6 +29,21 @@ class CurrencyPairCode(BaseConstrainedTypedString):
     pattern = r"^[A-Z]{3}/[A-Z]{3}$"
 
 
+class DiscountEndDate(BaseConstrainedTypedString):
+    """
+    The last local calendar day (in the business's time zone) a client's
+    discount applies to: a period starting after it is billed in full.
+    ISO 8601 "YYYY-MM-DD".
+
+    Example:
+        last_discounted_day = DiscountEndDate("2026-12-31")
+    """
+
+    min_length = 10
+    max_length = 10
+    pattern = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+
+
 class ExchangeRateDate(BaseConstrainedTypedString):
     """
     Calendar day an official exchange rate was set for, ISO 8601 "YYYY-MM-DD".
@@ -55,6 +70,21 @@ class ExchangeRateValue(BaseConstrainedTypedString):
     min_length = 1
     max_length = 25
     pattern = r"^(?=[0-9.]*[1-9])(0|[1-9][0-9]{0,11})(\.[0-9]{1,12})?$"
+
+
+class ManualPaymentReference(BaseConstrainedTypedString):
+    """
+    What identifies money that came outside the payment provider: the bank
+    transfer's reference or the cash receipt's number, as the founder reads
+    it from the statement.
+
+    Example:
+        reference = ManualPaymentReference("TBC 2026-10-04 #88213")
+    """
+
+    min_length = 1
+    max_length = 120
+    pattern = r"^\S(.*\S)?$"
 
 
 class PaymentCheckoutUrl(BaseConstrainedTypedString):

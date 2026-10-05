@@ -13,7 +13,7 @@ from babel.numbers import format_percent
 from typed_time_provider import Microseconds
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.schemas.constants.billing import InvoiceStatus
+from app.schemas.constants.billing import InvoiceStatus, ManualPaymentMethod
 from app.schemas.constants.invoicing import TaxTreatment
 from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.domain.billing_profiles import InvoiceParty, PaymentCardSnapshot
@@ -94,6 +94,41 @@ class BillingDocumentPage:
     def subtotal_minor(self) -> MoneyAmountMinor:
         return self.invoice.subtotal_minor or self.invoice.amount_minor
 
+    def list_price_minor(self) -> MoneyAmountMinor:
+        """The line's price before the client's discount and credit."""
+
+        return MoneyAmountMinor(
+            int(self.subtotal_minor())
+            + int(self.invoice.discount_minor or 0)
+            + int(self.invoice.credit_minor or 0)
+        )
+
+    def adjustment_rows(self) -> list[SheetRow]:
+        """What came off the price before tax: the discount, then the credit."""
+
+        rows: list[SheetRow] = []
+        if self.invoice.discount_minor:
+            percent: str = format_percent(
+                Decimal(int(self.invoice.discount_percent or 0)) / 100,
+                locale=self._locale,
+            )
+            rows.append(
+                SheetRow(
+                    self.say(texts.DISCOUNT, percent=percent),
+                    f"−{self.money(self.invoice.discount_minor)}",
+                )
+            )
+
+        if self.invoice.credit_minor:
+            rows.append(
+                SheetRow(
+                    self.say(texts.CREDIT_APPLIED),
+                    f"−{self.money(self.invoice.credit_minor)}",
+                )
+            )
+
+        return rows
+
     def tax_rows(self) -> list[SheetRow]:
         """Subtotal and VAT, when VAT is charged."""
 
@@ -118,9 +153,26 @@ class BillingDocumentPage:
 
         if paid_at is not None and self.invoice.status is InvoiceStatus.PAID:
             rows.append(SheetRow(self.say(texts.PAYMENT_DATE), self.day(paid_at)))
-            rows.append(SheetRow(self.say(texts.PAYMENT_METHOD), self.card()))
+            rows.append(SheetRow(self.say(texts.PAYMENT_METHOD), self.method()))
 
         return rows
+
+    def method(self) -> str:
+        """The card, the bank transfer or cash recorded by hand, or credit."""
+
+        manual = self.invoice.manual_payment
+        if manual is not None:
+            text: LocalizedText = (
+                texts.PAID_BY_BANK_TRANSFER
+                if manual.method is ManualPaymentMethod.BANK_TRANSFER
+                else texts.PAID_IN_CASH
+            )
+            return self.say(text, reference=str(manual.reference))
+
+        if int(self.invoice.amount_minor) == 0 and self.invoice.payment_card is None:
+            return self.say(texts.PAID_BY_CREDIT)
+
+        return self.card()
 
     def card(self) -> str:
         card: PaymentCardSnapshot | None = self.invoice.payment_card

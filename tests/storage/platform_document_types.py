@@ -9,6 +9,7 @@ from base_pydantic_schemas import PersistentDocument
 from app.schemas.domain import help_progress, platform_status
 from app.schemas.domain.billing_profiles import InvoiceCounterDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.client_health_changes import AdminDigestStateDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import LlmTurnDocument
 from app.schemas.domain.exchange_rates import ExchangeRateDocument
@@ -40,6 +41,7 @@ from app.schemas.domain.web_vitals import WebVitalSampleDocument
 PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
     {
         UserDocument,
+        AdminDigestStateDocument,
         OtpChallengeDocument,
         UserSessionDocument,
         BusinessDocument,

@@ -65,6 +65,12 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       session_revoked: "მოწყობილობიდან გასვლა",
       platform_admin_changed: "შეიცვალა ადმინისტრატორების გუნდი",
       spend_limit_reached: "ხარჯების დღიური ლიმიტი ამოიწურა",
+      admin_trial_extended: "პლატფორმამ საცდელი პერიოდი გააგრძელა",
+      admin_discount_given: "პლატფორმამ ფასდაკლება მისცა",
+      admin_credit_granted: "პლატფორმამ კრედიტი დაარიცხა",
+      admin_setup_fee_waived: "პლატფორმამ დაყენების საფასური გააუქმა",
+      admin_invoice_marked_paid: "პლატფორმამ ინვოისი გადახდილად მონიშნა",
+      admin_plan_overridden: "პლატფორმამ ტარიფი შეცვალა",
     },
     entities: {
       contact: "მომხმარებელი",
@@ -134,6 +140,10 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       customer_segment: "კლიენტების სეგმენტი",
       customer_settings: "კლიენტების პარამეტრები",
       spend_limits: "ხარჯების დღიური ლიმიტები",
+      subscription: "გამოწერა",
+      invoice: "ინვოისი",
+      billing_credit: "ანგარიშის კრედიტი",
+      onboarding_request: "დაყენებაში დახმარების მოთხოვნა",
     },
   },
   roles: {

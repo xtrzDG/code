@@ -7,6 +7,7 @@
   "entity_id": "Sample AuditEntityReference",
   "id": "audit_log_entry_54bed3fb-af95-47ae-bc26-d498c3c62e00",
   "ip_address": "203.0.113.7",
+  "reason": "Slow onboarding: menu photos arrive next week",
   "record_count": 1,
   "schema_version": "5",
   "updated_at": 1790000000000000

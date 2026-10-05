@@ -45,3 +45,6 @@ class OnboardingRequestRepository(
 
     def open_once(self, request: OnboardingRequestDocument) -> bool:
         return bool(self._collection.insert_if_absent(str(request.id), request))
+
+    def save(self, request: OnboardingRequestDocument) -> None:
+        self._store(str(request.id), request)

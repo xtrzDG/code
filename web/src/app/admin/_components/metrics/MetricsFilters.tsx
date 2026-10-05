@@ -139,7 +139,7 @@ export function MetricsFilters({
             size="sm"
             onClick={() => {
               setCustom(false);
-              setFilters(EMPTY_METRICS_FILTERS);
+              setFilters({ ...EMPTY_METRICS_FILTERS, include_admins: filters.include_admins });
             }}
           >
             {t("adminMetrics.filters.clear")}

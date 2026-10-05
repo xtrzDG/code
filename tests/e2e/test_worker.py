@@ -26,6 +26,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     CHECK_CHANNEL_CREDENTIALS_JOB,
 )
+from app.gateways.worker.periodic.critical_clients_digest import (
+    CRITICAL_CLIENTS_DIGEST_JOB,
+)
 from app.gateways.worker.periodic.end_expired_support_access import (
     END_EXPIRED_SUPPORT_ACCESS_JOB,
 )
@@ -131,6 +134,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_ACTIVATION_NUDGES_JOB, 3_600),
         (PLATFORM_ALERTS_JOB, 300),
         (CHECK_CHANNEL_CREDENTIALS_JOB, 3_600),
+        (CRITICAL_CLIENTS_DIGEST_JOB, 86_400),
         (RECORD_PLATFORM_STATUS_JOB, 300),
         (END_EXPIRED_SUPPORT_ACCESS_JOB, 600),
         (PURGE_BUSINESS_EXPORTS_JOB, 3600),
@@ -158,7 +162,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         SUMMARIZE_CONVERSATION_JOB,
         ERASE_PROCESSOR_COPIES_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (28, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (29, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the admin

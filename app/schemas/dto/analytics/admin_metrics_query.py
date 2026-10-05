@@ -1,6 +1,7 @@
 from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.niches import NicheKey
+from app.schemas.typings.analytics.booleans import IsPlatformAdminIncluded
 from app.schemas.typings.analytics.constrained_strings import (
     AcquisitionSourceKey,
     MetricsDate,
@@ -14,7 +15,8 @@ class AdminMetricsQuery(ImmutableDTO):
     The founder's growth metrics (GET /v1/admin/metrics): sign-up days from
     `period_start` to `period_end` (UTC, both included; the last 90 days
     when left out), optionally only owners of one country, niche or
-    acquisition source.
+    acquisition source. Owners who are platform admins and their
+    businesses count only with `include_platform_admins`.
     """
 
     user_id: UserId
@@ -23,3 +25,4 @@ class AdminMetricsQuery(ImmutableDTO):
     country_code: CountryCode | None = None
     niche_key: NicheKey | None = None
     source: AcquisitionSourceKey | None = None
+    include_platform_admins: IsPlatformAdminIncluded = False

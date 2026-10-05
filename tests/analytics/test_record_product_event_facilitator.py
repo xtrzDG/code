@@ -21,6 +21,7 @@ from app.schemas.domain.product_events import (
 from app.schemas.dto.analytics.product_event_drafts import ProductEventDraft
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.analytics.analytics_fakes import SettableClock, product_event_repo
 
@@ -36,6 +37,11 @@ class BrokenRepository(ProductEventRepoContract):
         names: Sequence[ProductEventName],
         occurred_from: Microseconds | None,
         occurred_before: Microseconds,
+    ) -> list[ProductEventDocument]:
+        return []
+
+    def list_by_business(
+        self, business_id: BusinessId, limit: DocumentQueryLimit
     ) -> list[ProductEventDocument]:
         return []
 

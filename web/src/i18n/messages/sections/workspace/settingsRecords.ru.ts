@@ -80,6 +80,12 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       session_revoked: "Выход на устройстве",
       platform_admin_changed: "Изменена команда админов",
       spend_limit_reached: "Достигнут дневной лимит расходов",
+      admin_trial_extended: "Платформа продлила пробный период",
+      admin_discount_given: "Платформа дала скидку",
+      admin_credit_granted: "Платформа начислила кредит",
+      admin_setup_fee_waived: "Платформа отменила плату за настройку",
+      admin_invoice_marked_paid: "Платформа отметила счёт оплаченным",
+      admin_plan_overridden: "Платформа сменила тариф",
     },
     entities: {
       contact: "Клиент",
@@ -149,6 +155,10 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       customer_segment: "Сегмент клиентов",
       customer_settings: "Настройки клиентов",
       spend_limits: "Дневные лимиты расходов",
+      subscription: "Подписка",
+      invoice: "Счёт",
+      billing_credit: "Кредит на счёт",
+      onboarding_request: "Заявка на помощь с настройкой",
     },
   },
   roles: {

@@ -15,8 +15,12 @@ from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.dto.analytics.web_vital_counts import WebVitalBucketCount
 from app.schemas.typings.analytics.constrained_integers import WebVitalValue
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
-from app.schemas.typings.storage.constrained_integers import DocumentCount
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 
 
 class ProductEventRepoContract(RepoContract, Protocol):
@@ -38,6 +42,15 @@ class ProductEventRepoContract(RepoContract, Protocol):
         The events of these names that happened from `occurred_from` (from
         the beginning when None) until before `occurred_before`, oldest
         first (indexed by name and time).
+        """
+        raise NotImplementedError
+
+    def list_by_business(
+        self, business_id: BusinessId, limit: DocumentQueryLimit
+    ) -> list[ProductEventDocument]:
+        """
+        The business's events (its owner's steps with it: a few dozen in its
+        life), at most `limit`, in write order (the business index).
         """
         raise NotImplementedError
 

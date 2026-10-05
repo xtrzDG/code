@@ -12,6 +12,7 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import (
     BillingNoticeKind,
+    InvoiceStatus,
     SubscriptionStatus,
 )
 from app.schemas.constants.businesses import BusinessStatus, ServiceMode
@@ -211,6 +212,13 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
                 period_start=find_next_period_start(subscription, invoices),
             )
         )
+        if all(invoice.status is InvoiceStatus.PAID for invoice in issued):
+            # The team's discount or credit paid the period: no grace, no notice.
+            advance_to_paid_periods(subscription, invoices + issued, now)
+            subscription.updated_at = now
+            self._subscription_repo.save(subscription)
+            return True
+
         self._start_grace(business, subscription, now)
         self._notify(
             business,

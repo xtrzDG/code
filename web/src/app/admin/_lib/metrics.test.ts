@@ -14,6 +14,7 @@ import {
   presetOf,
   presetRange,
   shiftDay,
+  withPlatformAdmins,
 } from "./metrics";
 
 const TODAY = "2026-10-15";
@@ -24,9 +25,18 @@ describe("metrics filters", () => {
       new URLSearchParams("from=2026-09-01&to=2026-13-01&country=GE&niche=beauty_salon&source=Instagram&x=1"),
     );
 
-    expect(filters).toEqual({ from: "2026-09-01", to: "", country: "GE", niche: "beauty_salon", source: "" });
+    expect(filters).toEqual({ from: "2026-09-01", to: "", country: "GE", niche: "beauty_salon", source: "", include_admins: "" });
     expect(hasMetricsFilters(filters)).toBe(true);
     expect(hasMetricsFilters(EMPTY_METRICS_FILTERS)).toBe(false);
+  });
+
+  it("count platform admins in only when asked, without that being a narrowing filter", () => {
+    const included = withPlatformAdmins(EMPTY_METRICS_FILTERS, true);
+    expect(metricsSearch(included)).toBe("include_admins=true");
+    expect(parseMetricsFilters(new URLSearchParams("include_admins=true")).include_admins).toBe("true");
+    expect(parseMetricsFilters(new URLSearchParams("include_admins=yes")).include_admins).toBe("");
+    expect(hasMetricsFilters(included)).toBe(false);
+    expect(withPlatformAdmins(included, false)).toEqual(EMPTY_METRICS_FILTERS);
   });
 
   it("go back into the address in a fixed order, the empty ones left out", () => {

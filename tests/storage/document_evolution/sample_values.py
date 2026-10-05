@@ -10,6 +10,7 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AcquisitionSourceTag": "qr-tables",
+    "AdminActionReason": "Slow onboarding: menu photos arrive next week",
     "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",
     "AutotestCaseQuestion": "Do you have a vegetarian menu?",
     "AutotestExpectedText": "vegetarian",
@@ -79,6 +80,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     ),
     "SignupSourceTag": "qr",
     "SupportAccessReason": "Owner asked why bookings stopped",
+    "ManualPaymentReference": "TBC 2026-10-04 #88213",
+    "ClientNoteText": "Owner prefers WhatsApp; call after 18:00",
     "SuppressionDigest": "0123456789abcdef" * 4,
     "ExportDownloadTokenHash": "ab" * 32,
     "TimezoneName": "Asia/Tbilisi",

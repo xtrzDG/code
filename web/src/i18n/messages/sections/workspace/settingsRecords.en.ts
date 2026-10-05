@@ -63,6 +63,12 @@ export const settingsRecordsEn = {
       session_revoked: "Signed out a device",
       platform_admin_changed: "Admin team changed",
       spend_limit_reached: "Daily spend limit reached",
+      admin_trial_extended: "Trial extended by the platform",
+      admin_discount_given: "Discount given by the platform",
+      admin_credit_granted: "Credit granted by the platform",
+      admin_setup_fee_waived: "Setup fee waived by the platform",
+      admin_invoice_marked_paid: "Invoice marked paid by the platform",
+      admin_plan_overridden: "Plan changed by the platform",
     },
     entities: {
       contact: "Customer",
@@ -132,6 +138,10 @@ export const settingsRecordsEn = {
       customer_segment: "Customer segment",
       customer_settings: "Customer settings",
       spend_limits: "Daily spend limits",
+      subscription: "Subscription",
+      invoice: "Invoice",
+      billing_credit: "Billing credit",
+      onboarding_request: "Setup help request",
     },
   },
   roles: {

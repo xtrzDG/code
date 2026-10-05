@@ -9,6 +9,15 @@ class AccountCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class BusinessCount(BaseConstrainedTypedInt):
+    """
+    Businesses at a step of the business funnel or the tunnel (each
+    business counted once, a second business of the same owner too).
+    """
+
+    ge = 0
+
+
 class MonthlyRecurringAmountMinor(BaseConstrainedTypedInt):
     """
     What a subscription brings in a month, in minor units of its currency:

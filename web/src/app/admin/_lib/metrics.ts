@@ -1,7 +1,7 @@
 /**
  * The founder's Metrics page (GET /v1/admin/metrics) as data: its filters
- * in the address (`?from=&to=&country=&niche=&source=`, so a view can be
- * shared and survives a reload), the period presets, and the small pieces
+ * in the address (`?from=&to=&country=&niche=&source=&include_admins=`, so
+ * a view can be shared and survives a reload), the period presets, and the small pieces
  * of arithmetic the charts need. Pure functions; the screen lives in
  * _components/metrics/.
  */
@@ -17,18 +17,26 @@ export type MarginView = Schema<"MarginView">;
 export type CohortRowView = Schema<"CohortRowView">;
 export type SourceRowView = Schema<"SourceRowView">;
 export type WebVitalView = Schema<"WebVitalView">;
+export type BusinessGrowthView = Schema<"BusinessGrowthView">;
+export type BusinessFunnelStepView = Schema<"BusinessFunnelStepView">;
+export type BusinessTunnelStepView = Schema<"BusinessTunnelStepView">;
 export type MrrMovementKind = MrrMovementView["kind"];
 
-/** Unset filters are empty strings; the API's default period is the last 90 days. */
+/**
+ * Unset filters are empty strings; the API's default period is the last 90
+ * days. `include_admins` is "true" when platform admins' own sign-ups and
+ * businesses are counted (left out by default).
+ */
 export interface MetricsFilters {
   from: string;
   to: string;
   country: string;
   niche: string;
   source: string;
+  include_admins: string;
 }
 
-export const EMPTY_METRICS_FILTERS: MetricsFilters = { from: "", to: "", country: "", niche: "", source: "" };
+export const EMPTY_METRICS_FILTERS: MetricsFilters = { from: "", to: "", country: "", niche: "", source: "", include_admins: "" };
 
 export const PERIOD_PRESETS = ["last30", "last90", "last180", "last365"] as const;
 export type PeriodPreset = (typeof PERIOD_PRESETS)[number] | "custom";
@@ -43,6 +51,7 @@ const RULES: Record<keyof MetricsFilters, RegExp> = {
   country: /^[A-Z]{2}$/,
   niche: /^[a-z][a-z_]*$/,
   source: /^[a-z0-9][a-z0-9._:-]{0,119}$/,
+  include_admins: /^true$/,
 };
 const FILTER_KEYS = Object.keys(RULES) as (keyof MetricsFilters)[];
 
@@ -65,8 +74,14 @@ export function metricsSearch(filters: MetricsFilters): string {
   return new URLSearchParams(metricsQuery(filters)).toString();
 }
 
+/** Whether the filters narrow the numbers (counting platform admins in is not a narrowing). */
 export function hasMetricsFilters(filters: MetricsFilters): boolean {
-  return FILTER_KEYS.some((key) => filters[key] !== "");
+  return FILTER_KEYS.some((key) => key !== "include_admins" && filters[key] !== "");
+}
+
+/** The same filters with platform admins counted in or left out. */
+export function withPlatformAdmins(filters: MetricsFilters, isIncluded: boolean): MetricsFilters {
+  return { ...filters, include_admins: isIncluded ? "true" : "" };
 }
 
 /** A UTC calendar day as YYYY-MM-DD. */

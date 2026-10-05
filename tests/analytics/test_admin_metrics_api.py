@@ -146,3 +146,22 @@ def test_an_attribution_with_unknown_fields_is_refused(workshop: Workshop) -> No
     )
 
     assert verified.status_code == 422, verified.text
+
+
+def test_the_founder_includes_platform_admins_on_request(workshop: Workshop) -> None:
+    headers = admin_headers(workshop)
+
+    left_out = workshop.client.get("/v1/admin/metrics", headers=headers)
+    included = workshop.client.get(
+        "/v1/admin/metrics", params={"include_admins": "true"}, headers=headers
+    )
+    broken = workshop.client.get(
+        "/v1/admin/metrics", params={"include_admins": "maybe"}, headers=headers
+    )
+
+    assert left_out.status_code == 200, left_out.text
+    assert left_out.json()["growth"]["are_platform_admins_included"] is False
+    assert included.status_code == 200, included.text
+    assert included.json()["growth"]["are_platform_admins_included"] is True
+    assert included.json()["growth"]["excluded_platform_admins"] == 0
+    assert broken.status_code == 422

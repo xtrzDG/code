@@ -15,12 +15,16 @@ ROLE_PERMISSIONS: Mapping[PlatformAdminRole, frozenset[PlatformAdminPermission]]
             PlatformAdminPermission.VIEW_OPERATIONS,
         }
     ),
-    # Money: the client list (with invoices and payments) and the growth
-    # metrics; never a client's conversations.
+    # Money: the client list (with invoices and payments), the account
+    # actions (trial, discount, credit, setup fee, payments recorded by
+    # hand, plan), notes about clients and the growth metrics; never a
+    # client's conversations.
     PlatformAdminRole.BILLING: frozenset(
         {
             PlatformAdminPermission.VIEW_CLIENTS,
             PlatformAdminPermission.VIEW_METRICS,
+            PlatformAdminPermission.MANAGE_CLIENT_BILLING,
+            PlatformAdminPermission.WRITE_CLIENT_NOTES,
         }
     ),
 }

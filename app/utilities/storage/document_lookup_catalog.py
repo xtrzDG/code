@@ -17,6 +17,7 @@ from collections.abc import Mapping
 
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
 from app.utilities.storage.lookup_field_builders import (
     element_field,
     filter_field,
@@ -267,6 +268,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **QUALITY_LOOKUP_FIELDS,
     # The spend guard's marks of a day (1142).
     **SPEND_GUARD_LOOKUP_FIELDS,
+    **CLIENT_CARE_LOOKUP_FIELDS,
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

@@ -64,3 +64,61 @@ class CabinetSection(StrEnum):
     CHANNELS = "channels"
     BILLING = "billing"
     SETTINGS = "settings"
+
+
+class ClientTimelineKind(StrEnum):
+    """
+    What a line of a client's story on the admin client page is about:
+    the platform team's ADMIN_ACTIONs on the account, SUPPORT looks into
+    the cabinet, CHANGES the client's team made (from the audit log),
+    BILLING (invoices, payments, credit, subscription steps), HEALTH
+    changes, the setup's MILESTONES and the ONBOARDING request.
+    """
+
+    ADMIN_ACTION = "admin_action"
+    SUPPORT = "support"
+    CHANGE = "change"
+    BILLING = "billing"
+    HEALTH = "health"
+    MILESTONE = "milestone"
+    ONBOARDING = "onboarding"
+
+
+class ClientTimelineEvent(StrEnum):
+    """
+    One line of a client's story, a code the admin pages word in their
+    language. AUDIT_ENTRY is any other audit log entry (its action and
+    entity say what); the rest name the step itself.
+    """
+
+    AUDIT_ENTRY = "audit_entry"
+    INVOICE_ISSUED = "invoice_issued"
+    INVOICE_PAID = "invoice_paid"
+    INVOICE_FAILED = "invoice_failed"
+    CREDIT_USED = "credit_used"
+    TRIAL_STARTED = "trial_started"
+    SUBSCRIBED = "subscribed"
+    PLAN_CHANGED = "plan_changed"
+    CANCELLED = "cancelled"
+    PAYMENT_FAILED = "payment_failed"
+    HEALTH_CHANGED = "health_changed"
+    BUSINESS_CREATED = "business_created"
+    LAUNCH_SUCCEEDED = "launch_succeeded"
+    LAUNCH_BLOCKED = "launch_blocked"
+    DPA_ACCEPTED = "dpa_accepted"
+    CHANNEL_CONNECTED = "channel_connected"
+    TEST_CHAT_TRIED = "test_chat_tried"
+    WENT_LIVE = "went_live"
+    FIRST_REAL_CONVERSATION = "first_real_conversation"
+    FIRST_BOOKING = "first_booking"
+    FIRST_HANDOFF = "first_handoff"
+    ONBOARDING_REQUESTED = "onboarding_requested"
+
+
+class AdminDigestKind(StrEnum):
+    """
+    A digest the platform team gets through the platform bot: once a day,
+    the CRITICAL_CLIENTS that newly turned critical since the last one.
+    """
+
+    CRITICAL_CLIENTS = "critical_clients"

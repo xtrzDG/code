@@ -17,7 +17,7 @@ from app.use_cases.billing.payment_webhook.payment_invoice_settlement import (
 from app.use_cases.billing.payment_webhook.payment_order_rules import (
     build_order_reference,
 )
-from app.use_cases.billing.payment_webhook.subscription_payment_transitions import (
+from app.use_cases.shared.subscription_payment_transitions import (
     resume_cancelled_subscription,
 )
 
