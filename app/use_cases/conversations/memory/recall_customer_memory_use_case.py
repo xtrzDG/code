@@ -1,4 +1,3 @@
-
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,

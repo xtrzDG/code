@@ -121,9 +121,11 @@ def test_an_owner_test_chat_never_lists_real_bookings() -> None:
 
     world.send("What time is my booking?", user_id="owner-test", is_sandbox=True)
 
-    sandbox = [
-        conversation for conversation in world.conversations() if conversation.is_sandbox
-    ][0]
+    sandbox = next(
+        conversation
+        for conversation in world.conversations()
+        if conversation.is_sandbox
+    )
     reply = world.messages(sandbox.id)[-1]
     result = json.loads(str(reply.tool_calls[0].result_json))
     assert result["bookings"] == []

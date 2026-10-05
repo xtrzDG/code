@@ -201,7 +201,7 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
     AssistantToolName.LIST_MY_BOOKINGS: (
         "List the customer's own bookings that are still to come (date, time, "
         "what is booked, guests, status), when they ask about their booking "
-        "(\"what time is my booking?\") or before you move or cancel one. "
+        '("what time is my booking?") or before you move or cancel one. '
         "Only bookings made in this conversation or under the number the "
         "customer writes or calls from are listed; an empty list means none "
         "were found that way.",
