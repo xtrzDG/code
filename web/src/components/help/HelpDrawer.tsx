@@ -10,7 +10,7 @@ import { helpArticlePath } from "@/lib/help/helpTopics";
 import { businessLocation } from "@/lib/navigation";
 
 import { HelpMarkdown } from "./HelpMarkdown";
-import { SupportContacts } from "./SupportContacts";
+import { StatusPageLink, SupportContacts, useStillStuck } from "./SupportContacts";
 import { useHelpArticle, type HelpArticle } from "./useHelp";
 
 /** One article over the page: its text, what to read next, and how to reach support. */
@@ -67,6 +67,7 @@ export function HelpDrawer({
 
 function ArticleBody({ article, onOpen, onClose }: { article: HelpArticle; onOpen: (slug: string) => void; onClose: () => void }) {
   const { t, locale } = useI18n();
+  const stuck = useStillStuck();
   const businessId = businessLocation(usePathname())?.businessId ?? null;
   return (
     <div className="space-y-6">
@@ -106,8 +107,8 @@ function ArticleBody({ article, onOpen, onClose }: { article: HelpArticle; onOpe
         <h3 id="help-stuck" className="text-sm font-semibold text-ink">
           {t("helpCenter.stillStuck")}
         </h3>
-        <p className="text-sm text-ink-muted">{t("helpCenter.stillStuckLead")}</p>
-        <SupportContacts variant="buttons" />
+        {stuck.lead ? <p className="text-sm text-ink-muted">{t(stuck.lead)}</p> : null}
+        {stuck.hasContacts ? <SupportContacts variant="buttons" /> : stuck.lead ? <StatusPageLink onNavigate={onClose} /> : null}
       </section>
     </div>
   );

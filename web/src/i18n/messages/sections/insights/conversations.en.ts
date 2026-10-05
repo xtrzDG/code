@@ -71,7 +71,7 @@ export const conversationsEn = {
     confirmationPrefilled: "The confirmation is in the reply box: check it and send.",
     template: {
       intro: "More than 24 hours have passed since the customer's last message, so WhatsApp only takes approved templates now. You can still write: the message goes out in your business's template.",
-      hint: "Goes to the customer in WhatsApp as the approved template “{name}” ({language}); your text fills its message. Line breaks are sent as spaces. The assistant does not answer it.",
+      hint: "Goes to the customer in WhatsApp as your approved template (language: {language}); your text fills its message. Line breaks are sent as spaces. The assistant does not answer it.",
       send: "Send as template",
       sent: "Sending to WhatsApp as a template: the delivery shows under the message",
       rejectedOwner: "WhatsApp did not accept the template “{name}”: check on the Channels page that its name and language are exactly as approved in WhatsApp Manager and that its text has one {{1}} variable. Trying again will not help until then.",

@@ -5,7 +5,7 @@ import type { helpCenterEn } from "./helpCenter.en";
 
 export const helpCenterKa: Translation<typeof helpCenterEn> = {
   title: "დახმარება",
-  description: "მოკლე ინსტრუქციები კაბინეტის ყველა ნაწილისთვის. პასუხი ვერ იპოვეთ? მოგვწერეთ.",
+  description: "მოკლე ინსტრუქციები კაბინეტის ყველა ნაწილისთვის.",
   searchLabel: "დახმარებაში ძიება",
   searchPlaceholder: "Telegram, ჯავშანი, ინვოისი…",
   search: "ძიება",
@@ -14,7 +14,7 @@ export const helpCenterKa: Translation<typeof helpCenterEn> = {
     one: "ნაპოვნია {count} სტატია",
     other: "ნაპოვნია {count} სტატია",
   },
-  noResults: "„{query}“ — ვერაფერი მოიძებნა. სცადეთ სხვა სიტყვა ან მოგვწერეთ.",
+  noResults: "„{query}“ — ვერაფერი მოიძებნა. სცადეთ სხვა სიტყვა.",
   topics: {
     getting_started: "დაწყება",
     channels: "არხები",
@@ -31,6 +31,7 @@ export const helpCenterKa: Translation<typeof helpCenterEn> = {
   back: "უკან",
   stillStuck: "კიდევ გაქვთ კითხვა?",
   stillStuckLead: "მოგვწერეთ: გიპასუხებთ გუნდის წევრი.",
+  noSupportLead: "შეამოწმეთ პლატფორმის მდგომარეობის გვერდი: თუ რამე ყველასთვის არ მუშაობს, გუნდი ამაზე უკვე მუშაობს.",
   tipsAgain: "მინიშნებების ხელახლა ჩვენება",
   tipsShown: "მინიშნებები ისევ გამოჩნდება გვერდებზე „შემოსული“, „ასისტენტი“ და „არხები“.",
   opensInNewTab: "გაიხსნება ახალ ჩანართში",

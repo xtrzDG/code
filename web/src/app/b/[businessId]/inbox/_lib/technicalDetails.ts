@@ -1,18 +1,14 @@
 /**
- * Whether "Technical details" under a message start open. Platform admins
- * see them open on a wide screen (lg and up), where they sit beside the
- * transcript; below that the raw requests would push the conversation
- * away, so they start closed. Whoever opens or closes them, the choice is
- * remembered per person in this browser and wins from then on.
+ * Whether "Technical details" under a message start open: closed for
+ * everyone (platform admins too), so raw requests never push the
+ * conversation away; a person who opens or closes them has the choice
+ * remembered in this browser, and it wins from then on.
  *
  * Storage can be missing or refuse (private windows): every access is
  * wrapped, and nothing remembered means the default.
  */
 
 export const TECHNICAL_DETAILS_PREFIX = "aw.technicalDetails:";
-
-/** Tailwind's lg: from here the details may start open. */
-export const TECHNICAL_DETAILS_WIDE_QUERY = "(min-width: 64rem)";
 
 export type DetailsChoice = "open" | "closed";
 
@@ -35,8 +31,8 @@ export function writeDetailsChoice(storage: ChoiceStorage | null, userId: string
   }
 }
 
-export function startsOpen(choice: DetailsChoice | null, isPlatformAdmin: boolean, isWide: boolean): boolean {
-  return choice === null ? isPlatformAdmin && isWide : choice === "open";
+export function startsOpen(choice: DetailsChoice | null): boolean {
+  return choice === "open";
 }
 
 export function localChoiceStorage(): ChoiceStorage | null {

@@ -79,7 +79,7 @@ describe("channel state", () => {
   it("shows bot usernames with @", () => {
     expect(accountLabel("telegram", "cafe_bot")).toBe("@cafe_bot");
     expect(accountLabel("telegram", "@cafe_bot")).toBe("@cafe_bot");
-    expect(accountLabel("phone", "+995322000000")).toBe("+995322000000");
+    expect(accountLabel("phone", "+995322000000")).toBe("+995 32 200 00 00");
     expect(accountLabel("phone", null)).toBeNull();
   });
 });

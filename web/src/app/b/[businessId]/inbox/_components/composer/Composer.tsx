@@ -212,10 +212,8 @@ function ReplyForm({
       <div id={`${id}-hint`} className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-1 text-xs text-ink-subtle">
         <p className={cn("min-w-0", closesSoon && !template && "font-medium text-warning")}>
           {template
-            ? t("conversations.reply.template.hint", {
-                name: template.name,
-                language: templateLanguageName(template.language_code, locale),
-              })
+            ? // The language people know, not the template's key ("staff_reply") from WhatsApp Manager.
+              t("conversations.reply.template.hint", { language: templateLanguageName(template.language_code, locale) })
             : reply.is_available && reply.window_closes_at
               ? t("conversations.reply.windowOpenUntil", { channel, date: format.dateTime(reply.window_closes_at) })
               : reply.delivery === "stored_for_widget"

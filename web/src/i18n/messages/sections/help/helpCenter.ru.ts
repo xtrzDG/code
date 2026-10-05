@@ -5,7 +5,7 @@ import type { helpCenterEn } from "./helpCenter.en";
 
 export const helpCenterRu: Translation<typeof helpCenterEn> = {
   title: "Помощь",
-  description: "Короткие инструкции ко всем разделам кабинета. Не нашли ответ? Напишите нам.",
+  description: "Короткие инструкции ко всем разделам кабинета.",
   searchLabel: "Поиск по справке",
   searchPlaceholder: "Telegram, запись, счёт…",
   search: "Найти",
@@ -16,7 +16,7 @@ export const helpCenterRu: Translation<typeof helpCenterEn> = {
     many: "Найдено {count} статей",
     other: "Найдено {count} статьи",
   },
-  noResults: "По запросу «{query}» ничего не нашлось. Попробуйте другое слово или напишите нам.",
+  noResults: "По запросу «{query}» ничего не нашлось. Попробуйте другое слово.",
   topics: {
     getting_started: "С чего начать",
     channels: "Каналы",
@@ -33,6 +33,7 @@ export const helpCenterRu: Translation<typeof helpCenterEn> = {
   back: "Назад",
   stillStuck: "Остались вопросы?",
   stillStuckLead: "Напишите нам: ответит человек из команды.",
+  noSupportLead: "Загляните на страницу состояния платформы: если что-то не работает у всех, команда уже этим занимается.",
   tipsAgain: "Показать подсказки снова",
   tipsShown: "Подсказки снова появятся на страницах «Входящие», «Помощник» и «Каналы».",
   opensInNewTab: "откроется в новой вкладке",

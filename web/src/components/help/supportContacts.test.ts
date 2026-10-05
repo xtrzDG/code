@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { contactLinks } from "./SupportContacts";
+import { contactLinks, stillStuckLead } from "./SupportContacts";
 
 describe("contactLinks", () => {
   it("lists only the channels that are set, chats opening in a new tab", () => {
@@ -25,5 +25,17 @@ describe("contactLinks", () => {
 
   it("has nothing before the contacts are loaded", () => {
     expect(contactLinks(undefined)).toEqual([]);
+  });
+});
+
+describe("stillStuckLead", () => {
+  it("promises an answer only when support has a channel, else points at the status page", () => {
+    expect(stillStuckLead({ email: "help@example.com", email_url: "mailto:help@example.com" })).toBe("helpCenter.stillStuckLead");
+    expect(stillStuckLead({})).toBe("helpCenter.noSupportLead");
+    expect(stillStuckLead({ whatsapp_number: "+995555123456", whatsapp_url: null })).toBe("helpCenter.noSupportLead");
+  });
+
+  it("says nothing before the contacts are loaded", () => {
+    expect(stillStuckLead(undefined)).toBeNull();
   });
 });
