@@ -10,6 +10,7 @@ import {
   JUDGE_CRITERIA,
   scenarioAverage,
   scenarioNumber,
+  scenarioPlays,
   scoreTone,
   type AutotestOutcome,
   type AutotestScenarioResult,
@@ -34,13 +35,13 @@ const OUTCOMES: Record<AutotestOutcome, { tone: BadgeTone; label: MessageKey; ic
   errored: { tone: "warning", label: "assistant.autotests.outcomes.errored", icon: IconAlert },
 };
 
-
 /** One scenario of a run, folded: outcome and score; open, the judge's scores, notes and the transcript. */
 export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
   const { t, locale } = useI18n();
   const outcome = OUTCOMES[result.outcome];
   const average = scenarioAverage(result);
   const number = scenarioNumber(result.scenario_key);
+  const plays = scenarioPlays(result);
   const Icon = outcome.icon;
   const notes = [...result.check_notes, ...result.judge_notes];
 
@@ -58,6 +59,11 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
             <span className="block text-sm text-ink-subtle">
               {languageName(result.language, locale)}
               {average !== null ? ` · ${t("assistant.autotests.scoreValue", { score: formatScore(average, locale) })}` : ""}
+              {plays ? (
+                <span title={t("assistant.comparison.playsHint")} className={cn(plays.passed < plays.played && "text-danger")}>
+                  {` · ${t("assistant.comparison.plays", { passed: plays.passed, played: plays.played })}`}
+                </span>
+              ) : null}
             </span>
           </span>
           <Badge tone={outcome.tone}>{t(outcome.label)}</Badge>

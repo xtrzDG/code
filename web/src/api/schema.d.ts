@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/clients/{business_id}/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Client Quality Route */
+        get: operations["get_client_quality_route_v1_admin_clients__business_id__quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/incidents": {
         parameters: {
             query?: never;
@@ -1323,6 +1340,23 @@ export interface paths {
         post?: never;
         /** Delete Conversation Note */
         delete: operations["delete_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes__note_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Conversation Quality Route */
+        get: operations["get_conversation_quality_route_v1_businesses__business_id__conversations__conversation_id__quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4254,7 +4288,20 @@ export interface components {
          *     scenario could not be evaluated at all.
          * @enum {string}
          */
-        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "wrong_disclosure_language" | "expected_text_missing" | "forbidden_text_mentioned" | "no_lead_created" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
+        AutotestCheckCode: "no_booking_created" | "not_handed_off" | "unexpected_records" | "wrong_reply_language" | "wrong_disclosure_language" | "expected_text_missing" | "forbidden_text_mentioned" | "no_lead_created" | "price_not_named" | "unsupported_price" | "instructions_revealed" | "personal_data_revealed" | "unauthorized_action" | "tools_misused" | "conversation_failed" | "no_customer_message" | "judge_unavailable" | "judge_unreadable";
+        /**
+         * AutotestCriterionChangeView
+         * @description The average score of one judge criterion over the shared scenarios.
+         */
+        AutotestCriterionChangeView: {
+            /** Average Score */
+            average_score: number;
+            /** Baseline Average Score */
+            baseline_average_score: number;
+            /** Change */
+            change: number;
+            criterion: components["schemas"]["JudgeCriterion"];
+        };
         /**
          * AutotestExpectation
          * @description What an owner check demands of the assistant's answer to its question:
@@ -4269,6 +4316,52 @@ export interface components {
          * @enum {string}
          */
         AutotestOutcome: "passed" | "failed" | "errored";
+        /**
+         * AutotestOutcomeChangeView
+         * @description A scenario played by both runs whose outcome changed: a new failure
+         *     (passed on the live version, not now) or a fix (the other way round).
+         */
+        AutotestOutcomeChangeView: {
+            /** Autotest Case Id */
+            autotest_case_id?: string | null;
+            baseline_outcome: components["schemas"]["AutotestOutcome"];
+            /** Check Codes */
+            check_codes?: components["schemas"]["AutotestCheckCode"][];
+            kind: components["schemas"]["AutotestScenarioKind"];
+            /** Language */
+            language: string;
+            outcome: components["schemas"]["AutotestOutcome"];
+            /** Scenario Key */
+            scenario_key: string;
+        };
+        /**
+         * AutotestRunComparisonView
+         * @description This run against the live version's run. Only scenarios both runs
+         *     played (`shared_scenario_count`) are compared; scenarios new to this
+         *     run are in the run's own results.
+         */
+        AutotestRunComparisonView: {
+            /** Average Score Change */
+            average_score_change?: number | null;
+            /** Baseline Average Score */
+            baseline_average_score?: number | null;
+            /** Baseline Run Id */
+            baseline_run_id: string;
+            /** Baseline Version Id */
+            baseline_version_id: string;
+            /** Baseline Version Number */
+            baseline_version_number: number;
+            /** Criterion Changes */
+            criterion_changes: components["schemas"]["AutotestCriterionChangeView"][];
+            /** Fixed */
+            fixed: components["schemas"]["AutotestOutcomeChangeView"][];
+            /** New Failures */
+            new_failures: components["schemas"]["AutotestOutcomeChangeView"][];
+            /** Score Changes */
+            score_changes: components["schemas"]["AutotestScoreChangeView"][];
+            /** Shared Scenario Count */
+            shared_scenario_count: number;
+        };
         /**
          * AutotestRunStatus
          * @description Progress of an autotest run: the worker plays it in the background
@@ -4287,6 +4380,8 @@ export interface components {
          *     READY. While `status` is RUNNING the worker is still playing it:
          *     `scenario_count` is then the number of planned scenarios and `results`
          *     holds the ones finished so far (progress = results / scenario_count).
+         *     `comparison` sets a finished run against the run of the version that
+         *     was live when it started (None when nothing was live then).
          */
         AutotestRunView: {
             /** Assistant Version Id */
@@ -4295,6 +4390,7 @@ export interface components {
             average_score?: number | null;
             /** Business Id */
             business_id: string;
+            comparison?: components["schemas"]["AutotestRunComparisonView"] | null;
             /** Cost Micro Usd */
             cost_micro_usd: number;
             /** Created At */
@@ -4323,7 +4419,7 @@ export interface components {
          * @description Scripted test conversation run against every version (concept section 11).
          * @enum {string}
          */
-        AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check";
+        AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check" | "prompt_injection_spoof" | "data_exfiltration" | "staff_impersonation" | "tool_abuse";
         /**
          * AutotestScenarioResultView
          * @description Result of one autotest scenario.
@@ -4343,12 +4439,33 @@ export interface components {
             /** Language */
             language: string;
             outcome: components["schemas"]["AutotestOutcome"];
+            /** Passed Sample Count */
+            passed_sample_count?: number | null;
+            /** Sample Count */
+            sample_count?: number | null;
             /** Scenario Key */
             scenario_key: string;
             /** Scores */
             scores: components["schemas"]["JudgeCriterionScoreView"][];
             /** Transcript */
             transcript: components["schemas"]["AutotestTranscriptLineView"][];
+        };
+        /**
+         * AutotestScoreChangeView
+         * @description A scenario whose average judge score moved by half a point or more.
+         */
+        AutotestScoreChangeView: {
+            /** Average Score */
+            average_score: number;
+            /** Baseline Average Score */
+            baseline_average_score: number;
+            /** Change */
+            change: number;
+            kind: components["schemas"]["AutotestScenarioKind"];
+            /** Language */
+            language: string;
+            /** Scenario Key */
+            scenario_key: string;
         };
         /**
          * AutotestTranscriptLineView
@@ -5626,6 +5743,40 @@ export interface components {
             timezone: string;
         };
         /**
+         * ClientQualityView
+         * @description A client's production quality for the platform admin: the last 30 days
+         *     of the business's time zone, oldest first, the average of the last 7
+         *     days against the 7 before (`is_dropping` when it fell by more than
+         *     the QUALITY_DROP alert's threshold), and the lowest-scored
+         *     conversations of the 30 days. Scores only: no customer text.
+         */
+        ClientQualityView: {
+            /** Average Score */
+            average_score?: number | null;
+            /** Business Id */
+            business_id: string;
+            /** Days */
+            days: components["schemas"]["QualityDayView"][];
+            /**
+             * Drop Percent
+             * @default 0
+             */
+            drop_percent: number;
+            /**
+             * Is Dropping
+             * @default false
+             */
+            is_dropping: boolean;
+            /** Last Week Average */
+            last_week_average?: number | null;
+            /** Lowest */
+            lowest?: components["schemas"]["QualitySampleView"][];
+            /** Previous Week Average */
+            previous_week_average?: number | null;
+            /** Sample Count */
+            sample_count: number;
+        };
+        /**
          * ClientReplySpeed
          * @description Reply speed of a client in the last 7 days, over every channel and per
          *     channel (the busiest first). Percentiles are None without measured
@@ -6149,6 +6300,30 @@ export interface components {
             items?: components["schemas"]["ConversationSummaryView"][];
             /** Next Cursor */
             next_cursor?: string | null;
+        };
+        /**
+         * ConversationQualityScoreView
+         * @description The judge's score of a conversation, its notes in the owner's language.
+         */
+        ConversationQualityScoreView: {
+            /** Average Score */
+            average_score: number;
+            /** Judge Notes */
+            judge_notes?: string[];
+            /** Judged At */
+            judged_at: number;
+            /** Scores */
+            scores: components["schemas"]["JudgeCriterionScoreView"][];
+        };
+        /**
+         * ConversationQualityView
+         * @description A conversation's quality score on its card; `score` is None for the
+         *     conversations the nightly sample did not pick (most of them).
+         */
+        ConversationQualityView: {
+            /** Conversation Id */
+            conversation_id: string;
+            score?: components["schemas"]["ConversationQualityScoreView"] | null;
         };
         /**
          * ConversationRating
@@ -9694,9 +9869,11 @@ export interface components {
          *     far more conversations go to people than usual. TOOL_ERRORS: assistant
          *     tools fail. STALE_WORKER: a worker of the current release stopped
          *     beating. OTP_CAP_TRIPS: a platform cap refused login codes.
+         *     QUALITY_DROP: the judge's scores of real conversations fell against the
+         *     week before (production quality).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -9897,6 +10074,35 @@ export interface components {
             url?: string | null;
             /** User Id */
             user_id: string;
+        };
+        /**
+         * QualityDayView
+         * @description One day of a business's trend (its own time zone): samples, average.
+         */
+        QualityDayView: {
+            /** Average Score */
+            average_score?: number | null;
+            /** Day Start */
+            day_start: number;
+            /** Sample Count */
+            sample_count: number;
+        };
+        /**
+         * QualitySampleView
+         * @description One scored conversation in the admin's list (scores only, no text).
+         */
+        QualitySampleView: {
+            /** Average Score */
+            average_score: number;
+            channel: components["schemas"]["ChannelKind"];
+            /** Conversation Id */
+            conversation_id: string;
+            /** Judged At */
+            judged_at: number;
+            /** Language */
+            language?: string | null;
+            /** Scores */
+            scores: components["schemas"]["JudgeCriterionScoreView"][];
         };
         /**
          * QuestionAnswerType
@@ -12529,6 +12735,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClientCabinetAccess"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_client_quality_route_v1_admin_clients__business_id__quality_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientQualityView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -15362,7 +15655,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Kinds */
-                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check")[] | null;
+                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check" | "prompt_injection_spoof" | "data_exfiltration" | "staff_impersonation" | "tool_abuse")[] | null;
                     /** Languages */
                     languages?: string[] | null;
                     /**
@@ -15640,7 +15933,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Kinds */
-                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check")[] | null;
+                    kinds?: ("booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check" | "prompt_injection_spoof" | "data_exfiltration" | "staff_impersonation" | "tool_abuse")[] | null;
                     /** Languages */
                     languages?: string[] | null;
                 };
@@ -20889,6 +21182,94 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_conversation_quality_route_v1_businesses__business_id__conversations__conversation_id__quality_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationQualityView"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

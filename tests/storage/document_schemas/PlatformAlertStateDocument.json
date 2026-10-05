@@ -1,7 +1,7 @@
 {
   "collection": "platform_alert_states",
   "document_type": "PlatformAlertStateDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -17,7 +17,8 @@
           "handoff_spike",
           "tool_errors",
           "stale_worker",
-          "otp_cap_trips"
+          "otp_cap_trips",
+          "quality_drop"
         ],
         "type": "string"
       },
@@ -62,7 +63,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "status": {

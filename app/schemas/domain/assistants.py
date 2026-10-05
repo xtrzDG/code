@@ -23,6 +23,8 @@ from app.schemas.typings.assistants.constrained_floats import (
 )
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
+    AutotestPassedSampleCount,
+    AutotestSampleCount,
     AutotestScenarioCount,
     JudgeScore,
 )
@@ -166,6 +168,8 @@ class AutotestScenarioResult(PersistentDocument):
     )
     cost_micro_usd: CostMicroUsd = CostMicroUsd(0)
     autotest_case_id: AutotestCaseId | None = None
+    sample_count: AutotestSampleCount | None = None
+    passed_sample_count: AutotestPassedSampleCount | None = None
 
 
 class AutotestRunDocument(BaseDocument):
@@ -180,6 +184,9 @@ class AutotestRunDocument(BaseDocument):
     every version language and every applicable scenario kind, the only
     kind of run that can make a version READY. `previous_version_status`
     is the version's status before the run, restored when the run errors.
+    `compared_to_run_id` is the run of the version that was live when this
+    run started (None when nothing was live or this version is the live
+    one): the version page shows new failures and score changes against it.
     """
 
     # 2: `check_codes` on the scenario results (optional, no upcaster).
@@ -188,7 +195,10 @@ class AutotestRunDocument(BaseDocument):
     # 4: owner checks: the owner_check kind, its three check codes and the
     # `autotest_case_id` of their results (new values and an optional
     # field, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 5: pass^k (`sample_count`, `passed_sample_count` on the results), the
+    # four attack kinds, the price and attack check codes, and
+    # `compared_to_run_id` (new values and optional fields, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId
@@ -198,6 +208,7 @@ class AutotestRunDocument(BaseDocument):
     is_full_coverage: IsFullAutotestCoverage = False
     planned_scenario_count: AutotestScenarioCount | None = None
     previous_version_status: AssistantVersionStatus | None = None
+    compared_to_run_id: AutotestRunId | None = None
     results: list[AutotestScenarioResult] = Field(
         default_factory=list[AutotestScenarioResult]
     )

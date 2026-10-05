@@ -6,7 +6,7 @@ import re
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.conversations import LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
-from app.utilities.assembly.autotest_prompts import DONE_MARKER, JUDGE_SYSTEM_PROMPT
+from app.utilities.assembly.autotest_prompts import DONE_MARKER, JUDGE_PROMPT_OPENING
 from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer
 from app.utilities.llm_rehearsal.rehearsal_reading import (
     last_customer_text as read_customer_words,
@@ -16,10 +16,14 @@ from tests.e2e.model_script_texts import (
     ASSISTANT_TEXTS,
     BOOKING_WORDS,
     CUSTOMER_MESSAGES,
+    DEFAULT_PRICE_ITEM,
     GOAL_PATTERN,
     HANDOFF_WORDS,
     LANGUAGE_TAG_PATTERN,
+    PRICE_ITEM_GOAL_PATTERN,
+    PRICE_ITEM_MESSAGES,
     PRICE_WORDS,
+    QUOTED_ITEM_PATTERN,
     TRANSLITERATED_MESSAGES,
     TRANSLITERATION_MARKER,
     detect_language,
@@ -55,7 +59,7 @@ class WorkshopModelScript:
         self.booking_request: JsonObject = {}
 
     def __call__(self, request: LlmRequest) -> ScriptedLlmTurn:
-        if str(request.system_prompt) == JUDGE_SYSTEM_PROMPT:
+        if str(request.system_prompt).startswith(JUDGE_PROMPT_OPENING):
             self.judge_calls += 1
             return say(
                 json.dumps(
@@ -106,6 +110,12 @@ class WorkshopModelScript:
         if TRANSLITERATION_MARKER in prompt:
             return say(TRANSLITERATED_MESSAGES[language_match.group(1)])
 
+        item: re.Match[str] | None = PRICE_ITEM_GOAL_PATTERN.match(goal_match.group(1))
+        if item is not None and language_match.group(1) in PRICE_ITEM_MESSAGES:
+            return say(
+                PRICE_ITEM_MESSAGES[language_match.group(1)].format(item=item.group(1))
+            )
+
         return say(
             CUSTOMER_MESSAGES[language_match.group(1)][
                 read_customer_intent(goal_match.group(1))
@@ -139,7 +149,15 @@ class WorkshopModelScript:
             )
 
         if any(word in customer_text for word in PRICE_WORDS):
-            return self._call(AssistantToolName.GET_PRICE, {"item_name": "ხაჭაპური"})
+            quoted: re.Match[str] | None = QUOTED_ITEM_PATTERN.search(customer_text)
+            return self._call(
+                AssistantToolName.GET_PRICE,
+                {
+                    "item_name": DEFAULT_PRICE_ITEM
+                    if quoted is None
+                    else quoted.group(1)
+                },
+            )
 
         if known_answer is not None:
             return say(known_answer)

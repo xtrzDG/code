@@ -23,6 +23,7 @@ import { InvoicesCard } from "./client/InvoicesCard";
 import { OpenCabinetDialog } from "./client/OpenCabinetDialog";
 import { OverviewCard } from "./client/OverviewCard";
 import { PaymentsCard } from "./client/PaymentsCard";
+import { QualityCard } from "./client/QualityCard";
 import { ReplyGuardCard } from "./client/ReplyGuardCard";
 import { ReplySpeedCard } from "./client/ReplySpeedCard";
 import { HealthBadge, IssueChips } from "./ClientBits";
@@ -110,6 +111,7 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
 
             <ReplySpeedCard summary={summary} />
             <ReplyGuardCard summary={summary} />
+            <QualityCard businessId={businessId} timeZone={data.timezone} />
             <CostCard summary={summary} timeZone={data.timezone} />
             <FailedAutotestsCard tests={data.failed_autotests ?? []} />
 

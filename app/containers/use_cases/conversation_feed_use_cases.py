@@ -37,6 +37,7 @@ from app.schemas.dto.conversation_feed.conversation_views import (
 )
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
 from app.schemas.dto.media import MessageMediaQuery, StoredMediaFile
+from app.schemas.dto.quality import ConversationQualityQuery, ConversationQualityView
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.use_cases.conversations.answer_fixes.correct_answer_use_case import (
     CorrectAnswerUseCase,
@@ -68,6 +69,9 @@ from app.use_cases.conversations.resolve_test_chat_version_use_case import (
 )
 from app.use_cases.conversations.send_staff_message_use_case import (
     SendStaffMessageUseCase,
+)
+from app.use_cases.quality.get_conversation_quality_use_case import (
+    GetConversationQualityUseCase,
 )
 
 
@@ -119,6 +123,14 @@ class ConversationFeedUseCasesContainer(containers.DeclarativeContainer):
         resource_repo=repositories.resource_repo,
         channel_repo=repositories.channel_repo,
         outbound_message_repo=repositories.outbound_message_repo,
+    )
+    # The judge's score of the conversation (production quality), if sampled.
+    get_conversation_quality_use_case: Factory[
+        UseCaseContract[ConversationQualityQuery, ConversationQualityView]
+    ] = Factory(
+        GetConversationQualityUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        conversation_quality_repo=repositories.conversation_quality_repo,
     )
     list_conversation_messages_use_case: Factory[
         UseCaseContract[ConversationMessagesQuery, MessagePage]

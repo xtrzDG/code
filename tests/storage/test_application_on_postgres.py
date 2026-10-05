@@ -79,9 +79,10 @@ def test_published_assistant_books_a_table_with_everything_in_postgres(
     assert stored["resources"] == 1
     assert stored["assistant_versions"] == 1
     assert stored["autotest_runs"] == 1
-    # The real booking plus one sandbox booking per language from the
-    # autotests the worker played (ka, ru, en).
-    assert stored["bookings"] == 4
+    # The real booking plus two sandbox bookings per language from the
+    # autotests the worker played (ka, ru, en): pass^k plays each booking
+    # scenario twice.
+    assert stored["bookings"] == 7
     # The autotest run, the safety job of each widget message (they find
     # their message answered) and the staff notification of the booking.
     assert stored["queued_jobs"] == 4

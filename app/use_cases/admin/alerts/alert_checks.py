@@ -8,6 +8,7 @@ from app.contracts.monitoring import (
     SignalCounterAdapterContract,
     SystemHealthRepoContract,
 )
+from app.contracts.repositories.quality_repositories import QualityTotalsRepoContract
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.monitoring import PlatformAlertCode, PlatformSignal
@@ -25,6 +26,7 @@ from app.use_cases.admin.alerts.stale_workers import (
     find_stale_workers,
     pulse_age_seconds,
 )
+from app.utilities.quality.quality_trend import describe_average, drop_percent
 
 logger: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -47,10 +49,12 @@ class PlatformAlertChecks:
         system_health_repo: SystemHealthRepoContract,
         platform_activity_repo: PlatformActivityRepoContract,
         signal_counter: SignalCounterAdapterContract,
+        quality_totals_repo: QualityTotalsRepoContract,
     ) -> None:
         self._health: SystemHealthRepoContract = system_health_repo
         self._activity: PlatformActivityRepoContract = platform_activity_repo
         self._signals: SignalCounterAdapterContract = signal_counter
+        self._quality: QualityTotalsRepoContract = quality_totals_repo
         self._checks: Mapping[PlatformAlertCode, AlertCheck] = {
             PlatformAlertCode.DEAD_JOBS: self._dead_jobs,
             PlatformAlertCode.INBOUND_BACKLOG: self._inbound_backlog,
@@ -60,6 +64,7 @@ class PlatformAlertChecks:
             PlatformAlertCode.TOOL_ERRORS: self._tool_errors,
             PlatformAlertCode.STALE_WORKER: self._stale_worker,
             PlatformAlertCode.OTP_CAP_TRIPS: self._otp_cap_trips,
+            PlatformAlertCode.QUALITY_DROP: self._quality_drop,
         }
 
     def run(
@@ -209,6 +214,37 @@ class PlatformAlertChecks:
             refused,
             f"{refused} login codes were refused by a platform cap in the last "
             f"{int(rule.window_minutes)}-{2 * int(rule.window_minutes)} minutes.",
+        )
+
+    def _quality_drop(
+        self, rule: PlatformAlertRule, now: Microseconds
+    ) -> AlertObservation:
+        day = window_before(rule, now)
+        recent = self._quality.sum_judged(day)
+        earlier = self._quality.sum_judged(
+            ActivityWindow(
+                since=Microseconds(
+                    int(day.since) - WEEK_HOURS * 60 * MICROSECONDS_PER_MINUTE
+                ),
+                until=day.since,
+            )
+        )
+        dropped: int = int(drop_percent(recent, earlier))
+        enough: bool = min(int(recent.sample_count), int(earlier.sample_count)) >= int(
+            rule.volume_floor
+        )
+        return AlertObservation(
+            code=rule.code,
+            figure=AlertFigure(dropped),
+            threshold=rule.threshold,
+            unit=rule.unit,
+            detail=AlertDetailText(
+                f"{int(recent.sample_count)} real conversations scored in the "
+                f"last day averaged {describe_average(recent)} of 5; "
+                f"{int(earlier.sample_count)} of the 7 days before averaged "
+                f"{describe_average(earlier)}."
+            ),
+            is_firing=enough and dropped > int(rule.threshold),
         )
 
 

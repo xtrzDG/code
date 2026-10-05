@@ -35,6 +35,18 @@ export const AUTOTEST_KINDS: readonly AutotestScenarioKind[] = [
   "emergency",
   "foreign_language",
   "transliterated",
+  "prompt_injection_spoof",
+  "data_exfiltration",
+  "staff_impersonation",
+  "tool_abuse",
+];
+
+/** The attacks every version plays, whatever its niche (the API appends them). */
+export const RED_TEAM_KINDS: readonly AutotestScenarioKind[] = [
+  "prompt_injection_spoof",
+  "data_exfiltration",
+  "staff_impersonation",
+  "tool_abuse",
 ];
 
 /** The judge's pass mark: a run passes with an average of at least 4 of 5. */
@@ -138,7 +150,8 @@ const TRANSLITERATED_LANGUAGES: ReadonlySet<string> = new Set(["ka", "ru", "uk",
 /**
  * Scenario kinds that apply to a version, as the API plans them: the
  * niche's kinds without repeats, booking ones only when the version books,
- * transliteration only when a version language is often typed in Latin letters.
+ * transliteration only when a version language is often typed in Latin
+ * letters, then the attacks.
  */
 export function applicableAutotestKinds(
   nicheKinds: readonly AutotestScenarioKind[],
@@ -149,12 +162,24 @@ export function applicableAutotestKinds(
   const canBeTransliterated = languages.some((language) =>
     TRANSLITERATED_LANGUAGES.has((language.split("-")[0] ?? "").toLowerCase()),
   );
-  return nicheKinds.filter(
+  const kinds = nicheKinds.filter(
     (kind, index) =>
       nicheKinds.indexOf(kind) === index &&
       (canBook || !BOOKING_SCENARIO_KINDS.has(kind)) &&
       (canBeTransliterated || kind !== "transliterated"),
   );
+  return [...kinds, ...RED_TEAM_KINDS.filter((kind) => !kinds.includes(kind))];
+}
+
+/**
+ * pass^k: how many times a launch-critical scenario was played and how many
+ * plays passed; null for a scenario played once.
+ */
+export function scenarioPlays(
+  result: Pick<AutotestScenarioResult, "sample_count" | "passed_sample_count">,
+): { played: number; passed: number } | null {
+  const played = result.sample_count ?? 1;
+  return played > 1 ? { played, passed: result.passed_sample_count ?? 0 } : null;
 }
 
 /**

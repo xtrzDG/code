@@ -9,10 +9,13 @@ from app.schemas.dto.assistants.assistant_views import (
     AutotestScenarioResultView,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.assembly.autotest_scenarios import RED_TEAM_SCENARIO_KINDS
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 
-GEORGIAN_SCENARIO_COUNT: int = 3 * 9 + 2
+# The attacks every version plays once, in English, whatever its languages.
+RED_TEAM_SCENARIO_COUNT: int = len(RED_TEAM_SCENARIO_KINDS)
+GEORGIAN_SCENARIO_COUNT: int = 3 * 9 + 2 + RED_TEAM_SCENARIO_COUNT
 
 
 def start(

@@ -11,6 +11,41 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — trustworthy checks: pass^k, attacks, version comparison, production quality
+
+Spec: `705d0e6d7f63f2a1`
+
+- **Changed** `AutotestScenarioKind` gains the attack kinds
+  `prompt_injection_spoof`, `data_exfiltration`, `staff_impersonation` and
+  `tool_abuse` (planned for every niche) and `AutotestCheckCode` gains
+  `price_not_named`, `unsupported_price`, `instructions_revealed`,
+  `personal_data_revealed`, `unauthorized_action` and `tools_misused`.
+  Clients that map these enums must accept the new values.
+- **Changed** `AutotestScenarioResultView` adds optional `sample_count` and
+  `passed_sample_count`: a launch-critical scenario is played
+  `AUTOTEST_CRITICAL_SAMPLES` times (pass^k) and passes only when every play
+  passed; the result shown is the first play that did not pass, else the
+  last one.
+- **Changed** `AutotestRunView` adds optional `comparison`
+  (`AutotestRunComparisonView`): for a finished run of a version that was
+  not live when the run started, the live version's run
+  (`baseline_run_id`, `baseline_version_number`), the scenarios both runs
+  played, `new_failures` and `fixed` (scenario key, kind, language, both
+  outcomes, check codes), `score_changes` per scenario that moved by half
+  a point or more (worst first), `criterion_changes` with every judge
+  criterion's average over those scenarios in both runs, and the average
+  score of both runs.
+- **Added** `GET /v1/admin/clients/{business_id}/quality` (platform admins
+  who view clients): `ClientQualityView`, the judge's scores of the
+  client's real conversations from the nightly sample — 30 local days
+  (`days`: day start, count, average), the last 7 days against the 7
+  before (`drop_percent`, `is_dropping`), and the five lowest-scored
+  conversations (scores only, no text).
+- **Added** `GET /v1/businesses/{business_id}/conversations/{conversation_id}/quality`
+  (members): `ConversationQualityView`; `score` is null unless the nightly
+  sample judged the conversation, else its average, the five criteria,
+  the judge's notes in the owner's language and when it was judged.
+
 ## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
 
 Spec: `8868b933a62e22f4`

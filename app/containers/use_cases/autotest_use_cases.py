@@ -1,6 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -73,6 +74,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
     turn orchestrator, so it is wired with the orchestrators.
     """
 
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -90,6 +92,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         autotest_case_repo=repositories.autotest_case_repo,
         niche_template_registry=registries.niche_template_registry,
         language_registry=registries.language_registry,
+        critical_samples=config.app_settings.provided.quality.autotest_critical_samples,
     )
     start_autotest_run_use_case: Factory[
         UseCaseContract[RunAutotestsCommand, AutotestRunPlan]

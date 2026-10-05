@@ -110,4 +110,7 @@ def test_a_queued_autotest_run_finishes_inside_the_api() -> None:
     assert run["is_passed"] is True
     assert run["is_full_coverage"] is True
     assert run["version_status"] == "ready"
-    assert workshop.model.judge_calls == run["scenario_count"]
+    # pass^k: every play of a launch-critical scenario is judged.
+    assert workshop.model.judge_calls == sum(
+        result["sample_count"] or 1 for result in run["results"]
+    )

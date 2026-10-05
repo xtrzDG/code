@@ -60,6 +60,7 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       tool_errors: "Ошибки инструментов",
       stale_worker: "Обработчик замолчал",
       otp_cap_trips: "Достигнут лимит кодов входа",
+      quality_drop: "Качество разговоров снизилось",
     },
   },
   workers: {

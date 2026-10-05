@@ -2408,6 +2408,12 @@
           "expected_text_missing",
           "forbidden_text_mentioned",
           "no_lead_created",
+          "price_not_named",
+          "unsupported_price",
+          "instructions_revealed",
+          "personal_data_revealed",
+          "unauthorized_action",
+          "tools_misused",
           "conversation_failed",
           "no_customer_message",
           "judge_unavailable",
@@ -2415,6 +2421,41 @@
         ],
         "title": "AutotestCheckCode",
         "type": "string"
+      },
+      "AutotestCriterionChangeView": {
+        "additionalProperties": false,
+        "description": "The average score of one judge criterion over the shared scenarios.",
+        "properties": {
+          "average_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Average Score",
+            "type": "number"
+          },
+          "baseline_average_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Baseline Average Score",
+            "type": "number"
+          },
+          "change": {
+            "maximum": 4.0,
+            "minimum": -4.0,
+            "title": "Change",
+            "type": "number"
+          },
+          "criterion": {
+            "$ref": "#/components/schemas/JudgeCriterion"
+          }
+        },
+        "required": [
+          "criterion",
+          "average_score",
+          "baseline_average_score",
+          "change"
+        ],
+        "title": "AutotestCriterionChangeView",
+        "type": "object"
       },
       "AutotestExpectation": {
         "description": "What an owner check demands of the assistant's answer to its question:\nto contain its expected text, never to contain it, to pass the\nconversation to a person, or to create a request (lead).",
@@ -2437,6 +2478,152 @@
         "title": "AutotestOutcome",
         "type": "string"
       },
+      "AutotestOutcomeChangeView": {
+        "additionalProperties": false,
+        "description": "A scenario played by both runs whose outcome changed: a new failure\n(passed on the live version, not now) or a fix (the other way round).",
+        "properties": {
+          "autotest_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autotest Case Id"
+          },
+          "baseline_outcome": {
+            "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "check_codes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCheckCode"
+            },
+            "title": "Check Codes",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AutotestScenarioKind"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "scenario_key": {
+            "maxLength": 96,
+            "minLength": 3,
+            "pattern": "^[a-z][a-z0-9_\\-]*$",
+            "title": "Scenario Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_key",
+          "kind",
+          "language",
+          "outcome",
+          "baseline_outcome"
+        ],
+        "title": "AutotestOutcomeChangeView",
+        "type": "object"
+      },
+      "AutotestRunComparisonView": {
+        "additionalProperties": false,
+        "description": "This run against the live version's run. Only scenarios both runs\nplayed (`shared_scenario_count`) are compared; scenarios new to this\nrun are in the run's own results.",
+        "properties": {
+          "average_score_change": {
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": -4.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score Change"
+          },
+          "baseline_average_score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Average Score"
+          },
+          "baseline_run_id": {
+            "title": "Baseline Run Id",
+            "type": "string"
+          },
+          "baseline_version_id": {
+            "title": "Baseline Version Id",
+            "type": "string"
+          },
+          "baseline_version_number": {
+            "minimum": 1.0,
+            "title": "Baseline Version Number",
+            "type": "integer"
+          },
+          "criterion_changes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCriterionChangeView"
+            },
+            "title": "Criterion Changes",
+            "type": "array"
+          },
+          "fixed": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestOutcomeChangeView"
+            },
+            "title": "Fixed",
+            "type": "array"
+          },
+          "new_failures": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestOutcomeChangeView"
+            },
+            "title": "New Failures",
+            "type": "array"
+          },
+          "score_changes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestScoreChangeView"
+            },
+            "title": "Score Changes",
+            "type": "array"
+          },
+          "shared_scenario_count": {
+            "minimum": 0.0,
+            "title": "Shared Scenario Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "baseline_run_id",
+          "baseline_version_id",
+          "baseline_version_number",
+          "shared_scenario_count",
+          "new_failures",
+          "fixed",
+          "score_changes",
+          "criterion_changes"
+        ],
+        "title": "AutotestRunComparisonView",
+        "type": "object"
+      },
       "AutotestRunStatus": {
         "description": "Progress of an autotest run: the worker plays it in the background\n(concept section 13, the job queue), so a run is RUNNING until it is\nFINISHED, or ERRORED when it could not be completed.",
         "enum": [
@@ -2449,7 +2636,7 @@
       },
       "AutotestRunView": {
         "additionalProperties": false,
-        "description": "An autotest run with the status its version got.\n\nThe run passes when every price and booking scenario passed and the\naverage judge score is at least 4 of 5; only a passed run that covered\nevery language and scenario kind (`is_full_coverage`) makes the version\nREADY. While `status` is RUNNING the worker is still playing it:\n`scenario_count` is then the number of planned scenarios and `results`\nholds the ones finished so far (progress = results / scenario_count).",
+        "description": "An autotest run with the status its version got.\n\nThe run passes when every price and booking scenario passed and the\naverage judge score is at least 4 of 5; only a passed run that covered\nevery language and scenario kind (`is_full_coverage`) makes the version\nREADY. While `status` is RUNNING the worker is still playing it:\n`scenario_count` is then the number of planned scenarios and `results`\nholds the ones finished so far (progress = results / scenario_count).\n`comparison` sets a finished run against the run of the version that\nwas live when it started (None when nothing was live then).",
         "properties": {
           "assistant_version_id": {
             "title": "Assistant Version Id",
@@ -2471,6 +2658,16 @@
           "business_id": {
             "title": "Business Id",
             "type": "string"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AutotestRunComparisonView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cost_micro_usd": {
             "minimum": 0.0,
@@ -2561,7 +2758,11 @@
           "emergency",
           "foreign_language",
           "transliterated",
-          "owner_check"
+          "owner_check",
+          "prompt_injection_spoof",
+          "data_exfiltration",
+          "staff_impersonation",
+          "tool_abuse"
         ],
         "title": "AutotestScenarioKind",
         "type": "string"
@@ -2620,6 +2821,32 @@
           "outcome": {
             "$ref": "#/components/schemas/AutotestOutcome"
           },
+          "passed_sample_count": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passed Sample Count"
+          },
+          "sample_count": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Count"
+          },
           "scenario_key": {
             "maxLength": 96,
             "minLength": 3,
@@ -2654,6 +2881,57 @@
           "cost_micro_usd"
         ],
         "title": "AutotestScenarioResultView",
+        "type": "object"
+      },
+      "AutotestScoreChangeView": {
+        "additionalProperties": false,
+        "description": "A scenario whose average judge score moved by half a point or more.",
+        "properties": {
+          "average_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Average Score",
+            "type": "number"
+          },
+          "baseline_average_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Baseline Average Score",
+            "type": "number"
+          },
+          "change": {
+            "maximum": 4.0,
+            "minimum": -4.0,
+            "title": "Change",
+            "type": "number"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AutotestScenarioKind"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "scenario_key": {
+            "maxLength": 96,
+            "minLength": 3,
+            "pattern": "^[a-z][a-z0-9_\\-]*$",
+            "title": "Scenario Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_key",
+          "kind",
+          "language",
+          "average_score",
+          "baseline_average_score",
+          "change"
+        ],
+        "title": "AutotestScoreChangeView",
         "type": "object"
       },
       "AutotestTranscriptLineView": {
@@ -6007,6 +6285,93 @@
         "title": "ClientHealthView",
         "type": "object"
       },
+      "ClientQualityView": {
+        "additionalProperties": false,
+        "description": "A client's production quality for the platform admin: the last 30 days\nof the business's time zone, oldest first, the average of the last 7\ndays against the 7 before (`is_dropping` when it fell by more than\nthe QUALITY_DROP alert's threshold), and the lowest-scored\nconversations of the 30 days. Scores only: no customer text.",
+        "properties": {
+          "average_score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/QualityDayView"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "drop_percent": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Drop Percent",
+            "type": "integer"
+          },
+          "is_dropping": {
+            "default": false,
+            "title": "Is Dropping",
+            "type": "boolean"
+          },
+          "last_week_average": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Week Average"
+          },
+          "lowest": {
+            "items": {
+              "$ref": "#/components/schemas/QualitySampleView"
+            },
+            "title": "Lowest",
+            "type": "array"
+          },
+          "previous_week_average": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Week Average"
+          },
+          "sample_count": {
+            "minimum": 0.0,
+            "title": "Sample Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "sample_count",
+          "days"
+        ],
+        "title": "ClientQualityView",
+        "type": "object"
+      },
       "ClientReplySpeed": {
         "additionalProperties": false,
         "description": "Reply speed of a client in the last 7 days, over every channel and per\nchannel (the busiest first). Percentiles are None without measured\nreplies; replies before measuring began (or of the owner's test chat\nand voice calls) are not measured.",
@@ -7181,6 +7546,68 @@
           }
         },
         "title": "ConversationPage",
+        "type": "object"
+      },
+      "ConversationQualityScoreView": {
+        "additionalProperties": false,
+        "description": "The judge's score of a conversation, its notes in the owner's language.",
+        "properties": {
+          "average_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Average Score",
+            "type": "number"
+          },
+          "judge_notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Judge Notes",
+            "type": "array"
+          },
+          "judged_at": {
+            "title": "Judged At",
+            "type": "integer"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/JudgeCriterionScoreView"
+            },
+            "title": "Scores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "average_score",
+          "scores",
+          "judged_at"
+        ],
+        "title": "ConversationQualityScoreView",
+        "type": "object"
+      },
+      "ConversationQualityView": {
+        "additionalProperties": false,
+        "description": "A conversation's quality score on its card; `score` is None for the\nconversations the nightly sample did not pick (most of them).",
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationQualityScoreView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "conversation_id"
+        ],
+        "title": "ConversationQualityView",
         "type": "object"
       },
       "ConversationRating": {
@@ -16240,7 +16667,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality).",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -16249,7 +16676,8 @@
           "handoff_spike",
           "tool_errors",
           "stale_worker",
-          "otp_cap_trips"
+          "otp_cap_trips",
+          "quality_drop"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -16789,6 +17217,93 @@
           "title"
         ],
         "title": "PushRecipient",
+        "type": "object"
+      },
+      "QualityDayView": {
+        "additionalProperties": false,
+        "description": "One day of a business's trend (its own time zone): samples, average.",
+        "properties": {
+          "average_score": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Score"
+          },
+          "day_start": {
+            "title": "Day Start",
+            "type": "integer"
+          },
+          "sample_count": {
+            "minimum": 0.0,
+            "title": "Sample Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day_start",
+          "sample_count"
+        ],
+        "title": "QualityDayView",
+        "type": "object"
+      },
+      "QualitySampleView": {
+        "additionalProperties": false,
+        "description": "One scored conversation in the admin's list (scores only, no text).",
+        "properties": {
+          "average_score": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Average Score",
+            "type": "number"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "judged_at": {
+            "title": "Judged At",
+            "type": "integer"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/JudgeCriterionScoreView"
+            },
+            "title": "Scores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "channel",
+          "average_score",
+          "scores",
+          "judged_at"
+        ],
+        "title": "QualitySampleView",
         "type": "object"
       },
       "QuestionAnswerType": {
@@ -22882,6 +23397,124 @@
         ]
       }
     },
+    "/v1/admin/clients/{business_id}/quality": {
+      "get": {
+        "operationId": "get_client_quality_route_v1_admin_clients__business_id__quality_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientQualityView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Client Quality Route",
+        "tags": [
+          "quality"
+        ]
+      }
+    },
     "/v1/admin/incidents": {
       "get": {
         "operationId": "list_incidents_v1_admin_incidents_get",
@@ -27525,7 +28158,11 @@
                             "emergency",
                             "foreign_language",
                             "transliterated",
-                            "owner_check"
+                            "owner_check",
+                            "prompt_injection_spoof",
+                            "data_exfiltration",
+                            "staff_impersonation",
+                            "tool_abuse"
                           ],
                           "title": "AutotestScenarioKind",
                           "type": "string"
@@ -27974,7 +28611,11 @@
                             "emergency",
                             "foreign_language",
                             "transliterated",
-                            "owner_check"
+                            "owner_check",
+                            "prompt_injection_spoof",
+                            "data_exfiltration",
+                            "staff_impersonation",
+                            "tool_abuse"
                           ],
                           "title": "AutotestScenarioKind",
                           "type": "string"
@@ -36929,6 +37570,133 @@
         "summary": "Delete Conversation Note",
         "tags": [
           "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/conversations/{conversation_id}/quality": {
+      "get": {
+        "operationId": "get_conversation_quality_route_v1_businesses__business_id__conversations__conversation_id__quality_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationQualityView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Conversation Quality Route",
+        "tags": [
+          "quality"
         ]
       }
     },

@@ -12,6 +12,8 @@ class PlatformAlertCode(StrEnum):
     far more conversations go to people than usual. TOOL_ERRORS: assistant
     tools fail. STALE_WORKER: a worker of the current release stopped
     beating. OTP_CAP_TRIPS: a platform cap refused login codes.
+    QUALITY_DROP: the judge's scores of real conversations fell against the
+    week before (production quality).
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -22,6 +24,7 @@ class PlatformAlertCode(StrEnum):
     TOOL_ERRORS = "tool_errors"
     STALE_WORKER = "stale_worker"
     OTP_CAP_TRIPS = "otp_cap_trips"
+    QUALITY_DROP = "quality_drop"
 
 
 class PlatformAlertStatus(StrEnum):

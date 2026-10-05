@@ -2,7 +2,8 @@
 The test conversation of one autotest scenario: the AI customer writes,
 the conversation engine answers as the version under test. An owner check
 opens with its question word for word and goes on with the AI customer
-only when its answer must lead to a request.
+only when its answer must lead to a request; an attack opens with the
+attack word for word and the AI customer goes on pressing.
 """
 
 from collections.abc import Callable
@@ -58,27 +59,48 @@ class ScenarioConversation:
         self._customer: LlmAdapterContract = customer_llm_adapter
         self._settings: AppSettings = app_settings
         self._estimate_cost: Callable[[LlmResponse], CostMicroUsd] = estimate_cost
+        self._channel_user_id: ChannelUserId = ChannelUserId("autotest")
         self.transcript: list[AutotestTranscriptLine] = []
         self.replies: list[AssistantReply] = []
         self.customer_costs: list[CostMicroUsd] = []
 
-    def play(self, scenario_run: AutotestScenarioRun) -> None:
+    def play(self, scenario_run: AutotestScenarioRun, sample_number: int = 1) -> None:
+        """
+        One play of the scenario; each play (`sample_number`) is a
+        conversation of its own customer (the second one's channel user id
+        ends in "-play2").
+        """
+
+        self._channel_user_id = ChannelUserId(
+            f"autotest-{scenario_run.run_id}-{scenario_run.scenario.key}"
+            + ("" if sample_number == 1 else f"-play{sample_number}")
+        )
         turn_limit: int = int(self._settings.autotest_turn_limit)
         owner_check: OwnerCheckSpec | None = scenario_run.scenario.owner_check
-        if owner_check is None:
+        opening: str | None = (
+            str(owner_check.question)
+            if owner_check is not None
+            else (
+                None
+                if scenario_run.scenario.opening_message is None
+                else str(scenario_run.scenario.opening_message)
+            )
+        )
+        if opening is None:
             customer_transcript: list[LlmProviderPayload] = [
                 self._customer.build_user_text_turn(MessageText(CUSTOMER_OPENING_TEXT))
             ]
         else:
-            reply: AssistantReply = self._exchange(
-                scenario_run, MessageText(str(owner_check.question))
-            )
-            if owner_check.expectation is not AutotestExpectation.MUST_CREATE_LEAD:
+            reply: AssistantReply = self._exchange(scenario_run, MessageText(opening))
+            if (
+                owner_check is not None
+                and owner_check.expectation is not AutotestExpectation.MUST_CREATE_LEAD
+            ):
                 return
 
             customer_transcript = [
                 self._customer.build_user_text_turn(
-                    build_owner_check_continuation(str(owner_check.question), reply)
+                    build_owner_check_continuation(opening, reply)
                 )
             ]
             turn_limit -= 1
@@ -125,9 +147,7 @@ class ScenarioConversation:
             InboundMessage(
                 business_id=scenario_run.business.id,
                 channel=ChannelKind.OWNER_TEST,
-                channel_user_id=ChannelUserId(
-                    f"autotest-{scenario_run.run_id}-{scenario_run.scenario.key}"
-                ),
+                channel_user_id=self._channel_user_id,
                 text=message,
                 is_sandbox=True,
                 assistant_version_id=scenario_run.version.id,

@@ -67,6 +67,7 @@ figure is above its threshold:
 | `tool_errors` | over 5 replies of the last hour carry a failed tool call | SEV3 | [assistant-quality](runbooks/assistant-quality.md) |
 | `stale_worker` | a worker of the current release has not beaten for 10 minutes while others run | SEV2 | [stuck-worker](runbooks/stuck-worker.md) |
 | `otp_cap_trips` | a platform cap refused a login code in the last 15-30 minutes | SEV2 | [sms-pumping](runbooks/sms-pumping.md) |
+| `quality_drop` | the judge's average score of the last day's sampled real conversations is over 10% below the 7 days before (at least 10 scored in each) | SEV3 | [assistant-quality](runbooks/assistant-quality.md) |
 
 **Episodes and cooldown.** An alert that starts firing is sent at once
 ("FIRING"). While it keeps firing it is sent again only after

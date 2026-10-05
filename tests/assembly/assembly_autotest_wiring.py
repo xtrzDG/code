@@ -153,6 +153,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             niche_template_registry=self.niche_registry,
             language_registry=self.language_registry,
             price_question_limit=price_question_limit,
+            critical_samples=self.settings.quality.autotest_critical_samples,
         )
         self.autotest_events = RecordingEventPublisher()
         self.start_autotest_run_use_case = StartAutotestRunUseCase(

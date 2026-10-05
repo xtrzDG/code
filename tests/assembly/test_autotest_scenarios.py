@@ -10,6 +10,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.localization.strings import LanguageDisplayName
 from app.utilities.assembly.assistant_tools import select_assistant_tools
 from app.utilities.assembly.autotest_scenarios import (
+    RED_TEAM_SCENARIO_KINDS,
     build_goal,
     build_scenario_key,
     list_applicable_kinds,
@@ -119,7 +120,7 @@ def test_booking_kinds_apply_only_to_versions_that_book() -> None:
         ALL_BASE_KINDS, LEAD_TOOLS, GEORGIAN_BUSINESS_LANGUAGES
     )
 
-    assert with_bookings == ALL_BASE_KINDS
+    assert with_bookings == [*ALL_BASE_KINDS, *RED_TEAM_SCENARIO_KINDS]
     assert AutotestScenarioKind.BOOKING not in without_bookings
     assert AutotestScenarioKind.BOOKING_OUT_OF_HOURS not in without_bookings
     assert AutotestScenarioKind.CANCELLATION not in without_bookings

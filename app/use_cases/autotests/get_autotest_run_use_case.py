@@ -18,7 +18,10 @@ from app.schemas.exceptions.application_errors import NotFoundError
 
 
 class GetAutotestRunUseCase(UseCaseContract[AssistantVersionQuery, AutotestRunView]):
-    """The latest autotest run of a version (owners and staff)."""
+    """
+    The latest autotest run of a version (owners and staff), compared with
+    the finished run of the version that was live when it started.
+    """
 
     def __init__(
         self,
@@ -80,6 +83,40 @@ class GetAutotestRunUseCase(UseCaseContract[AssistantVersionQuery, AutotestRunVi
                 self._assistant_version_repo.get(business.id, version.id) or version
             )
 
-        return self._autotest_run_view_transformer.transform(
-            AutotestRunViewSource(run=run, version=version)
+        baseline_run: AutotestRunDocument | None = self._read_baseline_run(
+            business, run
         )
+        return self._autotest_run_view_transformer.transform(
+            AutotestRunViewSource(
+                run=run,
+                version=version,
+                baseline_run=baseline_run,
+                baseline_version=(
+                    self._assistant_version_repo.get(
+                        business.id, baseline_run.assistant_version_id
+                    )
+                    if baseline_run is not None
+                    else None
+                ),
+            )
+        )
+
+    def _read_baseline_run(
+        self, business: BusinessDocument, run: AutotestRunDocument
+    ) -> AutotestRunDocument | None:
+        if (
+            run.status is not AutotestRunStatus.FINISHED
+            or run.compared_to_run_id is None
+        ):
+            return None
+
+        baseline_run: AutotestRunDocument | None = self._autotest_run_repo.get(
+            business.id, run.compared_to_run_id
+        )
+        if (
+            baseline_run is None
+            or baseline_run.status is not AutotestRunStatus.FINISHED
+        ):
+            return None
+
+        return baseline_run

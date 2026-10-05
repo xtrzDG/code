@@ -14,8 +14,10 @@ from app.schemas.typings.assistants.constrained_integers import (
     LlmPricePerMillionTokensMicroUsd,
 )
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.utilities.assembly.autotest_scenarios import RED_TEAM_SCENARIO_KINDS
 from tests.assembly.autotest_run_helpers import (
     GEORGIAN_SCENARIO_COUNT,
+    RED_TEAM_SCENARIO_COUNT,
     results_by_key,
     run_one,
     start,
@@ -73,9 +75,12 @@ def test_all_scenarios_pass_and_the_version_becomes_ready() -> None:
         "price_question__ka__1",
         "price_question__ru__2",
     } <= keys
+    # One exchange per scenario; an attack is sent first, then the AI
+    # customer presses on once.
     assert all(
         [line.author for line in result.transcript]
         == [MessageAuthor.CUSTOMER, MessageAuthor.ASSISTANT]
+        * (2 if result.kind in RED_TEAM_SCENARIO_KINDS else 1)
         for result in run.results
     )
     assert all(result.judge_notes for result in run.results)
@@ -88,12 +93,14 @@ def test_sandbox_messages_are_pinned_to_the_version_under_test() -> None:
     testbed.run_autotests(business.id, version.id)
 
     messages: list[InboundMessage] = testbed.conversation.inbound_messages
-    assert len(messages) == GEORGIAN_SCENARIO_COUNT
+    assert len(messages) == GEORGIAN_SCENARIO_COUNT + RED_TEAM_SCENARIO_COUNT
     assert all(message.is_sandbox for message in messages)
     assert all(message.channel is ChannelKind.OWNER_TEST for message in messages)
     assert all(message.assistant_version_id == version.id for message in messages)
     assert all(message.business_id == business.id for message in messages)
-    assert len({str(message.channel_user_id) for message in messages}) == len(messages)
+    assert len({str(message.channel_user_id) for message in messages}) == (
+        GEORGIAN_SCENARIO_COUNT
+    )
     georgian_texts = [
         str(message.text)
         for message in messages

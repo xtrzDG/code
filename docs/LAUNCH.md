@@ -381,7 +381,15 @@ API и воркер должны работать с одним и тем же �
 
 Тонкая настройка (необязательно; на Render — в группе `workshop-backend`, чтобы её
 получил и воркер, который играет автотесты): `LLM_MODEL_ID` — другая модель;
-`LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов; `LLM_SUMMARY_MODEL_ID` —
+`LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов и ночной оценки
+реальных разговоров (по умолчанию — модель другого провайдера, если задан его
+ключ: `claude-sonnet-5-5` при OpenAI с `ANTHROPIC_API_KEY`, `gpt-5-mini` при
+Anthropic с `OPENAI_API_KEY`; судья другого семейства строже к ответам);
+`AUTOTEST_CRITICAL_SAMPLES` — сколько раз играется важный для запуска сценарий
+(по умолчанию 2: он пройден, только если пройдены оба прогона);
+`QUALITY_SAMPLE_PERCENT`, `QUALITY_SAMPLE_PER_BUSINESS`,
+`QUALITY_SAMPLE_BUDGET_CENTS` — доля реальных разговоров, которую судья оценивает
+каждую ночь, предел на бизнес и на стоимость ночи; `LLM_SUMMARY_MODEL_ID` —
 модель итогов звонков для персонала (по умолчанию — `LLM_MODEL_ID`; подойдёт
 более дешёвая, например `gpt-5-nano`); `LLM_CHAT_EFFORT`,
 `LLM_JUDGE_EFFORT`, `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT`,

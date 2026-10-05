@@ -56,6 +56,7 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       tool_errors: "ხელსაწყოების შეცდომები",
       stale_worker: "დამმუშავებელი გაჩუმდა",
       otp_cap_trips: "შესვლის კოდების ლიმიტი ამოიწურა",
+      quality_drop: "საუბრების ხარისხი დაეცა",
     },
   },
   workers: {

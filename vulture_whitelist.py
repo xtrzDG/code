@@ -448,3 +448,21 @@ _.suggested_scope  # app/schemas/dto/conversation_feed/answer_corrections.py
 _.current_fact  # app/schemas/dto/conversation_feed/answer_corrections.py
 _.is_corrected  # app/schemas/dto/conversation_feed/answer_corrections.py
 _.bad_rating_count  # app/schemas/dto/conversation_feed/answers_to_improve.py
+
+# Trustworthy checks and production quality (R11): the comparison of a run
+# with the live version's run, a client's quality trend and a
+# conversation's score are response fields only the cabinet reads.
+_.baseline_outcome  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.baseline_average_score  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.baseline_run_id  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.baseline_version_id  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.baseline_version_number  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.average_score_change  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.shared_scenario_count  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.new_failures  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.fixed  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.score_changes  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.criterion_changes  # app/schemas/dto/assistants/autotest_comparison_views.py
+_.last_week_average  # app/schemas/dto/quality.py (ClientQualityView)
+_.previous_week_average  # app/schemas/dto/quality.py (ClientQualityView)
+_.is_dropping  # app/schemas/dto/quality.py (ClientQualityView)

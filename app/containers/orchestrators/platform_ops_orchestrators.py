@@ -39,6 +39,13 @@ class PlatformOpsOrchestratorsContainer(containers.DeclarativeContainer):
     check_channel_credentials_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.check_channel_credentials_use_case
     )
+    # Production quality: the nightly sample and a client's trend.
+    sample_conversation_quality_orchestrator = use_case_orchestrator(
+        platform_ops_use_cases.sample_conversation_quality_use_case
+    )
+    get_client_quality_orchestrator = use_case_orchestrator(
+        platform_ops_use_cases.get_client_quality_use_case
+    )
 
     # The status page and announcements (1111); the help center and guidance.
     get_platform_status_orchestrator = use_case_orchestrator(

@@ -1,8 +1,10 @@
-# Assistant quality: handoff spikes and tool errors
+# Assistant quality: handoff spikes, tool errors and quality drops
 
 **Alerts:** `handoff_spike` (SEV2): the last hour's handoffs are over 3
 times the week before's hourly mean (at least 5); `tool_errors` (SEV3):
-over 5 replies in an hour carry a failed tool call.
+over 5 replies in an hour carry a failed tool call; `quality_drop` (SEV3):
+the judge's average score of the real conversations sampled in the last
+day is over 10% below the 7 days before (at least 10 scored in each).
 
 ## How it shows
 
@@ -24,6 +26,16 @@ over 5 replies in an hour carry a failed tool call.
    error. Google Calendar errors (token revoked) show on the business's
    calendar connection; availability errors after an owner edited hours or
    resources.
+
+5. Quality drop: the nightly sample (`sample_conversation_quality`, about
+   QUALITY_SAMPLE_PERCENT of the day's conversations, cost-capped by
+   QUALITY_SAMPLE_BUDGET_CENTS) scores real conversations on the
+   autotests' five criteria. Admin → Clients → a client shows its daily
+   trend and its lowest-scored conversations; open the cabinet (with a
+   reason) to read one: its card shows the judge's notes. Several
+   businesses at once points at a deploy or the model; one business at
+   its own changes (a new version, new knowledge). A changed
+   `LLM_JUDGE_MODEL_ID` also moves every score: compare with its deploy.
 
 ## Mitigate
 

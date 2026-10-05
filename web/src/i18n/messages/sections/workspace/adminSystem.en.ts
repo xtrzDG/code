@@ -57,6 +57,7 @@ export const adminSystemEn = {
       tool_errors: "Tool errors",
       stale_worker: "Stale worker",
       otp_cap_trips: "Login code cap reached",
+      quality_drop: "Conversation quality dropped",
     },
   },
   workers: {

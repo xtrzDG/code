@@ -16,6 +16,24 @@ class AutotestCaseLimit(BaseConstrainedTypedInt):
     le = 200
 
 
+class AutotestPassedSampleCount(BaseConstrainedTypedInt):
+    """How many plays of one sampled autotest scenario passed (0 to 5)."""
+
+    ge = 0
+    le = 5
+
+
+class AutotestSampleCount(BaseConstrainedTypedInt):
+    """
+    How many times one autotest scenario is played (pass^k): a launch-
+    critical scenario passes only when every one of its plays passed
+    (AUTOTEST_CRITICAL_SAMPLES).
+    """
+
+    ge = 1
+    le = 5
+
+
 class AutotestScenarioCount(BaseConstrainedTypedInt):
     """Number of scenarios in one autotest run (all, passed, failed)."""
 

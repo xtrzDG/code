@@ -50,6 +50,9 @@ class ConversationOperatorsContainer(containers.DeclarativeContainer):
     get_conversation_operator = pipeline_operator(
         conversation_pipelines.get_conversation_pipeline, storage_scope
     )
+    get_conversation_quality_operator = pipeline_operator(
+        conversation_pipelines.get_conversation_quality_pipeline, storage_scope
+    )
     list_conversation_messages_operator = pipeline_operator(
         conversation_pipelines.list_conversation_messages_pipeline, storage_scope
     )

@@ -3,6 +3,7 @@
 from typing import Any
 
 from tests.assembly.assistant_routes_helpers import assemble, versions_url
+from tests.assembly.autotest_run_helpers import GEORGIAN_SCENARIO_COUNT
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.international_business_seeds import seed_italian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
@@ -32,7 +33,7 @@ def test_owner_assembles_tests_publishes_and_rolls_back_over_http() -> None:
     assert started.json()["status"] == "running"
     assert started.json()["version_status"] == "testing"
     # The planned scenarios are known at once; results arrive as they play.
-    assert started.json()["scenario_count"] == 29
+    assert started.json()["scenario_count"] == GEORGIAN_SCENARIO_COUNT
     assert started.json()["results"] == []
     assert testbed.judge_requests.requests == []
     running = client.get(f"{base}/{draft['id']}/autotest-run", headers=owner)
@@ -51,7 +52,7 @@ def test_owner_assembles_tests_publishes_and_rolls_back_over_http() -> None:
     assert run["is_full_coverage"] is True
     assert run["version_status"] == "ready"
     assert run["is_passed"] is True
-    assert run["scenario_count"] == 29
+    assert run["scenario_count"] == GEORGIAN_SCENARIO_COUNT
     assert run["results"][0]["transcript"][0]["author"] == "customer"
 
     published = client.post(f"{base}/{draft['id']}/publish", headers=owner)

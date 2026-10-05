@@ -16,7 +16,10 @@ from app.utilities.assembly.autotest_prompts import (
     TRANSLITERATION_NOTE,
     build_customer_persona_prompt,
 )
-from app.utilities.assembly.autotest_scenarios import list_applicable_kinds
+from app.utilities.assembly.autotest_scenarios import (
+    RED_TEAM_SCENARIO_KINDS,
+    list_applicable_kinds,
+)
 from app.utilities.assembly.language_scenarios import (
     choose_foreign_languages,
     choose_transliterated_languages,
@@ -55,8 +58,8 @@ def test_the_transliteration_kind_applies_only_to_such_languages() -> None:
     georgian = list_applicable_kinds(LANGUAGE_KINDS, tools, tags("ka", "en"))
     german = list_applicable_kinds(LANGUAGE_KINDS, tools, tags("de", "en"))
 
-    assert georgian == LANGUAGE_KINDS
-    assert german == [AutotestScenarioKind.FOREIGN_LANGUAGE]
+    assert georgian == [*LANGUAGE_KINDS, *RED_TEAM_SCENARIO_KINDS]
+    assert german == [AutotestScenarioKind.FOREIGN_LANGUAGE, *RED_TEAM_SCENARIO_KINDS]
 
 
 def test_the_ai_customer_is_told_how_to_write() -> None:

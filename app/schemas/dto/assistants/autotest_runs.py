@@ -21,6 +21,7 @@ from app.schemas.domain.assistants import (
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.assistants.smoke_checks import SmokeCheckSelection
+from app.schemas.dto.billing import Money
 from app.schemas.typings.assistants.booleans import (
     IsAutotestRunPassed,
     IsFullAutotestCoverage,
@@ -29,7 +30,10 @@ from app.schemas.typings.assistants.constrained_floats import (
     AutotestPassRate,
     AverageJudgeScore,
 )
-from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
+from app.schemas.typings.assistants.constrained_integers import (
+    AutotestSampleCount,
+    AutotestScenarioCount,
+)
 from app.schemas.typings.assistants.constrained_strings import (
     AutotestCaseQuestion,
     AutotestExpectedText,
@@ -38,6 +42,7 @@ from app.schemas.typings.assistants.constrained_strings import (
 from app.schemas.typings.assistants.prefixed_id import AutotestCaseId, AutotestRunId
 from app.schemas.typings.assistants.strings import (
     AutotestCheckNote,
+    AutotestOpeningMessage,
     AutotestScenarioGoal,
     JudgeNote,
 )
@@ -76,7 +81,11 @@ class AutotestScenario(ImmutableDTO):
     language. `language_script` is None when the script is unknown, which
     turns the reply-language check off. An owner check (`owner_check`)
     opens with its question instead of the AI customer's first message and
-    is decided by its expectation, not by the judge.
+    is decided by its expectation, not by the judge. An attack scenario
+    opens with its attack (`opening_message`) word for word, and the AI
+    customer goes on pressing for its goal. `expected_prices` are the prices
+    a price question's answer must name (the item asked about);
+    `sample_count` is how many times the scenario is played (pass^k).
     """
 
     key: AutotestScenarioKey
@@ -86,6 +95,9 @@ class AutotestScenario(ImmutableDTO):
     language_script: ScriptCode | None = None
     goal: AutotestScenarioGoal
     owner_check: OwnerCheckSpec | None = None
+    opening_message: AutotestOpeningMessage | None = None
+    expected_prices: list[Money] = Field(default_factory=list[Money])
+    sample_count: AutotestSampleCount = AutotestSampleCount(1)
 
 
 class AutotestRunPlan(ImmutableDTO):
@@ -191,10 +203,16 @@ class AutotestRunSummary(ImmutableDTO):
 
 
 class AutotestRunViewSource(ImmutableDTO):
-    """A stored run together with the current state of its version."""
+    """
+    A stored run together with the current state of its version, and the
+    run it is compared with (`baseline_run`, the live version's when the
+    run started) with that run's version.
+    """
 
     run: AutotestRunDocument
     version: AssistantVersionDocument
+    baseline_run: AutotestRunDocument | None = None
+    baseline_version: AssistantVersionDocument | None = None
 
 
 class JudgeVerdict(ImmutableDTO):

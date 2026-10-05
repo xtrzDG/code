@@ -22,6 +22,7 @@ import { useConversationRating } from "../../_lib/useConversationRating";
 import { ConversationTechnicalDetails } from "../conversation/TechnicalDetails";
 import { CallsCard } from "./CallsCard";
 import { LinkedItems } from "./LinkedItems";
+import { QualityScore } from "./QualityScore";
 import { RatingControl } from "./RatingControl";
 
 export function DetailsPanel({
@@ -90,6 +91,8 @@ export function DetailsPanel({
           />
         ) : null}
       </div>
+
+      {conversation.is_sandbox ? null : <QualityScore conversationId={conversation.id} />}
 
       <LinkedItems detail={detail} onBook={onBook} />
 

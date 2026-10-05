@@ -17,10 +17,12 @@ from app.schemas.typings.monitoring.constrained_integers import (
 from app.schemas.typings.monitoring.constrained_strings import AlertRunbookPath
 from app.schemas.typings.monitoring.strings import AlertRuleSummary
 from app.utilities.monitoring.signal_windows import SIGNAL_WINDOW_MINUTES
+from app.utilities.quality.quality_trend import QUALITY_DROP_FLOOR, QUALITY_DROP_PERCENT
 
 RUNBOOKS: str = "docs/operations/runbooks/"
 CHECK_INTERVAL_MINUTES: AlertWindowMinutes = AlertWindowMinutes(5)
 HOUR_MINUTES: AlertWindowMinutes = AlertWindowMinutes(60)
+DAY_MINUTES: AlertWindowMinutes = AlertWindowMinutes(24 * 60)
 
 
 def _rule(
@@ -123,6 +125,16 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
             AlertUnit.COUNT,
             SIGNAL_WINDOW_MINUTES,
             "sms-pumping.md",
+        ),
+        _rule(
+            PlatformAlertCode.QUALITY_DROP,
+            IncidentSeverity.SEV3,
+            "The judge's scores of real conversations fell against the week before.",
+            QUALITY_DROP_PERCENT,
+            AlertUnit.PERCENT,
+            DAY_MINUTES,
+            "assistant-quality.md",
+            volume_floor=QUALITY_DROP_FLOOR,
         ),
     )
 }

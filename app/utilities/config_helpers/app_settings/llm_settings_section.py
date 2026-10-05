@@ -1,6 +1,6 @@
 """
 LLM_*, OPENAI_*, AUTOTEST_TURN_LIMIT and SCRIPTED_LLM_LATENCY_MS: the
-language model of the assistants.
+language model of the assistants and of their judge.
 """
 
 from collections.abc import Mapping
@@ -31,6 +31,15 @@ DEFAULT_MODEL_IDS: dict[str, str] = {
     LlmProvider.OPENAI: "gpt-5-mini",
     LlmProvider.ANTHROPIC: "claude-opus-5-5",
     LlmProvider.SCRIPTED: "scripted",
+}
+# The judge of autotests and of real conversations comes from the other
+# provider, so a model never grades its own family's answers: a strong
+# Anthropic model for OpenAI deployments, the concept's OpenAI model for
+# Anthropic ones; used when that provider's key is set, else the judge
+# falls back to the deployment's own default model.
+DEFAULT_JUDGE_MODEL_IDS: dict[str, tuple[str, str]] = {
+    LlmProvider.OPENAI: ("claude-sonnet-5-5", "ANTHROPIC_API_KEY"),
+    LlmProvider.ANTHROPIC: ("gpt-5-mini", "OPENAI_API_KEY"),
 }
 DEFAULT_OPENAI_BASE_URL: str = "https://eu.api.openai.com/v1"
 # One model call of a customer chat (retried once) may take this long, so a
@@ -71,9 +80,9 @@ def read_llm_settings(
     llm_provider: LlmProvider,
 ) -> LlmSettingsSection:
     """
-    The chat and judge models default to the provider's default model; call
-    summaries use the chat model unless LLM_SUMMARY_MODEL_ID names a
-    cheaper one.
+    The chat model defaults to the provider's default model, the judge to
+    the other provider's (see `read_judge_model_id`); call summaries use
+    the chat model unless LLM_SUMMARY_MODEL_ID names a cheaper one.
     """
 
     default_model_id: str = DEFAULT_MODEL_IDS[llm_provider]
@@ -82,9 +91,7 @@ def read_llm_settings(
         llm_model_id=LlmModelId(
             read_text(environment_variables, "LLM_MODEL_ID", default_model_id)
         ),
-        llm_judge_model_id=LlmModelId(
-            read_text(environment_variables, "LLM_JUDGE_MODEL_ID", default_model_id)
-        ),
+        llm_judge_model_id=read_judge_model_id(environment_variables, llm_provider),
         # The model of call summaries for staff; the chat model when unset.
         llm_summary_model_id=optional_text(
             environment_variables, "LLM_SUMMARY_MODEL_ID", LlmModelId
@@ -133,4 +140,30 @@ def read_llm_settings(
             read_integer(environment_variables, "SCRIPTED_LLM_LATENCY_MS", 0),
             ScriptedLlmLatencyMilliseconds,
         ),
+    )
+
+
+def read_judge_model_id(
+    environment_variables: Mapping[str, str],
+    llm_provider: LlmProvider,
+) -> LlmModelId:
+    """
+    LLM_JUDGE_MODEL_ID, else the other provider's judge model when that
+    provider's key is set, else the provider's own default model (the
+    scripted provider judges with the scripted model).
+    """
+
+    own_default: str = DEFAULT_MODEL_IDS[llm_provider]
+    # Which providers have a key (the SDKs read them; here only whether set).
+    keyed: set[str] = {
+        key_name
+        for _, key_name in DEFAULT_JUDGE_MODEL_IDS.values()
+        if environment_variables.get(key_name, "").strip() != ""
+    }
+    other: tuple[str, str] | None = DEFAULT_JUDGE_MODEL_IDS.get(llm_provider)
+    default_judge: str = (
+        other[0] if other is not None and other[1] in keyed else own_default
+    )
+    return LlmModelId(
+        read_text(environment_variables, "LLM_JUDGE_MODEL_ID", default_judge)
     )

@@ -16,18 +16,26 @@ from app.schemas.typings.assistants.constrained_integers import (
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
+from app.utilities.conversations.llm_models import LLM_TOKEN_PRICES
 
 TOKENS_PER_MILLION: Decimal = Decimal(1_000_000)
+MICRO_USD_PER_USD: Decimal = Decimal(1_000_000)
 WHOLE_MICRO_USD: Decimal = Decimal(1)
-# OpenAI list price of gpt-5-mini (the concept's model): $0.25 per million
-# input tokens and $2.00 per million output tokens. Re-check before relying
-# on the totals; override with the constructor argument of the use case.
-DEFAULT_LLM_TOKEN_PRICES: tuple[LlmTokenPrice, ...] = (
+# The list prices of every model the platform knows (llm_models.py: OpenAI
+# gpt-5-mini of the concept, the Anthropic models a judge on the other
+# provider uses). Re-check before relying on the totals; override with the
+# constructor argument of the use case.
+DEFAULT_LLM_TOKEN_PRICES: tuple[LlmTokenPrice, ...] = tuple(
     LlmTokenPrice(
-        model_id=LlmModelId("gpt-5-mini"),
-        input_price=LlmPricePerMillionTokensMicroUsd(250_000),
-        output_price=LlmPricePerMillionTokensMicroUsd(2_000_000),
-    ),
+        model_id=LlmModelId(model_id),
+        input_price=LlmPricePerMillionTokensMicroUsd(
+            int(price.input_usd_per_million * MICRO_USD_PER_USD)
+        ),
+        output_price=LlmPricePerMillionTokensMicroUsd(
+            int(price.output_usd_per_million * MICRO_USD_PER_USD)
+        ),
+    )
+    for model_id, price in LLM_TOKEN_PRICES.items()
 )
 
 

@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
 
+import { RunComparison } from "./RunComparison";
 import { RunSummary } from "./RunSummary";
 import { ScenarioResult } from "./ScenarioResult";
 
@@ -84,6 +85,8 @@ export function AutotestsPanel({
           {t("assistant.autotests.erroredDescription")}
         </Alert>
       ) : null}
+
+      {!isRunning && run.status === "finished" && run.comparison ? <RunComparison comparison={run.comparison} /> : null}
 
       {!isRunning && run.status === "finished" && !run.is_full_coverage ? (
         <p className="text-sm text-ink-muted">{t("assistant.autotests.partialRun")}</p>

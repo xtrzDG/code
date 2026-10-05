@@ -33,6 +33,12 @@ class PlatformOpsPipelinesContainer(containers.DeclarativeContainer):
     check_channel_credentials_pipeline = orchestrator_pipeline(
         platform_ops.check_channel_credentials_orchestrator
     )
+    sample_conversation_quality_pipeline = orchestrator_pipeline(
+        platform_ops.sample_conversation_quality_orchestrator
+    )
+    get_client_quality_pipeline = orchestrator_pipeline(
+        platform_ops.get_client_quality_orchestrator
+    )
 
     # The status page and announcements (1111); the help center and guidance.
     get_platform_status_pipeline = orchestrator_pipeline(

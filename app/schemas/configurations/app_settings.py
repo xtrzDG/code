@@ -5,6 +5,7 @@ from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
+from app.schemas.configurations.quality_settings import QualitySettings
 from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
 from app.schemas.configurations.seller_settings import SellerSettings
@@ -273,6 +274,8 @@ class AppSettings(ImmutableDTO):
     # Grouped bursts, the turn deadline and model failover
     # (MESSAGE_COALESCE_SECONDS, CHAT_TURN_DEADLINE_SECONDS, LLM_FALLBACK_MODEL_ID).
     reply_speed: ReplySpeedSettings = Field(default_factory=ReplySpeedSettings)
+    # pass^k of autotests and the nightly judging of real conversations.
+    quality: QualitySettings = Field(default_factory=QualitySettings)
     # The claim check and the prompt-injection brake of the reply guard
     # (LLM_VERIFIER_MODEL_ID, INJECTION_FLAG_LIMIT).
     reply_safety: ReplySafetySettings = Field(default_factory=ReplySafetySettings)
