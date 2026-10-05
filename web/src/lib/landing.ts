@@ -1,6 +1,6 @@
 /**
  * Helpers of the public landing page: which country's prices to show and
- * how to present a plan quote of GET /v1/catalog/plans.
+ * the trial every plan shares. Prices themselves: ./publicSite/prices.ts.
  */
 
 import type { Schema } from "@/api/types";
@@ -8,7 +8,6 @@ import type { Schema } from "@/api/types";
 import { guessCountryCode } from "./countries";
 
 export type PlanQuote = Schema<"PlanQuote">;
-export type QuotedMoney = Schema<"QuotedMoney">;
 
 /** The language tags of an Accept-Language header, best first ("ru-RU,ka;q=0.8" -> ["ru-RU", "ka"]). */
 export function acceptLanguageTags(header: string | null | undefined): string[] {
@@ -29,24 +28,32 @@ export function acceptLanguageTags(header: string | null | undefined): string[] 
 }
 
 /**
- * The country whose prices the page shows: the one picked (?country=), else
- * the country a hosting proxy reports for the visitor, else a guess from the
- * browser languages, else Georgia (the first market) or the first available.
+ * The country whose prices the page shows. A country the visitor picked
+ * (?country=) is always shown. Otherwise the page guesses only among the
+ * countries with a price book (`priced`: the plans are billed in their own
+ * currency), so nobody lands on prices that are mere conversions: the
+ * country a hosting proxy reports for the visitor, else one guessed from
+ * the browser languages, else Georgia (the first market) or the first
+ * priced country.
  */
 export function pickLandingCountry(options: {
   requested?: string | null;
   available: readonly string[];
+  priced?: readonly string[];
   geoCountry?: string | null;
   acceptLanguage?: string | null;
 }): string | null {
-  const allowed = new Set(options.available.map((code) => code.toUpperCase()));
-  for (const candidate of [options.requested, options.geoCountry]) {
-    const code = candidate?.trim().toUpperCase();
-    if (code && allowed.has(code)) {
-      return code;
-    }
+  const available = new Set(options.available.map((code) => code.toUpperCase()));
+  const requested = options.requested?.trim().toUpperCase();
+  if (requested && available.has(requested)) {
+    return requested;
   }
-  return guessCountryCode(acceptLanguageTags(options.acceptLanguage), options.available);
+  const priced = (options.priced ?? options.available).filter((code) => available.has(code.toUpperCase()));
+  const geo = options.geoCountry?.trim().toUpperCase();
+  if (geo && priced.some((code) => code.toUpperCase() === geo)) {
+    return geo;
+  }
+  return guessCountryCode(acceptLanguageTags(options.acceptLanguage), priced) ?? options.available[0]?.toUpperCase() ?? null;
 }
 
 /** The free trial every plan shares ("14 days free on every plan"), or null when they differ or have none. */
@@ -54,31 +61,4 @@ export function sharedTrialDays(quotes: readonly PlanQuote[]): number | null {
   const days = new Set(quotes.map((quote) => quote.trial_days));
   const [only] = [...days];
   return days.size === 1 && only !== undefined && only > 0 ? only : null;
-}
-
-/** A price as text, "≈ " in front when it was converted by an exchange rate. */
-export function moneyText(price: QuotedMoney): string {
-  return price.is_estimated ? `≈ ${price.text}` : price.text;
-}
-
-/**
- * The monthly price in the country's currency when the price book or an
- * official rate knows it, and the plan's own price (euros) beside it when
- * the two differ.
- */
-export function landingPrices(quote: PlanQuote): { monthly: QuotedMoney; annual: QuotedMoney; setupFee: QuotedMoney; overage: QuotedMoney; plan: QuotedMoney | null } {
-  const local = quote.local_monthly_price ?? null;
-  return {
-    monthly: local ?? quote.monthly_price,
-    annual: quote.local_annual_price ?? quote.annual_price,
-    setupFee: quote.local_setup_fee ?? quote.setup_fee,
-    overage: quote.local_overage_price_per_minute ?? quote.overage_price_per_minute,
-    plan: local && local.money.currency_code !== quote.monthly_price.money.currency_code ? quote.monthly_price : null,
-  };
-}
-
-/** Whether any price the card shows is a conversion by exchange rate. */
-export function hasEstimatedPrice(quote: PlanQuote): boolean {
-  const prices = landingPrices(quote);
-  return [prices.monthly, prices.annual, prices.setupFee, prices.overage].some((price) => price.is_estimated);
 }

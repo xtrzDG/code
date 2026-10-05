@@ -495,3 +495,16 @@ _.has_placeholders  # app/schemas/dto/legal.py (LegalDocumentView)
 _.upcoming_version  # app/schemas/dto/legal.py (LegalDocumentView)
 _.terms_version  # app/schemas/dto/login_options.py (LoginOptionsView)
 _.privacy_version  # app/schemas/dto/login_options.py (LoginOptionsView)
+
+# The public site (landing-page demos, legal pages, country picker): the
+# security overview is chosen by the request path (/v1/legal/security); the
+# rest are response fields the landing page and the legal pages read.
+_.SECURITY  # app/schemas/constants/legal.py (LegalDocumentKind)
+_.has_price_book  # app/schemas/dto/catalog/countries.py (CountryListItem)
+_.is_draft  # app/schemas/dto/legal.py (LegalDocumentView, LegalOverviewView)
+_.niche_name  # app/schemas/dto/public_demo.py (PublicDemoCard)
+_.messages_per_hour  # app/schemas/dto/public_demo.py (PublicDemoList)
+_.is_booking_made  # app/schemas/dto/public_demo.py (PublicDemoReply)
+_.is_request_made  # app/schemas/dto/public_demo.py (PublicDemoReply)
+_.is_handoff_made  # app/schemas/dto/public_demo.py (PublicDemoReply)
+_.messages_left  # app/schemas/dto/public_demo.py (PublicDemoReply)

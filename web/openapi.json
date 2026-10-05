@@ -8099,7 +8099,7 @@
       },
       "CountryListItem": {
         "additionalProperties": false,
-        "description": "Summary of one country for a country picker.",
+        "description": "Summary of one country for a country picker. `has_price_book`: the\nplans have explicit prices in the country's currency (the euro area's\nown euro prices, the lari price book in Georgia), so nothing shown\nthere is a conversion.",
         "properties": {
           "calling_code": {
             "maximum": 999.0,
@@ -8142,6 +8142,11 @@
           "english_name": {
             "title": "English Name",
             "type": "string"
+          },
+          "has_price_book": {
+            "default": false,
+            "title": "Has Price Book",
+            "type": "boolean"
           },
           "onboarding_status": {
             "$ref": "#/components/schemas/CountryOnboardingStatus"
@@ -13445,18 +13450,19 @@
         "type": "object"
       },
       "LegalDocumentKind": {
-        "description": "The platform's own legal texts for business owners (docs/legal): the\nterms of service, the privacy policy and the cookie statement. The data\nprocessing agreement has its own versions and acceptance (DPA_*).",
+        "description": "The platform's own public texts (docs/legal): the terms of service, the\nprivacy policy, the cookie statement and the security overview of the\npublic /security page. The data processing agreement has its own\nversions and acceptance (DPA_*).",
         "enum": [
           "terms",
           "privacy",
-          "cookies"
+          "cookies",
+          "security"
         ],
         "title": "LegalDocumentKind",
         "type": "string"
       },
       "LegalDocumentView": {
         "additionalProperties": false,
-        "description": "GET /v1/legal/{terms|privacy|cookies}: the text of one version.\n\n`version` is the day it took effect. `upcoming_version` is a newer text\nalready published that takes effect later (owners can read it ahead).\n`has_placeholders` is true while the template still has fields in\nsquare brackets for the operator and its lawyer to fill.",
+        "description": "GET /v1/legal/{terms|privacy|cookies|security}: the text of one version.\n\n`version` is the day it took effect. `upcoming_version` is a newer text\nalready published that takes effect later (owners can read it ahead).\n`has_placeholders` is true while the template still has fields in\nsquare brackets for the operator and its lawyer to fill; `is_draft`\nwhile it does or the operator has not declared the texts final\n(LEGAL_TEXTS_FINAL): the public pages then say it is a draft.",
         "properties": {
           "available_languages": {
             "items": {
@@ -13470,6 +13476,11 @@
           },
           "has_placeholders": {
             "title": "Has Placeholders",
+            "type": "boolean"
+          },
+          "is_draft": {
+            "default": true,
+            "title": "Is Draft",
             "type": "boolean"
           },
           "kind": {
@@ -13522,6 +13533,101 @@
           "has_placeholders"
         ],
         "title": "LegalDocumentView",
+        "type": "object"
+      },
+      "LegalOperatorView": {
+        "additionalProperties": false,
+        "description": "Who provides the service, as the invoices name the seller (SELLER_*):\na detail the operator has not set is null.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "minLength": 3,
+                "pattern": "^[^\\x00-\\x09\\x0b-\\x1f\\x7f]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 6,
+                "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "legal_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "minLength": 2,
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9 ./\\-]*[A-Za-z0-9])?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Id"
+          }
+        },
+        "required": [
+          "legal_name",
+          "country_code"
+        ],
+        "title": "LegalOperatorView",
+        "type": "object"
+      },
+      "LegalOverviewView": {
+        "additionalProperties": false,
+        "description": "GET /v1/legal/overview: what the public legal and contact pages need\nbesides the texts: whether the texts are still drafts\n(LEGAL_TEXTS_FINAL off), the data processing agreement's version in\nforce (DPA_DOCUMENT_VERSION; its text is /v1/legal/dpa/{version}) and\nthe operator's details.",
+        "properties": {
+          "dpa_version": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+            "title": "Dpa Version",
+            "type": "string"
+          },
+          "is_draft": {
+            "title": "Is Draft",
+            "type": "boolean"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/LegalOperatorView"
+          }
+        },
+        "required": [
+          "is_draft",
+          "dpa_version",
+          "operator"
+        ],
+        "title": "LegalOverviewView",
         "type": "object"
       },
       "LocalNumberProvisioning": {
@@ -15298,7 +15404,7 @@
       },
       "NicheSummaryView": {
         "additionalProperties": false,
-        "description": "What a niche is and what it books, in one language.",
+        "description": "What a niche is and what it books, in one language. `typical_check`\n(the catalog list only): what one booking or order of the niche\ntypically brings, in euro, the starting point of the landing page's\nvalue calculator; null where checks vary too much to guess.",
         "properties": {
           "booking_unit": {
             "$ref": "#/components/schemas/BookingUnit"
@@ -15342,6 +15448,16 @@
           "takes_bookings": {
             "title": "Takes Bookings",
             "type": "boolean"
+          },
+          "typical_check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "wave": {
             "$ref": "#/components/schemas/LaunchWave"
@@ -17371,6 +17487,157 @@
           "profile"
         ],
         "title": "ProfileWizardView",
+        "type": "object"
+      },
+      "PublicDemoCard": {
+        "additionalProperties": false,
+        "description": "A demo business a visitor can chat with: its name, kind of business\n(`niche_name` in the language asked for), city and country, the\nlanguages its assistant answers in, and up to three starter questions\nper language from its FAQ.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "country_code": {
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "default_language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Default Language",
+            "type": "string"
+          },
+          "languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "niche_key": {
+            "$ref": "#/components/schemas/NicheKey"
+          },
+          "niche_name": {
+            "title": "Niche Name",
+            "type": "string"
+          },
+          "starters": {
+            "items": {
+              "$ref": "#/components/schemas/WidgetStarterQuestionView"
+            },
+            "title": "Starters",
+            "type": "array"
+          }
+        },
+        "required": [
+          "business_id",
+          "business_name",
+          "niche_key",
+          "niche_name",
+          "country_code",
+          "default_language",
+          "languages"
+        ],
+        "title": "PublicDemoCard",
+        "type": "object"
+      },
+      "PublicDemoList": {
+        "additionalProperties": false,
+        "description": "Every demo that can answer now (a configured business without a\npublished assistant is left out), and how many messages one visitor\nmay send each demo in an hour.",
+        "properties": {
+          "demos": {
+            "items": {
+              "$ref": "#/components/schemas/PublicDemoCard"
+            },
+            "title": "Demos",
+            "type": "array"
+          },
+          "messages_per_hour": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Messages Per Hour",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "demos",
+          "messages_per_hour"
+        ],
+        "title": "PublicDemoList",
+        "type": "object"
+      },
+      "PublicDemoReply": {
+        "additionalProperties": false,
+        "description": "The demo assistant's answer and what the turn did, all in sandbox: a\nbooking, a request taken down or a handoff to a person happen only as\ntest records. `messages_left`: how many more messages this visitor may\nsend this demo in the current hour.",
+        "properties": {
+          "is_booking_made": {
+            "default": false,
+            "title": "Is Booking Made",
+            "type": "boolean"
+          },
+          "is_handoff_made": {
+            "default": false,
+            "title": "Is Handoff Made",
+            "type": "boolean"
+          },
+          "is_request_made": {
+            "default": false,
+            "title": "Is Request Made",
+            "type": "boolean"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "messages_left": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Messages Left",
+            "type": "integer"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "text",
+          "language",
+          "messages_left"
+        ],
+        "title": "PublicDemoReply",
         "type": "object"
       },
       "PushDeviceView": {
@@ -56916,6 +57183,97 @@
         ]
       }
     },
+    "/v1/legal/overview": {
+      "get": {
+        "operationId": "get_legal_overview_v1_legal_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalOverviewView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Legal Overview",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
     "/v1/legal/subprocessors": {
       "get": {
         "operationId": "get_subprocessors_v1_legal_subprocessors_get",
@@ -59082,6 +59440,248 @@
         "summary": "Get Platform Status",
         "tags": [
           "platform status"
+        ]
+      }
+    },
+    "/v1/public-demos": {
+      "get": {
+        "operationId": "list_public_demos_v1_public_demos_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicDemoList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Public Demos",
+        "tags": [
+          "public-demos"
+        ]
+      }
+    },
+    "/v1/public-demos/{business_id}/messages": {
+      "post": {
+        "operationId": "send_public_demo_message_v1_public_demos__business_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a visitor's message to a demo: the text and the key of the\nvisitor's conversation (random, chosen by the page).",
+                "properties": {
+                  "session_key": {
+                    "pattern": "^[A-Za-z0-9_-]{16,64}$",
+                    "title": "Session Key",
+                    "type": "string"
+                  },
+                  "text": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text",
+                  "session_key"
+                ],
+                "title": "PublicDemoMessageRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicDemoReply"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Send Public Demo Message",
+        "tags": [
+          "public-demos"
         ]
       }
     },
