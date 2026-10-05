@@ -75,7 +75,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "SignupSourceTag": "qr",
     "SupportAccessReason": "Owner asked why bookings stopped",
     "SuppressionDigest": "0123456789abcdef" * 4,
-    "ExportDownloadTokenHash": "fedcba9876543210" * 4,
+    "ExportDownloadTokenHash": "ab" * 32,
     "TimezoneName": "Asia/Tbilisi",
     "UtmCampaign": "autumn-launch",
     "UtmContent": "hero-button",
