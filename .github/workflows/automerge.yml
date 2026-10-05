@@ -60,6 +60,13 @@ jobs:
             echo "The head commit of #${pr} is not Dependabot's (${author}): left for review."
             exit 0
           fi
+          # A group that conflicts with the branch is not a failure of this
+          # job: Dependabot rebases it, CI runs again and so does this job.
+          mergeable="$(gh pr view "$pr" --json mergeable --jq '.mergeable')"
+          if [ "$mergeable" = "CONFLICTING" ]; then
+            echo "::notice::#${pr} conflicts with its base: left for Dependabot's rebase."
+            exit 0
+          fi
           if gh api "repos/${GH_REPO}/commits/${HEAD_SHA}" --jq '.commit.message' \
               | uv run --no-project python -m scripts.dependabot_automerge; then
             gh pr merge "$pr" --squash --match-head-commit "$HEAD_SHA"
