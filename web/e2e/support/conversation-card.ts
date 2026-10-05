@@ -14,6 +14,7 @@ import { en } from "./messages";
 export type ConversationDetail = Schema<"ConversationDetailView">;
 
 export const CONVERSATION_ID = "conversation_7f0c2a52-1d4b-4c3e-9a7e-2b6f1c9d0e11";
+const CONTACT_ID = "contact_3c1d9a8e-5b2f-4e7a-8c6d-0f1e2d3c4b5a";
 export const HOUR_US = 3600 * 1_000_000;
 
 /** Seconds of silence as a WAV file (what the player is given). */
@@ -42,7 +43,7 @@ export function conversationCard(businessId: string, overrides: Partial<Conversa
     conversation: {
       id: CONVERSATION_ID,
       business_id: businessId,
-      contact_id: "contact_3c1d9a8e-5b2f-4e7a-8c6d-0f1e2d3c4b5a",
+      contact_id: CONTACT_ID,
       assistant_version_id: "assistant_version_9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
       channel: "whatsapp",
       status: "open",
@@ -89,6 +90,20 @@ export async function serveCard(
   // The team's notes load with the card; a served conversation has none.
   await page.route(`**/api/backend/v1/businesses/${businessId}/conversations/${CONVERSATION_ID}/notes*`, (route) =>
     route.fulfill({ json: { items: [], next_cursor: null } }),
+  );
+  // So does the customer's standing line in its header (the served contact is not in the API).
+  const standing: Schema<"ContactStandingView"> = {
+    contact_id: CONTACT_ID,
+    standing: "new",
+    visit_count: 0,
+    conversation_count: 1,
+    booking_count: 0,
+    is_vip: false,
+    is_blocked: false,
+    is_erased: false,
+  };
+  await page.route(`**/api/backend/v1/businesses/${businessId}/contacts/${CONTACT_ID}/standing`, (route) =>
+    route.fulfill({ json: standing }),
   );
 }
 
