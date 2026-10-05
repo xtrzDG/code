@@ -20,6 +20,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.containers.app import AppContainer
+from app.gateways.startup_checks import check_processor_uses
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.utilities.observability.logging_setup import configure_logging
 
@@ -31,11 +32,17 @@ def main(
     app_container: AppContainer | None = None,
     stop_event: threading.Event | None = None,
 ) -> int:
-    """Run the worker until stopped; returns the process exit code."""
+    """
+    Run the worker until stopped; returns the process exit code. A flow of
+    personal data to a provider the sub-processor list does not cover stops
+    it in production before it starts (`check_processor_uses`).
+    """
 
     container: AppContainer = AppContainer() if app_container is None else app_container
     stop: threading.Event = threading.Event() if stop_event is None else stop_event
     install_stop_signal_handlers(stop)
+    # The worker sends the nightly quality sample: it checks the providers too.
+    check_processor_uses(container)
     worker: BackgroundWorker = container.gateways.background_worker()
     LOGGER.info("Background worker started")
     try:

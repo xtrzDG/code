@@ -14,10 +14,12 @@ from app.schemas.dto.assistants.assembly_sources import LlmTokenPrice
 from app.schemas.dto.assistants.autotest_runs import JudgeVerdict
 from app.schemas.dto.conversations import LlmRequest, LlmResponse
 from app.schemas.dto.quality import QualityJudgement, QualityJudgeRequest
+from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.strings import JudgeNote, SystemPromptText
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.assembly.judge_verdicts import parse_judge_verdict
+from app.utilities.legal.processor_coverage import quality_judge_model_id
 from app.utilities.quality.quality_costs import cost_of, price_of, worst_case_cost
 from app.utilities.quality.quality_prompts import (
     QUALITY_JUDGE_SYSTEM_PROMPT,
@@ -29,8 +31,10 @@ from app.utilities.quality.quality_sampling import quality_score_id_of, to_hundr
 
 class ConversationQualityJudge:
     """
-    Scores one real conversation with the judge model (LLM_JUDGE_MODEL_ID,
-    by default the other provider's): the five autotest criteria on its
+    Scores one real conversation with the quality judge: the assistant's
+    own model while QUALITY_SAMPLING_JUDGE_SAME_PROVIDER is on (the
+    default), else LLM_JUDGE_MODEL_ID (the other provider's, once the
+    sub-processor list covers it): the five autotest criteria on its
     transcript with contacts blanked out, notes in the owner's language
     with contacts blanked out again. Provider errors propagate (the caller
     skips the conversation); an unreadable answer gives no score but its
@@ -45,9 +49,8 @@ class ConversationQualityJudge:
     ) -> None:
         self._llm_adapter: LlmAdapterContract = llm_adapter
         self._app_settings: AppSettings = app_settings
-        self._price: LlmTokenPrice = price_of(
-            llm_token_prices, app_settings.llm_judge_model_id
-        )
+        self._model_id: LlmModelId = quality_judge_model_id(app_settings)
+        self._price: LlmTokenPrice = price_of(llm_token_prices, self._model_id)
 
     def prepare(
         self,
@@ -62,7 +65,7 @@ class ConversationQualityJudge:
         )
         return QualityJudgeRequest(
             request=LlmRequest(
-                model_id=self._app_settings.llm_judge_model_id,
+                model_id=self._model_id,
                 system_prompt=SystemPromptText(QUALITY_JUDGE_SYSTEM_PROMPT),
                 tools=[],
                 transcript=[self._llm_adapter.build_user_text_turn(text)],
@@ -107,7 +110,7 @@ class ConversationQualityJudge:
                     JudgeNote(blank_contacts(str(note), business.country_code))
                     for note in verdict.notes
                 ],
-                judge_model_id=self._app_settings.llm_judge_model_id,
+                judge_model_id=self._model_id,
                 cost_micro_usd=cost,
                 judged_at=now,
                 created_at=now,

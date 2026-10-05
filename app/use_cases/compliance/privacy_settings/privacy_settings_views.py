@@ -24,6 +24,7 @@ def build_privacy_settings_view(
     return PrivacySettingsView(
         conversation_retention_days=settings.conversation_retention_days,
         llm_turn_retention_days=settings.llm_turn_retention_days,
+        quality_sampling_allowed=settings.quality_sampling_allowed,
         recording_retention_days=business.recording_retention_days,
         last_purge=(
             None

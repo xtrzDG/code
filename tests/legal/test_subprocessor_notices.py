@@ -6,7 +6,6 @@ log records it; staff are not told; a missed notice still goes out, marked
 late, until the notice period after the change has passed.
 """
 
-from app.registries.legal.subprocessor_catalog import SUBPROCESSORS
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.legal import SubprocessorChangeKind
@@ -15,6 +14,7 @@ from app.schemas.domain.legal import SubprocessorNoticeDocument
 from app.schemas.dto.jobs import JobTick
 from app.schemas.typings.platform.constrained_strings import JobName
 from tests.legal.legal_world import (
+    ORIGINAL_ENTRIES,
     NoticeWorld,
     announced_entry,
     business,
@@ -42,7 +42,7 @@ def notices(world: NoticeWorld) -> list[SubprocessorNoticeDocument]:
 
 
 def test_nothing_goes_out_before_the_notice_period_opens() -> None:
-    world = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2026-10-31")
+    world = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-10-31")
 
     assert tick(world) == 0
     assert world.notifier.sent == []
@@ -50,7 +50,7 @@ def test_nothing_goes_out_before_the_notice_period_opens() -> None:
 
 
 def test_owners_hear_thirty_days_ahead_once_in_their_language() -> None:
-    world = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2026-11-01")
+    world = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-11-01")
 
     assert tick(world) == 2
 
@@ -101,7 +101,7 @@ def test_owners_hear_thirty_days_ahead_once_in_their_language() -> None:
 
 
 def test_a_business_created_after_the_announcement_reads_the_table_instead() -> None:
-    world = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2026-11-01")
+    world = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-11-01")
     tick(world)
     newcomer = user("en", email="new@bakery.example")
     put(world.users, newcomer)
@@ -119,7 +119,7 @@ def test_a_business_created_after_the_announcement_reads_the_table_instead() -> 
 
 
 def test_a_missed_notice_goes_out_late_until_the_grace_period_ends() -> None:
-    late = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2026-12-05")
+    late = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-12-05")
 
     assert tick(late) == 2
     assert all(notice.is_late for notice in notices(late))
@@ -131,7 +131,7 @@ def test_a_missed_notice_goes_out_late_until_the_grace_period_ends() -> None:
     assert "should have told you earlier" in english
     assert "object" not in english
 
-    too_late = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2027-01-01")
+    too_late = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2027-01-01")
 
     assert tick(too_late) == 0
     assert too_late.notifier.sent == []
@@ -139,7 +139,7 @@ def test_a_missed_notice_goes_out_late_until_the_grace_period_ends() -> None:
 
 def test_a_removal_is_announced_without_an_objection() -> None:
     retiring = retiring_entry(removed_on="2026-12-01", announced_on="2026-10-15")
-    world = NoticeWorld((retiring, *SUBPROCESSORS[1:]), today="2026-11-01")
+    world = NoticeWorld((retiring, *ORIGINAL_ENTRIES[1:]), today="2026-11-01")
 
     assert tick(world) == 2
     english = next(
@@ -155,7 +155,7 @@ def test_a_removal_is_announced_without_an_objection() -> None:
 
 
 def test_one_failing_business_keeps_the_announcement_open_for_it() -> None:
-    world = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2026-11-01")
+    world = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-11-01")
     world.notifier.failing_business = world.salon.id
 
     assert tick(world) == 1
@@ -176,7 +176,7 @@ def test_one_failing_business_keeps_the_announcement_open_for_it() -> None:
 
 
 def test_a_business_whose_owners_have_no_address_is_recorded_once() -> None:
-    world = NoticeWorld((*SUBPROCESSORS, ADDITION), today="2026-11-01")
+    world = NoticeWorld((*ORIGINAL_ENTRIES, ADDITION), today="2026-11-01")
     silent = user("en")
     put(world.users, silent)
     put(

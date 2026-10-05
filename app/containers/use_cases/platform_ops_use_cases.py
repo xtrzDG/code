@@ -132,6 +132,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         conversation_quality_repo=repositories.conversation_quality_repo,
         quality_totals_repo=repositories.quality_totals_repo,
+        privacy_settings_repo=repositories.privacy_settings_repo,
         llm_adapter=adapters.llm_adapter,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,

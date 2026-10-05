@@ -1,7 +1,7 @@
 {
   "collection": "business_privacy_settings",
   "document_type": "BusinessPrivacySettingsDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -28,8 +28,12 @@
         "minimum": 1,
         "type": "integer"
       },
+      "quality_sampling_allowed": {
+        "default": true,
+        "type": "boolean"
+      },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {

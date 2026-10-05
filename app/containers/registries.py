@@ -14,6 +14,7 @@ from app.registries.demo.load_dataset_registry import LoadDatasetRegistry
 from app.registries.help.help_article_registry import HelpArticleRegistry
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
 from app.registries.legal.legal_text_registry import LegalTextRegistry
+from app.registries.legal.processor_use_registry import ProcessorUseRegistry
 from app.registries.legal.subprocessor_registry import SubprocessorRegistry
 from app.registries.limits.request_rate_limit_registry import (
     RequestRateLimitRegistry,
@@ -99,6 +100,11 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # The sub-processor list (DPA section 8), kept in code (1124).
     subprocessor_registry: Singleton[SubprocessorRegistry] = Singleton(
         SubprocessorRegistry
+    )
+    # The flows of personal data to model providers; startup checks that
+    # the sub-processor list covers each configured one (W13-TRUST).
+    processor_use_registry: Singleton[ProcessorUseRegistry] = Singleton(
+        ProcessorUseRegistry
     )
     # Data processing agreement texts (docs/legal), read once per process;
     # section 8's table comes live from the sub-processor list.
