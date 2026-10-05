@@ -26,6 +26,9 @@ from app.containers.adapters.inbox_collections_container import (
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
+from app.containers.adapters.legal_collections_container import (
+    LegalCollectionsContainer,
+)
 from app.containers.adapters.media_collections_container import (
     MediaCollectionsContainer,
 )
@@ -103,6 +106,7 @@ COLLECTION_CONTAINERS = (
     OperationsCollectionsContainer,
     PrivacyCollectionsContainer,
     invoicing.InvoicingCollectionsContainer,
+    LegalCollectionsContainer,
 )
 
 

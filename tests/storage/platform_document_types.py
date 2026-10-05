@@ -20,6 +20,7 @@ from app.schemas.domain.jobs import (
     WorkerHeartbeatDocument,
 )
 from app.schemas.domain.key_rotations import KeyRotationDocument
+from app.schemas.domain.legal import SubprocessorAnnouncementDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.mfa import (
     MfaChallengeDocument,
@@ -75,5 +76,7 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         platform_status.PlatformStatusDayDocument,
         help_progress.HelpProgressDocument,
         InvoiceCounterDocument,  # One invoice series for every business (1114).
+        # A sub-processor change is announced to every business at once (1124).
+        SubprocessorAnnouncementDocument,
     }
 )

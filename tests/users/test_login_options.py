@@ -24,6 +24,9 @@ def test_country_channels_meet_the_configured_providers() -> None:
         "is_phone_login_available": True,
         "is_email_login_available": False,
         "is_sign_up_restricted": False,
+        # Before the first terms took effect (the testbed's clock).
+        "terms_version": None,
+        "privacy_version": None,
     }
     assert israel.json()["phone_channels"] == ["sms"]
 
@@ -59,6 +62,9 @@ def test_without_a_country_every_configured_phone_channel_counts() -> None:
         "is_phone_login_available": True,
         "is_email_login_available": False,
         "is_sign_up_restricted": False,
+        # Before the first terms took effect (the testbed's clock).
+        "terms_version": None,
+        "privacy_version": None,
     }
     assert blank == body
     testbed.otp_delivery.channels = frozenset()

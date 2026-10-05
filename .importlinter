@@ -76,6 +76,7 @@ modules =
     app.use_cases.jobs
     app.use_cases.knowledge
     app.use_cases.leads
+    app.use_cases.legal
     app.use_cases.localization
     app.use_cases.maintenance
     app.use_cases.menu_import
