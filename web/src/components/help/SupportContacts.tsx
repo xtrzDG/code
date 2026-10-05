@@ -3,16 +3,20 @@
 /**
  * How to reach the platform's support (SUPPORT_WHATSAPP, SUPPORT_TELEGRAM,
  * SUPPORT_EMAIL on the API): the channels that are set, as links that open
- * the chat or the mail app. Nothing is shown while none is set.
+ * the chat or the mail app. Nothing is shown while none is set; "Still
+ * stuck?" then points at the status page instead of promising an answer
+ * (useStillStuck, StatusPageLink).
  */
 
+import Link from "next/link";
 import type { ComponentType } from "react";
 
-import { IconMail, IconTelegram, IconWhatsApp, type IconProps } from "@/components/icons";
+import { IconMail, IconPulse, IconTelegram, IconWhatsApp, type IconProps } from "@/components/icons";
 import { buttonClasses } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
+import { STATUS_PATH } from "@/lib/help/helpTopics";
 
 import { useSupportContacts, type SupportContacts as Contacts } from "./useHelp";
 
@@ -41,6 +45,31 @@ export function contactLinks(contacts: Contacts | undefined): ContactLink[] {
     links.push({ key: "email", label: "helpCenter.support.email", icon: IconMail, href: contacts.email_url, detail: contacts.email, external: false });
   }
   return links;
+}
+
+/** The lead under "Still stuck?": write to us when support has a channel, the status page when not; null while loading. */
+export function stillStuckLead(contacts: Contacts | undefined): MessageKey | null {
+  if (!contacts) {
+    return null;
+  }
+  return contactLinks(contacts).length > 0 ? "helpCenter.stillStuckLead" : "helpCenter.noSupportLead";
+}
+
+export function useStillStuck(): { lead: MessageKey | null; hasContacts: boolean } {
+  const contacts = useSupportContacts();
+  const lead = stillStuckLead(contacts.data);
+  return { lead, hasContacts: lead === "helpCenter.stillStuckLead" };
+}
+
+/** The status page, where "Still stuck?" leads when support has no channel. */
+export function StatusPageLink({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useI18n();
+  return (
+    <Link href={STATUS_PATH} onClick={onNavigate} className={buttonClasses({ variant: "secondary", size: "sm" })}>
+      <IconPulse className="size-4" aria-hidden />
+      {t("helpCenter.support.status")}
+    </Link>
+  );
 }
 
 /**

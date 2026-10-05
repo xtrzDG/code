@@ -6,6 +6,7 @@
  * in force at the given moment, so it follows summer time.
  */
 
+import { calendarFieldFormat } from "./intl/calendarFields";
 import { ZONE_CITIES } from "./zoneCities.generated";
 
 const MINUS = "−";
@@ -16,7 +17,7 @@ const offsetFormatters = new Map<string, Intl.DateTimeFormat | null>();
 function offsetFormatter(zone: string): Intl.DateTimeFormat | null {
   if (!offsetFormatters.has(zone)) {
     try {
-      offsetFormatters.set(zone, new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" }));
+      offsetFormatters.set(zone, calendarFieldFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" }));
     } catch {
       offsetFormatters.set(zone, null);
     }

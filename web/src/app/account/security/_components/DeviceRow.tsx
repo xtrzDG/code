@@ -4,10 +4,10 @@
 
 import type { UserSessionView } from "@/api/types";
 import { IconMonitor, IconPhone } from "@/components/icons";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { formatDateTime } from "@/lib/format";
 
 const KIND_LABELS = {
   desktop: "devices.kind.desktop",
@@ -34,10 +34,11 @@ export function DeviceRow({
   session: UserSessionView;
   onEnd: (session: UserSessionView) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+  const viewer = useViewerFormat();
   const deviceName = useDeviceName();
   const name = deviceName(session);
-  const when = (value: number) => formatDateTime(value, { locale });
+  const when = (value: number) => viewer.dateTime(value);
   const isPhone = session.device.kind === "phone" || session.device.kind === "tablet";
   const Icon = isPhone ? IconPhone : IconMonitor;
   const lastUsed = [

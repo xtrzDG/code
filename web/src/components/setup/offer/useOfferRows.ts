@@ -9,8 +9,9 @@
  * a revisit does not offer it again. Saves of one line queue behind each
  * other, so a line is never created twice.
  *
- * In the edit mode (Assistant → Business profile) the examples show only
- * while nothing is on offer yet, a change to a saved line is also saved a
+ * The examples show only while nothing is on offer yet and the step was
+ * never finished (initialOfferRows). In the edit mode (Assistant →
+ * Business profile) a change to a saved line is also saved a
  * moment after the typing stops, lines pasted from a spreadsheet are added
  * and saved at once, and what is left unsaved goes when the page does.
  */
@@ -23,7 +24,7 @@ import { unwrap } from "@/api/result";
 import { useQuery } from "@/api/useQuery";
 import type { KnowledgeItemDetails, KnowledgeItemKind, Schema } from "@/api/types";
 import { useI18n } from "@/i18n/client";
-import { blankOfferRow, editOfferRow, initialOfferRows, isOfferItem, offerSave, pastedOfferRows, savedOfferRow, type TunnelOfferRow } from "@/lib/tunnel/offer";
+import { blankOfferRow, editOfferRow, initialOfferRows, offerSave, pastedOfferRows, savedOfferRow, type TunnelOfferRow } from "@/lib/tunnel/offer";
 import { browserStorage, exampleKeyOf, readDoneExamples, rememberDoneExample } from "@/lib/tunnel/offerMemory";
 import type { PastedOffer } from "@/lib/tunnel/offerPaste";
 
@@ -36,7 +37,14 @@ export type RowStatus = LineSaveStatus;
 
 export type OfferRowPatch = Partial<Pick<TunnelOfferRow, "title" | "price" | "duration" | "kind">>;
 
-export function useOfferRows(businessId: string, examples: readonly Schema<"StarterOfferView">[], currency: string, kind: KnowledgeItemKind, mode: StepMode = "tunnel") {
+export function useOfferRows(
+  businessId: string,
+  examples: readonly Schema<"StarterOfferView">[],
+  currency: string,
+  kind: KnowledgeItemKind,
+  mode: StepMode = "tunnel",
+  isStepCompleted = false,
+) {
   const { locale } = useI18n();
   const track = useSaveTracker();
   const isEdit = mode === "edit";
@@ -60,8 +68,7 @@ export function useOfferRows(businessId: string, examples: readonly Schema<"Star
 
   const items = knowledge.data?.items;
   if (rows === null && items && knowledge.updatedAt > loadedAfter) {
-    const suggested = isEdit && items.some(isOfferItem) ? [] : examples;
-    setRows(initialOfferRows(items, suggested, currency, readDoneExamples(browserStorage(), businessId)));
+    setRows(initialOfferRows(items, examples, currency, { done: readDoneExamples(browserStorage(), businessId), isStepCompleted }));
   }
   const shown = rows ?? [];
 

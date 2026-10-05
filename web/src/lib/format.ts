@@ -19,9 +19,14 @@ export function toDate(value: Timestamp): Date {
   return value instanceof Date ? value : new Date(Math.floor(value / 1000));
 }
 
+/**
+ * The zone is required: a format without one takes the zone of whatever
+ * runs it (the server's UTC, then the browser's own), so the server and the
+ * browser write different text and React's hydration fails (#418).
+ */
 export function formatDateTime(
   value: Timestamp,
-  options: { locale: string; timeZone?: string; dateStyle?: "full" | "long" | "medium" | "short"; timeStyle?: "short" | "medium" },
+  options: { locale: string; timeZone: string; dateStyle?: "full" | "long" | "medium" | "short"; timeStyle?: "short" | "medium" },
 ): string {
   return dateTimeFormat(options.locale, {
     dateStyle: options.dateStyle ?? "medium",
@@ -32,7 +37,7 @@ export function formatDateTime(
 
 export function formatDate(
   value: Timestamp,
-  options: { locale: string; timeZone?: string; dateStyle?: "full" | "long" | "medium" | "short" },
+  options: { locale: string; timeZone: string; dateStyle?: "full" | "long" | "medium" | "short" },
 ): string {
   return dateTimeFormat(options.locale, {
     dateStyle: options.dateStyle ?? "medium",
@@ -40,7 +45,7 @@ export function formatDate(
   }).format(toDate(value));
 }
 
-export function formatTime(value: Timestamp, options: { locale: string; timeZone?: string }): string {
+export function formatTime(value: Timestamp, options: { locale: string; timeZone: string }): string {
   return dateTimeFormat(options.locale, { timeStyle: "short", timeZone: options.timeZone }).format(
     toDate(value),
   );

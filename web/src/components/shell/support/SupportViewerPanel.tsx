@@ -8,9 +8,9 @@
 import { useRouter } from "next/navigation";
 
 import type { SupportAccessView } from "@/api/types";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Button, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { formatTime } from "@/lib/format";
 import { adminClientPath } from "@/lib/navigation";
 import { supportUntil } from "@/lib/supportAccess";
 
@@ -27,11 +27,12 @@ export function SupportViewerPanel({
   businessName: string;
   actions: ReturnType<typeof useSupportAccess>;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+  const viewer = useViewerFormat();
   const toast = useToast();
   const router = useRouter();
   const until = supportUntil(view);
-  const time = (value: number) => formatTime(value, { locale });
+  const time = (value: number) => viewer.time(value);
   const writeUntil = view.write_access?.expires_at;
 
   const leave = async () => {

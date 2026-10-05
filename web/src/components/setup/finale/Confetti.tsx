@@ -2,17 +2,16 @@
 
 /**
  * Confetti for the moment the assistant goes live: three bursts drawn on a
- * canvas over the page, gone in about three seconds. Nothing is drawn with
+ * canvas over the page in clay, sand and ink, gone in about three seconds. Nothing is drawn with
  * reduced motion (the finale's glow and card carry the moment then).
  */
 
 import { useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
 
+import { confettiPalette } from "@/lib/tunnel/confettiPalette";
 import { advance, alive, burst, type Particle } from "@/lib/tunnel/depth";
 
-/** The brand's accents (decoration only: the same in both themes). */
-const PALETTE = ["#ad5732", "#d9a86c", "#b8796a", "#98b0c8", "#e8d6bf"] as const;
 const MAX_STEP_SECONDS = 0.05;
 
 function draw(context: CanvasRenderingContext2D, particles: readonly Particle[]) {
@@ -47,10 +46,12 @@ export function Confetti() {
     };
     resize();
     const { width, height } = size();
+    // Clay, sand and the page's ink (the canvas carries text-ink, so its colour follows the theme).
+    const palette = confettiPalette(getComputedStyle(node).color);
     let particles = [
-      ...burst(110, { x: width * 0.5, y: height * 0.38 }, PALETTE),
-      ...burst(60, { x: width * 0.18, y: height * 0.62 }, PALETTE),
-      ...burst(60, { x: width * 0.82, y: height * 0.62 }, PALETTE),
+      ...burst(110, { x: width * 0.5, y: height * 0.38 }, palette),
+      ...burst(60, { x: width * 0.18, y: height * 0.62 }, palette),
+      ...burst(60, { x: width * 0.82, y: height * 0.62 }, palette),
     ];
     let last = performance.now();
     let frame = 0;
@@ -75,5 +76,5 @@ export function Confetti() {
     };
   }, [isReduced]);
 
-  return <canvas ref={canvas} aria-hidden className="pointer-events-none fixed inset-0 z-40 size-full" />;
+  return <canvas ref={canvas} aria-hidden className="pointer-events-none fixed inset-0 z-40 size-full text-ink" />;
 }

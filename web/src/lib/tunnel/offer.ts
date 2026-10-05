@@ -32,32 +32,43 @@ function inTypedOrder(left: KnowledgeItemDetails, right: KnowledgeItemDetails): 
   return left.created_at - right.created_at || left.id.localeCompare(right.id);
 }
 
+export interface InitialOfferOptions {
+  /** Examples the owner replaced or removed (offerMemory), by example key. */
+  done?: ReadonlySet<string>;
+  /** The offer step was finished or skipped before: the owner has dealt with the examples. */
+  isStepCompleted?: boolean;
+}
+
 /**
  * The table's first rows: the business's offer items in the order they
- * were added, then the niche's examples the owner has not dealt with yet:
- * not replaced or removed (`done`, see offerMemory) and with no saved line
- * of the same name.
+ * were added. The niche's examples are offered only to an empty table on
+ * a step never finished: once anything is saved (in whatever language the
+ * owner typed it: "Бизнес-ланч" is the example "Business lunch" as much as
+ * "Business lunch" is) or the step was completed, a revisit shows exactly
+ * what the business sells. Examples the owner dealt with are matched by
+ * their key, never by a title, which changes with the language.
  */
 export function initialOfferRows(
   items: readonly KnowledgeItemDetails[],
   examples: readonly Schema<"StarterOfferView">[],
   currency: string,
-  done: ReadonlySet<string> = new Set(),
+  { done = new Set(), isStepCompleted = false }: InitialOfferOptions = {},
 ): TunnelOfferRow[] {
   const saved = items
     .filter(isOfferItem)
     .sort(inTypedOrder)
     .map((item) => ({ ...offerRowFromItem(item, currency), isSuggestion: false }));
-  const names = new Set(saved.map((row) => row.title.trim().toLocaleLowerCase()));
-  const suggestions = examples
-    .filter((example) => !done.has(example.key) && !names.has(example.title.trim().toLocaleLowerCase()))
+  if (saved.length > 0 || isStepCompleted) {
+    return saved;
+  }
+  return examples
+    .filter((example) => !done.has(example.key))
     .map((example) => ({
       ...newOfferRow(example.kind, exampleRowKey(example.key)),
       title: example.title,
       duration: example.duration_minutes ? String(example.duration_minutes) : "",
       isSuggestion: true,
     }));
-  return [...saved, ...suggestions];
 }
 
 export function blankOfferRow(kind: KnowledgeItemKind, key: string): TunnelOfferRow {

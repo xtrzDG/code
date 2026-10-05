@@ -40,5 +40,7 @@ export const MFA_ADMIN_EMAIL = "mfa-admin@e2e.workshop.example";
 export const SYSTEM_ADMIN_EMAIL = "system-admin@e2e.workshop.example";
 /** A platform admin who announces on the status page (status-page.spec.ts). */
 export const STATUS_ADMIN_EMAIL = "status-admin@e2e.workshop.example";
+/** A platform admin who walks the admin pages from Tbilisi (tour-routes.spec.ts). */
+export const TOUR_ADMIN_EMAIL = "tour-admin@e2e.workshop.example";
 /** The support contacts the suite's API shows (help-center.spec.ts). */
 export const SUPPORT_TELEGRAM = "workshop_help";

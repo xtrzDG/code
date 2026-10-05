@@ -1,8 +1,9 @@
 "use client";
 
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { formatDateTime, formatNumber } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 
 import { byteSize, durationParts, type AlertState, type AlertUnit, type JobLane, type RunState } from "../../_lib/system";
 
@@ -23,6 +24,7 @@ export const RUN_STATE_NAMES: Readonly<Record<RunState, MessageKey>> = {
 /** Times, durations, sizes and alert figures of the System page in the interface language (lib/format.ts, lib/intl). */
 export function useSystemFormat() {
   const { t, tp, locale } = useI18n();
+  const viewer = useViewerFormat();
   const number = (value: number) => formatNumber(value, locale);
   const duration = (seconds: number) => {
     const { unit, count } = durationParts(seconds);
@@ -44,7 +46,7 @@ export function useSystemFormat() {
     /** "12 min ago". */
     ago: (seconds: number) => t("adminSystem.ago", { duration: duration(seconds) }),
     /** An API time (microseconds) in the admin's own time zone; "—" without one. */
-    when: (micros: number | null | undefined) => (micros ? formatDateTime(micros, { locale }) : "—"),
+    when: (micros: number | null | undefined) => (micros ? viewer.dateTime(micros) : "—"),
     bytes: (bytes: number) => {
       const { unit, value } = byteSize(bytes);
       return t(`adminSystem.bytes.${unit}`, { value: formatNumber(value, locale, { maximumFractionDigits: 1 }) });

@@ -2,6 +2,7 @@
  * Pure helpers shared by the channels, billing, settings and admin pages.
  */
 
+import { calendarParts } from "@/lib/intl/calendarFields";
 import { numberFormat } from "@/lib/intl/formatters";
 
 /** A URL hash without the leading "#", percent-decoded; "" when its escapes are malformed (e.g. "#%"). */
@@ -100,8 +101,7 @@ export function downloadJson(data: unknown, fileName: string): void {
 
 /** Offset of a time zone from UTC at an instant, in milliseconds (Tbilisi: +4 h). */
 function zoneOffsetMs(instantMs: number, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
+  const parts = calendarParts(new Date(instantMs), timeZone, {
     hourCycle: "h23",
     year: "numeric",
     month: "2-digit",
@@ -109,8 +109,8 @@ function zoneOffsetMs(instantMs: number, timeZone: string): number {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }).formatToParts(new Date(instantMs));
-  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((item) => item.type === type)?.value ?? 0);
+  });
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts[type] ?? 0);
   const asUtc = Date.UTC(part("year"), part("month") - 1, part("day"), part("hour"), part("minute"), part("second"));
   return asUtc - Math.floor(instantMs / 1000) * 1000;
 }

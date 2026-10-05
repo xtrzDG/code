@@ -3,9 +3,9 @@
 /** One member of the admin team: who, how they sign in, their role, "Remove". */
 
 import type { PlatformAdminRole, PlatformAdminView } from "@/api/types";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Badge, Button, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { formatDate } from "@/lib/format";
 
 import { ADMIN_ROLES, ROLE_LABELS, adminDestination } from "../../_lib/team";
 
@@ -22,10 +22,11 @@ export function AdminRow({
   onRoleChange: (admin: PlatformAdminView, role: PlatformAdminRole) => void;
   onRemove: (admin: PlatformAdminView) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+  const viewer = useViewerFormat();
   const destination = adminDestination(admin);
   const name = admin.display_name ?? destination;
-  const date = formatDate(admin.created_at, { locale });
+  const date = viewer.date(admin.created_at);
   const addedLine = (member: PlatformAdminView, when: string) =>
     !member.added_by
       ? t("adminTeam.bootstrapped", { date: when })

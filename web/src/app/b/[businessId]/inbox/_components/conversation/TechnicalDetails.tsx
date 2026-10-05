@@ -4,9 +4,8 @@
  * "Technical details": what is behind a message (the model, tokens and AI
  * cost for platform admins; the exact requests the assistant made to the
  * business's data, with their answers, for everyone who opens it) and the
- * conversation's totals. Closed for owners and staff, who read the plain
- * actions above it; open by default for platform admins on a wide screen
- * (closed below lg); a person's own open or close is remembered
+ * conversation's totals. Closed by default for everyone, who read the
+ * plain actions above it; a person's own open or close is remembered
  * (_lib/technicalDetails).
  */
 
@@ -22,27 +21,19 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { prettyJson } from "../../_lib/conversationModel";
-import {
-  localChoiceStorage,
-  readDetailsChoice,
-  startsOpen,
-  TECHNICAL_DETAILS_WIDE_QUERY,
-  writeDetailsChoice,
-} from "../../_lib/technicalDetails";
-import { useMediaQuery } from "../../_lib/useMediaQuery";
+import { localChoiceStorage, readDetailsChoice, startsOpen, writeDetailsChoice } from "../../_lib/technicalDetails";
 import type { UsageTotals } from "../../_lib/conversationUsage";
 
 function Disclosure({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
-  const { isPlatformAdmin, me } = useBusiness();
-  const isWide = useMediaQuery(TECHNICAL_DETAILS_WIDE_QUERY);
+  const { me } = useBusiness();
   const details = useRef<HTMLDetailsElement>(null);
   const userId = me.user.id;
 
   useEffect(() => {
     if (details.current) {
-      details.current.open = startsOpen(readDetailsChoice(localChoiceStorage(), userId), isPlatformAdmin, isWide);
+      details.current.open = startsOpen(readDetailsChoice(localChoiceStorage(), userId));
     }
-  }, [userId, isPlatformAdmin, isWide]);
+  }, [userId]);
 
   // Only a person's own click is remembered (opening by default is not a choice).
   const remember = () => {

@@ -8,6 +8,7 @@
  */
 
 import { toDate, type Timestamp } from "@/lib/format";
+import { calendarParts } from "@/lib/intl/calendarFields";
 import { dateTimeFormat, relativeTimeFormat } from "@/lib/intl/formatters";
 
 /** "YYYY-MM-DD" in the business time zone (the API's LocalDate). */
@@ -37,14 +38,8 @@ export function localDateToUtc(date: LocalDateText): Date {
 
 /** The calendar date of an instant in a time zone: "2026-10-02". */
 export function localDateOf(value: Timestamp, timeZone: string): LocalDateText {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(toDate(value));
-  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
+  const parts = calendarParts(toDate(value), timeZone, { year: "numeric", month: "2-digit", day: "2-digit" });
+  return `${parts.year ?? ""}-${parts.month ?? ""}-${parts.day ?? ""}`;
 }
 
 /** Today in the business time zone. */

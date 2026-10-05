@@ -8,15 +8,13 @@ function memory(): ChoiceStorage {
 }
 
 describe("technical details", () => {
-  it("start open only for platform admins on a wide screen", () => {
-    expect(startsOpen(null, true, true)).toBe(true);
-    expect(startsOpen(null, true, false)).toBe(false);
-    expect(startsOpen(null, false, true)).toBe(false);
+  it("start closed for everyone, platform admins too", () => {
+    expect(startsOpen(null)).toBe(false);
   });
 
   it("follow the person's own last choice", () => {
-    expect(startsOpen("open", false, false)).toBe(true);
-    expect(startsOpen("closed", true, true)).toBe(false);
+    expect(startsOpen("open")).toBe(true);
+    expect(startsOpen("closed")).toBe(false);
   });
 
   it("remember the choice per person", () => {

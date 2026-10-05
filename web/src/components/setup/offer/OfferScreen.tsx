@@ -19,6 +19,7 @@ import { IconFile, IconGlobe, IconPencil } from "@/components/icons";
 import { ErrorState, LoadingRegion, SkeletonRows, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { pricedCount } from "@/lib/tunnel/offer";
+import { stepStates } from "@/lib/tunnel/steps";
 import { offerKinds } from "@/lib/wizard/offers";
 
 import { SectionQuestions } from "../edit/SectionQuestions";
@@ -40,7 +41,8 @@ export function OfferScreen({ ctx, mode = "tunnel" }: { ctx: StepContext; mode?:
   const [isSaving, setSaving] = useState(false);
   const isEdit = mode === "edit";
   const kinds = offerKinds(ctx.wizard.knowledge_kinds);
-  const table = useOfferRows(business.id, ctx.starters.offer_examples ?? [], currency, kinds[0] ?? "service", mode);
+  const isStepCompleted = stepStates(ctx.setup).offer !== "todo";
+  const table = useOfferRows(business.id, ctx.starters.offer_examples ?? [], currency, kinds[0] ?? "service", mode, isStepCompleted);
   const priced = pricedCount(table.rows, currency);
 
   const leave = async (skip: boolean) => {

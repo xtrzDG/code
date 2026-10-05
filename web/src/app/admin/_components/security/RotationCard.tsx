@@ -4,10 +4,11 @@ import { useState } from "react";
 
 import { IconKey, IconRefresh } from "@/components/icons";
 import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState } from "@/components/ui";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Facts } from "@/components/workspace/Facts";
 import { useToast } from "@/components/ui/Toast";
 import { useI18n } from "@/i18n/client";
-import { formatDateTime, formatNumber } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 
 import {
   ROTATION_STATUS_TONES,
@@ -116,7 +117,8 @@ function FindingText({ finding }: { finding: RotationFinding }) {
 
 function RunFacts({ rotation }: { rotation: KeyRotation }) {
   const { t, locale } = useI18n();
-  const when = (value: number | null | undefined) => (value ? formatDateTime(value, { locale }) : "—");
+  const viewer = useViewerFormat();
+  const when = (value: number | null | undefined) => (value ? viewer.dateTime(value) : "—");
   const count = (value: number) => formatNumber(value, locale);
   return (
     <Facts

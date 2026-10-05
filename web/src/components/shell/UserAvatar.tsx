@@ -1,31 +1,8 @@
-import type { UserView } from "@/api/types";
 import { cn } from "@/lib/cn";
 
-type UserNames = Pick<UserView, "display_name" | "phone_number" | "email">;
+import { userInitials, type UserNames } from "./userNames";
 
-/** Name to show for the signed-in user: display name, else phone or e-mail. */
-export function userDisplayName(user: UserNames): string {
-  return user.display_name || user.phone_number || user.email || "";
-}
-
-/** How the user signs in: the phone number, else the e-mail. */
-export function userContact(user: UserNames): string {
-  return user.phone_number || user.email || "";
-}
-
-/** Up to two letters of the name ("Nino Beridze" -> "NB"), or the first digit-free character. */
-export function userInitials(user: UserNames): string {
-  const words = (user.display_name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (words.length > 0) {
-    return words
-      .slice(0, 2)
-      .map((word) => Array.from(word)[0] ?? "")
-      .join("")
-      .toLocaleUpperCase();
-  }
-  const fallback = (user.email ?? "").trim();
-  return fallback ? (Array.from(fallback)[0] ?? "").toLocaleUpperCase() : "#";
-}
+export { userContact, userDisplayName, userInitials } from "./userNames";
 
 /** A round badge with the user's initials on the accent gradient. */
 export function UserAvatar({ user, className }: { user: UserNames; className?: string }) {

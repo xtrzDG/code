@@ -60,9 +60,14 @@
   --tone-sand: light-dark(#c48d4e, #d9a86c);
   --tone-rose: light-dark(#a8685a, #b8796a);
 
-  /* Muted states: sage, ochre, brick, slate. */
-  --success: light-dark(#4a6739, #a9bf94);
-  --success-soft: light-dark(#edf1e7, rgb(169 191 148 / 0.12));
+  /*
+   * Muted states: olive, ochre, brick, slate. "Done" is a desaturated warm
+   * olive-khaki that sits with the clay accent and never reads as green
+   * (the palette guard, tests/platform/test_palette_guard.py, keeps every
+   * hue of the green, cyan, indigo and purple families out).
+   */
+  --success: light-dark(#5c5a2e, #c2bd8c);
+  --success-soft: light-dark(#f0efe2, rgb(194 189 140 / 0.12));
   --warning: light-dark(#86570f, #e3b469);
   --warning-soft: light-dark(#f8eedb, rgb(227 180 105 / 0.12));
   --danger: light-dark(#b0362b, #f0918a);

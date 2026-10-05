@@ -81,6 +81,9 @@ test("an announced outage shows on the status page and over the cabinet until it
     await expect(now.getByText(status.affects.replace("{components}", status.components.telegram))).toBeVisible();
     const telegram = visitor.locator("[data-component='telegram']");
     await expect(telegram.getByText(status.levels.outage, { exact: true })).toBeVisible();
+    // A fresh platform has measured a day or two: the row says since when, never "100 %" or "0 %".
+    await expect(telegram.getByText(new RegExp(`^${status.observingSince.replace("{date}", ".+")}$`))).toBeVisible();
+    await expect(telegram).not.toContainText("%");
     const audit = await new AxeBuilder({ page: visitor }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(audit.violations).toEqual([]);
 

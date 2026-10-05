@@ -3,24 +3,30 @@
 import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { formatNumber } from "@/lib/format";
-import { DAY_COLOURS, LEVEL_TONES, goodDayShare, type PlatformStatus } from "@/lib/help/platformStatus";
+import { formatDate, formatNumber } from "@/lib/format";
+import { DAY_COLOURS, LEVEL_TONES, historySummary, type HistorySummary, type PlatformStatus } from "@/lib/help/platformStatus";
 
 type ComponentStatus = PlatformStatus["components"][number];
 
 /**
  * One part of the platform: how it is now and its last 90 days as bars,
  * oldest on the start side (each bar names its day and level when pointed
- * at), with the share of days without trouble.
+ * at), with the share of days without trouble once a week is measured, and
+ * since when it is observed before that.
  */
 export function ComponentRow({ component }: { component: ComponentStatus }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const name = t(`platformStatus.components.${component.component}`);
-  const share = goodDayShare(component.history);
-  const summary =
-    share === null
-      ? t("platformStatus.noHistory")
-      : t("platformStatus.uptime", { share: formatNumber(share, locale, { style: "percent", maximumFractionDigits: 1 }) });
+  const summary = summaryText(historySummary(component.history), {
+    none: () => t("platformStatus.noHistory"),
+    // History days are calendar days ("2026-10-05"): written as such, in no time zone.
+    observing: (since) =>
+      t("platformStatus.observingSince", {
+        date: formatDate(new Date(`${since}T12:00:00Z`), { locale, timeZone: "UTC", dateStyle: "long" }),
+      }),
+    share: (share, days) =>
+      tp("platformStatus.uptime", days, { share: formatNumber(share, locale, { style: "percent", maximumFractionDigits: 1 }) }),
+  });
 
   return (
     <li data-component={component.component} className="space-y-3 px-5 py-4">
@@ -48,4 +54,18 @@ export function ComponentRow({ component }: { component: ComponentStatus }) {
       </div>
     </li>
   );
+}
+
+function summaryText(
+  summary: HistorySummary,
+  texts: { none: () => string; observing: (since: string) => string; share: (share: number, days: number) => string },
+): string {
+  switch (summary.kind) {
+    case "none":
+      return texts.none();
+    case "observing":
+      return texts.observing(summary.since);
+    case "share":
+      return texts.share(summary.share, summary.days);
+  }
 }

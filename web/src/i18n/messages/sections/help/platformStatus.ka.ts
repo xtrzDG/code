@@ -32,7 +32,11 @@ export const platformStatusKa: Translation<typeof platformStatusEn> = {
   historyLabel: "{component}: ბოლო 90 დღე",
   historyStart: "90 დღის წინ",
   historyEnd: "დღეს",
-  uptime: "დღეების {share} პრობლემების გარეშე",
+  uptime: {
+    one: "{count} დღის განმავლობაში {share} პრობლემების გარეშე",
+    other: "{count} დღის განმავლობაში {share} პრობლემების გარეშე",
+  },
+  observingSince: "დაკვირვების დაწყება: {date}",
   noHistory: "გაზომილი დღეები ჯერ არ არის",
   day: "{day}: {level}",
   announcementLevels: {

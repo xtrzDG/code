@@ -6,7 +6,7 @@
 
 export const helpCenterEn = {
   title: "Help",
-  description: "Short guides to every part of the cabinet. Cannot find an answer? Write to us.",
+  description: "Short guides to every part of the cabinet.",
   searchLabel: "Search the help",
   searchPlaceholder: "Telegram, booking, invoice…",
   search: "Search",
@@ -15,7 +15,7 @@ export const helpCenterEn = {
     one: "{count} article found",
     other: "{count} articles found",
   },
-  noResults: "Nothing found for “{query}”. Try another word, or write to us.",
+  noResults: "Nothing found for “{query}”. Try another word.",
   topics: {
     getting_started: "Getting started",
     channels: "Channels",
@@ -32,6 +32,7 @@ export const helpCenterEn = {
   back: "Back",
   stillStuck: "Still stuck?",
   stillStuckLead: "Write to us: a person from the team answers.",
+  noSupportLead: "Check the platform status: when something does not work for everyone, the team is already on it.",
   tipsAgain: "Show tips again",
   tipsShown: "The tips will show again on the Inbox, Assistant and Channels pages.",
   opensInNewTab: "opens in a new tab",

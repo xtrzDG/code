@@ -51,7 +51,9 @@ test("after 24 hours a WhatsApp reply goes out in the owner's template", async (
 
   await openCard(page, owner.businessId);
   await expect(page.getByText(en.conversations.reply.template.intro)).toBeVisible();
-  await expect(page.getByText(/“staff_reply”/)).toBeVisible();
+  // The hint names the template's language, never its WhatsApp Manager key.
+  await expect(page.getByText(/\(language: [^)]*Portuguese\)/)).toBeVisible();
+  await expect(page.getByText(/staff_reply/)).toHaveCount(0);
   await page.getByLabel(en.conversations.reply.label).fill("Sua mesa está reservada.\nAté sábado!");
   await page.getByRole("button", { name: en.conversations.reply.template.send }).click();
 

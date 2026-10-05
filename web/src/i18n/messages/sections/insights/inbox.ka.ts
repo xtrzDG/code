@@ -13,6 +13,8 @@ export const inboxKa: Translation<typeof inboxEn> = {
     unassigned: "დაუნიშნავი",
     all: "ყველა",
   },
+  moreViews: "მეტი",
+  moreViewsChosen: "მეტი: {view}",
   viewCount: {
     one: "{count} საუბარი",
     other: "{count} საუბარი",

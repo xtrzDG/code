@@ -14,8 +14,9 @@
 
 import type { Page } from "@playwright/test";
 
+import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en } from "./support/messages";
+import { en, ru } from "./support/messages";
 import {
   answerBusiness,
   expectBackdropBehind,
@@ -165,9 +166,19 @@ test.describe("the rail and the offer step", () => {
     await expectStep(page, en.tunnelOffer.offer.title);
     await expect(names.nth(2)).toHaveValue("Beard trim");
     const shown = await names.evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
-    expect(shown.slice(0, 3)).toEqual([first, "Balayage", "Beard trim"]);
+    // Exactly what the business sells: no untouched example comes back once lines are saved.
+    expect(shown).toEqual([first, "Balayage", "Beard trim"]);
     expect(shown).not.toContain(replaced);
     expect(shown).not.toContain(removed);
+    await expect(page.getByText(en.tunnelOffer.offer.suggestion, { exact: true })).toHaveCount(0);
+
+    // In another interface language the saved lines are not doubled by the examples' own titles.
+    await page.context().addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL }]);
+    await page.reload();
+    await expectStep(page, ru.tunnelOffer.offer.title);
+    const ruNames = page.getByRole("textbox", { name: new RegExp(`^${ru.tunnelOffer.offer.name} \\d+$`) });
+    await expect(ruNames).toHaveCount(3);
+    await expect(page.getByText(ru.tunnelOffer.offer.suggestion, { exact: true })).toHaveCount(0);
   });
 });
 

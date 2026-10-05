@@ -13,6 +13,11 @@
  *
  * It springs in and fades out (`data-motion`, src/styles/motion.css); while
  * it fades out it keeps showing what it showed when it was open.
+ *
+ * The dialog never grows past the screen (100dvh): the header and the
+ * footer stay put and the body scrolls. A form whose buttons must stay
+ * inside its <form> ends with <ModalFooter>, which sticks to the bottom
+ * of the body the same way, so "Save" is in sight on a short screen.
  */
 
 import { useId, type ReactNode } from "react";
@@ -25,6 +30,21 @@ import { useClosingContent } from "./useClosingContent";
 import { useModalDialog } from "./useModalDialog";
 
 const SIZES = { sm: "max-w-md", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" } as const;
+
+/** The actions of a form inside a modal body: stuck to the dialog's bottom edge while the form scrolls. */
+export function ModalFooter({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      data-modal-footer=""
+      className={cn(
+        "sticky -bottom-5 z-10 -mx-5 -mb-5 flex flex-wrap items-center justify-end gap-3 border-t border-line bg-surface px-5 py-3.5",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function Modal({
   open,
@@ -63,7 +83,7 @@ export function Modal({
     >
       {closing.isMounted ? (
         <div className="flex max-h-[calc(100dvh-2rem)] flex-col">
-          <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+          <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div className="min-w-0 space-y-1">
               <h2 id={titleId} className="text-base font-semibold tracking-tight">
                 {shownTitle}
@@ -83,9 +103,11 @@ export function Modal({
               <IconX className="size-5" aria-hidden />
             </button>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto p-5">{shownChildren}</div>
+          <div data-modal-body="" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
+            {shownChildren}
+          </div>
           {shownFooter ? (
-            <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-3.5">
+            <footer className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-3.5">
               {shownFooter}
             </footer>
           ) : null}

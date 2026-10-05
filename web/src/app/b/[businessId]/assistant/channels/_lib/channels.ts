@@ -5,6 +5,7 @@
 
 import type { Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
+import { formatPhone } from "@/lib/phone";
 
 export type ChannelKind = Schema<"ChannelKind">;
 export type ChannelStatus = Schema<"ChannelStatus">;
@@ -85,6 +86,10 @@ export function upsertChannel(channels: readonly ChannelView[] | undefined, upda
 export function accountLabel(kind: ChannelKind, accountId: string | null | undefined): string | null {
   if (!accountId) {
     return null;
+  }
+  if (kind === "phone") {
+    // The assistant's line as people read it: "+995 32 200 00 00".
+    return formatPhone(accountId);
   }
   return kind === "telegram" && !accountId.startsWith("@") ? `@${accountId}` : accountId;
 }

@@ -96,7 +96,15 @@ test.describe("on a phone", () => {
   test("the ? in the top bar opens the page's guide", async ({ page, owner }) => {
     await page.goto(`/b/${owner.businessId}/assistant/channels`);
     await waitForNetworkQuiet(page);
-    await expect(page.getByRole("region", { name: tips.channels.title })).toBeVisible();
+    const tip = page.getByRole("region", { name: tips.channels.title });
+    await expect(tip).toBeVisible();
+    // On a phone the tip is one line just above the tab bar, not a card over the first screen.
+    const tipBox = await tip.boundingBox();
+    const tabBarBox = await page.getByRole("navigation", { name: en.navigation.tabBar }).boundingBox();
+    expect(tipBox?.height ?? 0).toBeLessThanOrEqual(56);
+    expect((tipBox?.y ?? 0) + (tipBox?.height ?? 0)).toBeLessThanOrEqual(tabBarBox?.y ?? 0);
+    // The current sub-tab (Channels) is scrolled into sight in the Assistant's row.
+    await expect(page.getByRole("main").locator('nav [aria-current="page"]').filter({ hasText: en.navigation.pages.assistantChannels })).toBeInViewport();
     await page.getByRole("banner").getByRole("button", { name: help.pageHelp }).click();
     const drawer = page.getByRole("dialog", { name: "Where your customers write and call" });
     await expect(drawer.getByRole("heading", { name: "Guides" })).toBeVisible();

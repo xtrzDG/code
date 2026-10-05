@@ -98,7 +98,17 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: /tour-routes\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
+    },
+    {
+      // Every route of the screenshot tour read from Tbilisi (UTC+4) while
+      // the cabinet's server runs in UTC: a date formatted without its zone
+      // renders differently on the two, and the console-clean gate fails
+      // on React's hydration error (#418).
+      name: "tz-tbilisi",
+      testMatch: /tour-routes\.spec\.ts$/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 }, timezoneId: "Asia/Tbilisi" },
     },
   ],
   webServer: [
@@ -151,6 +161,9 @@ export default defineConfig({
       cwd: WEB_DIRECTORY,
       url: `${WEB_URL}/login`,
       env: {
+        // The server's clock zone differs from every browser's (Europe/Berlin,
+        // Asia/Tbilisi): text formatted in "the local zone" cannot hydrate.
+        TZ: "UTC",
         BACKEND_URL: API_URL,
         COOKIE_SECURE: "false",
         NEXT_TELEMETRY_DISABLED: "1",

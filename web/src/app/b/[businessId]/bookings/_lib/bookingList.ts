@@ -5,6 +5,7 @@
 
 import { daysBetween, type LocalDateText } from "@/components/insights/dates";
 import type { BookingStatus, BookingView } from "@/components/insights/types";
+import { calendarParts } from "@/lib/intl/calendarFields";
 
 export interface BookingDay {
   date: LocalDateText;
@@ -72,18 +73,11 @@ export function bookingActionLayout(actions: BookingActions): BookingActionLayou
 
 /** "YYYY-MM-DDTHH:MM" now in a time zone, to compare with a booking's local start. */
 export function localNowIn(timeZone: string, now: Date = new Date()): string {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    })
-      .formatToParts(now)
-      .map((part) => [part.type, part.value]),
+  const parts = calendarParts(
+    now,
+    timeZone,
+    { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" },
+    "en-CA",
   );
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }

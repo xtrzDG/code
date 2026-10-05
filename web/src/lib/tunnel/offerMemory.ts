@@ -3,8 +3,10 @@
  * their own line (an example they typed over and saved) or removed. The
  * offer step remembers their keys per business in this browser, so a
  * revisit does not bring back "Chef's special" after the owner renamed it
- * to "Khinkali" or deleted it. A saved line whose name equals an example's
- * hides that example anyway (another browser, a cleared storage).
+ * to "Khinkali" or deleted it. Examples are matched by key, never by
+ * name (names change with the language); and once any line is saved, no
+ * example is offered at all (initialOfferRows), whatever this browser
+ * remembers.
  *
  * Storage can be missing or refuse (private windows, quotas): every access
  * is wrapped, and a broken value reads as nothing remembered.

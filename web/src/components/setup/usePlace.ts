@@ -10,6 +10,7 @@
 
 import { useCountries, useCountryProfile } from "@/api/catalog";
 import { guessCountryCode, isCountryAvailable, pickInitialTimezone } from "@/lib/countries";
+import { systemTimeZone } from "@/lib/intl/calendarFields";
 import { languageOptions } from "@/lib/tunnel/languageOptions";
 
 export interface PlaceForm {
@@ -48,7 +49,7 @@ export function usePlace(form: PlaceForm, userCountry: string | null | undefined
       ? pickInitialTimezone(
           zones.map((zone) => zone.name),
           defaults.default_timezone.name,
-          typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+          systemTimeZone(),
         )
       : undefined);
 

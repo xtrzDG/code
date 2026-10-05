@@ -11,10 +11,10 @@
 
 import { useEffect, useState } from "react";
 
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { usePageLevel, usePhoneChrome, usePhoneLive } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { formatTime } from "@/lib/format";
 import { freshness } from "@/lib/freshness";
 
 import { useLiveCabinet } from "./LiveEvents";
@@ -32,7 +32,8 @@ function useNow(): number {
 
 /** "Updated just now", "Updated 3 minutes ago", "Updating…" (empty before the first load). */
 export function useUpdatedText(updatedAt: number, isFetching: boolean): string {
-  const { t, tp, locale } = useI18n();
+  const { t, tp } = useI18n();
+  const viewer = useViewerFormat();
   const now = useNow();
   if (isFetching && updatedAt > 0) {
     return t("live.updating");
@@ -46,7 +47,7 @@ export function useUpdatedText(updatedAt: number, isFetching: boolean): string {
     case "minutes":
       return tp("live.updatedMinutesAgo", state.minutes);
     case "at":
-      return t("live.updatedAt", { time: formatTime(state.at, { locale }) });
+      return t("live.updatedAt", { time: viewer.time(state.at) });
   }
 }
 
