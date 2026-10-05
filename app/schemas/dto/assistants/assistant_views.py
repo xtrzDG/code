@@ -15,6 +15,9 @@ from app.schemas.constants.assistants import (
 )
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.niches import NicheKey
+from app.schemas.dto.assistants.autotest_comparison_views import (
+    AutotestRunComparisonView,
+)
 from app.schemas.typings.assistants.booleans import (
     IsAutotestRunPassed,
     IsFullAutotestCoverage,
@@ -142,6 +145,8 @@ class AutotestRunView(ImmutableDTO):
     READY. While `status` is RUNNING the worker is still playing it:
     `scenario_count` is then the number of planned scenarios and `results`
     holds the ones finished so far (progress = results / scenario_count).
+    `comparison` sets a finished run against the run of the version that
+    was live when it started (None when nothing was live then).
     """
 
     id: AutotestRunId
@@ -157,5 +162,6 @@ class AutotestRunView(ImmutableDTO):
     is_passed: IsAutotestRunPassed
     cost_micro_usd: CostMicroUsd
     results: list[AutotestScenarioResultView]
+    comparison: AutotestRunComparisonView | None = None
     created_at: Microseconds
     updated_at: Microseconds

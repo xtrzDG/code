@@ -24,7 +24,10 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
-from app.schemas.typings.assistants.prefixed_id import AutotestRunId
+from app.schemas.typings.assistants.prefixed_id import (
+    AssistantVersionId,
+    AutotestRunId,
+)
 from app.utilities.assembly.fact_formatting import find_example_mobile_number
 
 UNTESTABLE_STATUSES: frozenset[AssistantVersionStatus] = frozenset(
@@ -44,7 +47,8 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
     check of "Apply changes" (`smoke_check`) records the languages and
     kinds it plays. The AI
     customer gets a valid example mobile number of the business country, so
-    bookings work for any country.
+    bookings work for any country. The run remembers the run of the version
+    live at its start (`compared_to_run_id`) to show what changed against it.
     """
 
     def __init__(
@@ -140,6 +144,7 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             is_full_coverage=planning.is_full_coverage,
             planned_scenario_count=AutotestScenarioCount(len(planning.scenarios)),
             previous_version_status=previous_status,
+            compared_to_run_id=self._find_live_run_id(business, version),
             created_at=now,
             updated_at=now,
         )
@@ -164,3 +169,23 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             customer_phone_number=find_example_mobile_number(business.country_code),
             started_at=now,
         )
+
+    def _find_live_run_id(
+        self, business: BusinessDocument, version: AssistantVersionDocument
+    ) -> AutotestRunId | None:
+        """The run whose verdict let the live version go live, if any."""
+
+        live_id: AssistantVersionId | None = business.published_assistant_version_id
+        if live_id is None or live_id == version.id:
+            return None
+
+        live: AssistantVersionDocument | None = self._assistant_version_repo.get(
+            business.id, live_id
+        )
+        if live is None:
+            return None
+
+        if live.autotest_verdict is not None:
+            return live.autotest_verdict.run_id
+
+        return live.autotest_run_id
