@@ -96,7 +96,6 @@ def seed_history(
     world: RetentionWorld, business: BusinessDocument, at: Microseconds
 ) -> SeededHistory:
     contact_id = ContactId()
-    stamps = {"created_at": at, "updated_at": at}
     conversation = ConversationDocument(
         business_id=business.id,
         contact_id=contact_id,
@@ -104,7 +103,8 @@ def seed_history(
         channel=ChannelKind.WHATSAPP,
         channel_user_id=ChannelUserId(PHONE.removeprefix("+")),
         last_message_at=at,
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.conversations.save(conversation)
     messages = [
@@ -115,7 +115,8 @@ def seed_history(
             author=author,
             text=MessageText(text),
             language=LanguageTag("en"),
-            **stamps,
+            created_at=at,
+            updated_at=at,
         )
         for direction, author, text in (
             (MessageDirection.INBOUND, MessageAuthor.CUSTOMER, f"I am Nino, {PHONE}"),
@@ -132,7 +133,8 @@ def seed_history(
                 sequence_number=LlmTurnSequenceNumber(sequence_number),
                 role=LlmTurnRole.USER,
                 payload=LlmProviderPayload('{"role":"user","content":"Nino"}'),
-                **stamps,
+                created_at=at,
+                updated_at=at,
             )
         )
 
@@ -142,7 +144,8 @@ def seed_history(
             conversation_id=conversation.id,
             author_user_id=UserId(),
             text=ConversationNoteText("Nino is allergic to nuts"),
-            **stamps,
+            created_at=at,
+            updated_at=at,
         )
     )
     call = CallDocument(
@@ -157,7 +160,8 @@ def seed_history(
         summaries=[
             CallSummary(language=LanguageTag("en"), text=CallSummaryText("Nino booked"))
         ],
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.calls.save(call)
     lead = LeadDocument(
@@ -168,7 +172,8 @@ def seed_history(
         details=LeadDetails("Nino's wedding, 40 guests"),
         budget=LeadBudgetText("3000 GEL"),
         source_channel=ChannelKind.WHATSAPP,
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.leads.save(lead)
     visit_end = int(at) // MICROSECONDS_PER_SECOND
@@ -183,7 +188,8 @@ def seed_history(
         status=BookingStatus.CONFIRMED,
         source_channel=ChannelKind.WHATSAPP,
         notes=BookingNote("Nino needs a high chair"),
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.bookings.save(booking)
     handoff = HandoffDocument(
@@ -192,7 +198,8 @@ def seed_history(
         contact_id=contact_id,
         reason=HandoffReason.COMPLAINT,
         summary=HandoffSummary("Nino complains about the bill"),
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.handoffs.save(handoff)
     media = MessageMediaDocument(
@@ -203,7 +210,8 @@ def seed_history(
         storage_path=MediaStoragePath(f"media/{conversation.id}.jpg"),
         media_type=MessageMediaType("image/jpeg"),
         byte_count=MediaByteCount(2048),
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.media.save(media)
     world.media_storage.store(
@@ -220,7 +228,8 @@ def seed_history(
         called_at=at,
         language=LanguageTag("en"),
         status=TextBackStatus.QUEUED,
-        **stamps,
+        created_at=at,
+        updated_at=at,
     )
     world.missed_calls.insert_if_new(missed_call)
     return SeededHistory(

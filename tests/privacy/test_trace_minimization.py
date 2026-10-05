@@ -4,6 +4,8 @@ conversation they answered (metadata, and the conversation as sessionId),
 and without phone numbers or e-mail addresses unless LANGFUSE_RAW_TEXT.
 """
 
+from typing import cast
+
 import pytest
 from typed_time_provider import Microseconds, MonotonicClock, Nanoseconds, WallClock
 
@@ -67,10 +69,8 @@ def test_a_trace_names_the_business_contact_and_conversation_of_the_call() -> No
         "contact_id": str(contact_id),
         "conversation_id": str(conversation_id),
     }
-    generation_body = events[1]["body"]
-    assert isinstance(generation_body, dict)
-    generation_metadata = generation_body["metadata"]
-    assert isinstance(generation_metadata, dict)
+    generation_body = cast(dict[str, object], events[1]["body"])
+    generation_metadata = cast(dict[str, object], generation_body["metadata"])
     assert generation_metadata["conversation_id"] == str(conversation_id)
 
 
