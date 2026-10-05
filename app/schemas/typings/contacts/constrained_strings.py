@@ -16,4 +16,31 @@ class ContactSearchText(BaseConstrainedTypedString):
     max_length = 100
 
 
+class CustomerTag(BaseConstrainedTypedString):
+    """
+    A label the team puts on customers ("regular", "allergy", "wholesale"):
+    1 to 32 characters, no line breaks or other control characters, no
+    spaces at either end.
+
+    Example:
+        tag = CustomerTag("regular")
+    """
+
+    min_length = 1
+    max_length = 32
+    pattern = r"^[^\s\x00-\x1f\x7f](?:[^\x00-\x1f\x7f]{0,30}[^\s\x00-\x1f\x7f])?\Z"
+
+
+class SegmentName(BaseConstrainedTypedString):
+    """
+    The owner's name of a saved group of customers ("Not back in 60 days"):
+    1 to 60 characters, no line breaks or other control characters, no
+    spaces at either end.
+    """
+
+    min_length = 1
+    max_length = 60
+    pattern = r"^[^\s\x00-\x1f\x7f](?:[^\x00-\x1f\x7f]{0,58}[^\s\x00-\x1f\x7f])?\Z"
+
+
 # Keep abc order for all non example types, if possible.

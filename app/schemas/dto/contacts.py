@@ -7,8 +7,10 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.bookings import BookingStatus, LeadStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.constants.customers import CustomerListFilter, CustomerStanding
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.conversations import ConversationDocument
+from app.schemas.dto.customers.customer_timeline import CustomerTimelineEntry
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.constrained_integers import (
     BookingStartsAtUnixSeconds,
@@ -16,15 +18,24 @@ from app.schemas.typings.bookings.constrained_integers import (
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.contacts.booleans import IsContactPhoneVerified
+from app.schemas.typings.contacts.booleans import (
+    IsContactBlocked,
+    IsContactPhoneVerified,
+    IsPhoneMasked,
+    IsVipCustomer,
+)
 from app.schemas.typings.contacts.constrained_integers import (
     ContactBookingCount,
     ContactConversationCount,
     ContactLeadCount,
+    ContactVisitCount,
 )
-from app.schemas.typings.contacts.constrained_strings import ContactSearchText
+from app.schemas.typings.contacts.constrained_strings import (
+    ContactSearchText,
+    CustomerTag,
+)
 from app.schemas.typings.contacts.prefixed_id import ContactId
-from app.schemas.typings.contacts.strings import ContactName
+from app.schemas.typings.contacts.strings import ContactName, MaskedPhoneNumber
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
@@ -39,12 +50,15 @@ class ContactListQuery(ImmutableDTO):
     Owner looks for customers, most recently active first.
 
     `search` matches part of the name (any case), the digits of a phone
-    number (at least three) or the exact contact id.
+    number (at least three) or the exact contact id; `tag` and
+    `list_filter` (VIP or blocked ones) narrow the list.
     """
 
     user_id: UserId
     business_id: BusinessId
     search: ContactSearchText | None = None
+    tag: CustomerTag | None = None
+    list_filter: CustomerListFilter = CustomerListFilter.ALL
     page: PageRequest = PageRequest()
     client_ip_address: ClientIpAddress | None = None
 
@@ -68,7 +82,10 @@ class ContactSummaryView(ImmutableDTO):
     (`erased_at`) has no name, phone or language left; their anonymous
     conversations and bookings still count. `opted_out_channels`: where the
     customer sent STOP; while any is listed they get no reminders, feedback
-    requests or messages after a missed call.
+    requests or messages after a missed call. The team's card: `tags`,
+    `is_vip` and `is_blocked` (the assistant does not answer them). For
+    staff the owner did not allow to see phone numbers, `phone_number` is
+    None and `masked_phone_number` shows its ends (`is_phone_masked`).
     """
 
     id: ContactId
@@ -84,6 +101,11 @@ class ContactSummaryView(ImmutableDTO):
     last_activity_at: Microseconds
     erased_at: Microseconds | None = None
     opted_out_channels: list[ChannelKind] = Field(default_factory=list[ChannelKind])
+    tags: list[CustomerTag] = Field(default_factory=list[CustomerTag])
+    is_vip: IsVipCustomer = False
+    is_blocked: IsContactBlocked = False
+    masked_phone_number: MaskedPhoneNumber | None = None
+    is_phone_masked: IsPhoneMasked = False
 
 
 class ContactPage(ImmutableDTO):
@@ -121,9 +143,23 @@ class ContactLeadView(ImmutableDTO):
 
 
 class ContactDetailView(ImmutableDTO):
-    """One customer with their conversations, bookings and leads, newest first."""
+    """
+    One customer with their conversations, bookings and leads, newest
+    first, and their history across channels as one `timeline` (calls
+    too), the latest moment first: a booking by its start, so upcoming
+    visits lead. `standing`, `visit_count` and `last_visit_at` say how well
+    the business knows them; `blocked_at` since when the assistant does
+    not answer them.
+    """
 
     contact: ContactSummaryView
+    standing: CustomerStanding = CustomerStanding.NEW
+    visit_count: ContactVisitCount = ContactVisitCount(0)
+    last_visit_at: Microseconds | None = None
+    blocked_at: Microseconds | None = None
+    timeline: list[CustomerTimelineEntry] = Field(
+        default_factory=list[CustomerTimelineEntry]
+    )
     conversations: list[ContactConversationView] = Field(
         default_factory=list[ContactConversationView]
     )

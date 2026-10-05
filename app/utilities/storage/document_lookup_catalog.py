@@ -67,7 +67,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # Every customer message: the contact, its open conversation, the
     # hourly message count and the transcript.
     # The CSV and full exports page through them by first contact (1113).
-    # The customer list by last activity and the exact-name search (1122).
+    # The customer list by last activity and the exact-name search (1122);
+    # its tag, VIP and blocked filters (1140).
     DocumentCollectionName("contacts"): (
         text_field("phone_number"),
         text_field("verified_phone_number"),
@@ -75,6 +76,9 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("created_at"),
         integer_field("last_seen_at"),
         text_field("display_name_folded"),
+        element_field("tags[].tag"),
+        filter_field("is_vip"),
+        filter_field("is_blocked"),
     ),
     # The feed newest first (keyset pages), its filters, and the dashboard's
     # counts by channel, language and local day; the team inbox's views by

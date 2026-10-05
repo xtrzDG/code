@@ -15,4 +15,11 @@ class FoldedContactName(BaseTypedString):
     """
 
 
+class MaskedPhoneNumber(BaseTypedString):
+    """
+    A customer's phone with the middle digits hidden for staff the owner
+    did not allow to see phone numbers ("+995 ••• ••• •34").
+    """
+
+
 # Keep abc order for all non example types, if possible.

@@ -9,4 +9,21 @@ class ContactId(BasePrefixedTypedId):
     prefix = "contact"
 
 
+class CustomerSegmentId(BasePrefixedTypedId):
+    """Random identifier of a saved group of customers of a business."""
+
+    prefix = "segment"
+
+
+class CustomerSettingsId(BasePrefixedTypedId):
+    """
+    Identifier of how the team of one business works with its customers
+    (whether staff see phone numbers, the tags in use).
+
+    Derived (UUID v5) from the business: one settings document per business.
+    """
+
+    prefix = "custset"
+
+
 # Keep abc order for all non example types, if possible.

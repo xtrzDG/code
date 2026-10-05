@@ -1,4 +1,7 @@
-"""A customer's row in the list and the head of their page."""
+"""
+A customer's row in the list and the head of their page (Customers, the
+search, segments, Settings → Privacy), with the team's card.
+"""
 
 from typed_time_provider import Microseconds
 
@@ -115,4 +118,7 @@ def build_view(
         last_activity_at=last_activity_at,
         erased_at=contact.erased_at,
         opted_out_channels=list(contact.opted_out_channels),
+        tags=[mark.tag for mark in contact.tags],
+        is_vip=contact.is_vip,
+        is_blocked=contact.block is not None,
     )

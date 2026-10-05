@@ -1,0 +1,16 @@
+{
+  "business_id": "business_931937d7-8f96-4575-9966-09198648fcb6",
+  "created_at": 1790000000000000,
+  "created_by": "user_64d61fe2-bbea-465b-a416-f17e7d11f16a",
+  "id": "segment_7bbdf5f3-50a7-457e-9770-3135b884104e",
+  "name": "Not back in 60 days",
+  "rules": {
+    "last_visit_days_ago": 1,
+    "max_bookings": 1,
+    "min_bookings": 1,
+    "tag": "regular",
+    "vip_only": true
+  },
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

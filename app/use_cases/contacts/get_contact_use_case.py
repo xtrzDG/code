@@ -25,7 +25,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.use_cases.contacts.contact_summaries import summarize_contact
+from app.use_cases.shared.contact_summaries import summarize_contact
 
 
 class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):

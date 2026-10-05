@@ -28,11 +28,11 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.schemas.typings.platform.constrained_strings import PageCursor
-from app.use_cases.contacts.contact_list_search import (
+from app.use_cases.shared.contact_search_scan import (
     ContactSearchPage,
     search_contacts,
 )
-from app.use_cases.contacts.contact_summaries import summarize_contact_row
+from app.use_cases.shared.contact_summaries import summarize_contact_row
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 
