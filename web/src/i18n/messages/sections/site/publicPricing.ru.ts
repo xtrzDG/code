@@ -30,7 +30,6 @@ export const publicPricingRu: Translation<typeof publicPricingEn> = {
       channels: "Мы подключим каналы и переадресацию звонков",
       launch: "Мы проверим помощника вместе с вами и запустим его",
     },
-    note: "Настройка под ключ оплачивается один раз; самостоятельно — бесплатно.",
   },
   testimonials: {
     title: "Что говорят владельцы",

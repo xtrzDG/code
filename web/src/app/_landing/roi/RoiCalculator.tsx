@@ -138,7 +138,7 @@ export function RoiCalculator({
         </div>
       </div>
       <div className="space-y-3">
-        <RoiResult result={result} plan={plan} hasCheck={averageCheck > 0} />
+        <RoiResult result={result} plan={plan} averageCheck={averageCheck} />
         <p className="text-xs text-pretty text-ink-subtle">{t("roi.note")}</p>
       </div>
     </div>

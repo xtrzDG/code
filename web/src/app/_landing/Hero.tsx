@@ -32,7 +32,7 @@ export function Hero({
   return (
     <section aria-labelledby="hero-title" className="relative isolate overflow-x-clip">
       <HeroBackdrop />
-      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-12 pb-14 sm:px-6 sm:pt-20 sm:pb-20 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-12 pb-14 sm:px-6 sm:pt-20 sm:pb-20 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
         <div className="space-y-7">
           <p className="inline-flex animate-rise items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1 text-xs font-medium text-ink-muted backdrop-blur">
             <span className="relative flex size-1.5" aria-hidden>

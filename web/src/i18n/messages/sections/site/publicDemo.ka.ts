@@ -12,6 +12,11 @@ export const publicDemoKa: Translation<typeof publicDemoEn> = {
   place: "{niche} · {city}",
   greeting: "გამარჯობა! მე ვარ {business}-ის AI ასისტენტი. მკითხეთ ის, რასაც თქვენი კლიენტი იკითხავდა: ფასები, სამუშაო საათები, ჯავშანი.",
   starters: "მაგალითად, ჰკითხეთ",
+  genericStarters: {
+    hours: "როდის მუშაობთ?",
+    prices: "რა ღირს?",
+    place: "სად მდებარეობთ?",
+  },
   inputLabel: "თქვენი შეტყობინება დემო ასისტენტს",
   placeholder: "დაწერეთ ისე, როგორც კლიენტი დაწერდა…",
   send: "გაგზავნა",

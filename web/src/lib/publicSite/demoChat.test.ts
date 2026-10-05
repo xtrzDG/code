@@ -18,7 +18,7 @@ describe("demo chat", () => {
     expect(newSessionKey((bytes) => bytes.fill(255))).toBe("_".repeat(22));
   });
 
-  it("offers starters in the visitor's language, else in the demo's own", () => {
+  it("offers the demo's starters in the visitor's language, else the generic ones", () => {
     const card = {
       default_language: "ka",
       starters: [
@@ -31,8 +31,8 @@ describe("demo chat", () => {
     };
 
     expect(startersFor(card, "ru")).toEqual(["Есть столик?", "Какое меню?", "Где вы?"]);
-    expect(startersFor(card, "en")).toEqual(["გაქვთ მაგიდა?"]);
-    expect(startersFor({ default_language: "en" }, "en")).toEqual([]);
+    expect(startersFor(card, "en", ["Opening hours?", "Prices?", "Where?", "Extra"])).toEqual(["Opening hours?", "Prices?", "Where?"]);
+    expect(startersFor({}, "en")).toEqual([]);
   });
 
   it("names what a sandbox turn did", () => {

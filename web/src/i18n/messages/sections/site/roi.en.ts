@@ -27,6 +27,12 @@ export const roiEn = {
     other: "{count} bookings a month pay for the plan",
   },
   noCheck: "Enter an average check to see the money.",
+  breakdown: {
+    label: "How it adds up",
+    answered: "Answers outside working hours",
+    bookings: "Bookings among them",
+    check: "Average check",
+  },
   note: "An estimate from your numbers, not a promise. In the cabinet you see the real figures: answered requests, bookings and what they brought.",
   currency: "in {currency}",
 } as const;

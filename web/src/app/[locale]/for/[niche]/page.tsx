@@ -92,8 +92,12 @@ export default async function NichePage({ params, searchParams }: PageProps<"/[l
       <div aria-hidden className="landing-grain -z-10" />
       <LandingHeader t={t} home={home} />
       <main id="main" className="flex-1" data-niche={niche.key}>
-        <NicheHero t={t} niche={niche} home={home} hasDemo={demo !== null} />
-        {demo && data.demos ? <NicheDemo t={t} demo={demo} messagesPerHour={data.demos.messages_per_hour} /> : null}
+        <NicheHero
+          t={t}
+          niche={niche}
+          home={home}
+          demo={demo && data.demos ? <NicheDemo t={t} demo={demo} messagesPerHour={data.demos.messages_per_hour} /> : null}
+        />
         <NicheAbilities t={t} locale={locale} niche={niche} quotes={quotes} />
         <Roi
           t={t}

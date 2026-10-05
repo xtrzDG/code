@@ -9,6 +9,11 @@ export const publicDemoEn = {
   place: "{niche} · {city}",
   greeting: "Hello! I'm the AI assistant of {business}. Ask me what your customers would ask: prices, opening hours, a booking.",
   starters: "Try asking",
+  genericStarters: {
+    hours: "What are your opening hours?",
+    prices: "How much does it cost?",
+    place: "Where are you located?",
+  },
   inputLabel: "Your message to the demo assistant",
   placeholder: "Write as a customer would…",
   send: "Send",

@@ -30,7 +30,6 @@ export const publicPricingKa: Translation<typeof publicPricingEn> = {
       channels: "დავაკავშირებთ თქვენს არხებს და ზარების გადამისამართებას",
       launch: "ასისტენტს ერთად შევამოწმებთ და ერთად გავუშვებთ",
     },
-    note: "სრულად ჩვენი დაყენება ერთხელ იხდება; დამოუკიდებლად — უფასოა.",
   },
   testimonials: {
     title: "რას ამბობენ მფლობელები",

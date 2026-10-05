@@ -12,6 +12,11 @@ export const publicDemoRu: Translation<typeof publicDemoEn> = {
   place: "{niche} · {city}",
   greeting: "Здравствуйте! Я AI-помощник {business}. Спросите то, что спросил бы ваш клиент: цены, часы работы, бронь.",
   starters: "Спросите, например",
+  genericStarters: {
+    hours: "Когда вы работаете?",
+    prices: "Сколько это стоит?",
+    place: "Где вы находитесь?",
+  },
   inputLabel: "Ваше сообщение демо-помощнику",
   placeholder: "Напишите, как написал бы клиент…",
   send: "Отправить",

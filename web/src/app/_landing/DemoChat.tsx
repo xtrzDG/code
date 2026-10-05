@@ -59,7 +59,11 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
   const { t, tp, locale } = useI18n();
   const chat = useDemoChat(demo.business_id, messagesPerHour);
   const [draft, setDraft] = useState("");
-  const starters = startersFor(demo, locale);
+  const starters = startersFor(demo, locale, [
+    t("publicDemo.genericStarters.hours"),
+    t("publicDemo.genericStarters.prices"),
+    t("publicDemo.genericStarters.place"),
+  ]);
   const left = messagesLeftNotice(chat.messagesLeft);
   const isOut = chat.messagesLeft <= 0 || chat.failure === "limit";
 

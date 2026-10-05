@@ -44,7 +44,6 @@ export function SetupOptions({ translator, quote }: { translator: Translator; qu
         {column(t("publicPricing.setup.selfTitle"), t("publicPricing.setup.selfPrice"), SELF_POINTS, "selfPoints", true)}
         {column(t("publicPricing.setup.doneTitle"), t("publicPricing.setup.donePrice", { price: fee }), DONE_POINTS, "donePoints", false)}
       </div>
-      <p className="mt-4 text-xs text-ink-subtle">{t("publicPricing.setup.note")}</p>
     </Section>
   );
 }

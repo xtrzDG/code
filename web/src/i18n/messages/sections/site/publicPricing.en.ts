@@ -27,7 +27,6 @@ export const publicPricingEn = {
       channels: "We connect your channels and phone forwarding",
       launch: "We test the assistant with you and launch it together",
     },
-    note: "Done-for-you setup is paid once; on your own it is free.",
   },
   testimonials: {
     title: "What owners say",

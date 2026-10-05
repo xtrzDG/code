@@ -25,12 +25,15 @@ export function newSessionKey(random: (bytes: Uint8Array) => Uint8Array = (bytes
   return Array.from(bytes, (byte) => SESSION_KEY_ALPHABET[byte % 64]).join("");
 }
 
-/** Up to three starters in the visitor's language, else in the demo's own language. */
-export function startersFor(card: Pick<DemoCard, "starters" | "default_language">, locale: string): string[] {
-  const starters = card.starters ?? [];
-  const inLocale = starters.filter((starter) => baseLanguage(starter.language) === baseLanguage(locale));
-  const chosen = inLocale.length > 0 ? inLocale : starters.filter((starter) => starter.language === card.default_language);
-  return chosen.slice(0, 3).map((starter) => starter.text);
+/**
+ * Up to three starters in the visitor's language: the demo's own (from its
+ * FAQ), else the generic ones the page passes in its language. Starters
+ * in another language than the page's would only puzzle the visitor; the
+ * assistant answers in whatever language it is written to.
+ */
+export function startersFor(card: Pick<DemoCard, "starters">, locale: string, generic: readonly string[] = []): string[] {
+  const own = (card.starters ?? []).filter((starter) => baseLanguage(starter.language) === baseLanguage(locale));
+  return (own.length > 0 ? own.map((starter) => starter.text) : [...generic]).slice(0, 3);
 }
 
 function baseLanguage(tag: string): string {

@@ -15,26 +15,42 @@ export function wholeMoney(amount: number, currency: string, locale: string): st
 
 /**
  * What the visitor's numbers are worth a month against the plan: the money,
- * the bookings behind it, the multiple of the price (or that it stays below
- * it) and how many bookings pay for the plan. Read out when it changes.
+ * how it adds up (answers after hours, the bookings among them, the
+ * check), the multiple of the price (or that it stays below it) and how
+ * many bookings pay for the plan. Read out when it changes.
  */
-export function RoiResult({ result, plan, hasCheck }: { result: Result; plan: RoiPlan; hasCheck: boolean }) {
+export function RoiResult({
+  result,
+  plan,
+  averageCheck,
+}: {
+  result: Result;
+  plan: RoiPlan;
+  averageCheck: number;
+}) {
   const { t, tp, locale } = useI18n();
   const money = (amount: number) => wholeMoney(amount, plan.currency, locale);
   const price = money(plan.monthly);
+  const hasCheck = averageCheck > 0;
   const bookings = Math.round(result.bookings);
+  const whole = numberFormat(locale, { maximumFractionDigits: 0 });
   const decimal = numberFormat(locale, { maximumFractionDigits: 1 });
+  const rows: [string, string][] = [
+    [t("roi.breakdown.answered"), whole.format(result.answeredRequests)],
+    [t("roi.breakdown.bookings"), decimal.format(result.bookings)],
+    [t("roi.breakdown.check"), hasCheck ? money(averageCheck) : "—"],
+  ];
 
   return (
     <div
-      className="flex h-full flex-col justify-between gap-6 rounded-2xl border border-accent/30 bg-accent-soft/40 p-6 sm:p-7"
+      className="flex flex-col gap-6 rounded-2xl border border-accent/30 bg-accent-soft/40 p-6 sm:p-7"
       aria-live="polite"
       data-testid="roi-result"
     >
       <div className="space-y-2">
         <p className="text-sm text-ink-muted">{t("roi.resultLabel")}</p>
         {hasCheck ? (
-          <p className="text-4xl font-semibold tracking-tight text-ink tabular-nums sm:text-5xl">
+          <p className="text-4xl font-semibold tracking-tight text-ink tabular-nums sm:text-5xl" data-testid="roi-value">
             <AnimatedNumber value={Math.round(result.monthlyValue)} format={money} durationMs={500} />
           </p>
         ) : (
@@ -44,9 +60,17 @@ export function RoiResult({ result, plan, hasCheck }: { result: Result; plan: Ro
           {bookings >= 1 ? tp("roi.bookings", bookings) : result.bookings > 0 ? t("roi.bookingsUnderOne") : tp("roi.bookings", 0)}
         </p>
       </div>
+      <dl aria-label={t("roi.breakdown.label")} className="space-y-2 border-t border-line pt-4 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex items-baseline justify-between gap-4">
+            <dt className="text-ink-muted">{label}</dt>
+            <dd className="shrink-0 font-medium text-ink tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
       {hasCheck ? (
         <ul className="space-y-2 border-t border-line pt-4 text-sm text-ink">
-          <li>
+          <li data-testid="roi-multiple">
             {result.multiple !== null && result.multiple >= 1
               ? t("roi.multiple", { multiple: decimal.format(result.multiple), plan: plan.name, price })
               : t("roi.belowPrice", { plan: plan.name, price })}
