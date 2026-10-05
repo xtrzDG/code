@@ -110,19 +110,6 @@ class MessageListingContract(Protocol):
         """The conversation's messages newest first, ties in write order."""
         raise NotImplementedError
 
-    def page_newest_of_conversations(
-        self,
-        business_id: BusinessId,
-        conversation_ids: Sequence[ConversationId],
-        window: KeysetSlice,
-    ) -> list[MessageDocument]:
-        """
-        The messages of these conversations together, newest first (by
-        `created_at`, ties: the later write first), one keyset page: a
-        widget poll reads the few newest instead of a visitor's history.
-        """
-        raise NotImplementedError
-
     def page_newest_positions_of_conversations(
         self,
         business_id: BusinessId,
@@ -130,9 +117,11 @@ class MessageListingContract(Protocol):
         window: KeysetSlice,
     ) -> list[MessagePosition]:
         """
-        The ids and creation times of the messages
-        `page_newest_of_conversations` returns, in the same order, without
-        reading the messages (the indexed columns only).
+        The ids and creation times of the messages of these conversations
+        together, newest first (by `created_at`, ties: the later write
+        first), one keyset page, without reading the messages (the indexed
+        columns only): a widget poll looks at the few newest instead of a
+        visitor's history and reads in full only what it shows.
         """
         raise NotImplementedError
 

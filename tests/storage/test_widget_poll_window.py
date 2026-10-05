@@ -264,14 +264,8 @@ def test_a_caught_up_poll_of_a_long_chat_reads_only_the_newest(
             )
             for number in range(120)
         ]
-        newest = world.messages.page_newest_of_conversations(
-            world.business_id, [conversation.id, conversation.id], window_of(3)
-        )
-        nothing = world.messages.page_newest_of_conversations(
-            world.business_id, [], window_of(3)
-        )
         positions = world.messages.page_newest_positions_of_conversations(
-            world.business_id, [conversation.id], window_of(3)
+            world.business_id, [conversation.id, conversation.id], window_of(3)
         )
         no_positions = world.messages.page_newest_positions_of_conversations(
             world.business_id, [], window_of(3)
@@ -279,10 +273,8 @@ def test_a_caught_up_poll_of_a_long_chat_reads_only_the_newest(
         caught_up = world.poll(chat[-1].id)
         two_new = world.poll(chat[-3].id)
 
-    assert [message.id for message in newest] == [m.id for m in reversed(chat[-3:])]
-    assert nothing == []
     assert [(p.id, p.created_at) for p in positions] == [
-        (m.id, m.created_at) for m in newest
+        (m.id, m.created_at) for m in reversed(chat[-3:])
     ]
     assert no_positions == []
     assert caught_up.items == []

@@ -1,4 +1,4 @@
-"""The newest messages of a few conversations together (widget polls)."""
+"""Where the newest messages of a few conversations stand (widget polls)."""
 
 from collections.abc import Sequence
 
@@ -20,28 +20,7 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId, Messag
 
 
 class RecentMessageReading(BusinessScopedRepository[MessageDocument]):
-    """One keyset page of the newest messages of several conversations."""
-
-    def page_newest_of_conversations(
-        self,
-        business_id: BusinessId,
-        conversation_ids: Sequence[ConversationId],
-        window: KeysetSlice,
-    ) -> list[MessageDocument]:
-        """
-        Newest first. One conversation (a widget visitor's usual case) is
-        an equality on the (business, conversation, created_at) index, so
-        the page reads only its own rows backwards from the newest; several
-        are one `any(...)` probe of the same index.
-        """
-
-        where: DocumentFilter | None = of_conversations(conversation_ids)
-        if where is None:
-            return []
-
-        return self._page_in_business(
-            business_id, (CREATED_AT_FIELD,), window, where, is_descending=True
-        )
+    """One keyset page of positions of the newest messages of conversations."""
 
     def page_newest_positions_of_conversations(
         self,
@@ -50,8 +29,11 @@ class RecentMessageReading(BusinessScopedRepository[MessageDocument]):
         window: KeysetSlice,
     ) -> list[MessagePosition]:
         """
-        Where the messages `page_newest_of_conversations` returns stand, in
-        the same order, read from the index columns without the messages.
+        Newest first (ties: the later write first), read from the index
+        columns without the messages. One conversation (a widget visitor's
+        usual case) is an equality on the (business, conversation,
+        created_at) index, so the page reads only its own rows backwards
+        from the newest; several are one `any(...)` probe of the same index.
         """
 
         where: DocumentFilter | None = of_conversations(conversation_ids)
