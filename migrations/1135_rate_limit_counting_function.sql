@@ -1,4 +1,4 @@
--- 1125_rate_limit_counting_function
+-- 1135_rate_limit_counting_function
 --
 -- A request's rate limits are counted and checked in one statement, inside
 -- the database, so the counter rows are locked only while it runs.
@@ -101,4 +101,4 @@ comment on function workshop.count_request_within_limits(
 ) is
     'Count one request for every key when every counter stays within its '
     'sliding-window limit; otherwise count none and return the first '
-    'counter key over its limit (migration 1125).';
+    'counter key over its limit (migration 1135).';

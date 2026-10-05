@@ -66,7 +66,7 @@ def is_within_limit(
     Whether the estimate, the request itself counted, stays within the limit.
 
     The Postgres counters decide the same inequality inside the database
-    (`workshop.count_request_within_limits`, migration 1125); keep the two
+    (`workshop.count_request_within_limits`, migration 1135); keep the two
     in step (`tests/storage/test_rate_limit_parity.py`).
     """
 

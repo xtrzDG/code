@@ -40,7 +40,7 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
     instance and worker.
 
     A request is one statement: `workshop.count_request_within_limits`
-    (migration 1125) upserts one request more for every key (in key
+    (migration 1135) upserts one request more for every key (in key
     order), weighs each counter against its limit as `is_within_limit`
     does, and takes the request back out of every key when one is over,
     all inside the database. The rows are locked only while that statement

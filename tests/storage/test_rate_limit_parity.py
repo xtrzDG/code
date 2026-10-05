@@ -1,6 +1,6 @@
 """
 The Postgres counters decide like the in-memory ones: the database function
-(`workshop.count_request_within_limits`, migration 1125) and
+(`workshop.count_request_within_limits`, migration 1135) and
 `is_within_limit` admit and refuse the same requests, request by request,
 across windows whose previous window weighs in at every moment.
 """

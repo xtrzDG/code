@@ -1,11 +1,11 @@
-"""Statements on `workshop.rate_limit_buckets` (migrations 1041 and 1125)."""
+"""Statements on `workshop.rate_limit_buckets` (migrations 1041 and 1135)."""
 
 from typing import LiteralString
 
 RATE_LIMIT_BUCKETS_TABLE: str = "rate_limit_buckets"
 
 # One request more for every key when every counter stays within its
-# limit, decided by `workshop.count_request_within_limits` (1125) in this
+# limit, decided by `workshop.count_request_within_limits` (1135) in this
 # one statement: the counter rows are locked only while it runs, never
 # across a round trip to the application. Returns the refused counter's key
 # or NULL.

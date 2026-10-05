@@ -143,7 +143,7 @@ each other, one Python round trip each.
 
 **What changed.**
 
-- `workshop.count_request_within_limits` (migration 1125) counts a
+- `workshop.count_request_within_limits` (migration 1135) counts a
   request for every key, weighs each counter like `is_within_limit` and
   takes a refused request back out of every key, all in one autocommitted
   statement: the rows are locked only while it runs. Same contract (all
@@ -376,7 +376,7 @@ pools), pick one route and update the Blueprint and the test together:
   longer than that, an unknown cursor or none reads the visitor's whole
   chat (bounded by one visitor's chat, not by the business).
 - Every widget poll of the platform counts the same rate-limit row
-  (`widget-poll:platform`): one short statement each (migration 1125),
+  (`widget-poll:platform`): one short statement each (migration 1135),
   so it serializes polls only for about a millisecond apiece.
 - Seeding the full dataset took 21 minutes locally (the demo part of each
   business dominates); the weekly budgets job allows two hours.
