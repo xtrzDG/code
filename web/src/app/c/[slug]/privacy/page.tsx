@@ -24,8 +24,9 @@ function requestedLanguage(raw: string | string[] | undefined): PageLanguage | n
   return { language: tag, direction: directionOf(tag) };
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const visitor = visitorLanguage((await headers()).get("accept-language"));
+export async function generateMetadata({ searchParams }: PageProps<"/c/[slug]/privacy">): Promise<Metadata> {
+  const visitor =
+    requestedLanguage((await searchParams).lang) ?? visitorLanguage((await headers()).get("accept-language"));
   return {
     title: { absolute: privacyNoticeFor(visitor.language).text("title") },
     robots: { index: false, follow: false },
@@ -87,7 +88,7 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
         {notice.needsReview ? (
           <p className="hc-document-draft" role="note" data-testid="privacy-draft-note">
             {text("draftNote")}{" "}
-            <a href={`${address}/privacy?lang=en`} lang="en" hrefLang="en">
+            <a href={`${address}/privacy?lang=en`} hrefLang="en">
               {text("readInEnglish")}
             </a>
           </p>

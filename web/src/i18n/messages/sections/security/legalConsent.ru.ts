@@ -7,9 +7,7 @@ export const legalConsentRu: Translation<typeof legalConsentEn> = {
   terms: "Условия использования",
   privacy: "Политику конфиденциальности",
   cookies: "Заявление о файлах cookie",
-  documentVersion: "Версия от {date}",
   documentUpcoming: "С {date} действует новая версия.",
   otherLanguage: "Этот текст ещё не переведён на ваш язык; он показан на языке: {language}.",
-  template: "Текст ещё дорабатывается: поля в квадратных скобках заполнят до запуска.",
   loading: "Загружаем текст…",
 };

@@ -7,9 +7,7 @@ export const legalConsentKa: Translation<typeof legalConsentEn> = {
   terms: "მომსახურების პირობებს",
   privacy: "კონფიდენციალურობის პოლიტიკას",
   cookies: "განცხადება ქუქი-ფაილების შესახებ",
-  documentVersion: "ვერსია: {date}",
   documentUpcoming: "{date}-დან მოქმედებს ახალი ვერსია.",
   otherLanguage: "ეს ტექსტი თქვენს ენაზე ჯერ არ არის თარგმნილი; ნაჩვენებია ენაზე: {language}.",
-  template: "ტექსტი ჯერ კიდევ სრულდება: კვადრატულ ფრჩხილებში მოცემულ ველებს გაშვებამდე შეავსებენ.",
   loading: "ტექსტი იტვირთება…",
 };

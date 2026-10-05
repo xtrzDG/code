@@ -22,7 +22,9 @@ function formatDay(day: string, locale: string): string {
 /**
  * The terms, the privacy policy or the cookie statement in a dialog over
  * the sign-in page, so reading them never loses the code step. The version
- * shown is the one the acceptance line names.
+ * shown is the one the acceptance line names; the text itself names its
+ * version and says when it is still a template, so the dialog adds only
+ * a newer version already published and a fallback language.
  */
 export function LegalDocumentDialog({
   document,
@@ -67,16 +69,14 @@ export function LegalDocumentDialog({
         </LoadingRegion>
       ) : (
         <div className="space-y-4">
-          <p className="text-xs text-ink-subtle">
-            {t("legalConsent.documentVersion", { date: formatDay(data.version, locale) })}
-            {data.upcoming_version
-              ? ` · ${t("legalConsent.documentUpcoming", { date: formatDay(data.upcoming_version, locale) })}`
-              : null}
-          </p>
           {data.language !== locale ? (
             <Alert tone="info">{t("legalConsent.otherLanguage", { language: languageName(data.language, locale) })}</Alert>
           ) : null}
-          {data.has_placeholders ? <Alert tone="warning">{t("legalConsent.template")}</Alert> : null}
+          {data.upcoming_version ? (
+            <Alert tone="info">
+              {t("legalConsent.documentUpcoming", { date: formatDay(data.upcoming_version, locale) })}
+            </Alert>
+          ) : null}
           <MarkdownDocument source={data.text} lang={data.language} hideTitle />
         </div>
       )}
