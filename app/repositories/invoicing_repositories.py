@@ -25,9 +25,6 @@ from app.utilities.billing.invoicing_keys import (
     derive_billing_profile_id,
 )
 
-# Attempts before a number is given up as contended (each lost attempt
-# means another invoice got the number in between).
-MAX_COUNTER_ATTEMPTS: int = 50
 FIRST_NUMBER: InvoiceSequenceNumber = InvoiceSequenceNumber(1)
 
 
@@ -46,10 +43,12 @@ class BillingProfileRepository(
 
 class InvoiceCounterRepository(InvoiceCounterRepoContract):
     """
-    One row per invoice series and year. A number is taken by
-    compare-and-set: the first number inserts the row only if it is absent,
-    every later one replaces the row only while its `last_number` is still
-    the one read; a lost race reads again and retries.
+    One row per invoice series and year. A number is taken under the row's
+    lock: the row is read and moved on by one in one step, so issuers at the
+    same moment wait for each other instead of retrying (retries can lose
+    many times in a row under load). The first number of a series and year
+    inserts the row only if it is absent; an issuer that lost that race
+    takes the next number from the row the winner inserted.
     """
 
     def __init__(
@@ -64,46 +63,41 @@ class InvoiceCounterRepository(InvoiceCounterRepoContract):
         self, series: InvoiceSeries, year: InvoiceYear, now: Microseconds
     ) -> InvoiceSequenceNumber:
         key: InvoiceCounterKey = build_counter_key(series, year)
-        for _ in range(MAX_COUNTER_ATTEMPTS):
-            current: InvoiceCounterDocument | None = self._collection.get(str(key))
-            if current is None:
-                first = InvoiceCounterDocument(
-                    id=key,
-                    series=series,
-                    year=year,
-                    last_number=FIRST_NUMBER,
-                    created_at=now,
-                    updated_at=now,
-                )
-                if self._collection.insert_if_absent(str(key), first):
-                    return FIRST_NUMBER
+        taken: InvoiceSequenceNumber | None = self._advance(key, now)
+        if taken is not None:
+            return taken
 
-                continue
-
-            taken: InvoiceSequenceNumber | None = self._advance(key, current, now)
-            if taken is not None:
-                return taken
-
-        raise ConflictError(
-            "Invoice numbers are being taken too fast; try again in a moment."
+        first = InvoiceCounterDocument(
+            id=key,
+            series=series,
+            year=year,
+            last_number=FIRST_NUMBER,
+            created_at=now,
+            updated_at=now,
         )
+        if self._collection.insert_if_absent(str(key), first):
+            return FIRST_NUMBER
+
+        taken = self._advance(key, now)
+        if taken is None:
+            raise ConflictError(
+                "The invoice counter disappeared while a number was taken."
+            )
+
+        return taken
 
     def _advance(
-        self,
-        key: InvoiceCounterKey,
-        current: InvoiceCounterDocument,
-        now: Microseconds,
+        self, key: InvoiceCounterKey, now: Microseconds
     ) -> InvoiceSequenceNumber | None:
-        """The number after `current`, or None when another writer won."""
+        """The number after the stored one, or None when there is no row yet."""
 
-        read_number: InvoiceSequenceNumber = current.last_number
-        following = InvoiceSequenceNumber(int(read_number) + 1)
-        advanced: InvoiceCounterDocument = current.model_copy(
-            update={"last_number": following, "updated_at": now}
-        )
-        is_taken: bool = self._collection.replace_if(
+        advanced: InvoiceCounterDocument | None = self._collection.modify(
             str(key),
-            advanced,
-            lambda stored: stored.last_number == read_number,
+            lambda stored: stored.model_copy(
+                update={
+                    "last_number": InvoiceSequenceNumber(int(stored.last_number) + 1),
+                    "updated_at": now,
+                }
+            ),
         )
-        return following if is_taken else None
+        return None if advanced is None else advanced.last_number
