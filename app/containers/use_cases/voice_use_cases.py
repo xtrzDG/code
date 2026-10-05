@@ -12,6 +12,7 @@ from app.containers.use_cases.conversation_use_cases import (
     ConversationUseCasesContainer,
 )
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
+from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.call_audits import CallAudit, CallAuditRequest
@@ -69,6 +70,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     conversation_use_cases: ConversationUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    spend_guard_use_cases: SpendGuardUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # Switches the voice agent off when voice leaves the live service.
     remove_voice_agent_use_case: Factory[UseCaseContract[BusinessId, None]] = Factory(
@@ -105,6 +107,7 @@ class VoiceUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         build_call_greeting=conversation_use_cases.build_call_greeting_use_case,
         app_settings=config.app_settings,
+        check_spend=spend_guard_use_cases.check_business_spend_use_case,
     )
     audit_call_replies_use_case: Factory[
         UseCaseContract[CallAuditRequest, CallAudit]

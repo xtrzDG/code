@@ -1,9 +1,11 @@
 """
 The ElevenLabs agent of a business: languages, greetings, built-in tools,
-and the "Current call" block the call-initiation webhook fills in per call.
+the "Current call" block the call-initiation webhook fills in per call, and
+the call caps (the longest call, the silence that ends one).
 """
 
 from app.contracts.channel_clients import JsonObject
+from app.schemas.dto.spend_guard import VoiceCallLimits
 from app.schemas.dto.voice import VoiceAgentSpec, VoiceGreeting
 from app.schemas.typings.channels.strings import VoicePlatformToolId
 from app.utilities.channels.channel_endpoints import (
@@ -77,8 +79,16 @@ def build_agent_config(
     spec: VoiceAgentSpec,
     tool_ids: list[VoicePlatformToolId],
     request_headers: JsonObject,
+    call_limits: VoiceCallLimits | None = None,
 ) -> JsonObject:
-    """Create / update body of the business's agent."""
+    """
+    Create / update body of the business's agent. Every call ends at
+    `call_limits.max_duration_seconds` and after
+    `call_limits.silence_end_seconds` of silence (the defaults: 10 minutes
+    and 30 seconds).
+    """
+
+    limits: VoiceCallLimits = call_limits or VoiceCallLimits()
 
     default_code: str = to_voice_platform_language(spec.default_language)
     default_greeting: VoiceGreeting | None = find_greeting(spec)
@@ -147,7 +157,11 @@ def build_agent_config(
     if default_greeting is not None:
         agent["first_message"] = str(default_greeting.text)
 
-    conversation_config: JsonObject = {"agent": agent}
+    conversation_config: JsonObject = {
+        "agent": agent,
+        "conversation": {"max_duration_seconds": int(limits.max_duration_seconds)},
+        "turn": {"silence_end_call_timeout": int(limits.silence_end_seconds)},
+    }
     if language_presets:
         conversation_config["language_presets"] = language_presets
 

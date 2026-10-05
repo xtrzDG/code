@@ -4,6 +4,10 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
+from app.schemas.configurations.spend_guard_settings import (
+    DEFAULT_CALL_MAX_DURATION_SECONDS,
+    DEFAULT_CALL_SILENCE_END_SECONDS,
+)
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.spend import SpendLevel, SpendProvider
 from app.schemas.domain.businesses import BusinessDocument
@@ -16,6 +20,8 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.spend.booleans import IsCustomSpendLimit
 from app.schemas.typings.spend.constrained_integers import (
+    CallMaxDurationSeconds,
+    CallSilenceEndSeconds,
     DailySpendLimitMicroUsd,
     SpendPercent,
 )
@@ -46,10 +52,14 @@ class SpendLimits(ImmutableDTO):
 
 
 class SpendCheckRequest(ImmutableDTO):
-    """Check a business's spend of its day before a model turn or a call."""
+    """
+    Check a business's spend of its day before a model turn (`model_id`:
+    the model the turn would use) or a call (no model of ours).
+    """
 
     business: BusinessDocument
     now: Microseconds
+    model_id: LlmModelId | None = None
 
 
 class SpendVerdict(ImmutableDTO):
@@ -103,4 +113,20 @@ class PlatformSpendView(ImmutableDTO):
     budget_used_percent: SpendPercent | None = None
     braked_businesses: list[BusinessSpendMark] = Field(
         default_factory=list[BusinessSpendMark]
+    )
+
+
+class VoiceCallLimits(ImmutableDTO):
+    """
+    The caps of every call of a voice agent (CALL_MAX_DURATION_SECONDS,
+    CALL_SILENCE_END_SECONDS): the voice platform ends a call at that length
+    or after that much silence, so a prank or a forgotten line cannot run up
+    minutes.
+    """
+
+    max_duration_seconds: CallMaxDurationSeconds = CallMaxDurationSeconds(
+        DEFAULT_CALL_MAX_DURATION_SECONDS
+    )
+    silence_end_seconds: CallSilenceEndSeconds = CallSilenceEndSeconds(
+        DEFAULT_CALL_SILENCE_END_SECONDS
     )

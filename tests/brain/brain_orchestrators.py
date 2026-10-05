@@ -9,6 +9,7 @@ from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.orchestrators.conversations.conversation_turn_orchestrator import (
     ConversationTurnOrchestrator,
 )
+from app.orchestrators.conversations.spend_brake import SpendCheck
 from app.orchestrators.conversations.voice_tool_call_orchestrator import (
     VoiceToolCallOrchestrator,
 )
@@ -57,12 +58,16 @@ from tests.privacy.suppression_doubles import build_suppression_list
 
 @dataclass(frozen=True)
 class GuardOptions:
-    """The reply guard's claim check (off) and the injection brake limit."""
+    """
+    The reply guard's claim check (off), the injection brake limit and the
+    spend guard (none).
+    """
 
     claim_check: ClaimCheckFacilitatorContract = field(
         default_factory=lambda: FakeClaimCheck(is_enabled=False)
     )
     injection_flag_limit: InjectionFlagLimit = InjectionFlagLimit(3)
+    spend_check: SpendCheck | None = None
 
 
 @dataclass(frozen=True)
@@ -147,6 +152,7 @@ def build_brain_orchestrators(
             app_base_url=app_base_url,
             suppression_list=build_suppression_list(repos.suppression_entry_repo),
         ),
+        check_spend=options.spend_check,
     )
     voice_orchestrator = VoiceToolCallOrchestrator(
         open_voice_conversation=OpenVoiceConversationUseCase(

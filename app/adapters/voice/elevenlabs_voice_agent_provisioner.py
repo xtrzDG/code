@@ -8,6 +8,7 @@ from app.contracts.channel_clients import ElevenLabsApiClientContract, JsonObjec
 from app.contracts.voice_platform import VoiceAgentProvisionerAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import AssistantToolName
+from app.schemas.dto.spend_guard import VoiceCallLimits
 from app.schemas.dto.voice import VoiceAgentSpec
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.base_exception import ApplicationError
@@ -103,10 +104,21 @@ class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
         )
         self._elevenlabs_client.update_agent(
             spec.existing_agent_id,
-            build_agent_config(spec, kept_tool_ids, request_headers),
+            build_agent_config(
+                spec, kept_tool_ids, request_headers, self._call_limits()
+            ),
         )
         self._delete_tools(stale_tool_ids)
         return spec.existing_agent_id
+
+    def _call_limits(self) -> VoiceCallLimits:
+        """CALL_MAX_DURATION_SECONDS and CALL_SILENCE_END_SECONDS."""
+
+        guard = self._app_settings.spend_guard
+        return VoiceCallLimits(
+            max_duration_seconds=guard.call_max_duration_seconds,
+            silence_end_seconds=guard.call_silence_end_seconds,
+        )
 
     def remove_agent(self, agent_id: VoiceAgentId) -> None:
         tool_ids: list[VoicePlatformToolId] = (
@@ -127,7 +139,7 @@ class ElevenLabsVoiceAgentProvisioner(VoiceAgentProvisionerAdapterContract):
                 tool_ids.append(self._elevenlabs_client.create_tool(tool_config))
 
             return self._elevenlabs_client.create_agent(
-                build_agent_config(spec, tool_ids, request_headers)
+                build_agent_config(spec, tool_ids, request_headers, self._call_limits())
             )
         except ApplicationError:
             self._delete_tools(tool_ids)

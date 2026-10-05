@@ -82,6 +82,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         conversation_use_cases=conversations,
         follow_up_use_cases=CoreUseCasesContainer.follow_ups,
+        spend_guard_use_cases=CoreUseCasesContainer.spend_guard,
     )
     calls: CallUseCasesContainer = Container(  # type: ignore[assignment]
         CallUseCasesContainer,
@@ -295,6 +296,5 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
     )
-
     # --- Template example (keeps its concrete type).
     example_use_case: Factory[ExampleUseCase] = Factory(ExampleUseCase)

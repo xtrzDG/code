@@ -160,6 +160,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         call_use_cases=use_cases.calls,
         call_orchestrators=calls,
         feedback_use_cases=use_cases.feedback,
+        spend_guard_use_cases=use_cases.spend_guard,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,
