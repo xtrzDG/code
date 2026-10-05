@@ -10,7 +10,7 @@
 #   docker run --env-file .env assistant-workshop-backend backup
 
 # Base images are named once, in FROM lines, so Dependabot can update them.
-FROM ghcr.io/astral-sh/uv:0.12.21 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.23 AS uv
 FROM python:3.14-slim AS python-base
 
 # --- Dependencies ------------------------------------------------------------
