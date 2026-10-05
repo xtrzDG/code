@@ -311,7 +311,9 @@ with the machine's load (4,295 to 5,781 µs), the new one's much less
 quieter machine (63 ms; 51 ms with polls only) but not while the other
 jobs loaded it (213 and 404 ms); with two API processes (production's
 count) it was 270 ms at a load of 25. The weekly run on a dedicated
-runner decides it.
+runner decides it. `tests/perf` at the small scale measured the poll at
+p50 4.4 ms, p95 5.7 ms (budget 60 ms; 9.1 and 15.7 ms in a run of the
+previous commit on a busier machine).
 
 **What remains.** The next levers, in order of what they would save:
 
