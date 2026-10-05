@@ -238,10 +238,14 @@ def test_a_caught_up_poll_of_a_long_chat_reads_only_the_newest(
         newest = world.messages.page_newest_of_conversations(
             world.business_id, [conversation.id, conversation.id], window_of(3)
         )
+        nothing = world.messages.page_newest_of_conversations(
+            world.business_id, [], window_of(3)
+        )
         caught_up = world.poll(chat[-1].id)
         two_new = world.poll(chat[-3].id)
 
     assert [message.id for message in newest] == [m.id for m in reversed(chat[-3:])]
+    assert nothing == []
     assert caught_up.items == []
     assert caught_up.cursor == chat[-1].id
     assert [item.id for item in two_new.items] == [chat[-1].id]
