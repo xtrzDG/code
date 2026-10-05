@@ -96,9 +96,47 @@ export const adminMetricsEn = {
       launch: "Launch",
     },
   },
+  admins: {
+    excluded: {
+      one: "Left out: {count} platform admin who signed up as an owner",
+      other: "Left out: {count} platform admins who signed up as owners",
+    },
+    excludedBusinesses: {
+      one: "and {count} business of theirs",
+      other: "and {count} businesses of theirs",
+    },
+    none: "No platform admin signed up as an owner in this period.",
+    included: "Platform admins' own sign-ups and businesses are counted.",
+    include: "Count them",
+    exclude: "Leave them out",
+    note: "Revenue, margin, activation and trials always count every business.",
+  },
+  businesses: {
+    title: "Every business",
+    description:
+      "Businesses created in the period, whoever created them, including an owner's second business: at each step they reached after every step before it.",
+    created: {
+      one: "{count} business created",
+      other: "{count} businesses created",
+    },
+    returning: {
+      one: "{count} of them by an owner who had one before",
+      other: "{count} of them by owners who had one before",
+    },
+    chartLabel: "Funnel of businesses from creation to paying",
+    count: {
+      one: "{count} business",
+      other: "{count} businesses",
+    },
+    ofCreated: "{percent} of created",
+    tunnelTitle: "Setup tunnel by business",
+    tunnelDescription:
+      "Each business created in the period, and each setup that has not created its business yet, counted once on each screen.",
+  },
   mrr: {
     title: "MRR movements",
-    description: "Monthly recurring revenue in euros, converted at the stored rates of the National Bank of Georgia and the ECB, else at the platform's planning rate: at the start of the period, what moved it, and at the end.",
+    description:
+      "Monthly recurring revenue in euros: at the start of the period, what moved it, and at the end. The rates it was converted with are named under the table.",
     movement: "Movement",
     amount: "Amount",
     accounts: "Accounts",
@@ -112,6 +150,10 @@ export const adminMetricsEn = {
       churn: "Cancelled",
     },
     unconverted: "Left out, no exchange rate to euros: {currencies}",
+    rates: "Converted to euros at: {rates}",
+    rate: "1 {currency} = {value} EUR ({source}, {date})",
+    rateStale: "not refreshed since {date}",
+    noConversion: "Every subscription is in euros: nothing was converted.",
   },
   margin: {
     title: "Gross margin",

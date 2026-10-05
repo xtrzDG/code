@@ -199,6 +199,27 @@ quiet period writes again. Before rolling back past that release, note
 that versions assembled since offer `list_my_bookings`: publish a version
 assembled by the previous release first.
 
+The release with the admin's account actions and the client's story
+(R13-ADMIN-ACTIONS, migration 1143, `SubscriptionDocument` and
+`InvoiceDocument` version 3, `AuditLogEntryDocument` version 5) also
+writes new enum values in the release that introduces them, an exception
+to the enum rule below: six `AuditAction` values (`admin_trial_extended`,
+`admin_discount_given`, `admin_credit_granted`, `admin_setup_fee_waived`,
+`admin_invoice_marked_paid`, `admin_plan_overridden`). An old API instance
+that lists an audit log holding such an entry may fail that page until the
+overlap ends: nothing is lost. The timeline enums (`ClientTimelineKind`,
+`ClientTimelineEvent`) are only answered by the API, never stored. The new
+fields (a subscription's `discount` and `is_setup_fee_waived`, an
+invoice's `discount_percent`, `discount_minor`, `credit_minor` and
+`manual_payment`, an audit entry's `reason`) and the new collections
+(`billing_credits`, `client_notes`, `client_health_changes`,
+`admin_digest_states`) are unknown to the old release, which ignores them;
+but an old worker that issues invoices during the overlap bills without
+the discount and the credit, and an old instance that saves a subscription
+(a renewal, a webhook) drops its discount and waiver: give them again
+after the overlap (the audit log names them). Before rolling back past
+that release, note that discounts, credit and waived fees stop applying.
+
 The release with online-safe migrations (W12, migration 1122) adds
 trigger-filled lookup columns to `contacts`, `knowledge_items`, `bookings`
 and `leads`, the `client_standings` collection and the periodic job

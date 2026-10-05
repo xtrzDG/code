@@ -7,6 +7,8 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
 import { useAdminMetrics } from "../../_lib/useAdminMetrics";
+import { AdminsLine } from "./AdminsLine";
+import { BusinessFunnelCard, BusinessTunnelCard } from "./BusinessGrowthCards";
 import { CohortGrid } from "./CohortGrid";
 import { FunnelCard, TunnelCard } from "./FunnelCard";
 import { KpiTiles } from "./KpiTiles";
@@ -17,8 +19,10 @@ import { useMetricsFormat } from "./useMetricsFormat";
 
 /**
  * /admin/metrics: the founder's growth numbers from first-party product
- * events. Filters live in the address; the numbers of the previous filters
- * stay (dimmed) while new ones load.
+ * events: owners and, next to them, every business (an owner's second one
+ * included); platform admins left out unless counted in. Filters live in
+ * the address; the numbers of the previous filters stay (dimmed) while new
+ * ones load.
  */
 export function MetricsScreen() {
   const { t } = useI18n();
@@ -46,6 +50,7 @@ export function MetricsScreen() {
         <div className="space-y-6">
           {metrics.error ? <RefreshFailed error={metrics.error} onRetry={metrics.reload} /> : null}
           <MetricsFilters filters={filters} setFilters={setFilters} view={view} nicheName={nicheName} />
+          <AdminsLine view={view} filters={filters} setFilters={setFilters} />
           <div
             aria-busy={metrics.isPlaceholder || metrics.isFetching}
             className={cn("space-y-6 transition-opacity", metrics.isPlaceholder && "opacity-60")}
@@ -55,6 +60,12 @@ export function MetricsScreen() {
               <FunnelCard steps={view.growth.funnel} format={format} />
               <TunnelCard steps={view.growth.tunnel} format={format} />
             </div>
+            {view.growth.businesses ? (
+              <div className="grid gap-6 xl:grid-cols-2">
+                <BusinessFunnelCard growth={view.growth.businesses} format={format} />
+                <BusinessTunnelCard growth={view.growth.businesses} format={format} />
+              </div>
+            ) : null}
             <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
               <MrrCard mrr={view.revenue.mrr} format={format} />
               <MarginCard margin={view.revenue.margin} format={format} />

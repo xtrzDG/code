@@ -17,7 +17,7 @@ export const adminTeamEn = {
   roleHints: {
     super: "Everything: clients, operations, metrics, the team; changes in a client's cabinet when the owner allows them.",
     support_readonly: "Clients and the platform's health; opens a client's cabinet for an hour, read only.",
-    billing: "Clients and the growth metrics; never opens a client's cabinet.",
+    billing: "Clients, their account (trial, discounts, credit, payments by hand, plan), notes and the growth metrics; never opens a client's cabinet.",
   },
   you: "You",
   notSignedIn: "Has not signed in yet",
