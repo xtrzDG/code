@@ -7,6 +7,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCalendar, IconChat, IconClock } from "@/components/icons";
 import { Card, ErrorState, SkeletonCard, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/translate";
 
 import {
@@ -83,7 +84,7 @@ function MemorySwitchesForm({ switches }: { switches: MemorySwitches }) {
         disabled={!canShareNotes(switches, isOwner) || save.isPending}
         onChange={(sharesTeamNotes) => void change({ sharesTeamNotes })}
       />
-      <div className="rounded-xl bg-surface-muted px-4 py-3">
+      <div className={cn("rounded-xl bg-surface-muted px-4 py-3 transition-opacity", !switches.remembersCustomers && "opacity-60")}>
         <p className="text-sm font-medium text-ink">{t("customerMemory.remembers.title")}</p>
         <ul className="mt-2 space-y-2">
           {REMEMBERED.map(({ key, Icon }) => (
