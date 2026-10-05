@@ -116,7 +116,13 @@ def test_trigger_columns_are_listed_from_the_catalog(
         in columns
     )
     # Stored generated columns of older migrations are not backfilled.
-    assert all(str(column.field) != "phone_number" for column in columns)
+    assert (
+        TriggerLookupColumn(
+            collection_name=DocumentCollectionName("users"),
+            field=DocumentFieldPath("phone_number"),
+        )
+        not in columns
+    )
 
 
 def test_the_backfill_fills_old_rows_in_keyset_batches_once(
