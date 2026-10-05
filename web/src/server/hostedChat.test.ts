@@ -27,6 +27,7 @@ const HOSTED_VIEW: HostedChatView = {
   widget_script_url: "https://api.workshop.example/widget.js",
   privacy_url: null,  conversation_retention_days: 730,
   llm_turn_retention_days: 30,
+  takes_bookings: false,
 };
 
 afterEach(() => {
