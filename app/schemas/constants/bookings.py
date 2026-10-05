@@ -110,3 +110,33 @@ class BookingUndoRefusalCode(StrEnum):
     SLOT_TAKEN = "slot_taken"
     # The booking's place no longer exists.
     PLACE_GONE = "place_gone"
+
+
+class BookingConfirmationChange(StrEnum):
+    """
+    What a guest's written confirmation confirms: a new booking (BOOKED)
+    or a booking moved to another time (MOVED).
+    """
+
+    BOOKED = "booked"
+    MOVED = "moved"
+
+
+class ManagedBookingRefusalCode(StrEnum):
+    """
+    Why a guest's manage link (/r/{token}) cannot show or change the
+    booking, as the `reasons[].code` of the error, so the page explains it
+    in the guest's language.
+    """
+
+    # The link is not one this platform signed (altered or cut off).
+    LINK_INVALID = "link_invalid"
+    # The link was issued long enough ago that it no longer opens.
+    LINK_EXPIRED = "link_expired"
+    # The booking was moved or removed after the link was sent: only the
+    # latest confirmation's link manages it.
+    BOOKING_CHANGED = "booking_changed"
+    # The booking is cancelled, completed or a no-show: nothing to change.
+    NOT_ACTIVE = "not_active"
+    # The booking has started or is over: it can no longer be changed here.
+    ALREADY_STARTED = "already_started"

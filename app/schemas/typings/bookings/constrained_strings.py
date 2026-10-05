@@ -3,6 +3,48 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class BookingCalendarFileName(BaseConstrainedTypedString):
+    """
+    File name a guest's calendar file is saved under (ASCII, ".ics").
+
+    Example:
+        name = BookingCalendarFileName("booking-2026-10-06.ics")
+    """
+
+    min_length = 5
+    max_length = 80
+    pattern = r"^[A-Za-z0-9._-]+\.ics$"
+
+
+class BookingManageLink(BaseConstrainedTypedString):
+    """
+    Address of the page where a guest sees, moves or cancels their booking:
+    the cabinet's public address and a signed manage token.
+
+    Example:
+        link = BookingManageLink("https://app.example.com/r/AQ3x...")
+    """
+
+    min_length = 10
+    max_length = 512
+    pattern = r"^https?://[^\s/]+/r/[A-Za-z0-9_-]+$"
+
+
+class BookingManageToken(BaseConstrainedTypedString):
+    """
+    The signed, expiring token of a booking's manage link: which booking of
+    which business, the version (start time) it was issued for and until
+    when (base64url, no padding).
+
+    Example:
+        token = BookingManageToken("AQ3xL8...")
+    """
+
+    min_length = 40
+    max_length = 120
+    pattern = r"^[A-Za-z0-9_-]+$"
+
+
 class CalendarAuthorizationUrl(BaseConstrainedTypedString):
     """
     Provider consent page an owner opens to connect a calendar.

@@ -3,6 +3,10 @@
 from base_typed_string import BaseTypedString
 
 
+class BookingCalendarText(BaseTypedString):
+    """An iCalendar file (RFC 5545) of one booking, as a guest saves it."""
+
+
 class BookingNote(BaseTypedString):
     """Free-form wish attached to a booking ("high chair", "late arrival")."""
 

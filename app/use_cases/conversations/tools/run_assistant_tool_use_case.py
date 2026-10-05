@@ -12,6 +12,10 @@ from app.schemas.dto.assistant_tools import (
     AssistantToolInvocation,
     AssistantToolOutcome,
 )
+from app.schemas.dto.booking_manage import (
+    BookingConfirmationReceipt,
+    BookingConfirmationRequest,
+)
 from app.schemas.dto.bookings import (
     AvailabilityQuery,
     AvailabilityResult,
@@ -39,6 +43,9 @@ from app.schemas.dto.knowledge import (
     SendLinkResult,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.use_cases.conversations.tools.booking_confirmation_hook import (
+    BookingConfirmationHook,
+)
 from app.use_cases.conversations.tools.booking_tool_handlers import (
     run_cancel_booking,
     run_check_availability,
@@ -96,6 +103,8 @@ class RunAssistantToolUseCase(
     result the model can act on instead of an exception. Availability and
     booking results and their errors state today at the business
     (`business_today`), and a date that has already passed is refused.
+    A booking a call made or moved is confirmed to its guest in writing
+    (`BookingConfirmationHook`; not in the owner's test chats).
     """
 
     def __init__(
@@ -117,7 +126,16 @@ class RunAssistantToolUseCase(
         ],
         phone_number_parser: PhoneNumberParserContract,
         wall_clock: WallClock[Microseconds],
+        send_booking_confirmation: UseCaseContract[
+            BookingConfirmationRequest, BookingConfirmationReceipt
+        ]
+        | None = None,
     ) -> None:
+        self._confirmation_hook: BookingConfirmationHook | None = (
+            None
+            if send_booking_confirmation is None
+            else BookingConfirmationHook(send_booking_confirmation)
+        )
         self._search_knowledge: UseCaseContract[
             KnowledgeSearchRequest, KnowledgeSearchResult
         ] = search_knowledge
@@ -215,7 +233,9 @@ class RunAssistantToolUseCase(
             )
 
         try:
-            return self._handlers[call.tool_name](call, context)
+            outcome: AssistantToolOutcome = self._handlers[call.tool_name](
+                call, context
+            )
         except ValidationError as error:
             return error_outcome(
                 call, describe_tool_input_error(error), self._today_text(call, context)
@@ -231,6 +251,10 @@ class RunAssistantToolUseCase(
             # error result it can act on, and the error is reported.
             logger.exception("Tool %s failed unexpectedly.", call.tool_name)
             return error_outcome(call, UNEXPECTED_TOOL_ERROR)
+
+        if self._confirmation_hook is not None:
+            self._confirmation_hook.after(outcome, context)
+        return outcome
 
     def _today(self, context: AssistantToolContext) -> BusinessToday | None:
         """Today at the business, when its time zone is known."""
