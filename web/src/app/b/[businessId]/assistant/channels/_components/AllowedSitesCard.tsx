@@ -30,6 +30,7 @@ export function AllowedSitesCard({ canManage }: { canManage: boolean }) {
 
   return (
     <Card
+      aria-label={t("widgetSites.title")}
       title={t("widgetSites.title")}
       description={t("widgetSites.description")}
       actions={
