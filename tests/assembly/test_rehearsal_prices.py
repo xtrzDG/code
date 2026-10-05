@@ -10,7 +10,8 @@ FACTS: str = "\n".join(
     [
         "Facts:",
         "- Product: Khachapuri: Price: 18.00 GEL",
-        "- Dish: Badrijani with walnuts: Rolled eggplant; walnut paste; Price: 15.00 GEL; Tags: starters",
+        "- Dish: Badrijani with walnuts: Rolled eggplant; walnut paste; "
+        "Price: 15.00 GEL; Tags: starters",
         "- Dish: Lobio: Beans in a clay pot",
         "Menu note: Lobio: Price: 99.00 GEL is not a fact row",
     ]
