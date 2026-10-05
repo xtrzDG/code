@@ -11,6 +11,47 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — one story for updates: owner checks pending, named failures, drafts, "Check now"
+
+Spec: `14b1f6f07f1450cf`
+
+- **Added** `POST /v1/businesses/{business_id}/autotest-cases/{case_id}/check`
+  (owners): "Check now" asks the check once of the version customers talk
+  to through the autotests' scenario runner and answers
+  `OwnerCheckOutcomeView` — what it asked, `outcome`, `check_codes`, the
+  `reason` in plain words of `?language=` (the owner's language by
+  default; null when it passed), the semantic judge's `judge_notes`, the
+  assistant's first `answer`, the test `conversation_id` and
+  `answer_message_id` ("Fix this answer" opens them), the version and
+  `checked_at`. 30 an hour per business (429 with `Retry-After`); 409 when
+  nothing is live yet. A paused check can be asked too.
+- **Added** `DELETE /v1/businesses/{business_id}/assistant/drafts/{version_id}`
+  (owners, 204): discard a version built after the live one that customers
+  never got; 409 for the live version, an archived one, one under test or
+  one an apply is working on. Audited; the test chat no longer picks it
+  and an apply never publishes it.
+- **Changed** `PendingChangesView` adds `owner_checks`
+  (`PendingOwnerCheckView`: the check, `added` or `changed`, its question,
+  expectation, expected text and language): the owner's checks the live
+  version was not checked against, which the next "Apply changes" asks
+  first; `count` and `has_unapplied_changes` include them. They come in a
+  field of their own, so `changes` never carries the new area value
+  `owner_checks` and older cabinets list nothing they cannot name. It also
+  adds `drafts` (`PendingDraftView`: version, number, status, built at).
+  `PendingChange` adds optional `autotest_case_id`; `PendingChangeArea`
+  gains `owner_checks` (internal to the server's comparison).
+- **Changed** `ApplyAttentionView` adds `failed_checks`
+  (`OwnerCheckOutcomeView`, as above) on `checks_failed`: the owner's
+  checks the update did not pass, each with its question and why.
+- **Changed** `AutotestScenarioResultView` adds optional `owner_check`
+  (`OwnerCheckAskedView`: question, expectation, expected text as the run
+  asked them), `conversation_id` and `answer_message_id`.
+- **Changed** `AutotestCaseView` adds optional `last_probe` (the latest
+  "Check now" while the check is asked the same way), and `GET
+  .../autotest-cases` takes `?language=` for its reasons. A new check
+  without `language` takes the language its question is written in (the
+  business's default when the question tells too little).
+
 ## 2026-10-05 — wave 12 together: deeper checks, customer memory, online migrations, retention, legal texts
 
 Spec: `0ccf13ff93342e14`

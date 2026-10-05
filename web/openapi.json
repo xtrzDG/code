@@ -1465,7 +1465,7 @@
       },
       "ApplyAttentionView": {
         "additionalProperties": false,
-        "description": "One reason the changes are not live, in plain words, with where to fix it.",
+        "description": "One reason the changes are not live, in plain words, with where to fix\nit. Failed checks (CHECKS_FAILED) name the owner's own checks the\nversion did not pass in `failed_checks`, each with its question and why;\n`details` are the kinds of every scenario that did not pass.",
         "properties": {
           "action": {
             "$ref": "#/components/schemas/SetupActionView"
@@ -1481,6 +1481,13 @@
               "type": "string"
             },
             "title": "Details",
+            "type": "array"
+          },
+          "failed_checks": {
+            "items": {
+              "$ref": "#/components/schemas/OwnerCheckOutcomeView"
+            },
+            "title": "Failed Checks",
             "type": "array"
           },
           "message": {
@@ -2359,7 +2366,7 @@
       },
       "AutotestCaseView": {
         "additionalProperties": false,
-        "description": "A check as \"My checks\" lists it, with its latest result (None: not run yet).",
+        "description": "A check as \"My checks\" lists it, with its latest result (None: not run\nyet) and its latest \"Check now\" against the live version, if any.",
         "properties": {
           "created_at": {
             "title": "Created At",
@@ -2396,6 +2403,16 @@
             "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
             "title": "Language",
             "type": "string"
+          },
+          "last_probe": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnerCheckOutcomeView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "last_result": {
             "anyOf": [
@@ -2813,8 +2830,19 @@
       },
       "AutotestScenarioResultView": {
         "additionalProperties": false,
-        "description": "Result of one autotest scenario.",
+        "description": "Result of one autotest scenario. An owner check names its check and\nwhat it asked (`owner_check`; None for results stored before);\n`conversation_id` and `answer_message_id` are the test conversation and\nthe assistant's first answer in it (\"Fix this answer\" opens it).",
         "properties": {
+          "answer_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Message Id"
+          },
           "autotest_case_id": {
             "anyOf": [
               {
@@ -2840,6 +2868,17 @@
             "title": "Check Notes",
             "type": "array"
           },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
           "cost_micro_usd": {
             "minimum": 0.0,
             "title": "Cost Micro Usd",
@@ -2864,6 +2903,16 @@
           },
           "outcome": {
             "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "owner_check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnerCheckAskedView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "passed_sample_count": {
             "anyOf": [
@@ -16016,6 +16065,161 @@
         "title": "OutboundTemplate",
         "type": "object"
       },
+      "OwnerCheckAskedView": {
+        "additionalProperties": false,
+        "description": "What an owner check asked when it was played: its question and expectation.",
+        "properties": {
+          "expectation": {
+            "$ref": "#/components/schemas/AutotestExpectation"
+          },
+          "expected_text": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "\\w",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Text"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "expectation"
+        ],
+        "title": "OwnerCheckAskedView",
+        "type": "object"
+      },
+      "OwnerCheckOutcomeView": {
+        "additionalProperties": false,
+        "description": "How one of the owner's checks did when it was asked once: in the quick\ncheck of \"Apply changes\" or by \"Check now\". What it asked (the question\nand what the answer had to do, as asked), the outcome, why it failed\n(`check_codes`, and `reason` in plain words of the owner's language;\nNone when it passed), the semantic judge's notes, the assistant's first\nanswer, the test conversation and that answer in it (so \"Fix this\nanswer\" can open it), the version that answered and when.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "answer_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Message Id"
+          },
+          "assistant_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistant Version Id"
+          },
+          "autotest_case_id": {
+            "title": "Autotest Case Id",
+            "type": "string"
+          },
+          "check_codes": {
+            "items": {
+              "$ref": "#/components/schemas/AutotestCheckCode"
+            },
+            "title": "Check Codes",
+            "type": "array"
+          },
+          "checked_at": {
+            "title": "Checked At",
+            "type": "integer"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "expectation": {
+            "$ref": "#/components/schemas/AutotestExpectation"
+          },
+          "expected_text": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "\\w",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Text"
+          },
+          "judge_notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Judge Notes",
+            "type": "array"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AutotestOutcome"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Question",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "autotest_case_id",
+          "question",
+          "expectation",
+          "outcome",
+          "checked_at"
+        ],
+        "title": "OwnerCheckOutcomeView",
+        "type": "object"
+      },
       "PackageUsageView": {
         "additionalProperties": false,
         "description": "Use of the plan package in the current billing period.\n\nPercents are empty for a package of zero (the Chat plan has no minutes).\nOverage is priced in the subscription currency when an official rate\nallows it (then marked estimated), otherwise in the plan currency.",
@@ -16232,6 +16436,17 @@
           "area": {
             "$ref": "#/components/schemas/PendingChangeArea"
           },
+          "autotest_case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autotest Case Id"
+          },
           "before": {
             "anyOf": [
               {
@@ -16337,7 +16552,7 @@
         "type": "string"
       },
       "PendingChangeArea": {
-        "description": "The part of what the assistant knows that a change not live yet\ntouches: PROFILE (name, kind, city, country, address, map, public\nphone, time zone), HOURS, SPECIAL_DAYS, ANSWERS (the niche questions),\nOFFER (menu items, services, rooms, packages, vehicles, products),\nQUESTIONS (frequent questions and policies), RESOURCES (what customers\nbook), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes\nwith the plan or goes) and CONVERSATION (tone, what never to say, when\nto call a person).",
+        "description": "The part of what the assistant knows that a change not live yet\ntouches: PROFILE (name, kind, city, country, address, map, public\nphone, time zone), HOURS, SPECIAL_DAYS, ANSWERS (the niche questions),\nOFFER (menu items, services, rooms, packages, vehicles, products),\nQUESTIONS (frequent questions and policies), RESOURCES (what customers\nbook), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes\nwith the plan or goes), CONVERSATION (tone, what never to say, when\nto call a person) and OWNER_CHECKS (the owner's own checks written or\nchanged since the version was last checked: the next apply asks them).",
         "enum": [
           "profile",
           "hours",
@@ -16350,7 +16565,8 @@
           "links",
           "languages",
           "calls",
-          "conversation"
+          "conversation",
+          "owner_checks"
         ],
         "title": "PendingChangeArea",
         "type": "string"
@@ -16389,7 +16605,7 @@
       },
       "PendingChangesView": {
         "additionalProperties": false,
-        "description": "The changes customers do not get yet. Before the first go-live there is\nnothing to compare with: `is_live` is False and `changes` is empty,\nwhile `has_unapplied_changes` says whether there is a profile to\nlaunch.",
+        "description": "The changes customers do not get yet. Before the first go-live there is\nnothing to compare with: `is_live` is False and `changes` is empty,\nwhile `has_unapplied_changes` says whether there is a profile to\nlaunch. `changes` are what the owner changed in the business,\n`owner_checks` the owner's checks the live version was not checked\nagainst (a field of their own, so a cabinet that does not know them\nyet lists nothing it cannot name); `count` counts both, which the next\n\"Apply changes\" takes to customers. `drafts` are the versions built\nsince the live one that customers never got.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -16407,6 +16623,13 @@
             "minimum": 0.0,
             "title": "Count",
             "type": "integer"
+          },
+          "drafts": {
+            "items": {
+              "$ref": "#/components/schemas/PendingDraftView"
+            },
+            "title": "Drafts",
+            "type": "array"
           },
           "has_unapplied_changes": {
             "title": "Has Unapplied Changes",
@@ -16427,6 +16650,13 @@
               }
             ],
             "title": "Live Version Number"
+          },
+          "owner_checks": {
+            "items": {
+              "$ref": "#/components/schemas/PendingOwnerCheckView"
+            },
+            "title": "Owner Checks",
+            "type": "array"
           }
         },
         "required": [
@@ -16436,6 +16666,89 @@
           "count"
         ],
         "title": "PendingChangesView",
+        "type": "object"
+      },
+      "PendingDraftView": {
+        "additionalProperties": false,
+        "description": "A version built after the live one that never went live (a preview of\nthe test chat, a manual build, an update whose checks failed): its\ncustomers never saw it, and the owner may discard it.",
+        "properties": {
+          "assistant_version_id": {
+            "title": "Assistant Version Id",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssistantVersionStatus"
+          },
+          "version_number": {
+            "minimum": 1.0,
+            "title": "Version Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "assistant_version_id",
+          "version_number",
+          "status",
+          "created_at"
+        ],
+        "title": "PendingDraftView",
+        "type": "object"
+      },
+      "PendingOwnerCheckView": {
+        "additionalProperties": false,
+        "description": "One of the owner's checks the live version was not checked against:\nthe next \"Apply changes\" asks it before customers get anything. ADDED\nwhen the live version was never asked it, CHANGED when the check was\nedited since; with its question, what the answer must do and the\nlanguage it is asked in.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/PendingChangeAction"
+          },
+          "autotest_case_id": {
+            "title": "Autotest Case Id",
+            "type": "string"
+          },
+          "expectation": {
+            "$ref": "#/components/schemas/AutotestExpectation"
+          },
+          "expected_text": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "\\w",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Text"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "autotest_case_id",
+          "action",
+          "question",
+          "expectation",
+          "language"
+        ],
+        "title": "PendingOwnerCheckView",
         "type": "object"
       },
       "PhoneNumberDetails": {
@@ -30214,6 +30527,126 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/assistant/drafts/{version_id}": {
+      "delete": {
+        "operationId": "discard_assistant_draft_v1_businesses__business_id__assistant_drafts__version_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Discard Assistant Draft",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/assistant/pending-changes": {
       "get": {
         "operationId": "get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get",
@@ -30708,6 +31141,22 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
             }
           },
           {
@@ -31370,6 +31819,149 @@
           }
         },
         "summary": "Update Autotest Case",
+        "tags": [
+          "assistants"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/autotest-cases/{case_id}/check": {
+      "post": {
+        "operationId": "check_autotest_case_now_v1_businesses__business_id__autotest_cases__case_id__check_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerCheckOutcomeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Check Autotest Case Now",
         "tags": [
           "assistants"
         ]
