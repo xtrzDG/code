@@ -42,6 +42,9 @@ from app.gateways.worker.periodic.refresh_exchange_rates import (
 from app.gateways.worker.periodic.request_visit_feedback import (
     request_visit_feedback_job,
 )
+from app.gateways.worker.periodic.send_subprocessor_notices import (
+    send_subprocessor_notices_job,
+)
 from app.gateways.worker.periodic.send_value_reports import send_value_reports_job
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     sweep_rate_limit_buckets_job,
@@ -230,6 +233,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             purge_business_exports_job,
             operator=operators.privacy.purge_business_exports_operator,
+        ),
+        Factory(  # Sub-processor changes told 30 days ahead (DPA 8.3).
+            send_subprocessor_notices_job,
+            operator=operators.legal.send_subprocessor_notices_operator,
         ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases

@@ -3,6 +3,7 @@ import threading
 from pathlib import Path
 
 from app.contracts.legal_registries import LegalDocumentRegistryContract
+from app.contracts.subprocessor_registries import SubprocessorRegistryContract
 from app.schemas.dto.compliance import DpaDocumentView
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.compliance.strings import (
@@ -10,6 +11,10 @@ from app.schemas.typings.compliance.strings import (
     LegalDocumentTitle,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.legal.subprocessor_table import (
+    render_subprocessor_table,
+    serve_table_block,
+)
 from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 from app.utilities.localization.language_tags import (
     base_language_code,
@@ -33,13 +38,22 @@ class LegalDocumentRegistry(LegalDocumentRegistryContract):
     one file per version and language: `dpa-<version>.<language>.md` (for
     example `docs/legal/dpa-2026-10-01.ka.md`). The first `# ` heading is
     the title. Files are read on first use and kept for the process.
+
+    Section 8's sub-processor table is served live from the sub-processor
+    registry in place of the generated copy between its markers, so every
+    version shows the list as it is (DPA 8.3: the list changes with notice,
+    not with a new agreement).
     """
 
     def __init__(
         self,
         documents_directory: Path = DEFAULT_LEGAL_DOCUMENTS_DIRECTORY,
+        subprocessor_registry: SubprocessorRegistryContract | None = None,
     ) -> None:
         self._documents_directory: Path = documents_directory
+        self._subprocessor_registry: SubprocessorRegistryContract | None = (
+            subprocessor_registry
+        )
         self._texts: dict[DpaDocumentVersion, dict[LanguageTag, str]] | None = None
         self._lock: threading.Lock = threading.Lock()
 
@@ -54,6 +68,13 @@ class LegalDocumentRegistry(LegalDocumentRegistryContract):
 
         served: LanguageTag = select_translation(list(translations), language)
         text: str = translations[served]
+        if self._subprocessor_registry is not None:
+            text = serve_table_block(
+                text,
+                render_subprocessor_table(
+                    self._subprocessor_registry.list_entries(), served
+                ),
+            )
         return DpaDocumentView(
             version=version,
             language=served,

@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
+from app.contracts.legal_text_registries import LegalTextRegistryContract
 from app.contracts.platform_admins import PlatformAdminRegistryContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
@@ -20,7 +21,6 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.mfa import TotpFactorDocument
-from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.domain.users import OtpChallengeDocument, UserDocument
 from app.schemas.dto.mfa_login import MfaChallengeView, MfaRequiredView
 from app.schemas.dto.users import LoginSessionView, UserView, VerifyOtpLoginCommand
@@ -31,6 +31,7 @@ from app.use_cases.users.otp_login.login_challenge_consumption import (
 from app.use_cases.users.otp_login.login_check_limits import (
     refuse_too_frequent_code_checks,
 )
+from app.use_cases.users.otp_login.terms_acceptance import record_terms_acceptance
 from app.use_cases.users.sign_in_completion import SignInCompletion
 
 
@@ -53,7 +54,9 @@ class VerifyOtpLoginUseCase(
     one-factor session at once (SignInCompletion: the token is returned
     once, only its hash is stored, the login is audited and counted). A new
     account keeps where its owner came from (the cabinet's attribution,
-    never changed later).
+    never changed later). The terms of service version the sign-in page
+    showed is stored as accepted (`record_terms_acceptance`): continuing
+    past the page's acceptance line accepts it.
     """
 
     def __init__(
@@ -71,6 +74,7 @@ class VerifyOtpLoginUseCase(
         sign_in_notices: SignInNoticeFacilitatorContract,
         totp_factor_repo: TotpFactorRepoContract,
         mfa_challenge_repo: MfaChallengeRepoContract,
+        legal_text_registry: LegalTextRegistryContract,
     ) -> None:
         self._otp_challenge_repo: OtpChallengeRepoContract = otp_challenge_repo
         self._user_repo: UserRepoContract = user_repo
@@ -82,6 +86,7 @@ class VerifyOtpLoginUseCase(
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._mfa_challenge_repo: MfaChallengeRepoContract = mfa_challenge_repo
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
+        self._legal_text_registry: LegalTextRegistryContract = legal_text_registry
         self._sign_in: SignInCompletion = SignInCompletion(
             user_session_repo,
             audit_log_repo,
@@ -111,9 +116,7 @@ class VerifyOtpLoginUseCase(
             input_data.code,
             now,
         )
-        user, is_new_user = self._find_or_create_user(
-            challenge, input_data.signup_attribution, now
-        )
+        user, is_new_user = self._find_or_create_user(challenge, input_data, now)
         factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)
         has_active_factor: bool = (
             factor is not None and factor.status is TotpFactorStatus.ACTIVE
@@ -140,7 +143,7 @@ class VerifyOtpLoginUseCase(
     def _find_or_create_user(
         self,
         challenge: OtpChallengeDocument,
-        signup_attribution: SignupAttribution | None,
+        input_data: VerifyOtpLoginCommand,
         now: Microseconds,
     ) -> tuple[UserDocument, bool]:
         user: UserDocument | None = self._find_user(challenge)
@@ -152,7 +155,7 @@ class VerifyOtpLoginUseCase(
                 email=challenge.email,
                 country_code=challenge.country_code,
                 locale=challenge.locale,
-                signup_attribution=signup_attribution,
+                signup_attribution=input_data.signup_attribution,
                 created_at=now,
             )
 
@@ -161,6 +164,9 @@ class VerifyOtpLoginUseCase(
             user.country_code = challenge.country_code
 
         user.is_platform_admin = self._platform_admins.role_of(user) is not None
+        record_terms_acceptance(
+            user, input_data.accepted_terms_version, self._legal_text_registry, now
+        )
         user.updated_at = now
         self._user_repo.save(user)
         return user, is_new_user

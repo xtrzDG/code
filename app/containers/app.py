@@ -16,6 +16,9 @@ from app.containers.adapters.inbox_collections_container import (
 from app.containers.adapters.invoicing_collections_container import (
     InvoicingCollectionsContainer,
 )
+from app.containers.adapters.legal_collections_container import (
+    LegalCollectionsContainer,
+)
 from app.containers.adapters.media_collections_container import (
     MediaCollectionsContainer,
 )
@@ -171,8 +174,17 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The sub-processor change notices (1124), one more sibling.
+    legal_collections: LegalCollectionsContainer = Container(  # type: ignore[assignment]
+        LegalCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        legal_collections=legal_collections,
         privacy_collections=privacy_collections,
         invoicing_collections=invoicing_collections,
         payment_collections=adapters.collections,

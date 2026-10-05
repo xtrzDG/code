@@ -19,6 +19,7 @@ from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
 from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
+from app.containers.pipelines.legal_pipelines import LegalPipelinesContainer
 from app.containers.pipelines.notification_pipelines import (
     NotificationPipelinesContainer,
 )
@@ -64,6 +65,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     privacy: PrivacyPipelinesContainer = Container(  # type: ignore[assignment]
         PrivacyPipelinesContainer,
         privacy_orchestrators=orchestrators.privacy,
+    )
+    legal: LegalPipelinesContainer = Container(  # type: ignore[assignment]
+        LegalPipelinesContainer,
+        legal_orchestrators=orchestrators.legal,
     )
     inbox: InboxPipelinesContainer = Container(  # type: ignore[assignment]
         InboxPipelinesContainer,
