@@ -29,6 +29,8 @@ eggs/
 .ruff_cache/
 .eggs/
 lib/
+# The k6 scenarios' shared helpers are source, not a Python build folder.
+!perf/k6/lib/
 lib64/
 parts/
 sdist/

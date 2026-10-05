@@ -47,7 +47,8 @@ export default function () {
       JSON.stringify({ session_key: visitor.session_key, text: "Do you have a table tonight?" }),
       { headers: { ...headers, "Content-Type": "application/json" }, tags: { call: "message" } },
     );
-    check(sent, { "message answered": (r) => r.status === 200 });
+    // The message is stored and queued at once (202); a later poll brings the answer.
+    check(sent, { "message accepted": (r) => r.status === 202 });
   }
   sleep(POLL_SECONDS - 0.25 + Math.random() * 0.5);
 }
