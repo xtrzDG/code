@@ -13,16 +13,18 @@ from app.containers.utilities import UtilitiesContainer
 
 class SpendGuardOperatorsContainer(containers.DeclarativeContainer):
     """
-    Operators of the spend guard's endpoints. The generic API limits and
-    the admin's spend tile are platform-level (no business owns them); the
-    origin check and the lists of one business run in its scope.
+    Operators of the spend guard's endpoints. The admin's spend tile sums
+    every business's usage, so it runs platform-wide; the origin check and
+    the lists of one business run in its scope, and the generic API limits
+    name no business (their counters are a platform table whose adapter
+    escalates by itself).
     """
 
     spend_guard_pipelines: SpendGuardPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     storage_scope = utilities.storage_scope
 
-    admit_api_request_operator = platform_pipeline_operator(
+    admit_api_request_operator = pipeline_operator(
         spend_guard_pipelines.admit_api_request_pipeline, storage_scope
     )
     check_widget_origin_operator = pipeline_operator(

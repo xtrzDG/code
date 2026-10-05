@@ -15,6 +15,7 @@ from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.sessions import SessionCheck
 from app.schemas.dto.spend_guard import ApiRequestAdmission
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
 from app.utilities.security.user_agents import read_user_agent
@@ -44,7 +45,8 @@ def build_current_user_dependency(
     sign-in, step-up and platform support's access. The session's last
     use (address and browser) is recorded on the way. With `admit_request`
     the request then counts against the person's generic limits (429 with
-    Retry-After past them; exports stricter, `request_limits`).
+    Retry-After past them; exports stricter, `request_limits`), and a
+    request whose token is refused against its client address.
 
     The dependency is async on purpose: it binds the session in the
     request's own task, whose context the route's worker
@@ -65,16 +67,27 @@ def build_current_user_dependency(
         request: Request,
         authorization: Annotated[str | None, Header()] = None,
     ) -> UserId:
-        access_token: AccessToken = parse_bearer_token(authorization)
-        check = SessionCheck(
-            access_token=access_token,
-            client_ip_address=read_client_ip_address(request),
-            user_agent=read_user_agent(request.headers.get("user-agent")),
-            access_mode=access_mode_of(request.method),
-        )
-        assurance: SessionAssurance = await run_in_threadpool(
-            authentication_operator.operate, check
-        )
+        client_ip_address: ClientIpAddress | None = read_client_ip_address(request)
+        try:
+            check = SessionCheck(
+                access_token=parse_bearer_token(authorization),
+                client_ip_address=client_ip_address,
+                user_agent=read_user_agent(request.headers.get("user-agent")),
+                access_mode=access_mode_of(request.method),
+            )
+            assurance: SessionAssurance = await run_in_threadpool(
+                authentication_operator.operate, check
+            )
+        except AuthenticationRequiredError:
+            # A refused token counts against its address, as no token does:
+            # a made-up header buys no way around the per-address limit.
+            if admit_request is not None and client_ip_address is not None:
+                await run_in_threadpool(
+                    admit_request.operate,
+                    ApiRequestAdmission(client_ip_address=client_ip_address),
+                )
+            raise
+
         session_assurance.bind(assurance)
         if admit_request is not None:
             await run_in_threadpool(

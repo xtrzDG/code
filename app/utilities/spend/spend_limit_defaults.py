@@ -78,8 +78,4 @@ def resolve_spend_limits(
     return SpendLimits(
         soft_limit_micro_usd=DailySpendLimitMicroUsd(min(soft, hard)),
         hard_limit_micro_usd=DailySpendLimitMicroUsd(hard),
-        is_custom=(
-            limits.daily_soft_limit_micro_usd is not None
-            or limits.daily_hard_limit_micro_usd is not None
-        ),
     )

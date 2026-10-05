@@ -89,6 +89,10 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         "RESTORE_CHECK_DATABASE_URL",
         # The image has the Postgres client on the PATH.
         "POSTGRES_CLIENT_BIN_DIRECTORY",
+        # The spend guard: the cheaper model follows LLM_PROVIDER (its cheap
+        # model); no budget alert until the team sets a daily budget.
+        "SPEND_SOFT_LIMIT_MODEL_ID",
+        "PLATFORM_DAILY_SPEND_BUDGET_USD",
     }
 )
 

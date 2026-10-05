@@ -46,6 +46,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"GET {B}/call-settings",
         f"PUT {B}/call-settings",
         f"POST {B}/channels/telegram/validate-token",
+        f"PUT {B}/channels/web/allowed-origins",
         f"PUT {B}/channels/whatsapp/staff-template",
         f"PUT {B}/channels/whatsapp/staff-templates",
         f"PUT {B}/channels/{{channel}}",

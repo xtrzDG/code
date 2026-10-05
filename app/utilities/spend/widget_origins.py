@@ -20,7 +20,6 @@ from app.schemas.typings.spend.constrained_strings import (
     WidgetSiteAddress,
 )
 
-MAX_ALLOWED_SITES: int = 20
 DEFAULT_PORTS: dict[str, int] = {"http": 80, "https": 443}
 WWW_PREFIX: str = "www."
 NULL_ORIGIN: str = "null"

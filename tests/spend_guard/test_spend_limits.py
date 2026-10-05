@@ -39,7 +39,6 @@ def test_the_plan_defaults_are_multiples_of_its_planned_daily_cost() -> None:
     assert verdict.day == "2026-10-05"
     assert int(verdict.limits.soft_limit_micro_usd) == 5 * CHAT_PLANNED_DAILY_MICRO_USD
     assert int(verdict.limits.hard_limit_micro_usd) == 15 * CHAT_PLANNED_DAILY_MICRO_USD
-    assert verdict.limits.is_custom is False
     assert verdict.cheaper_model_id is None
 
 
@@ -156,4 +155,3 @@ def test_a_soft_limit_above_the_hard_one_is_held_at_the_hard_one() -> None:
     verdict = check(world)
 
     assert int(verdict.limits.soft_limit_micro_usd) == 2 * DOLLAR
-    assert verdict.limits.is_custom is True

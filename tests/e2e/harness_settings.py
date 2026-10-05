@@ -19,6 +19,12 @@ E2E_ENVIRONMENT: dict[str, str] = {
     # Every message answered at once (the movable clock never runs on by
     # itself, so a burst would wait forever).
     "MESSAGE_COALESCE_SECONDS": "0",
+    # The clock stands still, so a generic per-minute window never ends:
+    # the suites' many requests from one test client stay under it
+    # (tests/spend_guard proves the limits themselves).
+    "API_REQUESTS_PER_IP_PER_MINUTE": "100000",
+    "API_REQUESTS_PER_USER_PER_MINUTE": "100000",
+    "API_EXPORTS_PER_USER_PER_MINUTE": "100000",
     "PLATFORM_ADMIN_EMAILS": ADMIN_EMAIL,
     "TELEGRAM_PLATFORM_BOT_TOKEN": PLATFORM_BOT_TOKEN,
     "ELEVENLABS_API_KEY": "xi-e2e-key",

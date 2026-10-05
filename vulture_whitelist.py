@@ -518,3 +518,8 @@ _.messages_left  # app/schemas/dto/public_demo.py (PublicDemoReply)
 # security measure, read by tests/legal (every path exists).
 _.latest_acceptance  # app/schemas/dto/compliance.py (DpaStatusView)
 _.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)
+
+# The spend guard (R12): the admin overview's spend tile reads how much of
+# the daily budget is used and the clients that passed a limit today.
+_.budget_used_percent  # app/schemas/dto/spend_guard.py (PlatformSpendView)
+_.braked_businesses  # app/schemas/dto/spend_guard.py (PlatformSpendView)

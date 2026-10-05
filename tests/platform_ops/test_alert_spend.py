@@ -11,7 +11,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.billing import UsageKind
 from app.schemas.constants.monitoring import PlatformAlertCode, PlatformAlertStatus
 from app.schemas.domain.billing import UsageEventDocument
-from app.schemas.dto.jobs import JobTick
+from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.platform_alerts import AlertObservation
 from app.schemas.typings.billing.constrained_integers import (
     CostMicroUsd,
@@ -95,7 +95,7 @@ def test_the_spend_spike_fires_once_per_cooldown() -> None:
     rules_run = {PlatformAlertCode.SPEND_SPIKE}
 
     first = use_case.run(TICK)
-    quiet = []
+    quiet: list[JobReport] = []
     for _ in range(11):
         world.clock.advance(5 * MINUTE)
         quiet.append(use_case.run(TICK))

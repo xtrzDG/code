@@ -25,7 +25,7 @@ def build_widget_origin_guard(
     def require_allowed_origin(request: Request, business_id: str) -> None:
         try:
             checked_business = BusinessId(business_id)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return  # The route itself answers an unknown chat with 404.
 
         check_widget_origin_operator.operate(

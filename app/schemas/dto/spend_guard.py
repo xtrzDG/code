@@ -24,7 +24,6 @@ from app.schemas.typings.billing.constrained_integers import (
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.spend.booleans import IsCustomSpendLimit
 from app.schemas.typings.spend.constrained_integers import (
     CallMaxDurationSeconds,
     CallSilenceEndSeconds,
@@ -55,7 +54,6 @@ class SpendLimits(ImmutableDTO):
 
     soft_limit_micro_usd: DailySpendLimitMicroUsd
     hard_limit_micro_usd: DailySpendLimitMicroUsd
-    is_custom: IsCustomSpendLimit = False
 
 
 class SpendCheckRequest(ImmutableDTO):
