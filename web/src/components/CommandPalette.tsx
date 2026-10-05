@@ -101,7 +101,7 @@ export function CommandPalette({
         <h2 id={titleId} className="sr-only">
           {t("palette.title")}
         </h2>
-        <div className="flex shrink-0 items-center gap-3 border-b border-line px-4">
+        <div className="flex shrink-0 items-center gap-3 border-b border-line px-4 focus-within:shadow-[inset_0_-2px_0_var(--focus)]">
           <IconSearch className="size-5 shrink-0 text-ink-subtle" aria-hidden />
           <input
             type="text"
@@ -123,7 +123,7 @@ export function CommandPalette({
               setActive(0);
             }}
             onKeyDown={onKeyDown}
-            className="h-14 min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-ink-subtle focus:outline-none"
+            className="h-14 min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-ink-subtle outline-none!"
           />
           <kbd className="hidden shrink-0 rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px] text-ink-subtle sm:inline">Esc</kbd>
         </div>

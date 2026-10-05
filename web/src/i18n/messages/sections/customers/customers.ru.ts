@@ -10,9 +10,9 @@ export const customersRu: Translation<typeof customersEn> = {
     searchPlaceholder: "Имя, телефон или номер клиента",
     filter: "Показать",
     filters: {
-      all: "Всех",
+      all: "Все",
       vip: "VIP",
-      blocked: "Заблокированных",
+      blocked: "Заблокированные",
     },
     tag: "Метка",
     anyTag: "Любая метка",

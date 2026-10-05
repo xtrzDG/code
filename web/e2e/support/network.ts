@@ -16,7 +16,7 @@ const inFlight = new WeakMap<Page, Set<Request>>();
 
 /** A URL without its fragment (a Referer header never carries one). */
 function withoutFragment(url: string): string {
-  return url.split("#")[0];
+  return url.replace(/#.*$/s, "");
 }
 
 /** Starts counting the page's requests (fixtures.ts does it for every test). */
