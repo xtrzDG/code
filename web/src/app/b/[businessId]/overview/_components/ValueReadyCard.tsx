@@ -110,22 +110,24 @@ export function ValueReadyCard({ model, isPlaceholder }: { model: ValueModel; is
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface/80 p-4">
           <h3 className="text-base font-semibold text-ink">{t("value.ready.shareTitle")}</h3>
           {shareUrl ? (
-            <div className="flex flex-wrap items-center gap-4">
-              <QrImage value={shareUrl} label={t("value.ready.qrAlt", { link: displayUrl(shareUrl) })} className="size-28 shrink-0" />
-              <div className="min-w-0 flex-1 basis-40">
-                <p className="text-sm text-ink-muted">{t("value.ready.shareText")}</p>
-                <p className="mt-1 truncate text-sm font-medium text-ink" dir="ltr">
-                  {displayUrl(shareUrl)}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <CopyButton value={shareUrl} label={t("value.ready.copy")} variant="primary" />
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
-                    <IconExternal className="size-4" aria-hidden />
-                    <span>{t("value.ready.open")}</span>
-                  </a>
+            <>
+              <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
+                <QrImage value={shareUrl} label={t("value.ready.qrAlt", { link: displayUrl(shareUrl) })} className="size-24 sm:size-28" />
+                <div className="min-w-0">
+                  <p className="text-sm text-ink-muted">{t("value.ready.shareText")}</p>
+                  <p className="mt-1 truncate text-sm font-medium text-ink" dir="ltr">
+                    {displayUrl(shareUrl)}
+                  </p>
                 </div>
               </div>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                <CopyButton value={shareUrl} label={t("value.ready.copy")} variant="primary" />
+                <a href={shareUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                  <IconExternal className="size-4" aria-hidden />
+                  <span>{t("value.ready.open")}</span>
+                </a>
+              </div>
+            </>
           ) : share.isLoading && !share.data ? null : (
             <div className="space-y-3">
               <p className="text-sm text-ink-muted">{t("value.ready.noLink")}</p>

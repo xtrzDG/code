@@ -44,7 +44,7 @@ export function TrialLine({ model, className }: { model: ValueModel; className?:
     <p
       data-trial-line=""
       className={cn(
-        "inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-surface-muted px-2.5 py-1 text-xs text-ink-muted",
+        "inline-flex max-w-full items-center gap-1.5 rounded-xl border border-line bg-surface-muted px-2.5 py-1 text-xs text-ink-muted",
         className,
       )}
     >
