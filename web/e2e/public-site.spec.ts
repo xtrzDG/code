@@ -39,9 +39,9 @@ test.describe("the public site", () => {
     });
   }
 
-  test("answers 404 for an unknown kind of business or language", async ({ page }) => {
-    expect((await page.goto("/en/for/spaceships"))?.status()).toBe(404);
-    expect((await page.goto("/de"))?.status()).toBe(404);
+  test("answers 404 for an unknown kind of business or language", async ({ request }) => {
+    expect((await request.get("/en/for/spaceships")).status()).toBe(404);
+    expect((await request.get("/de")).status()).toBe(404);
   });
 
   test("links every footer page to a page that opens", async ({ page, request }) => {

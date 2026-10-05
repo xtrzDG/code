@@ -69,7 +69,7 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
                 } else {
                   // A full load: the root layout (the page's lang, the
                   // dictionary) belongs to the language too.
-                  window.location.assign(`${localized}${search}${hash}`);
+                  window.location.assign(new URL(`${localized}${search}${hash}`, window.location.origin));
                 }
               } catch (error) {
                 toast.error(error);
