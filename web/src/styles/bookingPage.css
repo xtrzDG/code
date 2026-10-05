@@ -1,0 +1,461 @@
+/*
+ * A guest's booking page (/r/{token}): a page for a business's customers,
+ * not the cabinet. Like the hosted chat page it follows the visitor's
+ * system colours (color-scheme: light dark), not the cabinet's theme
+ * cookie; every colour is a design token of globals.css, which resolve at
+ * the element that uses them. Phones: a card with the page's 16px gutter;
+ * wider screens: the same card, centred.
+ */
+
+.bp-page {
+  color-scheme: light dark;
+  min-height: 100dvh;
+  padding: 16px 16px 40px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Georgian", "Noto Sans Armenian",
+    "Noto Sans Hebrew", "Noto Sans Arabic", sans-serif;
+  line-height: 1.45;
+}
+
+.bp-card {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 22px 20px 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.bp-head {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.bp-business {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bp-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.bp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bp-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.bp-status[data-status="confirmed"] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.bp-status[data-status="pending"] {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.bp-messages:empty {
+  display: none;
+}
+
+.bp-messages {
+  display: grid;
+  gap: 8px;
+  outline: none;
+}
+
+.bp-notice,
+.bp-problem {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  animation: bp-appear 0.24s ease-out;
+}
+
+.bp-notice {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.bp-notice-quiet {
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+}
+
+.bp-problem {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@keyframes bp-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.bp-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin: 0;
+}
+
+.bp-fact {
+  min-width: 0;
+}
+
+.bp-fact-when,
+.bp-fact-wide {
+  grid-column: 1 / -1;
+}
+
+.bp-fact dt {
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+.bp-fact dd {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bp-fact-when dd {
+  font-size: 19px;
+  line-height: 1.3;
+}
+
+.bp-time {
+  color: var(--accent-ink);
+}
+
+.bp-link {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.bp-actions,
+.bp-panel-actions,
+.bp-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* One button a row on phones, side by side when they fit. */
+.bp-actions > *,
+.bp-panel-actions > *,
+.bp-dialog-actions > * {
+  flex: 1 1 170px;
+}
+
+.bp-actions > .bp-button-primary {
+  flex-basis: 100%;
+}
+
+.bp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.bp-button svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bp-button:hover {
+  background: var(--surface-muted);
+}
+
+.bp-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.bp-button-primary {
+  border-color: transparent;
+  background: var(--accent-solid);
+  color: var(--on-accent);
+}
+
+.bp-button-primary:hover:not(:disabled) {
+  background: var(--accent-solid-hover);
+}
+
+.bp-button-danger {
+  border-color: transparent;
+  color: var(--danger);
+}
+
+.bp-button-danger:hover {
+  background: var(--danger-soft);
+}
+
+.bp-button-danger-solid {
+  border-color: transparent;
+  background: var(--danger-solid);
+  color: var(--on-accent);
+}
+
+.bp-button-quiet {
+  border-color: transparent;
+  color: var(--ink-muted);
+}
+
+.bp-section,
+.bp-panel {
+  display: grid;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.bp-section h2,
+.bp-panel h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.bp-section p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.bp-field {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+.bp-field input {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.bp-slots {
+  display: grid;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.bp-hint {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+}
+
+.bp-times {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.bp-times legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+}
+
+.bp-time-option {
+  min-height: 42px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.bp-time-option:hover {
+  background: var(--surface-muted);
+}
+
+.bp-time-option[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--accent-solid);
+  color: var(--on-accent);
+}
+
+.bp-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bp-contacts .bp-button {
+  min-height: 42px;
+  border-radius: 999px;
+}
+
+.bp-dialog {
+  width: min(420px, calc(100vw - 32px));
+  padding: 22px 20px 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-2xl);
+}
+
+.bp-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.bp-dialog p {
+  margin: 0 0 18px;
+  color: var(--ink-muted);
+  font-size: 15px;
+}
+
+.bp-problem-page {
+  justify-items: center;
+  text-align: center;
+}
+
+.bp-problem-page .bp-title {
+  font-size: 22px;
+}
+
+.bp-problem-page p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15.5px;
+}
+
+.bp-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.bp-mark svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (min-width: 640px) {
+  .bp-page {
+    padding: 48px 24px 64px;
+  }
+
+  .bp-card {
+    gap: 24px;
+    padding: 32px 32px 30px;
+    border-radius: 24px;
+  }
+
+  .bp-title {
+    font-size: 30px;
+  }
+
+  .bp-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-notice,
+  .bp-problem {
+    animation: none;
+  }
+
+  .bp-button {
+    transition: none;
+  }
+}

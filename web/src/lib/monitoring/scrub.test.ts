@@ -29,6 +29,19 @@ describe("scrubEvent", () => {
     expect(event.exception?.values?.[0]?.value).toBe("Booking for [number] failed");
   });
 
+  it("masks the keys of guests' booking links", () => {
+    const token = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-AbCdEf";
+    const event: MonitoringEvent = {
+      transaction: `/r/${token}`,
+      message: `GET /api/backend/v1/public/bookings/${token}/slots failed`,
+    };
+
+    scrubEvent(event);
+
+    expect(event.transaction).toBe("/r/[token]");
+    expect(event.message).toBe("GET /api/backend/v1/public/bookings/[token]/slots failed");
+  });
+
   it("keeps short numbers such as statuses and counts", () => {
     expect(redactText("HTTP 503 after 3 tries")).toBe("HTTP 503 after 3 tries");
   });
