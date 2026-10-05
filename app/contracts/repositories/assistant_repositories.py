@@ -6,6 +6,7 @@ not change stored state until it is saved. Every business-owned document is
 looked up through its business id, so one tenant never sees another's data.
 """
 
+from collections.abc import Callable
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
@@ -30,6 +31,19 @@ class AssistantVersionRepoContract(RepoContract, Protocol):
         business_id: BusinessId,
     ) -> list[AssistantVersionDocument]:
         """Return versions ordered by version_number ascending."""
+        raise NotImplementedError
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        version_id: AssistantVersionId,
+        change: Callable[[AssistantVersionDocument], AssistantVersionDocument | None],
+    ) -> AssistantVersionDocument | None:
+        """
+        Store what `change` makes of the version as stored now, in one step;
+        None (nothing written) for a missing version or when `change`
+        returns None.
+        """
         raise NotImplementedError
 
 

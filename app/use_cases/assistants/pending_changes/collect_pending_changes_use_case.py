@@ -1,17 +1,26 @@
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.repositories.assistant_repositories import AutotestRunRepoContract
+from app.contracts.repositories.autotest_case_repositories import (
+    AutotestCaseRepoContract,
+)
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.setup import PendingChangeAction, PendingChangeArea
-from app.schemas.domain.assistants import AssistantVersionDocument
+from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.dto.assistants.assembly_sources import AssistantInstructionSource
 from app.schemas.dto.assistants.assistant_drafts import (
     AssistantDraft,
     AssistantDraftRequest,
 )
 from app.schemas.dto.setup.pending_changes import PendingChange, PendingChangesRequest
+from app.schemas.typings.assistants.prefixed_id import AutotestRunId
 from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.assembly.fact_diff import diff_fact_tables
+from app.utilities.assembly.owner_check_coverage import (
+    collect_owner_check_changes,
+    find_reference_run_id,
+)
 
 
 class CollectPendingChangesUseCase(
@@ -28,6 +37,9 @@ class CollectPendingChangesUseCase(
     the version was built, the instruction is composed again with the
     version's own facts and compared (CONVERSATION). A platform update of
     the instruction templates alone is therefore not the owner's change.
+    Last come the owner's checks the version was not checked against
+    (OWNER_CHECKS, see `collect_owner_check_changes`): the next apply asks
+    them before customers get anything.
 
     Raises:
         ValidationFailedError: the business has no profile.
@@ -41,6 +53,8 @@ class CollectPendingChangesUseCase(
             SystemPromptText,
         ],
         localized_text_resolver: LocalizedTextResolverContract,
+        autotest_case_repo: AutotestCaseRepoContract,
+        autotest_run_repo: AutotestRunRepoContract,
     ) -> None:
         self._build_assistant_draft: UseCaseContract[
             AssistantDraftRequest, AssistantDraft
@@ -50,6 +64,8 @@ class CollectPendingChangesUseCase(
             SystemPromptText,
         ] = assistant_instruction_transformer
         self._resolver: LocalizedTextResolverContract = localized_text_resolver
+        self._autotest_case_repo: AutotestCaseRepoContract = autotest_case_repo
+        self._autotest_run_repo: AutotestRunRepoContract = autotest_run_repo
 
     def run(self, input_data: PendingChangesRequest) -> list[PendingChange]:
         version: AssistantVersionDocument = input_data.version
@@ -82,7 +98,22 @@ class CollectPendingChangesUseCase(
                 )
             )
 
-        return changes
+        return changes + self._owner_check_changes(version)
+
+    def _owner_check_changes(
+        self, version: AssistantVersionDocument
+    ) -> list[PendingChange]:
+        run_id: AutotestRunId | None = find_reference_run_id(version)
+        run: AutotestRunDocument | None = (
+            None
+            if run_id is None
+            else self._autotest_run_repo.get(version.business_id, run_id)
+        )
+        return collect_owner_check_changes(
+            self._autotest_case_repo.list_by_business(version.business_id),
+            version,
+            run,
+        )
 
     def _answer_labels(
         self, draft: AssistantDraft, language: LanguageTag

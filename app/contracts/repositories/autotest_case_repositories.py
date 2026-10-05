@@ -6,6 +6,7 @@ does not change stored state until it is saved. A business keeps at most
 a few dozen checks, so they are read whole by business.
 """
 
+from collections.abc import Callable
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
@@ -28,4 +29,17 @@ class AutotestCaseRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def delete(self, business_id: BusinessId, case_id: AutotestCaseId) -> None:
+        raise NotImplementedError
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        case_id: AutotestCaseId,
+        change: Callable[[AutotestCaseDocument], AutotestCaseDocument | None],
+    ) -> AutotestCaseDocument | None:
+        """
+        Store what `change` makes of the check as stored now, in one step;
+        None (nothing written) for a missing check or when `change` returns
+        None.
+        """
         raise NotImplementedError

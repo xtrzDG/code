@@ -115,6 +115,9 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
     get_pending_changes_orchestrator = use_case_orchestrator(
         pending_change_use_cases.get_pending_changes_use_case
     )
+    discard_assistant_draft_orchestrator = use_case_orchestrator(
+        apply_use_cases.discard_assistant_draft_use_case
+    )
 
     # --- Assistant versions and autotests.
     assemble_assistant_version_orchestrator = use_case_orchestrator(

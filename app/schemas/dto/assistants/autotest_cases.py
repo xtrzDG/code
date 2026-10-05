@@ -19,7 +19,12 @@ from app.schemas.typings.assistants.constrained_strings import (
     AutotestCaseQuestion,
     AutotestExpectedText,
 )
-from app.schemas.typings.assistants.prefixed_id import AutotestCaseId, AutotestRunId
+from app.schemas.typings.assistants.prefixed_id import (
+    AssistantVersionId,
+    AutotestCaseId,
+    AutotestRunId,
+)
+from app.schemas.typings.assistants.strings import JudgeNote, OwnerCheckFailureReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import MessageText
@@ -99,8 +104,39 @@ class AutotestCaseResultView(ImmutableDTO):
     checked_at: Microseconds
 
 
+class OwnerCheckOutcomeView(ImmutableDTO):
+    """
+    How one of the owner's checks did when it was asked once: in the quick
+    check of "Apply changes" or by "Check now". What it asked (the question
+    and what the answer had to do, as asked), the outcome, why it failed
+    (`check_codes`, and `reason` in plain words of the owner's language;
+    None when it passed), the semantic judge's notes, the assistant's first
+    answer, the test conversation and that answer in it (so "Fix this
+    answer" can open it), the version that answered and when.
+    """
+
+    autotest_case_id: AutotestCaseId
+    question: AutotestCaseQuestion
+    expectation: AutotestExpectation
+    expected_text: AutotestExpectedText | None = None
+    outcome: AutotestOutcome
+    check_codes: list[AutotestCheckCode] = Field(
+        default_factory=list[AutotestCheckCode]
+    )
+    reason: OwnerCheckFailureReason | None = None
+    judge_notes: list[JudgeNote] = Field(default_factory=list[JudgeNote])
+    answer: MessageText | None = None
+    conversation_id: ConversationId | None = None
+    answer_message_id: MessageId | None = None
+    assistant_version_id: AssistantVersionId | None = None
+    checked_at: Microseconds
+
+
 class AutotestCaseView(ImmutableDTO):
-    """A check as "My checks" lists it, with its latest result (None: not run yet)."""
+    """
+    A check as "My checks" lists it, with its latest result (None: not run
+    yet) and its latest "Check now" against the live version, if any.
+    """
 
     id: AutotestCaseId
     question: AutotestCaseQuestion
@@ -112,6 +148,7 @@ class AutotestCaseView(ImmutableDTO):
     is_active: IsAutotestCaseActive
     created_at: Microseconds
     last_result: AutotestCaseResultView | None = None
+    last_probe: OwnerCheckOutcomeView | None = None
 
 
 class AutotestCaseList(ImmutableDTO):

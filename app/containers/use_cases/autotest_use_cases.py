@@ -6,6 +6,7 @@ from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.utilities import UtilitiesContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -80,6 +81,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     plan_autotest_scenarios_use_case: Factory[
@@ -179,6 +181,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         conversation_review_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
         unanswered_question_repo=repositories.unanswered_question_repo,
+        language_detector=utilities.language_detector,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     update_autotest_case_use_case: Factory[

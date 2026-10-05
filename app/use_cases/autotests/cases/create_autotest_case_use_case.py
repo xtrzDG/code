@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.localization_utilities import LanguageDetectorContract
 from app.contracts.repositories.autotest_case_repositories import (
     AutotestCaseRepoContract,
 )
@@ -25,6 +26,8 @@ from app.schemas.dto.assistants.autotest_cases import (
     CreateAutotestCaseCommand,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.autotests.cases.autotest_case_rules import (
     check_expected_text,
     check_room,
@@ -42,7 +45,10 @@ class CreateAutotestCaseUseCase(
     question the assistant could not answer. From the next autotest run on
     (the quick check of "Apply changes" included) every version must pass
     it. A check saved from a conversation rated bad means someone acted on
-    the rating, so it no longer waits in "Answers worth improving".
+    the rating, so it no longer waits in "Answers worth improving". Its
+    language is the one asked for, else the one its question is written in
+    (`detect_any`, the business's default language when the question tells
+    too little).
 
     Raises:
         NotFoundError: the conversation, message or question it was saved
@@ -62,6 +68,7 @@ class CreateAutotestCaseUseCase(
         conversation_review_repo: ConversationReviewRepoContract,
         message_repo: MessageRepoContract,
         unanswered_question_repo: UnansweredQuestionRepoContract,
+        language_detector: LanguageDetectorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -76,6 +83,7 @@ class CreateAutotestCaseUseCase(
         self._unanswered_question_repo: UnansweredQuestionRepoContract = (
             unanswered_question_repo
         )
+        self._language_detector: LanguageDetectorContract = language_detector
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: CreateAutotestCaseCommand) -> AutotestCaseView:
@@ -102,7 +110,8 @@ class CreateAutotestCaseUseCase(
             question=case_input.question,
             expectation=case_input.expectation,
             expected_text=expected_text,
-            language=case_input.language or business.default_language,
+            language=case_input.language
+            or self._question_language(business, case_input),
             source=case_input.source,
             source_conversation_id=case_input.source_conversation_id,
             source_message_id=case_input.source_message_id,
@@ -118,6 +127,19 @@ class CreateAutotestCaseUseCase(
             )
 
         return to_case_view(case)
+
+    def _question_language(
+        self, business: BusinessDocument, case_input: AutotestCaseInput
+    ) -> LanguageTag:
+        """The language the question is written in, as a customer's would be."""
+
+        return self._language_detector.detect_any(
+            MessageText(str(case_input.question)),
+            list(business.languages),
+            business.default_language,
+            None,
+            None,
+        ).language
 
     def _check_sources(
         self, business: BusinessDocument, case_input: AutotestCaseInput

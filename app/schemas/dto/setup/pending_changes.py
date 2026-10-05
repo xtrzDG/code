@@ -1,11 +1,15 @@
 """
 Changes not live yet: what the owner changed in the profile, knowledge,
-hours, prices and booking rules since the version customers talk to.
+hours, prices and booking rules since the version customers talk to, the
+owner's checks that version was not checked against, and the versions
+built since that never went live (drafts).
 """
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
+from typed_time_provider import Microseconds
 
+from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.businesses import BusinessLinkKind, Weekday
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.setup import (
@@ -17,6 +21,10 @@ from app.schemas.constants.setup import (
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
+from app.schemas.typings.assistants.prefixed_id import (
+    AssistantVersionId,
+    AutotestCaseId,
+)
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -47,6 +55,20 @@ class PendingChange(ImmutableDTO):
     detail: PendingChangeDetail | None = None
     before: PendingChangeValue | None = None
     after: PendingChangeValue | None = None
+    autotest_case_id: AutotestCaseId | None = None
+
+
+class PendingDraftView(ImmutableDTO):
+    """
+    A version built after the live one that never went live (a preview of
+    the test chat, a manual build, an update whose checks failed): its
+    customers never saw it, and the owner may discard it.
+    """
+
+    assistant_version_id: AssistantVersionId
+    version_number: AssistantVersionNumber
+    status: AssistantVersionStatus
+    created_at: Microseconds
 
 
 class PendingChangesQuery(ImmutableDTO):
@@ -74,7 +96,9 @@ class PendingChangesView(ImmutableDTO):
     The changes customers do not get yet. Before the first go-live there is
     nothing to compare with: `is_live` is False and `changes` is empty,
     while `has_unapplied_changes` says whether there is a profile to
-    launch.
+    launch. `count` counts `changes` (owner checks included), which the
+    next "Apply changes" takes to customers; `drafts` are the versions
+    built since the live one that customers never got.
     """
 
     business_id: BusinessId
@@ -83,3 +107,12 @@ class PendingChangesView(ImmutableDTO):
     has_unapplied_changes: HasUnappliedChanges
     count: PendingChangeCount
     changes: list[PendingChange] = Field(default_factory=list[PendingChange])
+    drafts: list[PendingDraftView] = Field(default_factory=list[PendingDraftView])
+
+
+class DiscardDraftCommand(ImmutableDTO):
+    """The owner discards a draft customers never got."""
+
+    user_id: UserId
+    business_id: BusinessId
+    assistant_version_id: AssistantVersionId

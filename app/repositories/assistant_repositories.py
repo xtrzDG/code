@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
@@ -33,6 +35,14 @@ class AssistantVersionRepository(
             self._list_in_business(business_id),
             key=lambda version: version.version_number,
         )
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        version_id: AssistantVersionId,
+        change: Callable[[AssistantVersionDocument], AssistantVersionDocument | None],
+    ) -> AssistantVersionDocument | None:
+        return self._modify_in_business(business_id, str(version_id), change)
 
 
 class AutotestRunRepository(

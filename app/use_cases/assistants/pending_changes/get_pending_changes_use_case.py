@@ -13,8 +13,10 @@ from app.schemas.dto.setup.pending_changes import (
     PendingChangesQuery,
     PendingChangesRequest,
     PendingChangesView,
+    PendingDraftView,
 )
 from app.schemas.typings.setup.constrained_integers import PendingChangeCount
+from app.utilities.assembly.version_retirement import list_pending_drafts
 
 
 class GetPendingChangesUseCase(
@@ -24,8 +26,10 @@ class GetPendingChangesUseCase(
     An owner or staff member reads what customers do not get yet: every
     change since the live version, typed so the cabinet says it in the
     owner's words (niche questions in `language`, the owner's language by
-    default). Before the first go-live nothing is compared: the view only
-    says whether there is a profile to launch.
+    default), the owner's checks the live version was not checked against,
+    and the drafts built since that customers never got. Before the first
+    go-live nothing is compared: the view only says whether there is a
+    profile to launch.
     """
 
     def __init__(
@@ -59,12 +63,16 @@ class GetPendingChangesUseCase(
                 business_id=input_data.business_id,
             )
         )
-        live: AssistantVersionDocument | None = (
-            None
-            if business.published_assistant_version_id is None
-            else self._assistant_version_repo.get(
-                business.id, business.published_assistant_version_id
-            )
+        versions: list[AssistantVersionDocument] = (
+            self._assistant_version_repo.list_by_business(business.id)
+        )
+        live: AssistantVersionDocument | None = next(
+            (
+                version
+                for version in versions
+                if version.id == business.published_assistant_version_id
+            ),
+            None,
         )
         if live is None:
             return PendingChangesView(
@@ -90,4 +98,13 @@ class GetPendingChangesUseCase(
             has_unapplied_changes=bool(changes),
             count=PendingChangeCount(len(changes)),
             changes=changes,
+            drafts=[
+                PendingDraftView(
+                    assistant_version_id=draft.id,
+                    version_number=draft.version_number,
+                    status=draft.status,
+                    created_at=draft.created_at,
+                )
+                for draft in list_pending_drafts(versions, live)
+            ],
         )

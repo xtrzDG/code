@@ -167,6 +167,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]

@@ -47,6 +47,9 @@ class AssistantPipelinesContainer(containers.DeclarativeContainer):
     get_pending_changes_pipeline = orchestrator_pipeline(
         assistant_orchestrators.get_pending_changes_orchestrator
     )
+    discard_assistant_draft_pipeline = orchestrator_pipeline(
+        assistant_orchestrators.discard_assistant_draft_orchestrator
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_pipeline = orchestrator_pipeline(

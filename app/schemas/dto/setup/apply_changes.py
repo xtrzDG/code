@@ -12,6 +12,7 @@ from app.schemas.constants.setup import (
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.setup import AssistantApplyDocument
+from app.schemas.dto.assistants.autotest_cases import OwnerCheckOutcomeView
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
     AutotestScenarioCount,
@@ -63,12 +64,20 @@ class ApplyChangesSource(ImmutableDTO):
 
 
 class ApplyAttentionView(ImmutableDTO):
-    """One reason the changes are not live, in plain words, with where to fix it."""
+    """
+    One reason the changes are not live, in plain words, with where to fix
+    it. Failed checks (CHECKS_FAILED) name the owner's own checks the
+    version did not pass in `failed_checks`, each with its question and why;
+    `details` are the kinds of every scenario that did not pass.
+    """
 
     code: ApplyAttentionCode
     message: ApplyAttentionMessage
     details: list[GoLiveCheckDetail] = Field(default_factory=list[GoLiveCheckDetail])
     action: SetupActionView
+    failed_checks: list[OwnerCheckOutcomeView] = Field(
+        default_factory=list[OwnerCheckOutcomeView]
+    )
 
 
 class ApplyChangesView(ImmutableDTO):
