@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from app.contracts.repositories.autotest_case_repositories import (
     AutotestCaseRepoContract,
 )
@@ -29,3 +31,11 @@ class AutotestCaseRepository(
 
     def delete(self, business_id: BusinessId, case_id: AutotestCaseId) -> None:
         self._remove(business_id, str(case_id))
+
+    def modify(
+        self,
+        business_id: BusinessId,
+        case_id: AutotestCaseId,
+        change: Callable[[AutotestCaseDocument], AutotestCaseDocument | None],
+    ) -> AutotestCaseDocument | None:
+        return self._modify_in_business(business_id, str(case_id), change)

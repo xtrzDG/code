@@ -4,9 +4,6 @@
  */
 
 export const assistantEn = {
-  live: "Customers talk to update {number}",
-  liveSince: "Since {date}, customers talk to update {number}",
-  notLive: "The assistant is not live yet: apply your changes, check the update and publish it.",
   status: {
     draft: "Not checked",
     testing: "Checking",

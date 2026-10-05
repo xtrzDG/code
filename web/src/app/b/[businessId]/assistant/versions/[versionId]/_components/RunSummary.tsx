@@ -4,14 +4,21 @@ import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { Spinner, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatScore, scoreTone, summarizeRun, type AutotestRunView } from "@/lib/assistant/autotests";
+import { onlyOwnerCheckFailures } from "@/lib/assistant/ownerChecks";
 import { cn } from "@/lib/cn";
 import { numberFormat } from "@/lib/intl/formatters";
 
-/** A run at a glance: passed scenarios, the average score and the result; progress while it runs. */
+/**
+ * A run at a glance: passed scenarios, the average score and the result
+ * ("Your check did not pass" when the owner's own checks are all that
+ * failed, so a good score never sits next to an unexplained failure);
+ * progress while it runs.
+ */
 export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning: boolean }) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
   const summary = summarizeRun(run);
+  const onlyOwnerChecks = !run.is_passed && onlyOwnerCheckFailures(run.results).length > 0;
   const percent = numberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
   return (
     <>
@@ -31,7 +38,9 @@ export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning
               ? t("assistant.autotests.outcomes.errored")
               : run.is_passed
                 ? t("assistant.autotests.runPassed")
-                : t("assistant.autotests.runFailed")
+                : onlyOwnerChecks
+                  ? t("updates.failed.result")
+                  : t("assistant.autotests.runFailed")
         }
         tone={isRunning ? "info" : run.status === "errored" ? "warning" : run.is_passed ? "success" : "danger"}
       />

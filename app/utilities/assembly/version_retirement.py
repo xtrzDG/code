@@ -59,3 +59,32 @@ def retire_other_versions(
         changed.append(other)
 
     return changed
+
+
+def is_pending_draft(
+    candidate: AssistantVersionDocument, live: AssistantVersionDocument | None
+) -> bool:
+    """
+    A version built after the live one (any, before the first go-live) that
+    never went live, is not being checked and was not discarded: a draft
+    customers never got, which the owner may discard.
+    """
+
+    return (
+        candidate.discarded_at is None
+        and candidate.status in DISCARDABLE_STATUSES
+        and (live is None or int(candidate.version_number) > int(live.version_number))
+    )
+
+
+def list_pending_drafts(
+    versions: Sequence[AssistantVersionDocument],
+    live: AssistantVersionDocument | None,
+) -> list[AssistantVersionDocument]:
+    """The pending drafts, the newest first."""
+
+    return sorted(
+        (version for version in versions if is_pending_draft(version, live)),
+        key=lambda version: int(version.version_number),
+        reverse=True,
+    )

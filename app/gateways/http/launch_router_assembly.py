@@ -45,5 +45,6 @@ def build_launch_routers(
             apply_changes_operator=operators.assistants.apply_changes_operator(),
             get_apply_changes_operator=operators.assistants.get_apply_changes_operator(),
             get_pending_changes_operator=operators.assistants.get_pending_changes_operator(),
+            discard_draft_operator=operators.assistants.discard_assistant_draft_operator(),
         ),
     ]

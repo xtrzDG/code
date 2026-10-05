@@ -2,7 +2,8 @@
  * Teaching the assistant from a real conversation, in Russian: the demo
  * restaurant's owner finds Natalia's badly rated answer under "Ответы,
  * которые стоит улучшить", sees why it was rated bad, fixes the answer on
- * the assistant's bubble and keeps the question as a check. The next
+ * the assistant's bubble and keeps the question as a check; "Проверить
+ * сейчас" asks it of what customers get now (not fixed yet there). The next
  * "Применить изменения" asks it first (the rehearsal model answers from
  * the corrected fact, LLM_PROVIDER=scripted) and "Мои проверки" shows it
  * passed; the check is deleted at the end, so the demo stays as it was.
@@ -63,7 +64,16 @@ test("the owner fixes an answer in Russian and the next update keeps it right", 
   await expect(keep.getByLabel(ru.teaching.checks.question)).toHaveValue(QUESTION);
   await keep.getByLabel(ru.teaching.checks.expectedText).fill(WORDS);
   await keep.getByRole("button", { name: ru.common.save, exact: true }).click();
-  await expect(keep).toBeHidden();
+
+  // "Проверить сейчас": one test conversation with what customers get now, which
+  // does not know the fix yet, so the check does not pass there.
+  const kept = page.getByRole("dialog", { name: ru.updates.checkNow.savedTitle });
+  await kept.getByRole("button", { name: ru.updates.checkNow.actionLabel.replace("{question}", QUESTION) }).click();
+  const probe = kept.locator("[data-check-probe]");
+  await expect(probe).toHaveAttribute("data-check-probe", "failed", { timeout: 60_000 });
+  await expect(probe).toContainText(ru.updates.checkNow.failed);
+  await kept.getByRole("button", { name: ru.teaching.fix.done }).click();
+  await expect(kept).toBeHidden();
 
   // "Мои проверки": the check waits for the next update.
   await page.goto(`/b/${owner.businessId}/assistant/checks`);
@@ -71,6 +81,7 @@ test("the owner fixes an answer in Russian and the next update keeps it right", 
   await expect(check).toContainText(ru.teaching.checks.sources.correction);
   await expect(check).toContainText(WORDS);
   await expect(check.locator("[data-check-result]")).toHaveAttribute("data-check-result", "none");
+  await expect(check.locator("[data-check-probe]")).toHaveAttribute("data-check-probe", "failed");
 
   // "Применить изменения": the fix is among the changes, the check runs with the quick check.
   const banner = page.getByTestId("pending-changes-banner");

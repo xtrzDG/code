@@ -48,6 +48,10 @@ NOT_CUSTOMER_DATA: dict[str, str] = {
         "the scripted test customer's messages of an autotest: written by "
         "the model, no real person"
     ),
+    "autotest_cases": (
+        "the owner's own checks and the assistant's answer to one in a test "
+        'conversation ("Check now"): written by the owner and the model'
+    ),
     "digest_preferences": "the owner's own number for digests and reports",
     "platform_admins": "the platform's own team",
     "billing_profiles": "the business's own details for its invoices (1114)",

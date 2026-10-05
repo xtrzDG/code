@@ -167,8 +167,9 @@ class PendingChangeArea(StrEnum):
     OFFER (menu items, services, rooms, packages, vehicles, products),
     QUESTIONS (frequent questions and policies), RESOURCES (what customers
     book), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes
-    with the plan or goes) and CONVERSATION (tone, what never to say, when
-    to call a person).
+    with the plan or goes), CONVERSATION (tone, what never to say, when
+    to call a person) and OWNER_CHECKS (the owner's own checks written or
+    changed since the version was last checked: the next apply asks them).
     """
 
     PROFILE = "profile"
@@ -183,6 +184,7 @@ class PendingChangeArea(StrEnum):
     LANGUAGES = "languages"
     CALLS = "calls"
     CONVERSATION = "conversation"
+    OWNER_CHECKS = "owner_checks"
 
 
 class PendingChangeAction(StrEnum):

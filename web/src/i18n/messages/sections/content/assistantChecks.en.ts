@@ -163,7 +163,6 @@ export const assistantChecksEn = {
     forceTitle: "Publish update {number} without passing checks?",
     forceWarningTitle: "This update did not pass its checks",
     forceWarning: "Customers may get wrong prices or bookings. The decision is written to the audit log.",
-    forceAcknowledge: "I checked the failed scenarios and take responsibility",
     forceConfirm: "Publish anyway",
   },
   rollback: {

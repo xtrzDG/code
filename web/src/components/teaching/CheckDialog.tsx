@@ -5,17 +5,22 @@
  * for word), what the answer must do and, when it must (not) mention
  * something, the words. Used for a new check, a changed one and "Save as a
  * check" from a fixed answer, a bad rating or a question without an answer.
+ * A new check written here takes the language of its question unless the
+ * owner picks one. Once saved, the dialog offers "Check now": one test
+ * conversation with what customers get now, its outcome shown right there.
  */
 
 import { useState, type FormEvent } from "react";
 
 import { describeError } from "@/api/errors";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, Button, Field, Input, Modal, Select, Textarea, useToast } from "@/components/ui";
+import { IconCheckCircle } from "@/components/icons";
+import { Alert, Button, Field, Input, Modal, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import type { CheckView, Expectation } from "@/lib/teaching";
 import {
+  AUTO_LANGUAGE,
   CHECK_QUESTION_MAX_LENGTH,
   checkBody,
   checkChanges,
@@ -27,6 +32,7 @@ import {
   type CheckForm,
 } from "@/lib/teachingChecks";
 
+import { CheckNowPanel } from "./CheckNowPanel";
 import { useChecks } from "./useTeaching";
 
 const ERROR_TEXTS = { conflict: "teaching.checks.conflict" } as const;
@@ -52,32 +58,53 @@ export function CheckDialog({
 }) {
   const { t } = useI18n();
   const formId = "check-dialog-form";
+  const [saved, setSaved] = useState<CheckView | null>(null);
+  const close = () => {
+    setSaved(null);
+    onClose();
+  };
   return (
     <Modal
       open={open}
-      onClose={onClose}
-      title={title}
-      description={description}
+      onClose={close}
+      title={saved ? t("updates.checkNow.savedTitle") : title}
+      description={saved ? undefined : description}
       footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t("common.cancel")}
+        saved ? (
+          <Button variant="secondary" onClick={close}>
+            {t("teaching.fix.done")}
           </Button>
-          <Button type="submit" form={formId}>
-            {t("common.save")}
-          </Button>
-        </>
+        ) : (
+          <>
+            <Button variant="secondary" onClick={close}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" form={formId}>
+              {t("common.save")}
+            </Button>
+          </>
+        )
       }
     >
-      {open ? (
+      {open && saved ? (
+        <div className="space-y-4">
+          <p className="flex items-start gap-2 text-sm text-ink" role="status">
+            <IconCheckCircle className="mt-0.5 size-5 shrink-0 text-success" aria-hidden />
+            <span dir="auto" className="[overflow-wrap:anywhere]">
+              {t(check ? "teaching.checks.changed" : "teaching.checks.created")}
+            </span>
+          </p>
+          <CheckNowPanel checkId={saved.id} question={saved.question} />
+        </div>
+      ) : open ? (
         <CheckFields
           key={check?.id ?? initial.question}
           formId={formId}
           initial={initial}
           check={check}
-          onSaved={(saved) => {
-            onSaved?.(saved);
-            onClose();
+          onSaved={(checkSaved) => {
+            onSaved?.(checkSaved);
+            setSaved(checkSaved);
           }}
         />
       ) : null}
@@ -97,14 +124,13 @@ function CheckFields({
   onSaved: (saved: CheckView) => void;
 }) {
   const { t, locale } = useI18n();
-  const toast = useToast();
   const { business } = useBusiness();
   const checks = useChecks(false);
   const [form, setForm] = useState<CheckForm>(initial);
   const [isSubmitted, setSubmitted] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const problems = isSubmitted ? checkProblems(form) : [];
-  const languages = Array.from(new Set([...business.languages, form.language]));
+  const languages = Array.from(new Set([...business.languages, form.language])).filter((language) => language !== AUTO_LANGUAGE);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -121,7 +147,6 @@ function CheckFields({
     if (check) {
       checks.replace(result.data);
     }
-    toast.success(t(check ? "teaching.checks.changed" : "teaching.checks.created"));
     onSaved(result.data);
   };
 
@@ -163,6 +188,7 @@ function CheckFields({
         <Field label={t("teaching.checks.language")}>
           {(control) => (
             <Select {...control} value={form.language} onChange={(event) => setForm({ ...form, language: event.target.value })}>
+              {check === null ? <option value={AUTO_LANGUAGE}>{t("updates.language.auto")}</option> : null}
               {languages.map((language) => (
                 <option key={language} value={language}>
                   {languageName(language, locale)}

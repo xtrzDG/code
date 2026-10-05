@@ -5,7 +5,9 @@
  * customer's question, the kind of fix it most likely needs and what the
  * assistant knows now. Saving creates or updates a knowledge item linked
  * to the answer, which reaches customers with the next "Apply changes";
- * then the owner may save the same question as a check.
+ * then the owner may save the same question as a check, or (`followUp`,
+ * when the answer failed one of their checks already) go on to "Apply
+ * changes".
  */
 
 import { useState, type FormEvent } from "react";
@@ -36,11 +38,14 @@ export function AnswerFixDialog({
   conversationId,
   messageId,
   onClose,
+  followUp,
 }: {
   conversationId: string;
   /** The answer to fix; null: closed. */
   messageId: string | null;
   onClose: () => void;
+  /** Once saved, this step instead of "Save as a check" (the question is a check already). */
+  followUp?: { label: string; onClick: () => void };
 }) {
   const { t } = useI18n();
   const { business } = useBusiness();
@@ -66,7 +71,18 @@ export function AnswerFixDialog({
               <Button variant="secondary" onClick={close}>
                 {t("teaching.fix.done")}
               </Button>
-              <Button onClick={() => setSavingCheck(true)}>{t("teaching.fix.saveAsCheck")}</Button>
+              {followUp ? (
+                <Button
+                  onClick={() => {
+                    close();
+                    followUp.onClick();
+                  }}
+                >
+                  {followUp.label}
+                </Button>
+              ) : (
+                <Button onClick={() => setSavingCheck(true)}>{t("teaching.fix.saveAsCheck")}</Button>
+              )}
             </>
           ) : (
             <>

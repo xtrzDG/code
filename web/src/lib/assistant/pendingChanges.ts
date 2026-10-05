@@ -13,11 +13,13 @@ import { formatDate, formatMoney, majorToMinor, weekdayName } from "@/lib/format
 export type PendingChange = Schema<"PendingChange">;
 export type PendingChangeArea = Schema<"PendingChangeArea">;
 export type PendingChangesView = Schema<"PendingChangesView">;
+/** The areas listed as changes; the owner's checks come in a list of their own (`owner_checks`). */
+export type ListedArea = Exclude<PendingChangeArea, "owner_checks">;
 
 type Words = Pick<Translator, "t" | "tp" | "tDynamic" | "locale">;
 
 /** The order the areas are listed in (the API sends them in this order too). */
-export const AREA_ORDER: readonly PendingChangeArea[] = [
+export const AREA_ORDER: readonly ListedArea[] = [
   "profile",
   "hours",
   "special_days",
@@ -122,7 +124,7 @@ export function describeChange(change: PendingChange, words: Words): string {
 }
 
 /** The changes by area, in AREA_ORDER, each area once. */
-export function groupChanges(changes: readonly PendingChange[]): { area: PendingChangeArea; changes: PendingChange[] }[] {
+export function groupChanges(changes: readonly PendingChange[]): { area: ListedArea; changes: PendingChange[] }[] {
   return AREA_ORDER.map((area) => ({ area, changes: changes.filter((change) => change.area === area) })).filter(
     (group) => group.changes.length > 0,
   );

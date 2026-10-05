@@ -17,6 +17,7 @@ from app.schemas.domain.autotest_cases import AutotestCaseDocument
 from app.schemas.dto.assistants.autotest_cases import (
     AutotestCaseResultView,
     AutotestCaseView,
+    OwnerCheckOutcomeView,
 )
 from app.schemas.typings.assistants.prefixed_id import AutotestCaseId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -24,7 +25,9 @@ from app.schemas.typings.conversations.strings import MessageText
 
 
 def to_case_view(
-    case: AutotestCaseDocument, result: AutotestCaseResultView | None = None
+    case: AutotestCaseDocument,
+    result: AutotestCaseResultView | None = None,
+    probe: OwnerCheckOutcomeView | None = None,
 ) -> AutotestCaseView:
     return AutotestCaseView(
         id=case.id,
@@ -37,6 +40,7 @@ def to_case_view(
         is_active=case.is_active,
         created_at=case.created_at,
         last_result=result,
+        last_probe=probe,
     )
 
 
@@ -93,5 +97,7 @@ def to_result_view(
         outcome=result.outcome,
         check_codes=list(result.check_codes),
         answer=answer,
+        conversation_id=result.conversation_id,
+        answer_message_id=result.answer_message_id,
         checked_at=checked_at,
     )

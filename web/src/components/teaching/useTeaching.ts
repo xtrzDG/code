@@ -75,7 +75,8 @@ export function useChecks(enabled = true) {
 
   const create = useMutation(
     (body: CheckBody) => api.POST("/v1/businesses/{business_id}/autotest-cases", { params: { path }, body }),
-    { errorToast: false, invalidate: [listKey, queryKeys.dashboard.answersToImprove(business.id)] },
+    // A new check is among the changes customers do not get yet.
+    { errorToast: false, invalidate: [listKey, queryKeys.dashboard.answersToImprove(business.id), queryKeys.assistant.pendingAll(business.id)] },
   );
 
   const update = useMutation(
@@ -84,7 +85,7 @@ export function useChecks(enabled = true) {
         params: { path: { ...path, case_id: checkId } },
         body: changes,
       }),
-    { errorToast: false },
+    { errorToast: false, invalidate: [queryKeys.assistant.pendingAll(business.id)] },
   );
 
   const remove = useMutation(
@@ -98,6 +99,7 @@ export function useChecks(enabled = true) {
           ...data,
           items: (data.items ?? []).filter((item) => item.id !== check.id),
         })),
+      invalidate: [queryKeys.assistant.pendingAll(business.id)],
     },
   );
 

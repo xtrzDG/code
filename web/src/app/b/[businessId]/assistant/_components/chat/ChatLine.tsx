@@ -12,12 +12,12 @@ import { AssistantLine } from "./AssistantLine";
 /** One line of the test chat: the customer's message (with retry), a silence, a note or an answer. */
 export function ChatLine({
   entry,
-  versionLabel,
+  answerLabel,
   onRetry,
   isSending,
 }: {
   entry: ChatEntry;
-  versionLabel: (id: string | null, number?: number | null) => string;
+  answerLabel: (versionId: string | null, number?: number | null) => string;
   onRetry: (message: string, key: string) => void;
   isSending: boolean;
 }) {
@@ -70,5 +70,5 @@ export function ChatLine({
     );
   }
 
-  return <AssistantLine entry={entry} versionLabel={versionLabel} />;
+  return <AssistantLine entry={entry} answerLabel={answerLabel} />;
 }

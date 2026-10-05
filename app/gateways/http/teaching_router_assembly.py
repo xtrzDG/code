@@ -35,6 +35,7 @@ def build_teaching_routers(
             create_case=assistants.create_autotest_case_operator(),
             update_case=assistants.update_autotest_case_operator(),
             delete_case=assistants.delete_autotest_case_operator(),
+            check_case_now=assistants.check_owner_check_now_operator(),
         ),
         build_quality_router(
             current_user=current_user,

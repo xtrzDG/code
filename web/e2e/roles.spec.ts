@@ -32,7 +32,7 @@ test("staff get the test chat and their notifications; owner pages explain thems
   await navigation.getByRole("link", { name: en.navigation.sections.assistant, exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant$`));
   await expect(navigation.getByRole("link", { name: en.navigation.pages.assistantKnowledge })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: en.navigation.applyChanges })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: en.applyChanges.sheet.apply })).toHaveCount(0);
 
   for (const path of ["settings/billing", "assistant/knowledge", "assistant/versions"]) {
     await page.goto(`/b/${owner.businessId}/${path}`);

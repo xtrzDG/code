@@ -94,7 +94,7 @@ def listed(world: TeachingWorld) -> AutotestCaseList:
     )
 
 
-def test_a_check_takes_the_business_language_and_lists_in_order() -> None:
+def test_a_check_takes_the_language_of_its_question_and_lists_in_order() -> None:
     world = build_teaching_world()
 
     first = create(world, **PARKING)
@@ -102,7 +102,10 @@ def test_a_check_takes_the_business_language_and_lists_in_order() -> None:
         world, question="Позовите менеджера", expectation="must_hand_off", language="en"
     )
 
-    assert first.language == world.brain.business.default_language
+    # A Russian question of a Georgian business is a Russian check.
+    assert world.brain.business.default_language == "ka"
+    assert first.language == "ru"
+    assert second.language == "en"
     assert first.source is AutotestCaseSource.OWNER
     assert first.is_active is True
     assert first.last_result is None

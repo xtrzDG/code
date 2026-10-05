@@ -5,12 +5,7 @@ import type { assistantChatEn } from "./assistantChat.en";
 
 export const assistantChatRu: Translation<typeof assistantChatEn> = {
   chat: {
-    version: "Обновление",
-    versionOption: "Обновление {number} · {status}",
-    unknownVersion: "Автоматически",
     newConversation: "Новый разговор",
-    sandboxNote: "Пишите так, как написал бы клиент. Тестовые разговоры не попадают к клиентам, сотрудникам и в оплату.",
-    sandboxNoteRisky: "Вы проверяете: {version}. Тестовые разговоры не попадают к клиентам, сотрудникам и в оплату.",
     logLabel: "Тестовый разговор",
     emptyTitle: "Начните тестовый разговор",
     emptyDescription: "Спросите то, что спрашивают ваши клиенты, на любом языке. Или попробуйте:",

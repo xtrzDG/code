@@ -161,6 +161,7 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
             self.profile_repo,
             self.collect_pending_changes_use_case,
             LocalizedTextResolver(),
+            self.autotest_case_repo,
         )
         self.get_apply_use_case = GetApplyChangesUseCase(
             self.authorize, self.describe_apply_use_case

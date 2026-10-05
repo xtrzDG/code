@@ -20,6 +20,7 @@ from app.schemas.dto.setup.apply_changes import (
     ApplyChangesView,
     ApplyStart,
 )
+from app.schemas.dto.setup.pending_changes import DiscardDraftCommand
 from app.schemas.typings.setup.booleans import IsApplyInProgress
 from app.use_cases.assistants.apply.check_applied_version_use_case import (
     CheckAppliedVersionUseCase,
@@ -38,6 +39,9 @@ from app.use_cases.assistants.apply.publish_applied_version_use_case import (
 )
 from app.use_cases.assistants.apply.start_apply_changes_use_case import (
     StartApplyChangesUseCase,
+)
+from app.use_cases.assistants.pending_changes.discard_assistant_draft_use_case import (
+    DiscardAssistantDraftUseCase,
 )
 
 
@@ -114,6 +118,7 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         collect_pending_changes=pending_change_use_cases.collect_pending_changes_use_case,
         localized_text_resolver=utilities.localized_text_resolver,
+        autotest_case_repo=repositories.autotest_case_repo,
     )
     get_apply_changes_use_case: Factory[
         UseCaseContract[ApplyChangesQuery, ApplyChangesView]
@@ -121,4 +126,16 @@ class ApplyUseCasesContainer(containers.DeclarativeContainer):
         GetApplyChangesUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         describe_apply_changes=describe_apply_changes_use_case,
+    )
+    # A draft customers never got leaves the "Apply changes" sheet.
+    discard_assistant_draft_use_case: Factory[
+        UseCaseContract[DiscardDraftCommand, None]
+    ] = Factory(
+        DiscardAssistantDraftUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        assistant_version_repo=repositories.assistant_version_repo,
+        assistant_apply_repo=repositories.assistant_apply_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        live_events=facilitators.event_publisher,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

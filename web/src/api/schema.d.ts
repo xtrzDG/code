@@ -676,6 +676,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/assistant/drafts/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Discard Assistant Draft */
+        delete: operations["discard_assistant_draft_v1_businesses__business_id__assistant_drafts__version_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/assistant/pending-changes": {
         parameters: {
             query?: never;
@@ -768,6 +785,23 @@ export interface paths {
         head?: never;
         /** Update Autotest Case */
         patch: operations["update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch"];
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/autotest-cases/{case_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Autotest Case Now */
+        post: operations["check_autotest_case_now_v1_businesses__business_id__autotest_cases__case_id__check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/businesses/{business_id}/availability": {
@@ -4020,13 +4054,18 @@ export interface components {
         ApplyAttentionCode: "profile_incomplete" | "staff_contact_missing" | "agreement_not_accepted" | "payment_needed" | "build_failed" | "checks_failed" | "checks_stopped" | "voice_not_ready" | "publish_failed";
         /**
          * ApplyAttentionView
-         * @description One reason the changes are not live, in plain words, with where to fix it.
+         * @description One reason the changes are not live, in plain words, with where to fix
+         *     it. Failed checks (CHECKS_FAILED) name the owner's own checks the
+         *     version did not pass in `failed_checks`, each with its question and why;
+         *     `details` are the kinds of every scenario that did not pass.
          */
         ApplyAttentionView: {
             action: components["schemas"]["SetupActionView"];
             code: components["schemas"]["ApplyAttentionCode"];
             /** Details */
             details?: string[];
+            /** Failed Checks */
+            failed_checks?: components["schemas"]["OwnerCheckOutcomeView"][];
             /** Message */
             message: string;
         };
@@ -4321,17 +4360,22 @@ export interface components {
         /**
          * AutotestCaseResultView
          * @description How the check did in the latest finished autotest run that played it:
-         *     the outcome, why it failed, the assistant's first answer and when.
+         *     the outcome, why it failed, the assistant's first answer, the test
+         *     conversation and that answer in it ("Fix this answer"), and when.
          */
         AutotestCaseResultView: {
             /** Answer */
             answer?: string | null;
+            /** Answer Message Id */
+            answer_message_id?: string | null;
             /** Assistant Version Number */
             assistant_version_number: number;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Checked At */
             checked_at: number;
+            /** Conversation Id */
+            conversation_id?: string | null;
             outcome: components["schemas"]["AutotestOutcome"];
             /** Run Id */
             run_id: string;
@@ -4346,7 +4390,8 @@ export interface components {
         AutotestCaseSource: "owner" | "correction" | "unanswered_question" | "bad_rating";
         /**
          * AutotestCaseView
-         * @description A check as "My checks" lists it, with its latest result (None: not run yet).
+         * @description A check as "My checks" lists it, with its latest result (None: not run
+         *     yet) and its latest "Check now" against the live version, if any.
          */
         AutotestCaseView: {
             /** Created At */
@@ -4360,6 +4405,7 @@ export interface components {
             is_active: boolean;
             /** Language */
             language: string;
+            last_probe?: components["schemas"]["OwnerCheckOutcomeView"] | null;
             last_result?: components["schemas"]["AutotestCaseResultView"] | null;
             /** Question */
             question: string;
@@ -4510,15 +4556,22 @@ export interface components {
         AutotestScenarioKind: "booking" | "booking_out_of_hours" | "cancellation" | "price_question" | "unknown_question" | "discount_request" | "rude_customer" | "human_request" | "prompt_injection" | "emergency" | "foreign_language" | "transliterated" | "owner_check" | "prompt_injection_spoof" | "data_exfiltration" | "staff_impersonation" | "tool_abuse";
         /**
          * AutotestScenarioResultView
-         * @description Result of one autotest scenario.
+         * @description Result of one autotest scenario. An owner check names its check and
+         *     what it asked (`owner_check`; None for results stored before);
+         *     `conversation_id` and `answer_message_id` are the test conversation and
+         *     the assistant's first answer in it ("Fix this answer" opens it).
          */
         AutotestScenarioResultView: {
+            /** Answer Message Id */
+            answer_message_id?: string | null;
             /** Autotest Case Id */
             autotest_case_id?: string | null;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Check Notes */
             check_notes: string[];
+            /** Conversation Id */
+            conversation_id?: string | null;
             /** Cost Micro Usd */
             cost_micro_usd: number;
             /** Judge Notes */
@@ -4527,6 +4580,7 @@ export interface components {
             /** Language */
             language: string;
             outcome: components["schemas"]["AutotestOutcome"];
+            owner_check?: components["schemas"]["OwnerCheckAskedView"] | null;
             /** Passed Sample Count */
             passed_sample_count?: number | null;
             /** Sample Count */
@@ -9718,6 +9772,53 @@ export interface components {
             name: string;
         };
         /**
+         * OwnerCheckAskedView
+         * @description What an owner check asked when it was played: its question and expectation.
+         */
+        OwnerCheckAskedView: {
+            expectation: components["schemas"]["AutotestExpectation"];
+            /** Expected Text */
+            expected_text?: string | null;
+            /** Question */
+            question: string;
+        };
+        /**
+         * OwnerCheckOutcomeView
+         * @description How one of the owner's checks did when it was asked once: in the quick
+         *     check of "Apply changes" or by "Check now". What it asked (the question
+         *     and what the answer had to do, as asked), the outcome, why it failed
+         *     (`check_codes`, and `reason` in plain words of the owner's language;
+         *     None when it passed), the semantic judge's notes, the assistant's first
+         *     answer, the test conversation and that answer in it (so "Fix this
+         *     answer" can open it), the version that answered and when.
+         */
+        OwnerCheckOutcomeView: {
+            /** Answer */
+            answer?: string | null;
+            /** Answer Message Id */
+            answer_message_id?: string | null;
+            /** Assistant Version Id */
+            assistant_version_id?: string | null;
+            /** Autotest Case Id */
+            autotest_case_id: string;
+            /** Check Codes */
+            check_codes?: components["schemas"]["AutotestCheckCode"][];
+            /** Checked At */
+            checked_at: number;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            expectation: components["schemas"]["AutotestExpectation"];
+            /** Expected Text */
+            expected_text?: string | null;
+            /** Judge Notes */
+            judge_notes?: string[];
+            outcome: components["schemas"]["AutotestOutcome"];
+            /** Question */
+            question: string;
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
          * PackageUsageView
          * @description Use of the plan package in the current billing period.
          *
@@ -9808,6 +9909,8 @@ export interface components {
             /** After */
             after?: string | null;
             area: components["schemas"]["PendingChangeArea"];
+            /** Autotest Case Id */
+            autotest_case_id?: string | null;
             /** Before */
             before?: string | null;
             /** Date */
@@ -9834,11 +9937,12 @@ export interface components {
          *     OFFER (menu items, services, rooms, packages, vehicles, products),
          *     QUESTIONS (frequent questions and policies), RESOURCES (what customers
          *     book), BOOKING_RULES, LINKS, LANGUAGES, CALLS (the phone line comes
-         *     with the plan or goes) and CONVERSATION (tone, what never to say, when
-         *     to call a person).
+         *     with the plan or goes), CONVERSATION (tone, what never to say, when
+         *     to call a person) and OWNER_CHECKS (the owner's own checks written or
+         *     changed since the version was last checked: the next apply asks them).
          * @enum {string}
          */
-        PendingChangeArea: "profile" | "hours" | "special_days" | "answers" | "offer" | "questions" | "resources" | "booking_rules" | "links" | "languages" | "calls" | "conversation";
+        PendingChangeArea: "profile" | "hours" | "special_days" | "answers" | "offer" | "questions" | "resources" | "booking_rules" | "links" | "languages" | "calls" | "conversation" | "owner_checks";
         /**
          * PendingChangeDetail
          * @description What changed in a CHANGED offer item: its PRICE (the before and after
@@ -9858,7 +9962,12 @@ export interface components {
          * @description The changes customers do not get yet. Before the first go-live there is
          *     nothing to compare with: `is_live` is False and `changes` is empty,
          *     while `has_unapplied_changes` says whether there is a profile to
-         *     launch.
+         *     launch. `changes` are what the owner changed in the business,
+         *     `owner_checks` the owner's checks the live version was not checked
+         *     against (a field of their own, so a cabinet that does not know them
+         *     yet lists nothing it cannot name); `count` counts both, which the next
+         *     "Apply changes" takes to customers. `drafts` are the versions built
+         *     since the live one that customers never got.
          */
         PendingChangesView: {
             /** Business Id */
@@ -9867,12 +9976,51 @@ export interface components {
             changes?: components["schemas"]["PendingChange"][];
             /** Count */
             count: number;
+            /** Drafts */
+            drafts?: components["schemas"]["PendingDraftView"][];
             /** Has Unapplied Changes */
             has_unapplied_changes: boolean;
             /** Is Live */
             is_live: boolean;
             /** Live Version Number */
             live_version_number?: number | null;
+            /** Owner Checks */
+            owner_checks?: components["schemas"]["PendingOwnerCheckView"][];
+        };
+        /**
+         * PendingDraftView
+         * @description A version built after the live one that never went live (a preview of
+         *     the test chat, a manual build, an update whose checks failed): its
+         *     customers never saw it, and the owner may discard it.
+         */
+        PendingDraftView: {
+            /** Assistant Version Id */
+            assistant_version_id: string;
+            /** Created At */
+            created_at: number;
+            status: components["schemas"]["AssistantVersionStatus"];
+            /** Version Number */
+            version_number: number;
+        };
+        /**
+         * PendingOwnerCheckView
+         * @description One of the owner's checks the live version was not checked against:
+         *     the next "Apply changes" asks it before customers get anything. ADDED
+         *     when the live version was never asked it, CHANGED when the check was
+         *     edited since; with its question, what the answer must do and the
+         *     language it is asked in.
+         */
+        PendingOwnerCheckView: {
+            action: components["schemas"]["PendingChangeAction"];
+            /** Autotest Case Id */
+            autotest_case_id: string;
+            expectation: components["schemas"]["AutotestExpectation"];
+            /** Expected Text */
+            expected_text?: string | null;
+            /** Language */
+            language: string;
+            /** Question */
+            question: string;
         };
         /**
          * PhoneNumberDetails
@@ -17028,6 +17176,92 @@ export interface operations {
             };
         };
     };
+    discard_assistant_draft_v1_businesses__business_id__assistant_drafts__version_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get: {
         parameters: {
             query?: {
@@ -17301,7 +17535,9 @@ export interface operations {
     };
     list_autotest_cases_v1_businesses__business_id__autotest_cases_get: {
         parameters: {
-            query?: never;
+            query?: {
+                language?: string | null;
+            };
             header?: {
                 authorization?: string | null;
             };
@@ -17628,6 +17864,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AutotestCaseView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    check_autotest_case_now_v1_businesses__business_id__autotest_cases__case_id__check_post: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerCheckOutcomeView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

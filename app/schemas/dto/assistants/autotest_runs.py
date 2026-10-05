@@ -46,7 +46,9 @@ from app.schemas.typings.assistants.strings import (
     AutotestScenarioGoal,
     JudgeNote,
 )
+from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
@@ -190,6 +192,31 @@ class AutotestCheckFailure(ImmutableDTO):
 
     code: AutotestCheckCode
     note: AutotestCheckNote
+
+
+class OwnerCheckDecision(ImmutableDTO):
+    """
+    How an owner check was decided: its failed checks (none: passed), the
+    semantic judge's notes and what asking the judge cost.
+    """
+
+    failures: list[AutotestCheckFailure] = Field(
+        default_factory=list[AutotestCheckFailure]
+    )
+    notes: list[JudgeNote] = Field(default_factory=list[JudgeNote])
+    cost: CostMicroUsd = CostMicroUsd(0)
+
+
+class ScenarioConversationTrace(ImmutableDTO):
+    """
+    The test conversation one scenario left: what the assistant's replies
+    cost, the conversation and the assistant's first answer in it (None
+    when it never answered).
+    """
+
+    cost: CostMicroUsd = CostMicroUsd(0)
+    conversation_id: ConversationId | None = None
+    answer_message_id: MessageId | None = None
 
 
 class AutotestRunSummary(ImmutableDTO):

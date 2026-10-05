@@ -9,10 +9,10 @@ import { ToolCallList } from "./ToolCallList";
 /** One answer of the assistant: the version that gave it, what it did (badges) and the tools it called. */
 export function AssistantLine({
   entry,
-  versionLabel,
+  answerLabel,
 }: {
   entry: Extract<ChatEntry, { kind: "assistant" }>;
-  versionLabel: (id: string | null, number?: number | null) => string;
+  answerLabel: (versionId: string | null, number?: number | null) => string;
 }) {
   const { t, tp } = useI18n();
   const reply = entry.reply;
@@ -38,7 +38,7 @@ export function AssistantLine({
     <div className="flex flex-col items-start gap-1">
       <p className="mb-0.5 text-xs font-medium text-ink-subtle">
         {t("assistant.authors.assistant")}
-        {entry.versionId ? ` · ${versionLabel(entry.versionId, entry.versionNumber)}` : ""}
+        {entry.versionId ? ` · ${answerLabel(entry.versionId, entry.versionNumber)}` : ""}
       </p>
       <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface-muted px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-ink" dir="auto">
         {entry.text}

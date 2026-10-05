@@ -3,6 +3,9 @@ from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
     AutotestRunRepoContract,
 )
+from app.contracts.repositories.autotest_case_repositories import (
+    AutotestCaseRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
@@ -15,8 +18,10 @@ from app.schemas.constants.setup import (
     SetupActionTarget,
 )
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
+from app.schemas.domain.autotest_cases import AutotestCaseDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.setup import AssistantApplyDocument
+from app.schemas.domain.setup import ApplyAttentionReason, AssistantApplyDocument
+from app.schemas.dto.assistants.autotest_cases import OwnerCheckOutcomeView
 from app.schemas.dto.setup.apply_changes import (
     ApplyAttentionView,
     ApplyChangesSource,
@@ -25,8 +30,10 @@ from app.schemas.dto.setup.apply_changes import (
 )
 from app.schemas.dto.setup.pending_changes import PendingChange, PendingChangesRequest
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
+from app.schemas.typings.assistants.prefixed_id import AutotestCaseId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.setup.strings import ApplyAttentionMessage, SetupActionLabel
+from app.use_cases.shared.owner_check_outcomes import list_failed_owner_checks
 from app.utilities.assembly.autotest_evaluation import count_run_scenarios
 from app.utilities.setup.apply_attention import ATTENTION_TARGETS, ATTENTION_TEXTS
 from app.utilities.setup.setup_texts import ACTION_LABELS
@@ -50,7 +57,8 @@ class DescribeApplyChangesUseCase(
     assistant is built from changed since the live version (the same
     changes GET /assistant/pending-changes lists). A version whose
     checks finished while the worker has not published it yet shows as
-    PUBLISHING.
+    PUBLISHING. Failed checks name the owner's own checks the version did
+    not pass, each with its question and why, as asked.
     """
 
     def __init__(
@@ -63,6 +71,7 @@ class DescribeApplyChangesUseCase(
             PendingChangesRequest, list[PendingChange]
         ],
         localized_text_resolver: LocalizedTextResolverContract,
+        autotest_case_repo: AutotestCaseRepoContract,
     ) -> None:
         self._assistant_apply_repo: AssistantApplyRepoContract = assistant_apply_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -74,6 +83,7 @@ class DescribeApplyChangesUseCase(
             PendingChangesRequest, list[PendingChange]
         ] = collect_pending_changes
         self._resolver: LocalizedTextResolverContract = localized_text_resolver
+        self._autotest_case_repo: AutotestCaseRepoContract = autotest_case_repo
 
     def run(self, input_data: ApplyChangesSource) -> ApplyChangesView:
         business: BusinessDocument = input_data.business
@@ -102,6 +112,15 @@ class DescribeApplyChangesUseCase(
             else self._autotest_run_repo.get(business.id, version.autotest_run_id)
         )
         is_checking: bool = stage is ApplyChangesStage.CHECKING and run is not None
+        failed_checks: list[OwnerCheckOutcomeView] = (
+            self._failed_owner_checks(business, run, input_data.language)
+            if run is not None
+            and any(
+                reason.code is ApplyAttentionCode.CHECKS_FAILED
+                for reason in apply.attention
+            )
+            else []
+        )
         return ApplyChangesView(
             business_id=business.id,
             stage=stage,
@@ -120,18 +139,41 @@ class DescribeApplyChangesUseCase(
             started_at=apply.started_at,
             finished_at=apply.finished_at,
             attention=[
-                ApplyAttentionView(
-                    code=reason.code,
-                    message=ApplyAttentionMessage(
-                        self._resolver.resolve(
-                            ATTENTION_TEXTS[reason.code], input_data.language
-                        )
-                    ),
-                    details=list(reason.details),
-                    action=self._action(reason.code, input_data.language),
-                )
+                self._attention(reason, failed_checks, input_data.language)
                 for reason in apply.attention
             ],
+        )
+
+    def _attention(
+        self,
+        reason: ApplyAttentionReason,
+        failed_checks: list[OwnerCheckOutcomeView],
+        language: LanguageTag,
+    ) -> ApplyAttentionView:
+        return ApplyAttentionView(
+            code=reason.code,
+            message=ApplyAttentionMessage(
+                self._resolver.resolve(ATTENTION_TEXTS[reason.code], language)
+            ),
+            details=list(reason.details),
+            action=self._action(reason.code, language),
+            failed_checks=(
+                failed_checks if reason.code is ApplyAttentionCode.CHECKS_FAILED else []
+            ),
+        )
+
+    def _failed_owner_checks(
+        self,
+        business: BusinessDocument,
+        run: AutotestRunDocument,
+        language: LanguageTag,
+    ) -> list[OwnerCheckOutcomeView]:
+        cases: dict[AutotestCaseId, AutotestCaseDocument] = {
+            case.id: case
+            for case in self._autotest_case_repo.list_by_business(business.id)
+        }
+        return list_failed_owner_checks(
+            self._resolver, run, cases, run.updated_at, language
         )
 
     def _action(

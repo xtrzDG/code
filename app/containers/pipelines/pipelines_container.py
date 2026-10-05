@@ -96,6 +96,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     assistants: AssistantPipelinesContainer = Container(  # type: ignore[assignment]
         AssistantPipelinesContainer,
         assistant_orchestrators=orchestrators.assistants,
+        registries=registries,
     )
     setup: SetupPipelinesContainer = Container(  # type: ignore[assignment]
         SetupPipelinesContainer,

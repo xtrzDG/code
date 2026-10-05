@@ -74,7 +74,10 @@ export interface CheckForm {
 
 export type CheckProblem = "question" | "expectedText";
 
-/** An empty check in the business's default language. */
+/** A new check's language left to its question: the API takes the language the question is written in. */
+export const AUTO_LANGUAGE = "";
+
+/** An empty check in `language`, or (AUTO_LANGUAGE) in the language its question will be written in. */
 export function newCheckForm(language: string): CheckForm {
   return {
     question: "",
@@ -173,7 +176,7 @@ export function checkBody(form: CheckForm): CheckBody {
     question: form.question.trim(),
     expectation: form.expectation,
     expected_text: needsExpectedText(form.expectation) ? form.expectedText.trim() : null,
-    language: form.language,
+    language: form.language === AUTO_LANGUAGE ? null : form.language,
     source: form.source,
     source_conversation_id: form.sourceConversationId,
     source_message_id: form.sourceMessageId,

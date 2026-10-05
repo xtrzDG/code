@@ -7,7 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { ConfirmDialog } from "@/components/ui";
-import { Alert, Checkbox, useToast } from "@/components/ui";
+import { Alert, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionDetails } from "@/lib/assistant/versions";
 
@@ -18,7 +18,8 @@ import { RefusalReasons } from "./RefusalReasons";
  * Publish a version (owner): a confirmation, and the API's refusal reasons
  * (by their codes: trial, agreement, profile, staff contact, autotests,
  * voice setup) with links to fix them.
- * `force` publishes a version that did not pass its autotests (platform admins).
+ * `force` publishes a version that did not pass its autotests (platform
+ * admins only), after the business's name is typed.
  */
 export function PublishDialog({
   version,
@@ -42,7 +43,6 @@ export function PublishDialog({
   const toast = useToast();
   const { business } = useBusiness();
   const [refusal, setRefusal] = useState<RefusalState | null>(null);
-  const [acknowledged, setAcknowledged] = useState(false);
 
   const publish = useMutation(
     (acceptFailedTests: boolean) =>
@@ -84,22 +84,14 @@ export function PublishDialog({
       confirmLabel={force ? t("assistant.publish.forceConfirm") : t("assistant.publish.confirm")}
       pendingLabel={t("assistant.publish.publishing")}
       isPending={publish.isPending}
-      confirmDisabled={force && !acknowledged}
+      confirmationText={force ? business.name : undefined}
       onConfirm={() => void submit()}
       onClose={onClose}
     >
       {force ? (
-        <>
-          <Alert tone="danger" title={t("assistant.publish.forceWarningTitle")}>
-            {t("assistant.publish.forceWarning")}
-          </Alert>
-          <Checkbox
-            id="publish-acknowledge"
-            label={t("assistant.publish.forceAcknowledge")}
-            checked={acknowledged}
-            onChange={(event) => setAcknowledged(event.target.checked)}
-          />
-        </>
+        <Alert tone="danger" title={t("assistant.publish.forceWarningTitle")}>
+          {t("assistant.publish.forceWarning")}
+        </Alert>
       ) : null}
       {refusal ? (
         <div role="alert" className="space-y-3 rounded-xl border border-danger/25 bg-danger-soft px-4 py-3">

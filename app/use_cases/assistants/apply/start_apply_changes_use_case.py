@@ -40,10 +40,12 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
     goes on. Idempotent: while an apply is under way (building, checking,
     publishing) the same one is returned and nothing new starts; when the
     live version already has everything, nothing starts either. A version
-    already checked (READY) and built from what the business has now is
-    published without building and checking it again; otherwise a new
-    version is built. Starting is atomic, so two presses at once start one
-    apply, and it is written to the audit log.
+    already checked (READY), built from what the business has now and not
+    discarded by the owner is published without building and checking it
+    again; otherwise a new version is built. The owner's checks the version
+    was not checked against count as changes, so they are asked first.
+    Starting is atomic, so two presses at once start one apply, and it is
+    written to the audit log.
     """
 
     def __init__(
@@ -98,7 +100,11 @@ class StartApplyChangesUseCase(UseCaseContract[ApplyChangesCommand, ApplyStart])
         if current is not None and is_apply_running(current, versions, now):
             return ApplyStart(business=business, apply=current, is_new=False)
 
-        latest: AssistantVersionDocument | None = versions[-1] if versions else None
+        # A draft the owner discarded is neither reused nor compared with.
+        latest: AssistantVersionDocument | None = next(
+            (version for version in reversed(versions) if version.discarded_at is None),
+            None,
+        )
         is_up_to_date: bool = latest is not None and not self._has_changes(
             business, latest
         )

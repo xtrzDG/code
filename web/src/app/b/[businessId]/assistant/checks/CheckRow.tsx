@@ -3,13 +3,16 @@
 /**
  * One of the owner's checks in "My checks": the question, what the answer
  * must do, where the check came from and how it did in the latest
- * "Apply changes" (with the answer it got), plus change, pause and delete.
+ * "Apply changes" (with the answer it got), "Check now" with its latest
+ * outcome, plus change, pause and delete.
  */
 
 import { IconPause, IconPencil, IconPlay, IconTrash } from "@/components/icons";
+import { CheckNowPanel } from "@/components/teaching/CheckNowPanel";
 import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
+import { checkAnchor } from "@/lib/assistant/ownerChecks";
 import { languageName } from "@/lib/format";
 import type { CheckView } from "@/lib/teaching";
 import {
@@ -46,7 +49,9 @@ export function CheckRow({
 
   return (
     <li
-      className="space-y-3 rounded-xl border border-line bg-surface p-4 shadow-xs data-[paused]:opacity-75"
+      id={checkAnchor(check.id)}
+      tabIndex={-1}
+      className="scroll-mt-24 space-y-3 rounded-xl border border-line bg-surface p-4 shadow-xs outline-none target:border-accent-solid target:ring-2 target:ring-accent-solid/30 focus-visible:ring-2 focus-visible:ring-focus data-[paused]:opacity-75"
       data-check={check.id}
       data-paused={check.is_active ? undefined : ""}
     >
@@ -89,6 +94,7 @@ export function CheckRow({
           </p>
         ) : null}
       </div>
+      <CheckNowPanel checkId={check.id} question={check.question} lastProbe={check.last_probe} />
       <div className="flex flex-wrap gap-2 border-t border-line pt-3">
         <Button
           size="sm"

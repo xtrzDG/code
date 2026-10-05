@@ -17,7 +17,9 @@ from app.schemas.dto.assistants.autotest_runs import (
     AutotestCheckFailure,
     AutotestScenarioRun,
     JudgeVerdict,
+    OwnerCheckDecision,
     OwnerCheckSpec,
+    ScenarioConversationTrace,
 )
 from app.schemas.dto.conversations import (
     AssistantReply,
@@ -29,8 +31,9 @@ from app.schemas.typings.assistants.strings import SystemPromptText
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.use_cases.autotests.autotest_scenario_results import (
     build_scenario_result,
-    sum_assistant_costs,
+    trace_test_conversation,
 )
+from app.use_cases.autotests.owner_check_judge import OwnerCheckJudge
 from app.use_cases.autotests.scenario_conversation import ScenarioConversation
 from app.utilities.assembly.autotest_evaluation import check_failure, decide_outcome
 from app.utilities.assembly.autotest_prompts import (
@@ -42,7 +45,6 @@ from app.utilities.assembly.llm_costs import (
     DEFAULT_LLM_TOKEN_PRICES,
     estimate_llm_cost,
 )
-from app.utilities.assembly.owner_check_evaluation import check_owner_expectation
 from app.utilities.assembly.scenario_checks import check_scenario_run
 
 
@@ -57,7 +59,9 @@ class ScenarioSamplePlayer:
     ends the conversation early. The judge then scores the five criteria
     and deterministic checks look at what was actually created. An owner
     check opens with its question as written and is decided by its
-    expectation alone (`ScenarioConversation`, `check_owner_expectation`).
+    expectation (`ScenarioConversation`, `OwnerCheckJudge`: the rules, and
+    the semantic judge for a check that must (not) mention something).
+    Every result names its test conversation and the first answer in it.
 
     Provider errors or an unreadable judge answer make the scenario
     ERRORED instead of failing the whole run. The cost is the assistant's
@@ -81,6 +85,9 @@ class ScenarioSamplePlayer:
         self._message_repo: MessageRepoContract = message_repo
         self._app_settings: AppSettings = app_settings
         self._llm_token_prices: tuple[LlmTokenPrice, ...] = tuple(llm_token_prices)
+        self._owner_check_judge: OwnerCheckJudge = OwnerCheckJudge(
+            judge_llm_adapter, app_settings, self._estimate_cost
+        )
 
     def play(
         self, input_data: AutotestScenarioRun, sample_number: int = 1
@@ -99,8 +106,11 @@ class ScenarioSamplePlayer:
 
         transcript: list[AutotestTranscriptLine] = conversation.transcript
         replies: list[AssistantReply] = conversation.replies
+        trace: ScenarioConversationTrace = trace_test_conversation(
+            self._message_repo, input_data, replies
+        )
         cost: int = sum(int(cost) for cost in conversation.customer_costs) + int(
-            sum_assistant_costs(self._message_repo, input_data, replies)
+            trace.cost
         )
         if conversation_error is not None:
             return build_scenario_result(
@@ -114,6 +124,7 @@ class ScenarioSamplePlayer:
                     )
                 ],
                 cost=CostMicroUsd(cost),
+                trace=trace,
             )
 
         if not any(line.author is MessageAuthor.CUSTOMER for line in transcript):
@@ -128,6 +139,7 @@ class ScenarioSamplePlayer:
                     )
                 ],
                 cost=CostMicroUsd(cost),
+                trace=trace,
             )
 
         check_failures: list[AutotestCheckFailure] = check_scenario_run(
@@ -135,14 +147,19 @@ class ScenarioSamplePlayer:
         )
         owner_check: OwnerCheckSpec | None = input_data.scenario.owner_check
         if owner_check is not None:
-            # The owner's own check is decided by its expectation, not judged.
-            check_failures.extend(check_owner_expectation(owner_check, replies))
+            # The owner's own check is decided by its expectation, not scored.
+            decision: OwnerCheckDecision = self._owner_check_judge.decide(
+                owner_check, replies, input_data.business.owner_language
+            )
+            check_failures.extend(decision.failures)
             return build_scenario_result(
                 input_data,
                 AutotestOutcome.FAILED if check_failures else AutotestOutcome.PASSED,
                 transcript=transcript,
                 check_failures=check_failures,
-                cost=CostMicroUsd(cost),
+                cost=CostMicroUsd(cost + int(decision.cost)),
+                trace=trace,
+                judge_notes=decision.notes,
             )
 
         try:
@@ -162,6 +179,7 @@ class ScenarioSamplePlayer:
                     ),
                 ],
                 cost=CostMicroUsd(cost),
+                trace=trace,
             )
 
         cost += int(self._estimate_cost(judge_response))
@@ -181,6 +199,7 @@ class ScenarioSamplePlayer:
                     ),
                 ],
                 cost=CostMicroUsd(cost),
+                trace=trace,
             )
 
         return build_scenario_result(
@@ -192,6 +211,7 @@ class ScenarioSamplePlayer:
             check_failures=check_failures,
             cost=CostMicroUsd(cost),
             verdict=verdict,
+            trace=trace,
         )
 
     def _build_judge_request(

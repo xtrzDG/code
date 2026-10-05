@@ -19,6 +19,9 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.orchestrators.assistants.apply_changes_orchestrator import (
     ApplyChangesOrchestrator,
 )
+from app.orchestrators.assistants.check_owner_check_now_orchestrator import (
+    CheckOwnerCheckNowOrchestrator,
+)
 from app.orchestrators.assistants.queue_autotest_run_orchestrator import (
     QueueAutotestRunOrchestrator,
 )
@@ -31,6 +34,10 @@ from app.orchestrators.assistants.run_queued_autotests_orchestrator import (
 from app.schemas.domain.assistants import AutotestScenarioResult
 from app.schemas.dto.assistants.assistant_commands import RunAutotestsCommand
 from app.schemas.dto.assistants.assistant_views import AutotestRunView
+from app.schemas.dto.assistants.autotest_cases import (
+    OwnerCheckOutcomeView,
+    OwnerCheckProbeCommand,
+)
 from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.setup.apply_changes import ApplyChangesCommand, ApplyChangesView
@@ -115,6 +122,9 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
     get_pending_changes_orchestrator = use_case_orchestrator(
         pending_change_use_cases.get_pending_changes_use_case
     )
+    discard_assistant_draft_orchestrator = use_case_orchestrator(
+        apply_use_cases.discard_assistant_draft_use_case
+    )
 
     # --- Assistant versions and autotests.
     assemble_assistant_version_orchestrator = use_case_orchestrator(
@@ -129,7 +139,16 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
     get_autotest_run_orchestrator = use_case_orchestrator(
         autotest_use_cases.get_autotest_run_use_case
     )
-    # The owner's own checks ("My checks").
+    # The owner's own checks ("My checks"); "Check now" asks one of them of
+    # the live version through the same scenario runner as the autotests.
+    check_owner_check_now_orchestrator: Factory[
+        OrchestratorContract[OwnerCheckProbeCommand, OwnerCheckOutcomeView]
+    ] = Factory(
+        CheckOwnerCheckNowOrchestrator,
+        prepare_owner_check_probe=autotest_use_cases.prepare_owner_check_probe_use_case,
+        run_autotest_scenario=run_autotest_scenario_use_case,
+        record_owner_check_probe=autotest_use_cases.record_owner_check_probe_use_case,
+    )
     list_autotest_cases_orchestrator = use_case_orchestrator(
         autotest_use_cases.list_autotest_cases_use_case
     )

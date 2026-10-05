@@ -19,6 +19,7 @@ from app.schemas.typings.assistants.constrained_strings import (
     AutotestCaseQuestion,
     AutotestExpectedText,
 )
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.autotests.cases.autotest_case_rules import (
     check_expected_text,
     check_unique,
@@ -32,7 +33,8 @@ class UpdateAutotestCaseUseCase(
     """
     Change one of the owner's checks (owner only): its question, what the
     answer must do, its language, or pause it (`is_active`: a paused check
-    is kept but not played). Missing fields stay as they are.
+    is kept but not played). Missing fields stay as they are. A check asked
+    differently forgets its "Check now", which answered the old question.
 
     Raises:
         NotFoundError: the check is not this business's.
@@ -84,15 +86,24 @@ class UpdateAutotestCaseUseCase(
             expected_text,
             own_id=case.id,
         )
+        language: LanguageTag = changes.language or case.language
+        is_same_question: bool = (
+            question == case.question
+            and expectation is case.expectation
+            and expected_text == case.expected_text
+            and language == case.language
+        )
         changed: AutotestCaseDocument = case.model_copy(
             update={
                 "question": question,
                 "expectation": expectation,
                 "expected_text": expected_text,
-                "language": changes.language or case.language,
+                "language": language,
                 "is_active": (
                     case.is_active if changes.is_active is None else changes.is_active
                 ),
+                # "Check now" answered the check as it was asked.
+                "last_probe": case.last_probe if is_same_question else None,
                 "updated_at": self._wall_clock.now_unix(),
             }
         )

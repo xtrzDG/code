@@ -72,6 +72,8 @@ class PendingChangeUseCasesContainer(containers.DeclarativeContainer):
         build_assistant_draft=build_assistant_draft_use_case,
         assistant_instruction_transformer=transformers.assistant_instruction_transformer,
         localized_text_resolver=utilities.localized_text_resolver,
+        autotest_case_repo=repositories.autotest_case_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
     )
     get_pending_changes_use_case: Factory[
         UseCaseContract[PendingChangesQuery, PendingChangesView]
@@ -81,6 +83,7 @@ class PendingChangeUseCasesContainer(containers.DeclarativeContainer):
         assistant_version_repo=repositories.assistant_version_repo,
         business_profile_repo=repositories.business_profile_repo,
         collect_pending_changes=collect_pending_changes_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
     )
     select_smoke_checks_use_case: Factory[
         UseCaseContract[AppliedVersion, SmokeCheckSelection | None]

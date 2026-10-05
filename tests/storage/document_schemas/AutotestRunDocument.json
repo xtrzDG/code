@@ -1,7 +1,7 @@
 {
   "collection": "autotest_runs",
   "document_type": "AutotestRunDocument",
-  "schema_version": 5,
+  "schema_version": 6,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -144,6 +144,18 @@
         "items": {
           "additionalProperties": false,
           "properties": {
+            "answer_message_id": {
+              "anyOf": [
+                {
+                  "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
             "autotest_case_id": {
               "anyOf": [
                 {
@@ -187,6 +199,18 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "conversation_id": {
+              "anyOf": [
+                {
+                  "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             },
             "cost_micro_usd": {
               "default": 0,
@@ -234,6 +258,53 @@
                 "errored"
               ],
               "type": "string"
+            },
+            "owner_check": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expectation": {
+                      "enum": [
+                        "must_mention",
+                        "must_not_mention",
+                        "must_hand_off",
+                        "must_create_lead"
+                      ],
+                      "type": "string"
+                    },
+                    "expected_text": {
+                      "anyOf": [
+                        {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "pattern": "\\w",
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "question": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "question",
+                    "expectation"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             },
             "passed_sample_count": {
               "anyOf": [
@@ -332,7 +403,7 @@
         "type": "array"
       },
       "schema_version": {
-        "default": "5",
+        "default": "6",
         "type": "string"
       },
       "status": {

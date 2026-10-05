@@ -44,9 +44,8 @@ class UseCasesContainer(CoreUseCasesContainer):
     chains built on them are checked. The edges and the contexts the others
     build on come from `CoreUseCasesContainer`.
 
-    Use cases are stateless: Factory, except the ones holding a cache. A
-    context that runs another context's use cases gets that child container
-    as an edge, so the order below is the order of those dependencies.
+    Use cases are stateless Factories, except ones holding a cache. A context
+    running another's use cases gets that (earlier) child container as edge.
     """
 
     conversations: ConversationUseCasesContainer = Container(  # type: ignore[assignment]
@@ -167,6 +166,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]

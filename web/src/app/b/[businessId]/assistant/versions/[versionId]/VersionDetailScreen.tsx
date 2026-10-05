@@ -9,6 +9,7 @@ import { Tabs } from "@/components/content/Tabs";
 import { IconArrowLeft } from "@/components/icons";
 import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { onlyOwnerCheckFailures } from "@/lib/assistant/ownerChecks";
 import { liveVersion, versionActions, type AssistantVersionDetails } from "@/lib/assistant/versions";
 import { businessPath } from "@/lib/navigation";
 
@@ -60,6 +61,8 @@ export function VersionDetailScreen({ versionId, showProblems = false }: { versi
   const live = liveVersion(versions.data ?? []);
   const liveNumber = live && live.id !== details.id ? live.version_number : null;
   const canRunAutotests = actions.runAutotests && !isRunning;
+  const ownerFailures =
+    runData && !isRunning && runData.status === "finished" && !runData.is_passed ? onlyOwnerCheckFailures(runData.results) : [];
 
   const afterGoLive = (updated: AssistantVersionDetails) => {
     version.setData(updated);
@@ -82,7 +85,14 @@ export function VersionDetailScreen({ versionId, showProblems = false }: { versi
         {t("assistant.detail.back")}
       </Link>
 
-      <VersionHeaderCard details={details} actions={actions} canRunAutotests={canRunAutotests} isRunning={isRunning} onOpen={setDialog} />
+      <VersionHeaderCard
+        details={details}
+        actions={actions}
+        canRunAutotests={canRunAutotests}
+        isRunning={isRunning}
+        ownerFailures={ownerFailures}
+        onOpen={setDialog}
+      />
 
       {(isOwner || isPlatformAdmin) && details.status !== "published" && details.status !== "archived" ? (
         <GoLiveChecklist

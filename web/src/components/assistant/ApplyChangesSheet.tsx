@@ -6,7 +6,10 @@
  * test conversations, giving customers the new answers). A stop lists
  * its reasons in plain words with the page that fixes each, and the
  * conversation that failed; the owner can close the sheet at any time,
- * the changes reach customers on their own.
+ * the changes reach customers on their own. The owner's checks the live
+ * version was not checked against count as changes, and drafts built by
+ * hand are listed apart (with "Discard"), so the sheet says everything
+ * reaches customers only when nothing of either kind is left.
  */
 
 import { useId } from "react";
@@ -16,12 +19,15 @@ import { IconCheck, IconSparkles } from "@/components/icons";
 import { LaunchProgress } from "@/components/setup/launch/LaunchProgress";
 import { Button, ButtonLink, SkeletonText, Sheet } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { hasPendingWork } from "@/lib/assistant/ownerChecks";
 import { summarizeChanges } from "@/lib/assistant/pendingChanges";
 import { setupPath } from "@/lib/navigation";
 
 import { ApplyAttention } from "./ApplyAttention";
 import { useApplyChanges } from "./ApplyChangesContext";
 import { PendingChangesList } from "./PendingChangesList";
+import { PendingDrafts } from "./PendingDrafts";
+import { PendingOwnerChecks } from "./PendingOwnerChecks";
 
 function SheetBody({ onClose }: { onClose: () => void }) {
   const translator = useI18n();
@@ -29,6 +35,8 @@ function SheetBody({ onClose }: { onClose: () => void }) {
   const { business } = useBusiness();
   const { pending, apply, applied } = useApplyChanges();
   const listId = useId();
+  const checksId = useId();
+  const draftsId = useId();
   const data = pending.data;
   const view = apply.view;
 
@@ -48,7 +56,7 @@ function SheetBody({ onClose }: { onClose: () => void }) {
     );
   }
 
-  if (apply.phase === "live" && applied !== null && (data?.count ?? 0) === 0) {
+  if (apply.phase === "live" && applied !== null && !hasPendingWork(data)) {
     return (
       <div className="space-y-2 rounded-2xl border border-success/30 bg-success-soft/50 p-4" aria-live="polite">
         <p className="flex items-center gap-2 font-semibold text-ink">
@@ -84,7 +92,7 @@ function SheetBody({ onClose }: { onClose: () => void }) {
     );
   }
 
-  if (data.count === 0) {
+  if (!hasPendingWork(data)) {
     return (
       <p className="flex items-start gap-2 text-sm text-ink-muted">
         <IconCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
@@ -93,16 +101,43 @@ function SheetBody({ onClose }: { onClose: () => void }) {
     );
   }
 
+  const isAttention = apply.phase === "attention";
+  const changes = data.changes ?? [];
+  const checks = data.owner_checks ?? [];
+  const drafts = data.drafts ?? [];
   return (
     <div className="space-y-5">
-      {apply.phase === "attention" && view ? <ApplyAttention businessId={business.id} view={view} onNavigate={onClose} /> : null}
-      <p className="text-sm text-ink-muted">{t("applyChanges.sheet.intro")}</p>
-      <div className="space-y-2">
-        <h3 id={listId} className="text-sm font-semibold text-ink">
-          {t("applyChanges.sheet.listLabel")}
-        </h3>
-        <PendingChangesList changes={data.changes ?? []} labelId={listId} />
-      </div>
+      {isAttention && view ? <ApplyAttention businessId={business.id} view={view} onNavigate={onClose} /> : null}
+      {/* After a stop the attention block already says customers keep the previous answers. */}
+      {isAttention && data.count > 0 ? null : (
+        <p className="text-sm text-ink-muted">{t(data.count > 0 ? "applyChanges.sheet.intro" : "updates.pending.onlyDrafts")}</p>
+      )}
+      {changes.length > 0 ? (
+        <div className="space-y-2">
+          <h3 id={listId} className="text-sm font-semibold text-ink">
+            {t("applyChanges.sheet.listLabel")}
+          </h3>
+          <PendingChangesList changes={changes} labelId={listId} />
+        </div>
+      ) : null}
+      {checks.length > 0 ? (
+        <section className="space-y-1.5">
+          <h3 id={checksId} className="text-sm font-semibold text-ink">
+            {t("updates.pending.checksTitle")}
+          </h3>
+          <p className="text-xs text-ink-subtle">{t("updates.pending.checksHint")}</p>
+          <PendingOwnerChecks checks={checks} labelId={checksId} />
+        </section>
+      ) : null}
+      {drafts.length > 0 ? (
+        <section className="space-y-1.5">
+          <h3 id={draftsId} className="text-sm font-semibold text-ink">
+            {t("updates.pending.draftsTitle")}
+          </h3>
+          <p className="text-xs text-ink-subtle">{t("updates.pending.draftsHint")}</p>
+          <PendingDrafts drafts={drafts} labelId={draftsId} onNavigate={onClose} />
+        </section>
+      ) : null}
     </div>
   );
 }

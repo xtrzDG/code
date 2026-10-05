@@ -36,6 +36,9 @@ class AssistantOperatorsContainer(containers.DeclarativeContainer):
     get_pending_changes_operator = pipeline_operator(
         assistant_pipelines.get_pending_changes_pipeline, storage_scope
     )
+    discard_assistant_draft_operator = pipeline_operator(
+        assistant_pipelines.discard_assistant_draft_pipeline, storage_scope
+    )
 
     # --- Assistant versions and autotests.
     list_assistant_versions_operator = pipeline_operator(
@@ -49,6 +52,9 @@ class AssistantOperatorsContainer(containers.DeclarativeContainer):
     )
     list_autotest_cases_operator = pipeline_operator(
         assistant_pipelines.list_autotest_cases_pipeline, storage_scope
+    )
+    check_owner_check_now_operator = pipeline_operator(
+        assistant_pipelines.check_owner_check_now_pipeline, storage_scope
     )
     create_autotest_case_operator = pipeline_operator(
         assistant_pipelines.create_autotest_case_pipeline, storage_scope

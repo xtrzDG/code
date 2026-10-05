@@ -8,6 +8,7 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.assistants.assistant_commands import (
     AssistantVersionQuery,
@@ -20,6 +21,10 @@ from app.schemas.dto.assistants.autotest_cases import (
     AutotestCaseView,
     CreateAutotestCaseCommand,
     ListAutotestCasesQuery,
+    OwnerCheckOutcomeView,
+    OwnerCheckProbeCommand,
+    OwnerCheckProbeOutcome,
+    OwnerCheckProbeStart,
     UpdateAutotestCaseCommand,
 )
 from app.schemas.dto.assistants.autotest_runs import (
@@ -44,6 +49,12 @@ from app.use_cases.autotests.cases.delete_autotest_case_use_case import (
 )
 from app.use_cases.autotests.cases.list_autotest_cases_use_case import (
     ListAutotestCasesUseCase,
+)
+from app.use_cases.autotests.cases.prepare_owner_check_probe_use_case import (
+    PrepareOwnerCheckProbeUseCase,
+)
+from app.use_cases.autotests.cases.record_owner_check_probe_use_case import (
+    RecordOwnerCheckProbeUseCase,
 )
 from app.use_cases.autotests.cases.update_autotest_case_use_case import (
     UpdateAutotestCaseUseCase,
@@ -80,6 +91,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     plan_autotest_scenarios_use_case: Factory[
@@ -168,6 +180,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         autotest_case_repo=repositories.autotest_case_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
+        localized_text_resolver=utilities.localized_text_resolver,
     )
     create_autotest_case_use_case: Factory[
         UseCaseContract[CreateAutotestCaseCommand, AutotestCaseView]
@@ -179,6 +192,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         conversation_review_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,
         unanswered_question_repo=repositories.unanswered_question_repo,
+        language_detector=utilities.language_detector,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     update_autotest_case_use_case: Factory[
@@ -187,6 +201,26 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         UpdateAutotestCaseUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         autotest_case_repo=repositories.autotest_case_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    prepare_owner_check_probe_use_case: Factory[
+        UseCaseContract[OwnerCheckProbeCommand, OwnerCheckProbeStart]
+    ] = Factory(
+        PrepareOwnerCheckProbeUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        language_registry=registries.language_registry,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    record_owner_check_probe_use_case: Factory[
+        UseCaseContract[OwnerCheckProbeOutcome, OwnerCheckOutcomeView]
+    ] = Factory(
+        RecordOwnerCheckProbeUseCase,
+        autotest_case_repo=repositories.autotest_case_repo,
+        localized_text_resolver=utilities.localized_text_resolver,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     delete_autotest_case_use_case: Factory[

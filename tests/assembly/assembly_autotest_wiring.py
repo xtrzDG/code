@@ -125,6 +125,8 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             self.build_draft_use_case,
             AssistantInstructionTransformer(),
             LocalizedTextResolver(),
+            self.autotest_case_repo,
+            self.run_repo,
         )
         self.assemble_use_case = AssembleAssistantVersionUseCase(
             authorize_business_access=authorize,
