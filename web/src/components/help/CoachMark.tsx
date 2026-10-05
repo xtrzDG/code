@@ -128,7 +128,7 @@ function PhoneCoachLine({ mark, onRead, onClose }: CoachProps) {
         type="button"
         aria-haspopup="dialog"
         onClick={onRead}
-        className="min-h-11 min-w-0 flex-1 cursor-pointer truncate py-2 text-start text-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus"
+        className="min-h-11 min-w-0 flex-1 cursor-pointer py-2 text-start text-sm leading-snug font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus"
       >
         <span id={titleId}>{t(`coachMarks.${mark.key}.title`)}</span>
         <span className="sr-only">. {t("coachMarks.readGuide")}</span>

@@ -31,7 +31,7 @@ import { MORE_INBOX_VIEWS, PRIMARY_INBOX_VIEWS, isMoreInboxView, menuTarget } fr
 const URGENT_VIEWS: ReadonlySet<InboxView> = new Set(["needs_person"]);
 
 const TAB_CLASSES =
-  "relative flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors select-none";
+  "relative flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-lg px-2 text-sm font-medium whitespace-nowrap transition-colors select-none";
 
 function ChosenPill() {
   return (
@@ -49,7 +49,7 @@ function CountChip({ view, count, checked }: { view: InboxView; count: number; c
     <span
       aria-hidden
       className={cn(
-        "relative min-w-5 rounded-full px-1.5 text-center text-xs tabular-nums",
+        "relative min-w-5 rounded-full px-1 text-center text-xs tabular-nums",
         count > 0 && URGENT_VIEWS.has(view)
           ? "bg-warning-soft font-semibold text-warning"
           : checked
@@ -196,7 +196,7 @@ function MoreViews({
         data-more-views=""
         data-chosen={chosen ?? undefined}
         onClick={() => setOpen((open) => !open)}
-        className={cn(TAB_CLASSES, "pe-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus", chosen ? "text-ink" : "text-ink-muted hover:text-ink")}
+        className={cn(TAB_CLASSES, "pe-1.5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus", chosen ? "text-ink" : "text-ink-muted hover:text-ink")}
       >
         {chosen ? <ChosenPill /> : null}
         <span className="relative">{chosenName ?? t("inbox.moreViews")}</span>

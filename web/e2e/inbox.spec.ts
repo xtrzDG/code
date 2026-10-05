@@ -209,6 +209,12 @@ for (const [locale, texts] of Object.entries({ en, ru, ka })) {
         await expect(views.getByRole("radio", { name: new RegExp(`^${texts.inbox.views[view]}`) }), where).toBeAttached();
       }
       await expect(views.getByRole("radio", { name: new RegExp(`^${texts.inbox.views.all}`) })).toHaveCount(0);
+      if (size.width >= 1440 && locale !== "ka") {
+        // In English and Russian the whole row fits beside a conversation: Mine ends before More, nothing scrolls away.
+        const mine = await views.locator('label[data-inbox-view="mine"]').boundingBox();
+        const more = await views.locator("[data-more-views]").boundingBox();
+        expect((mine?.x ?? 0) + (mine?.width ?? 0), `${where}: Mine is whole`).toBeLessThanOrEqual(more?.x ?? 0);
+      }
       await views.getByRole("button", { name: texts.inbox.moreViews }).click();
       await page.getByRole("menuitemradio", { name: new RegExp(`^${texts.inbox.views.unassigned}`) }).click();
       await expect(page).toHaveURL(/view=unassigned/);

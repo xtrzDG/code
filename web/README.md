@@ -531,7 +531,10 @@ redirect):
 - **Views** (`?view=`, `lib/navigation.ts` `inboxPath`): Needs a person
   (the default, no query), Requests, Mine, Unassigned, All. The first three
   stay in the row; Unassigned and All sit under "More ▾", and one chosen
-  there takes the More button's place in full (`_lib/viewTabs.ts`). The four work
+  there takes the More button's place in full (`_lib/viewTabs.ts`). Beside
+  a conversation at 1440 px the whole row fits in English and Russian (the
+  list column is up to 26.5rem from `xl`); in Georgian and on a phone the
+  three scroll sideways with the chosen one in sight. The four work
   views come from `GET …/inbox` with live counts from `GET …/inbox/counts`
   (not audited, kept fresh by every live event); a search or a history
   filter (period, status, test conversations) belongs to All and is answered

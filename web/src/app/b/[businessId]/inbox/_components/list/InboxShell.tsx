@@ -59,7 +59,7 @@ export function InboxShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(19rem,23rem)_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)]">
+    <div className="lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(19rem,23rem)_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[minmax(21rem,26.5rem)_minmax(0,1fr)]">
       <section
         aria-labelledby="inbox-title"
         className={cn("flex min-h-0 min-w-0 flex-col gap-3", isOpen && "hidden lg:flex")}
