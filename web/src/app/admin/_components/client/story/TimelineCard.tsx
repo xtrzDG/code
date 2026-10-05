@@ -22,9 +22,25 @@ import { HEALTH_LABELS, ISSUE_LABELS, PLAN_LABELS } from "../../labels";
 
 const TIMELINE_PAGE_SIZE = 30;
 
-/** A line's identity across pages (lines have no id of their own). */
+/**
+ * A line's identity across pages (lines have no id of their own): two
+ * channels connected in the same moment are two lines.
+ */
 function lineKey(entry: TimelineEntry): string {
-  return [entry.occurred_at, entry.kind, entry.event, entry.audit_action, entry.audit_entity, entry.invoice_number, entry.actor_user_id]
+  return [
+    entry.occurred_at,
+    entry.kind,
+    entry.event,
+    entry.audit_action,
+    entry.audit_entity,
+    entry.invoice_number,
+    entry.actor_user_id,
+    entry.channel,
+    entry.plan_key,
+    entry.previous_plan_key,
+    entry.health_to,
+    entry.amount?.amount_minor,
+  ]
     .map((part) => part ?? "")
     .join("|");
 }
