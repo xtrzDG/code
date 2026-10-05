@@ -1,7 +1,9 @@
 # Weekly dependency updates, grouped so a week brings a few pull requests,
 # not dozens. Security updates are opened as soon as an advisory appears,
 # independent of this schedule. New releases wait a few days (cooldown) so
-# a compromised version is usually yanked before it reaches us.
+# a compromised version is usually yanked before it reaches us. A grouped
+# patch or minor update merges itself once CI is green
+# (.github/workflows/automerge.yml); everything else waits for a person.
 version: 2
 updates:
   - package-ecosystem: uv
@@ -47,6 +49,17 @@ updates:
       cabinet-dev-tools:
         dependency-type: development
         update-types: [minor, patch]
+    # Majors of the toolchain are taken in a quarterly review, not weekly:
+    # .github/workflows/major-updates.yml opens its issue. They change what
+    # the compiler and the linter accept across the whole cabinet, and
+    # @types/node follows the Node major the images run, not npm's latest.
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, javascript]
 
   - package-ecosystem: github-actions

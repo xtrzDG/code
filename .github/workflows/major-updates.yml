@@ -1,0 +1,48 @@
+name: Quarterly major updates
+
+# Dependabot does not propose the majors of typescript, eslint and
+# @types/node (.github/dependabot.yml): once a quarter this opens the issue
+# that takes them by hand, at most one per quarter. Run it by hand to open
+# the current quarter's issue now.
+on:
+  schedule:
+    # 07:23 UTC on the first day of January, April, July and October.
+    - cron: "23 7 1 1,4,7,10 *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  issue:
+    name: Open the quarter's issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open it once per quarter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          month="$(date -u +%-m)"
+          quarter="$(date -u +%Y)-Q$(( (month - 1) / 3 + 1 ))"
+          title="Major updates ${quarter}: typescript, eslint, @types/node"
+          if gh issue list --state all --search "in:title \"Major updates ${quarter}\"" \
+              --json title --jq '.[].title' | grep -Fxq "$title"; then
+            echo "\"${title}\" is already open or done."
+            exit 0
+          fi
+          cat > "$RUNNER_TEMP/body.md" <<'BODY'
+          Dependabot leaves the majors of these three to this review (`.github/dependabot.yml`).
+
+          - [ ] `cd web && npm outdated typescript eslint @types/node`
+          - [ ] typescript: read the release notes ("Breaking changes"), bump, then `npm run typecheck && npm run lint && npm test && npm run build`
+          - [ ] eslint: first check that `eslint-config-next` and every plugin in `web/eslint.config.mjs` support the new major
+          - [ ] @types/node: only up to the Node major the images and CI run (`web/Dockerfile`, `node-version` in `.github/workflows/ci.yml`)
+          - [ ] `npm run e2e`, then one pull request per package
+
+          Close this issue saying what was taken and what waits, and why.
+          BODY
+          gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md"

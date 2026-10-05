@@ -26,8 +26,9 @@ next-env.d.ts
 npm-debug.log*
 .vercel
 
-# end-to-end tests (logs, traces, reports)
+# end-to-end tests (logs, traces, reports, the run's flaky tests)
 /e2e/.artifacts/
+/e2e/flaky.json
 
 # Lighthouse CI's local working folder
 /.lighthouseci/

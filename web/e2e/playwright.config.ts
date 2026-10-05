@@ -3,12 +3,14 @@
  *
  *   npm run e2e                      # builds the cabinet, starts both servers
  *   E2E_SKIP_BUILD=1 npm run e2e     # reuse the last `next build`
+ *   E2E_SHARD=2/4 npm run e2e        # one CI shard's spec files (support/shards.ts)
  *
  * The API runs in development mode with in-memory storage, so each run starts
  * with only the demo businesses (SEED_DEMO_DATA, used by live.spec.ts; every
  * other test signs up its own owner); login codes are read from its log
  * (e2e/.artifacts/api.log). See support/env.ts for ports and the Chromium
- * override.
+ * override. Tests that pass only on a retry go to e2e/flaky.json and the job
+ * summary; on main a new one fails the run (reporters/flakyReporter.ts).
  */
 
 import { mkdirSync } from "node:fs";
@@ -30,12 +32,24 @@ import {
   WEB_PORT,
   WEB_URL,
 } from "./support/env";
+import { matchSpecs, parseShard, readSpecFiles, specsOfShard } from "./support/shards";
 
 mkdirSync(ARTIFACTS_DIRECTORY, { recursive: true });
 
 const isCI = Boolean(process.env.CI);
 const skipBuild = process.env.E2E_SKIP_BUILD === "1";
 const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
+
+const E2E_DIRECTORY = path.join(WEB_DIRECTORY, "e2e");
+const TOUR_SPEC = "tour-routes.spec.ts";
+/** CI runs the suite in shards, each against its own API (support/shards.ts). */
+const shard = parseShard(process.env.E2E_SHARD);
+const shardSpecs = shard ? specsOfShard(readSpecFiles(E2E_DIRECTORY), shard) : null;
+const runsTour = shardSpecs === null || shardSpecs.includes(TOUR_SPEC);
+const flakyReporter = [
+  "./reporters/flakyReporter.ts",
+  { outputFile: path.join(E2E_DIRECTORY, "flaky.json"), knownFile: path.join(E2E_DIRECTORY, "flaky-known.json") },
+] as const;
 
 /**
  * Login code providers and a database a developer may have in the shell:
@@ -73,8 +87,8 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   reporter: isCI
-    ? [["list"], ["html", { outputFolder: path.join(ARTIFACTS_DIRECTORY, "report"), open: "never" }]]
-    : [["list"]],
+    ? [["list"], ["html", { outputFolder: path.join(ARTIFACTS_DIRECTORY, "report"), open: "never" }], flakyReporter]
+    : [["list"], flakyReporter],
   use: {
     baseURL: WEB_URL,
     locale: "en-US",
@@ -98,18 +112,24 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: /tour-routes\.spec\.ts$/,
+      // Spec files only: e2e/**/*.test.ts are the suite's own unit tests (Vitest).
+      testMatch: shardSpecs ? matchSpecs(shardSpecs) : /\.spec\.ts$/,
+      testIgnore: matchSpecs([TOUR_SPEC]),
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
     },
-    {
-      // Every route of the screenshot tour read from Tbilisi (UTC+4) while
-      // the cabinet's server runs in UTC: a date formatted without its zone
-      // renders differently on the two, and the console-clean gate fails
-      // on React's hydration error (#418).
-      name: "tz-tbilisi",
-      testMatch: /tour-routes\.spec\.ts$/,
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 }, timezoneId: "Asia/Tbilisi" },
-    },
+    ...(runsTour
+      ? [
+          {
+            // Every route of the screenshot tour read from Tbilisi (UTC+4) while
+            // the cabinet's server runs in UTC: a date formatted without its zone
+            // renders differently on the two, and the console-clean gate fails
+            // on React's hydration error (#418).
+            name: "tz-tbilisi",
+            testMatch: matchSpecs([TOUR_SPEC]),
+            use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 }, timezoneId: "Asia/Tbilisi" },
+          },
+        ]
+      : []),
   ],
   webServer: [
     {

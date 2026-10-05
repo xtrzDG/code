@@ -11,7 +11,8 @@ const alias = {
 /**
  * Two projects, one run (`npm test`):
  *
- * - unit: the pure logic (src/**\/*.test.ts) and the e2e reporters, in Node;
+ * - unit: the pure logic (src/**\/*.test.ts) and the e2e suite's own helpers
+ *   (shard plan, flaky-test reporter: e2e/**\/*.test.ts), in Node;
  * - components: React components (src/**\/*.test.tsx) rendered in jsdom with
  *   Testing Library and user-event, in the server's zone (TZ=UTC) unless a
  *   test moves it. src/test/ holds their setup and render helpers.
@@ -25,7 +26,7 @@ export default defineConfig({
         test: {
           name: "unit",
           environment: "node",
-          include: ["src/**/*.test.ts", "e2e/reporters/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "e2e/**/*.test.ts"],
         },
       },
       {
