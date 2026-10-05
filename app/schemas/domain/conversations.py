@@ -41,6 +41,9 @@ from app.schemas.typings.conversations.constrained_integers import (
     LlmTurnSequenceNumber,
     ReplyLatencyMilliseconds,
 )
+from app.schemas.typings.conversations.constrained_strings import (
+    ConversationSummaryText,
+)
 from app.schemas.typings.conversations.prefixed_id import (
     CallId,
     ConversationId,
@@ -101,9 +104,14 @@ class ConversationDocument(BaseDocument):
     the Overview's "Answers worth improving"). The review fields change
     only through `ConversationReviewRepoContract.set_review`; a plain save
     keeps them as stored. All optional, so version 3 rows read as they are.
+
+    Version 5: what the conversation was about (`summary`, at most 300
+    characters, written by a cheap model once it was quiet for two hours)
+    and when (`summarized_at`), the assistant's memory of a returning
+    customer. Optional, so version 4 rows read as they are.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: ConversationId = Field(default_factory=ConversationId)
     business_id: BusinessId
     contact_id: ContactId
@@ -129,6 +137,8 @@ class ConversationDocument(BaseDocument):
     rated_message_id: MessageId | None = None
     improved_at: Microseconds | None = None
     awaits_improvement: AwaitsImprovement = False
+    summary: ConversationSummaryText | None = None
+    summarized_at: Microseconds | None = None
 
 
 class ToolCallRecord(PersistentDocument):

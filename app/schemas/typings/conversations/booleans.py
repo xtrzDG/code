@@ -6,6 +6,8 @@ Example:
 
 AwaitsImprovement = bool
 CanTextCaller = bool
+# The turn's user message carries the customer memory (the first reply).
+CarriesCustomerMemory = bool
 IncludeSandboxConversations = bool
 IsAfterHours = bool
 IsAnswerCorrected = bool

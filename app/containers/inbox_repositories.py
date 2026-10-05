@@ -4,6 +4,9 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
+from app.repositories.assistant_settings_repository import (
+    AssistantSettingsRepository,
+)
 from app.repositories.inbox_repositories import (
     ConversationNoteRepository,
     InboxSettingsRepository,
@@ -33,4 +36,9 @@ class InboxRepositoriesContainer(containers.DeclarativeContainer):
     inbox_settings_repo: Singleton[InboxSettingsRepository] = Singleton(
         InboxSettingsRepository,
         collection=inbox_collections.inbox_settings_collection,
+    )
+    # How the assistant remembers returning customers (1121).
+    assistant_settings_repo: Singleton[AssistantSettingsRepository] = Singleton(
+        AssistantSettingsRepository,
+        collection=inbox_collections.assistant_settings_collection,
     )

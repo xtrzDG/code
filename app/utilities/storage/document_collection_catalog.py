@@ -73,6 +73,7 @@ from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 from app.utilities.storage.invoicing_collections import INVOICING_COLLECTIONS
+from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
@@ -270,6 +271,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *TEACHING_COLLECTIONS,  # The owner's own checks (1112).
     *PRIVACY_COLLECTIONS,  # The suppression list, full exports (1113).
     *INVOICING_COLLECTIONS,  # Billing details, invoice numbers (1114).
+    *MEMORY_COLLECTIONS,  # How the assistant remembers customers (1121).
 )
 
 
