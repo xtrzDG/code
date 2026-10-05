@@ -39,6 +39,8 @@ export const platformQueryKeys = {
     metrics: (filters: string) => ["admin", "metrics", filters] as const,
     /** The platform's health (GET /v1/admin/system). */
     system: () => ["admin", "system"] as const,
+    /** The providers' spend of the UTC day (GET /v1/admin/spend). */
+    spend: () => ["admin", "spend"] as const,
     /** The dead letters of the background queue. */
     deadJobs: () => ["admin", "jobs", "dead"] as const,
     /** The recorded incidents, newest first. */

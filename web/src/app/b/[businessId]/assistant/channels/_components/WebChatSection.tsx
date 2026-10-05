@@ -7,10 +7,14 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
 
 import type { ChannelView } from "../_lib/channels";
+import { AllowedSitesCard } from "./AllowedSitesCard";
 import { WidgetAppearanceCard } from "./WidgetAppearanceCard";
 import { WidgetSnippetCard } from "./WidgetSnippetCard";
 
-/** The switched-on website chat: its look with a live preview, and its code with where to paste it. */
+/**
+ * The switched-on website chat: its look with a live preview, its code with
+ * where to paste it, and the websites allowed to show it.
+ */
 export function WebChatSection({
   channel,
   canManage,
@@ -41,6 +45,7 @@ export function WebChatSection({
         onSaved={onSaved}
       />
       <WidgetSnippetCard snippet={snippet} />
+      <AllowedSitesCard canManage={canManage} />
     </section>
   );
 }

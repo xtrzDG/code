@@ -8,9 +8,16 @@ from app.orchestrators.conversations.failure_handoffs import (
     FAILURE_HANDOFF_REASONS,
     build_failure_summary,
 )
+from app.orchestrators.conversations.spend_brake import (
+    SpendCheck,
+    check_turn_spend,
+    on_cheaper_model,
+    paused_reply,
+)
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversation_engine import TurnGate
 from app.schemas.constants.handoffs import HandoffUrgency
+from app.schemas.constants.spend import SpendLevel
 from app.schemas.dto.conversation_engine import (
     GeneratedReply,
     PreparedTurn,
@@ -52,9 +59,12 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
     claims, other people's contact details). When the model refuses, is
     unavailable, cannot finish or keeps what the guard holds back, the
     conversation goes to a colleague (unless the model already handed it
-    over) and the customer hears so in their language. Finally the reply is
-    stored with its usage; on the phone the call ends after a handoff or the
-    caller's goodbye.
+    over) and the customer hears so in their language. Before the model is
+    asked, the spend guard checks the business's spend of its day: past
+    its soft limit the turn uses a cheaper model, past its hard limit the
+    conversation goes to the team without a model call (`spend_brake`).
+    Finally the reply is stored with its usage; on the phone the call ends
+    after a handoff or the caller's goodbye.
     """
 
     def __init__(
@@ -68,7 +78,9 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         answer_customer_signal: UseCaseContract[
             PreparedTurn, CustomerSignalReply | None
         ],
+        check_spend: SpendCheck | None = None,
     ) -> None:
+        self._check_spend: SpendCheck | None = check_spend
         self._answer_customer_signal: UseCaseContract[
             PreparedTurn, CustomerSignalReply | None
         ] = answer_customer_signal
@@ -127,7 +139,12 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
         if turn.gate is not TurnGate.ANSWER:
             return self._build_gated_record(turn, is_phone)
 
-        generated: GeneratedReply = self._generate_reply.run(turn)
+        verdict = check_turn_spend(self._check_spend, turn)
+        if verdict is not None and verdict.level is SpendLevel.HARD_LIMIT:
+            generated: GeneratedReply = paused_reply(turn)
+        else:
+            turn = on_cheaper_model(turn, verdict)
+            generated = self._generate_reply.run(turn)
         text: MessageText | None = generated.text
         handoff_ids: list[HandoffId] = list(generated.created_handoff_ids)
         if generated.failure is not None:

@@ -2132,7 +2132,7 @@
         "type": "string"
       },
       "AuditAction": {
-        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business. SUPPORT_ACCESS_START and\nSUPPORT_ACCESS_END bound a platform admin's time-boxed look into a\nclient's cabinet (with the reason, the address and how it ended);\nSESSION_REVOKED (a person ended sessions of theirs) and\nPLATFORM_ADMIN_CHANGED (the admin team changed) name no business.",
+        "description": "Operation on personal data recorded in the audit log (concept section\n10), a launch decision that must stay traceable (publishing a version\nthat has not passed its autotests), or a change of a person's\ntwo-factor sign-in (an authenticator added or removed, new recovery\ncodes): MFA_CHANGED entries name no business. SUPPORT_ACCESS_START and\nSUPPORT_ACCESS_END bound a platform admin's time-boxed look into a\nclient's cabinet (with the reason, the address and how it ended);\nSESSION_REVOKED (a person ended sessions of theirs) and\nPLATFORM_ADMIN_CHANGED (the admin team changed) name no business.\nSPEND_LIMIT_REACHED: the business passed its hard daily spend limit and\nits assistant only takes messages for the team until the day ends.",
         "enum": [
           "view",
           "create",
@@ -2147,7 +2147,8 @@
           "support_access_start",
           "support_access_end",
           "session_revoked",
-          "platform_admin_changed"
+          "platform_admin_changed",
+          "spend_limit_reached"
         ],
         "title": "AuditAction",
         "type": "string"
@@ -4747,6 +4748,86 @@
           "require_mfa_for_members"
         ],
         "title": "BusinessSecurityView",
+        "type": "object"
+      },
+      "BusinessSpendLimitsView": {
+        "additionalProperties": false,
+        "description": "A client's own daily spend limits (None: the plan's default).",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "hard_limit_micro_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Limit Micro Usd"
+          },
+          "soft_limit_micro_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Soft Limit Micro Usd"
+          }
+        },
+        "required": [
+          "business_id"
+        ],
+        "title": "BusinessSpendLimitsView",
+        "type": "object"
+      },
+      "BusinessSpendMark": {
+        "additionalProperties": false,
+        "description": "A business that passed a limit today, for the admin's spend tile.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/SpendLevel"
+          },
+          "limit_micro_usd": {
+            "minimum": 0.0,
+            "title": "Limit Micro Usd",
+            "type": "integer"
+          },
+          "reached_at": {
+            "title": "Reached At",
+            "type": "integer"
+          },
+          "spend_micro_usd": {
+            "minimum": 0.0,
+            "title": "Spend Micro Usd",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "business_name",
+          "level",
+          "spend_micro_usd",
+          "limit_micro_usd",
+          "reached_at"
+        ],
+        "title": "BusinessSpendMark",
         "type": "object"
       },
       "BusinessStatus": {
@@ -18324,7 +18405,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality).",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -18334,7 +18415,9 @@
           "tool_errors",
           "stale_worker",
           "otp_cap_trips",
-          "quality_drop"
+          "quality_drop",
+          "spend_spike",
+          "spend_budget"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -18373,6 +18456,75 @@
           "result"
         ],
         "title": "PlatformBotWebhookOutcome",
+        "type": "object"
+      },
+      "PlatformSpendView": {
+        "additionalProperties": false,
+        "description": "The admin overview's spend tile: the platform's provider spend of the\ncurrent UTC day by provider, the daily mean of the 7 days before, the\ndaily budget (when set) and how much of it is used, and the businesses\nthat passed one of their limits today.",
+        "properties": {
+          "braked_businesses": {
+            "items": {
+              "$ref": "#/components/schemas/BusinessSpendMark"
+            },
+            "title": "Braked Businesses",
+            "type": "array"
+          },
+          "budget_micro_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Micro Usd"
+          },
+          "budget_used_percent": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Used Percent"
+          },
+          "day": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "title": "Day",
+            "type": "string"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderSpend"
+            },
+            "title": "Providers",
+            "type": "array"
+          },
+          "total_micro_usd": {
+            "minimum": 0.0,
+            "title": "Total Micro Usd",
+            "type": "integer"
+          },
+          "week_daily_mean_micro_usd": {
+            "minimum": 0.0,
+            "title": "Week Daily Mean Micro Usd",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "total_micro_usd",
+          "providers",
+          "week_daily_mean_micro_usd"
+        ],
+        "title": "PlatformSpendView",
         "type": "object"
       },
       "PlatformStatusView": {
@@ -18820,6 +18972,26 @@
           "profile"
         ],
         "title": "ProfileWizardView",
+        "type": "object"
+      },
+      "ProviderSpend": {
+        "additionalProperties": false,
+        "description": "What the platform owes one provider for a window (planned prices fill gaps).",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/SpendProvider"
+          },
+          "spend_micro_usd": {
+            "minimum": 0.0,
+            "title": "Spend Micro Usd",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provider",
+          "spend_micro_usd"
+        ],
+        "title": "ProviderSpend",
         "type": "object"
       },
       "PublicDemoCard": {
@@ -20857,6 +21029,28 @@
         ],
         "title": "SourceRowView",
         "type": "object"
+      },
+      "SpendLevel": {
+        "description": "Where one business's provider spend of its day stands against its\nlimits: under both (NORMAL), past the soft limit (its assistant answers\non a cheaper model; the owner and the platform team are told once), or\npast the hard limit (the assistant only takes messages for the team\nuntil the day ends; told once, and audited).",
+        "enum": [
+          "normal",
+          "soft_limit",
+          "hard_limit"
+        ],
+        "title": "SpendLevel",
+        "type": "string"
+      },
+      "SpendProvider": {
+        "description": "Who the platform pays for a kind of metered usage: the language model\n(OpenAI or Anthropic tokens), the voice agent (ElevenLabs minutes), the\ntelephony of a transferred call, WhatsApp templates (Meta) and the\ntranscription of voice notes.",
+        "enum": [
+          "language_model",
+          "voice",
+          "telephony",
+          "whatsapp",
+          "transcription"
+        ],
+        "title": "SpendProvider",
+        "type": "string"
       },
       "StaffAlertEvent": {
         "description": "What staff can be told about: a conversation passed to a person, a new\nrequest, a booking (new, moved or cancelled). Each staff contact and\neach cabinet user chooses which of them reach them.",
@@ -24012,6 +24206,43 @@
         "title": "WhatsAppStaffTemplateView",
         "type": "object"
       },
+      "WidgetAllowedOriginsView": {
+        "additionalProperties": false,
+        "description": "The websites allowed to show the chat (origins, in the owner's order),\nwhether the list restricts it at all, and the platform's own pages that\nalways may (the hosted chat page and the cabinet's preview).",
+        "properties": {
+          "always_allowed": {
+            "items": {
+              "maxLength": 2048,
+              "minLength": 10,
+              "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+              "type": "string"
+            },
+            "title": "Always Allowed",
+            "type": "array"
+          },
+          "is_restricted": {
+            "title": "Is Restricted",
+            "type": "boolean"
+          },
+          "origins": {
+            "items": {
+              "maxLength": 2048,
+              "minLength": 10,
+              "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+              "type": "string"
+            },
+            "title": "Origins",
+            "type": "array"
+          }
+        },
+        "required": [
+          "origins",
+          "is_restricted",
+          "always_allowed"
+        ],
+        "title": "WidgetAllowedOriginsView",
+        "type": "object"
+      },
       "WidgetConfigView": {
         "additionalProperties": false,
         "description": "Public configuration the widget script loads before it shows itself.\n\n`business_name` is the name visitors see in the widget header.\n`greetings` holds the first message in the languages the live assistant\nanswers in (the business languages before anything is published) where\na text exists; the widget uses its own text for the others. `accent_color`\nand `position` are the owner's choices (None: the widget's defaults); the\nembed tag's data-color and data-position still win.\n\n`starter_questions` are up to three of the business's FAQ questions per\nlanguage, shown as one-tap chips before the visitor writes;\n`privacy_url` is the business's privacy notice (or the platform's\ndefault one for it; None without CABINET_BASE_URL), linked from the\nfooter; `contact_links` are the other channels, offered on the hosted\nchat page.",
@@ -25873,6 +26104,163 @@
         ]
       }
     },
+    "/v1/admin/clients/{business_id}/spend-limits": {
+      "put": {
+        "operationId": "set_client_spend_limits_v1_admin_clients__business_id__spend_limits_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A business's own daily spend limits in micro-USD; None returns that\nlimit to the plan's default.",
+                "properties": {
+                  "hard_limit_micro_usd": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Hard Limit Micro Usd"
+                  },
+                  "soft_limit_micro_usd": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Soft Limit Micro Usd"
+                  }
+                },
+                "title": "BusinessSpendLimitsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSpendLimitsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Set Client Spend Limits",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/incidents": {
       "get": {
         "operationId": "list_incidents_v1_admin_incidents_get",
@@ -27095,6 +27483,115 @@
           }
         },
         "summary": "Start Key Rotation",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/spend": {
+      "get": {
+        "operationId": "get_admin_spend_v1_admin_spend_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSpendView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Admin Spend",
         "tags": [
           "admin"
         ]
@@ -37629,6 +38126,265 @@
           }
         },
         "summary": "Validate Telegram Token",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/channels/web/allowed-origins": {
+      "get": {
+        "operationId": "get_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetAllowedOriginsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Widget Allowed Origins",
+        "tags": [
+          "channels"
+        ]
+      },
+      "put": {
+        "operationId": "save_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The websites, as the owner types them (at most 20; an empty list lets\nany website show the chat again).",
+                "properties": {
+                  "origins": {
+                    "items": {
+                      "maxLength": 300,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 20,
+                    "title": "Origins",
+                    "type": "array"
+                  }
+                },
+                "title": "WidgetAllowedOriginsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetAllowedOriginsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Save Widget Allowed Origins",
         "tags": [
           "channels"
         ]

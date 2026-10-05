@@ -14,6 +14,7 @@ import { ClientCards } from "./clients/ClientCards";
 import { ClientFiltersBar } from "./clients/ClientFiltersBar";
 import { ClientsTable } from "./clients/ClientsTable";
 import { SummaryTiles } from "./clients/SummaryTiles";
+import { SpendTile } from "./spend/SpendTile";
 
 /**
  * /admin: clients with health, package use, cost and margin. Filters,
@@ -47,6 +48,7 @@ export function AdminClientsScreen() {
         <div className="space-y-6">
           {list.error ? <RefreshFailed error={list.error} onRetry={list.reload} /> : null}
           <SummaryTiles totals={totals} filters={filters} setFilters={setFilters} />
+          <SpendTile />
 
           <Card padded={false}>
             <ClientFiltersBar data={data} filters={filters} setFilters={setFilters} sort={sort} setSort={setSort} nicheName={nicheName} />

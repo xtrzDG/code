@@ -64,6 +64,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       support_access_end: "პლატფორმის მხარდაჭერის წვდომა დასრულდა",
       session_revoked: "მოწყობილობიდან გასვლა",
       platform_admin_changed: "შეიცვალა ადმინისტრატორების გუნდი",
+      spend_limit_reached: "ხარჯების დღიური ლიმიტი ამოიწურა",
     },
     entities: {
       contact: "მომხმარებელი",
@@ -132,6 +133,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       customer_search: "კლიენტების ძიება",
       customer_segment: "კლიენტების სეგმენტი",
       customer_settings: "კლიენტების პარამეტრები",
+      spend_limits: "ხარჯების დღიური ლიმიტები",
     },
   },
   roles: {

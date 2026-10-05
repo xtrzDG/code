@@ -6,6 +6,7 @@ from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.public_booking_routes import build_public_booking_router
 from app.gateways.http.public_chat_routes import build_public_chat_router
 from app.gateways.http.sharing_routes import build_sharing_router
+from app.gateways.http.spend_guard_router_assembly import widget_origin_guard_of
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.gateways.http.widget_handoff_routes import build_widget_handoff_router
 
@@ -28,7 +29,9 @@ def build_sharing_routers(
             set_public_slug_operator=sharing.set_public_slug_operator(),
         ),
         build_public_chat_router(sharing.hosted_chat_operator()),
-        build_widget_handoff_router(sharing.widget_handoff_operator()),
+        build_widget_handoff_router(
+            sharing.widget_handoff_operator(), widget_origin_guard_of(operators)
+        ),
         build_public_booking_router(
             view_operator=booking_links.managed_booking_operator(),
             calendar_operator=booking_links.managed_booking_calendar_operator(),

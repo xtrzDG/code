@@ -26,8 +26,10 @@ from app.repositories.platform_alert_state_repository import (
     PlatformAlertStateRepository,
 )
 from app.repositories.quality_repositories import QualityTotalsRepository
+from app.repositories.spend_guard_repositories import UsageSpendRepository
 from app.repositories.system_health_repository import SystemHealthRepository
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
+from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.conversation_quality import ConversationQualityScoreDocument
@@ -43,12 +45,16 @@ from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.monitoring.constrained_integers import AlertCooldownMinutes
 from app.schemas.typings.monitoring.constrained_strings import AlertChatId
 from app.schemas.typings.platform.constrained_strings import CabinetBaseUrl
+from app.schemas.typings.spend.constrained_integers import (
+    PlatformDailySpendBudgetMicroUsd,
+)
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
 )
+from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.platform_ops.ops_documents import NOW
 
@@ -136,6 +142,10 @@ class OpsWorld:
         self.buckets = InMemoryRateLimitBucketAdapter()
         self.signals = BucketSignalCounterAdapter(self.buckets, self.clock.wall_clock)
         self.queue = RecordingJobQueue()
+        self.usage_events = InMemoryDocumentCollectionAdapter[UsageEventDocument](
+            UsageEventDocument
+        )
+        self.spend_budget: PlatformDailySpendBudgetMicroUsd | None = None
 
     def checks(self) -> PlatformAlertChecks:
         return PlatformAlertChecks(
@@ -143,6 +153,9 @@ class OpsWorld:
             platform_activity_repo=self.activity_repo,
             signal_counter=self.signals,
             quality_totals_repo=QualityTotalsRepository(self.quality_scores),
+            spend_checks=SpendAlertChecks(
+                UsageSpendRepository(self.usage_events), self.spend_budget
+            ),
         )
 
     def alerts_use_case(

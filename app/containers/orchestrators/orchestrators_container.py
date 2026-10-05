@@ -78,6 +78,9 @@ from app.containers.orchestrators.setup_orchestrators import (
 from app.containers.orchestrators.sharing_orchestrators import (
     SharingOrchestratorsContainer,
 )
+from app.containers.orchestrators.spend_guard_orchestrators import (
+    SpendGuardOrchestratorsContainer,
+)
 from app.containers.orchestrators.value_orchestrators import (
     ValueOrchestratorsContainer,
 )
@@ -170,6 +173,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         call_use_cases=use_cases.calls,
         call_orchestrators=calls,
         feedback_use_cases=use_cases.feedback,
+        spend_guard_use_cases=use_cases.spend_guard,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,
@@ -218,6 +222,11 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         PlatformOpsOrchestratorsContainer,
         platform_ops_use_cases=use_cases.platform_ops,
         help_use_cases=use_cases.help,
+    )
+    spend_guard: SpendGuardOrchestratorsContainer = Container(  # type: ignore[assignment]
+        SpendGuardOrchestratorsContainer,
+        spend_guard_use_cases=use_cases.spend_guard,
+        platform_ops_use_cases=use_cases.platform_ops,
     )
     security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
         SecurityOrchestratorsContainer,

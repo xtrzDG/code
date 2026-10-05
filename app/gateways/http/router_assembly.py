@@ -12,7 +12,6 @@ from app.gateways.http.billing_router_assembly import build_billing_routers
 from app.gateways.http.business_routes import build_business_router
 from app.gateways.http.call_router_assembly import build_call_routers
 from app.gateways.http.catalog_routes import build_catalog_router
-from app.gateways.http.channel_routes import build_channel_router
 from app.gateways.http.channel_setup_router_assembly import (
     build_channel_setup_routers,
 )
@@ -32,10 +31,14 @@ from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
 from app.gateways.http.privacy_router_assembly import build_privacy_routers
 from app.gateways.http.profile_routes import build_profile_router
+from app.gateways.http.public_channel_router_assembly import (
+    build_public_channel_router,
+)
 from app.gateways.http.public_site_router_assembly import build_public_site_routers
 from app.gateways.http.resource_routes import build_resource_router
 from app.gateways.http.security_router_assembly import build_security_routers
 from app.gateways.http.sharing_router_assembly import build_sharing_routers
+from app.gateways.http.spend_guard_router_assembly import build_spend_guard_routers
 from app.gateways.http.teaching_router_assembly import build_teaching_routers
 from app.gateways.http.user_authentication import (
     CurrentUserDependency,
@@ -65,12 +68,12 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     operations = operators.operations
     conversations = operators.conversations
     assistants = operators.assistants
-    channels = operators.channels
     platform = operators.platform
     notifications = operators.notifications
     current_user: CurrentUserDependency = build_current_user_dependency(
         accounts.authenticate_user_operator(),
         app_container.utilities.session_assurance(),
+        operators.spend_guard.admit_api_request_operator(),
     )
     business_access_operator = accounts.authorize_business_access_operator()
     return [
@@ -78,17 +81,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         # widget polls (every open chat every 4 s) and webhook bursts are
         # most of the traffic; no other route answers these paths
         # (tests/platform/test_route_matching_order.py).
-        build_channel_router(
-            telegram_webhook_operator=channels.telegram_webhook_operator(),
-            meta_webhook_verification_operator=channels.verify_meta_webhook_operator(),
-            meta_webhook_operator=channels.meta_webhook_operator(),
-            platform_bot_webhook_operator=(
-                channels.handle_platform_bot_update_operator()
-            ),
-            widget_config_operator=channels.get_widget_config_operator(),
-            widget_message_operator=channels.widget_message_operator(),
-            widget_messages_operator=channels.get_widget_messages_operator(),
-        ),
+        build_public_channel_router(operators),
         build_catalog_router(
             list_countries_operator=accounts.list_countries_operator(),
             get_country_profile_operator=accounts.get_country_profile_operator(),
@@ -294,4 +287,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_teaching_routers(operators, current_user),
         *build_memory_routers(operators, current_user),
         *build_customer_routers(operators, current_user),
+        *build_spend_guard_routers(operators, current_user),
     ]

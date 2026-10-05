@@ -22,6 +22,7 @@ from app.schemas.typings.monitoring.constrained_integers import (
 )
 from app.schemas.typings.monitoring.strings import AlertDetailText
 from app.use_cases.admin.alerts.alert_texts import describe_duration, describe_percent
+from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.alerts.stale_workers import (
     find_stale_workers,
     pulse_age_seconds,
@@ -39,9 +40,10 @@ type AlertCheck = Callable[[PlatformAlertRule, Microseconds], AlertObservation]
 class PlatformAlertChecks:
     """
     The checks behind the platform alert rules, each one or two indexed
-    counts across every business, the shared signal counters or the worker
-    pulses. A check that cannot read its figure (the database hiccups) is
-    skipped for this run and logged: the others still run.
+    counts across every business, the shared signal counters, the worker
+    pulses or the platform's spend (`SpendAlertChecks`). A check that cannot
+    read its figure (the database hiccups) is skipped for this run and
+    logged: the others still run.
     """
 
     def __init__(
@@ -50,6 +52,7 @@ class PlatformAlertChecks:
         platform_activity_repo: PlatformActivityRepoContract,
         signal_counter: SignalCounterAdapterContract,
         quality_totals_repo: QualityTotalsRepoContract,
+        spend_checks: SpendAlertChecks,
     ) -> None:
         self._health: SystemHealthRepoContract = system_health_repo
         self._activity: PlatformActivityRepoContract = platform_activity_repo
@@ -65,6 +68,8 @@ class PlatformAlertChecks:
             PlatformAlertCode.STALE_WORKER: self._stale_worker,
             PlatformAlertCode.OTP_CAP_TRIPS: self._otp_cap_trips,
             PlatformAlertCode.QUALITY_DROP: self._quality_drop,
+            PlatformAlertCode.SPEND_SPIKE: spend_checks.spend_spike,
+            PlatformAlertCode.SPEND_BUDGET: spend_checks.spend_budget,
         }
 
     def run(

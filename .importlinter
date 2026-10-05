@@ -89,6 +89,7 @@ modules =
     app.use_cases.search
     app.use_cases.setup
     app.use_cases.sharing
+    app.use_cases.spend_guard
     app.use_cases.telemetry
     app.use_cases.users
     app.use_cases.voice

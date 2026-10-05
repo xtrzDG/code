@@ -16,6 +16,7 @@ from app.containers.use_cases.conversation_use_cases import (
 from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
+from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.conversation_flow import (
@@ -74,6 +75,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     call_use_cases: CallUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     call_orchestrators: CallOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
     feedback_use_cases: FeedbackUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    spend_guard_use_cases: SpendGuardUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Conversation engine: one customer message, one voice tool call.
     conversation_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = (
@@ -86,7 +88,21 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
             localized_text_resolver=utilities.localized_text_resolver,
             storage_scope=utilities.storage_scope,
             answer_customer_signal=feedback_use_cases.answer_customer_signal_use_case,
+            check_spend=spend_guard_use_cases.check_business_spend_use_case,
         )
+    )
+    # Autotests play the same turns without the spend guard: a check must
+    # test the version's own model, and runs have their own limits (one at
+    # a time, 20 a day per business).
+    autotest_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = Factory(
+        ConversationTurnOrchestrator,
+        prepare_turn=conversation_use_cases.prepare_conversation_turn_use_case,
+        generate_reply=conversation_use_cases.generate_assistant_reply_use_case,
+        handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
+        record_reply=conversation_use_cases.record_assistant_reply_use_case,
+        localized_text_resolver=utilities.localized_text_resolver,
+        storage_scope=utilities.storage_scope,
+        answer_customer_signal=feedback_use_cases.answer_customer_signal_use_case,
     )
     voice_tool_call_orchestrator: Factory[VoiceToolCallOrchestratorContract] = Factory(
         VoiceToolCallOrchestrator,
@@ -101,6 +117,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         OwnerTestChatOrchestrator,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         resolve_test_chat_version=conversation_feed_use_cases.resolve_test_chat_version_use_case,
+        admit_owner_action=spend_guard_use_cases.admit_owner_action_use_case,
     )
 
     # --- Voice webhooks.

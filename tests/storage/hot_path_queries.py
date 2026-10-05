@@ -217,6 +217,16 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
         "usage_events_doc_occurred_at_idx",
     ),
     HotQuery(
+        "the platform's provider spend of a day (spend tile, spend alerts)",
+        lambda r: r.usage_spend.sum_platform(
+            Microseconds(BASE_TIME + 4_100_000),
+            Microseconds(BASE_TIME + 4_200_000),
+        ),
+        "usage_events",
+        "usage_events_doc_occurred_at_brin_idx",
+        is_in_business_scope=False,
+    ),
+    HotQuery(
         "purge of expired sessions",
         lambda r: r.sessions.delete_expired(Microseconds(BASE_TIME + 3)),
         "user_sessions",

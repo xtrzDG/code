@@ -24,6 +24,7 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.spend_guard_repositories import UsageSpendRepository
 from app.repositories.user_repositories import (
     OtpChallengeRepository,
     UserRepository,
@@ -79,6 +80,9 @@ class HotPathRepositories:
         self.turns = LlmTurnRepository(self._collection(LlmTurnDocument, "llm_turns"))
         self.calls = CallRepository(self._collection(CallDocument, "calls"))
         self.usage_events = UsageEventRepository(
+            self._collection(UsageEventDocument, "usage_events")
+        )
+        self.usage_spend = UsageSpendRepository(
             self._collection(UsageEventDocument, "usage_events")
         )
         self.manager_links = ManagerTelegramLinkRepository(

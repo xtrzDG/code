@@ -32,6 +32,7 @@ from app.containers.use_cases.public_demo_use_cases import (
 )
 from app.containers.use_cases.reply_speed_use_cases import ReplySpeedUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
+from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -159,6 +160,18 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,
+    )
+    # The spend guard: spend limits, owner action and API limits, chat
+    # websites, the platform's spend (1142).
+    spend_guard: SpendGuardUseCasesContainer = Container(  # type: ignore[assignment]
+        SpendGuardUseCasesContainer,
+        config=config,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
     )
     bookings: BookingUseCasesContainer = Container(  # type: ignore[assignment]
         BookingUseCasesContainer,

@@ -136,6 +136,11 @@ export default defineConfig({
         // The run's first platform admin signs in once per admin spec file
         // (and again after a worker restart): lift the per-address cap too.
         OTP_SENDS_PER_DESTINATION_PER_HOUR: "100000",
+        // Every request comes from 127.0.0.1 and one test person moves fast:
+        // lift the generic per-address and per-person request limits.
+        API_REQUESTS_PER_IP_PER_MINUTE: "100000",
+        API_REQUESTS_PER_USER_PER_MINUTE: "100000",
+        API_EXPORTS_PER_USER_PER_MINUTE: "100000",
         // The run's first platform admin (the list only bootstraps the first
         // SUPER admin); the other test admins (admin-metrics.spec.ts,
         // two-factor.spec.ts, admin-system.spec.ts) are added to the team

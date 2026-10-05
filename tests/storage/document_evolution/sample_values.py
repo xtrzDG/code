@@ -71,6 +71,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "ReviewLinkToken": "q3Jd8sLq0Pz-Xb7W2nVc1A",
     "SeasonDay": "06-15",
     "StatusDay": "2026-09-21",
+    "SpendDay": "2026-09-21",
+    "PublicBaseUrl": "https://cafe-batumi.example.com",
     "SessionUserAgent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"

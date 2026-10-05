@@ -19,6 +19,7 @@ from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
     WIDGET_SESSION_KEY_HEADER,
 )
+from app.gateways.http.widget_origin_guard import WidgetOriginGuard
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelWebhookOutcome,
     ChannelWebhookPayload,
@@ -85,6 +86,7 @@ def build_channel_router(
         WidgetMessagesQuery,
         WidgetMessagesView,
     ],
+    widget_origin_guard: WidgetOriginGuard | None = None,
 ) -> APIRouter:
     """
     Routes (no bearer token; each is authenticated by its platform):
@@ -101,9 +103,12 @@ def build_channel_router(
                                                           messages (header
                                                           X-Widget-Session-Key,
                                                           ?after=<message id>)
+    The widget routes answer 403 to a website the business does not allow
+    (`widget_origin_guard`).
     """
 
     router = APIRouter(tags=["channels"], responses=standard_error_responses())
+    guarded = [] if widget_origin_guard is None else [Depends(widget_origin_guard)]
 
     @router.post(TELEGRAM_WEBHOOK_PATH_TEMPLATE)
     def receive_telegram_webhook(
@@ -174,7 +179,7 @@ def build_channel_router(
             headers=WIDGET_CORS_HEADERS,
         )
 
-    @router.get(WIDGET_CONFIG_PATH)
+    @router.get(WIDGET_CONFIG_PATH, dependencies=guarded)
     def get_widget_config(business_id: str, response: Response) -> WidgetConfigView:
         response.headers.update(WIDGET_CORS_HEADERS)
         return widget_config_operator.operate(
@@ -185,6 +190,7 @@ def build_channel_router(
         WIDGET_MESSAGES_PATH,
         status_code=status.HTTP_202_ACCEPTED,
         openapi_extra=describe_json_body(WidgetMessageRequest),
+        dependencies=guarded,
     )
     def send_widget_message(
         request: Request,
@@ -201,8 +207,9 @@ def build_channel_router(
             )
         )
 
-    # Every open chat polls every 4 s: the answer is serialized here, so
-    # the request makes one hop to a request thread, not two.
+    # Every open chat polls every 4 s: the answer is serialized here, and
+    # the origin check runs here too, so the request makes one hop to a
+    # request thread, not two (or three).
     @router.get(WIDGET_MESSAGES_PATH, response_model=WidgetMessagesView)
     def list_widget_messages(
         request: Request,
@@ -210,6 +217,8 @@ def build_channel_router(
         session_key: Annotated[str, Header(alias=WIDGET_SESSION_KEY_HEADER)],
         after: Annotated[str | None, Query()] = None,
     ) -> Response:
+        if widget_origin_guard is not None:
+            widget_origin_guard(request, business_id)
         view: WidgetMessagesView = widget_messages_operator.operate(
             WidgetMessagesQuery(
                 business_id=parse_path_identifier(business_id, BusinessId, "Chat"),

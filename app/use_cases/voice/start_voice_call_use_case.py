@@ -20,11 +20,13 @@ from app.contracts.repositories.knowledge_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.spend import SpendLevel
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.conversations import CallGreeting, CallGreetingRequest
+from app.schemas.dto.spend_guard import SpendCheckRequest, SpendVerdict
 from app.schemas.dto.voice_webhooks import (
     CallInitiationData,
     CallInitiationWebhookRequest,
@@ -71,7 +73,10 @@ class StartVoiceCallUseCase(
     is open now (only then may it put a caller through to staff), the
     business-local date and time with the next days and the time zone, and
     for a caller known by their verified phone, their name and next booking
-    (`call_context`).
+    (`call_context`). Past its hard daily spend limit the business takes no
+    calls on the voice agent until its midnight (the spend guard): the call
+    is refused like a switched-off phone assistant, and the missed-call
+    flow texts the caller back.
     """
 
     def __init__(
@@ -90,7 +95,11 @@ class StartVoiceCallUseCase(
         phone_number_parser: PhoneNumberParserContract,
         build_call_greeting: UseCaseContract[CallGreetingRequest, CallGreeting],
         app_settings: AppSettings,
+        check_spend: UseCaseContract[SpendCheckRequest, SpendVerdict] | None = None,
     ) -> None:
+        self._check_spend: UseCaseContract[SpendCheckRequest, SpendVerdict] | None = (
+            check_spend
+        )
         self._business_repo: BusinessRepoContract = business_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
             assistant_version_repo
@@ -140,6 +149,8 @@ class StartVoiceCallUseCase(
         if refusal is not None:
             raise ConflictError(refusal)
 
+        self._refuse_past_hard_limit(business)
+
         caller_number: RawPhoneNumberInput | None = (
             self._voice_webhook_adapter.parse_call_initiation(input_data.body)
         )
@@ -178,6 +189,19 @@ class StartVoiceCallUseCase(
                 now_seconds,
             ),
         )
+
+    def _refuse_past_hard_limit(self, business: BusinessDocument) -> None:
+        if self._check_spend is None:
+            return
+
+        verdict: SpendVerdict = self._check_spend.run(
+            SpendCheckRequest(business=business, now=self._wall_clock.now_unix())
+        )
+        if verdict.level is SpendLevel.HARD_LIMIT:
+            raise ConflictError(
+                "The business reached its daily spend limit: the voice assistant "
+                "takes no calls until its midnight."
+            )
 
     def _is_open_now(self, business: BusinessDocument, now_seconds: int) -> bool:
         """Inside the business's opening hours (special days included)."""

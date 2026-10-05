@@ -47,6 +47,9 @@ from app.containers.adapters.rate_collections_container import (
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,
 )
+from app.containers.adapters.spend_guard_collections_container import (
+    SpendGuardCollectionsContainer,
+)
 from app.containers.adapters.value_collections_container import (
     ValueCollectionsContainer,
 )
@@ -107,6 +110,7 @@ COLLECTION_CONTAINERS = (
     PrivacyCollectionsContainer,
     invoicing.InvoicingCollectionsContainer,
     LegalCollectionsContainer,
+    SpendGuardCollectionsContainer,
 )
 
 

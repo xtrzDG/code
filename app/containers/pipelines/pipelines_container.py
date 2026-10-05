@@ -40,6 +40,9 @@ from app.containers.pipelines.public_demo_pipelines import (
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
 from app.containers.pipelines.sharing_pipelines import SharingPipelinesContainer
+from app.containers.pipelines.spend_guard_pipelines import (
+    SpendGuardPipelinesContainer,
+)
 from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
@@ -146,6 +149,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     platform_ops: PlatformOpsPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformOpsPipelinesContainer,
         platform_ops=orchestrators.platform_ops,
+    )
+    spend_guard: SpendGuardPipelinesContainer = Container(  # type: ignore[assignment]
+        SpendGuardPipelinesContainer,
+        spend_guard=orchestrators.spend_guard,
     )
     security: SecurityPipelinesContainer = Container(  # type: ignore[assignment]
         SecurityPipelinesContainer,

@@ -61,6 +61,8 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       stale_worker: "Обработчик замолчал",
       otp_cap_trips: "Достигнут лимит кодов входа",
       quality_drop: "Качество разговоров снизилось",
+      spend_spike: "Всплеск расходов",
+      spend_budget: "Дневной бюджет почти исчерпан",
     },
   },
   workers: {

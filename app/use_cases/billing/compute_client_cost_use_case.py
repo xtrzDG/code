@@ -36,9 +36,6 @@ from app.schemas.typings.billing.constrained_integers import (
 from app.schemas.typings.billing.integers import MarginAmountMinor
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.use_cases.billing.planned_provider_costs import (
-    PLANNED_MONTHLY_PROVIDER_COSTS,
-)
 from app.use_cases.shared.billing_records import find_current_subscription
 from app.utilities.billing.client_cost_math import (
     LLM_USAGE_KINDS,
@@ -49,6 +46,9 @@ from app.utilities.billing.client_cost_math import (
     convert_amount,
     summarize_usage_costs,
     to_minor_units,
+)
+from app.utilities.billing.planned_provider_costs import (
+    PLANNED_MONTHLY_PROVIDER_COSTS,
 )
 from app.utilities.money.money_math import get_currency_minor_unit_digits
 

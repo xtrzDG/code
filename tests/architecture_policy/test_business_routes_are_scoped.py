@@ -64,6 +64,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "platform_ops.list_incidents_operator": "platform admin's incident log",
     "platform_ops.record_maintenance_run_operator": "backup CLIs' run log",
     "platform_ops.check_channel_credentials_operator": "Meta token check job",
+    "spend_guard.get_platform_spend_operator": "platform admin's spend tile",
     "platform_ops.sample_conversation_quality_operator": (
         "nightly quality sample over every business"
     ),

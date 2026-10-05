@@ -67,6 +67,40 @@ Spec: `d7662b3200ec3235`
   platform's messages to the visitor (`author: system`): a booking's
   written confirmation with its manage link.
 
+## 2026-10-05 — spend guard: daily spend limits, allowed websites, generic request limits
+
+Spec: `6a1f5ebeb3c3ff1a`
+
+- **Added** `GET·PUT /v1/businesses/{business_id}/channels/web/allowed-origins`
+  (team members read, the owner changes): the websites (scheme, host and
+  port, no path; at most 20) that may show the business's website chat.
+  `WidgetAllowedOriginsView` has `origins`, `is_restricted` and
+  `always_allowed` (the hosted chat page and the cabinet's preview). An
+  empty list lets any website show the chat, as before.
+- **Changed** `/v1/widget/{business_id}/*` (and the hosted page's
+  handoff) answers 403 `access_denied` to a request whose page (`Origin`,
+  else `Referer`) is not one of the business's allowed websites, once the
+  business lists any. Requests without either header, the hosted chat page
+  and the cabinet's preview are never refused.
+- **Added** `GET /v1/admin/spend` (platform admin): the platform's provider
+  spend of the current UTC day by provider, the daily mean of the 7 days
+  before, the daily budget and how much of it is used, and the clients that
+  passed a spend limit today (`PlatformSpendView`).
+- **Added** `PUT /v1/admin/clients/{business_id}/spend-limits` (platform
+  admin, operations): a client's own daily soft and hard spend limits in
+  micro-USD; `null` returns a limit to the plan's default.
+- **Changed** every signed-in request counts against generic limits
+  (`API_REQUESTS_PER_USER_PER_MINUTE`, default 600 a minute per person;
+  exports `API_EXPORTS_PER_USER_PER_MINUTE`, default 30), and requests
+  without a valid token against `API_REQUESTS_PER_IP_PER_MINUTE` (default
+  120 a minute per address; the website chat, webhooks, the landing demos
+  and health checks have limits of their own). Past a limit: 429
+  `rate_limited` with `Retry-After`.
+- **Changed** the owner's test chat (30 messages a minute per person),
+  menu import (10 an hour per business) and autotest runs (one running and
+  20 a day per business) answer 429 `rate_limited` with `Retry-After` past
+  their limits.
+
 ## 2026-10-05 — wave 13 together: day 0, one story for updates, the landing page, trust fixes
 
 Spec: `f6fb07c0d144fbd5`

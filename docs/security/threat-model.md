@@ -63,7 +63,7 @@ access review (`docs/security/access-review.md`).
 | 10 | Stolen database dump reveals channel tokens or recordings | I | B5, B6 | Channel and calendar tokens sealed with the key ring; recordings encrypted per business in object storage; key rotation | `app/adapters/security/secret_cipher_adapter.py`, `app/utilities/security/recording_encryption.py`, `app/utilities/security/key_ring.py` | `tests/security/test_key_ring.py`, `tests/compliance/test_recording_encryption.py` |
 | 11 | Backups leak or cannot be restored | I, D | B6 | Backups encrypted with age before leaving Render, private key held only by the restore drill and escrow, retention 30 days / 12 months | `app/use_cases/maintenance/backups/` | `tests/backups/test_backup_keys_and_retention.py`, `tests/backups/test_age_format.py` |
 | 12 | Cross-site attacks on the cabinet (XSS, clickjacking) | T, I | B2 | Nonce-based CSP, frame-ancestors none, COOP and CORP, HSTS; Markdown rendered as text | `web/src/server/contentSecurityPolicy.ts`, `app/gateways/http/middleware/security_headers_middleware.py` | `web/src/server/contentSecurityPolicy.test.ts`, `web/e2e/security.spec.ts`, `tests/security/test_api_security_headers.py` |
-| 13 | Oversized bodies or floods exhaust the service | D | B1, B3 | Per-route body limits; shared rate limits for the widget and sign-in; bounded model concurrency and turn slots | `app/gateways/http/middleware/body_size_limit_middleware.py`, `web/src/server/bodyLimits.ts`, `app/registries/limits/request_rate_limit_registry.py` | `tests/security/test_api_body_limits.py`, `web/src/server/bodyLimits.test.ts`, `tests/channels/test_widget_rate_limits.py`, `tests/platform/test_turn_slots.py` |
+| 13 | Oversized bodies, floods or a copied widget run up the service and its bills | D | B1, B3, B6 | Per-route body limits; shared rate limits for the widget and sign-in; generic limits per person and per address (429 with Retry-After); owner action limits (test chat, menu import, autotests); allowed websites per business for the website chat; daily spend limits per business (cheaper model, then requests only) and the platform's spend alerts; call length and silence caps; bounded model concurrency and turn slots | `app/gateways/http/middleware/body_size_limit_middleware.py`, `web/src/server/bodyLimits.ts`, `app/registries/limits/request_rate_limit_registry.py`, `app/gateways/http/middleware/anonymous_request_limit_middleware.py`, `app/use_cases/spend_guard/check_business_spend_use_case.py`, `app/use_cases/spend_guard/check_widget_origin_use_case.py` | `tests/security/test_api_body_limits.py`, `web/src/server/bodyLimits.test.ts`, `tests/channels/test_widget_rate_limits.py`, `tests/platform/test_turn_slots.py`, `tests/spend_guard/test_request_limits.py`, `tests/spend_guard/test_spend_limits.py`, `tests/spend_guard/test_widget_origins.py` |
 | 14 | Personal data ends up in logs | I | B3 | Access log redaction of tokens and query values | `app/gateways/http/access_log_redaction.py` | `tests/platform/test_access_log_redaction.py` |
 | 15 | A new provider receives data the DPA does not name | I | B6 | Every client package maps to a sub-processor entry; changes announced 30 days ahead and audited | `app/registries/legal/subprocessor_catalog.py`, `app/use_cases/legal/send_subprocessor_notices_use_case.py` | `tests/legal/test_client_modules.py`, `tests/legal/test_subprocessor_notices.py` |
 | 16 | A compromised dependency or action ships in an image | T, E | B9 | Actions pinned to SHAs; pip-audit, npm audit, gitleaks, bandit, CodeQL, Trivy in CI; Dependabot | `.github/workflows/ci.yml`, `SECURITY.md` | `tests/platform/test_ci_workflows.py` |
@@ -89,14 +89,17 @@ access review (`docs/security/access-review.md`).
   are counted by updating an entry. It is a trace, not evidence a person
   cannot dispute (row 7). Closed by R13-AUDIT-TRAIL (append-only, hash-chained
   log shipped outside the application's database).
-- The website widget can be embedded on any site: its API accepts every
-  origin, so someone can put a business's assistant on their own page and
-  spend that business's conversations. Closed by R12-ABUSE-SPEND-GUARD
-  (allowed sites per business).
-- No spend caps: a flood of conversations, calls or SMS is limited only by
-  rate limits, not by a monthly ceiling per business or for the platform.
-  Closed by R12-ABUSE-SPEND-GUARD (per-business and platform budgets with
-  alerts).
+- The website chat's allowed sites are opt-in: a business without a list
+  still serves its chat on any site, and the check reads `Origin` (else
+  `Referer`), which only browsers set honestly. A script without either
+  header passes; the widget's limits per visitor, network and business and
+  the business's daily spend limit bound it (row 13).
+- Spend limits are checked before each model turn and call against the
+  business's day: a turn or call already under way finishes past the
+  limit, and a cost a provider reports late is counted at the planned
+  price until it arrives. The platform's budget only alerts (80%); the
+  stop is each business's hard limit and the providers' own spend limits
+  (docs/operations/runbooks/spend-spike.md).
 - No account deletion in the cabinet: a person cannot delete their account,
   nor an owner the business with all its data; it is done by the platform
   team on request (DPA section 13). Closed by R15-ACCOUNT-DELETION.

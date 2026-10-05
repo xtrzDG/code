@@ -8,6 +8,9 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.spend_guard_use_cases import (
+    admit_owner_action_factory,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.assistants.assistant_commands import (
@@ -116,6 +119,8 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         plan_autotest_scenarios=plan_autotest_scenarios_use_case,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+        admit_owner_action=admit_owner_action_factory(registries, time_provider),
+        assistant_apply_repo=repositories.assistant_apply_repo,
     )
     enqueue_autotest_run_use_case: Factory[
         UseCaseContract[AutotestRunPlan, AutotestRunView]

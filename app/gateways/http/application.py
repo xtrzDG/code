@@ -9,6 +9,10 @@ from starlette.types import Lifespan
 from app.contracts.observability import ErrorReportingFacilitatorContract
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.middleware.anonymous_request_limit_middleware import (
+    AdmitRequest,
+    AnonymousRequestLimitMiddleware,
+)
 from app.gateways.http.middleware.body_size_limit_middleware import (
     BodySizeLimitMiddleware,
 )
@@ -43,6 +47,7 @@ def build_http_application(
     cors_allowed_origins: Sequence[PublicBaseUrl],
     lifespan: Lifespan[FastAPI] | None = None,
     environment: DeploymentEnvironment = DeploymentEnvironment.DEVELOPMENT,
+    anonymous_request_admission: AdmitRequest | None = None,
 ) -> FastAPI:
     """
     Build the HTTP application.
@@ -57,7 +62,9 @@ def build_http_application(
     requests hold all of them. `lifespan` runs startup and shutdown work (see
     `app.main`). Request bodies are limited per route (413), every answer
     carries the security headers, and in production the API description
-    (/docs, /openapi.json) is not served and HSTS is sent.
+    (/docs, /openapi.json) is not served and HSTS is sent. With
+    `anonymous_request_admission`, requests without a token count against
+    their client network's generic limit (429 with Retry-After).
     """
 
     is_production: bool = environment is DeploymentEnvironment.PRODUCTION
@@ -101,6 +108,11 @@ def build_http_application(
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type", REQUEST_ID_HEADER],
+        )
+
+    if anonymous_request_admission is not None:
+        http_application.add_middleware(
+            AnonymousRequestLimitMiddleware, admit=anonymous_request_admission
         )
 
     http_application.add_middleware(WidgetCorsMiddleware)

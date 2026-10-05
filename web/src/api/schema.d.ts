@@ -124,6 +124,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/clients/{business_id}/spend-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Client Spend Limits */
+        put: operations["set_client_spend_limits_v1_admin_clients__business_id__spend_limits_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/incidents": {
         parameters: {
             query?: never;
@@ -238,6 +255,23 @@ export interface paths {
         put?: never;
         /** Start Key Rotation */
         post: operations["start_key_rotation_v1_admin_security_encryption_keys_rotate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Admin Spend */
+        get: operations["get_admin_spend_v1_admin_spend_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1165,6 +1199,24 @@ export interface paths {
         put?: never;
         /** Validate Telegram Token */
         post: operations["validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/channels/web/allowed-origins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Widget Allowed Origins */
+        get: operations["get_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_get"];
+        /** Save Widget Allowed Origins */
+        put: operations["save_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4623,9 +4675,11 @@ export interface components {
          *     client's cabinet (with the reason, the address and how it ended);
          *     SESSION_REVOKED (a person ended sessions of theirs) and
          *     PLATFORM_ADMIN_CHANGED (the admin team changed) name no business.
+         *     SPEND_LIMIT_REACHED: the business passed its hard daily spend limit and
+         *     its assistant only takes messages for the team until the day ends.
          * @enum {string}
          */
-        AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge" | "publish_untested" | "mfa_changed" | "support_access_start" | "support_access_end" | "session_revoked" | "platform_admin_changed";
+        AuditAction: "view" | "create" | "update" | "delete" | "export" | "admin_access" | "login" | "retention_purge" | "publish_untested" | "mfa_changed" | "support_access_start" | "support_access_end" | "session_revoked" | "platform_admin_changed" | "spend_limit_reached";
         /**
          * AuditLogEntryView
          * @description One operation on personal data.
@@ -5545,6 +5599,35 @@ export interface components {
             /** Require Mfa For Members */
             require_mfa_for_members: boolean;
             viewer_auth_level?: components["schemas"]["AuthLevel"] | null;
+        };
+        /**
+         * BusinessSpendLimitsView
+         * @description A client's own daily spend limits (None: the plan's default).
+         */
+        BusinessSpendLimitsView: {
+            /** Business Id */
+            business_id: string;
+            /** Hard Limit Micro Usd */
+            hard_limit_micro_usd?: number | null;
+            /** Soft Limit Micro Usd */
+            soft_limit_micro_usd?: number | null;
+        };
+        /**
+         * BusinessSpendMark
+         * @description A business that passed a limit today, for the admin's spend tile.
+         */
+        BusinessSpendMark: {
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name: string;
+            level: components["schemas"]["SpendLevel"];
+            /** Limit Micro Usd */
+            limit_micro_usd: number;
+            /** Reached At */
+            reached_at: number;
+            /** Spend Micro Usd */
+            spend_micro_usd: number;
         };
         /**
          * BusinessStatus
@@ -10973,10 +11056,12 @@ export interface components {
          *     tools fail. STALE_WORKER: a worker of the current release stopped
          *     beating. OTP_CAP_TRIPS: a platform cap refused login codes.
          *     QUALITY_DROP: the judge's scores of real conversations fell against the
-         *     week before (production quality).
+         *     week before (production quality). SPEND_SPIKE: today's provider spend
+         *     is far above the daily mean of the week before. SPEND_BUDGET: today's
+         *     provider spend passed 80 % of the platform's daily budget.
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -10996,6 +11081,29 @@ export interface components {
          */
         PlatformBotWebhookOutcome: {
             result: components["schemas"]["PlatformBotCommandResult"];
+        };
+        /**
+         * PlatformSpendView
+         * @description The admin overview's spend tile: the platform's provider spend of the
+         *     current UTC day by provider, the daily mean of the 7 days before, the
+         *     daily budget (when set) and how much of it is used, and the businesses
+         *     that passed one of their limits today.
+         */
+        PlatformSpendView: {
+            /** Braked Businesses */
+            braked_businesses?: components["schemas"]["BusinessSpendMark"][];
+            /** Budget Micro Usd */
+            budget_micro_usd?: number | null;
+            /** Budget Used Percent */
+            budget_used_percent?: number | null;
+            /** Day */
+            day: string;
+            /** Providers */
+            providers: components["schemas"]["ProviderSpend"][];
+            /** Total Micro Usd */
+            total_micro_usd: number;
+            /** Week Daily Mean Micro Usd */
+            week_daily_mean_micro_usd: number;
         };
         /**
          * PlatformStatusView
@@ -11164,6 +11272,15 @@ export interface components {
             steps: components["schemas"]["WizardStepView"][];
             /** Timezone */
             timezone: string;
+        };
+        /**
+         * ProviderSpend
+         * @description What the platform owes one provider for a window (planned prices fill gaps).
+         */
+        ProviderSpend: {
+            provider: components["schemas"]["SpendProvider"];
+            /** Spend Micro Usd */
+            spend_micro_usd: number;
         };
         /**
          * PublicDemoCard
@@ -12030,6 +12147,25 @@ export interface components {
             /** Went Live */
             went_live: number;
         };
+        /**
+         * SpendLevel
+         * @description Where one business's provider spend of its day stands against its
+         *     limits: under both (NORMAL), past the soft limit (its assistant answers
+         *     on a cheaper model; the owner and the platform team are told once), or
+         *     past the hard limit (the assistant only takes messages for the team
+         *     until the day ends; told once, and audited).
+         * @enum {string}
+         */
+        SpendLevel: "normal" | "soft_limit" | "hard_limit";
+        /**
+         * SpendProvider
+         * @description Who the platform pays for a kind of metered usage: the language model
+         *     (OpenAI or Anthropic tokens), the voice agent (ElevenLabs minutes), the
+         *     telephony of a transferred call, WhatsApp templates (Meta) and the
+         *     transcription of voice notes.
+         * @enum {string}
+         */
+        SpendProvider: "language_model" | "voice" | "telephony" | "whatsapp" | "transcription";
         /**
          * StaffAlertEvent
          * @description What staff can be told about: a conversation passed to a person, a new
@@ -13327,6 +13463,20 @@ export interface components {
             name: string;
         };
         /**
+         * WidgetAllowedOriginsView
+         * @description The websites allowed to show the chat (origins, in the owner's order),
+         *     whether the list restricts it at all, and the platform's own pages that
+         *     always may (the hosted chat page and the cabinet's preview).
+         */
+        WidgetAllowedOriginsView: {
+            /** Always Allowed */
+            always_allowed: string[];
+            /** Is Restricted */
+            is_restricted: boolean;
+            /** Origins */
+            origins: string[];
+        };
+        /**
          * WidgetConfigView
          * @description Public configuration the widget script loads before it shows itself.
          *
@@ -14319,6 +14469,102 @@ export interface operations {
             };
         };
     };
+    set_client_spend_limits_v1_admin_clients__business_id__spend_limits_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Hard Limit Micro Usd */
+                    hard_limit_micro_usd?: number | null;
+                    /** Soft Limit Micro Usd */
+                    soft_limit_micro_usd?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessSpendLimitsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     list_incidents_v1_admin_incidents_get: {
         parameters: {
             query?: {
@@ -14999,6 +15245,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KeyRotationStarted"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_admin_spend_v1_admin_spend_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformSpendView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -21295,6 +21626,187 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TelegramBotCheckView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetAllowedOriginsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    save_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Origins */
+                    origins?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetAllowedOriginsView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

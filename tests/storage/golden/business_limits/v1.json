@@ -1,0 +1,12 @@
+{
+  "business_id": "business_d39f761b-5a3f-47c0-a0c2-a8f2cab95911",
+  "created_at": 1790000000000000,
+  "daily_hard_limit_micro_usd": 1,
+  "daily_soft_limit_micro_usd": 1,
+  "id": "business_limits_8f09715a-c64f-551a-8abd-157eebf46cde",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "widget_allowed_origins": [
+    "https://cafe-batumi.example.com"
+  ]
+}

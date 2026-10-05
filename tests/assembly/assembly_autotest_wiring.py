@@ -165,6 +165,7 @@ class AssemblyAutotestWiring(AssemblyScriptedModels):
             plan_autotest_scenarios=plan_scenarios,
             live_events=self.autotest_events,
             wall_clock=self.wall_clock,
+            assistant_apply_repo=self.apply_repo,
         )
         self.run_scenario_use_case = RunAutotestScenarioUseCase(
             conversation_turn_orchestrator=self.conversation,

@@ -540,3 +540,8 @@ _.can_reschedule  # app/schemas/dto/booking_manage.py (ManagedBookingView)
 _.is_over  # app/schemas/dto/booking_manage.py (ManagedBookingView)
 _.is_stay_available  # app/schemas/dto/booking_manage.py (ManagedBookingSlots)
 _.booking_url  # app/schemas/dto/sharing.py (HostedChatView)
+
+# The spend guard (R12): the admin overview's spend tile reads how much of
+# the daily budget is used and the clients that passed a limit today.
+_.budget_used_percent  # app/schemas/dto/spend_guard.py (PlatformSpendView)
+_.braked_businesses  # app/schemas/dto/spend_guard.py (PlatformSpendView)

@@ -11,6 +11,7 @@ from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
 from app.schemas.configurations.seller_settings import SellerSettings
 from app.schemas.configurations.session_settings import SessionSettings
+from app.schemas.configurations.spend_guard_settings import SpendGuardSettings
 from app.schemas.configurations.support_settings import SupportSettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -113,8 +114,7 @@ class AppSettings(ImmutableDTO):
 
     environment: DeploymentEnvironment
     app_base_url: PublicBaseUrl | None = None
-    # Public address of the owner cabinet; provider consent pages (Google
-    # Calendar) send owners back there.
+    # The owner cabinet's public address (provider consent pages return there).
     cabinet_base_url: CabinetBaseUrl | None = None
     database_url: DatabaseUrl | None = None
     # The cabinet's live updates LISTEN on this direct (session) connection
@@ -232,9 +232,8 @@ class AppSettings(ImmutableDTO):
     is_llm_content_traced: IsLlmContentTraced
     is_llm_raw_text_traced: IsLlmRawTextTraced = False
     cors_allowed_origins: list[PublicBaseUrl]
-    # Request handlers running at once in threads (THREADPOOL_SIZE) and the
-    # Postgres connections of one process (DB_POOL_SIZE, half as many by
-    # default: a thread waiting for the model holds no connection).
+    # Request threads (THREADPOOL_SIZE) and Postgres connections of one
+    # process (DB_POOL_SIZE; a thread waiting for the model holds none).
     threadpool_size: ThreadPoolSize = ThreadPoolSize(64)
     db_pool_size: DatabasePoolSize = DatabasePoolSize(32)
     # Idle connections close after DB_POOL_MAX_IDLE_SECONDS down to
@@ -259,8 +258,7 @@ class AppSettings(ImmutableDTO):
     )
     sentry_dsn: PlatformSecret | None = None
     sentry_traces_sample_rate: TraceSampleRate = TraceSampleRate(0.05)
-    # The deployed build (APP_RELEASE, on Render RENDER_GIT_COMMIT): error
-    # reports and worker heartbeats name it.
+    # The build (APP_RELEASE or RENDER_GIT_COMMIT) errors and heartbeats name.
     release_version: ReleaseVersion | None = None
     log_format: LogFormat = LogFormat.TEXT
     recordings_directory: LocalDirectoryPath = LocalDirectoryPath("var/recordings")
@@ -298,3 +296,5 @@ class AppSettings(ImmutableDTO):
     seller: SellerSettings = Field(default_factory=SellerSettings)
     # Landing-page sandbox demos, legal pages (PUBLIC_DEMO_*, LEGAL_TEXTS_FINAL).
     public_site: PublicSiteSettings = Field(default_factory=PublicSiteSettings)
+    # Spend limits, call caps, API limits (SPEND_*, CALL_*, API_*, PLATFORM_*).
+    spend_guard: SpendGuardSettings = Field(default_factory=SpendGuardSettings)

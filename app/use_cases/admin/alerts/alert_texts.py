@@ -30,6 +30,8 @@ ALERT_TITLES: dict[str, str] = {
     "tool_errors": "Tool errors",
     "stale_worker": "Worker stopped",
     "otp_cap_trips": "Login codes refused",
+    "spend_spike": "Spend spike",
+    "spend_budget": "Daily budget nearly spent",
 }
 
 
