@@ -70,15 +70,23 @@ jobs:
       - name: Latency budgets
         run: uv run pytest -m perf tests/perf -ra
 
+      # perf/baseline.json is of the full scale: a smaller dataset is held
+      # to the budgets above only, and never becomes the baseline.
       - name: Compare with the baseline (more than 20% slower fails)
-        if: ${{ !inputs.update_baseline }}
+        if: ${{ !inputs.update_baseline && env.PERF_SCALE == 'full' }}
         shell: bash
         run: >-
           uv run python -m scripts.perf_compare "$PERF_REPORT" perf/baseline.json
           | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Note that a smaller scale is not compared with the baseline
+        if: ${{ env.PERF_SCALE != 'full' }}
+        run: >-
+          echo "Perf: the $PERF_SCALE scale met its latency budgets; the baseline
+          (full scale) was not compared." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Store the measured p95s as the new baseline
-        if: ${{ inputs.update_baseline }}
+        if: ${{ inputs.update_baseline && env.PERF_SCALE == 'full' }}
         run: uv run python -m scripts.perf_compare "$PERF_REPORT" perf/baseline.json --update
 
       - name: Keep the report
