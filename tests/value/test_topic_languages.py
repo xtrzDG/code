@@ -199,6 +199,20 @@ def test_version_1_rows_keep_their_label_and_find_their_catch_all() -> None:
     assert upgrade_conversation_topics_from_v1({"groups": None}) == {"groups": None}
 
 
+def test_the_upcaster_leaves_what_it_does_not_recognise() -> None:
+    odd: dict[str, object] = {
+        "label_language": "en",
+        "groups": [
+            "not a group",
+            {"language": "en", "topics": None},
+            {"topics": ["not a topic", {"conversation_count": 1}]},
+            {"topics": [{"label": "Parking", "labels": [], "kind": "named"}]},
+        ],
+    }
+
+    assert upgrade_conversation_topics_from_v1(odd) == odd
+
+
 def test_the_previous_labels_offered_are_the_owner_language_ones() -> None:
     bench = greeted_bench()
     tick(bench, rehearsal_model())
