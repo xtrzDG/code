@@ -9,11 +9,16 @@ newest messages.
 import random
 from collections.abc import Sequence
 
+import pytest
 from typed_time_provider import Microseconds
 
 from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
     InMemoryRateLimitBucketAdapter,
 )
+from app.adapters.storage.postgres.postgres_read_session_adapter import (
+    PostgresReadSessionAdapter,
+)
+from app.contracts.storage import StorageReadSessionContract
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.language_registry import LanguageRegistry
 from app.repositories.business_repositories import ChannelRepository
@@ -39,7 +44,7 @@ from app.use_cases.channels.get_widget_messages_use_case import (
     GetWidgetMessagesUseCase,
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
-from tests.storage.conftest import CollectionFactory
+from tests.storage.conftest import CollectionFactory, PostgresCollectionFactory
 from tests.storage.storage_testing import build_ticking_wall_clock
 
 VISITOR: str = "v1_window_visitor_0001"
@@ -57,7 +62,11 @@ AUTHORS: tuple[MessageAuthor, ...] = (
 class PollWorld:
     """One business with its widget on, its repositories and the poll."""
 
-    def __init__(self, collections: CollectionFactory) -> None:
+    def __init__(
+        self,
+        collections: CollectionFactory,
+        read_session: StorageReadSessionContract | None = None,
+    ) -> None:
         self.business_id = BusinessId()
         self.channels = ChannelRepository(collections(ChannelDocument, "channels"))
         self.conversations = ConversationRepository(
@@ -72,6 +81,7 @@ class PollWorld:
             LanguageRegistry(),
             RequestRateLimitRegistry(InMemoryRateLimitBucketAdapter()),
             build_ticking_wall_clock(5 * SECOND),
+            read_session,
         )
 
     def open_widget(self) -> None:
@@ -187,12 +197,29 @@ def build_random_chat(
     return conversations, messages
 
 
+@pytest.fixture
+def read_session(
+    collections: CollectionFactory, request: pytest.FixtureRequest
+) -> StorageReadSessionContract | None:
+    """On Postgres the polls read in a read session, as in the API."""
+
+    if not isinstance(collections, PostgresCollectionFactory):
+        return None
+
+    return PostgresReadSessionAdapter(
+        request.getfixturevalue("connection_pool"),
+        request.getfixturevalue("storage_scope"),
+    )
+
+
 def test_every_cursor_gets_the_whole_chats_answer(
-    collections: CollectionFactory, storage_scope: StorageScopeContext
+    collections: CollectionFactory,
+    storage_scope: StorageScopeContext,
+    read_session: StorageReadSessionContract | None,
 ) -> None:
     for seed in range(8):
         chance = random.Random(seed)
-        world = PollWorld(collections)
+        world = PollWorld(collections, read_session)
         with storage_scope.scoped_to_business(world.business_id):
             world.open_widget()
             conversations, messages = build_random_chat(world, chance)
@@ -221,9 +248,11 @@ def test_every_cursor_gets_the_whole_chats_answer(
 
 
 def test_a_caught_up_poll_of_a_long_chat_reads_only_the_newest(
-    collections: CollectionFactory, storage_scope: StorageScopeContext
+    collections: CollectionFactory,
+    storage_scope: StorageScopeContext,
+    read_session: StorageReadSessionContract | None,
 ) -> None:
-    world = PollWorld(collections)
+    world = PollWorld(collections, read_session)
     with storage_scope.scoped_to_business(world.business_id):
         world.open_widget()
         conversation = world.add_conversation(VISITOR)
@@ -241,11 +270,21 @@ def test_a_caught_up_poll_of_a_long_chat_reads_only_the_newest(
         nothing = world.messages.page_newest_of_conversations(
             world.business_id, [], window_of(3)
         )
+        positions = world.messages.page_newest_positions_of_conversations(
+            world.business_id, [conversation.id], window_of(3)
+        )
+        no_positions = world.messages.page_newest_positions_of_conversations(
+            world.business_id, [], window_of(3)
+        )
         caught_up = world.poll(chat[-1].id)
         two_new = world.poll(chat[-3].id)
 
     assert [message.id for message in newest] == [m.id for m in reversed(chat[-3:])]
     assert nothing == []
+    assert [(p.id, p.created_at) for p in positions] == [
+        (m.id, m.created_at) for m in newest
+    ]
+    assert no_positions == []
     assert caught_up.items == []
     assert caught_up.cursor == chat[-1].id
     assert [item.id for item in two_new.items] == [chat[-1].id]
