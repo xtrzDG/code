@@ -11,5 +11,5 @@ threshold: 3
 unit: ratio
 window_minutes: 1440
 volume_floor: 5
-source: usage_events (doc_occurred_at) include (doc_kind, doc_cost_micro_usd, doc_quantity), migration 1142
+source: usage_events BRIN (doc_occurred_at), migration 1142
 runbook: docs/operations/runbooks/spend-spike.md
