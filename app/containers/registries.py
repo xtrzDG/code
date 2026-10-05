@@ -36,6 +36,10 @@ from app.registries.locks.login_code_send_lock_registry import (
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
+from app.registries.public_site.public_demo_directory_registry import (
+    PublicDemoDirectoryRegistry,
+)
+from app.registries.public_site.public_demo_slots import build_public_demo_slots
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 from app.registries.turns.turn_slot_registry import (
     TurnSlotRegistry,
@@ -129,6 +133,13 @@ class RegistriesContainer(containers.DeclarativeContainer):
     test_chat_slots: Singleton[TurnSlotRegistry] = Singleton(
         build_test_chat_slots, settings=config.app_settings
     )
+    # The landing page's demo businesses (PUBLIC_DEMO_BUSINESS_IDS) and the
+    # places their sandbox turns take in this process.
+    public_demo_directory: Singleton[PublicDemoDirectoryRegistry] = Singleton(
+        PublicDemoDirectoryRegistry,
+        configured_business_ids=config.app_settings.provided.public_site.demo_business_ids,
+    )
+    public_demo_slots: Singleton[TurnSlotRegistry] = Singleton(build_public_demo_slots)
     # Request counters of public endpoints (the website widget, login code
     # checks), shared by every API instance through Postgres.
     request_rate_limit_registry: Singleton[RequestRateLimitRegistry] = Singleton(

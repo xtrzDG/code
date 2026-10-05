@@ -23,6 +23,9 @@ from app.containers.use_cases.memory_use_cases import MemoryUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
 from app.containers.use_cases.privacy_use_cases import PrivacyUseCasesContainer
+from app.containers.use_cases.public_demo_use_cases import (
+    PublicDemoUseCasesContainer,
+)
 from app.containers.use_cases.reply_speed_use_cases import ReplySpeedUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -101,7 +104,17 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
     # Legal texts, the sub-processor list and its change notices (1124).
     legal: LegalUseCasesContainer = Container(  # type: ignore[assignment]
         LegalUseCasesContainer,
+        config=config,
         facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    # The landing page's sandbox demos (PUBLIC_DEMO_BUSINESS_IDS).
+    public_demos: PublicDemoUseCasesContainer = Container(  # type: ignore[assignment]
+        PublicDemoUseCasesContainer,
+        config=config,
         registries=registries,
         repositories=repositories,
         time_provider=time_provider,

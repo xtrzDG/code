@@ -1,6 +1,7 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -11,10 +12,13 @@ from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.legal import (
     LegalDocumentQuery,
     LegalDocumentView,
+    LegalOverviewQuery,
+    LegalOverviewView,
     SubprocessorListQuery,
     SubprocessorListView,
 )
 from app.use_cases.legal.get_legal_document_use_case import GetLegalDocumentUseCase
+from app.use_cases.legal.get_legal_overview_use_case import GetLegalOverviewUseCase
 from app.use_cases.legal.get_subprocessors_use_case import GetSubprocessorsUseCase
 from app.use_cases.legal.send_subprocessor_notices_use_case import (
     SendSubprocessorNoticesUseCase,
@@ -27,6 +31,7 @@ class LegalUseCasesContainer(containers.DeclarativeContainer):
     sub-processor list and the notices of its changes to owners (1124).
     """
 
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -47,7 +52,11 @@ class LegalUseCasesContainer(containers.DeclarativeContainer):
         GetLegalDocumentUseCase,
         legal_text_registry=registries.legal_text_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        app_settings=config.app_settings,
     )
+    get_legal_overview_use_case: Factory[
+        UseCaseContract[LegalOverviewQuery, LegalOverviewView]
+    ] = Factory(GetLegalOverviewUseCase, app_settings=config.app_settings)
     send_subprocessor_notices_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
             SendSubprocessorNoticesUseCase,

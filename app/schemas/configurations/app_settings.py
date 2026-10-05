@@ -5,6 +5,7 @@ from app.schemas.configurations.backup_settings import BackupSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
+from app.schemas.configurations.public_site_settings import PublicSiteSettings
 from app.schemas.configurations.quality_settings import QualitySettings
 from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
 from app.schemas.configurations.reply_speed_settings import ReplySpeedSettings
@@ -295,3 +296,5 @@ class AppSettings(ImmutableDTO):
     privacy: PrivacySettings = Field(default_factory=PrivacySettings)
     # The seller on invoices and its VAT (SELLER_*, PLATFORM_VAT_REGISTERED).
     seller: SellerSettings = Field(default_factory=SellerSettings)
+    # Landing-page sandbox demos, legal pages (PUBLIC_DEMO_*, LEGAL_TEXTS_FINAL).
+    public_site: PublicSiteSettings = Field(default_factory=PublicSiteSettings)

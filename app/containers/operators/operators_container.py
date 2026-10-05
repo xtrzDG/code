@@ -27,6 +27,9 @@ from app.containers.operators.platform_ops_operators import (
     PlatformOpsOperatorsContainer,
 )
 from app.containers.operators.privacy_operators import PrivacyOperatorsContainer
+from app.containers.operators.public_demo_operators import (
+    PublicDemoOperatorsContainer,
+)
 from app.containers.operators.security_operators import SecurityOperatorsContainer
 from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.operators.sharing_operators import SharingOperatorsContainer
@@ -65,6 +68,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     legal: LegalOperatorsContainer = Container(  # type: ignore[assignment]
         LegalOperatorsContainer,
         legal_pipelines=pipelines.legal,
+        utilities=utilities,
+    )
+    public_demos: PublicDemoOperatorsContainer = Container(  # type: ignore[assignment]
+        PublicDemoOperatorsContainer,
+        public_demo_pipelines=pipelines.public_demos,
         utilities=utilities,
     )
     inbox: InboxOperatorsContainer = Container(  # type: ignore[assignment]

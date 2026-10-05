@@ -1,12 +1,14 @@
 from babel import Locale
 
-from app.contracts.registries import CountryRegistryContract
+from app.contracts.registries import CountryRegistryContract, PlanRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.catalog.countries import (
     CountryList,
     CountryListItem,
     CountryListRequest,
 )
+from app.schemas.typings.billing.booleans import HasLocalPriceBook
+from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.localization.display_names import build_country_display_name
 
@@ -16,11 +18,18 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
     Every country a business can come from, named in the display language
     and ordered by that name, for the sign-up and onboarding country picker.
     Restricted countries stay in the list with their status so the picker
-    can explain why they are unavailable.
+    can explain why they are unavailable. Each says whether the plans have
+    explicit prices in its currency (`has_price_book`), so the landing page
+    can show a visitor prices that are not conversions.
     """
 
-    def __init__(self, country_registry: CountryRegistryContract) -> None:
+    def __init__(
+        self,
+        country_registry: CountryRegistryContract,
+        plan_registry: PlanRegistryContract,
+    ) -> None:
         self._country_registry: CountryRegistryContract = country_registry
+        self._plan_registry: PlanRegistryContract = plan_registry
 
     def run(self, input_data: CountryListRequest) -> CountryList:
         display_locale: Locale = require_babel_locale(input_data.display_language)
@@ -37,6 +46,7 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
                 default_timezone=profile.default_timezone,
                 default_owner_language=profile.default_owner_language,
                 onboarding_status=profile.onboarding_status,
+                has_price_book=self._has_price_book(profile.currency_code),
             )
             for profile in self._country_registry.list_all()
         ]
@@ -49,4 +59,14 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
                     str(country.country_code),
                 ),
             ),
+        )
+
+    def _has_price_book(self, currency_code: CurrencyCode) -> HasLocalPriceBook:
+        """Every plan has an explicit monthly price in this currency."""
+
+        plans = self._plan_registry.list_all()
+        return plans != [] and all(
+            self._plan_registry.find_local_monthly_price(plan.key, currency_code)
+            is not None
+            for plan in plans
         )

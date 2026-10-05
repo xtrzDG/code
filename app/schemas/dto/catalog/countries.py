@@ -7,6 +7,7 @@ from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.localization import CountryOnboardingStatus, TextDirection
 from app.schemas.dto.localization import CountryProfile, LanguageProfile
+from app.schemas.typings.billing.booleans import HasLocalPriceBook
 from app.schemas.typings.localization.constrained_integers import CountryCallingCode
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -41,7 +42,12 @@ class CountryListRequest(ImmutableDTO):
 
 
 class CountryListItem(ImmutableDTO):
-    """Summary of one country for a country picker."""
+    """
+    Summary of one country for a country picker. `has_price_book`: the
+    plans have explicit prices in the country's currency (the euro area's
+    own euro prices, the lari price book in Georgia), so nothing shown
+    there is a conversion.
+    """
 
     country_code: CountryCode
     display_name: CountryDisplayName
@@ -51,6 +57,7 @@ class CountryListItem(ImmutableDTO):
     default_timezone: TimezoneName
     default_owner_language: LanguageTag
     onboarding_status: CountryOnboardingStatus
+    has_price_book: HasLocalPriceBook = False
 
 
 class CountryList(ImmutableDTO):

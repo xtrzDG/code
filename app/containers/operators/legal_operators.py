@@ -26,6 +26,9 @@ class LegalOperatorsContainer(containers.DeclarativeContainer):
     get_legal_document_operator = pipeline_operator(
         legal_pipelines.get_legal_document_pipeline, storage_scope
     )
+    get_legal_overview_operator = pipeline_operator(
+        legal_pipelines.get_legal_overview_pipeline, storage_scope
+    )
     send_subprocessor_notices_operator = platform_pipeline_operator(
         legal_pipelines.send_subprocessor_notices_pipeline, storage_scope
     )

@@ -13,6 +13,8 @@ from app.schemas.constants.legal import LegalDocumentKind
 from app.schemas.dto.legal import (
     LegalDocumentQuery,
     LegalDocumentView,
+    LegalOverviewQuery,
+    LegalOverviewView,
     SubprocessorListQuery,
     SubprocessorListView,
 )
@@ -24,6 +26,7 @@ type SubprocessorsOperator = OperatorContract[
     SubprocessorListQuery, SubprocessorListView
 ]
 type LegalDocumentOperator = OperatorContract[LegalDocumentQuery, LegalDocumentView]
+type LegalOverviewOperator = OperatorContract[LegalOverviewQuery, LegalOverviewView]
 
 # The texts change only with a release (or on the day a published version
 # takes effect): browsers and the cabinet's server may keep them a while.
@@ -33,13 +36,16 @@ LEGAL_CACHE_CONTROL: str = "public, max-age=300"
 def build_legal_router(
     get_subprocessors_operator: SubprocessorsOperator,
     get_legal_document_operator: LegalDocumentOperator,
+    get_legal_overview_operator: LegalOverviewOperator,
 ) -> APIRouter:
     """
     Routes (no token):
         GET /v1/legal/subprocessors?language=      the sub-processor list
+        GET /v1/legal/overview      drafts or final, the DPA in force and
+                                    the operator's details
         GET /v1/legal/{document}?language=&version=
-                                 terms, privacy or cookies: the version in
-                                 force, or the one asked for
+                                 terms, privacy, cookies or security: the
+                                 version in force, or the one asked for
 
     The language comes from `?language=`, else Accept-Language; the answer
     says which language it is in (its base language, else English). The
@@ -58,6 +64,11 @@ def build_legal_router(
         return get_subprocessors_operator.operate(
             SubprocessorListQuery(language=request_language(request, language))
         )
+
+    @router.get("/v1/legal/overview")
+    def get_legal_overview(response: Response) -> LegalOverviewView:
+        response.headers["Cache-Control"] = LEGAL_CACHE_CONTROL
+        return get_legal_overview_operator.operate(LegalOverviewQuery())
 
     @router.get("/v1/legal/{document}")
     def get_legal_document(
@@ -88,7 +99,7 @@ def request_language(request: Request, raw_language: str | None) -> LanguageTag 
 
 
 def parse_document_kind(raw_document: str) -> LegalDocumentKind:
-    """terms, privacy or cookies; anything else is 404."""
+    """terms, privacy, cookies or security; anything else is 404."""
 
     try:
         return LegalDocumentKind(raw_document)

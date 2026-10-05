@@ -5,9 +5,15 @@ from pydantic import Field
 
 from app.schemas.constants.legal import LegalDocumentKind, SubprocessorChangeKind
 from app.schemas.dto.localization import LocalizedText
+from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.compliance.strings import (
     LegalDocumentMarkdown,
     LegalDocumentTitle,
+)
+from app.schemas.typings.invoicing.constrained_strings import (
+    BillingAddressText,
+    BillingLegalName,
+    TaxpayerIdentificationNumber,
 )
 from app.schemas.typings.legal.booleans import (
     HasLegalPlaceholders,
@@ -27,7 +33,12 @@ from app.schemas.typings.legal.strings import (
     SubprocessorPersonalData,
     SubprocessorPurpose,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    LanguageTag,
+)
+from app.schemas.typings.public_site.booleans import IsLegalTextDraft
+from app.schemas.typings.users.constrained_strings import EmailAddress
 
 
 class SubprocessorEntry(ImmutableDTO):
@@ -126,12 +137,14 @@ class LegalDocumentQuery(ImmutableDTO):
 
 class LegalDocumentView(ImmutableDTO):
     """
-    GET /v1/legal/{terms|privacy|cookies}: the text of one version.
+    GET /v1/legal/{terms|privacy|cookies|security}: the text of one version.
 
     `version` is the day it took effect. `upcoming_version` is a newer text
     already published that takes effect later (owners can read it ahead).
     `has_placeholders` is true while the template still has fields in
-    square brackets for the operator and its lawyer to fill.
+    square brackets for the operator and its lawyer to fill; `is_draft`
+    while it does or the operator has not declared the texts final
+    (LEGAL_TEXTS_FINAL): the public pages then say it is a draft.
     """
 
     kind: LegalDocumentKind
@@ -142,3 +155,35 @@ class LegalDocumentView(ImmutableDTO):
     text: LegalDocumentMarkdown
     has_placeholders: HasLegalPlaceholders
     upcoming_version: LegalDocumentVersion | None = None
+    is_draft: IsLegalTextDraft = True
+
+
+class LegalOverviewQuery(ImmutableDTO):
+    """GET /v1/legal/overview (no input)."""
+
+
+class LegalOperatorView(ImmutableDTO):
+    """
+    Who provides the service, as the invoices name the seller (SELLER_*):
+    a detail the operator has not set is null.
+    """
+
+    legal_name: BillingLegalName
+    address: BillingAddressText | None = None
+    email: EmailAddress | None = None
+    tax_id: TaxpayerIdentificationNumber | None = None
+    country_code: CountryCode
+
+
+class LegalOverviewView(ImmutableDTO):
+    """
+    GET /v1/legal/overview: what the public legal and contact pages need
+    besides the texts: whether the texts are still drafts
+    (LEGAL_TEXTS_FINAL off), the data processing agreement's version in
+    force (DPA_DOCUMENT_VERSION; its text is /v1/legal/dpa/{version}) and
+    the operator's details.
+    """
+
+    is_draft: IsLegalTextDraft
+    dpa_version: DpaDocumentVersion
+    operator: LegalOperatorView

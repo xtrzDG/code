@@ -16,6 +16,9 @@ class LegalOrchestratorsContainer(containers.DeclarativeContainer):
     get_legal_document_orchestrator = use_case_orchestrator(
         legal_use_cases.get_legal_document_use_case
     )
+    get_legal_overview_orchestrator = use_case_orchestrator(
+        legal_use_cases.get_legal_overview_use_case
+    )
     send_subprocessor_notices_orchestrator = use_case_orchestrator(
         legal_use_cases.send_subprocessor_notices_use_case
     )

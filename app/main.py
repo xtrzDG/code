@@ -224,6 +224,10 @@ def seed_demo_data(app_container: AppContainer) -> None:
             SeedDemoDataCommand()
         )
     )
+    # Without PUBLIC_DEMO_BUSINESS_IDS the landing page chats with these.
+    app_container.registries.public_demo_directory().adopt_seeded(
+        [*report.created_business_ids, *report.kept_business_ids]
+    )
     # A warning, like the development login codes, so that uvicorn's default
     # log shows how to sign in.
     LOGGER.warning(

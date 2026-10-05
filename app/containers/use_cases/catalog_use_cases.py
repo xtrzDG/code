@@ -55,6 +55,7 @@ class CatalogUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ListCountriesUseCase,
         country_registry=registries.country_registry,
+        plan_registry=registries.plan_registry,
     )
     get_country_profile_use_case: Factory[
         UseCaseContract[CountryProfileRequest, CountryProfileView]
