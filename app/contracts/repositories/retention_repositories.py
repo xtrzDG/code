@@ -58,6 +58,17 @@ class QuietConversationRepoContract(RepoContract, Protocol):
         """
         raise NotImplementedError
 
+    def change(
+        self,
+        record: ConversationDocument,
+        change: Callable[[ConversationDocument], ConversationDocument | None],
+    ) -> ConversationDocument | None:
+        """
+        Store what `change` makes of the conversation as stored now; None,
+        and nothing written, when it is gone or `change` returns None.
+        """
+        raise NotImplementedError
+
 
 class ExpiredMessageRepoContract(RepoContract, Protocol):
     def delete_created_before(

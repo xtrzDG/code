@@ -66,7 +66,10 @@ def test_defaults_keep_conversations_two_years_and_model_records_a_month(
     handoff = world.handoffs.get(business.id, expired.handoff.id)
     assert handoff is not None and str(handoff.summary).startswith("[removed")
     assert world.missed_calls.get(business.id, expired.missed_call.id) is None
-    assert world.conversations.get(business.id, expired.conversation.id) is not None
+    stored = world.conversations.get(business.id, expired.conversation.id)
+    assert stored is not None
+    # The customer memory forgets it too.
+    assert (stored.summary, stored.summarized_at) == (None, None)
 
     # Quiet for 45 days: only the model's records go; the conversation stays.
     assert world.turns.list_by_conversation(expired.conversation.id) == []
@@ -75,6 +78,8 @@ def test_defaults_keep_conversations_two_years_and_model_records_a_month(
         len(world.messages.list_by_conversation(business.id, quiet.conversation.id))
         == 2
     )
+    quiet_stored = world.conversations.get(business.id, quiet.conversation.id)
+    assert quiet_stored is not None and quiet_stored.summary is not None
     quiet_lead = world.leads.get(business.id, quiet.lead.id)
     assert quiet_lead is not None and quiet_lead.budget is not None
 

@@ -39,11 +39,11 @@ from app.containers.orchestrators.inbox_orchestrators import (
 from app.containers.orchestrators.knowledge_orchestrators import (
     KnowledgeOrchestratorsContainer,
 )
-from app.containers.orchestrators.memory_orchestrators import (
-    MemoryOrchestratorsContainer,
-)
 from app.containers.orchestrators.legal_orchestrators import (
     LegalOrchestratorsContainer,
+)
+from app.containers.orchestrators.memory_orchestrators import (
+    MemoryOrchestratorsContainer,
 )
 from app.containers.orchestrators.notification_orchestrators import (
     NotificationOrchestratorsContainer,

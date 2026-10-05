@@ -18,8 +18,8 @@ from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
-from app.containers.use_cases.memory_use_cases import MemoryUseCasesContainer
 from app.containers.use_cases.legal_use_cases import LegalUseCasesContainer
+from app.containers.use_cases.memory_use_cases import MemoryUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
 from app.containers.use_cases.privacy_use_cases import PrivacyUseCasesContainer

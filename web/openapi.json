@@ -13444,6 +13444,86 @@
         "title": "LeadView",
         "type": "object"
       },
+      "LegalDocumentKind": {
+        "description": "The platform's own legal texts for business owners (docs/legal): the\nterms of service, the privacy policy and the cookie statement. The data\nprocessing agreement has its own versions and acceptance (DPA_*).",
+        "enum": [
+          "terms",
+          "privacy",
+          "cookies"
+        ],
+        "title": "LegalDocumentKind",
+        "type": "string"
+      },
+      "LegalDocumentView": {
+        "additionalProperties": false,
+        "description": "GET /v1/legal/{terms|privacy|cookies}: the text of one version.\n\n`version` is the day it took effect. `upcoming_version` is a newer text\nalready published that takes effect later (owners can read it ahead).\n`has_placeholders` is true while the template still has fields in\nsquare brackets for the operator and its lawyer to fill.",
+        "properties": {
+          "available_languages": {
+            "items": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "title": "Available Languages",
+            "type": "array"
+          },
+          "has_placeholders": {
+            "title": "Has Placeholders",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LegalDocumentKind"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "upcoming_version": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upcoming Version"
+          },
+          "version": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "language",
+          "available_languages",
+          "title",
+          "text",
+          "has_placeholders"
+        ],
+        "title": "LegalDocumentView",
+        "type": "object"
+      },
       "LocalNumberProvisioning": {
         "description": "Whether an assistant phone number can be bought inside the country.",
         "enum": [
@@ -13592,6 +13672,34 @@
             },
             "title": "Phone Channels",
             "type": "array"
+          },
+          "privacy_version": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privacy Version"
+          },
+          "terms_version": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms Version"
           }
         },
         "required": [
@@ -19809,6 +19917,188 @@
         "title": "SubProcessor",
         "type": "string"
       },
+      "SubprocessorChangeKind": {
+        "description": "What a change of the sub-processor list does (DPA section 8.3).",
+        "enum": [
+          "added",
+          "removed"
+        ],
+        "title": "SubprocessorChangeKind",
+        "type": "string"
+      },
+      "SubprocessorChangeView": {
+        "additionalProperties": false,
+        "description": "A change of the list that has not taken effect yet: owners are told\nfrom `notice_from` (the notice period before `effective_on`).",
+        "properties": {
+          "announced_on": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Announced On",
+            "type": "string"
+          },
+          "effective_on": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Effective On",
+            "type": "string"
+          },
+          "key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "pattern": "^[a-z][a-z0-9_]*-(added|removed)-[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SubprocessorChangeKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notice_from": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Notice From",
+            "type": "string"
+          },
+          "subprocessor": {
+            "maxLength": 40,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Subprocessor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "subprocessor",
+          "name",
+          "effective_on",
+          "announced_on",
+          "notice_from"
+        ],
+        "title": "SubprocessorChangeView",
+        "type": "object"
+      },
+      "SubprocessorListView": {
+        "additionalProperties": false,
+        "description": "GET /v1/legal/subprocessors: every sub-processor the list names today\nor has announced (an announced one is not in force yet; a leaving one\nshows its last day), and the changes still ahead. The DPA's section 8\ntable is rendered from the same registry.",
+        "properties": {
+          "as_of": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "As Of",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "notice_days": {
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Notice Days",
+            "type": "integer"
+          },
+          "subprocessors": {
+            "items": {
+              "$ref": "#/components/schemas/SubprocessorView"
+            },
+            "title": "Subprocessors",
+            "type": "array"
+          },
+          "upcoming_changes": {
+            "items": {
+              "$ref": "#/components/schemas/SubprocessorChangeView"
+            },
+            "title": "Upcoming Changes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "language",
+          "as_of",
+          "notice_days",
+          "subprocessors",
+          "upcoming_changes"
+        ],
+        "title": "SubprocessorListView",
+        "type": "object"
+      },
+      "SubprocessorView": {
+        "additionalProperties": false,
+        "description": "One sub-processor as owners and visitors read it.",
+        "properties": {
+          "added_on": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Added On",
+            "type": "string"
+          },
+          "is_in_force": {
+            "title": "Is In Force",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 40,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "personal_data": {
+            "title": "Personal Data",
+            "type": "string"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "removed_on": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed On"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "purpose",
+          "personal_data",
+          "location",
+          "added_on",
+          "is_in_force"
+        ],
+        "title": "SubprocessorView",
+        "type": "object"
+      },
       "SubscriptionStatus": {
         "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.",
         "enum": [
@@ -21042,6 +21332,20 @@
         "additionalProperties": false,
         "description": "A signed-in person as shown to themselves and to their team.",
         "properties": {
+          "accepted_terms_version": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Terms Version"
+          },
           "country_code": {
             "anyOf": [
               {
@@ -26535,6 +26839,20 @@
                 "additionalProperties": false,
                 "description": "HTTP body of the code check; the cabinet adds where a new owner came\nfrom (its first-party attribution cookie), kept only for a new account.",
                 "properties": {
+                  "accepted_terms_version": {
+                    "anyOf": [
+                      {
+                        "maxLength": 10,
+                        "minLength": 10,
+                        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Accepted Terms Version"
+                  },
                   "challenge_id": {
                     "pattern": "^otp_challenge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                     "title": "Challenge Id",
@@ -56595,6 +56913,249 @@
         "summary": "Get Dpa Document",
         "tags": [
           "compliance"
+        ]
+      }
+    },
+    "/v1/legal/subprocessors": {
+      "get": {
+        "operationId": "get_subprocessors_v1_legal_subprocessors_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubprocessorListView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Subprocessors",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/legal/{document}": {
+      "get": {
+        "operationId": "get_legal_document_v1_legal__document__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document",
+            "required": true,
+            "schema": {
+              "title": "Document",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalDocumentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Legal Document",
+        "tags": [
+          "legal"
         ]
       }
     },

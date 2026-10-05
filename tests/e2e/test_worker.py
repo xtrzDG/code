@@ -7,7 +7,7 @@ from typing import cast
 
 import pytest
 
-from app.containers.gateways import (
+from app.containers.periodic_jobs import (
     CHECK_PACKAGE_USAGE_JOB,
     END_TRIALS_JOB,
     ENFORCE_GRACE_PERIODS_JOB,
@@ -158,7 +158,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         SUMMARIZE_CONVERSATION_JOB,
         ERASE_PROCESSOR_COPIES_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (25, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (28, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the admin

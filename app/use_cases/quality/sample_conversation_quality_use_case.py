@@ -33,6 +33,7 @@ from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.quality.conversation_quality_judge import ConversationQualityJudge
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.assembly.llm_costs import DEFAULT_LLM_TOKEN_PRICES
 from app.utilities.quality.quality_sampling import (
     budget_micro_usd,
@@ -154,7 +155,7 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
             until=Microseconds(int(now) - QUIET_FOR),
         )
         groups: list[list[Candidate]] = []
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             if business.status not in SAMPLED_STATUSES:
                 continue
 

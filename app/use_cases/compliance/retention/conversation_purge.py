@@ -1,8 +1,8 @@
 """
 The retention purge of what hangs on a business's conversations: the
 records of model calls of conversations quiet for the model-record
-period, and the team's notes and the calls of conversations quiet for the
-conversation period.
+period, and the team's notes, the calls and the customer memory's summary
+of conversations quiet for the conversation period.
 """
 
 from collections.abc import Iterator
@@ -80,14 +80,19 @@ class ConversationPurger:
         self, business_id: BusinessId, window: RetentionWindow, now: Microseconds
     ) -> ConversationContentPurge:
         """
-        Delete the notes of the conversations in `window` and erase their
-        calls: an archived recording is deleted from storage here, one the
-        voice platform still keeps goes with its conversation there (a
-        queued deletion of every call's `provider_call_id`).
+        Delete the notes of the conversations in `window`, forget what the
+        customer memory summarized of them and erase their calls: an
+        archived recording is deleted from storage here, one the voice
+        platform still keeps goes with its conversation there (a queued
+        deletion of every call's `provider_call_id`).
         """
 
         purge = ConversationContentPurge()
         for conversation in self._quiet(business_id, window):
+            if conversation.summary is not None:
+                self.quiet_conversation_repo.change(
+                    conversation, lambda stored: without_summary(stored, now)
+                )
             purge.deleted_notes += int(
                 self.note_repo.delete_by_conversation(business_id, conversation.id)
             )
@@ -124,3 +129,16 @@ class ConversationPurger:
             call.business_id, call.id, lambda stored: erased_call(stored, now)
         )
         return erased is not None
+
+
+def without_summary(
+    conversation: ConversationDocument, now: Microseconds
+) -> ConversationDocument | None:
+    """The conversation without its summary; None when it has none left."""
+
+    if conversation.summary is None and conversation.summarized_at is None:
+        return None
+
+    return conversation.model_copy(
+        update={"summary": None, "summarized_at": None, "updated_at": now}
+    )

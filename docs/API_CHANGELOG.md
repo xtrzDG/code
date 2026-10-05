@@ -11,6 +11,19 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — wave 12 together: deeper checks, customer memory, online migrations, retention, legal texts
+
+Spec: `0ccf13ff93342e14`
+
+No change of its own: the API description with the five entries below
+merged together (pass^k, attack scenarios, the comparison with the live
+version and the quality of real conversations; the customer memory's
+settings and `list_my_bookings`; the customer and knowledge lists paged in
+the database and the admin client list from stored standings; retention
+periods and the erasure at sub-processors; legal texts, the sub-processor
+list and terms acceptance). Each of those entries names the description of
+its own change alone.
+
 ## 2026-10-05 — trustworthy checks: pass^k, attacks, version comparison, production quality
 
 Spec: `705d0e6d7f63f2a1`

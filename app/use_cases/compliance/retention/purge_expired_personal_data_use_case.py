@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterator
 
 from typed_time_provider import Microseconds, Seconds, WallClock
 
@@ -53,6 +54,7 @@ from app.use_cases.compliance.retention.retention_audit import (
     retention_audit_entries,
     window_since,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 SECONDS_PER_DAY: int = 24 * 60 * 60
@@ -147,9 +149,10 @@ class PurgeExpiredPersonalDataUseCase(UseCaseContract[JobTick, JobReport]):
 
         return JobReport(processed_count=ProcessedItemCount(processed))
 
-    def _business_ids(self) -> list[BusinessId]:
-        # Every business (a job over the whole platform).
-        return [business.id for business in self._business_repo.list_all()]
+    def _business_ids(self) -> Iterator[BusinessId]:
+        # Every business, a keyset batch at a time (a job over the platform).
+        for business in walk_businesses(self._business_repo):
+            yield business.id
 
     def _purge(self, business_id: BusinessId) -> int:
         settings: BusinessPrivacySettingsDocument = (

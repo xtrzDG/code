@@ -1,6 +1,7 @@
 """Periodic job: owners hear of sub-processor changes the notice period ahead."""
 
 import logging
+from collections.abc import Iterator
 from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
@@ -26,6 +27,7 @@ from app.schemas.typings.legal.constrained_integers import (
 )
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.legal.subprocessor_notice_sender import SubprocessorNoticeSender
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.legal.legal_keys import derive_subprocessor_announcement_id
 from app.utilities.legal.subprocessor_dates import is_notice_due, utc_day
 
@@ -164,6 +166,6 @@ class SendSubprocessorNoticesUseCase(UseCaseContract[JobTick, JobReport]):
         self._announcement_repo.save(started)
         return started
 
-    def _businesses(self) -> list[BusinessDocument]:
-        # Every business on the platform (a background job's walk).
-        return self._business_repo.list_all()
+    def _businesses(self) -> Iterator[BusinessDocument]:
+        # Every business on the platform, a keyset batch at a time.
+        return walk_businesses(self._business_repo)

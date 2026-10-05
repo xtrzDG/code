@@ -53,6 +53,9 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import (
     LlmTurnSequenceNumber,
 )
+from app.schemas.typings.conversations.constrained_strings import (
+    ConversationSummaryText,
+)
 from app.schemas.typings.conversations.strings import (
     CallTranscriptText,
     ChannelUserId,
@@ -78,6 +81,7 @@ if TYPE_CHECKING:
 
 PHONE: str = "+995555123456"
 MICROSECONDS_PER_SECOND: int = 1_000_000
+SUMMARY_DELAY_MICROSECONDS: int = 2 * 3600 * MICROSECONDS_PER_SECOND
 
 
 @dataclass(frozen=True)
@@ -103,6 +107,9 @@ def seed_history(
         channel=ChannelKind.WHATSAPP,
         channel_user_id=ChannelUserId(PHONE.removeprefix("+")),
         last_message_at=at,
+        # What the customer memory wrote of it, two quiet hours later.
+        summary=ConversationSummaryText("The customer booked a table for two."),
+        summarized_at=Microseconds(int(at) + SUMMARY_DELAY_MICROSECONDS),
         created_at=at,
         updated_at=at,
     )

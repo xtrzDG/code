@@ -2983,6 +2983,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/legal/subprocessors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Subprocessors */
+        get: operations["get_subprocessors_v1_legal_subprocessors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/legal/{document}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Legal Document */
+        get: operations["get_legal_document_v1_legal__document__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -8648,6 +8682,40 @@ export interface components {
             status: components["schemas"]["LeadStatus"];
         };
         /**
+         * LegalDocumentKind
+         * @description The platform's own legal texts for business owners (docs/legal): the
+         *     terms of service, the privacy policy and the cookie statement. The data
+         *     processing agreement has its own versions and acceptance (DPA_*).
+         * @enum {string}
+         */
+        LegalDocumentKind: "terms" | "privacy" | "cookies";
+        /**
+         * LegalDocumentView
+         * @description GET /v1/legal/{terms|privacy|cookies}: the text of one version.
+         *
+         *     `version` is the day it took effect. `upcoming_version` is a newer text
+         *     already published that takes effect later (owners can read it ahead).
+         *     `has_placeholders` is true while the template still has fields in
+         *     square brackets for the operator and its lawyer to fill.
+         */
+        LegalDocumentView: {
+            /** Available Languages */
+            available_languages: string[];
+            /** Has Placeholders */
+            has_placeholders: boolean;
+            kind: components["schemas"]["LegalDocumentKind"];
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /** Upcoming Version */
+            upcoming_version?: string | null;
+            /** Version */
+            version: string;
+        };
+        /**
          * LocalNumberProvisioning
          * @description Whether an assistant phone number can be bought inside the country.
          * @enum {string}
@@ -8714,6 +8782,10 @@ export interface components {
             is_sign_up_restricted: boolean;
             /** Phone Channels */
             phone_channels: components["schemas"]["OtpDeliveryChannel"][];
+            /** Privacy Version */
+            privacy_version?: string | null;
+            /** Terms Version */
+            terms_version?: string | null;
         };
         /**
          * LoginSessionView
@@ -11233,6 +11305,73 @@ export interface components {
          */
         SubProcessor: "langfuse" | "elevenlabs" | "meta" | "telegram";
         /**
+         * SubprocessorChangeKind
+         * @description What a change of the sub-processor list does (DPA section 8.3).
+         * @enum {string}
+         */
+        SubprocessorChangeKind: "added" | "removed";
+        /**
+         * SubprocessorChangeView
+         * @description A change of the list that has not taken effect yet: owners are told
+         *     from `notice_from` (the notice period before `effective_on`).
+         */
+        SubprocessorChangeView: {
+            /** Announced On */
+            announced_on: string;
+            /** Effective On */
+            effective_on: string;
+            /** Key */
+            key: string;
+            kind: components["schemas"]["SubprocessorChangeKind"];
+            /** Name */
+            name: string;
+            /** Notice From */
+            notice_from: string;
+            /** Subprocessor */
+            subprocessor: string;
+        };
+        /**
+         * SubprocessorListView
+         * @description GET /v1/legal/subprocessors: every sub-processor the list names today
+         *     or has announced (an announced one is not in force yet; a leaving one
+         *     shows its last day), and the changes still ahead. The DPA's section 8
+         *     table is rendered from the same registry.
+         */
+        SubprocessorListView: {
+            /** As Of */
+            as_of: string;
+            /** Language */
+            language: string;
+            /** Notice Days */
+            notice_days: number;
+            /** Subprocessors */
+            subprocessors: components["schemas"]["SubprocessorView"][];
+            /** Upcoming Changes */
+            upcoming_changes: components["schemas"]["SubprocessorChangeView"][];
+        };
+        /**
+         * SubprocessorView
+         * @description One sub-processor as owners and visitors read it.
+         */
+        SubprocessorView: {
+            /** Added On */
+            added_on: string;
+            /** Is In Force */
+            is_in_force: boolean;
+            /** Key */
+            key: string;
+            /** Location */
+            location: string;
+            /** Name */
+            name: string;
+            /** Personal Data */
+            personal_data: string;
+            /** Purpose */
+            purpose: string;
+            /** Removed On */
+            removed_on?: string | null;
+        };
+        /**
          * SubscriptionStatus
          * @description Subscription state driven by the payment provider.
          *
@@ -11745,6 +11884,8 @@ export interface components {
          * @description A signed-in person as shown to themselves and to their team.
          */
         UserView: {
+            /** Accepted Terms Version */
+            accepted_terms_version?: string | null;
             /** Country Code */
             country_code?: string | null;
             /** Display Name */
@@ -14852,6 +14993,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Accepted Terms Version */
+                    accepted_terms_version?: string | null;
                     /** Challenge Id */
                     challenge_id: string;
                     /** Code */
@@ -32610,6 +32753,179 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DpaDocumentView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_subprocessors_v1_legal_subprocessors_get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubprocessorListView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_legal_document_v1_legal__document__get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+                version?: string | null;
+            };
+            header?: never;
+            path: {
+                document: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalDocumentView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
