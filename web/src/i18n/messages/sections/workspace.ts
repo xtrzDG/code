@@ -16,6 +16,12 @@ import { adminIncidentEn } from "./workspace/adminIncident.en";
 import { adminIncidentKa } from "./workspace/adminIncident.ka";
 import { adminIncidentRu } from "./workspace/adminIncident.ru";
 import { adminKa } from "./workspace/admin.ka";
+import { adminActionsEn } from "./workspace/adminActions.en";
+import { adminActionsKa } from "./workspace/adminActions.ka";
+import { adminActionsRu } from "./workspace/adminActions.ru";
+import { adminStoryEn } from "./workspace/adminStory.en";
+import { adminStoryKa } from "./workspace/adminStory.ka";
+import { adminStoryRu } from "./workspace/adminStory.ru";
 import { adminMetricsEn } from "./workspace/adminMetrics.en";
 import { adminMetricsKa } from "./workspace/adminMetrics.ka";
 import { adminMetricsRu } from "./workspace/adminMetrics.ru";
@@ -100,7 +106,9 @@ export const workspaceEn = {
   quickReplies: quickRepliesEn,
   admin: adminEn,
   adminSecurity: adminSecurityEn,
+  adminActions: adminActionsEn,
   adminMetrics: adminMetricsEn,
+  adminStory: adminStoryEn,
   adminReplySpeed: adminReplySpeedEn,
   adminReplyGuard: adminReplyGuardEn,
   adminSystem: adminSystemEn,
@@ -127,7 +135,9 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   quickReplies: quickRepliesRu,
   admin: adminRu,
   adminSecurity: adminSecurityRu,
+  adminActions: adminActionsRu,
   adminMetrics: adminMetricsRu,
+  adminStory: adminStoryRu,
   adminReplySpeed: adminReplySpeedRu,
   adminReplyGuard: adminReplyGuardRu,
   adminSystem: adminSystemRu,
@@ -154,7 +164,9 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   quickReplies: quickRepliesKa,
   admin: adminKa,
   adminSecurity: adminSecurityKa,
+  adminActions: adminActionsKa,
   adminMetrics: adminMetricsKa,
+  adminStory: adminStoryKa,
   adminReplySpeed: adminReplySpeedKa,
   adminReplyGuard: adminReplyGuardKa,
   adminSystem: adminSystemKa,

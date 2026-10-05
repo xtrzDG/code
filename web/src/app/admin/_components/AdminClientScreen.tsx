@@ -16,6 +16,8 @@ import { countryFlag, countryName } from "@/lib/countries";
 import { ADMIN_PATH, businessPath } from "@/lib/navigation";
 
 import { AdminClientSkeleton } from "./AdminSkeletons";
+import { AccountCard, OnboardingRequestCard } from "./client/AccountCard";
+import { AccountActionsMenu } from "./client/actions/AccountActionsMenu";
 import { ClientUsageCard } from "./client/ClientUsageCard";
 import { CostCard } from "./client/CostCard";
 import { FailedAutotestsCard } from "./client/FailedAutotestsCard";
@@ -26,10 +28,24 @@ import { PaymentsCard } from "./client/PaymentsCard";
 import { QualityCard } from "./client/QualityCard";
 import { ReplyGuardCard } from "./client/ReplyGuardCard";
 import { ReplySpeedCard } from "./client/ReplySpeedCard";
+import { NotesCard } from "./client/story/NotesCard";
+import { TimelineCard } from "./client/story/TimelineCard";
 import { HealthBadge, IssueChips } from "./ClientBits";
 
-/** /admin/clients/[businessId]: one client's health explained, and an audited way into their cabinet. */
-export function AdminClientScreen({ businessId }: { businessId: string }) {
+/**
+ * /admin/clients/[businessId]: one client's health explained, an audited
+ * way into their cabinet, the account actions, the team's notes and the
+ * client's timeline.
+ */
+export function AdminClientScreen({
+  businessId,
+  canManageBilling,
+  canWriteNotes,
+}: {
+  businessId: string;
+  canManageBilling: boolean;
+  canWriteNotes: boolean;
+}) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const niches = useNiches();
@@ -83,15 +99,18 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
             }
             title={<span dir="auto">{summary.name}</span>}
             actions={
-              <Button
-                leadingIcon={<IconExternal className="size-4" aria-hidden />}
-                onClick={() => {
-                  setOpenError(null);
-                  setConfirming(true);
-                }}
-              >
-                {t("admin.detail.openCabinet")}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                {canManageBilling ? <AccountActionsMenu businessId={businessId} client={data} /> : null}
+                <Button
+                  leadingIcon={<IconExternal className="size-4" aria-hidden />}
+                  onClick={() => {
+                    setOpenError(null);
+                    setConfirming(true);
+                  }}
+                >
+                  {t("admin.detail.openCabinet")}
+                </Button>
+              </div>
             }
           />
 
@@ -109,6 +128,13 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
               <ClientUsageCard summary={summary} />
             </div>
 
+            <OnboardingRequestCard businessId={businessId} client={data} canComplete={canWriteNotes} />
+
+            <div className="grid gap-6 xl:grid-cols-2">
+              <AccountCard client={data} />
+              <NotesCard businessId={businessId} timeZone={data.timezone} canWrite={canWriteNotes} />
+            </div>
+
             <ReplySpeedCard summary={summary} />
             <ReplyGuardCard summary={summary} />
             <QualityCard businessId={businessId} timeZone={data.timezone} />
@@ -119,6 +145,8 @@ export function AdminClientScreen({ businessId }: { businessId: string }) {
               <InvoicesCard invoices={data.invoices ?? []} timeZone={data.timezone} />
               <PaymentsCard payments={data.payments ?? []} timeZone={data.timezone} />
             </div>
+
+            <TimelineCard businessId={businessId} timeZone={data.timezone} />
           </div>
 
           <OpenCabinetDialog
