@@ -1,5 +1,6 @@
 """In-memory wiring of the knowledge slice for tests (no network, fixed clock)."""
 
+from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.use_cases.knowledge.create_knowledge_item_use_case import (
     CreateKnowledgeItemUseCase,
 )
@@ -66,6 +67,7 @@ class KnowledgeHarness(KnowledgeStore):
         self.list_niche_templates = ListNicheTemplatesUseCase(
             niche_template_registry=self.niche_template_registry,
             localized_text_resolver=self.resolver,
+            niche_value_registry=NicheValueRegistry(),
         )
         self.get_niche_template = GetNicheTemplateUseCase(
             niche_template_registry=self.niche_template_registry,

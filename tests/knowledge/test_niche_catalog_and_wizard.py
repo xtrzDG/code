@@ -30,6 +30,22 @@ def test_catalog_lists_all_niches_in_the_requested_language() -> None:
     assert hebrew.niches[0].name == "Restaurants and cafes"
 
 
+def test_catalog_carries_each_niches_typical_check_in_euro() -> None:
+    harness = KnowledgeHarness()
+
+    niches = {
+        niche.key: niche
+        for niche in harness.list_niche_templates.run(NicheCatalogQuery()).niches
+    }
+
+    restaurant_check = niches[NicheKey.RESTAURANT].typical_check
+    assert restaurant_check is not None
+    assert restaurant_check.currency_code == "EUR"
+    assert restaurant_check.amount_minor > 0
+    # Real estate checks vary too much to guess: the calculator asks.
+    assert niches[NicheKey.REAL_ESTATE].typical_check is None
+
+
 def test_niche_details_resolve_questions_and_default_rules() -> None:
     harness = KnowledgeHarness()
 

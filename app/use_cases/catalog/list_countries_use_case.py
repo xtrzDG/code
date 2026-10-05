@@ -9,6 +9,7 @@ from app.schemas.dto.catalog.countries import (
 )
 from app.schemas.typings.billing.booleans import HasLocalPriceBook
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
+from app.use_cases.shared.subscription_pricing import select_subscription_currency
 from app.utilities.localization.babel_locales import require_babel_locale
 from app.utilities.localization.display_names import build_country_display_name
 
@@ -62,11 +63,15 @@ class ListCountriesUseCase(UseCaseContract[CountryListRequest, CountryList]):
         )
 
     def _has_price_book(self, currency_code: CurrencyCode) -> HasLocalPriceBook:
-        """Every plan has an explicit monthly price in this currency."""
+        """
+        Every plan is billed in this currency (the same rule subscriptions
+        follow: the monthly price and the setup fee are both in the price
+        book, or it is the plans' own currency).
+        """
 
         plans = self._plan_registry.list_all()
         return plans != [] and all(
-            self._plan_registry.find_local_monthly_price(plan.key, currency_code)
-            is not None
+            select_subscription_currency(self._plan_registry, plan.key, currency_code)
+            == currency_code
             for plan in plans
         )

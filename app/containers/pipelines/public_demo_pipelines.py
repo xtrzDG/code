@@ -21,8 +21,8 @@ class PublicDemoPipelinesContainer(containers.DeclarativeContainer):
     """
 
     public_demo_orchestrators: PublicDemoOrchestratorsContainer = (
-        DependenciesContainer()
-    )  # type: ignore[assignment]
+        DependenciesContainer()  # type: ignore[assignment]
+    )
     conversation_orchestrators: ConversationOrchestratorsContainer = (
         DependenciesContainer()  # type: ignore[assignment]
     )

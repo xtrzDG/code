@@ -99,6 +99,7 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         ListNicheTemplatesUseCase,
         niche_template_registry=registries.niche_template_registry,
         localized_text_resolver=utilities.localized_text_resolver,
+        niche_value_registry=registries.niche_value_registry,
     )
     get_niche_template_use_case: Factory[
         UseCaseContract[NicheTemplateQuery, NicheDetailsView]
