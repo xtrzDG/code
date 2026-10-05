@@ -16,10 +16,7 @@ from app.schemas.typings.bookings.constrained_integers import (
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
-from app.schemas.typings.contacts.booleans import (
-    HasContactTestActivity,
-    IsContactPhoneVerified,
-)
+from app.schemas.typings.contacts.booleans import IsContactPhoneVerified
 from app.schemas.typings.contacts.constrained_integers import (
     ContactBookingCount,
     ContactConversationCount,
@@ -136,8 +133,8 @@ class ContactDetailView(ImmutableDTO):
 
 class ContactActivity(ImmutableDTO):
     """
-    Records of one customer: real ones (conversations, bookings, leads) and
-    whether the owner's test chats or autotests touched them.
+    Records of one customer: their conversations, bookings and leads (the
+    owner's test chats and autotests left out).
     """
 
     conversations: list[ConversationDocument] = Field(
@@ -145,4 +142,17 @@ class ContactActivity(ImmutableDTO):
     )
     bookings: list[BookingDocument] = Field(default_factory=list[BookingDocument])
     leads: list[LeadDocument] = Field(default_factory=list[LeadDocument])
-    has_test_activity: HasContactTestActivity = False
+
+
+class ContactActivityTotals(ImmutableDTO):
+    """
+    How active one customer was, counted by the database for a page of the
+    list (test chats left out): records per kind, the channels they came
+    through and the moment of the latest one (None without any).
+    """
+
+    conversation_count: ContactConversationCount = ContactConversationCount(0)
+    booking_count: ContactBookingCount = ContactBookingCount(0)
+    lead_count: ContactLeadCount = ContactLeadCount(0)
+    channels: list[ChannelKind] = Field(default_factory=list[ChannelKind])
+    latest_at: Microseconds | None = None

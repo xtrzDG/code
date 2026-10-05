@@ -5,22 +5,22 @@ from app.contracts.repositories.knowledge_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.knowledge_admin import KnowledgeItemListQuery, KnowledgeItemPage
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.knowledge.knowledge_item_views import to_item_details
-from app.utilities.paging.cursor_paging import take_page
+from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 
 class ListKnowledgeItemsUseCase(
     UseCaseContract[KnowledgeItemListQuery, KnowledgeItemPage]
 ):
     """
-    One page of the knowledge base of a business, newest first, optionally
-    only one kind and only active or inactive items (filters apply before
-    paging).
+    One page of the knowledge base of a business, the last changed first,
+    optionally only one kind and only active or inactive items: a keyset
+    page of the database (`updated_at`, `kind` and `is_active` lookups of
+    migration 1122), whatever the size of the knowledge base.
     """
 
     def __init__(
@@ -41,16 +41,15 @@ class ListKnowledgeItemsUseCase(
             raise NotFoundError(f"Business {input_data.business_id} was not found.")
 
         language: LanguageTag = input_data.language or business.owner_language
-        items: list[KnowledgeItemDocument] = [
-            item
-            for item in self._knowledge_item_repo.list_by_business(business.id)
-            if (input_data.kind is None or item.kind is input_data.kind)
-            and (input_data.is_active is None or item.is_active == input_data.is_active)
-        ]
-        page_items, next_cursor = take_page(
-            items,
+        page_items, next_cursor = finish_page(
+            self._knowledge_item_repo.page_by_business(
+                business.id,
+                read_slice(input_data.page),
+                input_data.kind,
+                input_data.is_active,
+            ),
             input_data.page,
-            sort_key=lambda item: int(item.created_at),
+            sort_key=lambda item: int(item.updated_at),
             item_id=lambda item: str(item.id),
         )
         resources: list[ResourceDocument] = self._resource_repo.list_by_business(

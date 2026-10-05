@@ -210,8 +210,8 @@ jobs:
 
       - name: Smoke test the backend image
         run: |
-          # Without DATABASE_URL both migration runners refuse with exit code 2.
-          for runner in migrate migrate-documents; do
+          # Without DATABASE_URL the migration and backfill runners refuse with exit code 2.
+          for runner in migrate migrate-documents backfill-lookup; do
             status=0
             docker run --rm assistant-workshop-backend:ci "$runner" --dry-run || status=$?
             test "$status" -eq 2

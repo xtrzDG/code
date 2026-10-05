@@ -14,6 +14,7 @@ from app.schemas.exceptions.application_errors import (
     UnsupportedLanguageError,
     ValidationFailedError,
 )
+from app.schemas.typings.businesses.constrained_integers import BusinessBatchSize
 from app.schemas.typings.businesses.strings import BusinessName, CityName
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
@@ -258,7 +259,7 @@ def test_invalid_creation_requests_are_rejected(
     with pytest.raises(expected_error):
         testbed.create_business.run(create(testbed, owner.user.id, **details))
 
-    assert testbed.business_repo.list_all() == []
+    assert testbed.business_repo.list_batch(None, BusinessBatchSize(10)) == []
 
 
 def test_niche_without_recommendation_accepts_an_explicit_plan() -> None:

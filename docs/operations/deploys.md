@@ -199,6 +199,38 @@ quiet period writes again. Before rolling back past that release, note
 that versions assembled since offer `list_my_bookings`: publish a version
 assembled by the previous release first.
 
+The release with online-safe migrations (W12, migration 1122) adds
+trigger-filled lookup columns to `contacts`, `knowledge_items`, `bookings`
+and `leads`, the `client_standings` collection and the periodic job
+`refresh_client_standings` (every 15 minutes), and moves contacts to
+version 3 (`last_seen_at`, `display_name_folded`, upcast from version 2).
+The customer list, the knowledge list and a customer's counts page by the
+new columns, which are empty for rows written before the migration, so
+**right after the deploy** (all three services on the new commit):
+
+```
+workshop migrate-documents --collection contacts   # version 3 for old customers
+workshop backfill-lookup --dry-run                 # what is left to fill
+workshop backfill-lookup                           # every new column, batches of 5000
+```
+
+Until then those lists show only rows written since the migration (by
+either release: the trigger fills them on every write), and a customer's
+counts leave out older bookings and leads; nothing is lost, and running
+the commands again is harmless. A version 2 customer's latest activity
+starts as the moment they first wrote (the row knows no better), so older
+customers stand in the list by that until their next message, call or
+booking. The old release, during the overlap,
+still writes version 2 contacts, which clears their two new columns until
+`migrate-documents` (run it after the overlap ended) or the customer's
+next message. The admin client list of the new release reads the
+standings the new worker computes on its first tick and every 15 minutes
+after (the page says when; until the first run it is empty); the old
+release keeps summarizing live. The old release ignores the new columns,
+the new collection and the version 3 fields, so a rollback needs nothing
+beyond the usual. `BusinessRepoContract.list_all` is gone: a job over
+every business walks them with `walk_businesses` (keyset batches of 200).
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their
@@ -235,8 +267,9 @@ Rules that follow from it:
   write it in the next.
 - **Types:** never change the type of a field in place (string → object,
   integer → string); add a new field instead. Lookup fields
-  (`app/utilities/storage/document_lookup_fields.py`) have generated
-  columns cast in SQL: a new type would make writes fail.
+  (`app/utilities/storage/document_lookup_catalog.py`) have typed columns
+  (generated up to 1114, trigger-filled from 1122): a new type would make
+  writes fail.
 - **Required fields** start optional; a required field without a default
   needs an upcaster for old rows from the release that introduces it.
 - **Nested objects** follow the same rules: their shapes are part of the
@@ -277,10 +310,44 @@ The same expand and contract, for tables and columns:
 
 - Add tables, columns (nullable or with a default) and indexes; never drop
   or rename what the running release uses. Drop it in a later release.
-- Migrations are forward-only and run in one transaction each
+- Migrations are forward-only and run in one transaction each, or
+  statement by statement in a `-- workshop:no-transaction` file
   (`migrations/README.md`); a rollback of the code does not roll back the
   schema, so the previous release must work with the new schema.
-- Keep migrations short: they hold locks while both releases serve.
+- Migrations are online-safe: they run while the previous release writes,
+  so nothing may hold a busy table for longer than a moment. No stored
+  generated column, index built without `CONCURRENTLY`, unbatched
+  `UPDATE`/`DELETE`, type change or validated constraint on an existing
+  table (`tests/storage/test_migration_safety.py` lints every new file).
+  A lookup field on an existing table is a nullable column filled by a
+  BEFORE INSERT/UPDATE trigger, backfilled by
+  `workshop backfill-lookup --collection X --field Y --batch 5000` in
+  keyset batches outside the deploy, then indexed CONCURRENTLY in a later
+  file.
+- Every statement of `workshop migrate` waits at most 5 s for a lock and a
+  file that timed out is tried again, five times in all, with growing
+  jittered pauses. When the deploy still fails on it ("could not obtain
+  lock"), something held the table: look for long transactions
+  (`select pid, state, xact_start, query from pg_stat_activity where
+  xact_start < now() - interval '1 minute'`), end them or wait for a
+  quieter moment, and redeploy. Nothing of a failed file is recorded, and
+  a half-built concurrent index is dropped and built again next time.
+
+### `workshop backfill-lookup`
+
+```
+workshop backfill-lookup                                   # every column
+workshop backfill-lookup --collection contacts --field last_seen_at --batch 5000
+workshop backfill-lookup --dry-run                         # only count
+```
+
+Fills trigger-filled lookup columns of rows written before their
+migration: platform-wide, in primary-key order, one short transaction per
+batch (`--lock-timeout`, 5 s, and retries), only rows whose column is empty
+and whose document holds the field. Idempotent and resumable; it prints,
+per column, the rows it filled (with `--dry-run`, the rows left). Run it from the API's Render Shell or
+as a one-off job **after** the deploy that added the columns, never in
+`preDeployCommand`.
 
 ## Rollback
 

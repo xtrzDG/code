@@ -13,7 +13,9 @@ is not leakproof under row-level security, so the first sort column also
 gets a plain bound (`doc_x <= $1`), which is: the index range scan starts
 at the position and the row comparison only drops the ties already shown.
 When the position's row is gone, its write position is NULL and only the
-rest of its ties are skipped.
+rest of its ties are skipped. A page without sort columns is in first-write
+order alone: its plain bound is the write time of the position's row (a
+walk whose rows are never deleted, like the businesses).
 """
 
 from psycopg import sql
@@ -66,26 +68,35 @@ def compose_page(
     if query.after is not None:
         bound: sql.SQL = sql.SQL("<=" if query.is_descending else ">=")
         comparison: sql.SQL = sql.SQL("<" if query.is_descending else ">")
+        key: str = str(query.after.document_key)
+        if columns:
+            conditions.append(
+                sql.SQL("{column} {bound} %s").format(column=columns[0], bound=bound)
+            )
+            parameters.append(int(query.after.values[0]))
+        else:
+            # First-write order alone: the write time of the position's row
+            # is the plain bound the index range scan starts at.
+            conditions.append(
+                sql.SQL("created_at {bound} ({position})").format(
+                    bound=bound, position=write_position(table, "created_at")
+                )
+            )
+            parameters.append(key)
+        position: list[sql.Composable] = [
+            *(sql.SQL("%s") for _ in columns),
+            sql.SQL("({select})").format(select=write_position(table, "created_at")),
+            sql.SQL("({select})").format(select=write_position(table, "row_sequence")),
+        ]
         conditions.append(
-            sql.SQL("{column} {bound} %s").format(column=columns[0], bound=bound)
-        )
-        parameters.append(int(query.after.values[0]))
-        conditions.append(
-            sql.SQL(
-                "({columns}, created_at, row_sequence) {comparison} ({values}, "
-                "(select page_position.created_at from {table} as page_position "
-                "where page_position.document_key = %s), "
-                "(select page_position.row_sequence from {table} as page_position "
-                "where page_position.document_key = %s))"
-            ).format(
-                columns=sql.SQL(", ").join(columns),
+            sql.SQL("({columns}) {comparison} ({position})").format(
+                columns=sql.SQL(", ").join([*columns, *WRITE_ORDER_COLUMNS]),
                 comparison=comparison,
-                values=sql.SQL(", ").join(sql.SQL("%s") for _ in columns),
-                table=table,
+                position=sql.SQL(", ").join(position),
             )
         )
         parameters.extend(int(value) for value in query.after.values)
-        parameters.extend([str(query.after.document_key)] * 2)
+        parameters.extend([key] * 2)
 
     order: sql.Composable = sql.SQL(", ").join(
         sql.SQL("{column} {direction}").format(column=column, direction=direction)
@@ -96,6 +107,15 @@ def compose_page(
     ).format(table=table, where=sql.SQL(" and ").join(conditions), order=order)
     parameters.append(int(query.limit))
     return statement, parameters
+
+
+def write_position(table: sql.Identifier, column: str) -> sql.Composed:
+    """The write time or sequence of the row a page position names."""
+
+    return sql.SQL(
+        "select page_position.{column} from {table} as page_position "
+        "where page_position.document_key = %s"
+    ).format(column=sql.Identifier(column), table=table)
 
 
 def compose_latest(

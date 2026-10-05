@@ -21,10 +21,11 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.utilities.client_health.guard_activity import is_guard_spike
 from tests.billing.admin_world import AdminWorld, build_admin_world, days_ago
+from tests.billing.client_list_runs import list_clients
 
 
 def georgian_summary(world: AdminWorld) -> AdminClientSummary:
-    page = world.testbed.list_clients.run(AdminClientsQuery(user_id=world.admin.id))
+    page = list_clients(world.testbed, AdminClientsQuery(user_id=world.admin.id))
     return next(item for item in page.items if item.business_id == world.georgian.id)
 
 

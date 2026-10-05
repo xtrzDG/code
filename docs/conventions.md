@@ -31,10 +31,15 @@ Every HTTP endpoint runs `operator.operate` -> `pipeline.start` ->
   (`BusinessScopedRepository`). Repositories never read a whole collection
   to find documents: they query declared, indexed lookup fields
   (`find_one_by_field`, `list_by_fields`, `count_by_fields`,
-  `list_by_range`; see `migrations/README.md`). `list_all()` is only for
-  admin views and jobs that walk every business
-  (`tests/architecture_policy/test_no_full_scans_in_hot_paths.py`). The business of a channel message comes from the
-  server-side channel lookup, never from model output.
+  `list_by_range`; see `migrations/README.md`), and no repository reads a
+  whole collection
+  (`tests/architecture_policy/test_no_full_scans_in_hot_paths.py`, whose
+  allow-list is empty). Periodic jobs ask by indexed predicates; a job or
+  admin view that must see every business walks them with
+  `walk_businesses` (`app/use_cases/shared/business_walk.py`: keyset
+  batches of 200 in first-write order) and keeps only what it needs per
+  business. The business of a channel message comes from the server-side
+  channel lookup, never from model output.
 - Use cases depend on contracts from `app/contracts/` (repositories, registries,
   utilities, facilitators, LLM adapter), never on concrete classes of another
   module. Constructor injection only; no globals, no service locators.
@@ -90,7 +95,15 @@ a stored shape changes only by expand and contract
   read path (`PersistedDocumentCodec`) ignores unknown fields. Never relax
   inputs or DTOs to make old data load.
 - SQL migrations are additive; drop or rename only what no running
-  release uses.
+  release uses. They run while the previous release serves, so they are
+  online-safe (`migrations/README.md`, linted by
+  `tests/storage/test_migration_safety.py`): no rewrite, plain index build
+  or unbatched `UPDATE`/`DELETE` on an existing table. A lookup field on an
+  existing table is a nullable column filled by a BEFORE INSERT/UPDATE
+  trigger, backfilled by
+  `workshop backfill-lookup --collection X --field Y --batch 5000` in
+  keyset batches outside the deploy, then indexed CONCURRENTLY in a later
+  file.
 
 ## Time
 
@@ -129,10 +142,15 @@ a stored shape changes only by expand and contract
   and the page into `next_cursor`), and counts, sums and dashboards group
   there (`count_by`); a page's related documents come in one read
   (`get_many`, `latest_by`), never one query per row. Filters are part of
-  the query. `take_page` (`cursor_paging.py`) pages only small lists
-  already in memory; `tests/architecture_policy/test_lists_page_in_the_database.py`
-  keeps it out of the cabinet's lists, cards and dashboards. Their latency
-  budgets live in `tests/perf` (`docs/operations/capacity.md`).
+  the query; there is no in-memory paging helper, and
+  `tests/architecture_policy/test_lists_page_in_the_database.py` keeps the
+  cabinet's lists, cards and dashboards on the database. A list whose
+  order the database cannot compute per request (the platform admin's
+  client list, ordered by figures summarized from several collections) is
+  computed ahead by a periodic job into a read model with a stored rank
+  per order (`client_standings`, `refresh_client_standings`) and pages by
+  that rank. Their latency budgets live in `tests/perf`
+  (`docs/operations/capacity.md`).
 - JSON request bodies have one parsing stack,
   `app/gateways/http/strict_request_parsing.py`: read them with
   `build_json_body_dependency(Body)` (or `optional=True` when an empty body

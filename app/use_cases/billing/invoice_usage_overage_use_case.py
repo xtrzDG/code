@@ -40,6 +40,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     sum_invoice_amounts,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 from app.use_cases.shared.package_usage import (
     compute_overage_minutes,
     summarize_package_usage,
@@ -121,7 +122,7 @@ class InvoiceUsageOverageUseCase(UseCaseContract[JobTick, JobReport]):
 
     def run(self, input_data: JobTick) -> JobReport:
         issued_count: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             subscription: SubscriptionDocument | None = find_current_subscription(
                 self._subscription_repo,
                 business.id,

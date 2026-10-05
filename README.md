@@ -31,12 +31,13 @@ uv, Python 3.14, ruff, mypy и pyright в строгом режиме, pytest, d
 | --- | --- | --- |
 | HTTP API | `app.main:create_application` (фабрика uvicorn) | кабинет, каталог, вебхуки каналов, голоса и оплаты, виджет сайта |
 | Фоновый воркер | `python -m app.worker_main` | периодические задачи и очередь задач по полосам (ответы на сообщения из входящих, доставка исходящих, автотесты версий помощника и др.); воркеров может быть сколько угодно; в разработке без Postgres — поток внутри API (`EMBEDDED_WORKER`) |
-| Миграции | `python -m app.gateways.cli.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS) |
+| Миграции | `python -m app.gateways.cli.migrate` | схема Postgres (ЕС) с изоляцией по бизнесу (RLS); не блокирует запись во время деплоя: ожидание блокировки до 5 с, повторы, индексы `CONCURRENTLY` (см. [`migrations/README.md`](migrations/README.md)) |
 | Миграция документов | `python -m app.gateways.cli.migrate_documents` | переписывает сохранённые документы старых версий схемы в текущую (после деплоя, см. [`docs/operations/deploys.md`](docs/operations/deploys.md)) |
+| Заполнение колонок поиска | `python -m app.gateways.cli.backfill_lookup` | заполняет новые колонки поиска у строк, записанных до миграции, пакетами (после деплоя, см. [`docs/operations/deploys.md`](docs/operations/deploys.md)) |
 | Нагрузочные данные | `python -m app.gateways.cli.seed_load` | заполняет базу для нагрузочных тестов (500 бизнесов, 2 млн сообщений, 200 тыс. броней) и пишет манифест для k6; не в production, см. [`docs/operations/capacity.md`](docs/operations/capacity.md) |
 
 Все они собираются в один образ (`Dockerfile`, роли `api`, `worker`, `migrate`,
-`migrate-documents`, `seed-load`);
+`migrate-documents`, `backfill-lookup`, `seed-load`);
 кабинет владельца на Next.js — отдельный образ `web/Dockerfile`.
 
 API и воркер собираются из одного контейнера `app/containers/app.py::AppContainer`

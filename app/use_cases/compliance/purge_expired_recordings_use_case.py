@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.recording_storage import RecordingStorageAdapterContract
@@ -22,6 +24,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 
 SECONDS_PER_DAY: int = 24 * 60 * 60
 
@@ -54,10 +57,11 @@ class PurgeExpiredRecordingsUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: PurgeExpiredRecordingsCommand) -> RecordingPurgeResult:
-        businesses: list[BusinessDocument] = self._select_businesses(input_data)
+        scanned: int = 0
         purged_calls: int = 0
         deleted_recordings: int = 0
-        for business in businesses:
+        for business in self._select_businesses(input_data):
+            scanned += 1
             business_purged_calls, business_deleted_recordings = self._purge_business(
                 business
             )
@@ -65,7 +69,7 @@ class PurgeExpiredRecordingsUseCase(
             deleted_recordings += business_deleted_recordings
 
         return RecordingPurgeResult(
-            scanned_businesses=ScannedBusinessCount(len(businesses)),
+            scanned_businesses=ScannedBusinessCount(scanned),
             purged_calls=PurgedCallCount(purged_calls),
             deleted_recordings=DeletedRecordingCount(deleted_recordings),
         )
@@ -73,9 +77,9 @@ class PurgeExpiredRecordingsUseCase(
     def _select_businesses(
         self,
         input_data: PurgeExpiredRecordingsCommand,
-    ) -> list[BusinessDocument]:
+    ) -> Iterable[BusinessDocument]:
         if input_data.business_id is None:
-            return self._business_repo.list_all()
+            return walk_businesses(self._business_repo)
 
         business: BusinessDocument | None = self._business_repo.get(
             input_data.business_id

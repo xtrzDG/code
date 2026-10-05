@@ -3,9 +3,15 @@ Apply the SQL migrations in `migrations/` to the database in DATABASE_URL.
 
     uv run python -m app.gateways.cli.migrate            # apply
     uv run python -m app.gateways.cli.migrate --dry-run  # list
+    uv run python -m app.gateways.cli.migrate --lock-timeout 10 --attempts 8
 
-Safe to run on every deploy and from several instances at once. Exit codes:
-0 done, 1 a migration could not be applied, 2 DATABASE_URL is not set.
+Safe to run on every deploy and from several instances at once, while the
+previous release still serves: every statement waits at most
+`--lock-timeout` seconds (5) for a lock, so a migration never queues the
+live writes of a busy table behind it; a file that timed out is rolled back
+and tried again after a jittered pause, `--attempts` times (5) in all.
+Exit codes: 0 done, 1 a migration could not be applied, 2 DATABASE_URL is
+not set.
 """
 
 import argparse
@@ -35,17 +41,25 @@ from app.schemas.dto.storage import (
     DatabaseMigrationsReport,
 )
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.storage.constrained_integers import (
+    LockWaitSeconds,
+    MigrationAttemptLimit,
+)
 from app.use_cases.maintenance.apply_database_migrations_use_case import (
     ApplyDatabaseMigrationsUseCase,
 )
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
+from app.utilities.storage.migration_retry_pause import JitteredMigrationRetryPause
 
 DEFAULT_MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[3] / "migrations"
-# A migration may rewrite or index a big table: much longer than a request
-# may take, but still bounded, so a deploy never hangs on a blocked lock.
+# A statement may build an index concurrently or validate a constraint on a
+# big table: much longer than a request may take, but still bounded. Lock
+# waits are bounded separately and much tighter (--lock-timeout).
 MIGRATION_STATEMENT_TIMEOUT_SECONDS: int = 30 * 60
+DEFAULT_LOCK_TIMEOUT_SECONDS: int = 5
+DEFAULT_ATTEMPTS: int = 5
 MIGRATION_IDLE_IN_TRANSACTION_TIMEOUT_SECONDS: int = 5 * 60
 EXIT_OK: int = 0
 EXIT_MIGRATION_FAILED: int = 1
@@ -65,6 +79,12 @@ def main(
     parsed_arguments: argparse.Namespace = build_argument_parser().parse_args(arguments)
     is_dry_run: bool = bool(parsed_arguments.dry_run)
     migrations_directory: Path = Path(str(parsed_arguments.directory))
+    try:
+        lock_timeout = LockWaitSeconds(int(parsed_arguments.lock_timeout))
+        attempt_limit = MigrationAttemptLimit(int(parsed_arguments.attempts))
+    except ValueError as error:
+        print(f"Invalid arguments: {error}", file=error_stream)
+        return EXIT_NOT_CONFIGURED
 
     try:
         settings: AppSettings = assemble_app_settings(
@@ -99,9 +119,11 @@ def main(
                         migrations_directory
                     ),
                     migration_store=PostgresSchemaMigrationStoreAdapter(
-                        connection_pool
+                        connection_pool, lock_timeout=lock_timeout
                     ),
                     wall_clock=WallClock(preferred_time_unit_type=Microseconds),
+                    retry_pause=JitteredMigrationRetryPause(),
+                    attempt_limit=attempt_limit,
                 )
             )
         )
@@ -129,6 +151,18 @@ def build_argument_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="only list pending migrations",
+    )
+    parser.add_argument(
+        "--lock-timeout",
+        type=int,
+        default=DEFAULT_LOCK_TIMEOUT_SECONDS,
+        help="seconds a statement may wait for a lock (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--attempts",
+        type=int,
+        default=DEFAULT_ATTEMPTS,
+        help="tries of a file whose locks timed out (default: %(default)s)",
     )
     parser.add_argument(
         "--directory",

@@ -34,6 +34,7 @@ from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.contacts.strings import FoldedContactName
 from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
     ReplyLatencyMilliseconds,
@@ -54,6 +55,22 @@ class ContactListingContract(Protocol):
         self, business_id: BusinessId, window: KeysetSlice
     ) -> list[ContactDocument]:
         """One keyset page of the contacts, the newest first (CSV export)."""
+        raise NotImplementedError
+
+    def page_by_last_seen(
+        self, business_id: BusinessId, window: KeysetSlice
+    ) -> list[ContactDocument]:
+        """
+        One keyset page of the customers, the most recently active first
+        (`last_seen_at`); contacts made only by tests have none and are
+        never on it.
+        """
+        raise NotImplementedError
+
+    def list_by_folded_name(
+        self, business_id: BusinessId, folded_name: FoldedContactName
+    ) -> list[ContactDocument]:
+        """The contacts whose folded name is exactly this one (a few)."""
         raise NotImplementedError
 
 

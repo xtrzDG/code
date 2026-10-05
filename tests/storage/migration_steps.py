@@ -21,7 +21,11 @@ from app.use_cases.maintenance.apply_database_migrations_use_case import (
     ApplyDatabaseMigrationsUseCase,
 )
 from tests.storage.postgres_server import ThrowawayPostgresServer
-from tests.storage.storage_testing import MIGRATIONS_DIRECTORY, build_fixed_wall_clock
+from tests.storage.storage_testing import (
+    MIGRATIONS_DIRECTORY,
+    RecordedRetryPause,
+    build_fixed_wall_clock,
+)
 
 MIGRATION_NAMES: list[str] = sorted(
     path.stem for path in MIGRATIONS_DIRECTORY.glob("*.sql")
@@ -39,6 +43,7 @@ def run_migrations(
             migration_source=SqlFileMigrationSourceAdapter(migrations_directory),
             migration_store=PostgresSchemaMigrationStoreAdapter(connection_pool),
             wall_clock=build_fixed_wall_clock(),
+            retry_pause=RecordedRetryPause(),
         ).run(ApplyDatabaseMigrationsCommand(is_dry_run=is_dry_run))
     finally:
         connection_pool.close()

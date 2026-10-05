@@ -10,13 +10,31 @@ from app.schemas.domain.conversations import CallDocument
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.contacts.strings import FoldedContactName
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.utilities.contacts.contact_search import fold_contact_name
+
+LAST_SEEN_AT_FIELD: DocumentFieldPath = DocumentFieldPath("last_seen_at")
+DISPLAY_NAME_FOLDED_FIELD: DocumentFieldPath = DocumentFieldPath("display_name_folded")
+# Customers who share one exact name, at most (a search shows them first).
+SAME_NAME_LIMIT: DocumentQueryLimit = DocumentQueryLimit(50)
+
+
+def with_folded_name(contact: ContactDocument) -> ContactDocument:
+    """The contact with its folded name in step with its name (stored)."""
+
+    contact.display_name_folded = fold_contact_name(contact.name)
+    return contact
 
 
 class ContactListing(BusinessScopedRepository[ContactDocument]):
     """
     The contacts a page of a list names, read together; the business's
-    contacts a keyset page at a time, the newest first.
+    contacts a keyset page at a time, the newest first (exports) or the
+    most recently active first (the customer list, migration 1122); the
+    customers of one exact name.
     """
 
     def get_many(
@@ -35,6 +53,20 @@ class ContactListing(BusinessScopedRepository[ContactDocument]):
         self, business_id: BusinessId, window: KeysetSlice
     ) -> list[ContactDocument]:
         return self._page_in_business(business_id, (CREATED_AT_FIELD,), window)
+
+    def page_by_last_seen(
+        self, business_id: BusinessId, window: KeysetSlice
+    ) -> list[ContactDocument]:
+        return self._page_in_business(business_id, (LAST_SEEN_AT_FIELD,), window)
+
+    def list_by_folded_name(
+        self, business_id: BusinessId, folded_name: FoldedContactName
+    ) -> list[ContactDocument]:
+        return self._list_in_business(
+            business_id,
+            [field_equals(DISPLAY_NAME_FOLDED_FIELD, folded_name)],
+            limit=SAME_NAME_LIMIT,
+        )
 
 
 class CallListing(BusinessScopedRepository[CallDocument]):

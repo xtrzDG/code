@@ -1,10 +1,28 @@
+import logging
+import time
+from collections.abc import Callable
+
 import psycopg
-from psycopg import sql
 from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds
 
-from app.adapters.storage.postgres.postgres_session_settings import (
-    DOCUMENT_SCHEMA_NAME,
+from app.adapters.storage.postgres.migration_statements import (
+    concurrent_index_names,
+    drop_invalid_indexes,
+    execute_sql,
+)
+from app.adapters.storage.postgres.schema_migration_queries import (
+    DEFAULT_RUNNER_LOCK_WAIT_SECONDS,
+    INSERT_QUERY,
+    LIST_QUERY,
+    MIGRATION_LOCK_KEY,
+    bound_lock_waits,
+    has_bookkeeping_table,
+    is_recorded,
+    lock_runners,
+    prepare_bookkeeping,
+    read_integer,
+    read_text,
 )
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
@@ -12,67 +30,63 @@ from app.clients.postgres.postgres_connection_pool_client import (
 )
 from app.contracts.storage import SchemaMigrationStoreAdapterContract
 from app.schemas.dto.storage import AppliedSchemaMigration, SchemaMigrationScript
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    ExternalServiceError,
-)
+from app.schemas.exceptions.application_errors import ExternalServiceError
+from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 from app.schemas.typings.storage.constrained_strings import (
     SchemaMigrationChecksum,
     SchemaMigrationName,
 )
+from app.schemas.typings.storage.strings import SchemaMigrationStatement
+from app.utilities.storage.sql_statements import split_sql_statements
 
-SCHEMA_MIGRATIONS_TABLE_NAME: str = "schema_migrations"
-# Transaction-level advisory lock that serializes migration runners
-# (several app instances may start at once). Any fixed bigint works.
-MIGRATION_LOCK_KEY: int = 4_711_202_610_010_001
+DEFAULT_LOCK_TIMEOUT: LockWaitSeconds = LockWaitSeconds(5)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
     """
     Records applied migrations in `workshop.schema_migrations`.
 
-    Each script runs in its own transaction together with its record: after
-    taking an advisory lock, the runner re-checks the record, executes the
-    script (simple query protocol, so a file may hold many statements and
-    PL/pgSQL bodies) and inserts the record. A failing script leaves nothing
-    behind. Scripts must not contain transaction control (BEGIN, COMMIT) or
-    statements that cannot run in a transaction (CREATE INDEX CONCURRENTLY).
+    Runners are serialized by a session advisory lock, which a waiting
+    runner asks for again and again outside any transaction: a runner that
+    waited inside a transaction would hold a snapshot that the other
+    runner's `CREATE INDEX CONCURRENTLY` waits for (a deadlock). Whoever
+    gets the lock re-checks the record first.
+
+    Every statement of a migration waits at most `lock_timeout` for a lock
+    (5 s by default): a file that needs a table the live release keeps busy
+    fails fast (MigrationLockTimeoutError) instead of queueing every write
+    of that table behind it, and the runner tries it again later.
+
+    A transactional file runs in one transaction together with its record
+    (simple query protocol, so it may hold many statements and PL/pgSQL
+    bodies): a failure leaves nothing behind. A no-transaction file
+    (`-- workshop:no-transaction`, for `CREATE INDEX CONCURRENTLY`) runs
+    statement by statement and is recorded only after
+    its last statement; its statements must be idempotent (`IF NOT EXISTS`,
+    `CREATE OR REPLACE`), because a new try runs the file from the start,
+    after the indexes a failed try left invalid were dropped.
     """
 
-    def __init__(self, connection_pool: PostgresConnectionPoolClient) -> None:
+    def __init__(
+        self,
+        connection_pool: PostgresConnectionPoolClient,
+        lock_timeout: LockWaitSeconds = DEFAULT_LOCK_TIMEOUT,
+        sleep: Callable[[float], None] = time.sleep,
+        lock_wait_seconds: float = DEFAULT_RUNNER_LOCK_WAIT_SECONDS,
+    ) -> None:
         self._connection_pool: PostgresConnectionPoolClient = connection_pool
-        self._qualified_table_name: str = (
-            f"{DOCUMENT_SCHEMA_NAME}.{SCHEMA_MIGRATIONS_TABLE_NAME}"
-        )
-        table: sql.Identifier = sql.Identifier(
-            DOCUMENT_SCHEMA_NAME, SCHEMA_MIGRATIONS_TABLE_NAME
-        )
-        self._create_schema_query: sql.Composed = sql.SQL(
-            "create schema if not exists {schema}"
-        ).format(schema=sql.Identifier(DOCUMENT_SCHEMA_NAME))
-        self._create_table_query: sql.Composed = sql.SQL(
-            "create table if not exists {table} ("
-            "name text primary key, "
-            "checksum text not null, "
-            "applied_at bigint not null)"
-        ).format(table=table)
-        self._list_query: sql.Composed = sql.SQL(
-            "select name, checksum, applied_at from {table} order by name"
-        ).format(table=table)
-        self._find_checksum_query: sql.Composed = sql.SQL(
-            "select checksum from {table} where name = %s"
-        ).format(table=table)
-        self._insert_query: sql.Composed = sql.SQL(
-            "insert into {table} (name, checksum, applied_at) values (%s, %s, %s)"
-        ).format(table=table)
+        self._lock_timeout: LockWaitSeconds = lock_timeout
+        self._sleep: Callable[[float], None] = sleep
+        self._lock_wait_seconds: float = lock_wait_seconds
 
     def list_applied(self) -> list[AppliedSchemaMigration]:
         try:
             with self._connection_pool.transaction() as connection:
-                if not self._has_bookkeeping_table(connection):
+                if not has_bookkeeping_table(connection):
                     return []
 
-                rows: list[TupleRow] = connection.execute(self._list_query).fetchall()
+                rows: list[TupleRow] = connection.execute(LIST_QUERY).fetchall()
         except psycopg.Error as error:
             raise ExternalServiceError(
                 f"Could not read applied migrations ({type(error).__name__})."
@@ -93,26 +107,21 @@ class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
         applied_at: Microseconds,
     ) -> bool:
         try:
-            with self._connection_pool.transaction() as connection:
-                connection.execute(
-                    "select pg_advisory_xact_lock(%s)",
-                    (MIGRATION_LOCK_KEY,),
-                )
-                connection.execute(self._create_schema_query)
-                connection.execute(self._create_table_query)
-                recorded_row: TupleRow | None = connection.execute(
-                    self._find_checksum_query,
-                    (str(script.name),),
-                ).fetchone()
-                if recorded_row is not None:
-                    self._require_same_checksum(script, read_text(recorded_row, 0))
-                    return False
+            with self._connection_pool.connection() as connection:
+                lock_runners(connection, self._sleep, self._lock_wait_seconds)
+                try:
+                    prepare_bookkeeping(connection)
+                    if is_recorded(connection, script):
+                        return False
 
-                self._execute_script(connection, script)
-                connection.execute(
-                    self._insert_query,
-                    (str(script.name), str(script.checksum), int(applied_at)),
-                )
+                    if script.is_transactional:
+                        self._apply_in_transaction(connection, script, applied_at)
+                    else:
+                        self._apply_statement_by_statement(
+                            connection, script, applied_at
+                        )
+                finally:
+                    release_session(connection)
         except psycopg.Error as error:
             raise ExternalServiceError(
                 f"Could not record migration {str(script.name)!r} "
@@ -121,57 +130,62 @@ class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
 
         return True
 
-    def _has_bookkeeping_table(self, connection: PostgresConnection) -> bool:
-        row: TupleRow | None = connection.execute(
-            "select to_regclass(%s) is not null",
-            (self._qualified_table_name,),
-        ).fetchone()
-        return row is not None and row[0] is True
-
-    def _execute_script(
+    def _apply_in_transaction(
         self,
         connection: PostgresConnection,
         script: SchemaMigrationScript,
+        applied_at: Microseconds,
     ) -> None:
-        try:
-            # Bytes without parameters use the simple query protocol, which
-            # runs every statement of the file in the current transaction.
-            connection.execute(str(script.sql).encode("utf-8"))
+        with connection.transaction():
+            bound_lock_waits(connection, self._lock_timeout, is_local=True)
+            execute_sql(connection, script, str(script.sql))
             # Session settings a script may have changed end with it.
             connection.execute("reset all")
-        except psycopg.Error as error:
-            raise ExternalServiceError(
-                f"Migration {str(script.name)!r} failed and was rolled back: "
-                f"{type(error).__name__}: {error}"
-            ) from error
+            self._record(connection, script, applied_at)
 
-    def _require_same_checksum(
+    def _apply_statement_by_statement(
         self,
+        connection: PostgresConnection,
         script: SchemaMigrationScript,
-        recorded_checksum: str,
+        applied_at: Microseconds,
     ) -> None:
-        if recorded_checksum != script.checksum:
-            raise ConflictError(
-                f"Migration {str(script.name)!r} was applied with another "
-                "content; never edit an applied migration, add a new one."
+        statements: list[SchemaMigrationStatement] = split_sql_statements(
+            str(script.sql)
+        )
+        bound_lock_waits(connection, self._lock_timeout, is_local=False)
+        dropped: list[str] = drop_invalid_indexes(
+            connection, script, concurrent_index_names(statements)
+        )
+        if dropped:
+            logger.warning(
+                "Migration %s: rebuilding invalid indexes %s.",
+                script.name,
+                ", ".join(dropped),
             )
+        for statement in statements:
+            execute_sql(connection, script, str(statement))
+        self._record(connection, script, applied_at)
 
-
-def read_text(row: TupleRow, column_index: int) -> str:
-    value: object = row[column_index]
-    if not isinstance(value, str):
-        raise ExternalServiceError(
-            f"Unexpected value in schema_migrations column {column_index}."
+    def _record(
+        self,
+        connection: PostgresConnection,
+        script: SchemaMigrationScript,
+        applied_at: Microseconds,
+    ) -> None:
+        connection.execute(
+            INSERT_QUERY, (str(script.name), str(script.checksum), int(applied_at))
         )
 
-    return value
 
+def release_session(connection: PostgresConnection) -> None:
+    """
+    End what a migration set on its session: its settings and the runners'
+    lock. A broken connection is discarded by the pool, and the server drops
+    a dead session's lock itself.
+    """
 
-def read_integer(row: TupleRow, column_index: int) -> int:
-    value: object = row[column_index]
-    if not isinstance(value, int):
-        raise ExternalServiceError(
-            f"Unexpected value in schema_migrations column {column_index}."
-        )
-
-    return value
+    try:
+        connection.execute("reset all")
+        connection.execute("select pg_advisory_unlock(%s)", (MIGRATION_LOCK_KEY,))
+    except psycopg.Error:
+        logger.warning("Could not release the migration session.", exc_info=True)

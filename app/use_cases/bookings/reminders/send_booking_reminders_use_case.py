@@ -47,6 +47,7 @@ from app.use_cases.bookings.reminders.reminder_rules import (
     read_cancellation_policy,
     sends_reminders,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.channels.proactive_limits import (
     PROACTIVE_WINDOW,
     proactive_message_counter,
@@ -155,7 +156,7 @@ class SendBookingRemindersUseCase(UseCaseContract[JobTick, JobReport]):
         now_seconds: int = microseconds_to_seconds(int(now))
         window_end_seconds: int = now_seconds + int(self._reminder_lead)
         reminded: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             if not sends_reminders(business):
                 continue
 

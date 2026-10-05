@@ -6,7 +6,10 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.storage import StorageScopeKind
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.storage.booleans import IsMigrationDryRun
+from app.schemas.typings.storage.booleans import (
+    IsMigrationDryRun,
+    IsTransactionalMigration,
+)
 from app.schemas.typings.storage.constrained_strings import (
     SchemaMigrationChecksum,
     SchemaMigrationName,
@@ -55,11 +58,18 @@ class StorageScope(ImmutableDTO):
 
 
 class SchemaMigrationScript(ImmutableDTO):
-    """One migration file: name (version and slug), checksum and SQL."""
+    """
+    One migration file: name (version and slug), checksum and SQL.
+
+    `is_transactional` is False for a file headed `-- workshop:no-transaction`
+    (`CREATE INDEX CONCURRENTLY`): its statements run one at a time outside
+    a transaction and the file is recorded only after the last one.
+    """
 
     name: SchemaMigrationName
     checksum: SchemaMigrationChecksum
     sql: SchemaMigrationSql
+    is_transactional: IsTransactionalMigration = True
 
 
 class AppliedSchemaMigration(ImmutableDTO):

@@ -6,7 +6,8 @@ computed from the seeded records themselves, so no two screens disagree.
 - every connected channel has a public address and a share link;
 - the admin's autotest health is the published version's stored verdict;
 - the inbox badge is the sum of the inbox tabs it stands for;
-- a client with provider costs has a margin.
+- a client with provider costs has a margin;
+- the customer list comes most recently active first, as each row says.
 """
 
 import math
@@ -166,3 +167,19 @@ def test_admin_health_and_margin_agree_with_the_cabinet() -> None:
             assert cost["provider_cost"] is not None, name
             assert cost["margin"] is not None, name
             assert cost["exchange_rate"] is not None, name
+
+
+def test_the_customer_list_comes_most_recently_active_first() -> None:
+    workshop = start_workshop(DEMO_ENVIRONMENT)
+    with workshop.client as client:
+        headers = sign_in_owner(workshop)
+        for name, business in businesses_by_name(client, headers).items():
+            page: JsonObject = read(
+                client,
+                f"/v1/businesses/{business['id']}/contacts?limit={MAX_PAGE}",
+                headers,
+            )
+
+            moments = [int(item["last_activity_at"]) for item in page["items"]]
+            assert len(moments) > 1, name
+            assert moments == sorted(moments, reverse=True), name

@@ -9,6 +9,11 @@
 #                      rewrite stored documents of older schema versions
 #                      (one-shot, after a release is fully deployed), e.g.
 #                      --collection bookings --batch 500 --dry-run
+#   workshop backfill-lookup
+#                      fill trigger-kept lookup columns of rows written before
+#                      their migration (one-shot, after the deploy that added
+#                      them), e.g. --collection contacts --field last_seen_at
+#                      --batch 5000 --dry-run (migrations/README.md)
 #   workshop backup    dump the database in one snapshot, encrypt it with age
 #                      and upload it to the EU backup bucket, then apply the
 #                      retention (Render cron, daily); --work-directory DIR
@@ -51,6 +56,9 @@ case "$role" in
     ;;
   migrate-documents)
     exec python -m app.gateways.cli.migrate_documents "$@"
+    ;;
+  backfill-lookup)
+    exec python -m app.gateways.cli.backfill_lookup "$@"
     ;;
   seed-load)
     exec python -m app.gateways.cli.seed_load "$@"

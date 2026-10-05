@@ -1,26 +1,22 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
-from app.contracts.repositories.booking_repositories import (
-    BookingRepoContract,
-    LeadRepoContract,
-)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.conversation_repositories import (
-    ContactRepoContract,
-    ConversationRepoContract,
+from app.contracts.repositories.contact_activity_repositories import (
+    ContactActivityRepoContract,
 )
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.contacts import (
-    ContactActivity,
+    ContactActivityTotals,
     ContactListQuery,
     ContactPage,
-    ContactSummaryView,
 )
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
 from app.schemas.typings.compliance.strings import AuditEntityName
@@ -31,26 +27,29 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
 )
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
-from app.use_cases.contacts.contact_summaries import (
-    collect_contact_activity,
-    is_test_contact,
-    summarize_contact,
+from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.use_cases.contacts.contact_list_search import (
+    ContactSearchPage,
+    search_contacts,
 )
-from app.utilities.contacts.contact_search import matches_contact_search
-from app.utilities.paging.cursor_paging import take_page
+from app.use_cases.contacts.contact_summaries import summarize_contact_row
+from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 
 class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
     """
     Owner finds customers to answer their data requests (export, erasure).
 
-    Customers come most recently active first, with their channels and the
-    number of conversations, bookings and leads. Customers made only by the
-    owner's test chats or the autotests are left out; erased customers stay
-    in the list, marked erased. The search runs before paging; a phone typed
-    in the business country's national format ("0599 12 34 56") is read
-    with that country as a hint. Reading the list is personal data, so it is
-    audited (VIEW of "contact").
+    Customers come most recently active first (`last_seen_at`, a keyset
+    page in the database), with their channels and the number of
+    conversations, bookings and leads the database counts for the page.
+    Contacts made only by the owner's test chats or the autotests are never
+    listed; erased customers stay, marked erased. A search shows the exact
+    matches first (id, full phone, exact name: indexed) and then partial
+    ones from a bounded walk of the list (`contact_list_search`); a phone
+    typed in the business country's national format ("0599 12 34 56") is
+    read with that country as a hint. Reading the list is personal data, so
+    it is audited (VIEW of "contact").
     """
 
     def __init__(
@@ -60,9 +59,7 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
             BusinessDocument,
         ],
         contact_repo: ContactRepoContract,
-        conversation_repo: ConversationRepoContract,
-        booking_repo: BookingRepoContract,
-        lead_repo: LeadRepoContract,
+        contact_activity_repo: ContactActivityRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         phone_number_parser: PhoneNumberParserContract,
@@ -72,9 +69,7 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
             BusinessDocument,
         ] = authorize_business_access
         self._contact_repo: ContactRepoContract = contact_repo
-        self._conversation_repo: ConversationRepoContract = conversation_repo
-        self._booking_repo: BookingRepoContract = booking_repo
-        self._lead_repo: LeadRepoContract = lead_repo
+        self._contact_activity_repo: ContactActivityRepoContract = contact_activity_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
@@ -87,31 +82,11 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        activity: dict[ContactId, ContactActivity] = collect_contact_activity(
-            business.id,
-            self._conversation_repo,
-            self._booking_repo,
-            self._lead_repo,
-        )
-        search_phone: E164PhoneNumber | None = self._parse_search_phone(
-            input_data.search, business.country_code
-        )
-        summaries: list[ContactSummaryView] = []
-        for contact in self._contact_repo.list_by_business(business.id):
-            contact_activity: ContactActivity = activity.get(
-                contact.id, ContactActivity()
+        contacts, next_cursor = self._read_page(business, input_data)
+        totals: dict[ContactId, ContactActivityTotals] = (
+            self._contact_activity_repo.count_for_contacts(
+                business.id, [contact.id for contact in contacts]
             )
-            if is_test_contact(contact, contact_activity):
-                continue
-
-            if matches_contact_search(contact, input_data.search, search_phone):
-                summaries.append(summarize_contact(contact, contact_activity))
-
-        items, next_cursor = take_page(
-            summaries,
-            input_data.page,
-            sort_key=lambda summary: int(summary.last_activity_at),
-            item_id=lambda summary: str(summary.id),
         )
         now: Microseconds = self._wall_clock.now_unix()
         self._audit_log_repo.append(
@@ -125,17 +100,50 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
                 updated_at=now,
             )
         )
-        return ContactPage(items=items, next_cursor=next_cursor)
+        return ContactPage(
+            items=[
+                summarize_contact_row(contact, totals.get(contact.id))
+                for contact in contacts
+            ],
+            next_cursor=next_cursor,
+        )
+
+    def _read_page(
+        self,
+        business: BusinessDocument,
+        input_data: ContactListQuery,
+    ) -> tuple[list[ContactDocument], PageCursor | None]:
+        """
+        Raises:
+            ValidationFailedError: the cursor is broken.
+        """
+
+        search: ContactSearchText | None = input_data.search
+        if search is not None and str(search).strip() != "":
+            found: ContactSearchPage = search_contacts(
+                self._contact_repo,
+                business.id,
+                search,
+                self._parse_search_phone(search, business.country_code),
+                input_data.page,
+            )
+            return found.contacts, found.next_cursor
+
+        return finish_page(
+            self._contact_repo.page_by_last_seen(
+                business.id, read_slice(input_data.page)
+            ),
+            input_data.page,
+            sort_key=lambda contact: int(contact.last_seen_at or 0),
+            item_id=lambda contact: str(contact.id),
+        )
 
     def _parse_search_phone(
         self,
-        search: ContactSearchText | None,
+        search: ContactSearchText,
         country_code: CountryCode,
     ) -> E164PhoneNumber | None:
         """The search as a full phone number, or None when it is not one."""
-
-        if search is None:
-            return None
 
         try:
             return self._phone_number_parser.parse(

@@ -30,6 +30,22 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
         integer_field("run_at"),
     ),
     DocumentCollectionName("incidents"): (integer_field("created_at"),),
+    # The platform admin's client list (1122): a keyset page in one of its
+    # orders (each client's position among all of them), filtered and
+    # counted by status, health, country and niche.
+    DocumentCollectionName("client_standings"): (
+        text_field("business_status"),
+        text_field("health_status"),
+        text_field("country_code"),
+        text_field("niche_key"),
+        filter_field("is_losing_money"),
+        integer_field("health_position"),
+        integer_field("name_position"),
+        integer_field("usage_position"),
+        integer_field("margin_position"),
+        integer_field("cost_position"),
+        integer_field("revenue_position"),
+    ),
     # The status page (1111): the announcements in effect, those resolved
     # in the last ninety days, the admin's pages newest first.
     DocumentCollectionName("platform_announcements"): (

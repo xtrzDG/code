@@ -21,6 +21,7 @@ from app.schemas.exceptions.application_errors import ConflictError
 from app.use_cases.shared.billing_records import is_service_paid_for
 from app.utilities.billing.billing_periods import to_local_calendar_day
 from tests.billing.billing_settings import CABINET_ORIGIN
+from tests.billing.client_list_runs import list_clients
 from tests.billing.subscribe_world import World
 
 
@@ -164,7 +165,7 @@ def test_the_admin_sees_a_first_payment_pending() -> None:
     admin = world.testbed.add_user(email="admin@example.com", is_platform_admin=True)
     world.subscribe()
 
-    clients = world.testbed.list_clients.run(AdminClientsQuery(user_id=admin.id))
+    clients = list_clients(world.testbed, AdminClientsQuery(user_id=admin.id))
 
     summary = clients.items[0]
     assert summary.subscription_status is SubscriptionStatus.INCOMPLETE

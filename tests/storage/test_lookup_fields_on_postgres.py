@@ -40,9 +40,10 @@ COLUMN_TYPES: dict[LookupFieldKind, str] = {
     LookupFieldKind.FILTER_TEXT: "text",
     LookupFieldKind.INTEGER: "bigint",
 }
-GENERATED_COLUMNS_SQL: LiteralString = (
-    "select table_name, column_name, data_type from information_schema.columns "
-    "where table_schema = 'workshop' and is_generated = 'ALWAYS'"
+LOOKUP_COLUMNS_SQL: LiteralString = (
+    "select table_name, column_name, data_type, is_generated = 'ALWAYS' "
+    "from information_schema.columns "
+    "where table_schema = 'workshop' and column_name like 'doc\\_%'"
 )
 INDEXED_COLUMNS_SQL: LiteralString = (
     "select t.relname, a.attname from pg_index i "
@@ -54,6 +55,11 @@ TRIGGERS_SQL: LiteralString = (
     "select c.relname, encode(t.tgargs, 'escape') from pg_trigger t "
     "join pg_class c on c.oid = t.tgrelid where not t.tgisinternal"
 )
+FILL_TRIGGERS_SQL: LiteralString = (
+    "select c.relname, encode(t.tgargs, 'escape') from pg_trigger t "
+    "join pg_class c on c.oid = t.tgrelid "
+    "where t.tgname = c.relname || '_lookup_columns'"
+)
 
 
 def text_rows(rows: list[TupleRow]) -> set[tuple[str, ...]]:
@@ -64,10 +70,24 @@ def test_every_declared_lookup_field_is_indexed_by_the_migrations(
     postgres_server: ThrowawayPostgresServer,
     database_name: str,
 ) -> None:
+    """
+    A TEXT, FILTER_TEXT or INTEGER field has its `doc_<field>` column of the
+    right type: a stored generated one (up to migration 1113) or a plain
+    one that the table's `<table>_lookup_columns` trigger fills from the
+    field (1122 on); TEXT and INTEGER columns are indexed.
+    """
+
     with postgres_server.admin_connection(database_name) as connection:
-        columns = text_rows(connection.execute(GENERATED_COLUMNS_SQL).fetchall())
+        columns = {
+            (str(row[0]), str(row[1])): (str(row[2]), row[3] is True)
+            for row in connection.execute(LOOKUP_COLUMNS_SQL).fetchall()
+        }
         indexed = text_rows(connection.execute(INDEXED_COLUMNS_SQL).fetchall())
         triggers = text_rows(connection.execute(TRIGGERS_SQL).fetchall())
+        fill_arguments = {
+            str(row[0]): str(row[1]).split("\\000")
+            for row in connection.execute(FILL_TRIGGERS_SQL).fetchall()
+        }
 
     for collection_name, fields in DOCUMENT_LOOKUP_FIELDS.items():
         table: str = str(collection_name)
@@ -79,9 +99,38 @@ def test_every_declared_lookup_field_is_indexed_by_the_migrations(
                 continue
 
             column: str = lookup_column_name(field.path)
-            assert (table, column, COLUMN_TYPES[field.kind]) in columns, field
+            data_type, is_generated = columns[(table, column)]
+            assert data_type == COLUMN_TYPES[field.kind], field
+            if not is_generated:
+                pairs = fill_arguments.get(table, [])
+                assert any(
+                    pairs[index : index + 2] == [column, str(field.path)]
+                    for index in range(0, len(pairs) - 1, 2)
+                ), f"{table}.{column} is neither generated nor filled by a trigger"
             if field.kind is not LookupFieldKind.FILTER_TEXT:
                 assert (table, column) in indexed, f"{table}.{column} has no index"
+
+
+def test_every_plain_lookup_column_is_declared(
+    postgres_server: ThrowawayPostgresServer,
+    database_name: str,
+) -> None:
+    """No trigger fills a column the catalog does not query (dead weight)."""
+
+    with postgres_server.admin_connection(database_name) as connection:
+        plain = {
+            (str(row[0]), str(row[1]))
+            for row in connection.execute(LOOKUP_COLUMNS_SQL).fetchall()
+            if row[3] is not True
+        }
+
+    declared = {
+        (str(collection_name), lookup_column_name(field.path))
+        for collection_name, fields in DOCUMENT_LOOKUP_FIELDS.items()
+        for field in fields
+        if field.kind is not LookupFieldKind.ELEMENT_TEXT
+    }
+    assert plain <= declared
 
 
 def test_list_field_lookups_keep_to_the_business_scope(

@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_billing import metered_usage
 from app.registries.demo.demo_clock import DemoClock
+from app.registries.demo.demo_contact_activity import mark_demo_contacts_seen
 from app.registries.demo.demo_conversation_recorder import DemoConversationRecorder
 from app.registries.demo.demo_feedback import (
     build_demo_feedback_requests,
@@ -94,6 +95,12 @@ class DemoActivityBuilder:
 
         self._assign_oldest_waiting_conversation()
         tag_demo_sources(self.talk.conversations, self.talk.calls)
+        mark_demo_contacts_seen(
+            self.talk.contacts,
+            self.talk.conversations,
+            self.desk.bookings,
+            self.desk.leads,
+        )
         return DemoBusinessActivity(
             contacts=self.talk.contacts,
             conversations=self.talk.conversations,

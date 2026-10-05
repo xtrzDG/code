@@ -7,6 +7,7 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
+from app.repositories.client_standing_repository import ClientStandingRepository
 from app.repositories.help_progress_repository import HelpProgressRepository
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.maintenance_run_repository import MaintenanceRunRepository
@@ -59,6 +60,11 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
     incident_repo: Singleton[IncidentRepository] = Singleton(
         IncidentRepository,
         collection=operations_collections.incident_collection,
+    )
+    # The platform admin's client list, refreshed by a periodic job (1122).
+    client_standing_repo: Singleton[ClientStandingRepository] = Singleton(
+        ClientStandingRepository,
+        collection=operations_collections.client_standing_collection,
     )
     # The status page, the banner and the cabinet's guidance (1111).
     platform_announcement_repo: Singleton[PlatformAnnouncementRepository] = Singleton(

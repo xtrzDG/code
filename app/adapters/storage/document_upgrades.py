@@ -47,6 +47,7 @@ from base_pydantic_schemas import PersistentDocument, SchemaVersion
 from pydantic.fields import FieldInfo
 
 from app.adapters.storage.channel_upgrades import upgrade_channels_from_v3
+from app.adapters.storage.contact_upgrades import upgrade_contacts_from_v2
 from app.adapters.storage.knowledge_item_upgrades import (
     upgrade_knowledge_items_from_v1,
 )
@@ -72,6 +73,9 @@ DOCUMENT_UPCASTERS: Mapping[
 ] = {
     DocumentCollectionName("channels"): {
         DocumentSchemaVersionNumber(3): upgrade_channels_from_v3,
+    },
+    DocumentCollectionName("contacts"): {
+        DocumentSchemaVersionNumber(2): upgrade_contacts_from_v2,
     },
     DocumentCollectionName("knowledge_items"): {
         DocumentSchemaVersionNumber(1): upgrade_knowledge_items_from_v1,

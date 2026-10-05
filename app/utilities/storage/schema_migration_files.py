@@ -14,6 +14,9 @@ from app.schemas.typings.storage.constrained_strings import (
 
 MIGRATION_FILE_SUFFIX: str = ".sql"
 MIGRATION_VERSION_LENGTH: int = 4
+# The header of a file that runs outside a transaction (CREATE INDEX
+# CONCURRENTLY): one of the comment lines before its first statement.
+NO_TRANSACTION_HEADER: str = "-- workshop:no-transaction"
 
 
 def migration_name_from_file_name(file_name: str) -> SchemaMigrationName:
@@ -49,6 +52,20 @@ def normalize_migration_sql(sql_text: str) -> str:
     """Use "\\n" line endings, so a checkout with CRLF keeps the same checksum."""
 
     return sql_text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def has_no_transaction_header(sql_text: str) -> bool:
+    """True when a comment line before the first statement is the header."""
+
+    for line in normalize_migration_sql(sql_text).split("\n"):
+        stripped: str = line.strip()
+        if stripped == NO_TRANSACTION_HEADER:
+            return True
+
+        if stripped != "" and not stripped.startswith("--"):
+            return False
+
+    return False
 
 
 def compute_migration_checksum(sql_text: str) -> SchemaMigrationChecksum:

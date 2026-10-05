@@ -169,7 +169,7 @@
       },
       "AdminClientPage": {
         "additionalProperties": false,
-        "description": "One page of clients; `next_cursor` is None on the last page.\n\n`matching_count` counts the clients that pass the filters; `totals`,\n`countries` and `niches` describe every client (for the summary tiles\nand the filter choices).",
+        "description": "One page of clients; `next_cursor` is None on the last page.\n\n`matching_count` counts the clients that pass the filters (with a\nsearch, the matches among the clients one request looked at); `totals`,\n`countries` and `niches` describe every client (for the summary tiles\nand the filter choices). The summaries are the client standings a\nperiodic job refreshes every 15 minutes; `generated_at` is when the\noldest one on the page was taken.",
         "properties": {
           "countries": {
             "items": {
@@ -6663,7 +6663,7 @@
       },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -6680,6 +6680,17 @@
             "description": "Creation wall-clock UNIX timestamp in microseconds.",
             "title": "Created At",
             "type": "integer"
+          },
+          "display_name_folded": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name Folded"
           },
           "erased_at": {
             "anyOf": [
@@ -6709,6 +6720,17 @@
               }
             ],
             "title": "Language"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
           },
           "name": {
             "anyOf": [
@@ -6743,7 +6765,7 @@
             "title": "Phone Number"
           },
           "schema_version": {
-            "default": "2",
+            "default": "3",
             "title": "Schema Version",
             "type": "string"
           },
@@ -12597,7 +12619,7 @@
       },
       "KnowledgeItemPage": {
         "additionalProperties": false,
-        "description": "One page of the knowledge base, newest first (by creation time, ties by\nid); `next_cursor` asks for the next page and is None on the last one.",
+        "description": "One page of the knowledge base, the last changed first (by the time of\nthe latest change, ties in the order the items were written);\n`next_cursor` asks for the next page and is None on the last one.",
         "properties": {
           "items": {
             "items": {

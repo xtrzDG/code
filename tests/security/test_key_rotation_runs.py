@@ -68,7 +68,8 @@ def test_a_finished_run_makes_room_and_old_runs_are_not_updated() -> None:
 
 
 class FailingBusinessRepo:
-    def list_all(self) -> list[BusinessDocument]:
+    def list_batch(self, after: object, size: object) -> list[BusinessDocument]:
+        del after, size
         raise RuntimeError("database went away")
 
 

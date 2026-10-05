@@ -24,6 +24,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.use_cases.shared.contact_activity import record_contact_seen
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # The window in which a customer message joins an open conversation.
@@ -147,7 +148,8 @@ def resolve_caller(
         contact.updated_at = now
         contact_repo.save(contact)
 
-    return contact
+    # The missed call is the customer's latest activity.
+    return record_contact_seen(contact_repo, contact, now)
 
 
 def find_whatsapp_conversation(

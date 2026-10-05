@@ -12,12 +12,19 @@ from app.schemas.dto.document_upgrades import (
     CollectionUpgradeReport,
     CollectionUpgradeRequest,
 )
+from app.schemas.dto.lookup_backfill import LookupBackfillBatch, TriggerLookupColumn
 from app.schemas.dto.storage import (
     AppliedSchemaMigration,
     SchemaMigrationScript,
     StorageScope,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    LookupBackfillBatchSize,
+    MigrationAttemptNumber,
+)
+from app.schemas.typings.storage.strings import StoredDocumentKey
 
 
 class StorageScopeContract(UtilityContract, Protocol):
@@ -80,13 +87,26 @@ class SchemaMigrationStoreAdapterContract(AdapterContract, Protocol):
         applied_at: Microseconds,
     ) -> bool:
         """
-        Run one script and record it in a single transaction.
+        Run one script and record it: a transactional script together with
+        its record in one transaction; a no-transaction script statement by
+        statement, recorded only after the last one succeeded.
 
-        Returns False when another runner recorded it first (runners are
-        serialized by a database lock). Raises ConflictError when it was
-        recorded with a different checksum, ExternalServiceError when the
-        script fails (nothing of it is kept).
+        Every lock a script waits for is bounded by the store's lock
+        timeout. Returns False when another runner recorded it first
+        (runners are serialized by a database lock). Raises ConflictError
+        when it was recorded with a different checksum,
+        MigrationLockTimeoutError when a lock was not granted in time (the
+        try left nothing behind that a new try would not redo), and
+        ExternalServiceError when the script fails.
         """
+        raise NotImplementedError
+
+
+class MigrationRetryPauseContract(UtilityContract, Protocol):
+    """How long the migration runner waits before it tries a file again."""
+
+    def pause(self, attempt: MigrationAttemptNumber) -> None:
+        """Wait before the try after `attempt` (a growing, jittered pause)."""
         raise NotImplementedError
 
 
@@ -105,5 +125,39 @@ class StoredDocumentUpgradeAdapterContract(AdapterContract, Protocol):
         Rows of a newer version are counted and left alone; a row that
         cannot be upgraded is counted as failed and the run goes on.
         NotFoundError for a collection outside the catalog.
+        """
+        raise NotImplementedError
+
+
+class LookupColumnBackfillAdapterContract(AdapterContract, Protocol):
+    """
+    The trigger-kept lookup columns of the database and their backfill,
+    platform-wide (row-level security bypassed): rows written before a
+    column's migration get its value in keyset batches, each its own short
+    transaction whose lock waits are bounded.
+    """
+
+    def list_trigger_columns(self) -> list[TriggerLookupColumn]:
+        """Every trigger-kept `doc_<field>` column, by table and column."""
+        raise NotImplementedError
+
+    def count_missing(self, column: TriggerLookupColumn) -> DocumentCount:
+        """Rows whose document has the field but whose column is empty."""
+        raise NotImplementedError
+
+    def fill_batch(
+        self,
+        column: TriggerLookupColumn,
+        after: StoredDocumentKey | None,
+        batch_size: LookupBackfillBatchSize,
+    ) -> LookupBackfillBatch:
+        """
+        Look at the next `batch_size` rows after the key `after` (primary
+        key order) and fill the column where it is still empty.
+
+        Raises:
+            MigrationLockTimeoutError: a row stayed locked by another
+                transaction for longer than the lock timeout (nothing of
+                the batch was written).
         """
         raise NotImplementedError

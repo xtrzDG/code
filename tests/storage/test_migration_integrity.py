@@ -28,7 +28,7 @@ from tests.storage.migration_steps import (
     workshop_tables,
 )
 from tests.storage.postgres_server import ThrowawayPostgresServer
-from tests.storage.storage_testing import build_fixed_wall_clock
+from tests.storage.storage_testing import RecordedRetryPause, build_fixed_wall_clock
 
 
 def test_edited_applied_migration_is_refused(
@@ -110,6 +110,7 @@ def test_script_session_settings_end_with_the_migration(
             migration_source=SqlFileMigrationSourceAdapter(migrations_directory),
             migration_store=PostgresSchemaMigrationStoreAdapter(connection_pool),
             wall_clock=build_fixed_wall_clock(),
+            retry_pause=RecordedRetryPause(),
         ).run(ApplyDatabaseMigrationsCommand())
         with connection_pool.connection() as connection:
             row = connection.execute(

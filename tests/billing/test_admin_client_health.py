@@ -16,6 +16,7 @@ from app.schemas.typings.access.constrained_strings import SupportAccessReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from tests.billing.admin_world import build_admin_world
+from tests.billing.client_list_runs import list_clients
 
 REASON: SupportAccessReason = SupportAccessReason("Owner asked about an invoice")
 HOUR_MICROSECONDS: int = 60 * 60 * 1_000_000
@@ -25,7 +26,7 @@ def test_admin_pages_are_for_platform_admins_only() -> None:
     world = build_admin_world()
 
     with pytest.raises(AccessDeniedError):
-        world.testbed.list_clients.run(AdminClientsQuery(user_id=world.owner.id))
+        list_clients(world.testbed, AdminClientsQuery(user_id=world.owner.id))
 
     with pytest.raises(AccessDeniedError):
         world.testbed.get_client_health.run(
@@ -124,9 +125,9 @@ def test_entering_a_client_cabinet_is_audited_time_boxed_and_told() -> None:
 def test_admin_access_follows_the_platform_admin_flag() -> None:
     world = build_admin_world()
     query = AdminClientsQuery(user_id=world.admin.id)
-    world.testbed.list_clients.run(query)
+    list_clients(world.testbed, query)
     demoted = world.admin.model_copy(update={"is_platform_admin": False})
     world.testbed.user_repo.save(demoted)
 
     with pytest.raises(AccessDeniedError):
-        world.testbed.list_clients.run(query)
+        list_clients(world.testbed, query)

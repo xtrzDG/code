@@ -60,7 +60,8 @@ export const adminEn = {
   unknown: "—",
   count: { one: "{count} client", other: "{count} clients" },
   emptyTitle: "No clients yet",
-  emptyDescription: "Businesses appear here as soon as owners create them.",
+  emptyDescription: "Businesses appear here within 15 minutes of being created.",
+  summariesAsOf: "Summaries as of {time}, refreshed every 15 minutes",
   emptyFiltered: "No clients match the filters.",
   openDetails: "Details of {name}",
   detail: {

@@ -6,6 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
@@ -48,6 +49,14 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     incident_collection = document_collection(
         IncidentDocument,
         "incidents",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    client_standing_collection = document_collection(
+        ClientStandingDocument,
+        "client_standings",
         config,
         clients,
         utilities,

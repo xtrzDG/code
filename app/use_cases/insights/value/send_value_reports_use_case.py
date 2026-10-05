@@ -29,6 +29,7 @@ from app.use_cases.insights.value.value_report_building import (
     had_activity,
 )
 from app.use_cases.insights.value.value_snapshots import build_value_report_view
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     local_day_start_microseconds,
@@ -99,7 +100,7 @@ class SendValueReportsUseCase(UseCaseContract[JobTick, JobReport]):
     def run(self, input_data: JobTick) -> JobReport:
         del input_data
         stored: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             try:
                 stored += self._report(business)
             except Exception:

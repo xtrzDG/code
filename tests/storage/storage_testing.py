@@ -5,6 +5,9 @@ from pathlib import Path
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.storage import MigrationRetryPauseContract
+from app.schemas.typings.storage.constrained_integers import MigrationAttemptNumber
+
 MIGRATIONS_DIRECTORY: Path = Path(__file__).resolve().parents[2] / "migrations"
 PROJECT_ROOT_DIRECTORY: Path = Path(__file__).resolve().parents[2]
 FIXED_NANOSECONDS: int = 1_790_000_000_000_000_000
@@ -33,3 +36,13 @@ def build_ticking_wall_clock(
         preferred_time_unit_type=Microseconds,
         unix_nanosecond_factory=lambda: next(readings),
     )
+
+
+class RecordedRetryPause(MigrationRetryPauseContract):
+    """A migration retry pause that only records the tries it followed."""
+
+    def __init__(self) -> None:
+        self.attempts: list[int] = []
+
+    def pause(self, attempt: MigrationAttemptNumber) -> None:
+        self.attempts.append(int(attempt))

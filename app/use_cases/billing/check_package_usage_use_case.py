@@ -28,6 +28,7 @@ from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.use_cases.billing.owner_notifications import notify_business_owners
 from app.use_cases.shared.billing_records import find_current_subscription
+from app.use_cases.shared.business_walk import walk_businesses
 from app.use_cases.shared.package_usage import (
     compute_usage_percent,
     summarize_package_usage,
@@ -85,7 +86,7 @@ class CheckPackageUsageUseCase(UseCaseContract[JobTick, JobReport]):
 
     def run(self, input_data: JobTick) -> JobReport:
         warnings_sent: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             subscription: SubscriptionDocument | None = find_current_subscription(
                 self._subscription_repo,
                 business.id,

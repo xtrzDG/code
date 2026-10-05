@@ -65,7 +65,8 @@ export const adminRu: Translation<typeof adminEn> = {
     other: "{count} клиента",
   },
   emptyTitle: "Клиентов пока нет",
-  emptyDescription: "Бизнесы появятся здесь, как только владельцы их создадут.",
+  emptyDescription: "Бизнесы появятся здесь в течение 15 минут после создания.",
+  summariesAsOf: "Сводки на {time}, обновляются каждые 15 минут",
   emptyFiltered: "Под фильтры никто не подходит.",
   openDetails: "Подробнее: {name}",
   detail: {

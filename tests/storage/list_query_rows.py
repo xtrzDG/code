@@ -28,6 +28,12 @@ CONVERSATION: LiteralString = (
     "substr(md5((n %% 900)::text), 18, 15))::uuid"
 )
 
+# The customer of a booking or a lead (one of 1,000) and where it came from.
+CUSTOMER: LiteralString = (
+    "'contact_id', 'seeded_contact_' || (n %% 1000), "
+    "'source_channel', (array['telegram', 'whatsapp', 'phone'])[1 + n %% 3]"
+)
+
 LIST_TABLES: tuple[SeededTable, ...] = (
     SeededTable(
         "conversations",
@@ -51,7 +57,7 @@ LIST_TABLES: tuple[SeededTable, ...] = (
     ),
     SeededTable(
         "bookings",
-        f"jsonb_build_object('conversation_id', {CONVERSATION}, "
+        f"jsonb_build_object('conversation_id', {CONVERSATION}, {CUSTOMER}, "
         "'status', (array['confirmed', 'pending', 'cancelled', 'completed'])"
         "[1 + n %% 4], 'resource_id', 'resource_' || (n %% 7), "
         f"'is_sandbox', {FLAG}, 'starts_at', 1790000000 + n * 600, "
@@ -59,7 +65,7 @@ LIST_TABLES: tuple[SeededTable, ...] = (
     ),
     SeededTable(
         "leads",
-        f"jsonb_build_object('conversation_id', {CONVERSATION}, "
+        f"jsonb_build_object('conversation_id', {CONVERSATION}, {CUSTOMER}, "
         "'status', (array['new', 'in_progress', 'won', 'lost'])[1 + n %% 4], "
         f"'is_sandbox', {FLAG}, 'created_at', %(time)s + n * 1000)",
     ),
@@ -77,6 +83,30 @@ LIST_TABLES: tuple[SeededTable, ...] = (
         "jsonb_build_object('occurrence_count', 1 + n %% 9, "
         "'last_seen_at', %(time)s + n * 1000, 'is_resolved', n %% 3 = 0, "
         f"'is_sandbox', {FLAG})",
+    ),
+    SeededTable(
+        "contacts",
+        "jsonb_build_object('name', 'Customer ' || n, "
+        "'display_name_folded', 'customer ' || n, "
+        "'last_seen_at', %(time)s + n * 1000)",
+    ),
+    SeededTable(
+        "knowledge_items",
+        "jsonb_build_object('title', 'Item ' || n, "
+        "'kind', (array['menu_item', 'faq', 'service', 'policy'])[1 + n %% 4], "
+        "'is_active', n %% 5 <> 0, 'updated_at', %(time)s + n * 1000)",
+    ),
+    SeededTable("businesses", "jsonb_build_object('name', 'Business ' || n)"),
+    SeededTable(
+        "client_standings",
+        "jsonb_build_object('name', 'Client ' || n, "
+        "'business_status', (array['live', 'onboarding', 'paused'])[1 + n %% 3], "
+        "'health_status', (array['healthy', 'attention', 'healthy', 'critical'])"
+        "[1 + n %% 4], 'country_code', (array['GE', 'IT', 'US'])[1 + n %% 3], "
+        "'niche_key', 'restaurant', 'is_losing_money', n %% 10 = 0, "
+        "'health_position', n, 'name_position', (n * 7919) %% 30000, "
+        "'usage_position', 30000 - n, 'margin_position', (n * 31) %% 30000, "
+        "'cost_position', (n * 17) %% 30000, 'revenue_position', (n * 13) %% 30000)",
     ),
     SeededTable(
         "audit_log_entries",

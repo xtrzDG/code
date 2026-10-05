@@ -29,8 +29,15 @@ KEYSET_USE_CASES: tuple[str, ...] = (
     "use_cases/handoffs/handoff_queue_paging.py",
     "use_cases/handoffs/list_unanswered_questions_use_case.py",
     "use_cases/compliance/list_audit_log_use_case.py",
+    "use_cases/contacts/list_contacts_use_case.py",
+    "use_cases/contacts/contact_list_search.py",
+    "use_cases/contacts/get_contact_use_case.py",
+    "use_cases/knowledge/list_knowledge_items_use_case.py",
     "use_cases/insights/get_dashboard_stats_use_case.py",
     "use_cases/admin/summarize_client_use_case.py",
+    "use_cases/admin/list_clients_use_case.py",
+    "use_cases/admin/client_list_search.py",
+    "use_cases/admin/refresh_client_standings_use_case.py",
     "use_cases/billing/compute_client_cost_use_case.py",
 )
 # Collections that grow with every customer message, booking or view.

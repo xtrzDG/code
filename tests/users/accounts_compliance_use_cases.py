@@ -114,9 +114,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         self.list_contacts = ListContactsUseCase(
             authorize_business_access=self.authorize_business_access,
             contact_repo=self.contact_repo,
-            conversation_repo=self.conversation_repo,
-            booking_repo=self.booking_repo,
-            lead_repo=self.lead_repo,
+            contact_activity_repo=self.contact_activity_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
             phone_number_parser=self.phone_parser,
@@ -124,9 +122,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         self.get_contact = GetContactUseCase(
             authorize_business_access=self.authorize_business_access,
             contact_repo=self.contact_repo,
-            conversation_repo=self.conversation_repo,
-            booking_repo=self.booking_repo,
-            lead_repo=self.lead_repo,
+            contact_activity_repo=self.contact_activity_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
         )

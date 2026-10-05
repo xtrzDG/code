@@ -228,6 +228,9 @@ _.unconfirmed_bookings  # app/schemas/dto/inbox/inbox_attention.py
 _.unconfirmed_booking_count  # app/schemas/dto/inbox/inbox_attention.py (deprecated)
 # A channel's link state, read by the cabinet's Channels card.
 _.link_state  # app/schemas/dto/channels/channel_settings.py
+# The folded name of a contact: stored for its lookup column, which the
+# trigger of migration 1122 fills and the exact-name search queries.
+_.display_name_folded  # app/schemas/domain/contacts.py
 # Dated exchange rates: the stored day number is a lookup column (the newest
 # rate of a pair, migration 1071); staleness is shown by the cabinet.
 _.rate_day  # app/schemas/domain/exchange_rates.py

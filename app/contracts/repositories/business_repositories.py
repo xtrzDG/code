@@ -14,6 +14,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.typings.businesses.constrained_integers import BusinessBatchSize
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ChannelExternalId
@@ -61,8 +62,18 @@ class BusinessRepoContract(RepoContract, Protocol):
         """Businesses where the user is an owner or staff member."""
         raise NotImplementedError
 
-    def list_all(self) -> list[BusinessDocument]:
-        """Every business (platform admin views and background jobs only)."""
+    def list_batch(
+        self,
+        after: BusinessId | None,
+        size: BusinessBatchSize,
+    ) -> list[BusinessDocument]:
+        """
+        The next businesses in the order they were created (first write),
+        after the business `after` (from the first one when None), at most
+        `size`: a keyset walk over the platform for background jobs and
+        platform admin views, one batch in memory at a time
+        (`app/use_cases/shared/business_walk.py`).
+        """
         raise NotImplementedError
 
 

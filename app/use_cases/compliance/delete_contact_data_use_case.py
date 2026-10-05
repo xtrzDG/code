@@ -184,6 +184,8 @@ class DeleteContactDataUseCase(
                 id=contact.id,
                 business_id=business.id,
                 erased_at=now,
+                # The erasure is the customer's latest event in the list.
+                last_seen_at=now,
                 created_at=contact.created_at,
                 updated_at=now,
             )

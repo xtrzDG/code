@@ -9,6 +9,7 @@ from app.utilities.storage.schema_migration_files import (
     MIGRATION_FILE_SUFFIX,
     compute_migration_checksum,
     find_duplicate_versions,
+    has_no_transaction_header,
     migration_name_from_file_name,
     normalize_migration_sql,
 )
@@ -23,7 +24,8 @@ class SqlFileMigrationSourceAdapter(SchemaMigrationSourceAdapterContract):
 
     Other files (README.md) are ignored; a misnamed `.sql` file or two files
     with the same version stop the run. Files are read as UTF-8 and their
-    line endings normalized before hashing and execution.
+    line endings normalized before hashing and execution. A file headed
+    `-- workshop:no-transaction` is marked to run outside a transaction.
     """
 
     def __init__(self, migrations_directory: Path) -> None:
@@ -50,6 +52,7 @@ class SqlFileMigrationSourceAdapter(SchemaMigrationSourceAdapterContract):
                     name=migration_name,
                     checksum=compute_migration_checksum(sql_text),
                     sql=SchemaMigrationSql(normalize_migration_sql(sql_text)),
+                    is_transactional=not has_no_transaction_header(sql_text),
                 )
             )
 

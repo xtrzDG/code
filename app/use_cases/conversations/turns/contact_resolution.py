@@ -6,6 +6,7 @@ from app.contracts.repositories.conversation_repositories import ContactRepoCont
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.dto.conversations import InboundMessage
+from app.use_cases.shared.contact_activity import mark_contact_seen
 
 
 def resolve_contact(
@@ -70,6 +71,10 @@ def resolve_contact(
         and contact.verified_phone_number != message.contact_phone_number
     ):
         contact.verified_phone_number = message.contact_phone_number
+        is_changed = True
+
+    # A customer's message moves them up the customer list.
+    if not is_sandbox and mark_contact_seen(contact, now):
         is_changed = True
 
     if is_changed:

@@ -1,14 +1,10 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.repositories.booking_repositories import (
-    BookingRepoContract,
-    LeadRepoContract,
-)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.conversation_repositories import (
-    ContactRepoContract,
-    ConversationRepoContract,
+from app.contracts.repositories.contact_activity_repositories import (
+    ContactActivityRepoContract,
 )
+from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
@@ -29,17 +25,16 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.use_cases.contacts.contact_summaries import (
-    collect_contact_activity,
-    summarize_contact,
-)
+from app.use_cases.contacts.contact_summaries import summarize_contact
 
 
 class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
     """
     Owner opens one customer: who they are, their conversations, bookings
-    and leads (test chats left out), newest first. An erased customer is
-    shown without personal data. The view is audited (VIEW of the contact).
+    and leads (test chats left out), newest first, read by the customer
+    (indexed), never through the business's whole history. An erased
+    customer is shown without personal data. The view is audited (VIEW of
+    the contact).
     """
 
     def __init__(
@@ -49,9 +44,7 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
             BusinessDocument,
         ],
         contact_repo: ContactRepoContract,
-        conversation_repo: ConversationRepoContract,
-        booking_repo: BookingRepoContract,
-        lead_repo: LeadRepoContract,
+        contact_activity_repo: ContactActivityRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -60,9 +53,7 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
             BusinessDocument,
         ] = authorize_business_access
         self._contact_repo: ContactRepoContract = contact_repo
-        self._conversation_repo: ConversationRepoContract = conversation_repo
-        self._booking_repo: BookingRepoContract = booking_repo
-        self._lead_repo: LeadRepoContract = lead_repo
+        self._contact_activity_repo: ContactActivityRepoContract = contact_activity_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -81,12 +72,9 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
         if contact is None:
             raise NotFoundError(f"Contact {input_data.contact_id} was not found.")
 
-        activity: ContactActivity = collect_contact_activity(
-            business.id,
-            self._conversation_repo,
-            self._booking_repo,
-            self._lead_repo,
-        ).get(contact.id, ContactActivity())
+        activity: ContactActivity = self._contact_activity_repo.list_for_contact(
+            business.id, contact.id
+        )
         now: Microseconds = self._wall_clock.now_unix()
         self._audit_log_repo.append(
             AuditLogEntryDocument(

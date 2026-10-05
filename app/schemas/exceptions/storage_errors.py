@@ -1,3 +1,6 @@
+from app.schemas.exceptions.application_errors import ExternalServiceError
+
+
 class UndeclaredLookupFieldError(LookupError):
     """
     A storage query used a field its collection does not declare as a lookup
@@ -28,4 +31,13 @@ class UnscopedStorageAccessError(RuntimeError):
     business must run inside `scoped_to_business(...)` (operators and the
     job runner do that from the business id of their input), and
     platform-level code must say so with `platform_wide()`.
+    """
+
+
+class MigrationLockTimeoutError(ExternalServiceError):
+    """
+    A migration file waited longer than the runner's `lock_timeout` for a
+    lock (or lost a deadlock) and was rolled back, so it never queued in
+    front of the live release's writes. The runner tries it again after a
+    pause; nothing of the failed try is kept.
     """
