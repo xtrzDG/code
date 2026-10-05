@@ -16,7 +16,7 @@ export interface QrMatrix {
 
 export const QUIET_ZONE = 4;
 /** Pixels per module of a downloaded PNG (a 33-module code: 656 px). */
-export const PNG_MODULE_PIXELS = 16;
+const PNG_MODULE_PIXELS = 16;
 
 export function encodeQr(text: string): QrMatrix {
   const result = encode(text, { ecc: "M", border: 0 });

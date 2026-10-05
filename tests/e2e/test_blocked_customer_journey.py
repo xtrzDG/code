@@ -54,6 +54,12 @@ def test_the_owner_tags_finds_segments_and_blocks_a_customer(
     base, headers = restaurant.base, restaurant.headers
     customer = TelegramCustomer(workshop, restaurant)
     assert customer.writes(BOOKING_REQUEST_RU)[-1].endswith(BOOKED)
+    # The written confirmation of the booking follows the answer a few
+    # seconds later, before the owner gets to the customer.
+    worker = workshop.container.gateways.background_worker()
+    workshop.clock.advance(10)
+    assert worker.run_once().failures == 0
+    assert customer.received()[-1].startswith("Salobie Bia: ваша бронь подтверждена.")
     contact_id = str(the_customer(client, restaurant)["id"])
 
     card = client.patch(
@@ -110,7 +116,6 @@ def test_the_owner_tags_finds_segments_and_blocks_a_customer(
 
     # The visit comes due; no reminder reaches them.
     received = len(customer.received())
-    worker = workshop.container.gateways.background_worker()
     for _ in range(36):
         workshop.clock.advance(60 * 60)
         assert worker.run_once().failures == 0

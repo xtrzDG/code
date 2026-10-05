@@ -9,7 +9,7 @@
 
 import type { privacyNoticeEn } from "@/i18n/messages/sections/workspace/privacyNotice.en";
 
-export type PrivacyNoticeKey = keyof typeof privacyNoticeEn;
+type PrivacyNoticeKey = keyof typeof privacyNoticeEn;
 
 export type PrivacyNoticeTexts = Record<PrivacyNoticeKey, string> & {
   /** "This translation is a draft…": shown above a draft. */
@@ -18,7 +18,7 @@ export type PrivacyNoticeTexts = Record<PrivacyNoticeKey, string> & {
   readInEnglish: string;
 };
 
-export type ReviewStatus = "needs_review" | "reviewed";
+type ReviewStatus = "needs_review" | "reviewed";
 
 export interface PrivacyNoticeDraft {
   status: ReviewStatus;

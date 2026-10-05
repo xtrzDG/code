@@ -30,7 +30,7 @@ export interface PaletteNavLink {
 /** Pages listed when nothing is typed, and at most after a match. */
 export const NAVIGATION_LIMIT = 8;
 /** Text shorter than this searches nothing (one letter finds everyone). */
-export const MIN_SEARCH_LENGTH = 2;
+const MIN_SEARCH_LENGTH = 2;
 /** The API's limit for the search text. */
 export const MAX_SEARCH_LENGTH = 100;
 

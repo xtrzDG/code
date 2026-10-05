@@ -12,15 +12,15 @@ import { localInputToMicros, microsToLocalInput } from "./incidentForm";
 
 export type AdminAnnouncement = Schema<"AnnouncementAdminView">;
 export type AnnouncementLevel = Schema<"AnnouncementLevel">;
-export type StatusComponent = Schema<"StatusComponent">;
+type StatusComponent = Schema<"StatusComponent">;
 export type CreateAnnouncementBody = RequestBody<"/v1/admin/announcements", "post">;
 export type UpdateAnnouncementBody = RequestBody<"/v1/admin/announcements/{announcement_id}", "patch">;
 
 export const ANNOUNCEMENT_LANGUAGES = ["en", "ka", "ru"] as const;
-export type AnnouncementLanguage = (typeof ANNOUNCEMENT_LANGUAGES)[number];
+type AnnouncementLanguage = (typeof ANNOUNCEMENT_LANGUAGES)[number];
 
 /** The API's limits. */
-export const TEXT_MIN_LENGTH = 3;
+const TEXT_MIN_LENGTH = 3;
 export const TEXT_MAX_LENGTH = 600;
 const MAX_LEAD_MICROS = 60 * 24 * 60 * 60 * 1_000_000;
 

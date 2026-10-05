@@ -12,7 +12,6 @@ export type CustomerSummary = Schema<"ContactSummaryView">;
 export type CustomerPage = Schema<"ContactPage">;
 export type CustomerDetail = Schema<"ContactDetailView">;
 export type CustomerCard = Schema<"CustomerCardView">;
-export type CustomerStandingView = Schema<"ContactStandingView">;
 export type TimelineEntry = Schema<"CustomerTimelineEntry">;
 export type CardChange = RequestBody<"/v1/businesses/{business_id}/contacts/{contact_id}/card", "patch">;
 
@@ -71,7 +70,7 @@ export function cleanTag(text: string): string {
 }
 
 /** Tags compare without case, as the API compares them. */
-export function tagKey(tag: string): string {
+function tagKey(tag: string): string {
   return tag.toLowerCase();
 }
 

@@ -8,9 +8,7 @@ import type { RequestBody, Schema } from "@/api/types";
 import type { MessageKey, PluralKey } from "@/i18n/translate";
 
 export type Segment = Schema<"SegmentView">;
-export type SegmentList = Schema<"SegmentList">;
 export type SegmentRules = Schema<"SegmentRulesBody">;
-export type SegmentPreview = Schema<"SegmentPreview">;
 export type SegmentBody = RequestBody<"/v1/businesses/{business_id}/customer-segments", "post">;
 
 export const MAX_SEGMENTS = 50;
@@ -28,7 +26,7 @@ export interface SegmentForm {
   vipOnly: boolean;
 }
 
-export type SegmentField = "name" | "lastVisitDays" | "minBookings" | "maxBookings";
+type SegmentField = "name" | "lastVisitDays" | "minBookings" | "maxBookings";
 export type SegmentErrors = Partial<Record<SegmentField, MessageKey>>;
 
 export const EMPTY_SEGMENT_FORM: SegmentForm = {

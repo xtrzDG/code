@@ -1,5 +1,5 @@
 /** A guest's booking page: `/r/{token}` (the link in their written confirmation). */
-export const BOOKING_PAGE_PREFIX = "/r/";
+const BOOKING_PAGE_PREFIX = "/r/";
 
 /** The page's address and the API's (/v1/public/bookings/{token}…) carry the key. */
 const TOKEN_IN_PATH = /(\/r\/|\/v1\/public\/bookings\/)[^/?#\s"']+/g;

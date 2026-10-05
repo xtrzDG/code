@@ -8,7 +8,7 @@ import type { BadgeTone } from "@/components/ui";
 import { formatPhone } from "@/lib/phone";
 
 export type ChannelKind = Schema<"ChannelKind">;
-export type ChannelStatus = Schema<"ChannelStatus">;
+type ChannelStatus = Schema<"ChannelStatus">;
 export type ChannelView = Schema<"ChannelView">;
 export type CallForwardingCondition = Schema<"CallForwardingCondition">;
 
@@ -16,10 +16,6 @@ export type CallForwardingCondition = Schema<"CallForwardingCondition">;
 export const CONNECTABLE_CHANNELS = ["web_chat", "telegram", "whatsapp", "instagram", "messenger", "phone"] as const;
 
 export type ConnectableChannel = (typeof CONNECTABLE_CHANNELS)[number];
-
-export function isConnectableChannel(kind: string): kind is ConnectableChannel {
-  return (CONNECTABLE_CHANNELS as readonly string[]).includes(kind);
-}
 
 /** The channel's name in the API path ("web" is the website chat). */
 export function channelPathName(kind: ConnectableChannel): string {
@@ -97,7 +93,7 @@ export function accountLabel(kind: ChannelKind, accountId: string | null | undef
 // --- Call forwarding -----------------------------------------------------------
 
 /** Order of the forwarding codes: the three conditions, then "switch off". */
-export const FORWARDING_CONDITIONS: readonly CallForwardingCondition[] = ["no_answer", "busy", "unreachable", "cancel_all"];
+const FORWARDING_CONDITIONS: readonly CallForwardingCondition[] = ["no_answer", "busy", "unreachable", "cancel_all"];
 
 export function sortForwardingCodes<T extends { condition: CallForwardingCondition }>(codes: readonly T[]): T[] {
   return [...codes].sort(

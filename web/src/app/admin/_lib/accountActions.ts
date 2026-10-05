@@ -13,20 +13,20 @@ import { shiftDay } from "./metrics";
 type AdminInvoice = Schema<"AdminInvoiceView">;
 
 /** The six actions of the menu, in its order. */
-export const ACCOUNT_ACTIONS = ["extend", "discount", "credit", "waive", "payment", "plan"] as const;
+const ACCOUNT_ACTIONS = ["extend", "discount", "credit", "waive", "payment", "plan"] as const;
 export type AccountAction = (typeof ACCOUNT_ACTIONS)[number];
 
 /** As the API's `AdminActionReason`. */
-export const ADMIN_REASON_MIN = 8;
+const ADMIN_REASON_MIN = 8;
 export const ADMIN_REASON_MAX = 300;
 /** As the API's `TrialExtensionDays`. */
 export const TRIAL_DAYS_MAX = 60;
 /** As the API's `BillingCreditAmountMinor`. */
-export const CREDIT_MAX_MINOR = 10_000_000;
+const CREDIT_MAX_MINOR = 10_000_000;
 /** As the API's `ManualPaymentReference`. */
 export const REFERENCE_MAX = 120;
 /** A discount runs three years at most (the API's limit). */
-export const DISCOUNT_MAX_DAYS = 3 * 366;
+const DISCOUNT_MAX_DAYS = 3 * 366;
 
 /** The reason as sent: no blanks around it. */
 export function cleanReason(text: string): string {
@@ -39,7 +39,7 @@ export function isReasonValid(text: string): boolean {
 }
 
 /** A whole number typed with digits only, within the bounds; else null. */
-export function parseWholeNumber(text: string, min: number, max: number): number | null {
+function parseWholeNumber(text: string, min: number, max: number): number | null {
   const typed = text.trim();
   if (!/^\d{1,9}$/.test(typed)) {
     return null;

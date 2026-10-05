@@ -12,9 +12,9 @@
 
 import type { OpeningInterval, Weekday } from "@/api/types";
 
-const WEEKDAYS: readonly Weekday[] = [1, 2, 3, 4, 5, 6, 7];
+export const WEEKDAYS: readonly Weekday[] = [1, 2, 3, 4, 5, 6, 7];
 
-const MINUTES_PER_DAY = 1440;
+export const MINUTES_PER_DAY = 1440;
 
 /** One editor row: `closes` is 0..1439; `closes <= opens` runs past midnight. */
 export interface EditorInterval {

@@ -9,7 +9,7 @@ export type CustomerListFilter = (typeof CUSTOMER_LIST_FILTERS)[number];
 
 /** The API's longest search and tag. */
 export const MAX_SEARCH_LENGTH = 100;
-export const MAX_TAG_LENGTH = 32;
+const MAX_TAG_LENGTH = 32;
 
 export interface CustomerFilters {
   /** What the search box holds (trimmed only when sent). */

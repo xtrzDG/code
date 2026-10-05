@@ -4,7 +4,7 @@
  * API's `SupportAccessReason`).
  */
 
-export const SUPPORT_REASON_MIN = 8;
+const SUPPORT_REASON_MIN = 8;
 export const SUPPORT_REASON_MAX = 300;
 
 /** The reason as sent: no blanks around it. */

@@ -1,6 +1,6 @@
 /** The notice Google Calendar's consent page returns with (`?calendar=…`). */
 
-export const CALENDAR_FAILURE_REASONS = ["access_denied", "link_expired", "no_offline_access", "provider_error"] as const;
+const CALENDAR_FAILURE_REASONS = ["access_denied", "link_expired", "no_offline_access", "provider_error"] as const;
 
 export type CalendarFailureReason = (typeof CALENDAR_FAILURE_REASONS)[number] | "unknown";
 

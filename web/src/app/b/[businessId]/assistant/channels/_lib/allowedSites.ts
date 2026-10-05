@@ -43,7 +43,7 @@ export function siteOrigin(text: string): string | null {
 }
 
 /** What two origins share as one site: the host without "www." and the port. */
-export function siteKey(origin: string): string {
+function siteKey(origin: string): string {
   try {
     const url = new URL(origin);
     return `${url.hostname.replace(/^www\./, "")}:${url.port}`;

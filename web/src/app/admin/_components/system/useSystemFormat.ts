@@ -56,5 +56,3 @@ export function useSystemFormat() {
       t("adminSystem.alerts.figure", { figure: figure(alert.figure, alert.unit), threshold: figure(alert.threshold, alert.unit) }),
   };
 }
-
-export type SystemFormat = ReturnType<typeof useSystemFormat>;

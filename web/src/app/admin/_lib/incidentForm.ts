@@ -33,10 +33,10 @@ export const NOTICE_MAX_LENGTH: Readonly<Record<NoticeField, number>> = {
   measures: 2000,
 };
 
-export const TITLE_MIN_LENGTH = 3;
+const TITLE_MIN_LENGTH = 3;
 export const TITLE_MAX_LENGTH = 160;
-export const MAX_AFFECTED_BUSINESSES = 1000;
-export const MAX_AFFECTED_COUNT = 1_000_000_000;
+const MAX_AFFECTED_BUSINESSES = 1000;
+const MAX_AFFECTED_COUNT = 1_000_000_000;
 
 const BUSINESS_ID = /business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
@@ -55,7 +55,7 @@ export interface IncidentForm {
   notices: Record<NoticeLanguage, NoticeTexts>;
 }
 
-export type IncidentField = "title" | "startedAt" | "detectedAt" | "businesses" | "subjectCount" | "recordCount";
+type IncidentField = "title" | "startedAt" | "detectedAt" | "businesses" | "subjectCount" | "recordCount";
 
 export type IncidentProblem =
   | "required"
@@ -77,7 +77,7 @@ export interface IncidentFormErrors {
 
 export type BuiltIncident = { ok: true; body: CreateIncidentBody } | { ok: false; errors: IncidentFormErrors };
 
-export function emptyNotice(): NoticeTexts {
+function emptyNotice(): NoticeTexts {
   return { nature: "", subject_categories: "", record_categories: "", likely_consequences: "", measures: "" };
 }
 

@@ -631,7 +631,9 @@ Messenger и Instagram — ничего. Телефон не подтвержд�
   маршрутов `/v1/widget/{business_id}/*` сверяет `Origin` (иначе `Referer`)
   по хосту без `www.` и порту; пустой список — любой сайт, свои страницы
   платформы (`CABINET_BASE_URL`, `APP_BASE_URL`, `CORS_ALLOWED_ORIGINS`) —
-  всегда, чужой сайт — 403.
+  всегда, чужой сайт — 403. Опрос сообщений (каждые 4 с) вызывает ту же
+  проверку внутри своего маршрута, а не зависимостью: запрос остаётся одним
+  переходом в поток запроса.
 - Звонки: `CALL_MAX_DURATION_SECONDS` и `CALL_SILENCE_END_SECONDS` попадают
   в конфигурацию агента (`build_agent_config`: `max_duration_seconds`,
   `silence_end_call_timeout`) при каждой его настройке.

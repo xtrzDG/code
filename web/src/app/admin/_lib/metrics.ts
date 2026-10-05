@@ -12,14 +12,12 @@ export type AdminMetricsView = Schema<"AdminMetricsView">;
 export type FunnelStepView = Schema<"FunnelStepView">;
 export type TunnelStepView = Schema<"TunnelStepView">;
 export type MrrView = Schema<"MrrView">;
-export type MrrMovementView = Schema<"MrrMovementView">;
+type MrrMovementView = Schema<"MrrMovementView">;
 export type MarginView = Schema<"MarginView">;
 export type CohortRowView = Schema<"CohortRowView">;
 export type SourceRowView = Schema<"SourceRowView">;
 export type WebVitalView = Schema<"WebVitalView">;
 export type BusinessGrowthView = Schema<"BusinessGrowthView">;
-export type BusinessFunnelStepView = Schema<"BusinessFunnelStepView">;
-export type BusinessTunnelStepView = Schema<"BusinessTunnelStepView">;
 export type MrrMovementKind = MrrMovementView["kind"];
 
 /**

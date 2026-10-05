@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 
 import { IconSearch } from "@/components/icons";
-import { useModalDialog } from "@/components/ui";
+import { useModalDialog } from "@/components/ui/useModalDialog";
 import { useI18n } from "@/i18n/client";
 import { matchNavigation, movedIndex, navigationEntries, orderedEntries, type PaletteEntry, type PaletteNavLink } from "@/lib/commandPalette";
 

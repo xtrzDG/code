@@ -58,7 +58,7 @@ export function downloadName(slug: string, kind: ShareLinkKind, source: ShareSou
   return ["chat", slug, kind === "hosted_chat" ? "" : kind, source].filter(Boolean).join("-").replace(/_/g, "-");
 }
 
-export const SLUG_MIN_LENGTH = 3;
+const SLUG_MIN_LENGTH = 3;
 export const SLUG_MAX_LENGTH = 40;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

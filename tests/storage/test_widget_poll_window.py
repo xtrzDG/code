@@ -40,8 +40,8 @@ from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
 from app.use_cases.channels.get_widget_messages_use_case import (
-    WIDGET_MESSAGE_AUTHORS,
     GetWidgetMessagesUseCase,
+    is_shown_in_widget,
 )
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.storage.conftest import CollectionFactory, PostgresCollectionFactory
@@ -170,7 +170,7 @@ def whole_chat_answer(
         cursor = str(customer[-1].id) if customer else latest
         return [], cursor, False, is_handed_off
 
-    shown = [m for m in chat[positions[0] + 1 :] if m.author in WIDGET_MESSAGE_AUTHORS]
+    shown = [m for m in chat[positions[0] + 1 :] if is_shown_in_widget(m)]
     page = shown[:50]
     has_more = len(shown) > len(page)
     cursor = str(page[-1].id) if has_more else latest

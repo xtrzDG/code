@@ -3,9 +3,9 @@ import type { Schema } from "@/api/types";
 export type ClientGuardActivity = Schema<"ClientGuardActivity">;
 
 /** The API's GUARD_SPIKE rule (app/utilities/client_health/guard_activity.py). */
-export const MIN_HELD_BACK_REPLIES = 5;
-export const HELD_BACK_SHARE = 1 / 6;
-export const INJECTION_FLAG_SPIKE = 10;
+const MIN_HELD_BACK_REPLIES = 5;
+const HELD_BACK_SHARE = 1 / 6;
+const INJECTION_FLAG_SPIKE = 10;
 
 export interface GuardFigures {
   checked: number;

@@ -9,15 +9,13 @@ import type { BadgeTone } from "@/components/ui";
 import type { Schema } from "@/api/types";
 
 export type PlatformSpend = Schema<"PlatformSpendView">;
-export type SpendProvider = Schema<"SpendProvider">;
-export type BrakedBusiness = Schema<"BusinessSpendMark">;
 
 const MICRO_USD_PER_CENT = 10_000;
 /** The `spend_spike` rule of ops/alerts/spend_spike.yaml. */
-export const SPIKE_RATIO = 3;
-export const SPIKE_FLOOR_MICRO_USD = 5_000_000;
+const SPIKE_RATIO = 3;
+const SPIKE_FLOOR_MICRO_USD = 5_000_000;
 /** The `spend_budget` rule fires at 80% of the daily budget. */
-export const BUDGET_ALERT_PERCENT = 80;
+const BUDGET_ALERT_PERCENT = 80;
 
 /** Micro-USD → US cents, for `formatMoney(cents, "USD", locale)`. */
 export function microUsdToCents(microUsd: number): number {

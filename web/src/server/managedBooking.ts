@@ -19,7 +19,7 @@ import { getServerApi } from "./api";
  * the API only.
  */
 
-export type ManagedBookingView = Schema<"ManagedBookingView">;
+type ManagedBookingView = Schema<"ManagedBookingView">;
 
 export type ManagedBookingLookup =
   | { kind: "found"; view: ManagedBookingView }
@@ -28,7 +28,7 @@ export type ManagedBookingLookup =
 /** The token's alphabet and length (the API's BookingManageToken). */
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{40,120}$/;
 
-export function isManageToken(value: string): boolean {
+function isManageToken(value: string): boolean {
   return TOKEN_PATTERN.test(value);
 }
 

@@ -11,7 +11,6 @@ import type { BadgeTone } from "@/components/ui";
 export type AdminSystem = Schema<"AdminSystemView">;
 export type AlertState = Schema<"AlertStateView">;
 export type AlertUnit = Schema<"AlertUnit">;
-export type PlatformAlertCode = Schema<"PlatformAlertCode">;
 export type IncidentSeverity = Schema<"IncidentSeverity">;
 export type JobLane = Schema<"JobLane">;
 export type Lane = Schema<"LaneView">;
@@ -25,13 +24,13 @@ export type QueuedJob = Schema<"QueuedJobView">;
 export const SYSTEM_POLL_MS = 30_000;
 
 /** A lane whose oldest due job waited longer than this is behind: the `inbound_backlog` alert's threshold. */
-export const LANE_BEHIND_SECONDS = 120;
+const LANE_BEHIND_SECONDS = 120;
 
 /** The restore drill runs weekly (docs/operations/backup-restore.md); a day of slack before it counts as late. */
-export const DRILL_OVERDUE_DAYS = 8;
+const DRILL_OVERDUE_DAYS = 8;
 
 /** The largest tables shown; the rest are in the total. */
-export const TABLES_SHOWN = 8;
+const TABLES_SHOWN = 8;
 
 const MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1_000_000;
 
@@ -60,7 +59,7 @@ export function groupAlerts(alerts: readonly AlertState[]): AlertGroups {
   return { firing, resolved };
 }
 
-export type DurationUnit = "seconds" | "minutes" | "hours" | "days";
+type DurationUnit = "seconds" | "minutes" | "hours" | "days";
 
 export interface DurationParts {
   unit: DurationUnit;
@@ -82,7 +81,7 @@ export function durationParts(seconds: number): DurationParts {
   return { unit: "days", count: Math.floor(whole / 86_400) };
 }
 
-export type ByteUnit = "b" | "kb" | "mb" | "gb" | "tb";
+type ByteUnit = "b" | "kb" | "mb" | "gb" | "tb";
 
 export interface ByteSize {
   unit: ByteUnit;
@@ -118,7 +117,7 @@ export function tableName(table: string): string {
   return dot === -1 ? table : table.slice(dot + 1);
 }
 
-export function isLaneBehind(lane: Lane): boolean {
+function isLaneBehind(lane: Lane): boolean {
   return (lane.oldest_wait_seconds ?? 0) > LANE_BEHIND_SECONDS;
 }
 

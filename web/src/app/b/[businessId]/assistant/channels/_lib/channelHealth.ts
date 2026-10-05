@@ -18,7 +18,7 @@ export type ChannelProblem = DeliveryFailureReason | "missing_public_address" | 
 export type ChannelFix = "reconnect" | "templates";
 
 /** How loud a problem is: it stops the channel, it needs a look, or it passes by itself. */
-export type ProblemTone = "danger" | "warning" | "info";
+type ProblemTone = "danger" | "warning" | "info";
 
 export interface ChannelHealth {
   /** Times of the last message each way (microseconds), when the channel shows them. */
@@ -64,7 +64,7 @@ export function problemFix(kind: ConnectableChannel, problem: ChannelProblem): C
   return RECONNECT_PROBLEMS.has(problem) ? "reconnect" : null;
 }
 
-export function problemTone(channel: ChannelView, problem: ChannelProblem): ProblemTone {
+function problemTone(channel: ChannelView, problem: ChannelProblem): ProblemTone {
   if (PASSING_PROBLEMS.has(problem)) {
     return channel.status === "error" ? "warning" : "info";
   }
