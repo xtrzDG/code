@@ -255,7 +255,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 conversation=conversation,
                 is_new_conversation=is_new_conversation,
                 previous_last_message_at=previous_last_message_at,
-                wants_context=is_first_reply,
+                wants_context=is_first_reply and gate is TurnGate.ANSWER,
                 now=now,
             )
         )

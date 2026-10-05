@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from app.adapters.voice.elevenlabs_tool_config import build_tool_config
@@ -47,18 +48,17 @@ def other_customer(world: BrainWorld, phone: str) -> ContactDocument:
     return contact
 
 
-def listed_result(world: BrainWorld) -> dict[str, object]:
+def listed_result(world: BrainWorld) -> dict[str, Any]:
     conversation = world.conversations()[0]
     reply = world.messages(conversation.id)[-1]
     assert reply.tool_calls[0].tool_name is AssistantToolName.LIST_MY_BOOKINGS
     assert reply.tool_calls[0].is_error is False
-    result: dict[str, object] = json.loads(str(reply.tool_calls[0].result_json))
+    result: dict[str, Any] = json.loads(str(reply.tool_calls[0].result_json))
     return result
 
 
-def listed_ids(result: dict[str, object]) -> list[str]:
-    bookings = result["bookings"]
-    assert isinstance(bookings, list)
+def listed_ids(result: dict[str, Any]) -> list[str]:
+    bookings: list[dict[str, Any]] = result["bookings"]
     return [str(booking["booking_id"]) for booking in bookings]
 
 
@@ -77,8 +77,7 @@ def test_the_tool_is_scoped_to_the_customer() -> None:
 
     result = listed_result(world)
     assert listed_ids(result) == [str(saturday.id), str(cancelled.id)]
-    bookings = result["bookings"]
-    assert isinstance(bookings, list)
+    bookings: list[dict[str, Any]] = result["bookings"]
     assert bookings[0]["date"] == "2026-10-03"
     assert bookings[0]["time"] == "20:00"
     assert bookings[0]["resource_name"] == "Table 4"
@@ -158,12 +157,10 @@ def test_the_voice_tool_list_carries_list_my_bookings_without_arguments() -> Non
         definition, "https://api.example.com", {"X-Assistant-Tool-Secret": "s"}
     )
 
-    api_schema = config["api_schema"]
-    assert isinstance(api_schema, dict)
+    api_schema: dict[str, Any] = json.loads(json.dumps(config["api_schema"]))
     assert str(api_schema["url"]).endswith("/v1/voice/tools/list_my_bookings")
-    body = api_schema["request_body_schema"]
-    assert isinstance(body, dict)
-    assert body["properties"]["arguments"]["properties"] == {}  # type: ignore[index]
+    arguments = api_schema["request_body_schema"]["properties"]["arguments"]
+    assert arguments["properties"] == {}
     assert json.loads(str(definition.input_schema_json)) == {
         "type": "object",
         "properties": {},
