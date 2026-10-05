@@ -71,7 +71,7 @@ from app.use_cases.conversations.turns.prepare_conversation_turn_use_case import
 
 class ConversationUseCasesContainer(containers.DeclarativeContainer):
     """
-    The conversation engine: the ten tools of the assistant, then prepare,
+    The conversation engine: the tools of the assistant, then prepare,
     generate and record a turn; the voice turn's pieces and the call greeting.
     """
 
@@ -97,6 +97,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         create_booking=booking_use_cases.create_booking_use_case,
         cancel_booking=booking_use_cases.cancel_booking_use_case,
         reschedule_booking=booking_use_cases.reschedule_booking_use_case,
+        list_my_bookings=booking_use_cases.list_customer_bookings_use_case,
         create_lead=follow_up_use_cases.create_lead_use_case,
         handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
         record_unanswered_question=follow_up_use_cases.record_unanswered_question_use_case,

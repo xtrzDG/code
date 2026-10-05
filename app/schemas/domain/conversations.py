@@ -187,9 +187,12 @@ class MessageDocument(BaseDocument):
     checked). On a customer message: `injection_flag`, the kind of prompt
     injection it looked like (None: none). All optional, so version 3 rows
     read as they are.
+
+    Version 5: `tool_calls` may name the tool list_my_bookings (a new
+    value; version 4 rows read as they are).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId

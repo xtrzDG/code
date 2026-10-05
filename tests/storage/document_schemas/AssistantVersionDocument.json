@@ -1,7 +1,7 @@
 {
   "collection": "assistant_versions",
   "document_type": "AssistantVersionDocument",
-  "schema_version": 5,
+  "schema_version": 6,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -199,7 +199,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "5",
+        "default": "6",
         "type": "string"
       },
       "status": {
@@ -236,6 +236,7 @@
             "create_booking",
             "cancel_booking",
             "reschedule_booking",
+            "list_my_bookings",
             "create_lead",
             "handoff_to_human",
             "send_link",

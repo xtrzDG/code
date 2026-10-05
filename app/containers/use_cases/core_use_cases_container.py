@@ -18,6 +18,7 @@ from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
+from app.containers.use_cases.memory_use_cases import MemoryUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
 from app.containers.use_cases.privacy_use_cases import PrivacyUseCasesContainer
@@ -180,4 +181,14 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         repositories=repositories,
         time_provider=time_provider,
         utilities=utilities,
+    )
+    # The customer memory: its settings and the conversation summaries (1121).
+    memory: MemoryUseCasesContainer = Container(  # type: ignore[assignment]
+        MemoryUseCasesContainer,
+        adapters=adapters,
+        config=config,
+        facilitators=facilitators,
+        repositories=repositories,
+        time_provider=time_provider,
+        account_use_cases=accounts,
     )

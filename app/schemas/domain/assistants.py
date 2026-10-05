@@ -98,7 +98,8 @@ class AssistantVersionDocument(BaseDocument):
     # 4: `discarded_at` (optional: a version stored before is not discarded).
     # 5: `facts[].is_imported` (optional: older facts read as written by
     #    the owner).
-    schema_version: SchemaVersion = SchemaVersion("5")
+    # 6: the tool list_my_bookings in `tools` (a new value, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

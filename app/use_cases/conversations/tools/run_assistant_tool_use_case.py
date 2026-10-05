@@ -23,6 +23,7 @@ from app.schemas.dto.bookings import (
     RescheduleBookingCommand,
 )
 from app.schemas.dto.conversations import LlmToolCall
+from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBookingsQuery
 from app.schemas.dto.handoffs import (
     HandoffCommand,
     HandoffResult,
@@ -42,6 +43,7 @@ from app.use_cases.conversations.tools.booking_tool_handlers import (
     run_cancel_booking,
     run_check_availability,
     run_create_booking,
+    run_list_my_bookings,
     run_reschedule_booking,
 )
 from app.use_cases.conversations.tools.knowledge_tool_handlers import (
@@ -88,8 +90,9 @@ class RunAssistantToolUseCase(
     for the customer's own bookings only: they are found by the contact and
     by the phone the channel proved, never by a phone the customer typed
     (anyone can type someone else's number), and only in the conversation's
-    sandbox mode. A tool not offered in the conversation, invalid input or
-    a business rule error (slot taken, unknown booking) becomes an error
+    sandbox mode; listing them (list_my_bookings) is scoped the same way.
+    A tool not offered in the conversation, invalid input or a business
+    rule error (slot taken, unknown booking) becomes an error
     result the model can act on instead of an exception. Availability and
     booking results and their errors state today at the business
     (`business_today`), and a date that has already passed is refused.
@@ -106,6 +109,7 @@ class RunAssistantToolUseCase(
         create_booking: UseCaseContract[CreateBookingCommand, BookingResult],
         cancel_booking: UseCaseContract[CancelBookingCommand, BookingResult],
         reschedule_booking: UseCaseContract[RescheduleBookingCommand, BookingResult],
+        list_my_bookings: UseCaseContract[CustomerBookingsQuery, CustomerBookingList],
         create_lead: UseCaseContract[CreateLeadCommand, LeadView],
         handoff_to_human: UseCaseContract[HandoffCommand, HandoffResult],
         record_unanswered_question: UseCaseContract[
@@ -133,6 +137,9 @@ class RunAssistantToolUseCase(
         self._reschedule_booking: UseCaseContract[
             RescheduleBookingCommand, BookingResult
         ] = reschedule_booking
+        self._list_my_bookings: UseCaseContract[
+            CustomerBookingsQuery, CustomerBookingList
+        ] = list_my_bookings
         self._create_lead: UseCaseContract[CreateLeadCommand, LeadView] = create_lead
         self._handoff_to_human: UseCaseContract[HandoffCommand, HandoffResult] = (
             handoff_to_human
@@ -178,6 +185,11 @@ class RunAssistantToolUseCase(
                     call,
                     context,
                     self._today(context),
+                )
+            ),
+            AssistantToolName.LIST_MY_BOOKINGS: lambda call, context: (
+                run_list_my_bookings(
+                    self._list_my_bookings, call, context, self._today(context)
                 )
             ),
             AssistantToolName.CREATE_LEAD: lambda call, context: run_create_lead(

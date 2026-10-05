@@ -168,6 +168,11 @@ def build_booking_section(
         "- Follow the booking rules in the facts: maximum party size, minimum "
         "notice, deposit and cancellation policy.",
         "- Use cancel_booking and reschedule_booking to change existing bookings.",
+        *(
+            ["- When customers ask about their own bookings, call list_my_bookings."]
+            if AssistantToolName.LIST_MY_BOOKINGS in tools
+            else []
+        ),
         time_rule,
         "- For larger groups, banquets, corporate events and other non-standard "
         "requests, collect the details with create_lead.",

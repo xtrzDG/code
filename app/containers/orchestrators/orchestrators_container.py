@@ -39,6 +39,9 @@ from app.containers.orchestrators.inbox_orchestrators import (
 from app.containers.orchestrators.knowledge_orchestrators import (
     KnowledgeOrchestratorsContainer,
 )
+from app.containers.orchestrators.memory_orchestrators import (
+    MemoryOrchestratorsContainer,
+)
 from app.containers.orchestrators.notification_orchestrators import (
     NotificationOrchestratorsContainer,
 )
@@ -109,6 +112,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     inbox: InboxOrchestratorsContainer = Container(  # type: ignore[assignment]
         InboxOrchestratorsContainer,
         inbox_use_cases=use_cases.inbox,
+    )
+    memory: MemoryOrchestratorsContainer = Container(  # type: ignore[assignment]
+        MemoryOrchestratorsContainer,
+        memory_use_cases=use_cases.memory,
     )
     knowledge: KnowledgeOrchestratorsContainer = Container(  # type: ignore[assignment]
         KnowledgeOrchestratorsContainer,

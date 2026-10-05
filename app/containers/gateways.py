@@ -72,6 +72,7 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
     PROCESS_POST_CALL_JOB,
 )
+from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 
 MINUTE_SECONDS: int = 60
 HOUR_SECONDS: int = 60 * MINUTE_SECONDS
@@ -265,6 +266,8 @@ class GatewaysContainer(containers.DeclarativeContainer):
             SEND_PLATFORM_ALERT_JOB: (
                 operators.platform_ops.send_platform_alert_operator
             ),
+            # A quiet conversation summarized for the customer memory.
+            SUMMARIZE_CONVERSATION_JOB: operators.memory.summarize_conversation_operator,  # noqa: E501
         }
     )
     # The pulse of this worker process (GET /readyz reports its age).

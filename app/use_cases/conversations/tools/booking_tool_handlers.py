@@ -1,5 +1,6 @@
 """
-Booking tools of the assistant: availability, booking, cancelling, moving.
+Booking tools of the assistant: availability, booking, cancelling, moving,
+and listing the customer's own bookings.
 
 With today at the business known (`BusinessToday`), every result states it,
 and a date that has already passed is refused before anything is looked up.
@@ -13,6 +14,7 @@ from app.schemas.dto.assistant_tools import (
     CancelBookingToolInput,
     CheckAvailabilityToolInput,
     CreateBookingToolInput,
+    ListMyBookingsToolInput,
     RescheduleBookingToolInput,
 )
 from app.schemas.dto.bookings import (
@@ -24,6 +26,7 @@ from app.schemas.dto.bookings import (
     RescheduleBookingCommand,
 )
 from app.schemas.dto.conversations import LlmToolCall, LlmToolResult
+from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBookingsQuery
 from app.use_cases.conversations.tools.tool_outcomes import (
     error_outcome,
     success_outcome,
@@ -35,6 +38,9 @@ from app.use_cases.conversations.tools.tool_phone_numbers import (
 from app.utilities.conversations.business_today import (
     BusinessToday,
     describe_past_date,
+)
+from app.utilities.conversations.customer_booking_payloads import (
+    render_customer_bookings,
 )
 from app.utilities.conversations.tool_payloads import (
     render_availability,
@@ -174,6 +180,29 @@ def run_reschedule_booking(
         )
     )
     return success_outcome(call, render_booking(result, today_text(today)))
+
+
+def run_list_my_bookings(
+    list_my_bookings: UseCaseContract[CustomerBookingsQuery, CustomerBookingList],
+    call: LlmToolCall,
+    context: AssistantToolContext,
+    today: BusinessToday | None = None,
+) -> AssistantToolOutcome:
+    """
+    The customer's own bookings still to come: by the conversation's
+    contact and the phone the channel proved, as cancel_booking finds them.
+    """
+
+    ListMyBookingsToolInput.model_validate_json(call.input_json)
+    result: CustomerBookingList = list_my_bookings.run(
+        CustomerBookingsQuery(
+            business_id=context.business_id,
+            contact_id=context.contact_id,
+            verified_phone_number=context.verified_phone_number,
+            is_sandbox=context.is_sandbox,
+        )
+    )
+    return success_outcome(call, render_customer_bookings(result, today_text(today)))
 
 
 def refuse_past_date(

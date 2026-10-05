@@ -8,6 +8,9 @@ from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.typings.businesses.constrained_strings import WebLink
+from app.use_cases.bookings.list_customer_bookings_use_case import (
+    ListCustomerBookingsUseCase,
+)
 from app.use_cases.conversations.tools.run_assistant_tool_use_case import (
     RunAssistantToolUseCase,
 )
@@ -67,6 +70,14 @@ def build_brain_tools(
         create_booking=FakeCreateBooking(bookings),
         cancel_booking=FakeCancelBooking(bookings),
         reschedule_booking=FakeRescheduleBooking(bookings),
+        list_my_bookings=ListCustomerBookingsUseCase(
+            business_repo=repos.business_repo,
+            contact_repo=repos.contact_repo,
+            booking_repo=repos.memory.booking_repo,
+            resource_repo=repos.memory.resource_repo,
+            knowledge_item_repo=repos.knowledge_item_repo,
+            wall_clock=wall_clock,
+        ),
         create_lead=create_lead,
         handoff_to_human=handoff,
         record_unanswered_question=record_question,
