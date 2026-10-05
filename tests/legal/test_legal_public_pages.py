@@ -7,6 +7,9 @@ GET /v1/legal/overview with the DPA in force and the operator's details.
 
 from pathlib import Path
 
+from app.utilities.config_helpers.app_settings.compliance_settings_section import (
+    DEFAULT_DPA_DOCUMENT_VERSION,
+)
 from tests.legal.legal_http import build_legal_client
 from tests.legal.legal_world import Clock
 
@@ -67,7 +70,8 @@ def test_the_overview_names_the_dpa_in_force_and_the_operator() -> None:
     assert response.headers["cache-control"] == "public, max-age=300"
     body = response.json()
     assert body["is_draft"] is False
-    assert body["dpa_version"] == "2026-10-01"
+    # The version in force is the deployment's DPA_DOCUMENT_VERSION (default).
+    assert body["dpa_version"] == DEFAULT_DPA_DOCUMENT_VERSION
     assert body["operator"] == {
         "legal_name": "Workshop Labs LLC",
         "address": "1 Rustaveli Ave, Tbilisi",

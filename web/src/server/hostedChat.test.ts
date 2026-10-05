@@ -22,7 +22,7 @@ const HOSTED_VIEW: HostedChatView = {
     { tag: "ka", native_name: "ქართული", direction: "ltr" },
     { tag: "he", native_name: "עברית", direction: "rtl" },
   ],
-  accent_color: "#2F7D4F",
+  accent_color: "#AD5732",
   api_base_url: "https://api.workshop.example",
   widget_script_url: "https://api.workshop.example/widget.js",
   privacy_url: null,  conversation_retention_days: 730,

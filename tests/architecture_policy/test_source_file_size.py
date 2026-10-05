@@ -89,8 +89,16 @@ def list_source_files(root_path: Path, suffixes: frozenset[str]) -> list[Path]:
         and file_path.suffix in suffixes
         and "__pycache__" not in file_path.parts
         and "node_modules" not in file_path.parts
+        and not is_in_hidden_folder(file_path, root_path)
         and not is_exempt(file_path)
     )
+
+
+def is_in_hidden_folder(file_path: Path, root_path: Path) -> bool:
+    # Tool output, not sources: an e2e run writes its traces (with their
+    # stylesheets) into the git-ignored web/e2e/.artifacts while it runs.
+    folders: tuple[str, ...] = file_path.relative_to(root_path).parts[:-1]
+    return any(folder.startswith(".") for folder in folders)
 
 
 def is_exempt(file_path: Path) -> bool:
@@ -105,3 +113,11 @@ def test_exempt_files_are_only_generated_files_and_dictionaries() -> None:
     assert not is_exempt(PROJECT_ROOT / "web/src/i18n/translate.ts")
     assert not is_exempt(PROJECT_ROOT / "web/src/api/client.ts")
     assert not is_exempt(PROJECT_ROOT / "app/main.py")
+
+
+def test_tool_output_in_hidden_folders_is_not_a_source() -> None:
+    e2e_root: Path = PROJECT_ROOT / "web/e2e"
+    trace_style: Path = e2e_root / ".artifacts/results/trace/assets/index.css"
+
+    assert is_in_hidden_folder(trace_style, e2e_root)
+    assert not is_in_hidden_folder(e2e_root / "support/fixtures.ts", e2e_root)

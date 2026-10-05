@@ -191,7 +191,7 @@ describe("website chat look", () => {
   });
 
   it("picks readable text on the accent like the widget does", () => {
-    expect(readableTextColor("#4f46e5")).toBe("#ffffff");
+    expect(readableTextColor("#ad5732")).toBe("#ffffff");
     expect(readableTextColor("#fde047")).toBe("#111827");
     expect(readableTextColor("not a colour")).toBe("#ffffff");
     // Mid-tone brand colours: dark text has the higher contrast.

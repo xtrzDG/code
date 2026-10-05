@@ -63,7 +63,7 @@ describe("the table card", () => {
     matrix: encodeQr("https://app.example/c/cafe?src=table"),
     language: "he",
     direction: "rtl" as const,
-    accent: "#2F7D4F",
+    accent: "#AD5732",
     heading: "סרקו כדי לכתוב לנו",
     hint: "שאלו אותנו כל דבר",
   };
@@ -75,7 +75,7 @@ describe("the table card", () => {
     expect(html).toContain('<html lang="he" dir="rtl">');
     expect(html).toContain("Café &lt;b&gt;&quot;Ezo&quot;&lt;/b&gt;");
     expect(html).not.toContain("<b>");
-    expect(html).toContain("--accent: #2F7D4F");
+    expect(html).toContain("--accent: #AD5732");
     expect(html).toContain("סרקו כדי לכתוב לנו");
     expect(html).toContain('<p class="link">app.example/c/cafe?src=table</p>');
     expect(html).not.toContain("<script");
