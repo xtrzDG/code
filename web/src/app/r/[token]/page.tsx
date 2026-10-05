@@ -8,6 +8,7 @@ import { bookingPageLanguage, loadManagedBooking } from "@/server/managedBooking
 import { ManagedBooking } from "./_components/ManagedBooking";
 
 import "@/styles/bookingPage.css";
+import "@/styles/bookingActions.css";
 
 export async function generateMetadata({ params }: PageProps<"/r/[token]">): Promise<Metadata> {
   const { token } = await params;
