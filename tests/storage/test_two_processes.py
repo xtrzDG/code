@@ -219,6 +219,9 @@ def test_one_customers_messages_are_answered_one_at_a_time(
     assert len(calls) == 4
     for (_, _, previous_end), (_, next_start, _) in zip(calls, calls[1:], strict=False):
         assert next_start >= previous_end - 0.001
+    # A call is logged as the model answers; its reply is stored after the
+    # checks, before the turn's job is done.
+    assert wait_until_inbox_answered(two_processes)
     # The transcript alternates: every reply follows its own message.
     with two_processes.postgres_server.admin_connection(
         two_processes.database_name
