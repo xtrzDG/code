@@ -27,7 +27,7 @@ test("continuing with the code accepts the terms the page names", async ({ page 
   const dialog = page.getByRole("dialog", { name: "Terms of Service" });
   await expect(dialog.getByRole("heading", { level: 3, name: "1. About these terms" })).toBeVisible();
   await expect(dialog.getByText(/^Version \d{4}-\d{2}-\d{2}$/)).toBeVisible();
-  await dialog.getByRole("button", { name: en.common.close }).click();
+  await dialog.locator("footer").getByRole("button", { name: en.common.close }).click();
   await expect(dialog).toBeHidden();
   await line.getByRole("button", { name: en.legalConsent.privacy }).click();
   await expect(page.getByRole("dialog", { name: "Privacy Policy" })).toBeVisible();
