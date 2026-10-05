@@ -30,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      # actions: write starts CI on the base branch after the merge.
+      actions: write
       contents: write
       pull-requests: write
     steps:
@@ -70,4 +72,8 @@ jobs:
           if gh api "repos/${GH_REPO}/commits/${HEAD_SHA}" --jq '.commit.message' \
               | uv run --no-project python -m scripts.dependabot_automerge; then
             gh pr merge "$pr" --squash --match-head-commit "$HEAD_SHA"
+            # A merge made with this job's token starts no workflow on the
+            # base branch, so its new head would carry no CI: ask for it.
+            base="$(gh pr view "$pr" --json baseRefName --jq '.baseRefName')"
+            gh workflow run ci.yml --ref "$base"
           fi

@@ -127,11 +127,18 @@ def test_only_a_green_dependabot_run_can_merge_and_only_its_head() -> None:
         "head_repository.full_name == github.repository",
     ):
         assert condition in merge["if"]
-    assert merge["permissions"] == {"contents": "write", "pull-requests": "write"}
+    assert merge["permissions"] == {
+        "actions": "write",
+        "contents": "write",
+        "pull-requests": "write",
+    }
     assert "scripts.dependabot_automerge" in run
     assert '--match-head-commit "$HEAD_SHA"' in run
     # A conflicting group waits for Dependabot's rebase instead of failing.
     assert run.index('"$mergeable" = "CONFLICTING"') < run.index("gh pr merge")
+    # A merge pushed with the job's token starts no CI: the job dispatches it.
+    assert run.index("gh pr merge") < run.index('gh workflow run ci.yml --ref "$base"')
+    assert "workflow_dispatch" in triggers(CI)
     # The pull request's code is never checked out.
     checkout = next(step for step in merge["steps"] if "uses" in step)
     assert "ref" not in checkout.get("with", {})
