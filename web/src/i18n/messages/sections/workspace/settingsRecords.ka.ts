@@ -108,6 +108,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       privacy_settings: "მონაცემების შენახვის ვადები",
       langfuse_copies: "ასლები Langfuse-ში",
       elevenlabs_copies: "ასლები ElevenLabs-ში",
+      subprocessor_notice: "შეტყობინება ქვე-უფლებამოსილი პირების ცვლილების შესახებ",
     },
   },
   roles: {

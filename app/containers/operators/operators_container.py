@@ -17,6 +17,7 @@ from app.containers.operators.feedback_operators import FeedbackOperatorsContain
 from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
 from app.containers.operators.memory_operators import MemoryOperatorsContainer
+from app.containers.operators.legal_operators import LegalOperatorsContainer
 from app.containers.operators.notification_operators import (
     NotificationOperatorsContainer,
 )
@@ -59,6 +60,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     privacy: PrivacyOperatorsContainer = Container(  # type: ignore[assignment]
         PrivacyOperatorsContainer,
         privacy_pipelines=pipelines.privacy,
+        utilities=utilities,
+    )
+    legal: LegalOperatorsContainer = Container(  # type: ignore[assignment]
+        LegalOperatorsContainer,
+        legal_pipelines=pipelines.legal,
         utilities=utilities,
     )
     inbox: InboxOperatorsContainer = Container(  # type: ignore[assignment]

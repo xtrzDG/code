@@ -106,6 +106,7 @@ export const settingsRecordsEn = {
       privacy_settings: "Data retention",
       langfuse_copies: "Copies at Langfuse",
       elevenlabs_copies: "Copies at ElevenLabs",
+      subprocessor_notice: "Sub-processor change notice",
     },
   },
   roles: {

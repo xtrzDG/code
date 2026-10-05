@@ -11,6 +11,7 @@ from app.adapters.rate_limits.in_memory_rate_limit_bucket_adapter import (
     InMemoryRateLimitBucketAdapter,
 )
 from app.contracts.session_assurance import StepUpGuardContract
+from app.registries.legal.legal_text_registry import LegalTextRegistry
 from app.registries.limits.request_rate_limit_registry import RequestRateLimitRegistry
 from app.registries.localization.high_cost_phone_number_registry import (
     HighCostPhoneNumberRegistry,
@@ -130,10 +131,13 @@ class AccountsUserUseCases(AccountsRepositories):
             ),
             send_login_code=self.send_login_code,
         )
+        self.legal_text_registry = LegalTextRegistry()
         self.get_login_options = GetLoginOptionsUseCase(
             country_registry=self.country_registry,
             otp_delivery_facilitator=self.otp_delivery,
             app_settings=self.settings,
+            legal_text_registry=self.legal_text_registry,
+            wall_clock=wall_clock,
         )
         self.verify_otp_login = VerifyOtpLoginUseCase(
             otp_challenge_repo=self.otp_challenge_repo,
@@ -149,6 +153,7 @@ class AccountsUserUseCases(AccountsRepositories):
             mfa_challenge_repo=self.mfa_challenge_repo,
             platform_admins=self.platform_admins,
             sign_in_notices=self.sign_in_notices,
+            legal_text_registry=self.legal_text_registry,
         )
         self.authenticate_user = AuthenticateUserUseCase(
             user_session_repo=self.user_session_repo,

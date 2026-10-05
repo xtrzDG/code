@@ -242,6 +242,8 @@ export const queryKeys = {
     languages: (locale: Locale) => ["catalog", "languages", locale] as const,
     plans: (countryCode: string, locale: Locale) => ["catalog", "plans", countryCode, locale] as const,
     dpa: (version: string, locale: Locale) => ["catalog", "dpa", version, locale] as const,
+    legal: (document: string, version: string, locale: Locale) =>
+      ["catalog", "legal", document, version, locale] as const,
   },
 
   auth: {

@@ -2,15 +2,14 @@ import logging
 
 from app.contracts.facilitators import ManagerNotificationFacilitatorContract
 from app.contracts.repositories.user_repositories import UserRepoContract
-from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.deliveries import StaffNotification
-from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.notifications.constrained_strings import StaffAlertSubject
 from app.use_cases.admin.incidents.incident_notices import compose_breach_notice
+from app.use_cases.shared.owner_contacts import contact_of
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -70,26 +69,3 @@ class OwnerBreachNotices:
             )
 
         return queued
-
-
-def contact_of(owner: UserDocument) -> ManagerContact | None:
-    """The owner's sign-in e-mail, else the sign-in phone by SMS."""
-
-    name = ManagerName(str(owner.display_name or owner.email or owner.phone_number))
-    if owner.email is not None:
-        return ManagerContact(
-            name=name,
-            channel=ManagerContactChannel.EMAIL,
-            address=ManagerContactAddress(str(owner.email)),
-            language=owner.locale,
-        )
-
-    if owner.phone_number is not None:
-        return ManagerContact(
-            name=name,
-            channel=ManagerContactChannel.SMS,
-            address=ManagerContactAddress(str(owner.phone_number)),
-            language=owner.locale,
-        )
-
-    return None

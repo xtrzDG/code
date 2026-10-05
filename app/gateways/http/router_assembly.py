@@ -26,6 +26,7 @@ from app.gateways.http.inbox_router_assembly import build_inbox_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.launch_router_assembly import build_launch_routers
 from app.gateways.http.memory_router_assembly import build_memory_routers
+from app.gateways.http.legal_routes import build_legal_router
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
@@ -113,6 +114,11 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             get_contact_operator=compliance.get_contact_operator(),
             get_dpa_document_operator=compliance.get_dpa_document_operator(),
             current_user=current_user,
+        ),
+        # Terms, privacy policy, cookies and the sub-processor list (public).
+        build_legal_router(
+            get_subprocessors_operator=operators.legal.get_subprocessors_operator(),
+            get_legal_document_operator=operators.legal.get_legal_document_operator(),
         ),
         build_profile_router(
             current_user=current_user,

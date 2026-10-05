@@ -7,6 +7,7 @@ from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import LoginMethod
 from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.legal.constrained_strings import LegalDocumentVersion
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -42,11 +43,16 @@ class UserDocument(BaseDocument):
     Signs in with a phone number of any country or with e-mail. Roles inside a
     business live on the business (members); `is_platform_admin` is global.
     `signup_attribution` is where they came from, set once when the account
-    is created (the founder's acquisition reports).
+    is created (the founder's acquisition reports). `accepted_terms_version`
+    is the terms of service version the person accepted by signing in with
+    the sign-in page's acceptance line ("By continuing, you accept..."), and
+    `terms_accepted_at` when; a newer version is accepted at the next
+    sign-in.
     """
 
-    # 2: `signup_attribution` (optional, so version 1 needs no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 2: `signup_attribution`; 3: `accepted_terms_version` and
+    # `terms_accepted_at` (all optional, so older versions need no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: UserId = Field(default_factory=UserId)
     login_method: LoginMethod
     phone_number: E164PhoneNumber | None = None
@@ -57,6 +63,8 @@ class UserDocument(BaseDocument):
     is_verified: IsUserVerified = False
     is_platform_admin: IsPlatformAdmin = False
     signup_attribution: SignupAttribution | None = None
+    accepted_terms_version: LegalDocumentVersion | None = None
+    terms_accepted_at: Microseconds | None = None
 
 
 class OtpChallengeDocument(BaseDocument):

@@ -19,6 +19,7 @@ from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.invoicing_use_cases import InvoicingUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
 from app.containers.use_cases.memory_use_cases import MemoryUseCasesContainer
+from app.containers.use_cases.legal_use_cases import LegalUseCasesContainer
 from app.containers.use_cases.menu_import_use_cases import MenuImportUseCasesContainer
 from app.containers.use_cases.mfa_use_cases import MfaUseCasesContainer
 from app.containers.use_cases.privacy_use_cases import PrivacyUseCasesContainer
@@ -96,6 +97,15 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
         account_use_cases=accounts,
+    )
+    # Legal texts, the sub-processor list and its change notices (1124).
+    legal: LegalUseCasesContainer = Container(  # type: ignore[assignment]
+        LegalUseCasesContainer,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
     )
     # Billing details and the invoice and receipt PDFs (1114).
     invoicing: InvoicingUseCasesContainer = Container(  # type: ignore[assignment]

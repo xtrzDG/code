@@ -2,7 +2,8 @@
  * Texts of two-factor sign-in: the second step of signing in and the
  * "confirm it is you" dialog (`mfa`), Account → Security and a business's
  * requirement for its team (`security`), the signed-in devices
- * (`devices`) and platform support's access to a cabinet (`supportAccess`).
+ * (`devices`), platform support's access to a cabinet (`supportAccess`) and
+ * the terms a person accepts by signing in (`legalConsent`).
  *
  * Top-level keys are namespaces, spread into en.ts, ru.ts and ka.ts; `ru`
  * and `ka` are type-checked against `en`. Each namespace lives in its own
@@ -13,6 +14,9 @@ import type { Translation } from "../../translate";
 import { devicesEn } from "./security/devices.en";
 import { devicesKa } from "./security/devices.ka";
 import { devicesRu } from "./security/devices.ru";
+import { legalConsentEn } from "./security/legalConsent.en";
+import { legalConsentKa } from "./security/legalConsent.ka";
+import { legalConsentRu } from "./security/legalConsent.ru";
 import { mfaEn } from "./security/mfa.en";
 import { mfaKa } from "./security/mfa.ka";
 import { mfaRu } from "./security/mfa.ru";
@@ -28,6 +32,7 @@ export const securityFlowEn = {
   security: securityEn,
   devices: devicesEn,
   supportAccess: supportAccessEn,
+  legalConsent: legalConsentEn,
 } as const;
 
 export const securityFlowRu: Translation<typeof securityFlowEn> = {
@@ -35,6 +40,7 @@ export const securityFlowRu: Translation<typeof securityFlowEn> = {
   security: securityRu,
   devices: devicesRu,
   supportAccess: supportAccessRu,
+  legalConsent: legalConsentRu,
 };
 
 export const securityFlowKa: Translation<typeof securityFlowEn> = {
@@ -42,4 +48,5 @@ export const securityFlowKa: Translation<typeof securityFlowEn> = {
   security: securityKa,
   devices: devicesKa,
   supportAccess: supportAccessKa,
+  legalConsent: legalConsentKa,
 };

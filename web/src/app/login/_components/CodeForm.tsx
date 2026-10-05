@@ -8,6 +8,7 @@ import { toAsciiDigits } from "@/lib/countries";
 import { otherDeliveryChannels } from "../_lib/loginOptions";
 import { CODE_LENGTH, DELIVERY_CHANNEL_LABELS } from "../_lib/loginTexts";
 import type { LoginFlow } from "../_lib/useLoginFlow";
+import { TermsLine } from "./TermsLine";
 
 /** Step two: the 6-digit code, checked as soon as the last digit is typed. */
 export function CodeForm({ flow, challenge }: { flow: LoginFlow; challenge: OtpChallengeView }) {
@@ -62,6 +63,9 @@ export function CodeForm({ flow, challenge }: { flow: LoginFlow; challenge: OtpC
       <Button type="submit" fullWidth size="lg" isLoading={isVerifying} loadingText={t("auth.verifying")}>
         {t("auth.verify")}
       </Button>
+      {flow.destination.termsVersion ? (
+        <TermsLine termsVersion={flow.destination.termsVersion} privacyVersion={flow.destination.privacyVersion} />
+      ) : null}
       <div className="flex flex-col items-center gap-1 border-t border-line pt-4 text-sm">
         {secondsUntilResend > 0 ? (
           <p className="py-1.5 text-ink-subtle" aria-live="polite">

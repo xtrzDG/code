@@ -1805,3 +1805,11 @@ c1b77653af7791923b42874f8ef115d4558583cd:tests/storage/test_two_processes.py:gen
 266501bc4db78483c7826b38526dea98ea03e07a:evals/cassettes/veterinary.json:generic-api-key:2587
 266501bc4db78483c7826b38526dea98ea03e07a:evals/cassettes/veterinary.json:generic-api-key:2611
 19bc36bc103cf62c733f0659cfd8d927fc396265:web/content/changelog/2026-09-13-summaries.ts:generic-api-key:4
+# Reviewed 2026-10-05 (R14-TRUST-DOCS): the sample sub-processor change key
+# "anthropic-added-2026-12-01" (a sub-processor name, a change kind and a
+# day) in the stored-document golden fixtures and their sample values; the
+# field is named change_key, which the generic-api-key rule matches. Not a
+# secret.
+4d95a5dd8b896020b25cfe6fe3aa0803793dfb62:tests/storage/golden/subprocessor_notices/v1.json:generic-api-key:3
+4d95a5dd8b896020b25cfe6fe3aa0803793dfb62:tests/storage/golden/subprocessor_announcements/v1.json:generic-api-key:2
+4d95a5dd8b896020b25cfe6fe3aa0803793dfb62:tests/storage/document_evolution/sample_values.py:generic-api-key:33

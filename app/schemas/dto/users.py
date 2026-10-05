@@ -11,6 +11,7 @@ from app.schemas.domain.signup_attribution import SignupAttribution
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.legal.constrained_strings import LegalDocumentVersion
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -99,6 +100,9 @@ class VerifyOtpLoginRequest(ImmutableDTO):
     challenge_id: OtpChallengeId
     code: OtpCode
     signup_attribution: SignupAttribution | None = None
+    # The terms of service version the sign-in page showed in its
+    # acceptance line ("By continuing, you accept..."): continuing accepts it.
+    accepted_terms_version: LegalDocumentVersion | None = None
 
 
 class VerifyOtpLoginCommand(ImmutableDTO):
@@ -109,6 +113,7 @@ class VerifyOtpLoginCommand(ImmutableDTO):
     client_ip_address: ClientIpAddress | None = None
     user_agent: SessionUserAgent | None = None
     signup_attribution: SignupAttribution | None = None
+    accepted_terms_version: LegalDocumentVersion | None = None
 
 
 class UserView(ImmutableDTO):
@@ -123,6 +128,8 @@ class UserView(ImmutableDTO):
     display_name: UserDisplayName | None = None
     is_verified: IsUserVerified
     is_platform_admin: IsPlatformAdmin
+    # The terms of service version the person accepted (None: none yet).
+    accepted_terms_version: LegalDocumentVersion | None = None
 
 
 class LoginSessionView(ImmutableDTO):

@@ -17,4 +17,5 @@ class UserViewTransformer(TransformerContract[UserDocument, UserView]):
             display_name=input_data.display_name,
             is_verified=input_data.is_verified,
             is_platform_admin=input_data.is_platform_admin,
+            accepted_terms_version=input_data.accepted_terms_version,
         )

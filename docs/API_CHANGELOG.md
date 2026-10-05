@@ -114,6 +114,31 @@ Spec: `db25fd7f093858f0`
   (`AuditLogEntryView`): adds `record_count`, how many records a retention
   purge or a deletion at a sub-processor covered (null for other entries).
 
+## 2026-10-05 — legal texts, sub-processor list, terms acceptance
+
+Spec: `64c2050e047d42ec`
+
+- **Added** `GET /v1/legal/subprocessors?language=` (public, cached for
+  5 minutes): `SubprocessorListView` with `as_of`, `notice_days` (30), every
+  sub-processor in use or announced (`name`, `purpose`, `personal_data`,
+  `location`, `added_on`, `removed_on`, `is_in_force`) and
+  `upcoming_changes` (`kind` `added` or `removed`, `effective_on`,
+  `announced_on`, `notice_from`). English, Russian or Georgian; other
+  languages read English. The DPA's section 8 table is rendered from the
+  same registry.
+- **Added** `GET /v1/legal/{document}?language=&version=` for `terms`,
+  `privacy` and `cookies` (public): `LegalDocumentView` with `version` (the
+  day it took effect; the version in force when omitted), `language`,
+  `available_languages`, `title`, `text` (Markdown), `has_placeholders` and
+  `upcoming_version`. 404 for another document or a version without a text.
+- **Changed** `GET /v1/auth/login-options`: `terms_version` and
+  `privacy_version`, the versions in force (null when there is none).
+- **Changed** `POST /v1/auth/otp/verify`: optional `accepted_terms_version`,
+  the terms version shown on the code step; a known version not in the future
+  is stored on the user and never lowered.
+- **Changed** `GET·PATCH /v1/me`: `accepted_terms_version` (null until the
+  user signs in with the line shown).
+
 ## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
 
 Spec: `8868b933a62e22f4`

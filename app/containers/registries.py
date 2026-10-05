@@ -13,6 +13,8 @@ from app.registries.demo.demo_dataset_registry import DemoDatasetRegistry
 from app.registries.demo.load_dataset_registry import LoadDatasetRegistry
 from app.registries.help.help_article_registry import HelpArticleRegistry
 from app.registries.legal.legal_document_registry import LegalDocumentRegistry
+from app.registries.legal.legal_text_registry import LegalTextRegistry
+from app.registries.legal.subprocessor_registry import SubprocessorRegistry
 from app.registries.limits.request_rate_limit_registry import (
     RequestRateLimitRegistry,
 )
@@ -94,10 +96,17 @@ class RegistriesContainer(containers.DeclarativeContainer):
     assistant_tool_registry: Singleton[AssistantToolRegistry] = Singleton(
         AssistantToolRegistry
     )
-    # Data processing agreement texts (docs/legal), read once per process.
-    legal_document_registry: Singleton[LegalDocumentRegistry] = Singleton(
-        LegalDocumentRegistry
+    # The sub-processor list (DPA section 8), kept in code (1124).
+    subprocessor_registry: Singleton[SubprocessorRegistry] = Singleton(
+        SubprocessorRegistry
     )
+    # Data processing agreement texts (docs/legal), read once per process;
+    # section 8's table comes live from the sub-processor list.
+    legal_document_registry: Singleton[LegalDocumentRegistry] = Singleton(
+        LegalDocumentRegistry, subprocessor_registry=subprocessor_registry
+    )
+    # Terms of service, privacy policy and cookie statement (docs/legal).
+    legal_text_registry: Singleton[LegalTextRegistry] = Singleton(LegalTextRegistry)
     # The help center's articles (docs/help), read once per process.
     help_article_registry: Singleton[HelpArticleRegistry] = Singleton(
         HelpArticleRegistry

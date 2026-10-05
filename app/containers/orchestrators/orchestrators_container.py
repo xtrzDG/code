@@ -42,6 +42,9 @@ from app.containers.orchestrators.knowledge_orchestrators import (
 from app.containers.orchestrators.memory_orchestrators import (
     MemoryOrchestratorsContainer,
 )
+from app.containers.orchestrators.legal_orchestrators import (
+    LegalOrchestratorsContainer,
+)
 from app.containers.orchestrators.notification_orchestrators import (
     NotificationOrchestratorsContainer,
 )
@@ -108,6 +111,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     privacy: PrivacyOrchestratorsContainer = Container(  # type: ignore[assignment]
         PrivacyOrchestratorsContainer,
         privacy_use_cases=use_cases.privacy,
+    )
+    legal: LegalOrchestratorsContainer = Container(  # type: ignore[assignment]
+        LegalOrchestratorsContainer,
+        legal_use_cases=use_cases.legal,
     )
     inbox: InboxOrchestratorsContainer = Container(  # type: ignore[assignment]
         InboxOrchestratorsContainer,

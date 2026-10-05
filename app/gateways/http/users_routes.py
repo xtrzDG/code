@@ -113,6 +113,7 @@ def build_users_router(
                 client_ip_address=read_client_ip_address(request),
                 user_agent=read_user_agent(request.headers.get("user-agent")),
                 signup_attribution=body.signup_attribution,
+                accepted_terms_version=body.accepted_terms_version,
             )
         )
 

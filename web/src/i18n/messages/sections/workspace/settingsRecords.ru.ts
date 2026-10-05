@@ -113,6 +113,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       privacy_settings: "Сроки хранения данных",
       langfuse_copies: "Копии в Langfuse",
       elevenlabs_copies: "Копии в ElevenLabs",
+      subprocessor_notice: "Уведомление о смене субобработчиков",
     },
   },
   roles: {

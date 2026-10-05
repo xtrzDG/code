@@ -12,6 +12,7 @@ from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
+from app.containers.legal_repositories import LegalRepositoriesContainer
 from app.containers.media_repositories import MediaRepositoriesContainer
 from app.containers.operations_repositories import OperationsRepositoriesContainer
 from app.containers.privacy_repositories import PrivacyRepositoriesContainer
@@ -103,6 +104,7 @@ class RepositoriesContainer(
     PrivacyRepositoriesContainer,
     RetentionRepositoriesContainer,
     BillingRepositoriesContainer,
+    LegalRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 

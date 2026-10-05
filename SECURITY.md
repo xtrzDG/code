@@ -16,6 +16,14 @@ about the safety of that data as urgent.
   what an attacker gains, and any proof of concept. Use test accounts and
   your own data only.
 
+The cabinet publishes this contact as `/.well-known/security.txt`
+(`web/public/.well-known/security.txt`, RFC 9116); a test fails 30 days
+before its `Expires`, so it is renewed in time. The trust boundaries, the
+STRIDE threats and the code and tests behind each mitigation are in
+[docs/security/threat-model.md](docs/security/threat-model.md); who has
+access to what is reviewed every quarter
+([docs/security/access-review.md](docs/security/access-review.md)).
+
 ## Scope
 
 In scope:

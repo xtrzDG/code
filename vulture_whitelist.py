@@ -478,3 +478,20 @@ _.deleted_missed_calls  # app/schemas/domain/retention_purges.py
 _.queued_processor_erasures  # app/schemas/dto/compliance.py (ContactErasureResult)
 _.ran_at  # app/schemas/dto/retention.py (RetentionPurgeView)
 _.last_purge  # app/schemas/dto/retention.py (PrivacySettingsView)
+
+# Legal texts and the sub-processor list (1124): the cookie statement is
+# chosen by the request path (/v1/legal/cookies); the time of the terms
+# acceptance is stored for the record; the `app/clients` packages of an
+# entry are read by tests/legal (every client package has an entry); the
+# rest are response fields the public pages and the sign-in page read.
+_.COOKIES  # app/schemas/constants/legal.py (LegalDocumentKind)
+_.terms_accepted_at  # app/schemas/domain/users.py
+_.client_modules  # app/schemas/dto/legal.py (SubprocessorEntry)
+_.notice_from  # app/schemas/dto/legal.py (SubprocessorChangeView)
+_.as_of  # app/schemas/dto/legal.py (SubprocessorListView)
+_.subprocessors  # app/schemas/dto/legal.py (SubprocessorListView)
+_.upcoming_changes  # app/schemas/dto/legal.py (SubprocessorListView)
+_.has_placeholders  # app/schemas/dto/legal.py (LegalDocumentView)
+_.upcoming_version  # app/schemas/dto/legal.py (LegalDocumentView)
+_.terms_version  # app/schemas/dto/login_options.py (LoginOptionsView)
+_.privacy_version  # app/schemas/dto/login_options.py (LoginOptionsView)

@@ -3,6 +3,7 @@
 from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.localization import OtpDeliveryChannel
+from app.schemas.typings.legal.constrained_strings import LegalDocumentVersion
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.booleans import (
     IsEmailLoginAvailable,
@@ -33,3 +34,7 @@ class LoginOptionsView(ImmutableDTO):
     is_phone_login_available: IsPhoneLoginAvailable
     is_email_login_available: IsEmailLoginAvailable
     is_sign_up_restricted: IsSignUpRestricted = False
+    # The terms of service and privacy policy in force, which the code
+    # step's acceptance line names (None before the first version).
+    terms_version: LegalDocumentVersion | None = None
+    privacy_version: LegalDocumentVersion | None = None
