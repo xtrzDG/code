@@ -8,6 +8,8 @@
  *                                                  zone on a full colour square
  *                                                  (Android crops it to its shape)
  *   src/app/apple-icon.png                         180 × 180, opaque (iOS home screen)
+ *   src/app/favicon.ico                            16, 32 and 48 px PNGs in one ICO (what
+ *                                                  browsers fetch at /favicon.ico by themselves)
  *
  *   npm run gen:icons
  *   PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/path/to/chrome npm run gen:icons
@@ -15,7 +17,7 @@
  * Run it after changing icon.svg and commit the PNG files.
  */
 
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -42,6 +44,30 @@ const ICONS = [
   { file: "src/app/apple-icon.png", size: 180, html: maskable(180), transparent: false },
 ];
 
+const FAVICON_FILE = "src/app/favicon.ico";
+const FAVICON_SIZES = [16, 32, 48];
+
+/** An ICO file holding PNG images (Windows Vista+ and every browser read PNG entries). */
+function icoFromPngs(images) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(images.length, 4);
+  let offset = 6 + 16 * images.length;
+  const entries = images.map(({ size, data }) => {
+    const entry = Buffer.alloc(16);
+    entry.writeUInt8(size >= 256 ? 0 : size, 0);
+    entry.writeUInt8(size >= 256 ? 0 : size, 1);
+    entry.writeUInt16LE(1, 4);
+    entry.writeUInt16LE(32, 6);
+    entry.writeUInt32LE(data.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    offset += data.length;
+    return entry;
+  });
+  return Buffer.concat([header, ...entries, ...images.map((image) => image.data)]);
+}
+
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined });
 try {
   for (const icon of ICONS) {
@@ -53,6 +79,15 @@ try {
     await page.close();
     process.stdout.write(`${icon.file} (${icon.size} × ${icon.size})\n`);
   }
+  const favicons = [];
+  for (const size of FAVICON_SIZES) {
+    const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 });
+    await page.setContent(`<!doctype html><html><body style="margin:0;background:transparent">${plain(size)}</body></html>`);
+    favicons.push({ size, data: await page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } }) });
+    await page.close();
+  }
+  writeFileSync(path.join(WEB_DIRECTORY, FAVICON_FILE), icoFromPngs(favicons));
+  process.stdout.write(`${FAVICON_FILE} (${FAVICON_SIZES.join(", ")})\n`);
 } finally {
   await browser.close();
 }

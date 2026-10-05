@@ -12,7 +12,7 @@ export { ErrorState } from "./ErrorState";
 export { Fab } from "./Fab";
 export { Field, Fieldset, type FieldControlProps } from "./Field";
 export { FilterSheet } from "./FilterSheet";
-export { Modal } from "./Modal";
+export { Modal, ModalFooter } from "./Modal";
 export { OverflowMenu, type MenuAction } from "./OverflowMenu";
 export { PageHeader, SubPages, usePageLevel, type PagePrimaryAction } from "./PageHeader";
 export { PageHelpProvider, usePageHelp } from "./PageHelp";

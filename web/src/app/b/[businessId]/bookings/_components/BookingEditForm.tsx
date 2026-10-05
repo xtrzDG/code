@@ -8,7 +8,7 @@ import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import type { BookingUpdateBody, BookingView, ResourceView } from "@/components/insights/types";
 import { usePartyWording } from "@/components/insights/usePartyWording";
-import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { Alert, Button, Field, Input, ModalFooter, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { performersOf } from "@/lib/offers";
 
@@ -149,14 +149,14 @@ export function BookingEditForm({
           />
         )}
       </Field>
-      <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-4">
+      <ModalFooter>
         <Button variant="secondary" onClick={onCancel} disabled={save.isPending}>
           {t("common.cancel")}
         </Button>
         <Button type="submit" isLoading={save.isPending} loadingText={t("bookings.edit.saving")}>
           {t("bookings.edit.save")}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   );
 }

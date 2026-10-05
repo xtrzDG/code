@@ -11,7 +11,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { CHANNEL_LABELS, CUSTOMER_CHANNELS } from "@/components/insights/labels";
 import type { BookingResult, ChannelKind, ManualBookingBody, ResourceView } from "@/components/insights/types";
 import { usePartyWording } from "@/components/insights/usePartyWording";
-import { Alert, Button, Field, Select, Textarea } from "@/components/ui";
+import { Alert, Button, Field, ModalFooter, Select, Textarea } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { capitalizeFirst } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
@@ -197,14 +197,14 @@ export function BookingForm({
 
       <BookingValueLine offer={offer} value={value} nights={nights} />
 
-      <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-4">
+      <ModalFooter>
         <Button variant="secondary" onClick={onCancel} disabled={create.isPending}>
           {t("common.cancel")}
         </Button>
         <Button type="submit" isLoading={create.isPending} loadingText={t("bookings.form.submitting")}>
           {t("bookings.form.submit")}
         </Button>
-      </div>
+      </ModalFooter>
     </form>
   );
 }
