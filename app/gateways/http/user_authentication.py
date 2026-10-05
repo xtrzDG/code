@@ -8,10 +8,12 @@ from starlette.concurrency import run_in_threadpool
 
 from app.contracts.operator_contract import OperatorContract
 from app.contracts.session_assurance import SessionAssuranceContract
+from app.gateways.http.request_limits import limit_class_of
 from app.gateways.http.strict_request_parsing import read_client_ip_address
 from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.sessions import SessionCheck
+from app.schemas.dto.spend_guard import ApiRequestAdmission
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessToken
@@ -31,6 +33,7 @@ READING_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS"})
 def build_current_user_dependency(
     authentication_operator: UserAuthenticationOperator,
     session_assurance: SessionAssuranceContract,
+    admit_request: OperatorContract[ApiRequestAdmission, None] | None = None,
 ) -> CurrentUserDependency:
     """
     Build a FastAPI dependency returning the authenticated UserId.
@@ -39,7 +42,9 @@ def build_current_user_dependency(
     person last proved it is them, the caller's address, and whether the
     request reads or changes) for the use cases that check two-factor
     sign-in, step-up and platform support's access. The session's last
-    use (address and browser) is recorded on the way.
+    use (address and browser) is recorded on the way. With `admit_request`
+    the request then counts against the person's generic limits (429 with
+    Retry-After past them; exports stricter, `request_limits`).
 
     The dependency is async on purpose: it binds the session in the
     request's own task, whose context the route's worker
@@ -71,6 +76,14 @@ def build_current_user_dependency(
             authentication_operator.operate, check
         )
         session_assurance.bind(assurance)
+        if admit_request is not None:
+            await run_in_threadpool(
+                admit_request.operate,
+                ApiRequestAdmission(
+                    user_id=assurance.user_id,
+                    limit_class=limit_class_of(request.url.path),
+                ),
+            )
         return assurance.user_id
 
     return resolve_current_user

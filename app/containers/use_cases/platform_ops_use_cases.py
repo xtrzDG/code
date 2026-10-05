@@ -33,6 +33,12 @@ from app.schemas.dto.platform_announcements import (
 )
 from app.schemas.dto.platform_status import PlatformStatusQuery, PlatformStatusView
 from app.schemas.dto.quality import ClientQualityView
+from app.schemas.dto.spend_guard import (
+    AdminSpendQuery,
+    BusinessSpendLimitsCommand,
+    BusinessSpendLimitsView,
+    PlatformSpendView,
+)
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
@@ -46,6 +52,12 @@ from app.use_cases.admin.incidents.create_incident_use_case import (
 )
 from app.use_cases.admin.incidents.list_incidents_use_case import ListIncidentsUseCase
 from app.use_cases.admin.incidents.owner_breach_notices import OwnerBreachNotices
+from app.use_cases.admin.spend.get_platform_spend_use_case import (
+    GetPlatformSpendUseCase,
+)
+from app.use_cases.admin.spend.set_business_spend_limits_use_case import (
+    SetBusinessSpendLimitsUseCase,
+)
 from app.use_cases.admin.system.check_channel_credentials_use_case import (
     CheckChannelCredentialsUseCase,
 )
@@ -262,4 +274,27 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         ListAnnouncementsUseCase,
         authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
         announcement_repo=repositories.platform_announcement_repo,
+    )
+
+    # --- The spend guard for the admin: today's spend, a client's limits.
+    get_platform_spend_use_case: Factory[
+        UseCaseContract[AdminSpendQuery, PlatformSpendView]
+    ] = Factory(
+        GetPlatformSpendUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        usage_spend_repo=repositories.usage_spend_repo,
+        spend_limit_mark_repo=repositories.spend_limit_mark_repo,
+        business_repo=repositories.business_repo,
+        settings=config.app_settings.provided.spend_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    set_business_spend_limits_use_case: Factory[
+        UseCaseContract[BusinessSpendLimitsCommand, BusinessSpendLimitsView]
+    ] = Factory(
+        SetBusinessSpendLimitsUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        business_repo=repositories.business_repo,
+        business_limits_repo=repositories.business_limits_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

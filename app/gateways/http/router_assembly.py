@@ -35,6 +35,10 @@ from app.gateways.http.public_site_router_assembly import build_public_site_rout
 from app.gateways.http.resource_routes import build_resource_router
 from app.gateways.http.security_router_assembly import build_security_routers
 from app.gateways.http.sharing_router_assembly import build_sharing_routers
+from app.gateways.http.spend_guard_router_assembly import (
+    build_spend_guard_routers,
+    widget_origin_guard_of,
+)
 from app.gateways.http.teaching_router_assembly import build_teaching_routers
 from app.gateways.http.user_authentication import (
     CurrentUserDependency,
@@ -69,6 +73,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     current_user: CurrentUserDependency = build_current_user_dependency(
         accounts.authenticate_user_operator(),
         app_container.utilities.session_assurance(),
+        operators.spend_guard.admit_api_request_operator(),
     )
     business_access_operator = accounts.authorize_business_access_operator()
     return [
@@ -244,6 +249,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             widget_config_operator=channels.get_widget_config_operator(),
             widget_message_operator=channels.widget_message_operator(),
             widget_messages_operator=channels.get_widget_messages_operator(),
+            widget_origin_guard=widget_origin_guard_of(operators),
         ),
         *build_channel_setup_routers(operators, current_user),
         build_voice_router(
@@ -287,4 +293,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_help_routers(operators, current_user),
         *build_teaching_routers(operators, current_user),
         *build_memory_routers(operators, current_user),
+        *build_spend_guard_routers(operators, current_user),
     ]

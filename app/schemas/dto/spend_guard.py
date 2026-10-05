@@ -194,7 +194,8 @@ class BusinessSpendLimitsCommand(ImmutableDTO):
 
 
 class BusinessSpendLimitsView(ImmutableDTO):
-    """A client's daily spend limits as the spend guard holds them now."""
+    """A client's own daily spend limits (None: the plan's default)."""
 
     business_id: BusinessId
-    limits: SpendLimits
+    soft_limit_micro_usd: DailySpendLimitMicroUsd | None = None
+    hard_limit_micro_usd: DailySpendLimitMicroUsd | None = None

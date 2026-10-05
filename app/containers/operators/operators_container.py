@@ -33,6 +33,9 @@ from app.containers.operators.public_demo_operators import (
 from app.containers.operators.security_operators import SecurityOperatorsContainer
 from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.operators.sharing_operators import SharingOperatorsContainer
+from app.containers.operators.spend_guard_operators import (
+    SpendGuardOperatorsContainer,
+)
 from app.containers.operators.value_operators import ValueOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -138,6 +141,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOperatorsContainer,
         platform_ops_pipelines=pipelines.platform_ops,
+        utilities=utilities,
+    )
+    spend_guard: SpendGuardOperatorsContainer = Container(  # type: ignore[assignment]
+        SpendGuardOperatorsContainer,
+        spend_guard_pipelines=pipelines.spend_guard,
         utilities=utilities,
     )
     security: SecurityOperatorsContainer = Container(  # type: ignore[assignment]

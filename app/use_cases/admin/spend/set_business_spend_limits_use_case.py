@@ -1,13 +1,11 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.spend_guard_repositories import (
     BusinessLimitsRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.configurations.spend_guard_settings import SpendGuardSettings
 from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.business_limits import BusinessLimitsDocument
@@ -27,7 +25,6 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.utilities.spend.spend_limit_defaults import resolve_spend_limits
 
 AUDITED_ENTITY: AuditEntityName = AuditEntityName("business")
 
@@ -54,8 +51,6 @@ class SetBusinessSpendLimitsUseCase(
         business_repo: BusinessRepoContract,
         business_limits_repo: BusinessLimitsRepoContract,
         audit_log_repo: AuditLogRepoContract,
-        exchange_rate_registry: ExchangeRateRegistryContract,
-        settings: SpendGuardSettings,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_platform_admin: UseCaseContract[
@@ -64,8 +59,6 @@ class SetBusinessSpendLimitsUseCase(
         self._business_repo: BusinessRepoContract = business_repo
         self._limits_repo: BusinessLimitsRepoContract = business_limits_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
-        self._exchange_rates: ExchangeRateRegistryContract = exchange_rate_registry
-        self._settings: SpendGuardSettings = settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: BusinessSpendLimitsCommand) -> BusinessSpendLimitsView:
@@ -109,7 +102,6 @@ class SetBusinessSpendLimitsUseCase(
         )
         return BusinessSpendLimitsView(
             business_id=business.id,
-            limits=resolve_spend_limits(
-                limits, business.plan_key, self._settings, self._exchange_rates
-            ),
+            soft_limit_micro_usd=limits.daily_soft_limit_micro_usd,
+            hard_limit_micro_usd=limits.daily_hard_limit_micro_usd,
         )

@@ -18,6 +18,7 @@ from app.gateways.http.widget_cors_middleware import (
     WIDGET_CORS_HEADERS,
     WIDGET_SESSION_KEY_HEADER,
 )
+from app.gateways.http.widget_origin_guard import WidgetOriginGuard
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelWebhookOutcome,
     ChannelWebhookPayload,
@@ -84,6 +85,7 @@ def build_channel_router(
         WidgetMessagesQuery,
         WidgetMessagesView,
     ],
+    widget_origin_guard: WidgetOriginGuard | None = None,
 ) -> APIRouter:
     """
     Routes (no bearer token; each is authenticated by its platform):
@@ -100,9 +102,12 @@ def build_channel_router(
                                                           messages (header
                                                           X-Widget-Session-Key,
                                                           ?after=<message id>)
+    The widget routes answer 403 to a website the business does not allow
+    (`widget_origin_guard`).
     """
 
     router = APIRouter(tags=["channels"], responses=standard_error_responses())
+    guarded = [] if widget_origin_guard is None else [Depends(widget_origin_guard)]
 
     @router.post(TELEGRAM_WEBHOOK_PATH_TEMPLATE)
     def receive_telegram_webhook(
@@ -173,7 +178,7 @@ def build_channel_router(
             headers=WIDGET_CORS_HEADERS,
         )
 
-    @router.get(WIDGET_CONFIG_PATH)
+    @router.get(WIDGET_CONFIG_PATH, dependencies=guarded)
     def get_widget_config(business_id: str, response: Response) -> WidgetConfigView:
         response.headers.update(WIDGET_CORS_HEADERS)
         return widget_config_operator.operate(
@@ -184,6 +189,7 @@ def build_channel_router(
         WIDGET_MESSAGES_PATH,
         status_code=status.HTTP_202_ACCEPTED,
         openapi_extra=describe_json_body(WidgetMessageRequest),
+        dependencies=guarded,
     )
     def send_widget_message(
         request: Request,
@@ -200,7 +206,7 @@ def build_channel_router(
             )
         )
 
-    @router.get(WIDGET_MESSAGES_PATH)
+    @router.get(WIDGET_MESSAGES_PATH, dependencies=guarded)
     def list_widget_messages(
         request: Request,
         business_id: str,

@@ -13,6 +13,7 @@ from app.gateways.http.strict_request_parsing import (
     read_client_ip_address,
 )
 from app.gateways.http.widget_cors_middleware import WIDGET_CORS_HEADERS
+from app.gateways.http.widget_origin_guard import WidgetOriginGuard
 from app.schemas.dto.channels.widget_handoff import (
     WidgetHandoffCommand,
     WidgetHandoffRequest,
@@ -27,6 +28,7 @@ read_widget_handoff_body = build_json_body_dependency(WidgetHandoffRequest)
 
 def build_widget_handoff_router(
     widget_handoff_operator: OperatorContract[WidgetHandoffCommand, WidgetHandoffView],
+    widget_origin_guard: WidgetOriginGuard | None = None,
 ) -> APIRouter:
     """
     Routes (public; the visitor is the widget's session key, in the body):
@@ -35,12 +37,14 @@ def build_widget_handoff_router(
             (reason customer_request; opened now if the visitor has not
             written yet) and the visitor is told when they hear back.
             Asking again while staff have it changes nothing. Limited like
-            the widget's messages (429 with Retry-After).
+            the widget's messages (429 with Retry-After), and refused to a
+            website the business does not allow (403).
     """
 
     router: APIRouter = APIRouter(
         tags=["channels"], responses=standard_error_responses()
     )
+    guarded = [] if widget_origin_guard is None else [Depends(widget_origin_guard)]
 
     @router.options(WIDGET_HANDOFF_PATH, include_in_schema=False)
     def allow_widget_handoff_preflight(business_id: str) -> Response:
@@ -53,6 +57,7 @@ def build_widget_handoff_router(
     @router.post(
         WIDGET_HANDOFF_PATH,
         openapi_extra=describe_json_body(WidgetHandoffRequest),
+        dependencies=guarded,
     )
     def request_widget_handoff(
         request: Request,

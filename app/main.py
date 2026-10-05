@@ -30,6 +30,9 @@ from app.gateways.http.background_threads import (
 )
 from app.gateways.http.live_events.exit_signals import end_streams_on_exit_signals
 from app.gateways.http.router_assembly import build_application_routers
+from app.gateways.http.spend_guard_router_assembly import (
+    anonymous_request_admission_of,
+)
 from app.gateways.startup_checks import check_processor_uses
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -78,6 +81,9 @@ def build_application(app_container: AppContainer) -> FastAPI:
         cors_allowed_origins=settings.cors_allowed_origins,
         lifespan=build_lifespan(app_container),
         environment=settings.environment,
+        anonymous_request_admission=anonymous_request_admission_of(
+            app_container.operators
+        ),
     )
 
 
