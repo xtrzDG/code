@@ -40,6 +40,7 @@ export const updatesKa: Translation<typeof updatesEn> = {
     onlyDrafts: "ყველაფერი, რაც შეცვალეთ, უკვე კლიენტებამდეა. დარჩა მონახაზი:",
   },
   checkNow: {
+    savedTitle: "შემოწმება შენახულია",
     action: "ახლავე შემოწმება",
     actionLabel: "ახლავე შემოწმება: „{question}“",
     checking: "ვამოწმებთ…",

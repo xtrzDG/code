@@ -2,6 +2,8 @@
 
 import type { Schema } from "@/api/types";
 
+import { CHAT_TARGETS, type ChatTarget } from "./chatTargets";
+
 export type MessageView = Schema<"MessageView">;
 
 const SESSION_SUFFIX_BYTES = 10;
@@ -39,11 +41,20 @@ export function prettyJson(text: string): string {
   }
 }
 
-/** The test chat remembered in the browser tab, so a reload keeps the conversation. */
+/**
+ * The test chat remembered in the browser tab, so a reload keeps the
+ * conversation: who it talks to and the version that answers it (set by
+ * the first answer when the API picked it).
+ */
 export interface StoredTestChat {
   sessionKey: string;
   versionId: string | null;
   conversationId: string | null;
+  target?: ChatTarget | null;
+}
+
+function isChatTarget(value: unknown): value is ChatTarget {
+  return typeof value === "string" && (CHAT_TARGETS as readonly string[]).includes(value);
 }
 
 export function parseStoredTestChat(raw: string | null): StoredTestChat | null {
@@ -59,6 +70,7 @@ export function parseStoredTestChat(raw: string | null): StoredTestChat | null {
       sessionKey: value.sessionKey,
       versionId: typeof value.versionId === "string" ? value.versionId : null,
       conversationId: typeof value.conversationId === "string" ? value.conversationId : null,
+      target: isChatTarget(value.target) ? value.target : null,
     };
   } catch {
     return null;

@@ -52,15 +52,3 @@ export function sortVersions<T extends Pick<AssistantVersionSummary, "version_nu
 export function liveVersion<T extends Pick<AssistantVersionSummary, "status">>(versions: readonly T[]): T | undefined {
   return versions.find((version) => version.status === "published");
 }
-
-/**
- * The version the test chat talks to by default, as the API picks it: the
- * newest version that is not archived (one being prepared when it is newer
- * than the live one, else the live one), else the newest of all.
- */
-export function defaultTestVersionId(
-  versions: readonly Pick<AssistantVersionSummary, "id" | "status" | "version_number">[],
-): string | null {
-  const sorted = sortVersions(versions);
-  return (sorted.find((version) => version.status !== "archived") ?? sorted[0])?.id ?? null;
-}

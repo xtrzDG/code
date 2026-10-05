@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultTestVersionId, liveVersion, sortVersions, versionActions } from "./versions";
+import { liveVersion, sortVersions, versionActions } from "./versions";
 import {
   applicableAutotestKinds,
   criterionScore,
@@ -64,16 +64,6 @@ describe("versions", () => {
     expect(sortVersions(versions).map((item) => item.id)).toEqual(["c", "b", "a"]);
     expect(liveVersion(versions)?.id).toBe("b");
     expect(liveVersion([version("a", 1, "draft")])).toBeUndefined();
-  });
-
-  it("chooses the version the test chat talks to", () => {
-    // The newest version that is not archived, as the API picks it.
-    expect(defaultTestVersionId([version("a", 1, "published"), version("b", 2, "ready")])).toBe("b");
-    expect(defaultTestVersionId([version("a", 1, "ready"), version("b", 2, "published")])).toBe("b");
-    expect(defaultTestVersionId([version("a", 1, "draft"), version("b", 2, "tests_failed")])).toBe("b");
-    expect(defaultTestVersionId([version("a", 1, "testing"), version("b", 2, "archived")])).toBe("a");
-    expect(defaultTestVersionId([version("a", 1, "archived"), version("b", 2, "archived")])).toBe("b");
-    expect(defaultTestVersionId([])).toBeNull();
   });
 
   it("formats scores with one decimal in the UI language", () => {
@@ -269,7 +259,12 @@ describe("test chat", () => {
       sessionKey: "web-1",
       versionId: "v",
       conversationId: null,
+      target: null,
     });
+    expect(
+      parseStoredTestChat(JSON.stringify({ sessionKey: "web-2", versionId: null, conversationId: "c", target: "changes" }))?.target,
+    ).toBe("changes");
+    expect(parseStoredTestChat(JSON.stringify({ sessionKey: "web-3", versionId: null, target: "version 3" }))?.target).toBeNull();
     expect(parseStoredTestChat(JSON.stringify({ sessionKey: "bad key" }))).toBeNull();
     expect(parseStoredTestChat("{not json")).toBeNull();
     expect(parseStoredTestChat(null)).toBeNull();

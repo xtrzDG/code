@@ -5,12 +5,7 @@
 
 export const assistantChatEn = {
   chat: {
-    version: "Update",
-    versionOption: "Update {number} · {status}",
-    unknownVersion: "Automatic",
     newConversation: "New conversation",
-    sandboxNote: "Write as a customer would. Test conversations do not reach customers, staff or billing.",
-    sandboxNoteRisky: "You are testing {version}. Test conversations do not reach customers, staff or billing.",
     logLabel: "Test conversation",
     emptyTitle: "Start a test conversation",
     emptyDescription: "Ask what your customers ask, in any language. Or try one of these:",

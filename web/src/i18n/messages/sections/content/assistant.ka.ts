@@ -7,9 +7,6 @@ import type { Translation } from "../../../translate";
 import type { assistantEn } from "./assistant.en";
 
 export const assistantKa: Translation<typeof assistantEn> = {
-  live: "კლიენტები განახლება {number}-ს ესაუბრებიან",
-  liveSince: "{date}-დან კლიენტები განახლება {number}-ს ესაუბრებიან",
-  notLive: "ასისტენტი ჯერ არ მუშაობს კლიენტებთან: გამოიყენეთ ცვლილებები, შეამოწმეთ განახლება და გამოაქვეყნეთ.",
   status: {
     draft: "შეუმოწმებელი",
     testing: "მოწმდება",

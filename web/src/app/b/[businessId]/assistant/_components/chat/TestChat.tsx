@@ -11,21 +11,15 @@ import { ChatLine } from "./ChatLine";
 import { ChatVersionBar } from "./ChatVersionBar";
 import { ChatBubblesSkeleton } from "../AssistantSkeletons";
 
-/** The test conversation with one version: its log, a handoff notice and the message box. */
+/** The test conversation with what customers get now or with the owner's changes: its log, a handoff notice and the message box. */
 export function TestChat({ versions, initialVersionId }: { versions: AssistantVersionSummary[]; initialVersionId: string | null }) {
   const { t } = useI18n();
-  const { scroller, input, session, entries, isRestoring, isHandedOff, isSending, text, setText, startNew, deliver, submit, onKeyDown, versionLabel } =
+  const { scroller, input, entries, isRestoring, isHandedOff, isSending, text, setText, startNew, deliver, submit, onKeyDown, target, choices, answerLabel } =
     useTestChat(versions, initialVersionId);
 
   return (
     <Card padded={false}>
-      <ChatVersionBar
-        versions={versions}
-        versionId={session.versionId}
-        isSending={isSending}
-        versionLabel={versionLabel}
-        onStartNew={startNew}
-      />
+      <ChatVersionBar choices={choices} target={target} isSending={isSending} onStartNew={startNew} />
 
       <div
         ref={scroller}
@@ -45,7 +39,7 @@ export function TestChat({ versions, initialVersionId }: { versions: AssistantVe
             <ChatLine
               key={entry.key}
               entry={entry}
-              versionLabel={versionLabel}
+              answerLabel={answerLabel}
               onRetry={(message, key) => void deliver(message, key)}
               isSending={isSending}
             />

@@ -3,33 +3,44 @@
 /**
  * Assistant → My checks (owners, under Advanced): the owner's own
  * questions with what the answer must do. Every "Apply changes" asks them;
- * each shows how it did in the latest run and the answer it got. Checks
- * are added here or saved from a fixed answer, a bad rating or a question
- * without an answer.
+ * each shows how it did in the latest run and the answer it got, and
+ * "Check now" asks it once of what customers get now. Checks are added
+ * here or saved from a fixed answer, a bad rating or a question without
+ * an answer. "Open the check" elsewhere lands on one (`#check-…`).
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus, IconShield } from "@/components/icons";
 import { CheckDialog } from "@/components/teaching/CheckDialog";
 import { useChecks } from "@/components/teaching/useTeaching";
 import { Button, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, SkeletonCardList, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { CheckView } from "@/lib/teaching";
-import { checkFormOf, newCheckForm } from "@/lib/teachingChecks";
+import { AUTO_LANGUAGE, checkFormOf, newCheckForm } from "@/lib/teachingChecks";
 
 import { CheckRow } from "./CheckRow";
 
 export function ChecksScreen() {
   const { t } = useI18n();
   const toast = useToast();
-  const { business } = useBusiness();
   const checks = useChecks();
   const [editing, setEditing] = useState<{ check: CheckView | null } | null>(null);
   const [deleting, setDeleting] = useState<CheckView | null>(null);
   const items = checks.list.data?.items;
   const limit = checks.list.data?.limit ?? 0;
+  const hasItems = items !== undefined;
+
+  // "Open the check" from an update: once the list is there, bring that check into view.
+  useEffect(() => {
+    const anchor = window.location.hash.slice(1);
+    if (!hasItems || anchor === "") {
+      return;
+    }
+    const row = document.getElementById(anchor);
+    row?.scrollIntoView({ block: "center" });
+    row?.focus({ preventScroll: true });
+  }, [hasItems]);
 
   const toggle = async (check: CheckView) => {
     const result = await checks.update.run(check.id, { is_active: !check.is_active });
@@ -95,7 +106,7 @@ export function ChecksScreen() {
       {editing ? (
         <CheckDialog
           open
-          initial={editing.check ? checkFormOf(editing.check) : newCheckForm(business.default_language)}
+          initial={editing.check ? checkFormOf(editing.check) : newCheckForm(AUTO_LANGUAGE)}
           check={editing.check}
           title={t(editing.check ? "teaching.checks.editTitle" : "teaching.checks.newTitle")}
           description={editing.check ? undefined : t("teaching.checks.description")}

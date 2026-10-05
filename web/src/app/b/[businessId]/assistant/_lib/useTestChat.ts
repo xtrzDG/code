@@ -7,17 +7,18 @@ import { useMutation } from "@/api/useMutation";
 import { unwrap } from "@/api/result";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
+import { answeredTarget, chatChoices, initialTarget, storedTarget, type ChatChoice, type ChatTarget } from "@/lib/assistant/chatTargets";
 import { newSessionKey, type StoredTestChat } from "@/lib/assistant/testChat";
-import { defaultTestVersionId, type AssistantVersionSummary } from "@/lib/assistant/versions";
+import type { AssistantVersionSummary } from "@/lib/assistant/versions";
 
-import { VERSION_STATUS_LABELS } from "../_components/VersionStatusBadge";
 import { entriesFromMessages, type ChatEntry } from "./chatEntries";
 import { readStored, writeStored } from "./testChatStorage";
 
 /**
- * One test conversation: the version it talks to, its lines, sending and
- * retrying messages. The conversation is kept in this browser tab, so a
- * reload continues it.
+ * One test conversation: who it talks to ("What customers get now", "With
+ * your changes", or an update opened from History), its lines, sending
+ * and retrying messages. The conversation is kept in this browser tab, so
+ * a reload continues it.
  */
 export function useTestChat(versions: AssistantVersionSummary[], initialVersionId: string | null) {
   const { t } = useI18n();
@@ -27,19 +28,31 @@ export function useTestChat(versions: AssistantVersionSummary[], initialVersionI
   const sequence = useRef(0);
 
   const known = (id: string | null | undefined): id is string => Boolean(id && versions.some((version) => version.id === id));
+  // An update opened from History stays a choice while this page is open.
+  const historyId = known(initialVersionId) ? initialVersionId : null;
+  const choices = chatChoices(versions, historyId);
+  const choiceOf = (target: ChatTarget): ChatChoice =>
+    choices.find((choice) => choice.target === target) ?? { target: "changes", versionId: null, versionNumber: null };
 
   const [session, setSession] = useState<StoredTestChat>(() => {
     const stored = readStored(business.id);
-    if (known(initialVersionId)) {
-      return stored && stored.versionId === initialVersionId
-        ? stored
-        : { sessionKey: newSessionKey(), versionId: initialVersionId, conversationId: null };
+    if (historyId) {
+      const target = initialTarget(versions, historyId);
+      return stored && stored.versionId === historyId
+        ? { ...stored, target }
+        : { sessionKey: newSessionKey(), versionId: historyId, conversationId: null, target };
     }
-    if (stored && known(stored.versionId)) {
-      return stored;
+    if (stored && (stored.versionId === null || known(stored.versionId))) {
+      const target = storedTarget(versions, stored);
+      // A conversation with an earlier live version starts over with the one customers get now.
+      const isStale = target === "live" && stored.versionId !== choices.find((choice) => choice.target === "live")?.versionId;
+      if (!isStale && choices.some((choice) => choice.target === target)) {
+        return { ...stored, target };
+      }
     }
-    return { sessionKey: newSessionKey(), versionId: defaultTestVersionId(versions), conversationId: null };
+    return { sessionKey: newSessionKey(), versionId: null, conversationId: null, target: "changes" };
   });
+  const target: ChatTarget = session.target ?? "changes";
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [isRestoring, setRestoring] = useState(session.conversationId !== null);
   const [isHandedOff, setHandedOff] = useState(false);
@@ -105,8 +118,8 @@ export function useTestChat(versions: AssistantVersionSummary[], initialVersionI
     }
   }, [entries, send.isPending]);
 
-  const startNew = (versionId: string | null = session.versionId) => {
-    setSession({ sessionKey: newSessionKey(), versionId, conversationId: null });
+  const startNew = (next: ChatTarget = target) => {
+    setSession({ sessionKey: newSessionKey(), versionId: choiceOf(next).versionId, conversationId: null, target: next });
     setEntries([]);
     setHandedOff(false);
     input.current?.focus();
@@ -167,12 +180,10 @@ export function useTestChat(versions: AssistantVersionSummary[], initialVersionI
     }
   };
 
-  const versionLabel = (id: string | null, number?: number | null) => {
-    const version = versions.find((item) => item.id === id);
-    if (version) {
-      return t("assistant.chat.versionOption", { number: version.version_number, status: t(VERSION_STATUS_LABELS[version.status]) });
-    }
-    return number ? t("assistant.versions.number", { number }) : t("assistant.chat.unknownVersion");
+  /** Which choice answered a line ("What customers get now", "With your changes", "From History: update 3"). */
+  const answerLabel = (versionId: string | null, number?: number | null) => {
+    const answered = answeredTarget(versions, versionId, historyId);
+    return answered === "history" ? t("updates.chat.history", { number: number ?? choiceOf("history").versionNumber ?? "" }) : t(`updates.chat.${answered}`);
   };
 
   return {
@@ -189,6 +200,8 @@ export function useTestChat(versions: AssistantVersionSummary[], initialVersionI
     deliver,
     submit,
     onKeyDown,
-    versionLabel,
+    target,
+    choices,
+    answerLabel,
   };
 }

@@ -5,12 +5,7 @@ import type { assistantChatEn } from "./assistantChat.en";
 
 export const assistantChatKa: Translation<typeof assistantChatEn> = {
   chat: {
-    version: "განახლება",
-    versionOption: "განახლება {number} · {status}",
-    unknownVersion: "ავტომატურად",
     newConversation: "ახალი საუბარი",
-    sandboxNote: "წერეთ ისე, როგორც კლიენტი დაწერდა. სატესტო საუბრები კლიენტებს, თანამშრომლებს და გადახდებს არ ეხება.",
-    sandboxNoteRisky: "თქვენ ამოწმებთ: {version}. სატესტო საუბრები კლიენტებს, თანამშრომლებს და გადახდებს არ ეხება.",
     logLabel: "სატესტო საუბარი",
     emptyTitle: "დაიწყეთ სატესტო საუბარი",
     emptyDescription: "იკითხეთ ის, რასაც თქვენი კლიენტები კითხულობენ, ნებისმიერ ენაზე. ან სცადეთ:",

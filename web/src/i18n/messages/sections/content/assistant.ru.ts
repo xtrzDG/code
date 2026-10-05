@@ -7,9 +7,6 @@ import type { Translation } from "../../../translate";
 import type { assistantEn } from "./assistant.en";
 
 export const assistantRu: Translation<typeof assistantEn> = {
-  live: "Клиенты общаются с обновлением {number}",
-  liveSince: "С {date} клиенты общаются с обновлением {number}",
-  notLive: "Помощник ещё не работает с клиентами: примените изменения, проверьте обновление и опубликуйте его.",
   status: {
     draft: "Не проверено",
     testing: "Проверяется",

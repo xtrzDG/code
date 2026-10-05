@@ -44,6 +44,7 @@ export const updatesEn = {
     onlyDrafts: "Everything you changed reaches customers. A draft is left over:",
   },
   checkNow: {
+    savedTitle: "Check saved",
     action: "Check now",
     actionLabel: "Check “{question}” now",
     checking: "Checking…",

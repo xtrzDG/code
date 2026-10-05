@@ -42,6 +42,7 @@ export const updatesRu: Translation<typeof updatesEn> = {
     onlyDrafts: "Всё, что вы изменили, уже у клиентов. Остался черновик:",
   },
   checkNow: {
+    savedTitle: "Проверка сохранена",
     action: "Проверить сейчас",
     actionLabel: "Проверить сейчас: «{question}»",
     checking: "Проверяем…",
