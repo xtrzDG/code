@@ -62,7 +62,7 @@ export function TimelineCard({ businessId, timeZone }: { businessId: string; tim
   const items = timeline.items;
 
   return (
-    <Card title={t("adminStory.timeline.title")} description={t("adminStory.timeline.description")}>
+    <Card title={t("adminStory.timeline.title")} description={t("adminStory.timeline.description")} aria-label={t("adminStory.timeline.title")}>
       {timeline.error && !items ? (
         <ErrorState error={timeline.error} onRetry={timeline.reload} />
       ) : !items ? (

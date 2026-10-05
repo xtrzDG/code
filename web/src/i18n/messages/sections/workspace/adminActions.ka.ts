@@ -92,7 +92,7 @@ export const adminActionsKa: Translation<typeof adminActionsEn> = {
   },
   onboarding: {
     title: "მოთხოვნილია დაყენება გასაღებით",
-    description: "მფლობელმა სთხოვა პლატფორმის გუნდს ბიზნესის დაყენება ({plan}) {date}.",
+    description: "{date} მფლობელმა სთხოვა პლატფორმის გუნდს ბიზნესის დაყენება ({plan}).",
     markDone: "შესრულებულად მონიშვნა",
     marked: "დაყენება გასაღებით შესრულებულად მოინიშნა",
     doneTitle: "დაყენება გასაღებით შესრულდა",

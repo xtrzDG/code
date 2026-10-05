@@ -94,7 +94,7 @@ export const adminActionsEn = {
   },
   onboarding: {
     title: "Done-for-you setup requested",
-    description: "The owner asked the platform team to set the business up ({plan}) on {date}.",
+    description: "On {date} the owner asked the platform team to set the business up ({plan}).",
     markDone: "Mark as done",
     marked: "The done-for-you setup is marked done",
     doneTitle: "Done-for-you setup finished",

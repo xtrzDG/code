@@ -92,7 +92,7 @@ export const adminActionsRu: Translation<typeof adminActionsEn> = {
   },
   onboarding: {
     title: "Запрошена настройка под ключ",
-    description: "Владелец попросил команду платформы настроить бизнес ({plan}) {date}.",
+    description: "{date} владелец попросил команду платформы настроить бизнес ({plan}).",
     markDone: "Отметить выполненной",
     marked: "Настройка под ключ отмечена выполненной",
     doneTitle: "Настройка под ключ выполнена",

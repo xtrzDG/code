@@ -19,7 +19,7 @@ export function AccountCard({ client }: { client: Schema<"ClientHealthView"> }) 
   const account = client.account;
   if (!account) {
     return (
-      <Card title={t("adminActions.account.title")}>
+      <Card title={t("adminActions.account.title")} aria-label={t("adminActions.account.title")}>
         <p className="text-sm text-ink-muted">{t("adminActions.account.noSubscription")}</p>
       </Card>
     );
@@ -30,7 +30,7 @@ export function AccountCard({ client }: { client: Schema<"ClientHealthView"> }) 
   // `ends_at` is the first moment after the last day: the day before it is the last one discounted.
   const lastDay = discount ? date(discount.ends_at - 1) : "";
   return (
-    <Card title={t("adminActions.account.title")} description={t("adminActions.account.description")}>
+    <Card title={t("adminActions.account.title")} description={t("adminActions.account.description")} aria-label={t("adminActions.account.title")}>
       <Facts
         columns={2}
         items={[
@@ -107,6 +107,7 @@ export function OnboardingRequestCard({
   return (
     <Card
       title={t("adminActions.onboarding.title")}
+      aria-label={t("adminActions.onboarding.title")}
       actions={
         canComplete ? (
           <Button size="sm" variant="secondary" isLoading={complete.isPending} onClick={onComplete}>

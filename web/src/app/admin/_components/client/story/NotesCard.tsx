@@ -72,7 +72,7 @@ export function NotesCard({ businessId, timeZone, canWrite }: { businessId: stri
   const items = notes.data?.items ?? [];
 
   return (
-    <Card title={t("adminStory.notes.title")} description={t("adminStory.notes.description")}>
+    <Card title={t("adminStory.notes.title")} description={t("adminStory.notes.description")} aria-label={t("adminStory.notes.title")}>
       {canWrite ? (
         <form
           className="space-y-3"

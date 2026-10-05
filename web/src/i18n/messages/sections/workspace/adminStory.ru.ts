@@ -67,7 +67,7 @@ export const adminStoryRu: Translation<typeof adminStoryEn> = {
       dpa_accepted: "Принято соглашение об обработке данных",
       channel_connected: "Подключён канал: {channel}",
       test_chat_tried: "Попробовал тестовый чат",
-      went_live: "Ассистент заработал",
+      went_live: "Помощник заработал",
       first_real_conversation: "Первый настоящий разговор",
       first_booking: "Первая запись",
       first_handoff: "Первый разговор передан человеку",
