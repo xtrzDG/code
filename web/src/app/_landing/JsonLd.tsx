@@ -6,6 +6,5 @@ import { serializeJsonLd, type JsonLd as JsonLdData } from "@/lib/publicSite/seo
  * close the tag.
  */
 export function JsonLd({ data }: { data: JsonLdData | readonly JsonLdData[] }) {
-  // eslint-disable-next-line react/no-danger -- serialized JSON with "<" escaped (serializeJsonLd).
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />;
 }

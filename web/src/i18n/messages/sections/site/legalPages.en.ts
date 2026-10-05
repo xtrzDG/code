@@ -8,6 +8,13 @@ export const legalPagesEn = {
     security: "Security",
     contact: "Contact",
   },
+  descriptions: {
+    terms: "The terms on which businesses use the AI assistant platform: the service, payment, trial, liability and ending the agreement.",
+    privacy: "What personal data the platform processes about business owners and their team, why, for how long and how to exercise your rights.",
+    dpa: "The data processing agreement every business accepts before going live: how customers' data is processed on its behalf, and by which sub-processors.",
+    security: "How the platform protects data: encryption, access control, backups, monitoring and how to report a vulnerability.",
+    contact: "Who provides the AI assistant platform and how to reach a person: support channels and the operator's details.",
+  },
   footerLabel: "Legal and contact",
   draftTitle: "Draft",
   draftText: "A lawyer has not reviewed this text yet, and the fields in square brackets are still to be filled. It is published so you can read what the service will offer; it is not yet in force as written.",
