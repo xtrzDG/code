@@ -10,11 +10,13 @@ from app.gateways.worker.lease_heartbeat import LeaseHeartbeat
 from app.gateways.worker.queued_job_runner import QueuedJobRunner
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.domain.jobs import QueuedJobDocument
+from app.schemas.dto.job_queue import JobLeaseExtension
 from app.schemas.typings.platform.constrained_integers import (
     JobClaimLimit,
     JobLeaseSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import JobLeaseToken
+from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.platform.worker_fakes import (
@@ -139,7 +141,34 @@ def test_a_heartbeat_while_a_job_is_settled_reports_no_lost_lease(
     assert "lost its lease" not in caplog.text
 
 
-def test_a_job_that_outlived_its_lease_leaves_the_result_to_the_new_holder() -> None:
+def test_a_job_that_finishes_during_a_beat_reports_no_lost_lease(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    clock = ControlledClock()
+    stores = build_job_stores()
+    operator = FlakyQueuedOperator(failures_before_success=0)
+    runner, _, heartbeat = build_runner(clock, stores, operator)
+    build_worker(clock, [], stores=stores).queue.enqueue(
+        RUN_AUTOTESTS, JobPayloadJson("{}"), None
+    )
+    claimed, lease_token = runner.claim(JobLane.DEFAULT, JobClaimLimit(1))
+    extend_leases = stores.job_repo.extend_leases
+
+    def finish_then_extend(extension: JobLeaseExtension) -> list[QueuedJobId]:
+        # The job finishes after the beat saw it held, before its update.
+        runner.run(claimed[0], lease_token)
+        return extend_leases(extension)
+
+    monkeypatch.setattr(stores.job_repo, "extend_leases", finish_then_extend)
+    with caplog.at_level(logging.WARNING):
+        heartbeat.beat()
+
+    assert "lost its lease" not in caplog.text
+
+
+def test_a_job_that_outlived_its_lease_leaves_the_result_to_the_new_holder(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     clock = ControlledClock()
     stores = build_job_stores()
     operator = FlakyQueuedOperator(failures_before_success=0)
@@ -151,7 +180,9 @@ def test_a_job_that_outlived_its_lease_leaves_the_result_to_the_new_holder() -> 
     clock.advance(121)  # no heartbeat came through (the database was away)
     fast = build_worker(clock, [], {RUN_AUTOTESTS: operator}, stores=stores)
     fast.worker.run_once()
-    heartbeat.beat()  # too late: the lease is gone
+    with caplog.at_level(logging.WARNING):
+        heartbeat.beat()  # too late: the lease is gone
+    assert "lost its lease" in caplog.text
 
     slow_runner.run(claimed[0], slow_token)
 

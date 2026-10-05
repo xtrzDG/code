@@ -48,6 +48,12 @@ class HeldLeases:
         with self._lock:
             self._jobs.pop(job_id, None)
 
+    def holds_job(self, job_id: QueuedJobId, lease_token: JobLeaseToken) -> bool:
+        """Whether the job still runs here under this claim's token."""
+
+        with self._lock:
+            return self._jobs.get(job_id) == lease_token
+
     def hold_periodic_run(self, run: HeldPeriodicRun) -> None:
         with self._lock:
             self._periodic_runs[run.job_name] = run
