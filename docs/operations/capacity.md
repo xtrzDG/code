@@ -200,10 +200,11 @@ than it works (each process used about 0.65 CPU while polls queued for
 seconds). On this machine four processes (`WEB_CONCURRENCY=4`,
 `DB_POOL_SIZE=12` to stay within 100 connections) measured a poll p95 of
 453 ms where two measured 2.15 s; fewer threads (16) or a shorter
-interpreter switch interval did not help. The load stack keeps its two
-processes (this change is the code's); if the weekly run still misses
-150 ms, the lever is API processes (or less Python per request), not the
-database.
+interpreter switch interval did not help. The weekly run on GitHub's
+runner then still measured a poll p95 of 1.8 s with two processes, so the
+load override now runs four of 12 connections each, as production does
+(render.yaml: two instances of two uvicorn workers). If it still misses
+150 ms, the next lever is less Python per request, not the database.
 
 ## What one process carries
 
@@ -229,8 +230,9 @@ database.
   queues it; the answer comes from the worker. One API process
   acknowledges about 120 webhooks a second on 4 shared vCPU (10 ms each
   at 50 a second); at 200 a second it falls behind and the wait grows to
-  seconds. Two processes (`WEB_CONCURRENCY=2`, as the load override sets)
-  took 200 a second for 20 s with nothing dropped and a p95 of 0.6 s.
+  seconds. Two processes (`WEB_CONCURRENCY=2`; the load override now
+  sets four) took 200 a second for 20 s with nothing dropped and a p95 of
+  0.6 s.
   Plan one API process per 100 webhooks a second of peak.
 - **Worker throughput.** A worker answers `inbound` messages
   `WORKER_LANE_CONCURRENCY` at a time (8 by default). At 800 ms per model

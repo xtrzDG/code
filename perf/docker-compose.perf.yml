@@ -33,9 +33,14 @@ services:
     environment:
       <<: *load-environment
       FORWARDED_ALLOW_IPS: "*"
-      # Two API processes (uvicorn workers): one process acknowledges about
-      # 120 webhooks a second on a 4-vCPU runner, the burst sends 200.
-      WEB_CONCURRENCY: "2"
+      # Four API processes of 12 connections each, as production runs them
+      # (render.yaml: two instances of two uvicorn workers, DB_POOL_SIZE 12):
+      # with two, 1000 polling visitors queued in Python while Postgres
+      # idled (docs/operations/capacity.md, "Widget polls and the shared
+      # rate-limit counters"). 4 x (12 + 1) + the worker's stay well under
+      # Postgres's 100 connections.
+      WEB_CONCURRENCY: "4"
+      DB_POOL_SIZE: "12"
     extra_hosts: *offline-providers
 
   worker:
