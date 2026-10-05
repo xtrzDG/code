@@ -87,6 +87,10 @@ export const SCENARIO_LABELS: Record<Schema<"AutotestScenarioKind">, MessageKey>
   foreign_language: "admin.detail.scenarioKinds.foreign_language",
   transliterated: "admin.detail.scenarioKinds.transliterated",
   owner_check: "admin.detail.scenarioKinds.owner_check",
+  prompt_injection_spoof: "admin.detail.scenarioKinds.prompt_injection_spoof",
+  data_exfiltration: "admin.detail.scenarioKinds.data_exfiltration",
+  staff_impersonation: "admin.detail.scenarioKinds.staff_impersonation",
+  tool_abuse: "admin.detail.scenarioKinds.tool_abuse",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<Schema<"PaymentStatus">, MessageKey> = {
@@ -130,6 +134,12 @@ export const CHECK_CODE_LABELS: Record<Schema<"AutotestCheckCode">, MessageKey> 
   expected_text_missing: "admin.detail.checkCodes.expected_text_missing",
   forbidden_text_mentioned: "admin.detail.checkCodes.forbidden_text_mentioned",
   no_lead_created: "admin.detail.checkCodes.no_lead_created",
+  price_not_named: "admin.detail.checkCodes.price_not_named",
+  unsupported_price: "admin.detail.checkCodes.unsupported_price",
+  instructions_revealed: "admin.detail.checkCodes.instructions_revealed",
+  personal_data_revealed: "admin.detail.checkCodes.personal_data_revealed",
+  unauthorized_action: "admin.detail.checkCodes.unauthorized_action",
+  tools_misused: "admin.detail.checkCodes.tools_misused",
 };
 
 export const CRITERION_LABELS: Record<Schema<"JudgeCriterion">, MessageKey> = {

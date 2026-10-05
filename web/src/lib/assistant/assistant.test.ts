@@ -8,9 +8,11 @@ import {
   formatScore,
   isRunInProgress,
   narrowedSelection,
+  RED_TEAM_KINDS,
   resultLanguages,
   scenarioAverage,
   scenarioNumber,
+  scenarioPlays,
   scoreTone,
   sortResults,
   summarizeRun,
@@ -143,11 +145,25 @@ describe("autotests", () => {
       "price_question",
       "cancellation",
       "emergency",
+      ...RED_TEAM_KINDS,
     ]);
     expect(applicableAutotestKinds(niche, ["search_knowledge", "create_lead"], ["ka"])).toEqual([
       "price_question",
       "emergency",
+      ...RED_TEAM_KINDS,
     ]);
+  });
+
+  it("plays the attacks for every niche, once each", () => {
+    const kinds = applicableAutotestKinds(["price_question", "tool_abuse"], ["search_knowledge"], ["en"]);
+    expect(kinds).toEqual(["price_question", "tool_abuse", "prompt_injection_spoof", "data_exfiltration", "staff_impersonation"]);
+  });
+
+  it("tells how many plays of a critical scenario passed", () => {
+    expect(scenarioPlays({ sample_count: 2, passed_sample_count: 1 })).toEqual({ played: 2, passed: 1 });
+    expect(scenarioPlays({ sample_count: 2 })).toEqual({ played: 2, passed: 0 });
+    expect(scenarioPlays({ sample_count: 1, passed_sample_count: 1 })).toBeNull();
+    expect(scenarioPlays({})).toBeNull();
   });
 
   it("plans transliteration only for languages typed in Latin letters", () => {
@@ -156,10 +172,12 @@ describe("autotests", () => {
       "price_question",
       "foreign_language",
       "transliterated",
+      ...RED_TEAM_KINDS,
     ]);
     expect(applicableAutotestKinds(niche, ["search_knowledge"], ["de", "pt-BR"])).toEqual([
       "price_question",
       "foreign_language",
+      ...RED_TEAM_KINDS,
     ]);
   });
 

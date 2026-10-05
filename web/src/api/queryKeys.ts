@@ -68,6 +68,8 @@ export const queryKeys = {
     /** Quick replies filled in for one conversation (audited reads). */
     quickReplies: (businessId: Id, conversationId: Id) =>
       ["conversations", businessId, "quickReplies", conversationId] as const,
+    /** The nightly judge's score of one conversation (most have none). */
+    quality: (businessId: Id, conversationId: Id) => ["conversations", businessId, "quality", conversationId] as const,
   },
 
   bookings: {
@@ -248,6 +250,7 @@ export const queryKeys = {
     all: () => ["admin"] as const,
     clients: (filters: string) => ["admin", "clients", filters] as const,
     client: (businessId: Id) => ["admin", "client", businessId] as const,
+    clientQuality: (businessId: Id) => ["admin", "client", businessId, "quality"] as const,
     /** The key ring and the latest re-encryption run. */
     encryptionKeys: () => ["admin", "encryptionKeys"] as const,
     /** The founder's growth metrics for one set of filters. */

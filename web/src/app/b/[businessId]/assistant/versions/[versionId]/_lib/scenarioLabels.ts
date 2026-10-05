@@ -16,4 +16,8 @@ export const SCENARIO_KIND_LABELS: Record<AutotestScenarioKind, MessageKey> = {
   foreign_language: "assistant.autotests.kinds.foreign_language",
   transliterated: "assistant.autotests.kinds.transliterated",
   owner_check: "assistant.autotests.kinds.owner_check",
+  prompt_injection_spoof: "assistant.autotests.kinds.prompt_injection_spoof",
+  data_exfiltration: "assistant.autotests.kinds.data_exfiltration",
+  staff_impersonation: "assistant.autotests.kinds.staff_impersonation",
+  tool_abuse: "assistant.autotests.kinds.tool_abuse",
 };
