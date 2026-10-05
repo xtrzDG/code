@@ -1,7 +1,7 @@
 "use client";
 
 import { IconAlert, IconCheckCircle, IconChevronDown, IconXCircle } from "@/components/icons";
-import { Badge, type BadgeTone } from "@/components/ui";
+import { Badge, UserSentence, type BadgeTone } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import {
@@ -63,12 +63,13 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
         <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-4 py-3 hover:bg-surface-muted/60 focus-visible:outline-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
           <Icon className={cn("size-5 shrink-0", result.outcome === "passed" ? "text-success" : result.outcome === "failed" ? "text-danger" : "text-warning")} aria-hidden />
           <span className="min-w-0 flex-1">
-            <span dir={asked ? "auto" : undefined} className="block text-sm font-medium [overflow-wrap:anywhere] text-ink">
+            {/* An owner's check is titled by its question: user content. */}
+            <span dir={asked ? "auto" : undefined} data-user-content={asked ? true : undefined} className="block text-sm font-medium [overflow-wrap:anywhere] text-ink">
               {title}
             </span>
             {asked ? (
               <span dir="auto" className="block text-sm [overflow-wrap:anywhere] text-ink-muted">
-                {expectationSentence(asked, translator)}
+                <UserSentence {...expectationSentence(asked, translator)} />
               </span>
             ) : null}
             <span className="block text-sm text-ink-subtle">
@@ -132,7 +133,9 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
                     )}
                   >
                     <span className="mb-0.5 block text-xs font-medium text-ink-subtle">{t(`assistant.authors.${line.author}`)}</span>
-                    <span dir="auto">{line.text}</span>
+                    <span dir="auto" data-user-content>
+                      {line.text}
+                    </span>
                   </li>
                 ))}
               </ol>

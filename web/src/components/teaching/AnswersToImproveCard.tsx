@@ -107,7 +107,7 @@ function ImproveRow({
         <span className="ms-auto">{format.dateTime(item.at)}</span>
       </div>
       {isQuestion ? (
-        <p dir="auto" className="text-sm font-medium break-words text-ink">
+        <p dir="auto" data-user-content className="text-sm font-medium break-words text-ink">
           {item.question}
         </p>
       ) : (
@@ -115,7 +115,7 @@ function ImproveRow({
           {item.customer_message ? (
             <div className="flex gap-2">
               <dt className="shrink-0 text-ink-subtle">{t("teaching.improve.customer")}:</dt>
-              <dd dir="auto" className="min-w-0 break-words text-ink">
+              <dd dir="auto" data-user-content className="min-w-0 break-words text-ink">
                 {item.customer_message}
               </dd>
             </div>
@@ -123,7 +123,7 @@ function ImproveRow({
           {item.answer ? (
             <div className="flex gap-2">
               <dt className="shrink-0 text-ink-subtle">{t("teaching.improve.assistant")}:</dt>
-              <dd dir="auto" className="line-clamp-2 min-w-0 break-words text-ink-muted">
+              <dd dir="auto" data-user-content className="line-clamp-2 min-w-0 break-words text-ink-muted">
                 {item.answer}
               </dd>
             </div>

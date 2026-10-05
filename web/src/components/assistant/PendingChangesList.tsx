@@ -3,9 +3,10 @@
 /**
  * The changes customers do not get yet, grouped by the part of the
  * business they touch ("Offer and prices: Price of “Khachapuri”: 18,00 ₾
- * → 20,00 ₾"). Owners' own titles keep their direction (`dir="auto"`).
+ * → 20,00 ₾"). Owners' own titles are user content in their own direction (`UserSentence`).
  */
 
+import { UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { describeChange, groupChanges, type PendingChange } from "@/lib/assistant/pendingChanges";
 
@@ -35,7 +36,7 @@ export function PendingChangesList({ changes, labelId }: { changes: readonly Pen
                   }
                 />
                 <span dir="auto" className="min-w-0 [overflow-wrap:anywhere]">
-                  {describeChange(change, translator)}
+                  <UserSentence {...describeChange(change, translator)} />
                 </span>
               </li>
             ))}

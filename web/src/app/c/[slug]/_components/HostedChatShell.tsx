@@ -37,7 +37,12 @@ export function HostedChatNotice({ title, lead, hint }: { title?: string; lead: 
             <path d="M5 18l-1.5 3 4-1.5A8.5 8.5 0 1012 3.5 8.5 8.5 0 003.5 12c0 2.2.6 4.2 1.5 6z" />
           </svg>
         </span>
-        {title ? <h1 dir="auto">{title}</h1> : null}
+        {/* The title is the business's name (user content). */}
+        {title ? (
+          <h1 dir="auto" data-user-content>
+            {title}
+          </h1>
+        ) : null}
         {title ? <p className="hc-notice-lead">{lead}</p> : <h1>{lead}</h1>}
         {hint ? <p>{hint}</p> : null}
       </div>

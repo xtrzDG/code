@@ -36,7 +36,7 @@ export function CustomerRow({
           {isErased ? (
             <span className="text-ink-muted">{t("settings.customers.erasedName")}</span>
           ) : (
-            <span dir="auto" className="break-words">
+            <span dir="auto" data-user-content={contact.name ? true : undefined} className="break-words">
               {name}
             </span>
           )}

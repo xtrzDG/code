@@ -73,10 +73,14 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
         <UserAvatar user={me.user} className="size-10 text-sm" />
         <div className="min-w-0">
           <p className="text-xs text-ink-subtle">{t("account.signedInAs")}</p>
-          <p className="truncate text-sm font-semibold text-ink" title={name}>
+          <p className="truncate text-sm font-semibold text-ink" title={name} data-user-content>
             {name}
           </p>
-          {contact && contact !== name ? <p className="truncate text-xs text-ink-muted">{contact}</p> : null}
+          {contact && contact !== name ? (
+            <p className="truncate text-xs text-ink-muted" data-user-content>
+              {contact}
+            </p>
+          ) : null}
         </div>
       </div>
 

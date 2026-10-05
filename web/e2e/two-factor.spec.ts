@@ -113,7 +113,8 @@ test("an owner sets up an authenticator app, confirms an action with it and sign
   await confirm.getByLabel(en.mfa.stepUp.code).fill(second.code);
   await expect(confirm).toBeHidden();
   await expect(page.getByText(en.mfa.stepUp.confirmed)).toBeVisible();
-  await expect(page.getByText(staffEmail, { exact: true })).toBeVisible();
+  // In the team list (the toast names the new member too).
+  await expect(page.getByRole("main").getByText(staffEmail, { exact: true })).toBeVisible();
   expect(refused).toBe(true);
   // The new member has no app yet: the team card counts them.
   await expect(page.getByText(en.security.team.without.one.replace("{count}", "1"))).toBeVisible();

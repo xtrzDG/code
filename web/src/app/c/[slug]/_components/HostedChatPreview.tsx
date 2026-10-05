@@ -35,7 +35,7 @@ export function HostedChatPreview({
       <div className="hc-preview-site" aria-hidden>
         <div className="hc-preview-bar">
           <span className="hc-preview-logo" />
-          <span className="hc-preview-name" dir="auto">
+          <span className="hc-preview-name" dir="auto" data-user-content>
             {view.business_name}
           </span>
           <span className="hc-preview-nav">

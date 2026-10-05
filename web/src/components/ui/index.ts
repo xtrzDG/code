@@ -40,5 +40,6 @@ export {
 } from "./Skeleton";
 export { LoadingBlock, Spinner } from "./Spinner";
 export { Table, TBody, Td, Th, THead, Tr } from "./Table";
-export { ToastProvider, UNDO_WINDOW_MS, useToast, type ToastAction, type ToastApi } from "./Toast";
+export { ToastProvider, UNDO_WINDOW_MS, useToast, type ToastAction, type ToastApi, type ToastTitle } from "./Toast";
 export { useModalDialog, type ModalDialogProps } from "./useModalDialog";
+export { UserContent, UserSentence } from "./UserContent";

@@ -113,8 +113,9 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
   // call ("Voice agent called check_availability."): the actions below say
   // it in the interface language, so the note itself is not shown.
   const isVoiceAction = message.author === "system" && (message.tool_calls?.length ?? 0) > 0;
+  const isMine = message.sent_by === me.user.id;
   const sender = message.sent_by
-    ? message.sent_by === me.user.id
+    ? isMine
       ? t("conversations.author.you")
       : memberName(business.members.find((member) => member.user_id === message.sent_by))
     : null;
@@ -139,7 +140,10 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
           {sender ? (
             <>
               {" · "}
-              <span dir="auto">{sender}</span>
+              {/* A teammate's name is user content; "You" is the interface's. */}
+              <span dir="auto" data-user-content={isMine ? undefined : true}>
+                {sender}
+              </span>
             </>
           ) : null}
           {" · "}
@@ -151,6 +155,7 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
         {isVoiceAction || !hasText ? null : (
           <div
             dir="auto"
+            data-user-content
             className={cn(
               "rounded-2xl px-4 py-2.5 text-[0.9375rem] leading-6 break-words whitespace-pre-wrap",
               BUBBLE[message.author],

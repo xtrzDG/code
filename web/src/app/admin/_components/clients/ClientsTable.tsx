@@ -33,7 +33,7 @@ export function ClientsTable({ clients, nicheName }: { clients: AdminClientSumma
           {clients.map((client) => (
             <Tr key={client.business_id}>
               <Td>
-                <Link href={adminClientPath(client.business_id)} className="font-medium text-ink hover:text-accent hover:underline" dir="auto">
+                <Link href={adminClientPath(client.business_id)} className="font-medium text-ink hover:text-accent hover:underline" dir="auto" data-user-content>
                   {client.name}
                 </Link>
                 <p className="mt-0.5 text-xs text-ink-muted">

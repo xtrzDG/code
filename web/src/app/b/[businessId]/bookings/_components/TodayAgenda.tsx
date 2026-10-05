@@ -62,8 +62,13 @@ export function TodayAgenda({ page }: { page: BookingsPage }) {
 
   const { entries, nowIndex, counts } = todayAgenda(items, localNow);
   const mark = (booking: BookingView, status: Extract<BookingStatus, "completed" | "no_show">) => {
-    const name = booking.contact_name ?? t("insights.unknownCustomer");
-    void runStatus(booking, status, t(status === "completed" ? "bookings.today.markedArrived" : "bookings.today.markedNoShow", { name }));
+    const key = status === "completed" ? "bookings.today.markedArrived" : "bookings.today.markedNoShow";
+    // The customer's name is user content.
+    void runStatus(
+      booking,
+      status,
+      booking.contact_name ? { text: t(key), values: { name: booking.contact_name } } : t(key, { name: t("insights.unknownCustomer") }),
+    );
   };
   const tally = [
     t("bookings.today.toCome", { count: counts.toCome }),

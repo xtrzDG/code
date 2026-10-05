@@ -25,6 +25,7 @@ import {
   Th,
   THead,
   Tr,
+  UserContent,
 } from "@/components/ui";
 import { shortId, zonedDayStartUs } from "@/components/workspace/helpers";
 import { IconList } from "@/components/icons";
@@ -97,9 +98,14 @@ export function AuditTab() {
     entry.record_count === null || entry.record_count === undefined ? null : (
       <span className="ml-2 text-xs text-ink-subtle">{tp(auditCountKey(entry), entry.record_count)}</span>
     );
-  const actorName = (actorId: string | null | undefined, action?: AuditAction) =>
-    actorLabel(actorId, business.members) ??
-    (action === "admin_access" ? t("settings.audit.platform") : actorId ? shortId(actorId) : t("settings.audit.system"));
+  const actorName = (actorId: string | null | undefined, action?: AuditAction) => {
+    // A member's name is user content; "Platform support" and "System" are the interface's.
+    const member = actorLabel(actorId, business.members);
+    if (member) {
+      return <UserContent>{member}</UserContent>;
+    }
+    return action === "admin_access" ? t("settings.audit.platform") : actorId ? shortId(actorId) : t("settings.audit.system");
+  };
   const entries = log.items ?? [];
   const page = log.page;
   const isFiltered = hasAuditFilters(filters);

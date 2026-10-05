@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 
+import { UserSentence } from "@/components/ui/UserContent";
 import { isLocale } from "@/i18n/config";
 import { FALLBACK_MESSAGES, getMessages } from "@/i18n/messages";
 import { createTranslator, type MessageValues } from "@/i18n/translate";
+import type { SentenceWithUserValues } from "@/i18n/userValues";
 import { directionOf } from "@/lib/hostedChat/language";
 import { daysLabel, periodLabel } from "@/lib/retentionPeriods";
 import { hostedChatPath, lookUpHostedChat, type HostedChatLookup, type HostedChatView } from "@/server/hostedChat";
@@ -85,17 +87,19 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
   const notice = privacyNoticeFor(chosen.language);
   const page: PageLanguage = { language: notice.language, direction: directionOf(notice.language) };
   const text = notice.text;
-  const values = { business: view.business_name };
+  // The business's name is user content: each sentence keeps its placeholder and `UserSentence` shows it.
+  const names = { business: view.business_name };
+  const naming = (key: Parameters<typeof text>[0], values?: MessageValues): SentenceWithUserValues => ({ text: text(key, values), values: names });
   const sections = [
-    { title: text("whoTitle"), body: [text("who", values)] },
+    { title: text("whoTitle"), body: [naming("who")] },
     {
       title: text("whatTitle"),
       list: [text("whatMessages"), text("whatContacts"), text("whatBrowser"), text("whatTechnical")],
     },
-    { title: text("whyTitle"), body: [text("why", values)] },
-    { title: text("sharedTitle"), body: [text("shared", values)] },
-    { title: text("keptTitle"), body: [text("kept", { ...values, ...keptPeriods(notice.language, view) })] },
-    { title: text("rightsTitle"), body: [text("rights", values)] },
+    { title: text("whyTitle"), body: [naming("why")] },
+    { title: text("sharedTitle"), body: [naming("shared")] },
+    { title: text("keptTitle"), body: [naming("kept", keptPeriods(notice.language, view))] },
+    { title: text("rightsTitle"), body: [naming("rights")] },
   ];
   const address = hostedChatPath(view.slug ?? slug);
 
@@ -103,7 +107,9 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
     <HostedChatShell page={page} accent={view.accent_color}>
       <article className="hc-document">
         <h1>{text("title")}</h1>
-        <p className="hc-document-lead">{text("subtitle", values)}</p>
+        <p className="hc-document-lead">
+          <UserSentence {...naming("subtitle")} />
+        </p>
         {notice.needsReview ? (
           <p className="hc-document-draft" role="note" data-testid="privacy-draft-note">
             {text("draftNote")}{" "}
@@ -115,7 +121,11 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
         {sections.map((section) => (
           <section key={section.title}>
             <h2>{section.title}</h2>
-            {section.body?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            {section.body?.map((paragraph) => (
+              <p key={paragraph.text}>
+                <UserSentence {...paragraph} />
+              </p>
+            ))}
             {section.list ? (
               <ul>
                 {section.list.map((item) => (
@@ -125,7 +135,9 @@ export default async function PrivacyNoticePage({ params, searchParams }: PagePr
             ) : null}
           </section>
         ))}
-        <p className="hc-document-lead">{text("platformNote", values)}</p>
+        <p className="hc-document-lead">
+          <UserSentence {...naming("platformNote")} />
+        </p>
         <p>
           {/* A full page load: the chat page gets its own policy from the proxy. */}
           <a href={address}>{text("backToChat")}</a>

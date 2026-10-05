@@ -119,7 +119,7 @@ function VoiceAttachment({ attachment }: { attachment: MessageAttachmentView }) 
       {transcript ? (
         <div>
           <p className="text-xs font-medium text-ink-subtle">{t("conversationMedia.voice.transcript")}</p>
-          <p dir="auto" className="text-[0.9375rem] leading-6 break-words whitespace-pre-wrap">
+          <p dir="auto" data-user-content className="text-[0.9375rem] leading-6 break-words whitespace-pre-wrap">
             {transcript}
           </p>
         </div>
@@ -138,11 +138,11 @@ function PlaceAttachment({ location, mapUrl }: { location: SharedLocation; mapUr
   return (
     <AttachmentCard kind="location">
       <div className="space-y-0.5">
-        <p dir="auto" className="text-[0.9375rem] leading-6 font-medium break-words">
+        <p dir="auto" data-user-content={title ? true : undefined} className="text-[0.9375rem] leading-6 font-medium break-words">
           {title ?? t("conversationMedia.place.unnamed")}
         </p>
         {subtitle ? (
-          <p dir="auto" className="text-sm break-words text-ink-muted">
+          <p dir="auto" data-user-content className="text-sm break-words text-ink-muted">
             {subtitle}
           </p>
         ) : null}

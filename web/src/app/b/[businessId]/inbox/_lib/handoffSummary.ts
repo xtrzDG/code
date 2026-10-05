@@ -8,12 +8,15 @@
 
 import type { HandoffListItem } from "@/components/insights/types";
 import type { MessageKey, Translator } from "@/i18n/translate";
+import { interfaceSentence, userWords, type SentenceWithUserValues } from "@/i18n/userValues";
 
 type SummaryCode = NonNullable<HandoffListItem["summary_code"]>;
 type SummarySource = Pick<HandoffListItem, "summary" | "summary_code" | "quoted_text" | "flagged_values">;
 
 export interface HandoffSummaryView {
-  text: string;
+  /** What happened; the model's own summary and the flagged values are user content (`UserSentence`). */
+  text: SentenceWithUserValues;
+  /** The quoted words (user content) under their label. */
   quote: { label: string; text: string } | null;
 }
 
@@ -37,13 +40,13 @@ const SUMMARY_TEXTS_WITH_VALUES: Partial<Record<SummaryCode, MessageKey>> = {
 export function handoffSummary(handoff: SummarySource, t: Translator["t"]): HandoffSummaryView {
   const code = handoff.summary_code;
   if (!code) {
-    return { text: handoff.summary, quote: null };
+    return { text: userWords(handoff.summary), quote: null };
   }
 
   const values = handoff.flagged_values ?? [];
   const withValues = SUMMARY_TEXTS_WITH_VALUES[code];
   const text =
-    values.length > 0 && withValues ? t(withValues, { values: values.join(", ") }) : t(SUMMARY_TEXTS[code]);
+    values.length > 0 && withValues ? { text: t(withValues), values: { values: values.join(", ") } } : interfaceSentence(t(SUMMARY_TEXTS[code]));
   const quoted = handoff.quoted_text;
   return {
     text,

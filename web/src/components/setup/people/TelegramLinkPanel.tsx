@@ -10,7 +10,7 @@ import type { Schema } from "@/api/types";
 import { formatLinkCode } from "@/app/b/[businessId]/assistant/channels/_lib/channels";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconCheckCircle, IconExternal } from "@/components/icons";
-import { Alert, Button, Spinner, buttonClasses } from "@/components/ui";
+import { Alert, Button, Spinner, UserSentence, buttonClasses } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { QrImage } from "../QrImage";
@@ -33,7 +33,9 @@ export function TelegramLinkPanel({
     return (
       <p role="status" className="flex items-center gap-2 rounded-2xl border border-success/40 bg-success-soft/60 p-4 text-sm font-medium text-ink">
         <IconCheckCircle className="size-5 shrink-0 text-success" aria-hidden />
-        <span dir="auto">{t("tunnelTeam.people.telegramLinked", { name })}</span>
+        <span>
+          <UserSentence text={t("tunnelTeam.people.telegramLinked")} values={{ name }} />
+        </span>
       </p>
     );
   }

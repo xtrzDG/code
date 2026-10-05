@@ -14,7 +14,7 @@ import { displayUrl } from "@/app/b/[businessId]/assistant/channels/_lib/share";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconArrowRight, IconBook, IconExternal, IconInbox, IconPlug, IconTag } from "@/components/icons";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
-import { Button, buttonClasses } from "@/components/ui";
+import { Button, UserSentence, buttonClasses } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -64,7 +64,9 @@ export function FinaleScreen({ ctx }: { ctx: StepContext }) {
         <h1 ref={heading} tabIndex={-1} className="text-4xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none! sm:text-5xl">
           {t("tunnelLaunch.finale.title")}
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-ink-muted">{t("tunnelLaunch.finale.text", { business: business.name })}</p>
+        <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-ink-muted">
+          <UserSentence text={t("tunnelLaunch.finale.text")} values={{ business: business.name }} />
+        </p>
       </div>
 
       {/* On a phone: the card, the link, the code, then what is next; side by side on a desktop. */}

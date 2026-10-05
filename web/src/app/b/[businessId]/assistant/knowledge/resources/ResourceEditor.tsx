@@ -125,7 +125,7 @@ export function ResourceEditor({
     if (!resource) {
       const result = await create.run(resourceCreateBody(form, schedule));
       if (result.ok) {
-        toast.success(t("knowledge.resources.added", { name: result.data.name }));
+        toast.success({ text: t("knowledge.resources.added"), values: { name: result.data.name } });
         onSaved(result.data);
       }
       return;

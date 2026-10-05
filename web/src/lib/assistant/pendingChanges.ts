@@ -8,6 +8,7 @@
 
 import type { Schema } from "@/api/types";
 import type { Translator } from "@/i18n/translate";
+import { interfaceSentence, joinSentences, type SentenceWithUserValues } from "@/i18n/userValues";
 import { formatDate, formatMoney, majorToMinor, weekdayName } from "@/lib/format";
 
 export type PendingChange = Schema<"PendingChange">;
@@ -75,52 +76,59 @@ function formatLocalDate(date: string | null | undefined, locale: string): strin
   });
 }
 
+/*
+ * The sentences below come as their translation with the owner's own
+ * words apart (an item's, answer's or resource's name: `{name}`), so
+ * `UserSentence` shows those as user content.
+ */
+
 /** What a change is about, as a noun ("“Khachapuri”", "opening hours (Monday)", "address"). */
-export function changeThing(change: PendingChange, words: Words): string {
+function changeThing(change: PendingChange, words: Words): SentenceWithUserValues {
   const { t, tDynamic, locale } = words;
   switch (change.area) {
     case "hours":
-      return t("applyChanges.hours", { weekday: change.weekday ? weekdayName(change.weekday, locale) : "" });
+      return interfaceSentence(t("applyChanges.hours", { weekday: change.weekday ? weekdayName(change.weekday, locale) : "" }));
     case "special_days":
-      return t("applyChanges.specialDay", { date: formatLocalDate(change.date, locale) });
+      return interfaceSentence(t("applyChanges.specialDay", { date: formatLocalDate(change.date, locale) }));
     case "links":
-      return tDynamic(`applyChanges.links.${change.link_kind ?? ""}`, change.link_kind ?? "");
+      return interfaceSentence(tDynamic(`applyChanges.links.${change.link_kind ?? ""}`, change.link_kind ?? ""));
     case "profile":
     case "booking_rules":
     case "languages":
-      return tDynamic(`applyChanges.fields.${change.field ?? ""}`, change.field ?? "");
+      return interfaceSentence(tDynamic(`applyChanges.fields.${change.field ?? ""}`, change.field ?? ""));
     case "calls":
     case "conversation":
-      return t(`applyChanges.areas.${change.area}`);
+      return interfaceSentence(t(`applyChanges.areas.${change.area}`));
     default:
-      return t("applyChanges.item", { name: change.subject ?? "" });
+      return { text: t("applyChanges.item"), values: { name: change.subject ?? "" } };
   }
 }
 
 /** One change as a line of the list ("Changed: address", "Price of “Khachapuri”: 18,00 ₾ → 20,00 ₾"). */
-export function describeChange(change: PendingChange, words: Words): string {
+export function describeChange(change: PendingChange, words: Words): SentenceWithUserValues {
   const { t, locale } = words;
   if (change.area === "calls") {
-    return t(`applyChanges.calls.${change.action}`);
+    return interfaceSentence(t(`applyChanges.calls.${change.action}`));
   }
   if (change.area === "conversation") {
-    return t("applyChanges.conversation");
+    return interfaceSentence(t("applyChanges.conversation"));
   }
-  const thing = changeThing(change, words);
+  const { text: thing, values } = changeThing(change, words);
   if (change.action === "changed" && change.detail === "price") {
     const before = formatPrice(change.before, locale);
     const after = formatPrice(change.after, locale);
     if (!after) {
-      return t("applyChanges.priceRemoved", { item: thing });
+      return { text: t("applyChanges.priceRemoved", { item: thing }), values };
     }
-    return before
-      ? t("applyChanges.price", { item: thing, before, after })
-      : t("applyChanges.priceSet", { item: thing, after });
+    return {
+      text: before ? t("applyChanges.price", { item: thing, before, after }) : t("applyChanges.priceSet", { item: thing, after }),
+      values,
+    };
   }
   if (change.action === "changed" && change.detail === "details") {
-    return t("applyChanges.details", { item: thing });
+    return { text: t("applyChanges.details", { item: thing }), values };
   }
-  return t(`applyChanges.actions.${change.action}`, { thing });
+  return { text: t(`applyChanges.actions.${change.action}`, { thing }), values };
 }
 
 /** The changes by area, in AREA_ORDER, each area once. */
@@ -131,10 +139,10 @@ export function groupChanges(changes: readonly PendingChange[]): { area: ListedA
 }
 
 /** A change in the toast's list: the new price with its item, otherwise what it is about. */
-function shortChange(change: PendingChange, words: Words): string {
+function shortChange(change: PendingChange, words: Words): SentenceWithUserValues {
   const thing = changeThing(change, words);
   if (change.detail === "price" && change.after) {
-    return words.t("applyChanges.priceShort", { item: thing, after: formatPrice(change.after, words.locale) });
+    return { text: words.t("applyChanges.priceShort", { item: thing.text, after: formatPrice(change.after, words.locale) }), values: thing.values };
   }
   return thing;
 }
@@ -143,14 +151,14 @@ function shortChange(change: PendingChange, words: Words): string {
  * "Your assistant now knows: “Khachapuri”, 20,00 ₾" for the toast, or null
  * when nothing was added or changed (only removals: the title says enough).
  */
-export function summarizeChanges(changes: readonly PendingChange[], words: Words): string | null {
+export function summarizeChanges(changes: readonly PendingChange[], words: Words): SentenceWithUserValues | null {
   const known = changes.filter((change) => change.action !== "removed");
   if (known.length === 0) {
     return null;
   }
   const named = known.slice(0, SUMMARY_LIMIT).map((change) => shortChange(change, words));
-  const list = named.join(", ");
+  const list = joinSentences(named, ", ");
   const rest = known.length - named.length;
-  const text = rest > 0 ? words.tp("applyChanges.done.andMore", rest, { changes: list }) : list;
-  return words.t("applyChanges.done.knows", { changes: text });
+  const text = rest > 0 ? words.tp("applyChanges.done.andMore", rest, { changes: list.text }) : list.text;
+  return { text: words.t("applyChanges.done.knows", { changes: text }), values: list.values };
 }

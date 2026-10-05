@@ -45,7 +45,9 @@ export function DeviceVisual({ isOn, title }: { isOn: boolean; title: string }) 
                 <IconBell className="size-3.5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[0.625rem] leading-3 font-semibold text-ink">{title}</span>
+                <span className="block truncate text-[0.625rem] leading-3 font-semibold text-ink" data-user-content>
+                  {title}
+                </span>
                 <span className="mt-1 block h-1 w-2/3 rounded-full bg-line" />
               </span>
             </m.div>

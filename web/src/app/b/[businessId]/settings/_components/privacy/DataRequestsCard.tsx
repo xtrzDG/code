@@ -14,6 +14,7 @@ import {
   Input,
   LoadingRegion,
   SkeletonRows,
+  UserSentence,
 } from "@/components/ui";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
@@ -44,7 +45,7 @@ export function DataRequestsCard() {
       <div className="space-y-6">
         {lastErasedName ? (
           <Alert tone="success" title={t("settings.requests.deleted")}>
-            {t("settings.requests.deletedSummary", { name: lastErasedName })}
+            <UserSentence text={t("settings.requests.deletedSummary")} values={{ name: lastErasedName }} />
           </Alert>
         ) : null}
 
@@ -114,7 +115,7 @@ export function DataRequestsCard() {
         onConfirm={requests.onErase}
         isPending={requests.isErasing}
         error={erasureError}
-        title={erasing ? t("settings.requests.deleteTitle", { name: displayName(erasing) }) : ""}
+        title={erasing ? <UserSentence text={t("settings.requests.deleteTitle")} values={{ name: displayName(erasing) }} /> : ""}
         confirmLabel={t("settings.requests.deleteConfirm")}
         confirmationText={erasing ? erasureConfirmation(erasing) : undefined}
       >

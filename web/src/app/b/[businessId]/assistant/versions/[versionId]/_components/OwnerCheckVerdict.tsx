@@ -12,6 +12,7 @@ import { useApplyChanges } from "@/components/assistant/ApplyChangesContext";
 import { OwnerCheckFailure } from "@/components/assistant/OwnerCheckFailure";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconAlert } from "@/components/icons";
+import { UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { failureSentence, type NamedFailure } from "@/lib/assistant/ownerChecks";
 
@@ -31,7 +32,9 @@ export function OwnerCheckVerdict({ failures }: { failures: readonly NamedFailur
     >
       <h3 id="owner-check-verdict" className="flex items-start gap-2 text-sm font-semibold [overflow-wrap:anywhere] text-danger" dir="auto">
         <IconAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-        <span>{failures.length === 1 ? failureSentence(failures[0]!, translator) : tp("updates.failed.many", failures.length)}</span>
+        <span>
+          {failures.length === 1 ? <UserSentence {...failureSentence(failures[0]!, translator)} /> : tp("updates.failed.many", failures.length)}
+        </span>
       </h3>
       {failures.map((failure, index) => (
         <OwnerCheckFailure

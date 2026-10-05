@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { IconPlus, IconShield } from "@/components/icons";
 import { CheckDialog } from "@/components/teaching/CheckDialog";
 import { useChecks } from "@/components/teaching/useTeaching";
-import { Button, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, SkeletonCardList, useToast } from "@/components/ui";
+import { Button, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, SkeletonCardList, UserSentence, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { CheckView } from "@/lib/teaching";
 import { AUTO_LANGUAGE, checkFormOf, newCheckForm } from "@/lib/teachingChecks";
@@ -118,7 +118,7 @@ export function ChecksScreen() {
         open={deleting !== null}
         tone="danger"
         title={t("teaching.checks.deleteTitle")}
-        description={t("teaching.checks.deleteDescription", { question: deleting?.question ?? "" })}
+        description={<UserSentence text={t("teaching.checks.deleteDescription")} values={{ question: deleting?.question ?? "" }} />}
         confirmLabel={t("teaching.checks.delete")}
         onClose={() => setDeleting(null)}
         onConfirm={() => {

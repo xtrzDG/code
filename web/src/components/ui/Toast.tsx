@@ -8,6 +8,7 @@
  *     toast.error(apiError);                      // localized by error code
  *     toast.error(apiError, { conflict: "bookings.slotTaken" });
  *     toast.undoable(t("leads.updated", …), () => setStatus.run(lead, previous));
+ *     toast.success({ text: t("inbox.assign.assigned"), values: { name } }); // a name is user content
  *
  * An undoable toast carries an Undo button for 5 seconds (the window runs
  * down under it and stops while the pointer or the keyboard focus is on
@@ -20,9 +21,9 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 import { describeError, type ErrorMessageOverrides, type ReasonMessages } from "@/api/errors";
 import { useI18n } from "@/i18n/client";
 
-import { ToastViewport, type ToastItem, type ToastTone } from "./ToastViewport";
+import { ToastViewport, type ToastItem, type ToastTitle, type ToastTone } from "./ToastViewport";
 
-export type { ToastTone } from "./ToastViewport";
+export type { ToastTitle, ToastTone } from "./ToastViewport";
 
 /** How long Undo is offered after an action. */
 export const UNDO_WINDOW_MS = 5_000;
@@ -35,16 +36,16 @@ export interface ToastAction {
 export interface ToastApi {
   show: (toast: {
     tone: ToastTone;
-    title: string;
+    title: ToastTitle;
     description?: string | null;
     durationMs?: number;
     /** A button in the toast (Undo); pressing it closes the toast. */
     action?: ToastAction;
   }) => void;
-  success: (title: string, description?: string) => void;
-  info: (title: string, description?: string) => void;
+  success: (title: ToastTitle, description?: string) => void;
+  info: (title: ToastTitle, description?: string) => void;
   /** A success with an Undo button for UNDO_WINDOW_MS. */
-  undoable: (title: string, onUndo: () => void) => void;
+  undoable: (title: ToastTitle, onUndo: () => void) => void;
   /** An ApiError (or anything thrown) as a localized message; known refusal reasons get their own text. */
   error: (error: unknown, overrides?: ErrorMessageOverrides, reasonMessages?: ReasonMessages) => void;
   dismiss: (id: number) => void;

@@ -2,7 +2,7 @@
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconBook, IconPlus } from "@/components/icons";
-import { Alert, Button, ButtonLink, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion } from "@/components/ui";
+import { Alert, Button, ButtonLink, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -100,7 +100,7 @@ export function KnowledgeItemsScreen() {
       <ConfirmDialog
         open={deleting !== null}
         title={t("knowledge.items.deleteTitle")}
-        description={deleting ? t("knowledge.items.deleteDescription", { title: deleting.title }) : undefined}
+        description={deleting ? <UserSentence text={t("knowledge.items.deleteDescription")} values={{ title: deleting.title }} /> : undefined}
         confirmLabel={t("common.delete")}
         isPending={list.isDeleting}
         onConfirm={() => void list.confirmDelete()}

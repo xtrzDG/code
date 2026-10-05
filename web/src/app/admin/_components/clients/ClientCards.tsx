@@ -26,7 +26,7 @@ export function ClientCards({ clients, nicheName }: { clients: AdminClientSummar
           >
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium text-ink" dir="auto">
+                <span className="font-medium text-ink" dir="auto" data-user-content>
                   {client.name}
                 </span>
                 <HealthBadge status={client.health_status} />

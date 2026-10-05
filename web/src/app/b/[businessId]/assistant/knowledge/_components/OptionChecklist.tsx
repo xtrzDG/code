@@ -88,7 +88,7 @@ export function OptionChecklist({
                   className="min-h-11 rounded-xl border border-line bg-surface px-3 py-2.5 transition-colors has-checked:border-accent/40 has-checked:bg-accent-soft"
                   label={
                     <span className="flex flex-wrap items-center gap-1.5">
-                      <span dir="auto" className="break-words">
+                      <span dir="auto" data-user-content className="break-words">
                         {option.label}
                       </span>
                       {option.isOff ? <Badge>{t("knowledge.offer.resourceOff")}</Badge> : null}

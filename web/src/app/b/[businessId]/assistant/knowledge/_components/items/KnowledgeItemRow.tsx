@@ -1,10 +1,12 @@
 "use client";
 
+import { Fragment } from "react";
+
 import type { KnowledgeItemDetails } from "@/api/types";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPencil, IconTrash } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { listFormat } from "@/lib/intl/formatters";
@@ -42,15 +44,18 @@ export function KnowledgeItemRow({
     item.duration_minutes ? t("knowledge.items.minutes", { count: item.duration_minutes }) : null,
     item.buffer_minutes ? t("knowledge.offer.breakValue", { count: item.buffer_minutes }) : null,
     seasons > 0 ? tp("knowledge.offer.seasonsValue", seasons) : null,
-    nameList ? t(item.kind === "room_type" ? "knowledge.offer.roomsList" : "knowledge.offer.performedBy", { names: nameList }) : null,
+    // The rooms or the people are the business's own names (user content).
+    nameList ? (
+      <UserSentence text={t(item.kind === "room_type" ? "knowledge.offer.roomsList" : "knowledge.offer.performedBy")} values={{ names: nameList }} />
+    ) : null,
     (item.languages ?? []).length > 0 ? (item.languages ?? []).map((language) => languageName(language, locale)).join(", ") : null,
-  ].filter((part): part is string => part !== null);
+  ].filter((part) => part !== null);
 
   return (
     <li className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-6">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="font-medium break-words text-ink" dir="auto">
+          <p className="font-medium break-words text-ink" dir="auto" data-user-content>
             {item.title}
           </p>
           {!item.is_active ? (
@@ -61,11 +66,20 @@ export function KnowledgeItemRow({
           {item.source === "unanswered_question" ? <Badge tone="info">{t("knowledge.items.fromQuestion")}</Badge> : null}
         </div>
         {item.body ? (
-          <p className="mt-1 line-clamp-2 text-sm break-words whitespace-pre-line text-ink-muted" dir="auto">
+          <p className="mt-1 line-clamp-2 text-sm break-words whitespace-pre-line text-ink-muted" dir="auto" data-user-content>
             {item.body}
           </p>
         ) : null}
-        {meta.length > 0 ? <p className="mt-1.5 text-sm text-ink-subtle">{meta.join(" · ")}</p> : null}
+        {meta.length > 0 ? (
+          <p className="mt-1.5 text-sm text-ink-subtle">
+            {meta.map((part, index) => (
+              <Fragment key={index}>
+                {index > 0 ? " · " : null}
+                {part}
+              </Fragment>
+            ))}
+          </p>
+        ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:pt-0.5">
         <span className="mr-2 flex items-center gap-2 text-sm text-ink-muted">

@@ -9,7 +9,7 @@
  */
 
 import { IconPencil, IconShield } from "@/components/icons";
-import { Button, ButtonLink } from "@/components/ui";
+import { Button, ButtonLink, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { checkPath, failureSentence, type NamedFailure } from "@/lib/assistant/ownerChecks";
 import { cn } from "@/lib/cn";
@@ -40,14 +40,14 @@ export function OwnerCheckFailure({
     <div className={cn("space-y-2", className)} data-owner-check-failure={failure.checkId ?? ""}>
       {showSentence ? (
         <p dir="auto" className="text-sm font-medium [overflow-wrap:anywhere] text-ink">
-          {failureSentence(failure, translator)}
+          <UserSentence {...failureSentence(failure, translator)} />
         </p>
       ) : null}
       {failure.reason ? <p className="text-sm text-ink-muted">{failure.reason}</p> : null}
       {failure.answer ? (
         <p className="text-sm text-ink-muted">
           <span className="text-ink-subtle">{t("updates.failed.answered")}: </span>
-          <span dir="auto" className="line-clamp-3 [overflow-wrap:anywhere]">
+          <span dir="auto" data-user-content className="line-clamp-3 [overflow-wrap:anywhere]">
             {failure.answer}
           </span>
         </p>

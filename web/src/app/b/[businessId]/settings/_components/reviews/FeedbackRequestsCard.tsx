@@ -6,7 +6,7 @@ import type { Query } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconStar } from "@/components/icons";
 import { ChannelBadge } from "@/components/insights/Badges";
-import { Badge, Card, EmptyState, ErrorState, SkeletonRows } from "@/components/ui";
+import { Badge, Card, EmptyState, ErrorState, SkeletonRows, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { conversationPath } from "@/lib/navigation";
 
@@ -58,7 +58,7 @@ function RequestRow({ item }: { item: FeedbackRequestView }) {
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-6">
       <div className="min-w-0 space-y-0.5">
         <p className="text-sm font-medium text-ink [overflow-wrap:anywhere]">
-          {item.contact_name ?? t("reviewSettings.requests.customer")}
+          {item.contact_name ? <UserContent>{item.contact_name}</UserContent> : t("reviewSettings.requests.customer")}
         </p>
         <p className="text-sm text-ink-muted">
           {t("reviewSettings.requests.visitEnded", { time: format.dateTime(item.visit_ended_at) })}

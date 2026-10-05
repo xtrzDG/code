@@ -66,6 +66,7 @@ export function ConversationTopBar({
       </Link>
       <span
         aria-hidden
+        data-user-content
         className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink sm:flex"
       >
         {initialsOf(conversation.contact_name)}
@@ -73,7 +74,9 @@ export function ConversationTopBar({
       <div className="min-w-0 flex-1 leading-tight">
         {/* The name keeps its own direction (<bdi>) but sits at the start, next to the avatar, in any script. */}
         <h2 id="conversation-title" className="truncate text-start text-base font-semibold text-ink">
-          <bdi dir={conversation.contact_name ? "auto" : "ltr"}>{name}</bdi>
+          <bdi dir={conversation.contact_name ? "auto" : "ltr"} data-user-content={conversation.contact_name ? true : undefined}>
+            {name}
+          </bdi>
         </h2>
         <p className="truncate text-xs text-ink-subtle">{subline}</p>
       </div>

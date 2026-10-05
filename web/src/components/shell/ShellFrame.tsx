@@ -71,8 +71,8 @@ export function ShellFrame({
   sidebarReplacement?: (collapsed: boolean) => ReactNode;
   /** Where you are, for the phone's top bar. */
   title?: string;
-  /** The business name (or "Platform admin"), above the title on phones. */
-  context?: string;
+  /** The business name (user content) or "Platform admin", above the title on phones. */
+  context?: ReactNode;
   me: CurrentUserView;
   initialCollapsed: boolean;
   /** False before the assistant exists and on an open conversation (its reply box needs the space). */

@@ -114,7 +114,12 @@ function TopicRow({
   return (
     <li>
       <div className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="min-w-0 font-medium break-words text-ink" data-topic-kind={topic.kind}>
+        {/* A named topic's label comes from the customers' messages (user content); the catch-all is the cabinet's. */}
+        <span
+          className="min-w-0 font-medium break-words text-ink"
+          data-topic-kind={topic.kind}
+          data-user-content={topic.kind === "other" ? undefined : true}
+        >
           {name}
         </span>
         <span className="shrink-0 text-ink-muted tabular-nums">{tp("topics.conversations", topic.conversation_count)}</span>
@@ -131,7 +136,10 @@ function TopicRow({
               className="rounded text-sm font-medium text-accent-ink underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               {t("topics.addAnswer")}
-              <span className="sr-only">{`: ${name}`}</span>
+              <span className="sr-only">
+                {": "}
+                <span data-user-content={topic.kind === "other" ? undefined : true}>{name}</span>
+              </span>
             </Link>
           ) : null}
         </div>

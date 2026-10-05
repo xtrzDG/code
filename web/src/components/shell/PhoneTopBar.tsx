@@ -25,7 +25,8 @@ export function PhoneTopBar({
   ring,
 }: {
   title?: string;
-  context?: string;
+  /** The business name (user content) or "Platform admin". */
+  context?: ReactNode;
   action?: ReactNode;
   /** The setup guide's progress ring, before the action. */
   ring?: ReactNode;

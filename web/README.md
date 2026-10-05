@@ -100,11 +100,20 @@ npm run e2e -- onboarding         # one file
   fails when any page of its browser context throws or logs a console error
   it did not accept (`consoleErrors.allow(/…/)` accepts one a test provokes
   on purpose), and always on a hydration failure (React #418/#423), which
-  `allow` cannot hide. `cyrillicCheck` (`E2E_CYRILLIC_CHECK=1` or
-  `test.use({ cyrillicCheck: true })`) also fails English and Georgian pages
-  that show interface text in Cyrillic (user content, form fields and text
-  marked with another `lang` are left out); it becomes the default once the
-  topic labels come in the reader's language (W13-DAY0-TRUE-NUMBERS).
+  `allow` cannot hide. `cyrillicCheck` (on by default; `E2E_CYRILLIC_CHECK=0`
+  or `test.use({ cyrillicCheck: false })` turns it off) also fails an
+  English or Georgian page that shows interface text in Cyrillic at the end
+  of a test: an untranslated text. User content is left out: elements
+  marked `data-user-content`, form fields, code and text marked with
+  another `lang`. The cabinet marks the business's, its team's and its
+  customers' own words (names, messages, knowledge, notes, quick replies,
+  topic labels…) where it renders them: `CustomerName`, the transcript, the
+  inbox row and the UI kit's `UserContent`; a translated sentence that
+  names such words ("Handled by {name}") keeps its placeholder in `t(key)`
+  and shows the value with `UserSentence` (or, from a hook or a model, a
+  `SentenceWithUserValues` of `src/i18n/userValues.ts`, which toasts take
+  as a title), so the sentence itself is still checked. Never mark the
+  interface's own text.
 - The cabinet's server runs with `TZ=UTC` while the browser reads in
   Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-routes.spec.ts`, run by
   `npm run e2e` like the rest) opens every route of the screenshot tour from
@@ -193,6 +202,7 @@ npm run e2e -- onboarding         # one file
 | --- | --- | --- |
 | `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
+| `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.56.1, Chromium 141) |
 
 Failures leave screenshots and traces in `e2e/.artifacts/results/`
@@ -943,6 +953,15 @@ Each line has a test (`e2e/` or a unit test) that fails if it comes back.
   right to left in any interface language. A name in a heading or a row
   next to an avatar goes in a `<bdi>` inside a `text-start` element: it keeps
   its own direction but stays beside the avatar.
+- Words that belong to the business, its team or its customers (names,
+  messages, knowledge items, notes, quick replies, topic labels, the
+  business's name) carry `data-user-content` on the element that holds
+  exactly them: `UserContent` wraps them in a span (with `dir="auto"`),
+  `CustomerName` and the avatars mark themselves. A translated sentence that
+  names them keeps the placeholder (`t(key)` without the value) and shows it
+  with `<UserSentence text={t(key)} values={{ name }} />`; toasts take
+  `{ text, values }` as a title. The e2e suite's Cyrillic check skips that
+  content and still reads every text of the interface around it.
 - `ScrollRow` holds a row that may not fit (tabs, the inbox views): it never
   wraps, scrolls sideways and fades out the side with more to see.
 - `OverflowMenu` ("More") keeps one main action in sight and puts the rest in

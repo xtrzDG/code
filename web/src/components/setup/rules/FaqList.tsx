@@ -104,7 +104,13 @@ export function FaqList({ faq, starters, gaps }: { faq: FaqRows; starters: reado
         <div className="space-y-4">
           <SuggestionChips
             title={t("profileEdit.rules.customersAsked")}
-            chips={asked.map((question) => ({ key: question, text: question, label: t("profileEdit.rules.writeAnswer", { question }), onPick: () => open(question) }))}
+            chips={asked.map((question) => ({
+              key: question,
+              text: question,
+              isUserContent: true,
+              label: t("profileEdit.rules.writeAnswer", { question }),
+              onPick: () => open(question),
+            }))}
           />
           <SuggestionChips
             title={t("profileEdit.rules.suggestedQuestions")}
