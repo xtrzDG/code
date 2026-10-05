@@ -6,6 +6,9 @@ from app.containers.operators.account_operators import AccountOperatorsContainer
 from app.containers.operators.analytics_operators import AnalyticsOperatorsContainer
 from app.containers.operators.assistant_operators import AssistantOperatorsContainer
 from app.containers.operators.billing_operators import BillingOperatorsContainer
+from app.containers.operators.booking_link_operators import (
+    BookingLinkOperatorsContainer,
+)
 from app.containers.operators.call_operators import CallOperatorsContainer
 from app.containers.operators.channel_operators import ChannelOperatorsContainer
 from app.containers.operators.compliance_operators import ComplianceOperatorsContainer
@@ -154,6 +157,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     sharing: SharingOperatorsContainer = Container(  # type: ignore[assignment]
         SharingOperatorsContainer,
         sharing_pipelines=pipelines.sharing,
+        utilities=utilities,
+    )
+    booking_links: BookingLinkOperatorsContainer = Container(  # type: ignore[assignment]
+        BookingLinkOperatorsContainer,
+        booking_link_pipelines=pipelines.booking_links,
         utilities=utilities,
     )
     feedback: FeedbackOperatorsContainer = Container(  # type: ignore[assignment]

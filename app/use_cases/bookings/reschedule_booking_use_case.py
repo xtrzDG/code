@@ -60,6 +60,7 @@ from app.use_cases.bookings.booking_support import (
     notify_staff_about_booking,
     stay_night_count,
 )
+from app.use_cases.bookings.booking_versions import refuse_changed_booking
 from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
 from app.use_cases.bookings.reschedule_candidates import (
     booked_length,
@@ -182,6 +183,7 @@ class RescheduleBookingUseCase(
                 now_seconds,
                 is_sandbox=input_data.is_sandbox,
             )
+            refuse_changed_booking(booking, input_data.expected_starts_at)
             if booking.status not in BLOCKING_BOOKING_STATUSES:
                 raise ConflictError(
                     f"The booking is {booking.status} and can no longer be moved."

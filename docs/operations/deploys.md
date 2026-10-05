@@ -231,6 +231,23 @@ the new collection and the version 3 fields, so a rollback needs nothing
 beyond the usual. `BusinessRepoContract.list_all` is gone: a job over
 every business walks them with `walk_businesses` (keyset batches of 200).
 
+The release with written booking confirmations (W16-BOOKING-CONFIRMATION,
+`OutboundMessageDocument` version 6, no migration) also writes a new enum
+value in the release that introduces it, an exception to the enum rule
+below: the outbox kind `booking_confirmation`. An old worker that claims
+the delivery job of such a row, or reads it among a guest's waiting
+messages, fails the job, and the queue tries it again until a new worker
+takes it: a confirmation is late during the overlap, not lost (it is
+given up only past the booking's start). The website chat's confirmation
+is a message of the conversation (`author: system`, `direction:
+outbound`), which the old release stores and lists already but does not
+show in the widget. Manage links (`/r/{token}`) are signed with a key
+derived from `ENCRYPTION_KEY` and nothing is stored, so an old instance
+answers their API with 404 during the overlap, and a rollback leaves the
+links sent so far dead until the release is deployed again. Before
+rolling back past that release, let the outbox drain (no `pending` rows of
+the new kind).
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

@@ -36,7 +36,9 @@ class OutboundMessageKind(StrEnum):
     (STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written
     confirmation of a booking made on the phone (CALL_CONFIRMATION), the
     links the phone assistant promised (CALL_LINKS) and the message to a
-    caller who did not get through (TEXT_BACK).
+    caller who did not get through (TEXT_BACK), and a guest's written
+    confirmation of a booking the assistant made or moved in a chat, with
+    its manage link (BOOKING_CONFIRMATION).
     """
 
     CUSTOMER_REPLY = "customer_reply"
@@ -46,6 +48,7 @@ class OutboundMessageKind(StrEnum):
     CALL_CONFIRMATION = "call_confirmation"
     CALL_LINKS = "call_links"
     TEXT_BACK = "text_back"
+    BOOKING_CONFIRMATION = "booking_confirmation"
 
 
 class OutboundMessageStatus(StrEnum):

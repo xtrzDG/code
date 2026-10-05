@@ -12,6 +12,7 @@ from app.contracts.repositories.retention_repositories import (
 from app.contracts.repositories.setup_repositories import SetupStateRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
@@ -28,10 +29,12 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetScriptUrl,
 )
 from app.use_cases.shared.widget_languages import build_widget_languages
+from app.utilities.bookings.booking_manage_links import choose_maps_url
 from app.utilities.channels.channel_endpoints import (
     WIDGET_SCRIPT_PATH,
     join_public_url,
 )
+from app.utilities.knowledge.profile_links import find_profile_link
 from app.utilities.sharing.share_links import choose_privacy_url
 
 
@@ -41,7 +44,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
     the widget loads: the business's current address, name, colour,
     customer languages, whether the chat is on, where the widget script and
     the API live (APP_BASE_URL) and the privacy notice, with the retention
-    periods the business chose in Settings → Privacy. The widget loads
+    periods the business chose in Settings → Privacy. For a "link in bio"
+    page it adds the business's hours, address with a map link and whether
+    it takes bookings (and its own booking page, if any). The widget loads
     the rest itself, with its usual limits. Nothing personal or secret is
     returned; an unknown business is not found.
 
@@ -125,6 +130,20 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
             ),
             conversation_retention_days=retention.conversation_retention_days,
             llm_turn_retention_days=retention.llm_turn_retention_days,
+            timezone=business.timezone,
+            hours=[] if profile is None else list(profile.hours),
+            address=(
+                None
+                if profile is None or profile.address is None
+                else profile.address.text
+            ),
+            maps_url=None if profile is None else choose_maps_url(profile.address),
+            takes_bookings=profile is not None and profile.booking_rules is not None,
+            booking_url=(
+                None
+                if profile is None
+                else find_profile_link(profile, BusinessLinkKind.BOOKING_PAGE)
+            ),
         )
 
     def _note_first_visit(self, business: BusinessDocument) -> None:

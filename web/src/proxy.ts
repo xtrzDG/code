@@ -10,6 +10,8 @@
  *  - a session under the cookie's old name moves to `__Host-aw_session`;
  *  - the public hosted chat page (/c/{address}) gets its business and a
  *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed;
+ *  - a guest's booking page (/r/{token}) is never indexed, cached or
+ *    named in a Referer (the address is the key to the booking);
  *  - a visitor's first landing or hosted chat page keeps where they came
  *    from in the `aw_attr` cookie (server/attributionCookie.ts);
  *  - a public page in a language (/ka, /ru/for/hotel) is rendered in it,
@@ -22,6 +24,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { LOCALE_COOKIE, matchLocale, negotiateLocale, resolveLocale, DEFAULT_LOCALE } from "@/i18n/config";
 import { HOME_PATH, LOGIN_PATH, isProtectedPath, loginPath, safeNextPath } from "@/lib/navigation";
 import { PATH_LOCALE_HEADER, localizedRedirectPath, pathLocale } from "@/lib/publicSite/paths";
+import { isBookingPagePath } from "@/lib/bookingPage/paths";
 import {
   PATHNAME_HEADER,
   buildUpstreamHeaders,
@@ -133,6 +136,11 @@ async function route(request: NextRequest): Promise<NextResponse> {
   response.headers.set(CSP_HEADER, policy);
   if (isHostedChatPath(pathname)) {
     response.headers.set(ROBOTS_HEADER, NOINDEX);
+  }
+  if (isBookingPagePath(pathname)) {
+    response.headers.set(ROBOTS_HEADER, NOINDEX);
+    response.headers.set("referrer-policy", "no-referrer");
+    response.headers.set("cache-control", "private, no-store");
   }
   if (newLocale) {
     response.cookies.set(LOCALE_COOKIE, newLocale, localeCookieOptions());

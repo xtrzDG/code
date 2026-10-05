@@ -220,6 +220,9 @@ services:
       # booking reminders after the customer's 24-hour WhatsApp window
       - key: WHATSAPP_REMINDER_TEMPLATE
         sync: false
+      # guests' booking confirmations after the 24-hour WhatsApp window
+      - key: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+        sync: false
       # owners' summaries in WhatsApp from the platform number
       - key: WHATSAPP_OWNER_REPORT_TEMPLATE
         sync: false
@@ -517,6 +520,11 @@ services:
           type: web
           name: workshop-api
           envVarKey: WHATSAPP_REMINDER_TEMPLATE
+      - key: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
       - key: WHATSAPP_OWNER_REPORT_TEMPLATE
         fromService:
           type: web

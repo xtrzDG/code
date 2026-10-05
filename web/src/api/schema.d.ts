@@ -3550,6 +3550,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/public/bookings/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Managed Booking */
+        get: operations["get_managed_booking_v1_public_bookings__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/bookings/{token}/calendar.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Managed Booking Calendar */
+        get: operations["get_managed_booking_calendar_v1_public_bookings__token__calendar_ics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/bookings/{token}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Managed Booking */
+        post: operations["cancel_managed_booking_v1_public_bookings__token__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/bookings/{token}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reschedule Managed Booking */
+        post: operations["reschedule_managed_booking_v1_public_bookings__token__reschedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/bookings/{token}/slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Managed Booking Slots */
+        get: operations["get_managed_booking_slots_v1_public_bookings__token__slots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/public/chat/{address}": {
         parameters: {
             query?: never;
@@ -8307,12 +8392,22 @@ export interface components {
          *     APP_BASE_URL is not set), and the privacy notice with how long the
          *     business keeps conversations and the records of model calls (its
          *     Settings → Privacy, the defaults until it chose).
+         *
+         *     As a "link in bio" page it also shows the business: its opening hours
+         *     (local minutes of the day in `timezone`), its address with a map link
+         *     and a booking button when it takes bookings (`booking_url`: the
+         *     owner's own booking page, else the button starts a booking in the
+         *     chat).
          */
         HostedChatView: {
             /** Accent Color */
             accent_color?: string | null;
+            /** Address */
+            address?: string | null;
             /** Api Base Url */
             api_base_url?: string | null;
+            /** Booking Url */
+            booking_url?: string | null;
             /** Business Id */
             business_id: string;
             /** Business Name */
@@ -8324,6 +8419,8 @@ export interface components {
             conversation_retention_days: number;
             /** Default Language */
             default_language: string;
+            /** Hours */
+            hours?: components["schemas"]["OpeningInterval"][];
             /** Is Enabled */
             is_enabled: boolean;
             /** Languages */
@@ -8333,11 +8430,20 @@ export interface components {
              * @default 30
              */
             llm_turn_retention_days: number;
+            /** Maps Url */
+            maps_url?: string | null;
             position?: components["schemas"]["WidgetPosition"] | null;
             /** Privacy Url */
             privacy_url?: string | null;
             /** Slug */
             slug?: string | null;
+            /**
+             * Takes Bookings
+             * @default false
+             */
+            takes_bookings: boolean;
+            /** Timezone */
+            timezone?: string | null;
             /** Widget Script Url */
             widget_script_url?: string | null;
         };
@@ -9491,6 +9597,85 @@ export interface components {
             started_at: number;
         };
         /**
+         * ManagedBookingSlots
+         * @description When the booking could move to on one local date: the free start times
+         *     of a time-slot booking (its length, party and service as booked), or
+         *     for a stay whether its nights are free from that date (`times` empty).
+         */
+        ManagedBookingSlots: {
+            booking_unit: components["schemas"]["BookingUnit"];
+            /** Date */
+            date: string;
+            /** Is Open On Date */
+            is_open_on_date: boolean;
+            /**
+             * Is Stay Available
+             * @default false
+             */
+            is_stay_available: boolean;
+            /** Times */
+            times?: string[];
+            /** Timezone */
+            timezone: string;
+        };
+        /**
+         * ManagedBookingView
+         * @description The guest's booking as the manage page shows it, in the business's
+         *     time zone: no contact details of the guest (anyone holding the link
+         *     sees the page). `token` is the link's current token (a move issues a
+         *     new one); `language` is the guest's. `chat_links` are the ways to write
+         *     to the business, the chat the booking was made in first.
+         */
+        ManagedBookingView: {
+            /** Address */
+            address?: string | null;
+            booking_unit: components["schemas"]["BookingUnit"];
+            /** Business Name */
+            business_name: string;
+            /**
+             * Can Cancel
+             * @default false
+             */
+            can_cancel: boolean;
+            /**
+             * Can Reschedule
+             * @default false
+             */
+            can_reschedule: boolean;
+            /** Cancellation Policy */
+            cancellation_policy?: string | null;
+            /** Chat Links */
+            chat_links?: components["schemas"]["WidgetContactLinkView"][];
+            /** Date */
+            date: string;
+            /** End Date */
+            end_date: string;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Is Over
+             * @default false
+             */
+            is_over: boolean;
+            /** Language */
+            language: string;
+            /** Maps Url */
+            maps_url?: string | null;
+            /** Party Size */
+            party_size: number;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Service Title */
+            service_title?: string | null;
+            status: components["schemas"]["BookingStatus"];
+            /** Time */
+            time?: string | null;
+            /** Timezone */
+            timezone: string;
+            /** Token */
+            token: string;
+        };
+        /**
          * ManagerContact
          * @description Staff contact that receives handoffs, bookings and leads, in their
          *     language. `preferences` (None: every event, at any hour) choose which
@@ -10251,6 +10436,10 @@ export interface components {
          *     Version 5: an e-mail to the billing contact may carry the invoice and
          *     receipt PDFs of an invoice (`billing_documents`, optional; a release
          *     that does not know it sends the e-mail without them).
+         *
+         *     Version 6: the kind `booking_confirmation` (a guest's written
+         *     confirmation of a booking the assistant made or moved, with its manage
+         *     link). Rows of the earlier kinds read unchanged.
          */
         OutboundMessageDocument: {
             /**
@@ -10303,7 +10492,7 @@ export interface components {
             recipient_key: string;
             /**
              * Schema Version
-             * @default 5
+             * @default 6
              */
             schema_version: string;
             /** Send Before */
@@ -10330,10 +10519,12 @@ export interface components {
          *     (STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written
          *     confirmation of a booking made on the phone (CALL_CONFIRMATION), the
          *     links the phone assistant promised (CALL_LINKS) and the message to a
-         *     caller who did not get through (TEXT_BACK).
+         *     caller who did not get through (TEXT_BACK), and a guest's written
+         *     confirmation of a booking the assistant made or moved in a chat, with
+         *     its manage link (BOOKING_CONFIRMATION).
          * @enum {string}
          */
-        OutboundMessageKind: "customer_reply" | "staff_notification" | "staff_reply" | "booking_reminder" | "call_confirmation" | "call_links" | "text_back";
+        OutboundMessageKind: "customer_reply" | "staff_notification" | "staff_reply" | "booking_reminder" | "call_confirmation" | "call_links" | "text_back" | "booking_confirmation";
         /**
          * OutboundMessageStatus
          * @description Delivery state of an outbox message: PENDING waits for its next attempt,
@@ -37089,6 +37280,442 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicDemoReply"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_managed_booking_v1_public_bookings__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedBookingView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_managed_booking_calendar_v1_public_bookings__token__calendar_ics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The booking as an iCalendar file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    cancel_managed_booking_v1_public_bookings__token__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedBookingView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    reschedule_managed_booking_v1_public_bookings__token__reschedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Date */
+                    date: string;
+                    /** Time */
+                    time?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedBookingView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_managed_booking_slots_v1_public_bookings__token__slots_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedBookingSlots"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

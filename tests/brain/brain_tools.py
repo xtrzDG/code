@@ -4,8 +4,13 @@ from dataclasses import dataclass
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.dto.booking_manage import (
+    BookingConfirmationReceipt,
+    BookingConfirmationRequest,
+)
 from app.schemas.dto.knowledge import KnowledgeItemView
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.use_cases.bookings.list_customer_bookings_use_case import (
@@ -52,6 +57,10 @@ def build_brain_tools(
     business: BusinessDocument,
     items: list[KnowledgeItemView],
     wall_clock: WallClock[Microseconds],
+    send_booking_confirmation: UseCaseContract[
+        BookingConfirmationRequest, BookingConfirmationReceipt
+    ]
+    | None = None,
 ) -> BrainTools:
     bookings = FakeBookings(timezone=business.timezone)
     search_knowledge = FakeSearchKnowledge(items)
@@ -83,6 +92,7 @@ def build_brain_tools(
         record_unanswered_question=record_question,
         phone_number_parser=PhoneNumberParser(),
         wall_clock=wall_clock,
+        send_booking_confirmation=send_booking_confirmation,
     )
     return BrainTools(
         bookings=bookings,

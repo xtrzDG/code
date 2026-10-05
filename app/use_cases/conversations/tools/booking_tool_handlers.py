@@ -123,6 +123,7 @@ def run_create_booking(
             result_json=render_booking(result, today_text(today)),
         ),
         booking_id=result.booking.id,
+        confirmed_booking_id=result.booking.id,
     )
 
 
@@ -179,7 +180,9 @@ def run_reschedule_booking(
             language=context.language,
         )
     )
-    return success_outcome(call, render_booking(result, today_text(today)))
+    return success_outcome(call, render_booking(result, today_text(today))).model_copy(
+        update={"confirmed_booking_id": result.booking.id}
+    )
 
 
 def run_list_my_bookings(

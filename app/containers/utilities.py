@@ -13,6 +13,9 @@ from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
 from app.utilities.observability.readiness_memory import ReadinessMemory
+from app.utilities.security.booking_manage_token_signer import (
+    BookingManageTokenSigner,
+)
 from app.utilities.security.require_recent_authentication import (
     RequireRecentAuthentication,
 )
@@ -44,4 +47,11 @@ class UtilitiesContainer(containers.DeclarativeContainer):
         session_assurance=session_assurance,
         wall_clock=time_provider.microsecond_wall_clock,
         max_age=config.app_settings.provided.step_up_max_age_seconds,
+    )
+    # Signed links of a guest's booking page (/r/{token}); the key derives
+    # from ENCRYPTION_KEYS, one signer per process.
+    booking_manage_token_signer: Singleton[BookingManageTokenSigner] = Singleton(
+        BookingManageTokenSigner,
+        encryption_key=config.app_settings.provided.encryption_key,
+        previous_keys=config.app_settings.provided.previous_encryption_keys,
     )

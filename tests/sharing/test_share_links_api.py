@@ -154,6 +154,12 @@ def test_the_public_page_config_names_no_secret(workshop: Workshop) -> None:
         "privacy_url",
         "conversation_retention_days",
         "llm_turn_retention_days",
+        "timezone",
+        "hours",
+        "address",
+        "maps_url",
+        "takes_bookings",
+        "booking_url",
     }
     # The privacy notice names the business's own periods (the defaults).
     assert (body["conversation_retention_days"], body["llm_turn_retention_days"]) == (

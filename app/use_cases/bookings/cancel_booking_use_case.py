@@ -45,6 +45,7 @@ from app.use_cases.bookings.booking_support import (
     load_scheduling_inputs,
     notify_staff_about_booking,
 )
+from app.use_cases.bookings.booking_versions import refuse_changed_booking
 from app.use_cases.bookings.status_undo import note_status_change
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_views import build_booking_view
@@ -139,6 +140,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                 microseconds_to_seconds(int(now)),
                 is_sandbox=input_data.is_sandbox,
             )
+            refuse_changed_booking(booking, input_data.expected_starts_at)
             is_newly_cancelled: bool = booking.status is not BookingStatus.CANCELLED
             if is_newly_cancelled:
                 if booking.status not in BLOCKING_BOOKING_STATUSES:

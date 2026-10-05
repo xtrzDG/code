@@ -17,6 +17,9 @@ from app.containers.orchestrators.assistant_orchestrators import (
 from app.containers.orchestrators.billing_orchestrators import (
     BillingOrchestratorsContainer,
 )
+from app.containers.orchestrators.booking_link_orchestrators import (
+    BookingLinkOrchestratorsContainer,
+)
 from app.containers.orchestrators.call_orchestrators import (
     CallOrchestratorsContainer,
 )
@@ -225,6 +228,11 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         SharingOrchestratorsContainer,
         sharing_use_cases=use_cases.sharing,
         follow_up_use_cases=use_cases.follow_ups,
+        utilities=utilities,
+    )
+    booking_links: BookingLinkOrchestratorsContainer = Container(  # type: ignore[assignment]
+        BookingLinkOrchestratorsContainer,
+        booking_link_use_cases=use_cases.booking_links,
         utilities=utilities,
     )
     feedback: FeedbackOrchestratorsContainer = Container(  # type: ignore[assignment]

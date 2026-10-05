@@ -10,6 +10,9 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.booking_link_use_cases import (
+    BookingLinkUseCasesContainer,
+)
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
@@ -167,6 +170,16 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         transformers=transformers,
         utilities=utilities,
+    )
+    # A guest's booking page behind its manage link (/r/{token}).
+    booking_links: BookingLinkUseCasesContainer = Container(  # type: ignore[assignment]
+        BookingLinkUseCasesContainer,
+        config=config,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        booking_use_cases=bookings,
     )
     inbox: InboxUseCasesContainer = Container(  # type: ignore[assignment]
         InboxUseCasesContainer,

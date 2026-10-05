@@ -530,3 +530,13 @@ _.member_count  # app/schemas/dto/customers/customer_segments.py (SegmentPreview
 _.is_count_exact  # app/schemas/dto/customers/customer_segments.py (SegmentPreview)
 _.conversation_status  # app/schemas/dto/customers/customer_timeline.py
 _.call_outcome  # app/schemas/dto/customers/customer_timeline.py
+
+# What a guest's booking page (/r/{token}) and the hosted chat page read
+# from the API: the ways to write, what may still change, the stay's
+# availability and the owner's own booking page.
+_.chat_links  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.can_cancel  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.can_reschedule  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.is_over  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.is_stay_available  # app/schemas/dto/booking_manage.py (ManagedBookingSlots)
+_.booking_url  # app/schemas/dto/sharing.py (HostedChatView)

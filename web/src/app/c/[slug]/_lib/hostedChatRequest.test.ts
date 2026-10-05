@@ -19,6 +19,7 @@ const VIEW: HostedChatView = {
     { tag: "ar", native_name: "العربية", direction: "rtl" },
   ],  conversation_retention_days: 730,
   llm_turn_retention_days: 30,
+  takes_bookings: false,
 };
 
 beforeEach(() => {

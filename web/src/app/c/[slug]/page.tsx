@@ -8,6 +8,7 @@ import { chatApiBase } from "@/server/hostedChat";
 
 import { HostedChatPreview } from "./_components/HostedChatPreview";
 import { HostedChatNotice, HostedChatShell } from "./_components/HostedChatShell";
+import { HostedInfoPanel, hasHostedInfo } from "./_components/HostedInfoPanel";
 import { chatLanguage, readHostedChatRequest, visitorLanguage } from "./_lib/hostedChatRequest";
 import { visitSourceOf } from "./_lib/visitSource";
 
@@ -85,19 +86,30 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
 
   const apiBase = chatApiBase(view);
   const source = visitSourceOf(query);
+  const frame = (
+    <div className="hc-frame">
+      <div className="hc-placeholder">
+        <span className="hc-spinner" aria-hidden />
+        <p role="status">{texts.loading}</p>
+        <noscript>
+          <p>{texts.noScript}</p>
+        </noscript>
+      </div>
+      {/* The widget adds its own element here: React leaves the inside alone. */}
+      <div id={CONTAINER_ID} className="hc-widget" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: "" }} />
+    </div>
+  );
   return (
     <HostedChatShell page={page} accent={view.accent_color}>
-      <div className="hc-frame">
-        <div className="hc-placeholder">
-          <span className="hc-spinner" aria-hidden />
-          <p role="status">{texts.loading}</p>
-          <noscript>
-            <p>{texts.noScript}</p>
-          </noscript>
+      {hasHostedInfo(view) ? (
+        // A link in bio: the business's hours, address and Book beside the chat.
+        <div className="hc-layout">
+          <HostedInfoPanel view={view} language={page.language} containerId={CONTAINER_ID} now={new Date()} />
+          {frame}
         </div>
-        {/* The widget adds its own element here: React leaves the inside alone. */}
-        <div id={CONTAINER_ID} className="hc-widget" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: "" }} />
-      </div>
+      ) : (
+        frame
+      )}
       <script
         async
         nonce={nonce}

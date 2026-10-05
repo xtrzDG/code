@@ -208,11 +208,13 @@ class AssistantToolOutcome(ImmutableDTO):
     Result returned to the model plus what the call created.
 
     `booking_id` is set only for a new booking, `lead_id` for a new lead and
-    `handoff_id` for a new handoff.
+    `handoff_id` for a new handoff. `confirmed_booking_id` names the booking
+    a call made or moved: its guest gets a written confirmation.
     """
 
     tool_name: AssistantToolName
     result: LlmToolResult
     booking_id: BookingId | None = None
+    confirmed_booking_id: BookingId | None = None
     lead_id: LeadId | None = None
     handoff_id: HandoffId | None = None

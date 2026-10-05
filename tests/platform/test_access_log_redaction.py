@@ -33,6 +33,17 @@ def test_session_keys_in_old_poll_urls_are_redacted() -> None:
     )
 
 
+def test_booking_manage_tokens_are_redacted() -> None:
+    record = access_record("/v1/public/bookings/AbC-123_xyz/slots?date=2026-10-07")
+
+    SessionKeyRedactionFilter().filter(record)
+
+    assert record.getMessage() == (
+        '127.0.0.1:5000 - "GET /v1/public/bookings/REDACTED/slots'
+        '?date=2026-10-07 HTTP/1.1" 200'
+    )
+
+
 def test_other_paths_are_logged_as_they_are() -> None:
     record = access_record("/v1/widget/business_x/messages?after=message_1")
 

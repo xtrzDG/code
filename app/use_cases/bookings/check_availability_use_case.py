@@ -148,6 +148,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
                 else now_seconds + min_notice_seconds(inputs.rules)
             ),
             include_sandbox=input_data.is_sandbox,
+            excluded_booking_id=input_data.excluded_booking_id,
             sandbox_conversation_id=input_data.conversation_id,
             buffer_minutes=choice.buffer_minutes,
         )

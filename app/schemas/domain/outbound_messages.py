@@ -131,9 +131,13 @@ class OutboundMessageDocument(BaseDocument):
     Version 5: an e-mail to the billing contact may carry the invoice and
     receipt PDFs of an invoice (`billing_documents`, optional; a release
     that does not know it sends the e-mail without them).
+
+    Version 6: the kind `booking_confirmation` (a guest's written
+    confirmation of a booking the assistant made or moved, with its manage
+    link). Rows of the earlier kinds read unchanged.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("5")
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind

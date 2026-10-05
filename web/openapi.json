@@ -11647,7 +11647,7 @@
       },
       "HostedChatView": {
         "additionalProperties": false,
-        "description": "What the hosted chat page needs before the widget loads: the business,\nits current address (`slug`; a page opened under an older address or\nthe id moves there), its name, colour and customer languages, whether\nthe chat is on, where the widget script and API live (None while\nAPP_BASE_URL is not set), and the privacy notice with how long the\nbusiness keeps conversations and the records of model calls (its\nSettings → Privacy, the defaults until it chose).",
+        "description": "What the hosted chat page needs before the widget loads: the business,\nits current address (`slug`; a page opened under an older address or\nthe id moves there), its name, colour and customer languages, whether\nthe chat is on, where the widget script and API live (None while\nAPP_BASE_URL is not set), and the privacy notice with how long the\nbusiness keeps conversations and the records of model calls (its\nSettings → Privacy, the defaults until it chose).\n\nAs a \"link in bio\" page it also shows the business: its opening hours\n(local minutes of the day in `timezone`), its address with a map link\nand a booking button when it takes bookings (`booking_url`: the\nowner's own booking page, else the button starts a booking in the\nchat).",
         "properties": {
           "accent_color": {
             "anyOf": [
@@ -11663,6 +11663,17 @@
             ],
             "title": "Accent Color"
           },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
           "api_base_url": {
             "anyOf": [
               {
@@ -11676,6 +11687,20 @@
               }
             ],
             "title": "Api Base Url"
+          },
+          "booking_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Url"
           },
           "business_id": {
             "title": "Business Id",
@@ -11699,6 +11724,13 @@
             "title": "Default Language",
             "type": "string"
           },
+          "hours": {
+            "items": {
+              "$ref": "#/components/schemas/OpeningInterval"
+            },
+            "title": "Hours",
+            "type": "array"
+          },
           "is_enabled": {
             "title": "Is Enabled",
             "type": "boolean"
@@ -11716,6 +11748,20 @@
             "minimum": 1.0,
             "title": "Llm Turn Retention Days",
             "type": "integer"
+          },
+          "maps_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maps Url"
           },
           "position": {
             "anyOf": [
@@ -11754,6 +11800,25 @@
               }
             ],
             "title": "Slug"
+          },
+          "takes_bookings": {
+            "default": false,
+            "title": "Takes Bookings",
+            "type": "boolean"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 2,
+                "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
           },
           "widget_script_url": {
             "anyOf": [
@@ -14722,6 +14787,237 @@
         "title": "MaintenanceRunView",
         "type": "object"
       },
+      "ManagedBookingSlots": {
+        "additionalProperties": false,
+        "description": "When the booking could move to on one local date: the free start times\nof a time-slot booking (its length, party and service as booked), or\nfor a stay whether its nights are free from that date (`times` empty).",
+        "properties": {
+          "booking_unit": {
+            "$ref": "#/components/schemas/BookingUnit"
+          },
+          "date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date",
+            "type": "string"
+          },
+          "is_open_on_date": {
+            "title": "Is Open On Date",
+            "type": "boolean"
+          },
+          "is_stay_available": {
+            "default": false,
+            "title": "Is Stay Available",
+            "type": "boolean"
+          },
+          "times": {
+            "items": {
+              "maxLength": 5,
+              "minLength": 5,
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "type": "string"
+            },
+            "title": "Times",
+            "type": "array"
+          },
+          "timezone": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "timezone",
+          "booking_unit",
+          "is_open_on_date"
+        ],
+        "title": "ManagedBookingSlots",
+        "type": "object"
+      },
+      "ManagedBookingView": {
+        "additionalProperties": false,
+        "description": "The guest's booking as the manage page shows it, in the business's\ntime zone: no contact details of the guest (anyone holding the link\nsees the page). `token` is the link's current token (a move issues a\nnew one); `language` is the guest's. `chat_links` are the ways to write\nto the business, the chat the booking was made in first.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "booking_unit": {
+            "$ref": "#/components/schemas/BookingUnit"
+          },
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "can_cancel": {
+            "default": false,
+            "title": "Can Cancel",
+            "type": "boolean"
+          },
+          "can_reschedule": {
+            "default": false,
+            "title": "Can Reschedule",
+            "type": "boolean"
+          },
+          "cancellation_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Policy"
+          },
+          "chat_links": {
+            "items": {
+              "$ref": "#/components/schemas/WidgetContactLinkView"
+            },
+            "title": "Chat Links",
+            "type": "array"
+          },
+          "date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date",
+            "type": "string"
+          },
+          "end_date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "End Date",
+            "type": "string"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "maxLength": 5,
+                "minLength": 5,
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "is_over": {
+            "default": false,
+            "title": "Is Over",
+            "type": "boolean"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "maps_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maps Url"
+          },
+          "party_size": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Party Size",
+            "type": "integer"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "service_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "maxLength": 5,
+                "minLength": 5,
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "timezone": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "token": {
+            "maxLength": 120,
+            "minLength": 40,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "business_name",
+          "status",
+          "booking_unit",
+          "date",
+          "end_date",
+          "timezone",
+          "party_size",
+          "language"
+        ],
+        "title": "ManagedBookingView",
+        "type": "object"
+      },
       "ManagerContact": {
         "additionalProperties": false,
         "description": "Staff contact that receives handoffs, bookings and leads, in their\nlanguage. `preferences` (None: every event, at any hour) choose which\nevents reach them and their quiet hours; `telegram_username` is the\n@username of a chat linked through the platform bot, shown instead of\nthe chat id.",
@@ -16576,7 +16872,7 @@
       },
       "OutboundMessageDocument": {
         "additionalProperties": false,
-        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).",
+        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).\n\nVersion 6: the kind `booking_confirmation` (a guest's written\nconfirmation of a booking the assistant made or moved, with its manage\nlink). Rows of the earlier kinds read unchanged.",
         "properties": {
           "attempts": {
             "default": 0,
@@ -16771,7 +17067,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "5",
+            "default": "6",
             "title": "Schema Version",
             "type": "string"
           },
@@ -16843,7 +17139,7 @@
         "type": "object"
       },
       "OutboundMessageKind": {
-        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK).",
+        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK), and a guest's written\nconfirmation of a booking the assistant made or moved in a chat, with\nits manage link (BOOKING_CONFIRMATION).",
         "enum": [
           "customer_reply",
           "staff_notification",
@@ -16851,7 +17147,8 @@
           "booking_reminder",
           "call_confirmation",
           "call_links",
-          "text_back"
+          "text_back",
+          "booking_confirmation"
         ],
         "title": "OutboundMessageKind",
         "type": "string"
@@ -63396,6 +63693,571 @@
         "summary": "Send Public Demo Message",
         "tags": [
           "public-demos"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}": {
+      "get": {
+        "operationId": "get_managed_booking_v1_public_bookings__token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedBookingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Managed Booking",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}/calendar.ics": {
+      "get": {
+        "operationId": "get_managed_booking_calendar_v1_public_bookings__token__calendar_ics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/calendar": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The booking as an iCalendar file."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Managed Booking Calendar",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}/cancel": {
+      "post": {
+        "operationId": "cancel_managed_booking_v1_public_bookings__token__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedBookingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Cancel Managed Booking",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}/reschedule": {
+      "post": {
+        "operationId": "reschedule_managed_booking_v1_public_bookings__token__reschedule_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The new local date, and the time for bookings of a time slot.",
+                "properties": {
+                  "date": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "title": "Date",
+                    "type": "string"
+                  },
+                  "time": {
+                    "anyOf": [
+                      {
+                        "maxLength": 5,
+                        "minLength": 5,
+                        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Time"
+                  }
+                },
+                "required": [
+                  "date"
+                ],
+                "title": "RescheduleManagedBookingBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedBookingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Reschedule Managed Booking",
+        "tags": [
+          "bookings"
+        ]
+      }
+    },
+    "/v1/public/bookings/{token}/slots": {
+      "get": {
+        "operationId": "get_managed_booking_slots_v1_public_bookings__token__slots_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedBookingSlots"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Managed Booking Slots",
+        "tags": [
+          "bookings"
         ]
       }
     },
