@@ -14,7 +14,9 @@ import { waitForNetworkQuiet } from "./support/network";
 
 const DICTIONARIES = { en, ru, ka } as const;
 
-async function openNewBooking(page: Page, businessId: string, texts: typeof en) {
+type Texts = (typeof DICTIONARIES)[keyof typeof DICTIONARIES];
+
+async function openNewBooking(page: Page, businessId: string, texts: Texts) {
   await page.goto(`/b/${businessId}/bookings`);
   await waitForNetworkQuiet(page);
   await page.getByRole("button", { name: texts.bookings.newBooking }).first().click();

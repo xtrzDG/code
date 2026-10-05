@@ -1,9 +1,11 @@
 /**
  * The `test` of the suite: Playwright's, plus
  *
- *   - a check that the page logged no console errors and threw nothing
- *     (every test, automatically; `consoleErrors.allow(/…/)` accepts an
- *     error the test provokes on purpose);
+ *   - the console-clean gate (support/consoleClean.ts): no page of the
+ *     test's context may throw, log a console error the test did not
+ *     accept (`consoleErrors.allow(/…/)`) or fail hydration (React #418,
+ *     #423: never acceptable); with `cyrillicCheck` on, no English or
+ *     Georgian page may show interface text in Cyrillic;
  *   - requests counted on every page, for `waitForNetworkQuiet` (support/network.ts);
  *   - `account`: a new account created through the API, with the browser
  *     context signed in as it (interface in English);
@@ -16,6 +18,7 @@
 import { test as base, expect, type BrowserContext } from "@playwright/test";
 
 import { createAssistant, createBusiness, signInByEmail, uniqueEmail, type NewBusiness } from "./api";
+import { strayCyrillic, unexpectedErrors, watchContext, type ConsoleRecord } from "./consoleClean";
 import { WEB_URL } from "./env";
 import { trackRequests } from "./network";
 
@@ -53,25 +56,25 @@ export interface ConsoleErrors {
 }
 
 export const test = base.extend<{
+  /** Fail on Cyrillic interface text of en/ka pages (support/consoleClean.ts). */
+  cyrillicCheck: boolean;
   consoleErrors: ConsoleErrors;
   requestTracking: void;
   account: Account;
   newOwner: Owner;
   owner: Owner;
 }>({
+  cyrillicCheck: [process.env.E2E_CYRILLIC_CHECK === "1", { option: true }],
+
   consoleErrors: [
-    async ({ page }, use) => {
-      const errors: string[] = [];
+    async ({ page, context, cyrillicCheck }, use) => {
+      const record: ConsoleRecord = { errors: [], hydration: [] };
       const allowed: RegExp[] = [];
-      page.on("console", (message) => {
-        if (message.type() === "error") {
-          errors.push(`console.error: ${message.text()} (${message.location().url})`);
-        }
-      });
-      page.on("pageerror", (error) => errors.push(`uncaught: ${error.message}`));
+      watchContext(context, record);
       await use({ allow: (pattern) => allowed.push(pattern) });
-      const unexpected = errors.filter((error) => !allowed.some((pattern) => pattern.test(error)));
-      expect(unexpected, "the page logged errors").toEqual([]);
+      const stray = cyrillicCheck ? await strayCyrillic(page) : [];
+      expect(unexpectedErrors(record, allowed), "the page logged errors").toEqual([]);
+      expect(stray, "interface text in Cyrillic on an English or Georgian page").toEqual([]);
     },
     { auto: true },
   ],

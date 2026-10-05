@@ -14,9 +14,10 @@ import type { APIRequestContext, Browser, BrowserContext, Page } from "@playwrig
 
 import { inviteStaff, signInByEmail, uniqueEmail, uniqueSuffix } from "./support/api";
 import { signInAsDemoOwner, visitorAsksForPerson, visitorTranscript, type DemoOwner } from "./support/demo";
+import { API_URL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { assignByApi, cardOf, subscribeDevice, userIdOf, waitingConversationOf } from "./support/inbox";
-import { en } from "./support/messages";
+import { en, ka, ru } from "./support/messages";
 import { decryptPush, newReceiver, startPushService } from "./support/push";
 
 test.describe.configure({ timeout: 120_000 });
@@ -185,3 +186,40 @@ test("the transcript's date sits in the flow and a right-to-left name stays besi
   expect(gap).toBeGreaterThanOrEqual(0);
   expect(gap).toBeLessThan(24);
 });
+
+for (const [locale, texts] of Object.entries({ en, ru, ka })) {
+  test(`the inbox views fit: three in the row, Unassigned and All under More, the chosen one in full (${locale})`, async ({ page, context, request }) => {
+    const demo = await signInAsDemoOwner(request);
+    await signInContext(context, demo.token);
+    await context.addCookies([{ name: "aw_locale", value: locale, url: WEB_URL }]);
+    const views = page.getByRole("group", { name: texts.inbox.viewsLabel });
+    const listed = await request.get(`${API_URL}/v1/businesses/${demo.businessId}/inbox`, {
+      params: { view: "all", limit: "1" },
+      headers: { authorization: `Bearer ${demo.token}` },
+    });
+    const conversation = ((await listed.json()) as { items: { id: string }[] }).items[0]?.id;
+    expect(conversation, "the demo restaurant has conversations").toBeDefined();
+    for (const [where, size, path] of [
+      ["the list beside a conversation", { width: 1440, height: 900 }, `/b/${demo.businessId}/inbox/${conversation}`],
+      ["a phone", PHONE.viewport, `/b/${demo.businessId}/inbox`],
+    ] as const) {
+      await page.setViewportSize(size);
+      await page.goto(path);
+      for (const view of ["needs_person", "requests", "mine"] as const) {
+        await expect(views.getByRole("radio", { name: new RegExp(`^${texts.inbox.views[view]}`) }), where).toBeAttached();
+      }
+      await expect(views.getByRole("radio", { name: new RegExp(`^${texts.inbox.views.all}`) })).toHaveCount(0);
+      await views.getByRole("button", { name: texts.inbox.moreViews }).click();
+      await page.getByRole("menuitemradio", { name: new RegExp(`^${texts.inbox.views.unassigned}`) }).click();
+      await expect(page).toHaveURL(/view=unassigned/);
+      // The chosen view takes the More button's place, whole and inside the row.
+      const chosen = views.locator("[data-more-views]");
+      await expect(chosen).toContainText(texts.inbox.views.unassigned);
+      await expect(chosen).toBeInViewport({ ratio: 1 });
+      const row = await views.locator("[data-inbox-views]").boundingBox();
+      const box = await chosen.boundingBox();
+      expect((box?.x ?? 0) + (box?.width ?? 0), where).toBeLessThanOrEqual((row?.x ?? 0) + (row?.width ?? 0) + 1);
+      expect(await chosen.evaluate((node) => node.scrollWidth <= node.clientWidth), `${where}: the label is not cut`).toBe(true);
+    }
+  });
+}
