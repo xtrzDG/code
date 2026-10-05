@@ -2,16 +2,27 @@ import "server-only";
 
 import { cookies, headers } from "next/headers";
 
-import { LOCALE_COOKIE, resolveLocale, type Locale } from "./config";
+import { PATH_LOCALE_HEADER } from "@/lib/publicSite/paths";
+
+import { LOCALE_COOKIE, matchLocale, resolveLocale, type Locale } from "./config";
 import { FALLBACK_MESSAGES, getMessages } from "./messages";
 import { pseudoMessages, wantsPseudoLocale } from "./pseudo";
 import { createTranslator, type MessageTree, type Translator } from "./translate";
 
 let pseudoDictionary: MessageTree | undefined;
 
-/** The interface language of the current request (Server Components, route handlers). */
+/**
+ * The interface language of the current request (Server Components, route
+ * handlers). A public page's own language (/ka, /ru/for/hotel, set by the
+ * proxy from the path) comes first; then the cookie, Accept-Language and
+ * English.
+ */
 export async function getLocale(): Promise<Locale> {
   const [cookieStore, headerList] = await Promise.all([cookies(), headers()]);
+  const pathLocale = matchLocale(headerList.get(PATH_LOCALE_HEADER));
+  if (pathLocale) {
+    return pathLocale;
+  }
   return resolveLocale({
     cookieValue: cookieStore.get(LOCALE_COOKIE)?.value,
     acceptLanguage: headerList.get("accept-language"),

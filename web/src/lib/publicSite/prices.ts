@@ -87,15 +87,20 @@ export function hasConversion(quotes: readonly PlanQuote[]): boolean {
   return quotes.some((quote) => quote.local_monthly_price?.is_estimated === true);
 }
 
-export type RateSourceKind = "official" | "planning";
+export type RateSourceKey = "nbg" | "ecb" | "official" | "planning";
 
 /**
- * Who set the rate behind a conversion: a central bank's published rate
- * (National Bank of Georgia, ECB) or the platform's own planning rate, the
- * fallback while no published rate is stored. A rate built from both is a
+ * Who set the rate behind a conversion, for its name in a note: a central
+ * bank's published rate (National Bank of Georgia, ECB), several of them
+ * (a cross rate), or the platform's own planning rate, the fallback while
+ * no published rate is stored. A rate built with the planning rate is a
  * planning rate: it is only as good as its weakest part.
  */
-export function rateSourceKind(rate: Pick<ExchangeRateQuote, "sources">): RateSourceKind {
+export function rateSourceKey(rate: Pick<ExchangeRateQuote, "sources">): RateSourceKey {
   const sources = rate.sources ?? [];
-  return sources.length === 0 || sources.includes("planning") ? "planning" : "official";
+  if (sources.length === 0 || sources.includes("planning")) {
+    return "planning";
+  }
+  const [only] = sources;
+  return sources.length === 1 && only !== undefined ? only : "official";
 }

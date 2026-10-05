@@ -1,31 +1,50 @@
 import type { CountryListItem, Schema } from "@/api/types";
 import { Stagger } from "@/components/motion";
 import type { Translator } from "@/i18n/translate";
-import { hasEstimatedPrice } from "@/lib/landing";
+import { dateTimeFormat } from "@/lib/intl/formatters";
+import { hasConversion, rateSourceKey } from "@/lib/publicSite/prices";
 
 import { CountryPicker } from "./CountryPicker";
 import { PlanCard } from "./PlanCard";
 import { Section } from "./Section";
 
-/** The plans of the chosen country, from GET /v1/catalog/plans. */
+type PlanQuoteList = Schema<"PlanQuoteList">;
+
+/** A rate's day ("2026-10-01") in the page's language: "1 October 2026". */
+function rateDay(day: string, locale: string): string {
+  return dateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${day}T00:00:00Z`),
+  );
+}
+
+/**
+ * The plans of the chosen country, from GET /v1/catalog/plans. Prices are
+ * the ones the plan is billed at; a conversion into the visitor's currency
+ * is marked "≈" and the note under the cards names who set its rate (a
+ * central bank, or the platform's own planning rate) and its day.
+ */
 export function Pricing({
   translator,
   countries,
   countryCode,
   plans,
+  formAction,
 }: {
   translator: Translator;
   countries: CountryListItem[];
   countryCode: string | null;
-  plans: Schema<"PlanQuoteList"> | null;
+  plans: PlanQuoteList | null;
+  /** The page the country picker reloads ("/ru", "/ka/for/hotel"). */
+  formAction: string;
 }) {
-  const { t } = translator;
+  const { t, locale } = translator;
   const quotes = plans?.quotes ?? null;
+  const rate = plans?.exchange_rate ?? null;
   return (
     <Section id="pricing" title={t("landing.pricing.title")} subtitle={t("landing.pricing.subtitle")} glow="right">
       {countries.length > 0 ? (
         <div className="mb-8">
-          <CountryPicker countries={countries} value={countryCode} />
+          <CountryPicker countries={countries} value={countryCode} action={formAction} />
         </div>
       ) : null}
       {quotes === null ? (
@@ -39,13 +58,13 @@ export function Pricing({
               <PlanCard key={quote.plan_key} quote={quote} translator={translator} />
             ))}
           </Stagger>
-          <div className="mt-6 space-y-1 text-xs text-ink-subtle">
+          <div className="mt-6 space-y-1 text-xs text-ink-subtle" data-testid="pricing-notes">
             <p>{t("landing.pricing.note")}</p>
-            {plans?.exchange_rate && quotes.some(hasEstimatedPrice) ? (
+            {rate && hasConversion(quotes) ? (
               <p>
-                {t("billing.plans.estimatedNote", {
-                  source: plans.exchange_rate.source,
-                  date: plans.exchange_rate.rate_date,
+                {t("publicPricing.conversionNote", {
+                  source: t(`publicPricing.rateSources.${rateSourceKey(rate)}`),
+                  date: rateDay(rate.rate_date, locale),
                 })}
               </p>
             ) : null}

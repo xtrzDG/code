@@ -48,6 +48,44 @@ describe("proxy", () => {
   });
 });
 
+describe("proxy on the public site", () => {
+  it("sends a legal page without a language to the reader's", async () => {
+    const response = await proxy(
+      new NextRequest("https://app.example.com/privacy?from=footer", { headers: { "accept-language": "ru-RU,ru;q=0.9" } }),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://app.example.com/ru/privacy?from=footer");
+  });
+
+  it("prefers the language cookie for that redirect", async () => {
+    const response = await proxy(
+      new NextRequest("https://app.example.com/terms", { headers: { cookie: "aw_locale=ka", "accept-language": "en" } }),
+    );
+
+    expect(response.headers.get("location")).toBe("https://app.example.com/ka/terms");
+  });
+
+  it("renders a public page in its own language and starts a new visitor's cabinet in it", async () => {
+    const response = await proxy(new NextRequest("https://app.example.com/ka/for/hotel", { headers: { "accept-language": "en" } }));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-middleware-request-x-aw-path-locale")).toBe("ka");
+    expect(response.cookies.get("aw_locale")?.value).toBe("ka");
+  });
+
+  it("keeps a returning visitor's language and lets no browser name the page's", async () => {
+    const response = await proxy(
+      new NextRequest("https://app.example.com/login", {
+        headers: { cookie: "aw_locale=ru", "x-aw-path-locale": "ka" },
+      }),
+    );
+
+    expect(response.cookies.get("aw_locale")).toBeUndefined();
+    expect(response.headers.get("x-middleware-request-x-aw-path-locale")).toBeNull();
+  });
+});
+
 describe("proxy on the hosted chat page", () => {
   const VIEW = {
     business_id: "business_1",

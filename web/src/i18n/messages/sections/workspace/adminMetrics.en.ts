@@ -98,7 +98,7 @@ export const adminMetricsEn = {
   },
   mrr: {
     title: "MRR movements",
-    description: "Monthly recurring revenue in euros at official rates: at the start of the period, what moved it, and at the end.",
+    description: "Monthly recurring revenue in euros, converted at the stored rates of the National Bank of Georgia and the ECB, else at the platform's planning rate: at the start of the period, what moved it, and at the end.",
     movement: "Movement",
     amount: "Amount",
     accounts: "Accounts",
@@ -111,7 +111,7 @@ export const adminMetricsEn = {
       contraction: "Downgrades",
       churn: "Cancelled",
     },
-    unconverted: "Left out, no official rate to euros: {currencies}",
+    unconverted: "Left out, no exchange rate to euros: {currencies}",
   },
   margin: {
     title: "Gross margin",
@@ -124,8 +124,8 @@ export const adminMetricsEn = {
       other: "Over {count} clients with revenue or cost",
     },
     withoutRate: {
-      one: "{count} client left out: no official rate to euros.",
-      other: "{count} clients left out: no official rate to euros.",
+      one: "{count} client left out: no exchange rate to euros.",
+      other: "{count} clients left out: no exchange rate to euros.",
     },
   },
   cohorts: {

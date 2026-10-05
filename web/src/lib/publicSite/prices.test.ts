@@ -5,7 +5,7 @@ import {
   hasConversion,
   moneyLabel,
   planPriceLines,
-  rateSourceKind,
+  rateSourceKey,
   type PlanQuote,
   type QuotedMoney,
 } from "./prices";
@@ -104,12 +104,13 @@ describe("plan price lines", () => {
 });
 
 describe("rate source", () => {
-  it("names a central bank's rate official and anything with the planning rate as planning", () => {
-    expect(rateSourceKind({ sources: ["nbg"] })).toBe("official");
-    expect(rateSourceKind({ sources: ["ecb", "nbg"] })).toBe("official");
-    expect(rateSourceKind({ sources: ["planning"] })).toBe("planning");
-    expect(rateSourceKind({ sources: ["ecb", "planning"] })).toBe("planning");
-    expect(rateSourceKind({ sources: [] })).toBe("planning");
-    expect(rateSourceKind({})).toBe("planning");
+  it("names a central bank's rate, several banks' rates or the planning rate", () => {
+    expect(rateSourceKey({ sources: ["nbg"] })).toBe("nbg");
+    expect(rateSourceKey({ sources: ["ecb"] })).toBe("ecb");
+    expect(rateSourceKey({ sources: ["ecb", "nbg"] })).toBe("official");
+    expect(rateSourceKey({ sources: ["planning"] })).toBe("planning");
+    expect(rateSourceKey({ sources: ["ecb", "planning"] })).toBe("planning");
+    expect(rateSourceKey({ sources: [] })).toBe("planning");
+    expect(rateSourceKey({})).toBe("planning");
   });
 });

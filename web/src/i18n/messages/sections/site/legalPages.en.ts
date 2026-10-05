@@ -1,0 +1,38 @@
+/** `legalPages.*`: the public legal and contact pages (/[locale]/terms, privacy, dpa, security, contact), English. */
+
+export const legalPagesEn = {
+  nav: {
+    terms: "Terms of Service",
+    privacy: "Privacy Policy",
+    dpa: "Data Processing Agreement",
+    security: "Security",
+    contact: "Contact",
+  },
+  footerLabel: "Legal and contact",
+  draftTitle: "Draft",
+  draftText: "A lawyer has not reviewed this text yet, and the fields in square brackets are still to be filled. It is published so you can read what the service will offer; it is not yet in force as written.",
+  document: {
+    upcoming: "A new version takes effect on {date}; it is already published.",
+    otherLanguage: "This text is not available in your language yet; it is shown in {language}.",
+  },
+  unavailable: "The text could not be loaded right now. Please try again later.",
+  dpaLead: "Every business on the platform accepts this agreement in its cabinet before going live; it says how customers' data is processed on the business's behalf.",
+  related: "Other documents",
+  contactTitle: "Contact",
+  contactLead: "Who provides the service and how to reach a person.",
+  operatorTitle: "Operator",
+  legalName: "Name",
+  address: "Address",
+  taxId: "Tax number",
+  country: "Country",
+  email: "E-mail",
+  operatorMissing: "The operator's address and registration details will be published here before the service opens to customers.",
+  supportTitle: "Write to us",
+  supportWhatsApp: "WhatsApp",
+  supportTelegram: "Telegram",
+  supportEmail: "E-mail",
+  supportMissing: "The support contacts will appear here before the service opens to customers.",
+  securityReportTitle: "Found a vulnerability?",
+  securityReportText: "Please report it privately; how to do it is in our security.txt.",
+  securityReportLink: "Open the rules for security researchers",
+} as const;
