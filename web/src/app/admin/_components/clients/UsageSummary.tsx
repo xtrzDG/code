@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui";
-import { usageLevel } from "@/components/workspace/helpers";
+import { usageLevel } from "@/lib/usage";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
 

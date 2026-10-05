@@ -10,7 +10,7 @@
 
 import type { MessageTree } from "./translate";
 
-export const PSEUDO_LOCALE_TAG = "en-xa";
+const PSEUDO_LOCALE_TAG = "en-xa";
 
 /** How much longer than English a pseudo text is (Russian and Georgian run 20–40 % longer). */
 export const PSEUDO_EXPANSION = 0.4;

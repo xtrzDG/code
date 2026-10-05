@@ -14,7 +14,7 @@
 
 import type { Schema } from "@/api/types";
 import type { BadgeTone } from "@/components/ui";
-import { usageLevel } from "@/components/workspace/helpers";
+import { usageLevel } from "@/lib/usage";
 
 export type BillingOverview = Schema<"BillingOverview">;
 export type SubscriptionView = Schema<"SubscriptionView">;

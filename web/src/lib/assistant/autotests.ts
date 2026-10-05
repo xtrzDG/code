@@ -22,25 +22,6 @@ export const JUDGE_CRITERIA: readonly JudgeCriterion[] = [
   "language",
 ];
 
-export const AUTOTEST_KINDS: readonly AutotestScenarioKind[] = [
-  "booking",
-  "booking_out_of_hours",
-  "cancellation",
-  "price_question",
-  "unknown_question",
-  "discount_request",
-  "rude_customer",
-  "human_request",
-  "prompt_injection",
-  "emergency",
-  "foreign_language",
-  "transliterated",
-  "prompt_injection_spoof",
-  "data_exfiltration",
-  "staff_impersonation",
-  "tool_abuse",
-];
-
 /** The attacks every version plays, whatever its niche (the API appends them). */
 export const RED_TEAM_KINDS: readonly AutotestScenarioKind[] = [
   "prompt_injection_spoof",

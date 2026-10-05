@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 import { userInitials, type UserNames } from "./userNames";
 
-export { userContact, userDisplayName, userInitials } from "./userNames";
+export { userContact, userDisplayName } from "./userNames";
 
 /** A round badge with the user's initials on the accent gradient. */
 export function UserAvatar({ user, className }: { user: UserNames; className?: string }) {

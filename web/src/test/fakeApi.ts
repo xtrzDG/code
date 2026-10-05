@@ -11,7 +11,7 @@ import { vi } from "vitest";
 
 import { api } from "@/api/client";
 
-export interface RequestInit {
+interface RequestInit {
   params?: { path?: Record<string, string>; query?: Record<string, string> };
   body?: unknown;
 }

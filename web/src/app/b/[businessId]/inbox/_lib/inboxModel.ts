@@ -24,7 +24,6 @@ import {
   DEFAULT_CONVERSATION_FILTERS,
   parseConversationFilters,
   type ConversationFilters,
-  type ConversationPeriod,
 } from "./conversationModel";
 import type { AttachmentKind } from "./messageMedia";
 import type { InboxHandoffSummary, InboxItemView, InboxRequestSummary, InboxViewCounts } from "./types";
@@ -106,8 +105,6 @@ export function inboxApiQuery(filters: InboxFilters): { view: InboxView; channel
 export function feedApiQuery(filters: InboxFilters, today: LocalDateText) {
   return conversationApiQuery(filters, today);
 }
-
-export type { ConversationPeriod };
 
 /** One conversation in the list, whichever API it came from. */
 export interface InboxRow {

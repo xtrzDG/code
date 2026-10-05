@@ -11,7 +11,7 @@ export type DigestChannel = Schema<"DigestChannel">;
 export type DigestPreferencesView = Schema<"DigestPreferencesView">;
 
 /** The channels in the order the API keeps them. */
-export const DIGEST_CHANNELS: readonly DigestChannel[] = ["email", "push", "telegram", "whatsapp"];
+const DIGEST_CHANNELS: readonly DigestChannel[] = ["email", "push", "telegram", "whatsapp"];
 
 /** The chosen channels with one switched on or off, in the API's order. */
 export function withChannel(channels: readonly DigestChannel[], channel: DigestChannel, isOn: boolean): DigestChannel[] {

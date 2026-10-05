@@ -11,7 +11,7 @@ export type GoLiveCheck = Schema<"GoLiveCheck">;
 export type GoLiveReadiness = Schema<"GoLiveReadiness">;
 
 /** Checklist codes, in the order the API lists them. */
-export const GO_LIVE_CHECK_CODES: readonly GoLiveCheckCode[] = [
+const GO_LIVE_CHECK_CODES: readonly GoLiveCheckCode[] = [
   "subscription_or_trial",
   "dpa",
   "profile_gaps",
@@ -21,14 +21,14 @@ export const GO_LIVE_CHECK_CODES: readonly GoLiveCheckCode[] = [
 ];
 
 /** Why a version cannot be published or rolled back in its current state. */
-export const VERSION_REFUSAL_CODES = [
+const VERSION_REFUSAL_CODES = [
   "version_already_live",
   "version_archived",
   "version_not_archived",
   "force_publish_admin_only",
 ] as const;
 
-export type VersionRefusalCode = (typeof VERSION_REFUSAL_CODES)[number];
+type VersionRefusalCode = (typeof VERSION_REFUSAL_CODES)[number];
 export type RefusalCode = GoLiveCheckCode | VersionRefusalCode;
 
 export interface Refusal {
@@ -87,7 +87,7 @@ export function blockingChecks<T extends Pick<GoLiveCheck, "is_ok" | "is_blockin
 }
 
 /** The detail of a passed billing check: the free trial starts at the first go-live. */
-export const TRIAL_AT_GO_LIVE_DETAIL = "trial_at_go_live";
+const TRIAL_AT_GO_LIVE_DETAIL = "trial_at_go_live";
 
 export type BillingCheckText =
   | "assistant.checklist.billingTrialAtGoLive"

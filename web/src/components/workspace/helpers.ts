@@ -15,25 +15,6 @@ export function decodeHash(hash: string): string {
   }
 }
 
-/** The owner is warned when a package is used to this share (concept section 9). */
-export const USAGE_WARNING_PERCENT = 80;
-
-export type UsageLevel = "none" | "ok" | "warning" | "exceeded";
-
-/**
- * How full a package is: "none" for a package of zero (no percent),
- * "warning" from 80 %, "exceeded" from 100 %.
- */
-export function usageLevel(percent: number | null | undefined): UsageLevel {
-  if (percent === null || percent === undefined || !Number.isFinite(percent)) {
-    return "none";
-  }
-  if (percent >= 100) {
-    return "exceeded";
-  }
-  return percent >= USAGE_WARNING_PERCENT ? "warning" : "ok";
-}
-
 /** Used share of a package in whole percent (rounded down), or null for a package of zero. */
 export function usagePercent(used: number, included: number): number | null {
   if (included <= 0) {

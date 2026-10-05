@@ -4,7 +4,7 @@ import type { ApiError } from "@/api/errors";
 import type { Schema } from "@/api/types";
 import type { MessageView } from "@/lib/assistant/testChat";
 
-export type AssistantReply = Schema<"AssistantReply">;
+type AssistantReply = Schema<"AssistantReply">;
 export type ToolCallView = Schema<"ToolCallView">;
 
 export type ChatEntry =

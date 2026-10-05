@@ -18,7 +18,7 @@ type Milestone = Schema<"ActivationMilestoneView">;
 type MilestoneKind = Schema<"ActivationEventKind">;
 
 /** Where a row's button goes: a page, the tunnel at a step, or the QR code in place. */
-export type GuideRowKind = "page" | "tunnel" | "phone";
+type GuideRowKind = "page" | "tunnel" | "phone";
 
 export interface GuideRow {
   step: SetupStepView;
@@ -32,7 +32,7 @@ export interface GuideRow {
 }
 
 /** The steps after the launch, in order. */
-export const AFTER_LAUNCH: readonly StepCode[] = ["phone_test", "second_channel", "share"];
+const AFTER_LAUNCH: readonly StepCode[] = ["phone_test", "second_channel", "share"];
 
 function rowOf(step: SetupStepView, businessId: string, isLive: boolean): GuideRow {
   const isDone = step.status === "done";
@@ -93,7 +93,7 @@ export function showsRing(setup: SetupView | undefined, isOwner: boolean): boole
 }
 
 /** The milestones the cabinet celebrates with a toast (going live has the finale). */
-export const CELEBRATED: readonly MilestoneKind[] = ["first_conversation", "first_booking", "first_after_hours_booking"];
+const CELEBRATED: readonly MilestoneKind[] = ["first_conversation", "first_booking", "first_after_hours_booking"];
 
 /** Older than this, a milestone is old news: acknowledged without a toast. */
 export const CELEBRATE_WITHIN_MS = 7 * 24 * 60 * 60 * 1000;

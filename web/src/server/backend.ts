@@ -16,7 +16,7 @@ export const REQUEST_ID_HEADER = "x-request-id";
 const DEFAULT_BACKEND_URL = "http://localhost:8000";
 
 /** Long LLM-backed calls (assembly, autotests, test chat, menu import) need time. */
-export const UPSTREAM_TIMEOUT_MS = 180_000;
+const UPSTREAM_TIMEOUT_MS = 180_000;
 
 const MAX_REQUEST_ID_LENGTH = 128;
 

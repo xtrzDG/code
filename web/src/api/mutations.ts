@@ -11,7 +11,7 @@ import { unwrap, type ApiResult } from "./result";
 
 export type MutationResult<T> = { ok: true; data: T } | { ok: false; error: ApiError };
 
-export type MutationKeys<Args extends unknown[], T> =
+type MutationKeys<Args extends unknown[], T> =
   | readonly QueryKey[]
   | ((data: T | undefined, ...args: Args) => readonly QueryKey[]);
 
@@ -48,7 +48,7 @@ function resolveKeys<Args extends unknown[], T>(
 }
 
 /** Marks the keys of a settled mutation out of date (see MutationOptions). */
-export function settleKeys<Args extends unknown[], T>(
+function settleKeys<Args extends unknown[], T>(
   options: Pick<MutationOptions<Args, T>, "invalidate" | "stale">,
   data: T | undefined,
   args: Args,

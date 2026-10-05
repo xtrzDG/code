@@ -8,7 +8,7 @@
 
 import type { Locale } from "@/i18n/config";
 
-export interface ChangelogText {
+interface ChangelogText {
   title: string;
   /** Paragraphs. */
   body: readonly string[];
@@ -21,7 +21,7 @@ export interface ChangelogEntry {
 }
 
 /** The API's ChangelogEntryKey. */
-export const CHANGELOG_KEY = /^(\d{4})-(\d{2})-(\d{2})(-[a-z0-9]+)*$/;
+const CHANGELOG_KEY = /^(\d{4})-(\d{2})-(\d{2})(-[a-z0-9]+)*$/;
 
 export function newestFirst(entries: readonly ChangelogEntry[]): ChangelogEntry[] {
   return [...entries].sort((left, right) => (left.key < right.key ? 1 : left.key > right.key ? -1 : 0));

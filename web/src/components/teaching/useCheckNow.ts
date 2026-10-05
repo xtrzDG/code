@@ -25,7 +25,7 @@ type CheckList = { items?: CheckView[]; limit: number };
 /** Why "Check now" could not run: nothing is live yet, too many this hour, or another failure. */
 export type CheckNowProblem = "notLive" | "limited" | "failed";
 
-export function checkNowProblem(error: Pick<ApiError, "code">): CheckNowProblem {
+function checkNowProblem(error: Pick<ApiError, "code">): CheckNowProblem {
   if (error.code === "conflict") {
     return "notLive";
   }

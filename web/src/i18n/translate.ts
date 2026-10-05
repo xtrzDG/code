@@ -12,7 +12,7 @@ import type { Locale } from "./config";
 import type { en } from "./messages/en";
 
 /** Plural forms of one text; languages use the categories they need. */
-export type PluralForms = {
+type PluralForms = {
   zero?: string;
   one?: string;
   two?: string;

@@ -22,12 +22,12 @@ import { useI18n } from "@/i18n/client";
 
 import { ToastViewport, type ToastItem, type ToastTone } from "./ToastViewport";
 
-export type { ToastTone } from "./ToastViewport";
+
 
 /** How long Undo is offered after an action. */
 export const UNDO_WINDOW_MS = 5_000;
 
-export interface ToastAction {
+interface ToastAction {
   label: string;
   onAction: () => void;
 }

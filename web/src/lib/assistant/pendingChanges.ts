@@ -11,7 +11,7 @@ import type { Translator } from "@/i18n/translate";
 import { formatDate, formatMoney, majorToMinor, weekdayName } from "@/lib/format";
 
 export type PendingChange = Schema<"PendingChange">;
-export type PendingChangeArea = Schema<"PendingChangeArea">;
+type PendingChangeArea = Schema<"PendingChangeArea">;
 export type PendingChangesView = Schema<"PendingChangesView">;
 /** The areas listed as changes; the owner's checks come in a list of their own (`owner_checks`). */
 export type ListedArea = Exclude<PendingChangeArea, "owner_checks">;
@@ -19,7 +19,7 @@ export type ListedArea = Exclude<PendingChangeArea, "owner_checks">;
 type Words = Pick<Translator, "t" | "tp" | "tDynamic" | "locale">;
 
 /** The order the areas are listed in (the API sends them in this order too). */
-export const AREA_ORDER: readonly ListedArea[] = [
+const AREA_ORDER: readonly ListedArea[] = [
   "profile",
   "hours",
   "special_days",
@@ -48,7 +48,7 @@ export function touchesPendingChanges(prefix: readonly unknown[], businessId: st
 }
 
 /** How many changes the toast names before "and N more". */
-export const SUMMARY_LIMIT = 3;
+const SUMMARY_LIMIT = 3;
 
 const MONEY_PATTERN = /^(\d+(?:\.\d+)?) ([A-Z]{3})$/;
 const LOCAL_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -76,7 +76,7 @@ function formatLocalDate(date: string | null | undefined, locale: string): strin
 }
 
 /** What a change is about, as a noun ("“Khachapuri”", "opening hours (Monday)", "address"). */
-export function changeThing(change: PendingChange, words: Words): string {
+function changeThing(change: PendingChange, words: Words): string {
   const { t, tDynamic, locale } = words;
   switch (change.area) {
     case "hours":

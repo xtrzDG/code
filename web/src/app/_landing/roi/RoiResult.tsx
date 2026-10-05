@@ -7,7 +7,7 @@ import type { RoiResult as Result } from "@/lib/publicSite/roi";
 import type { RoiPlan } from "@/lib/publicSite/roiOptions";
 
 /** Whole units of the plan's currency: "₾ 1 240", "€576". */
-export function wholeMoney(amount: number, currency: string, locale: string): string {
+function wholeMoney(amount: number, currency: string, locale: string): string {
   return numberFormat(locale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(
     Math.round(amount),
   );

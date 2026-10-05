@@ -82,7 +82,7 @@ export function OfferFields({
 }
 
 /** The resources an offer may be linked to: those booked its way, and any it is linked to already. */
-export function performerOptions(
+function performerOptions(
   resources: readonly ResourceView[],
   form: Pick<KnowledgeForm, "kind" | "performerIds">,
   kindLabel: (resource: ResourceView) => string,

@@ -44,7 +44,7 @@ export interface PluralSelector {
 }
 
 /** "ka", "ka-GE", "KA_ge": the language Chrome cannot format. */
-export function isGeorgianLocale(locale: string): boolean {
+function isGeorgianLocale(locale: string): boolean {
   return /^ka(?:[-_]|$)/i.test(locale);
 }
 

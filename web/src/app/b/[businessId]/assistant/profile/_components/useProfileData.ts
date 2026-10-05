@@ -37,5 +37,3 @@ export function useProfileData(businessId: string) {
   );
   return { wizard, knowledge, gaps };
 }
-
-export type ProfileData = ReturnType<typeof useProfileData>;

@@ -8,7 +8,7 @@
  * wrapped, and nothing remembered means the default.
  */
 
-export const TECHNICAL_DETAILS_PREFIX = "aw.technicalDetails:";
+const TECHNICAL_DETAILS_PREFIX = "aw.technicalDetails:";
 
 export type DetailsChoice = "open" | "closed";
 

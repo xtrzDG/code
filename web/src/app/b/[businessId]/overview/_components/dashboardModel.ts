@@ -98,21 +98,6 @@ export function canTakeStep(step: Pick<NextStep, "page">, isOwner: boolean): boo
   return canOpenPage(step.page, isOwner ? "owner" : "staff");
 }
 
-export type UsageLevel = "ok" | "warning" | "over";
-
-/** 80% of a package triggers the warning (concept: "на 80 % пакета"); 100% is overage. */
-export const USAGE_WARNING_PERCENT = 80;
-
-export function usageLevel(percent: number | null | undefined): UsageLevel {
-  if (percent === null || percent === undefined) {
-    return "ok";
-  }
-  if (percent >= 100) {
-    return "over";
-  }
-  return percent >= USAGE_WARNING_PERCENT ? "warning" : "ok";
-}
-
 export interface Bar<Key> {
   key: Key;
   count: number;

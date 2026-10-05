@@ -6,7 +6,9 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 
-import { usageBarWidth, usageLevel, type UsageLevel } from "./helpers";
+import { usageLevel, type UsageLevel } from "@/lib/usage";
+
+import { usageBarWidth } from "./helpers";
 
 const BAR_COLORS: Record<UsageLevel, string> = {
   none: "bg-line-strong",

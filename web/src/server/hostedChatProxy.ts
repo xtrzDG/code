@@ -22,7 +22,7 @@ import {
   originOf,
 } from "./hostedChat";
 
-export const CSP_HEADER = "content-security-policy";
+const CSP_HEADER = "content-security-policy";
 export const ROBOTS_HEADER = "x-robots-tag";
 export const NOINDEX = "noindex, nofollow";
 

@@ -10,7 +10,7 @@ import type { MessageKey } from "@/i18n/translate";
 export type MessageDelivery = NonNullable<MessageView["delivery"]>;
 
 /** The failure reason of a WhatsApp template Meta did not accept. */
-export const TEMPLATE_REJECTED = "template_rejected";
+const TEMPLATE_REJECTED = "template_rejected";
 
 /** The newest staff reply sent through a messenger, if any. */
 export function latestDeliveredReply(messages: readonly MessageView[]): MessageView | null {

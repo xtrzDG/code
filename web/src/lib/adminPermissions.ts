@@ -13,7 +13,7 @@ export function hasAdminPermission(
 }
 
 /** The permission each admin page needs, by its navigation key. */
-export const ADMIN_PAGE_PERMISSIONS = {
+const ADMIN_PAGE_PERMISSIONS = {
   admin: "view_clients",
   system: "view_operations",
   metrics: "view_metrics",

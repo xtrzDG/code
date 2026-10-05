@@ -146,7 +146,7 @@ export function InboxList({
 }
 
 /** Rows while the first page loads: an avatar, a name with a time and the last message. */
-export function InboxRowsSkeleton({ rows = 6 }: { rows?: number }) {
+function InboxRowsSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <div aria-hidden className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
       {Array.from({ length: rows }, (_, index) => (

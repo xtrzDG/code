@@ -6,7 +6,6 @@
  */
 
 import type { ReasonMessages } from "@/api/errors";
-import type { BookingStatus } from "@/components/insights/types";
 
 export const UNDO_REFUSAL_MESSAGES: ReasonMessages = {
   slot_taken: () => ({ key: "bookings.undo.slotTaken" }),
@@ -15,6 +14,3 @@ export const UNDO_REFUSAL_MESSAGES: ReasonMessages = {
   status_changed: () => ({ key: "bookings.undo.changed" }),
   place_gone: () => ({ key: "bookings.undo.placeGone" }),
 };
-
-/** The statuses staff set from the cabinet, which an Undo can take back. */
-export const UNDOABLE_STATUSES: ReadonlySet<BookingStatus> = new Set(["confirmed", "completed", "no_show", "cancelled"]);

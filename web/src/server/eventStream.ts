@@ -16,7 +16,7 @@ import { prepareBackendCall } from "./relay";
 import { clearSessionCookie } from "./sessionCookie";
 
 /** Answers the API must start within (the stream itself may run for long). */
-export const EVENT_STREAM_CONNECT_TIMEOUT_MS = 15_000;
+const EVENT_STREAM_CONNECT_TIMEOUT_MS = 15_000;
 
 const EVENT_STREAM_PATH = /^\/v1\/businesses\/[^/]+\/events$/;
 const EVENT_STREAM_TYPE = /^text\/event-stream/i;

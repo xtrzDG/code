@@ -11,7 +11,6 @@ import type { StatusTone } from "./versions";
 export type AutotestRunComparison = Schema<"AutotestRunComparisonView">;
 export type AutotestOutcomeChange = Schema<"AutotestOutcomeChangeView">;
 export type AutotestScoreChange = Schema<"AutotestScoreChangeView">;
-export type AutotestCriterionChange = Schema<"AutotestCriterionChangeView">;
 
 /** Under this a change rounds to "0.0" and has no direction. */
 const VISIBLE_CHANGE = 0.05;

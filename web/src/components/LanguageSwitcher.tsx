@@ -13,7 +13,7 @@ import { IconChevronDown, IconGlobe } from "./icons";
 import { useToast } from "./ui/Toast";
 
 /** POST /api/locale: cookie + the signed-in user's account language. */
-export async function changeInterfaceLanguage(locale: Locale): Promise<void> {
+async function changeInterfaceLanguage(locale: Locale): Promise<void> {
   const response = await fetch("/api/locale", {
     method: "POST",
     headers: { "content-type": "application/json" },

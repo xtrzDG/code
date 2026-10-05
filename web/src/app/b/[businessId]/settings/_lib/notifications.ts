@@ -11,7 +11,6 @@ import type { RememberedDevice } from "@/lib/webPush";
 
 export type StaffAlertEvent = Schema<"StaffAlertEvent">;
 export type NotificationPreferences = Schema<"StaffNotificationPreferences">;
-export type StaffDelivery = Schema<"StaffDeliveryView">;
 export type DeliveryStatus = Schema<"OutboundMessageStatus">;
 export type NotificationContact = Schema<"NotificationContactView">;
 export type MyNotificationSettings = Schema<"MyNotificationSettingsView">;
@@ -45,7 +44,7 @@ export const DELIVERY_LABELS: Record<DeliveryStatus, MessageKey> = {
 };
 
 /** Quiet hours a person starts from when they turn them on. */
-export const DEFAULT_QUIET_HOURS = { from: "22:00", until: "08:00" } as const;
+const DEFAULT_QUIET_HOURS = { from: "22:00", until: "08:00" } as const;
 
 /** Events and quiet hours as a form edits them (the hours kept while switched off). */
 export interface PreferencesForm {

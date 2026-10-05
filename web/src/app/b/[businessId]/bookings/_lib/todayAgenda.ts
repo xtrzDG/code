@@ -17,7 +17,7 @@ export interface AgendaEntry {
   canMark: boolean;
 }
 
-export interface AgendaCounts {
+interface AgendaCounts {
   /** Still to come or to be marked. */
   toCome: number;
   arrived: number;

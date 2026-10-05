@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "knip": "knip --no-progress",
     "e2e": "playwright test --config e2e/playwright.config.ts",
     "check:intl": "node scripts/check-intl.mjs",
     "measure:first-load": "node scripts/measure-first-load.mjs",

@@ -42,7 +42,7 @@ const MEDIA_TYPES_BY_EXTENSION: Record<string, string> = {
 };
 
 /** Media types the menu reader accepts for uploads. */
-export const MENU_UPLOAD_MEDIA_TYPES: readonly string[] = [...new Set(Object.values(MEDIA_TYPES_BY_EXTENSION))];
+const MENU_UPLOAD_MEDIA_TYPES: readonly string[] = [...new Set(Object.values(MEDIA_TYPES_BY_EXTENSION))];
 
 /** `accept` of the file input. */
 export const MENU_UPLOAD_ACCEPT = [...MENU_UPLOAD_MEDIA_TYPES, ...Object.keys(MEDIA_TYPES_BY_EXTENSION).map((ext) => `.${ext}`)].join(",");

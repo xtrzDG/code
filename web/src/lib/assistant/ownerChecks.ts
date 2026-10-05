@@ -13,7 +13,7 @@ import { businessPath } from "@/lib/navigation";
 import type { AutotestScenarioResult } from "./autotests";
 import type { PendingChangesView } from "./pendingChanges";
 
-export type Expectation = Schema<"AutotestExpectation">;
+type Expectation = Schema<"AutotestExpectation">;
 export type PendingOwnerCheck = Schema<"PendingOwnerCheckView">;
 export type PendingDraft = Schema<"PendingDraftView">;
 export type OwnerCheckOutcome = Schema<"OwnerCheckOutcomeView">;
@@ -64,7 +64,7 @@ function problems(results: readonly AutotestScenarioResult[]): AutotestScenarioR
 }
 
 /** A run's owner-check result as a named failure (null for other scenarios or a check the run did not keep). */
-export function namedFailureOf(result: AutotestScenarioResult): NamedFailure | null {
+function namedFailureOf(result: AutotestScenarioResult): NamedFailure | null {
   const asked = result.owner_check;
   if (result.kind !== "owner_check" || !asked) {
     return null;

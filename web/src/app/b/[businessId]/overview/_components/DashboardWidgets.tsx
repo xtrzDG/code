@@ -9,7 +9,9 @@ import { ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
-import type { Bar, NextStep, UsageLevel } from "./dashboardModel";
+import type { UsageLevel } from "@/lib/usage";
+
+import type { Bar, NextStep } from "./dashboardModel";
 
 const STEP_STYLES: Record<NextStep["tone"], { box: string; icon: string; Icon: typeof IconInfo }> = {
   info: { box: "border-info/25 bg-info-soft", icon: "text-info", Icon: IconInfo },
@@ -148,9 +150,10 @@ export function AttentionTile({
 }
 
 const METER_STYLES: Record<UsageLevel, { track: string; fill: string }> = {
+  none: { track: "bg-accent-soft", fill: "bg-accent-solid" },
   ok: { track: "bg-accent-soft", fill: "bg-accent-solid" },
   warning: { track: "bg-warning-soft", fill: "bg-warning" },
-  over: { track: "bg-danger-soft", fill: "bg-danger-solid" },
+  exceeded: { track: "bg-danger-soft", fill: "bg-danger-solid" },
 };
 
 /** Use of a limit (package minutes, dialogues): the fill carries the severity. */

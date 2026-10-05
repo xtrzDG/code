@@ -65,7 +65,7 @@ export function parseConversationFilters(params: URLSearchParams): ConversationF
 }
 
 /** The first local date of a period ending today, or null for all time. */
-export function periodStart(period: ConversationPeriod, today: LocalDateText): LocalDateText | null {
+function periodStart(period: ConversationPeriod, today: LocalDateText): LocalDateText | null {
   switch (period) {
     case "today":
       return today;

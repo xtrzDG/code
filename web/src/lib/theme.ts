@@ -15,12 +15,12 @@ export const DEFAULT_THEME: Theme = "dark";
 export const THEME_COOKIE = "aw_theme";
 
 /** One year: the theme is a preference, not a session. */
-export const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 /** The page background of each scheme, for the browser's <meta name="theme-color">. */
 export const SCHEME_BACKGROUNDS = { dark: "#141311", light: "#f6f5f2" } as const;
 
-export function isTheme(value: unknown): value is Theme {
+function isTheme(value: unknown): value is Theme {
   return typeof value === "string" && (THEMES as readonly string[]).includes(value);
 }
 

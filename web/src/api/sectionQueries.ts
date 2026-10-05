@@ -14,7 +14,7 @@ import type { KnowledgeItemKind } from "./types";
 import type { KnowledgeStatusFilter } from "@/lib/knowledge/kinds";
 
 /** Knowledge items per request; "show more" loads the next page (newest first). */
-export const KNOWLEDGE_PAGE_SIZE = 100;
+const KNOWLEDGE_PAGE_SIZE = 100;
 
 function isActiveQuery(status: KnowledgeStatusFilter): "true" | "false" | undefined {
   return status === "all" ? undefined : status === "active" ? "true" : "false";

@@ -15,7 +15,7 @@ import { isKnownTimeZone } from "./intl/calendarFields";
 export const VIEWER_TIME_ZONE_COOKIE = "aw_tz";
 
 /** One year: the zone is a property of the device, refreshed on every visit. */
-export const VIEWER_TIME_ZONE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+const VIEWER_TIME_ZONE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 /** The zone shown before the viewer's own is known. */
 export const FALLBACK_TIME_ZONE = "UTC";

@@ -17,7 +17,7 @@ import { toApiError } from "./errors";
 import { hashKey, startsWithKey, type QueryKey } from "./queryKey";
 import { EMPTY_SNAPSHOT, type QuerySnapshot, type Rollback } from "./querySnapshot";
 
-export type { QueryKey, QueryKeyPart } from "./queryKey";
+export type { QueryKey } from "./queryKey";
 export { EMPTY_SNAPSHOT, type QuerySnapshot, type Rollback } from "./querySnapshot";
 
 /** Unobserved entries are dropped after this long. */

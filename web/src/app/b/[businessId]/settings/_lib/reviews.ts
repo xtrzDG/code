@@ -19,14 +19,14 @@ export type FeedbackSkipReason = Schema<"FeedbackSkipReason">;
 
 /** Settings → Reviews lists the latest requests only (the API pages further). */
 export const FEEDBACK_REQUEST_LIST_SIZE = 20;
-export const SCORES = [5, 4, 3, 2, 1] as const;
+const SCORES = [5, 4, 3, 2, 1] as const;
 
 /** What Meta accepts as a template name (the API checks the same). */
 const TEMPLATE_NAME_PATTERN = /^[a-z0-9_]{1,512}$/;
 const MAX_LINK_LENGTH = 2048;
 
 /** The delays an owner picks from, in minutes after the visit ends (the API allows 15 to 4320). */
-export const DELAY_CHOICES = [30, 60, 120, 180, 360, 720, 1440, 2880] as const;
+const DELAY_CHOICES = [30, 60, 120, 180, 360, 720, 1440, 2880] as const;
 
 export interface ReviewSettingsForm {
   isFeedbackEnabled: boolean;

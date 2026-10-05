@@ -3,7 +3,7 @@ import type { ComponentType } from "react";
 import type { IconProps } from "../icons";
 
 /** One link of the cabinet's navigation, as the shell renders it. */
-export interface ShellLink {
+interface ShellLink {
   href: string;
   label: string;
   isActive: boolean;

@@ -42,7 +42,7 @@ const REVEAL_DELAY_MS = 60;
 const OWN_ENTER = new Set(["TEXTAREA", "BUTTON", "A", "SELECT", "SUMMARY"]);
 
 /** Whether Enter pressed on this element means "continue". */
-export function isContinueKey(event: Pick<KeyboardEvent, "key" | "shiftKey" | "altKey" | "ctrlKey" | "metaKey" | "nativeEvent">, target: HTMLElement): boolean {
+function isContinueKey(event: Pick<KeyboardEvent, "key" | "shiftKey" | "altKey" | "ctrlKey" | "metaKey" | "nativeEvent">, target: HTMLElement): boolean {
   if (event.key !== "Enter" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
     return false;
   }

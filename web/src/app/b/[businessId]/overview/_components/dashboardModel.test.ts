@@ -11,7 +11,6 @@ import {
   toBars,
   trendAxis,
   trendPath,
-  usageLevel,
 } from "./dashboardModel";
 
 describe("dashboard periods", () => {
@@ -69,16 +68,6 @@ describe("who can take the next step", () => {
     expect(canTakeStep({ page: "assistant/channels" }, false)).toBe(false);
     expect(canTakeStep({ page: "settings/billing" }, true)).toBe(true);
     expect(canTakeStep({ page: "assistant" }, false)).toBe(true);
-  });
-});
-
-describe("package usage", () => {
-  it("warns at 80% and flags overage at 100%", () => {
-    expect(usageLevel(null)).toBe("ok");
-    expect(usageLevel(79)).toBe("ok");
-    expect(usageLevel(80)).toBe("warning");
-    expect(usageLevel(100)).toBe("over");
-    expect(usageLevel(140)).toBe("over");
   });
 });
 

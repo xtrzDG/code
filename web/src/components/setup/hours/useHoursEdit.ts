@@ -87,5 +87,3 @@ export function useHoursEdit(ctx: StepContext) {
     rulesError: rulesSave.error,
   };
 }
-
-export type HoursEditState = ReturnType<typeof useHoursEdit>;

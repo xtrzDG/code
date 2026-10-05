@@ -7,23 +7,11 @@ import {
   safeFileName,
   shortId,
   usageBarWidth,
-  usageLevel,
   usagePercent,
   zonedDayStartUs,
 } from "./helpers";
 
 describe("usage", () => {
-  it("warns from 80 % and flags 100 %", () => {
-    expect(usageLevel(null)).toBe("none");
-    expect(usageLevel(undefined)).toBe("none");
-    expect(usageLevel(0)).toBe("ok");
-    expect(usageLevel(79)).toBe("ok");
-    expect(usageLevel(80)).toBe("warning");
-    expect(usageLevel(99)).toBe("warning");
-    expect(usageLevel(100)).toBe("exceeded");
-    expect(usageLevel(250)).toBe("exceeded");
-  });
-
   it("computes whole percents and empty packages", () => {
     expect(usagePercent(320, 400)).toBe(80);
     expect(usagePercent(1, 3)).toBe(33);

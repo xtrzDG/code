@@ -38,7 +38,7 @@ export interface BillingDetailsForm {
   countryCode: string;
 }
 
-export type BillingDetailsField = "legalName" | "taxId" | "address" | "billingEmail";
+type BillingDetailsField = "legalName" | "taxId" | "address" | "billingEmail";
 export type BillingDetailsErrors = Partial<Record<BillingDetailsField, MessageKey>>;
 
 /** Limits of the API (BillingLegalName, TaxpayerIdentificationNumber, BillingAddressText). */

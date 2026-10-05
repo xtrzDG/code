@@ -10,7 +10,7 @@ import { useI18n } from "@/i18n/client";
 const COPIED_FEEDBACK_MS = 2_000;
 
 /** Copy text with the async clipboard API, else with a hidden textarea. */
-export async function copyText(text: string): Promise<boolean> {
+async function copyText(text: string): Promise<boolean> {
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);

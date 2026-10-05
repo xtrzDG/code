@@ -5,7 +5,7 @@
  * `queryKeys` (queryKeys.ts), never by hand in a screen.
  */
 
-export type QueryKeyPart = string | number | boolean | null;
+type QueryKeyPart = string | number | boolean | null;
 export type QueryKey = readonly QueryKeyPart[];
 
 /** The key as a string (Map key); equal tuples give equal strings. */

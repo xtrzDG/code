@@ -16,7 +16,7 @@ import { UNDO_REFUSAL_MESSAGES } from "./bookingUndo";
 type BookingList = PagedData<BookingView, BookingPage>;
 
 /** The cached list with one booking replaced by another copy of it. */
-export function withBooking(data: BookingList, booking: BookingView): BookingList {
+function withBooking(data: BookingList, booking: BookingView): BookingList {
   return { ...data, items: data.items.map((item) => (item.id === booking.id ? booking : item)) };
 }
 

@@ -57,11 +57,9 @@ export function adminClientPath(businessId: string): string {
 }
 /** Account → Security: the authenticator app and recovery codes. */
 export const ACCOUNT_SECURITY_PATH = "/account/security";
-/** Shown by the service worker (public/sw.js) when a page cannot be loaded. */
-export const OFFLINE_PATH = "/offline";
 
 /** Where a notification link (`{cabinet}/n/{token}`) lands; see lib/notificationLinks.ts. */
-export const NOTIFICATION_LINK_PREFIX = "/n/";
+const NOTIFICATION_LINK_PREFIX = "/n/";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
 const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, "/account/", "/integrations/", NOTIFICATION_LINK_PREFIX] as const;

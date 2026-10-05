@@ -32,9 +32,6 @@ export const SKIPPABLE_STEPS: Readonly<Partial<Record<TunnelStep, SetupStepCode>
   try: "test",
 };
 
-/** The two steps answered before the business exists (on /create). */
-export const BEFORE_CREATION: ReadonlySet<TunnelStep> = new Set(["business", "place"]);
-
 export function isTunnelPlace(value: string | null | undefined): value is TunnelPlace {
   return value === FINALE || (TUNNEL_STEPS as readonly string[]).includes(value ?? "");
 }

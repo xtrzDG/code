@@ -15,7 +15,7 @@ export interface CallGuardBadge {
   label: MessageKey;
 }
 
-export const CALL_GUARD_BADGES: Record<CallGuardVerdict, CallGuardBadge> = {
+const CALL_GUARD_BADGES: Record<CallGuardVerdict, CallGuardBadge> = {
   clean: { tone: "success", label: "conversations.calls.guard.clean" },
   flagged: { tone: "warning", label: "conversations.calls.guard.flagged" },
   handed_off: { tone: "warning", label: "conversations.calls.guard.handedOff" },

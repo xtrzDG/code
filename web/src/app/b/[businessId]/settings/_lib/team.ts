@@ -54,7 +54,7 @@ export function allowedRoles(member: BusinessMember, members: readonly BusinessM
   return canRemoveMember(member, members) ? ["owner", "staff"] : ["owner"];
 }
 
-export type InviteMethod = "phone" | "email";
+type InviteMethod = "phone" | "email";
 
 export interface InviteForm {
   method: InviteMethod;
