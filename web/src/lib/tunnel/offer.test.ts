@@ -38,14 +38,27 @@ const EXAMPLES: Schema<"StarterOfferView">[] = [
 ];
 
 describe("offer rows", () => {
-  it("start with saved offers, then examples not there yet", () => {
-    const rows = initialOfferRows([item({}), item({ id: "faq_1", kind: "faq", title: "Parking?" })], EXAMPLES, "EUR");
-    expect(rows.map((row) => [row.title, row.price, row.isSuggestion])).toEqual([
-      ["Women's haircut", "45", false],
-      ["Manicure", "", true],
+  it("offer the niche's examples to an empty table, with their minutes", () => {
+    const rows = initialOfferRows([item({ id: "faq_1", kind: "faq", title: "Parking?" })], EXAMPLES, "EUR");
+    expect(rows.map((row) => [row.title, row.price, row.isSuggestion, row.key])).toEqual([
+      ["Women's haircut", "", true, "starter-haircut"],
+      ["Manicure", "", true, "starter-manicure"],
     ]);
+    expect(rows[0]?.duration).toBe("60");
     expect(rows[1]?.duration).toBe("");
-    expect(initialOfferRows([], EXAMPLES, "EUR")[0]?.duration).toBe("60");
+  });
+
+  it("bring back no example once anything is saved, whatever its name or language", () => {
+    const lunch: Schema<"StarterOfferView">[] = [{ key: "business_lunch", kind: "menu_item", title: "Business lunch", duration_minutes: null }];
+    // Saved in Russian, reopened in English: "Бизнес-ланч" is not followed by "Business lunch".
+    const rows = initialOfferRows([item({ kind: "menu_item", title: "Бизнес-ланч", price_minor: 1800 })], lunch, "EUR");
+    expect(rows.map((row) => [row.title, row.isSuggestion])).toEqual([["Бизнес-ланч", false]]);
+    // A saved line of another name hides the examples just as well.
+    expect(initialOfferRows([item({ title: "Gel nails" })], EXAMPLES, "EUR").every((row) => !row.isSuggestion)).toBe(true);
+  });
+
+  it("bring back no example once the offer step was finished or skipped", () => {
+    expect(initialOfferRows([], EXAMPLES, "EUR", { isStepCompleted: true })).toEqual([]);
   });
 
   it("keep the saved lines in the order they were added, though the API lists the newest first", () => {
@@ -61,14 +74,13 @@ describe("offer rows", () => {
     expect(rows.map((row) => row.title)).toEqual(["Men's haircut", "Blow-dry", "Coloring"]);
   });
 
-  it("do not bring back an example the owner replaced or removed", () => {
-    // "Manicure" was typed over as "Gel nails" and saved: its name is gone, its key is remembered.
-    const rows = initialOfferRows([item({ title: "Gel nails" })], EXAMPLES, "EUR", new Set(["manicure"]));
-    expect(rows.map((row) => [row.title, row.isSuggestion])).toEqual([
-      ["Gel nails", false],
-      ["Women's haircut", true],
-    ]);
-    expect(rows[1]?.key).toBe("starter-haircut");
+  it("do not bring back an example the owner removed, matched by its key", () => {
+    const rows = initialOfferRows([], EXAMPLES, "EUR", { done: new Set(["manicure"]) });
+    expect(rows.map((row) => [row.title, row.isSuggestion])).toEqual([["Women's haircut", true]]);
+    expect(rows[0]?.key).toBe("starter-haircut");
+    // The key, not the title: an example of the same name but another key stays.
+    const renamed = initialOfferRows([], [{ ...EXAMPLES[1]!, key: "nails" }], "EUR", { done: new Set(["manicure"]) });
+    expect(renamed.map((row) => row.title)).toEqual(["Manicure"]);
   });
 
   it("leave switched-off items and questions off the table", () => {
@@ -78,7 +90,7 @@ describe("offer rows", () => {
   });
 
   it("never save an untouched example", () => {
-    const [, suggestion] = initialOfferRows([item({})], EXAMPLES, "EUR");
+    const [, suggestion] = initialOfferRows([], EXAMPLES, "EUR");
     if (!suggestion) {
       throw new Error("no suggestion");
     }

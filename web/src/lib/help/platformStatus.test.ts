@@ -4,10 +4,11 @@ import {
   bannerAnnouncements,
   canDismiss,
   dismissKey,
-  goodDayShare,
+  historySummary,
   parseDismissed,
   type Announcement,
   type PlatformStatus,
+  type StatusDay,
 } from "./platformStatus";
 
 function announcement(id: string, level: Announcement["level"], updatedAt = 1): Announcement {
@@ -29,22 +30,39 @@ function status(announcements: Announcement[]): PlatformStatus {
   return { level: "operational", checked_at: 1, components: [], announcements, past_announcements: [] };
 }
 
-describe("goodDayShare", () => {
-  it("counts days that worked or were planned maintenance", () => {
-    expect(
-      goodDayShare([
-        { day: "2026-10-01", level: "operational" },
-        { day: "2026-10-02", level: "maintenance" },
-        { day: "2026-10-03", level: "degraded" },
-        { day: "2026-10-04", level: "outage" },
-        { day: "2026-10-05", level: "no_data" },
-      ]),
-    ).toBe(0.5);
+function days(levels: readonly StatusDay["level"][], start = 1): StatusDay[] {
+  return levels.map((level, index) => ({ day: `2026-09-${String(start + index).padStart(2, "0")}`, level }));
+}
+
+describe("historySummary", () => {
+  it("counts from the first recorded day, not from the start of the 90 bars", () => {
+    const history = [...days(["no_data", "no_data", "no_data"]), ...days(Array(7).fill("operational"), 4)];
+    expect(historySummary(history)).toEqual({ kind: "share", share: 1, days: 7 });
+  });
+
+  it("says since when it observes until a week is measured", () => {
+    // One measured day never reads as "100 %"; one slow day never as "0 %".
+    expect(historySummary(days(["no_data", "operational"]))).toEqual({ kind: "observing", since: "2026-09-02" });
+    expect(historySummary(days(["degraded"]))).toEqual({ kind: "observing", since: "2026-09-01" });
+    expect(historySummary(days(["operational", "operational", "operational", "operational", "operational", "operational", "no_data"]))).toEqual({
+      kind: "observing",
+      since: "2026-09-01",
+    });
+  });
+
+  it("counts a degraded day as half, an outage and an unrecorded day after the first as none", () => {
+    const history = days(["operational", "maintenance", "degraded", "outage", "no_data", "operational", "operational", "operational"]);
+    expect(historySummary(history)).toEqual({ kind: "share", share: 5.5 / 8, days: 8 });
+  });
+
+  it("does not count today while it has no record yet", () => {
+    const history = days([...Array(8).fill("operational"), "no_data"]);
+    expect(historySummary(history)).toEqual({ kind: "share", share: 1, days: 8 });
   });
 
   it("has nothing to say before a day is measured", () => {
-    expect(goodDayShare([{ day: "2026-10-01", level: "no_data" }])).toBeNull();
-    expect(goodDayShare([])).toBeNull();
+    expect(historySummary(days(["no_data"]))).toEqual({ kind: "none" });
+    expect(historySummary([])).toEqual({ kind: "none" });
   });
 });
 

@@ -1,7 +1,8 @@
 /**
  * The public status page and the cabinet's announcement banner, as plain
- * functions: the colour of each level, the share of good days in a
- * component's 90-day history, and which announcements the banner shows.
+ * functions: the colour of each level, what a component's 90-day history
+ * says (since when it is observed, or its share of good days), and which
+ * announcements the banner shows.
  */
 
 import type { Schema } from "@/api/types";
@@ -44,14 +45,46 @@ export const DAY_COLOURS: Readonly<Record<StatusLevel, string>> = {
   no_data: "bg-line-strong",
 };
 
-/** The share (0 to 1) of measured days without a slowdown or an outage; null before any day is measured. */
-export function goodDayShare(history: readonly StatusDay[]): number | null {
-  const measured = history.filter((day) => day.level !== "no_data");
-  if (measured.length === 0) {
-    return null;
+/** Days of history a share is shown for; before that the row says since when it is observed. */
+export const DAYS_FOR_SHARE = 7;
+
+/** What a day counts towards the share: a degraded day is partly good, an unrecorded one not at all. */
+const DAY_WEIGHTS: Readonly<Record<StatusLevel, number>> = {
+  operational: 1,
+  maintenance: 1,
+  degraded: 0.5,
+  outage: 0,
+  no_data: 0,
+};
+
+export type HistorySummary =
+  | { kind: "none" }
+  | { kind: "observing"; since: string }
+  | { kind: "share"; share: number; days: number };
+
+/**
+ * What a component's history says honestly. Days count from the first
+ * recorded day on (the 90 bars start before the platform did); after it a
+ * day without a record counts as trouble (nothing was measuring, so
+ * nothing can vouch for it), except today while it is still being
+ * measured. A degraded day counts half. Until a week is measured the row
+ * says since when the component is observed instead of a share.
+ */
+export function historySummary(history: readonly StatusDay[]): HistorySummary {
+  const first = history.findIndex((day) => day.level !== "no_data");
+  const since = history[first]?.day;
+  if (first < 0 || since === undefined) {
+    return { kind: "none" };
   }
-  const good = measured.filter((day) => day.level === "operational" || day.level === "maintenance");
-  return good.length / measured.length;
+  const counted = history.slice(first);
+  if (counted.at(-1)?.level === "no_data") {
+    counted.pop();
+  }
+  if (counted.length < DAYS_FOR_SHARE) {
+    return { kind: "observing", since };
+  }
+  const score = counted.reduce((sum, day) => sum + DAY_WEIGHTS[day.level], 0);
+  return { kind: "share", share: score / counted.length, days: counted.length };
 }
 
 /** An outage must stay in sight: its banner cannot be hidden. */

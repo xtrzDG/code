@@ -32,7 +32,13 @@ export const platformStatusRu: Translation<typeof platformStatusEn> = {
   historyLabel: "{component}: последние 90 дней",
   historyStart: "90 дней назад",
   historyEnd: "Сегодня",
-  uptime: "{share} дней без проблем",
+  uptime: {
+    one: "{share} без проблем за {count} день",
+    few: "{share} без проблем за {count} дня",
+    many: "{share} без проблем за {count} дней",
+    other: "{share} без проблем за {count} дня",
+  },
+  observingSince: "Наблюдаем с {date}",
   noHistory: "Пока нет замеренных дней",
   day: "{day}: {level}",
   announcementLevels: {

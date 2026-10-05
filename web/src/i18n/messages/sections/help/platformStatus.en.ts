@@ -33,7 +33,11 @@ export const platformStatusEn = {
   historyLabel: "{component}: the last 90 days",
   historyStart: "90 days ago",
   historyEnd: "Today",
-  uptime: "{share} of days without trouble",
+  uptime: {
+    one: "{share} without trouble over {count} day",
+    other: "{share} without trouble over {count} days",
+  },
+  observingSince: "Observed since {date}",
   noHistory: "No days measured yet",
   day: "{day}: {level}",
   announcementLevels: {
