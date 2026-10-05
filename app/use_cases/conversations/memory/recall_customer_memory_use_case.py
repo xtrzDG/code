@@ -24,6 +24,7 @@ from app.schemas.dto.customer_memory.returning_customers import (
     CustomerMemoryRequest,
     ReturningCustomerContext,
 )
+from app.schemas.typings.assistants.booleans import SharesTeamNotesWithAssistant
 from app.schemas.typings.conversations.constrained_integers import (
     EarlierConversationCount,
 )
@@ -125,7 +126,7 @@ class RecallCustomerMemoryUseCase(
     def _recall(
         self,
         input_data: CustomerMemoryRequest,
-        shares_team_notes: bool,
+        shares_team_notes: SharesTeamNotesWithAssistant,
     ) -> ReturningCustomerContext:
         business_id = input_data.business.id
         earlier: list[ConversationDocument] = [
