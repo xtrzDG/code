@@ -1,7 +1,7 @@
 {
   "collection": "conversation_topics",
   "document_type": "ConversationTopicsDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -42,11 +42,44 @@
                     "minimum": 0,
                     "type": "integer"
                   },
+                  "kind": {
+                    "default": "named",
+                    "enum": [
+                      "named",
+                      "other"
+                    ],
+                    "type": "string"
+                  },
                   "label": {
                     "maxLength": 60,
                     "minLength": 1,
                     "pattern": "\\S",
                     "type": "string"
+                  },
+                  "labels": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "label": {
+                          "maxLength": 60,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "type": "string"
+                        },
+                        "language": {
+                          "maxLength": 16,
+                          "minLength": 2,
+                          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "language",
+                        "label"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
                   },
                   "unanswered_count": {
                     "default": 0,
@@ -81,7 +114,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {

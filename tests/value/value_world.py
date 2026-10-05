@@ -132,6 +132,7 @@ class ValueWorld(OperationsWorld):
         return GetBusinessValueUseCase(
             authorize_business_access=self.authorize(),
             compute_value_model=self.compute_value(),
+            activation_event_repo=self.activation_event_repo,
             wall_clock=self.clock.wall_clock,
         )
 

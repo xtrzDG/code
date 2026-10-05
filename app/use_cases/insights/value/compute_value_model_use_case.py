@@ -36,8 +36,8 @@ from app.use_cases.insights.value.value_return import (
     NO_RETURN,
     PlanPrices,
     PlanReturn,
-    monthly_plan_price,
     plan_return,
+    read_plan_terms,
 )
 from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.opening_hours import DayRanges
@@ -65,7 +65,8 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
       minutes per reply, plus the calls it answered times its minutes per
       call;
     - what the money returned against the plan's price for the same days
-      (`value_return.py`; only with `plan_prices`).
+      (`value_return.py`; only with `plan_prices`); in the free trial no
+      cost and no multiple, only the monthly price after it.
 
     Everything is counted by the database; sandbox activity is excluded.
     Callers check access (the cabinet route, the report job).
@@ -128,7 +129,7 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
             NO_RETURN
             if self._plan_prices is None
             else plan_return(
-                monthly_plan_price(self._plan_prices, business),
+                read_plan_terms(self._plan_prices, business),
                 business.currency_code,
                 parse_local_date(input_data.date_from),
                 parse_local_date(input_data.date_to),
@@ -157,4 +158,7 @@ class ComputeValueModelUseCase(UseCaseContract[ValueModelQuery, ValueModel]):
             ),
             plan_cost_minor=returned.plan_cost_minor,
             return_multiple=returned.return_multiple,
+            is_trial=returned.is_trial,
+            trial_ends_at=returned.trial_ends_at,
+            plan_cost_after_trial_minor=returned.price_after_trial,
         )

@@ -116,3 +116,15 @@ class CustomerSourceKind(StrEnum):
     TAGGED = "tagged"
     UNTAGGED = "untagged"
     OTHER = "other"
+
+
+class TopicKind(StrEnum):
+    """
+    What one topic of customers' questions is: a topic the nightly grouping
+    named (its labels are stored per cabinet language), or the catch-all of
+    greetings and questions that fit no other topic, which every cabinet
+    names in its own words.
+    """
+
+    NAMED = "named"
+    OTHER = "other"

@@ -15,8 +15,9 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.constants.conversations import MessageAuthor, ReplyGuardVerdict
 from app.schemas.constants.demo import DemoBusinessKey
+from app.schemas.constants.reply_safety import ReplyGuardReason
 from app.schemas.domain.assistants import AutotestRunDocument
 from app.schemas.domain.billing import (
     InvoiceDocument,
@@ -29,9 +30,11 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.domain.conversation_quality import ConversationQualityScoreDocument
 from app.schemas.domain.conversation_topics import ConversationTopicsDocument
 from app.schemas.domain.conversations import (
     CallDocument,
+    ClaimFinding,
     ConversationDocument,
     MessageDocument,
     ToolCallRecord,
@@ -50,7 +53,10 @@ from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.assistants.strings import VoiceAgentId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelSecret
-from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.conversations.strings import (
+    MessageText,
+    UnverifiedReplyValue,
+)
 from app.schemas.typings.demo.constrained_integers import DemoReplyPauseSeconds
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -146,8 +152,27 @@ class DemoAttachmentLine(ImmutableDTO):
     content: bytes | None = Field(default=None, repr=False)
 
 
+class DemoReplyGuard(ImmutableDTO):
+    """
+    What the reply guard did with a demo assistant reply, as the live engine
+    stores it: rewritten once (with what the first draft got wrong) or held
+    back and handed to staff (with the values or claims it held back).
+    """
+
+    verdict: ReplyGuardVerdict
+    reasons: list[ReplyGuardReason] = Field(default_factory=list[ReplyGuardReason])
+    unverified_values: list[UnverifiedReplyValue] = Field(
+        default_factory=list[UnverifiedReplyValue]
+    )
+    claim_findings: list[ClaimFinding] = Field(default_factory=list[ClaimFinding])
+
+
 class DemoMessageLine(ImmutableDTO):
-    """One message of a demo conversation, `pause_seconds` after the last."""
+    """
+    One message of a demo conversation, `pause_seconds` after the last; an
+    assistant reply the guard rewrote or held back carries `guard` (none:
+    the guard let it through as written).
+    """
 
     author: MessageAuthor
     text: MessageText
@@ -156,6 +181,7 @@ class DemoMessageLine(ImmutableDTO):
         default_factory=list[DemoAttachmentLine]
     )
     pause_seconds: DemoReplyPauseSeconds = DemoReplyPauseSeconds(40)
+    guard: DemoReplyGuard | None = None
 
 
 class DemoMediaFile(ImmutableDTO):
@@ -197,6 +223,9 @@ class DemoBusinessActivity(ImmutableDTO):
     )
     media_files: list[DemoMediaFile] = Field(default_factory=list[DemoMediaFile])
     conversation_topics: ConversationTopicsDocument | None = None
+    quality_scores: list[ConversationQualityScoreDocument] = Field(
+        default_factory=list[ConversationQualityScoreDocument]
+    )
 
 
 class DemoSeedPlan(ImmutableDTO):

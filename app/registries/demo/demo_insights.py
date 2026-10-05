@@ -27,15 +27,14 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 from app.utilities.llm_rehearsal.rehearsal_topics import rehearse_topics
 from app.utilities.sharing.acquisition_sources import called_number_source
+from app.utilities.value.topic_answers import read_grouped_topics
 from app.utilities.value.topic_batches import (
     FirstMessage,
     language_batches,
     to_group,
 )
-from app.utilities.value.topic_grouping import (
-    build_topic_request_text,
-    read_grouped_topics,
-)
+from app.utilities.value.topic_grouping import build_topic_request_text
+from app.utilities.value.topic_labels import label_languages
 from app.utilities.value.value_keys import conversation_topics_id_of
 
 # The tags each channel's conversations take in turn (None: no tag): the
@@ -99,12 +98,13 @@ def build_demo_topics(
         and conversation.id in first_texts
     ]
     groups: list[TopicLanguageGroup] = []
+    languages: list[str] = label_languages(business.owner_language)
     for batch in language_batches(
         firsts, [question for question in questions if not question.is_sandbox]
     ):
         answer: str = rehearse_topics(
             build_topic_request_text(
-                str(business.owner_language),
+                languages,
                 str(business.name),
                 [],
                 batch.first_messages,
@@ -112,9 +112,9 @@ def build_demo_topics(
             )
         )
         topics = read_grouped_topics(
-            answer, len(batch.first_messages), len(batch.open_questions)
+            answer, len(batch.first_messages), len(batch.open_questions), languages
         )
-        groups.append(to_group(batch, topics or []))
+        groups.append(to_group(batch, topics or [], business.owner_language))
 
     return ConversationTopicsDocument(
         id=conversation_topics_id_of(business.id),

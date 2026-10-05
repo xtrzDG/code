@@ -2,10 +2,11 @@ from collections.abc import Sequence
 
 from typed_time_provider import Microseconds
 
-from app.registries.demo.demo_clock import MICROSECONDS_PER_SECOND, DemoClock
+from app.registries.demo.demo_clock import DemoClock
 from app.registries.demo.demo_media_lines import record_line_media
-from app.registries.demo.demo_reply_speed import demo_reply_channel, demo_reply_latency
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.registries.demo.demo_messages import demo_message
+from app.registries.demo.demo_reply_speed import demo_line_pause_microseconds
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
@@ -13,7 +14,6 @@ from app.schemas.constants.conversations import (
     ConversationRatingReason,
     ConversationStatus,
     MessageAuthor,
-    ReplyGuardVerdict,
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
@@ -34,7 +34,6 @@ from app.schemas.typings.calls.constrained_strings import CallSummaryText
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.constrained_integers import (
     CallDurationSeconds,
-    LlmTokenCount,
 )
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import (
@@ -49,13 +48,6 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.scheduling.opening_hours import business_day_ranges, is_open_at
 from app.utilities.scheduling.zoned_time import load_time_zone, microseconds_to_seconds
-
-# What an assistant reply of gpt-5-mini roughly costs: the cached
-# instruction and transcript in, a short answer out.
-REPLY_INPUT_TOKENS: int = 2600
-INPUT_MICRO_USD_PER_TOKEN: float = 0.25
-OUTPUT_MICRO_USD_PER_TOKEN: float = 2.0
-CHARACTERS_PER_TOKEN: int = 3
 
 
 class DemoConversationRecorder:
@@ -160,9 +152,9 @@ class DemoConversationRecorder:
         moment: int = int(start)
         for index, line in enumerate(lines):
             if index > 0:
-                moment += int(line.pause_seconds) * MICROSECONDS_PER_SECOND
+                moment += demo_line_pause_microseconds(conversation, line, index)
             self.messages.append(
-                self._message(conversation, line, Microseconds(moment))
+                self._message(conversation, line, index, Microseconds(moment))
             )
 
         conversation.last_message_at = Microseconds(moment)
@@ -237,49 +229,24 @@ class DemoConversationRecorder:
         self,
         conversation: ConversationDocument,
         line: DemoMessageLine,
+        position: int,
         moment: Microseconds,
     ) -> MessageDocument:
-        is_model_reply: bool = line.author is MessageAuthor.ASSISTANT
-        output_tokens: int = len(str(line.text)) // CHARACTERS_PER_TOKEN + 20
         message_id = MessageId()
         attachments: list[MessageAttachment]
         attachments, files = record_line_media(
             self._business.id, message_id, line, moment
         )
         self.media_files.extend(files)
-        return MessageDocument(
-            id=message_id,
-            conversation_id=conversation.id,
-            business_id=self._business.id,
-            direction=(
-                MessageDirection.INBOUND
-                if line.author is MessageAuthor.CUSTOMER
-                else MessageDirection.OUTBOUND
-            ),
-            author=line.author,
-            text=line.text,
-            language=conversation.language,
-            sent_by=(
-                self._team_member_id if line.author is MessageAuthor.STAFF else None
-            ),
-            tool_calls=list(line.tool_calls),
-            attachments=attachments,
-            model_id=self._model_id if is_model_reply else None,
-            channel=demo_reply_channel(conversation, line),
-            reply_latency_ms=demo_reply_latency(conversation, line),
-            guard_verdict=ReplyGuardVerdict.CLEAN if is_model_reply else None,
-            input_tokens=LlmTokenCount(REPLY_INPUT_TOKENS if is_model_reply else 0),
-            output_tokens=LlmTokenCount(output_tokens if is_model_reply else 0),
-            cost_micro_usd=CostMicroUsd(
-                round(
-                    REPLY_INPUT_TOKENS * INPUT_MICRO_USD_PER_TOKEN
-                    + output_tokens * OUTPUT_MICRO_USD_PER_TOKEN
-                )
-                if is_model_reply
-                else 0
-            ),
-            created_at=moment,
-            updated_at=moment,
+        return demo_message(
+            conversation,
+            line,
+            position,
+            moment,
+            message_id,
+            attachments,
+            self._model_id,
+            self._team_member_id,
         )
 
     def _version_live_at(self, moment: Microseconds) -> AssistantVersionId:

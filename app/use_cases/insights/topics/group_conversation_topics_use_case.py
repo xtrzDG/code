@@ -39,13 +39,13 @@ from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,
     to_local_moment,
 )
+from app.utilities.value.topic_answers import GroupedTopic
 from app.utilities.value.topic_batches import (
     FirstMessage,
     language_batches,
     previous_labels,
     to_group,
 )
-from app.utilities.value.topic_grouping import GroupedTopic
 from app.utilities.value.value_keys import conversation_topics_id_of
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -68,8 +68,10 @@ class GroupConversationTopicsUseCase(UseCaseContract[JobTick, JobReport]):
     to 09:00), once a day, the first messages of the last 30 days'
     conversations (the newest 200, sandbox left out) and the open questions
     the assistant could not answer (the 100 most asked) are grouped by a
-    cheap model into at most 12 labelled topics per customer language, and
-    stored as the business's one topics document. A business never grouped
+    cheap model into at most 12 topics per customer language, each labelled
+    in the owner's language and every cabinet language (the catch-all of
+    other questions is marked, not named), and stored as the business's one
+    topics document. A business never grouped
     is grouped at once. No conversation and no question: an empty document,
     no model call. A failed language keeps the stored topics and is tried
     again the next hour; one failing business never stops the others.
@@ -119,12 +121,14 @@ class GroupConversationTopicsUseCase(UseCaseContract[JobTick, JobReport]):
             self._first_messages(business, start, now), self._open_questions(business)
         ):
             topics: list[GroupedTopic] | None = self._grouper.group(
-                business, batch, previous_labels(earlier, batch.language)
+                business,
+                batch,
+                previous_labels(earlier, batch.language, business.owner_language),
             )
             if topics is None:
                 return False
 
-            groups.append(to_group(batch, topics))
+            groups.append(to_group(batch, topics, business.owner_language))
 
         self._topics_repo.save(
             ConversationTopicsDocument(

@@ -5,6 +5,7 @@ serves the dashboard, the digests and the monthly report.
 """
 
 from base_pydantic_schemas import ImmutableDTO
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.value import AverageCheckSource, RevenueSource, ValueBasis
 from app.schemas.typings.bookings.constrained_strings import LocalDate
@@ -14,11 +15,13 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     TimezoneName,
 )
+from app.schemas.typings.value.booleans import IsPeriodSinceLaunch, IsTrialPeriod
 from app.schemas.typings.value.constrained_floats import ValueReturnMultiple
 from app.schemas.typings.value.constrained_integers import (
     AverageCheckMinor,
     BookedValueMinor,
     EstimatedRevenueMinor,
+    MonthlyPlanPriceMinor,
     PlanCostMinor,
     StaffMinutesSaved,
     StaffSecondsPerCall,
@@ -86,7 +89,17 @@ class ValueModel(ImmutableDTO):
     `plan_cost_minor` is what the business's plan costs for the period's
     days and `return_multiple` how many times the period's money estimate
     covers it (both None when the plan is priced in another currency; no
-    multiple without an estimate).
+    multiple without an estimate, or for an estimate of nothing).
+
+    In the free trial (`is_trial`, until `trial_ends_at`) the period costs
+    nothing: no plan cost and no multiple, only the monthly price that
+    follows the trial (`plan_cost_after_trial_minor`, in the business
+    currency; None when priced in another).
+
+    The cabinet's periods never start before the business went live (or
+    was created): `is_since_launch` says `date_from` was moved up to that
+    day from an earlier one asked for, and `went_live_at` is when it first
+    went live (None: not yet, or before milestones were kept).
     """
 
     business_id: BusinessId
@@ -106,3 +119,8 @@ class ValueModel(ImmutableDTO):
     previous: ValueTotals
     plan_cost_minor: PlanCostMinor | None = None
     return_multiple: ValueReturnMultiple | None = None
+    is_trial: IsTrialPeriod = False
+    trial_ends_at: Microseconds | None = None
+    plan_cost_after_trial_minor: MonthlyPlanPriceMinor | None = None
+    is_since_launch: IsPeriodSinceLaunch = False
+    went_live_at: Microseconds | None = None

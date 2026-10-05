@@ -13,15 +13,20 @@ from app.schemas.dto.value.conversation_topics import (
     ConversationTopicView,
     TopicLanguageView,
 )
+from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.value.topic_labels import resolve_topic_label
 
 
 class GetConversationTopicsUseCase(
     UseCaseContract[ConversationTopicsQuery, ConversationTopicsView]
 ):
     """
-    The topics the nightly grouping stored, for owners and staff: labels
-    and counts only (no customer text is kept), so no audit entry. Never
-    grouped yet: an empty view in the owner's language.
+    The topics the nightly grouping stored, for owners and staff, labelled
+    in the language the member reads the cabinet in (`language`, else the
+    owner's): each topic's label in that language, else in English, else in
+    the owner's; the catch-all of other questions as OTHER. Labels and
+    counts only (no customer text is kept), so no audit entry. Never
+    grouped yet: an empty view.
     """
 
     def __init__(
@@ -42,15 +47,16 @@ class GetConversationTopicsUseCase(
                 user_id=input_data.user_id, business_id=input_data.business_id
             )
         )
+        language: LanguageTag = input_data.language or business.owner_language
         stored: ConversationTopicsDocument | None = self._topics_repo.get(business.id)
         if stored is None:
             return ConversationTopicsView(
-                business_id=business.id, label_language=business.owner_language
+                business_id=business.id, label_language=language
             )
 
         return ConversationTopicsView(
             business_id=business.id,
-            label_language=stored.label_language,
+            label_language=language,
             window_from=stored.window_from,
             window_to=stored.window_to,
             groups=[
@@ -59,7 +65,10 @@ class GetConversationTopicsUseCase(
                     conversation_count=group.conversation_count,
                     topics=[
                         ConversationTopicView(
-                            label=topic.label,
+                            label=resolve_topic_label(
+                                topic, language, stored.label_language
+                            ),
+                            kind=topic.kind,
                             conversation_count=topic.conversation_count,
                             unanswered_count=topic.unanswered_count,
                         )

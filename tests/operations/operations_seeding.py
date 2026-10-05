@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+from typed_time_provider import Microseconds
+
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.bookings import BookingStatus, BookingUnit, ResourceKind
 from app.schemas.constants.channels import ChannelKind
@@ -56,6 +58,8 @@ from tests.operations.builders import DEFAULT_MANAGERS, every_day
 from tests.operations.fakes import to_microseconds
 from tests.operations.operations_store import OperationsStore
 
+BUSINESS_AGE_MICROSECONDS: int = 365 * 24 * 60 * 60 * 1_000_000
+
 
 class OperationsSeeding(OperationsStore):
     """The operations store with helpers that add test data to it."""
@@ -93,6 +97,11 @@ class OperationsSeeding(OperationsStore):
             data_region=DataRegion.EU,
             members=members,
             manager_contacts=list(managers),
+            # A year before the world's now: every period tested is after it
+            # (the cabinet's periods never start before the business).
+            created_at=Microseconds(
+                int(self.clock.now_microseconds()) - BUSINESS_AGE_MICROSECONDS
+            ),
         )
         self.business_repo.save(business)
         return business

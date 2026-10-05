@@ -40,6 +40,19 @@ class EstimatedRevenueMinor(BaseConstrainedTypedInt):
     ge = 0
 
 
+class MonthlyPlanPriceMinor(BaseConstrainedTypedInt):
+    """
+    What a business's plan costs a month (an annual subscription spread over
+    twelve months), in minor units of its currency; what a trial business
+    pays once its free trial ends.
+
+    Example:
+        price = MonthlyPlanPriceMinor(51000)  # 510.00 GEL a month
+    """
+
+    ge = 0
+
+
 class PlanCostMinor(BaseConstrainedTypedInt):
     """
     What a business's plan costs for the days of a value period, in minor

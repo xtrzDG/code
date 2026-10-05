@@ -201,5 +201,6 @@ class OperationsWorld(OperationsBookingFactories):
             usage_event_repo=self.usage_repo,
             subscription_repo=self.subscription_repo,
             plan_registry=self.plan_registry,
+            activation_event_repo=self.activation_event_repo,
             wall_clock=self.clock.wall_clock,
         )

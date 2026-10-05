@@ -21,8 +21,9 @@ from app.use_cases.insights.value.value_access import without_money
 from app.use_cases.insights.value.value_return import (
     NO_RETURN,
     PlanPrices,
-    monthly_plan_price,
+    PlanTerms,
     plan_return,
+    read_plan_terms,
 )
 from tests.value.value_scene import ValueScene, at
 
@@ -32,6 +33,10 @@ GEL: CurrencyCode = CurrencyCode("GEL")
 
 def price(amount: int, currency: str = "GEL") -> Money:
     return Money.model_validate({"amount_minor": amount, "currency_code": currency})
+
+
+def terms(amount: int, currency: str = "GEL") -> PlanTerms:
+    return PlanTerms(monthly_price=price(amount, currency))
 
 
 def estimate(amount: int) -> EstimatedRevenueMinor:
@@ -50,7 +55,7 @@ def prices() -> PlanPrices:
 
 
 def test_a_calendar_month_against_the_whole_monthly_price() -> None:
-    returned = plan_return(price(29_300), GEL, *SEPTEMBER, estimate(109_000))
+    returned = plan_return(terms(29_300), GEL, *SEPTEMBER, estimate(109_000))
 
     assert returned.plan_cost_minor == 29_300
     # 109 000 / 29 300 = 3.72: one decimal, half up.
@@ -59,7 +64,7 @@ def test_a_calendar_month_against_the_whole_monthly_price() -> None:
 
 def test_a_week_against_its_share_of_the_month() -> None:
     returned = plan_return(
-        price(29_300), GEL, date(2026, 9, 28), date(2026, 10, 4), estimate(20_000)
+        terms(29_300), GEL, date(2026, 9, 28), date(2026, 10, 4), estimate(20_000)
     )
 
     # 29 300 x 7 / 30.436875 days = 6 738.6.
@@ -68,9 +73,9 @@ def test_a_week_against_its_share_of_the_month() -> None:
 
 
 def test_no_multiple_when_the_currencies_differ_or_nothing_is_priced() -> None:
-    euros = plan_return(price(7_900, "EUR"), GEL, *SEPTEMBER, estimate(109_000))
-    free = plan_return(price(0), GEL, *SEPTEMBER, estimate(109_000))
-    unpriced = plan_return(price(29_300), GEL, *SEPTEMBER, None)
+    euros = plan_return(terms(7_900, "EUR"), GEL, *SEPTEMBER, estimate(109_000))
+    free = plan_return(terms(0), GEL, *SEPTEMBER, estimate(109_000))
+    unpriced = plan_return(terms(29_300), GEL, *SEPTEMBER, None)
 
     assert euros == NO_RETURN
     assert free == NO_RETURN
@@ -80,7 +85,7 @@ def test_no_multiple_when_the_currencies_differ_or_nothing_is_priced() -> None:
 def test_the_monthly_price_comes_from_the_subscription_first() -> None:
     scene = ValueScene()
     sources = prices()
-    local = monthly_plan_price(sources, scene.business)
+    local = read_plan_terms(sources, scene.business).monthly_price
     sources.subscription_repo.save(
         SubscriptionDocument(
             business_id=scene.business.id,
@@ -94,7 +99,7 @@ def test_the_monthly_price_comes_from_the_subscription_first() -> None:
         )
     )
 
-    subscribed = monthly_plan_price(sources, scene.business)
+    subscribed = read_plan_terms(sources, scene.business).monthly_price
 
     assert local is not None and local.currency_code == "GEL"
     assert subscribed == price(29_250)

@@ -8,6 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.language_negotiation import parse_language_parameter
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.query_parsing import parse_optional
 from app.gateways.http.strict_request_parsing import parse_path_identifier
@@ -74,11 +75,19 @@ def build_value_insight_router(
     def get_conversation_topics(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
+        language: Annotated[str | None, Query()] = None,
     ) -> ConversationTopicsView:
-        """The topics of the last 30 days' first messages, grouped nightly."""
+        """
+        The topics of the last 30 days' first messages, grouped nightly,
+        labelled in `?language=` (the cabinet's; else the owner's).
+        """
 
         return get_topics.operate(
-            ConversationTopicsQuery(user_id=user_id, business_id=business(business_id))
+            ConversationTopicsQuery(
+                user_id=user_id,
+                business_id=business(business_id),
+                language=parse_language_parameter(language),
+            )
         )
 
     return router

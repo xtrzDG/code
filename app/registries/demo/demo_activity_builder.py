@@ -12,6 +12,7 @@ from app.registries.demo.demo_feedback import (
 )
 from app.registries.demo.demo_insights import build_demo_topics, tag_demo_sources
 from app.registries.demo.demo_operations_recorder import DemoOperationsRecorder
+from app.registries.demo.demo_quality import build_demo_quality_scores
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.users import BusinessMemberRole
@@ -23,6 +24,7 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.demo_data import DemoActivityRequest, DemoBusinessActivity
+from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.inbox.constrained_integers import AssignmentRevision
 from app.schemas.typings.users.prefixed_id import UserId
@@ -53,6 +55,7 @@ class DemoActivityBuilder:
         # Staff replies in the cabinet come from the staff member when the
         # business has one, otherwise from the owner.
         self.team_member_id: UserId = staff_ids[0] if staff_ids else self.owner_id
+        self.model_id: LlmModelId = request.model_id
         self.talk: DemoConversationRecorder = DemoConversationRecorder(
             business=business,
             clock=self.clock,
@@ -132,6 +135,13 @@ class DemoActivityBuilder:
                 self.talk.conversations,
                 self.talk.messages,
                 self.desk.questions,
+                self.clock.now,
+            ),
+            quality_scores=build_demo_quality_scores(
+                self.business,
+                self.talk.conversations,
+                self.talk.messages,
+                self.model_id,
                 self.clock.now,
             ),
         )

@@ -117,9 +117,10 @@ def test_a_niche_without_a_typical_check_waits_for_the_owners() -> None:
             ("2026-08-07", "2026-09-05"),
         ),
         (
+            # The restaurant opened on 2026-08-01: 90 days would start before it.
             ValuePeriod.LAST_90_DAYS,
-            ("2026-07-08", "2026-10-05"),
-            ("2026-04-09", "2026-07-07"),
+            ("2026-08-01", "2026-10-05"),
+            ("2026-05-27", "2026-07-31"),
         ),
         (
             ValuePeriod.THIS_MONTH,
