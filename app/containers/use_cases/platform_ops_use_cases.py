@@ -40,6 +40,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 from app.use_cases.admin.alerts.send_platform_alert_use_case import (
     SendPlatformAlertUseCase,
 )
+from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.incidents.create_incident_use_case import (
     CreateIncidentUseCase,
 )
@@ -100,6 +101,13 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         platform_activity_repo=repositories.platform_activity_repo,
         signal_counter=adapters.signal_counter,
         quality_totals_repo=repositories.quality_totals_repo,
+        spend_checks=Factory(
+            SpendAlertChecks,
+            usage_spend_repo=repositories.usage_spend_repo,
+            daily_budget_micro_usd=(
+                config.app_settings.provided.spend_guard.provided.platform_daily_budget_micro_usd
+            ),
+        ),
     )
     check_platform_alerts_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(

@@ -1,6 +1,7 @@
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.spend import OwnerAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.conversation_feed.owner_test_chat import (
@@ -8,6 +9,7 @@ from app.schemas.dto.conversation_feed.owner_test_chat import (
     OwnerTestChatVersionQuery,
 )
 from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.spend_guard import OwnerActionAdmission
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.conversations.strings import ChannelUserId
@@ -24,6 +26,7 @@ class OwnerTestChatOrchestrator(
     on the business (owners and staff), choose the version to test, and
     address the message to the OWNER_TEST channel of this user and session,
     so tests never mix with real customers, billing or staff notifications.
+    A person sends at most 30 test messages a minute (`owner_action_limits`).
     """
 
     def __init__(
@@ -34,7 +37,11 @@ class OwnerTestChatOrchestrator(
         resolve_test_chat_version: UseCaseContract[
             OwnerTestChatVersionQuery, AssistantVersionId
         ],
+        admit_owner_action: UseCaseContract[OwnerActionAdmission, None] | None = None,
     ) -> None:
+        self._admit_owner_action: UseCaseContract[OwnerActionAdmission, None] | None = (
+            admit_owner_action
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -51,6 +58,15 @@ class OwnerTestChatOrchestrator(
         )
         if str(input_data.request.text).strip() == "":
             raise ValidationFailedError("The test message is empty.")
+
+        if self._admit_owner_action is not None:
+            self._admit_owner_action.run(
+                OwnerActionAdmission(
+                    action=OwnerAction.TEST_CHAT,
+                    user_id=input_data.user_id,
+                    business_id=business.id,
+                )
+            )
 
         version_id: AssistantVersionId = self._resolve_test_chat_version.run(
             OwnerTestChatVersionQuery(

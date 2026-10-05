@@ -68,7 +68,7 @@ class AssistantOrchestratorsContainer(containers.DeclarativeContainer):
         UseCaseContract[AutotestScenarioRun, AutotestScenarioResult]
     ] = Factory(
         RunAutotestScenarioUseCase,
-        conversation_turn_orchestrator=conversation_orchestrators.conversation_turn_orchestrator,
+        conversation_turn_orchestrator=conversation_orchestrators.autotest_turn_orchestrator,
         customer_llm_adapter=adapters.llm_adapter,
         judge_llm_adapter=adapters.llm_adapter,
         message_repo=repositories.message_repo,

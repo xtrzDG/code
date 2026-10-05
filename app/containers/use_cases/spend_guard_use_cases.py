@@ -11,9 +11,31 @@ from app.containers.utilities import UtilitiesContainer
 from app.facilitators.spend_guard.spend_limit_notice_facilitator import (
     SpendLimitNoticeFacilitator,
 )
+from app.use_cases.spend_guard.admit_api_request_use_case import (
+    AdmitApiRequestUseCase,
+)
+from app.use_cases.spend_guard.admit_owner_action_use_case import (
+    AdmitOwnerActionUseCase,
+)
 from app.use_cases.spend_guard.check_business_spend_use_case import (
     CheckBusinessSpendUseCase,
 )
+
+
+def admit_owner_action_factory(
+    registries: RegistriesContainer, time_provider: TimeProviderContainer
+) -> Factory[AdmitOwnerActionUseCase]:
+    """
+    The owner action limits over the shared counters; the contexts whose
+    actions they limit (menu imports, autotests) build it from their own
+    edges.
+    """
+
+    return Factory(
+        AdmitOwnerActionUseCase,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
 
 
 class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
@@ -49,4 +71,13 @@ class SpendGuardUseCasesContainer(containers.DeclarativeContainer):
         notices=spend_limit_notices,
         exchange_rate_registry=registries.exchange_rate_registry,
         settings=config.app_settings.provided.spend_guard,
+    )
+    admit_owner_action_use_case: Factory[AdmitOwnerActionUseCase] = (
+        admit_owner_action_factory(registries, time_provider)
+    )
+    admit_api_request_use_case: Factory[AdmitApiRequestUseCase] = Factory(
+        AdmitApiRequestUseCase,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        settings=config.app_settings.provided.spend_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

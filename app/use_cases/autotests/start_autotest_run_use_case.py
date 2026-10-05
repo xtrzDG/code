@@ -8,6 +8,7 @@ from app.contracts.repositories.assistant_repositories import (
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.assistants import AssistantVersionStatus, AutotestRunStatus
 from app.schemas.constants.live_events import LiveEventKind
+from app.schemas.constants.spend import OwnerAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -18,6 +19,7 @@ from app.schemas.dto.assistants.autotest_runs import (
     AutotestRunPlan,
     AutotestScenarioPlanning,
 )
+from app.schemas.dto.spend_guard import OwnerActionAdmission
 from app.schemas.exceptions.application_errors import (
     ConflictError,
     NotFoundError,
@@ -49,6 +51,8 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
     customer gets a valid example mobile number of the business country, so
     bookings work for any country. The run remembers the run of the version
     live at its start (`compared_to_run_id`) to show what changed against it.
+    A business tests one version at a time and starts at most 20 runs a day
+    (`owner_action_limits`; each run plays hundreds of model turns).
     """
 
     def __init__(
@@ -65,7 +69,11 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
         ],
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        admit_owner_action: UseCaseContract[OwnerActionAdmission, None] | None = None,
     ) -> None:
+        self._admit_owner_action: UseCaseContract[OwnerActionAdmission, None] | None = (
+            admit_owner_action
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -124,6 +132,8 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
         if not planning.scenarios:
             raise ValidationFailedError("There are no autotest scenarios to run.")
 
+        self._admit_run(business, input_data)
+
         now: Microseconds = self._wall_clock.now_unix()
         previous_status: AssistantVersionStatus = version.status
         run = AutotestRunDocument(
@@ -169,6 +179,28 @@ class StartAutotestRunUseCase(UseCaseContract[RunAutotestsCommand, AutotestRunPl
             customer_phone_number=find_example_mobile_number(business.country_code),
             started_at=now,
         )
+
+    def _admit_run(
+        self, business: BusinessDocument, input_data: RunAutotestsCommand
+    ) -> None:
+        """One version under test at a time, and the business's daily runs."""
+
+        if any(
+            other.status is AssistantVersionStatus.TESTING
+            for other in self._assistant_version_repo.list_by_business(business.id)
+        ):
+            raise ConflictError(
+                "Another version is being tested; wait for its autotest run to finish."
+            )
+
+        if self._admit_owner_action is not None:
+            self._admit_owner_action.run(
+                OwnerActionAdmission(
+                    action=OwnerAction.AUTOTEST_RUN,
+                    user_id=input_data.user_id,
+                    business_id=business.id,
+                )
+            )
 
     def _find_live_run_id(
         self, business: BusinessDocument, version: AssistantVersionDocument

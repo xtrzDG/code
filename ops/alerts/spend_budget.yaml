@@ -1,0 +1,14 @@
+# The platform budget breaker: the providers' spend of the current UTC day
+# passed 80% of PLATFORM_DAILY_SPEND_BUDGET_USD (unset: never fires). The
+# figure is the percent of the budget used. Each business's own daily
+# limits still brake it on its own (the spend guard, migration 1142).
+code: spend_budget
+severity: sev2
+summary: Today's provider spend passed 80% of the platform's daily budget.
+measure: today's provider spend (UTC) as a percent of the daily budget
+threshold: 80
+unit: percent
+window_minutes: 1440
+volume_floor: 0
+source: usage_events (doc_occurred_at) include (doc_kind, doc_cost_micro_usd, doc_quantity), migration 1142
+runbook: docs/operations/runbooks/spend-spike.md

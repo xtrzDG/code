@@ -91,6 +91,19 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
             check_spend=spend_guard_use_cases.check_business_spend_use_case,
         )
     )
+    # Autotests play the same turns without the spend guard: a check must
+    # test the version's own model, and runs have their own limits (one at
+    # a time, 20 a day per business).
+    autotest_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = Factory(
+        ConversationTurnOrchestrator,
+        prepare_turn=conversation_use_cases.prepare_conversation_turn_use_case,
+        generate_reply=conversation_use_cases.generate_assistant_reply_use_case,
+        handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
+        record_reply=conversation_use_cases.record_assistant_reply_use_case,
+        localized_text_resolver=utilities.localized_text_resolver,
+        storage_scope=utilities.storage_scope,
+        answer_customer_signal=feedback_use_cases.answer_customer_signal_use_case,
+    )
     voice_tool_call_orchestrator: Factory[VoiceToolCallOrchestratorContract] = Factory(
         VoiceToolCallOrchestrator,
         open_voice_conversation=conversation_use_cases.open_voice_conversation_use_case,
@@ -104,6 +117,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
         OwnerTestChatOrchestrator,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         resolve_test_chat_version=conversation_feed_use_cases.resolve_test_chat_version_use_case,
+        admit_owner_action=spend_guard_use_cases.admit_owner_action_use_case,
     )
 
     # --- Voice webhooks.

@@ -9,7 +9,12 @@ from app.schemas.configurations.spend_guard_settings import (
     DEFAULT_CALL_SILENCE_END_SECONDS,
 )
 from app.schemas.constants.billing import UsageKind
-from app.schemas.constants.spend import SpendLevel, SpendProvider
+from app.schemas.constants.spend import (
+    OwnerAction,
+    RequestLimitClass,
+    SpendLevel,
+    SpendProvider,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.billing.constrained_integers import (
@@ -18,6 +23,7 @@ from app.schemas.typings.billing.constrained_integers import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.spend.booleans import IsCustomSpendLimit
 from app.schemas.typings.spend.constrained_integers import (
     CallMaxDurationSeconds,
@@ -26,6 +32,7 @@ from app.schemas.typings.spend.constrained_integers import (
     SpendPercent,
 )
 from app.schemas.typings.spend.constrained_strings import SpendDay
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class UsageKindTotal(ImmutableDTO):
@@ -130,3 +137,64 @@ class VoiceCallLimits(ImmutableDTO):
     silence_end_seconds: CallSilenceEndSeconds = CallSilenceEndSeconds(
         DEFAULT_CALL_SILENCE_END_SECONDS
     )
+
+
+class OwnerActionAdmission(ImmutableDTO):
+    """A person of a business is about to take a limited cabinet action."""
+
+    action: OwnerAction
+    user_id: UserId
+    business_id: BusinessId
+
+
+class ApiRequestAdmission(ImmutableDTO):
+    """
+    One API request to count against the generic limits: a signed-in
+    person's (`user_id`, by the class of request) or, without a token, its
+    client address's.
+    """
+
+    limit_class: RequestLimitClass = RequestLimitClass.GENERAL
+    user_id: UserId | None = None
+    client_ip_address: ClientIpAddress | None = None
+
+
+class PlatformSpendFigures(ImmutableDTO):
+    """The platform's spend of the current UTC day and of the 7 days before."""
+
+    day: SpendDay
+    providers: list[ProviderSpend]
+    total_micro_usd: CostMicroUsd
+    week_total_micro_usd: CostMicroUsd
+    week_daily_mean_micro_usd: CostMicroUsd
+
+
+class AdminSpendQuery(ImmutableDTO):
+    """A platform admin opens the overview's spend tile."""
+
+    user_id: UserId
+
+
+class BusinessSpendLimitsRequest(ImmutableDTO):
+    """
+    A business's own daily spend limits in micro-USD; None returns that
+    limit to the plan's default.
+    """
+
+    soft_limit_micro_usd: DailySpendLimitMicroUsd | None = None
+    hard_limit_micro_usd: DailySpendLimitMicroUsd | None = None
+
+
+class BusinessSpendLimitsCommand(ImmutableDTO):
+    """A platform admin sets a client's daily spend limits."""
+
+    user_id: UserId
+    business_id: BusinessId
+    request: BusinessSpendLimitsRequest
+
+
+class BusinessSpendLimitsView(ImmutableDTO):
+    """A client's daily spend limits as the spend guard holds them now."""
+
+    business_id: BusinessId
+    limits: SpendLimits

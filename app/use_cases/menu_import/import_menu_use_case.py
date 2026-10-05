@@ -3,6 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.brain import MenuExtractionAdapterContract
 from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.spend import OwnerAction
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.access import BusinessAccessRequest
@@ -13,6 +14,7 @@ from app.schemas.dto.menu_import import (
     MenuImportRequest,
     MenuImportResult,
 )
+from app.schemas.dto.spend_guard import OwnerActionAdmission
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.menu_import.prefixed_id import MenuImportBatchId
 from app.utilities.knowledge.imported_drafts import build_draft
@@ -42,7 +44,8 @@ class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
     (to discard the rest at once), and come from MENU_IMPORT.
     Prices become minor units of the business currency; a line printed in
     another currency keeps its printed price and is flagged instead, because
-    exchange rates are never invented.
+    exchange rates are never invented. A business imports at most 10 menus
+    an hour (`owner_action_limits`; a model reads each one).
     """
 
     def __init__(
@@ -53,7 +56,11 @@ class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
         menu_extraction_adapter: MenuExtractionAdapterContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
         wall_clock: WallClock[Microseconds],
+        admit_owner_action: UseCaseContract[OwnerActionAdmission, None] | None = None,
     ) -> None:
+        self._admit_owner_action: UseCaseContract[OwnerActionAdmission, None] | None = (
+            admit_owner_action
+        )
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -71,6 +78,14 @@ class ImportMenuUseCase(UseCaseContract[ImportMenuCommand, MenuImportResult]):
             )
         )
         validate_import_request(input_data.request)
+        if self._admit_owner_action is not None:
+            self._admit_owner_action.run(
+                OwnerActionAdmission(
+                    action=OwnerAction.MENU_IMPORT,
+                    user_id=input_data.user_id,
+                    business_id=business.id,
+                )
+            )
         extraction: MenuExtraction = self._menu_extraction_adapter.extract(
             MenuExtractionRequest(
                 media_type=input_data.request.media_type,

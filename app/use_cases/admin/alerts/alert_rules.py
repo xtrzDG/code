@@ -136,5 +136,24 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
             "assistant-quality.md",
             volume_floor=QUALITY_DROP_FLOOR,
         ),
+        _rule(
+            PlatformAlertCode.SPEND_SPIKE,
+            IncidentSeverity.SEV2,
+            "Today's provider spend is far above the daily mean of the week before.",
+            3,
+            AlertUnit.RATIO,
+            DAY_MINUTES,
+            "spend-spike.md",
+            volume_floor=5,
+        ),
+        _rule(
+            PlatformAlertCode.SPEND_BUDGET,
+            IncidentSeverity.SEV2,
+            "Today's provider spend passed 80% of the platform's daily budget.",
+            80,
+            AlertUnit.PERCENT,
+            DAY_MINUTES,
+            "spend-spike.md",
+        ),
     )
 }

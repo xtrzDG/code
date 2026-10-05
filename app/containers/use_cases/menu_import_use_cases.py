@@ -12,6 +12,9 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.use_cases.spend_guard_use_cases import (
+    admit_owner_action_factory,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.contracts.website_import import WebsiteExtractionAdapterContract
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
@@ -71,6 +74,7 @@ class MenuImportUseCasesContainer(containers.DeclarativeContainer):
         menu_extraction_adapter=adapters.menu_extraction_adapter,
         knowledge_item_repo=repositories.knowledge_item_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        admit_owner_action=admit_owner_action_factory(registries, time_provider),
     )
     confirm_imported_items_use_case: Factory[
         UseCaseContract[ConfirmImportedItemsCommand, ConfirmImportedItemsResult]
