@@ -9,7 +9,7 @@
 
 import type { Schema } from "@/api/types";
 import { minorToMajor } from "@/lib/format";
-import { numberFormat } from "@/lib/intl/formatters";
+import { dateTimeFormat, numberFormat } from "@/lib/intl/formatters";
 
 export type PlanQuote = Schema<"PlanQuote">;
 export type QuotedMoney = Schema<"QuotedMoney">;
@@ -103,4 +103,11 @@ export function rateSourceKey(rate: Pick<ExchangeRateQuote, "sources">): RateSou
   }
   const [only] = sources;
   return sources.length === 1 && only !== undefined ? only : "official";
+}
+
+/** A rate's day ("2026-10-01") in a language: "1 October 2026" (the day as published, in UTC). */
+export function rateDayLabel(day: string, locale: string): string {
+  return dateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${day}T00:00:00Z`),
+  );
 }

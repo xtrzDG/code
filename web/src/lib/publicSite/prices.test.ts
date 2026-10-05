@@ -5,6 +5,7 @@ import {
   hasConversion,
   moneyLabel,
   planPriceLines,
+  rateDayLabel,
   rateSourceKey,
   type PlanQuote,
   type QuotedMoney,
@@ -112,5 +113,12 @@ describe("rate source", () => {
     expect(rateSourceKey({ sources: ["ecb", "planning"] })).toBe("planning");
     expect(rateSourceKey({ sources: [] })).toBe("planning");
     expect(rateSourceKey({})).toBe("planning");
+  });
+});
+
+describe("rate day", () => {
+  it("names the published day in the reader's language, whatever their time zone", () => {
+    expect(rateDayLabel("2026-09-30", "en")).toBe("September 30, 2026");
+    expect(rateDayLabel("2026-09-30", "ru")).toMatch(/^30 сентября 2026/);
   });
 });

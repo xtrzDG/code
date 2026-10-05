@@ -9,7 +9,7 @@ import type { ApiError } from "@/api/errors";
 import type { Schema } from "@/api/types";
 import { cn } from "@/lib/cn";
 import { listFormat } from "@/lib/intl/formatters";
-import { rateSourceKey } from "@/lib/publicSite/prices";
+import { rateDayLabel, rateSourceKey } from "@/lib/publicSite/prices";
 
 import {
   hasEstimatedPrices,
@@ -213,7 +213,10 @@ export function PlansSection({
           </ul>
           {exchangeRate && hasEstimatedPrices(quotes, period) ? (
             <p className="text-xs text-ink-subtle">
-              {t("billing.plans.estimatedNote", { source: t(`publicPricing.rateSources.${rateSourceKey(exchangeRate)}`), date: exchangeRate.rate_date })}
+              {t("billing.plans.estimatedNote", {
+                source: t(`publicPricing.rateSources.${rateSourceKey(exchangeRate)}`),
+                date: rateDayLabel(exchangeRate.rate_date, locale),
+              })}
             </p>
           ) : null}
         </>

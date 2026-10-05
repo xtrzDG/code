@@ -81,7 +81,7 @@ export const billingKa: Translation<typeof billingEn> = {
     overageValue: "{minutes} წთ · {cost}",
     overagePrice: "თითოეული დამატებითი წუთი ღირს {price}.",
     none: "ხარჯი აქ გამოჩნდება გამოწერის დაწყების შემდეგ.",
-    estimatedNote: "≈ გადაანგარიშებულია მხოლოდ ორიენტირისთვის; ანგარიში გამოიწერება ტარიფის ვალუტაში.",
+    estimatedNote: "≈ გადაანგარიშებულია მხოლოდ ორიენტირისთვის; ზუსტი თანხა ანგარიშშია.",
   },
   plans: {
     title: "ტარიფები",
@@ -101,7 +101,7 @@ export const billingKa: Translation<typeof billingEn> = {
     switchTo: "ამ ტარიფზე გადასვლა",
     startTrial: "უფასოდ დაწყება",
     empty: "თქვენი ქვეყნისთვის ტარიფები ჯერ მიუწვდომელია.",
-    estimatedNote: "≈ ნიშნით აღნიშნული ფასები მხოლოდ ორიენტირია: გადაანგარიშებულია ევროდან {source}, თარიღი: {date}; გადახდა ევროშია.",
+    estimatedNote: "≈ ნიშნით აღნიშნული ფასები მხოლოდ ორიენტირია: გადაანგარიშებულია {source}, თარიღი: {date}; ზუსტი თანხა ანგარიშშია.",
   },
   invoices: {
     title: "ინვოისები",

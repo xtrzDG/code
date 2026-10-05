@@ -78,7 +78,7 @@ export const billingEn = {
     overageValue: "{minutes} min · {cost}",
     overagePrice: "Each extra minute costs {price}.",
     none: "Usage appears here once the subscription starts.",
-    estimatedNote: "≈ converted for orientation only; the invoice is in the plan's currency.",
+    estimatedNote: "≈ converted for orientation only; the invoice shows the exact amount.",
   },
   plans: {
     title: "Plans",
@@ -98,7 +98,7 @@ export const billingEn = {
     switchTo: "Switch to this plan",
     startTrial: "Start free trial",
     empty: "Plans for your country are not available yet.",
-    estimatedNote: "Prices with ≈ are a guide only: converted from euros at {source} as of {date}; you are billed in euros.",
+    estimatedNote: "Prices with ≈ are a guide only: converted at {source} as of {date}; the invoice shows the exact amount.",
   },
   invoices: {
     title: "Invoices",

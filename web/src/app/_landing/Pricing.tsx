@@ -1,21 +1,13 @@
 import type { CountryListItem, Schema } from "@/api/types";
 import { Stagger } from "@/components/motion";
 import type { Translator } from "@/i18n/translate";
-import { dateTimeFormat } from "@/lib/intl/formatters";
-import { hasConversion, rateSourceKey } from "@/lib/publicSite/prices";
+import { hasConversion, rateDayLabel, rateSourceKey } from "@/lib/publicSite/prices";
 
 import { CountryPicker } from "./CountryPicker";
 import { PlanCard } from "./PlanCard";
 import { Section } from "./Section";
 
 type PlanQuoteList = Schema<"PlanQuoteList">;
-
-/** A rate's day ("2026-10-01") in the page's language: "1 October 2026". */
-function rateDay(day: string, locale: string): string {
-  return dateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
-    new Date(`${day}T00:00:00Z`),
-  );
-}
 
 /**
  * The plans of the chosen country, from GET /v1/catalog/plans. Prices are
@@ -64,7 +56,7 @@ export function Pricing({
               <p>
                 {t("publicPricing.conversionNote", {
                   source: t(`publicPricing.rateSources.${rateSourceKey(rate)}`),
-                  date: rateDay(rate.rate_date, locale),
+                  date: rateDayLabel(rate.rate_date, locale),
                 })}
               </p>
             ) : null}
