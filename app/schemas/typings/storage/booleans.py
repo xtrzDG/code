@@ -7,6 +7,7 @@ Example:
 IsDescendingOrder = bool
 IsDocumentInserted = bool
 IsDocumentUpgradeDryRun = bool
+IsLookupBackfillDryRun = bool
 IsMigrationDryRun = bool
 IsTransactionalMigration = bool
 # Keep abc order for all non example types, if possible.

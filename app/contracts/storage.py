@@ -12,13 +12,19 @@ from app.schemas.dto.document_upgrades import (
     CollectionUpgradeReport,
     CollectionUpgradeRequest,
 )
+from app.schemas.dto.lookup_backfill import LookupBackfillBatch, TriggerLookupColumn
 from app.schemas.dto.storage import (
     AppliedSchemaMigration,
     SchemaMigrationScript,
     StorageScope,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.storage.constrained_integers import MigrationAttemptNumber
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    LookupBackfillBatchSize,
+    MigrationAttemptNumber,
+)
+from app.schemas.typings.storage.strings import StoredDocumentKey
 
 
 class StorageScopeContract(UtilityContract, Protocol):
@@ -119,5 +125,39 @@ class StoredDocumentUpgradeAdapterContract(AdapterContract, Protocol):
         Rows of a newer version are counted and left alone; a row that
         cannot be upgraded is counted as failed and the run goes on.
         NotFoundError for a collection outside the catalog.
+        """
+        raise NotImplementedError
+
+
+class LookupColumnBackfillAdapterContract(AdapterContract, Protocol):
+    """
+    The trigger-kept lookup columns of the database and their backfill,
+    platform-wide (row-level security bypassed): rows written before a
+    column's migration get its value in keyset batches, each its own short
+    transaction whose lock waits are bounded.
+    """
+
+    def list_trigger_columns(self) -> list[TriggerLookupColumn]:
+        """Every trigger-kept `doc_<field>` column, by table and column."""
+        raise NotImplementedError
+
+    def count_missing(self, column: TriggerLookupColumn) -> DocumentCount:
+        """Rows whose document has the field but whose column is empty."""
+        raise NotImplementedError
+
+    def fill_batch(
+        self,
+        column: TriggerLookupColumn,
+        after: StoredDocumentKey | None,
+        batch_size: LookupBackfillBatchSize,
+    ) -> LookupBackfillBatch:
+        """
+        Look at the next `batch_size` rows after the key `after` (primary
+        key order) and fill the column where it is still empty.
+
+        Raises:
+            MigrationLockTimeoutError: a row stayed locked by another
+                transaction for longer than the lock timeout (nothing of
+                the batch was written).
         """
         raise NotImplementedError

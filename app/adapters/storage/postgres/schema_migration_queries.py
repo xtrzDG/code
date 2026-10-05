@@ -3,6 +3,9 @@ The bookkeeping SQL of the migration runner: `workshop.schema_migrations`,
 the runners' lock and the lock timeout of a migration's statements.
 """
 
+import time
+from collections.abc import Callable
+
 from psycopg import sql
 from psycopg.rows import TupleRow
 
@@ -19,10 +22,13 @@ from app.schemas.typings.storage.constrained_integers import LockWaitSeconds
 
 SCHEMA_MIGRATIONS_TABLE_NAME: str = "schema_migrations"
 QUALIFIED_TABLE_NAME: str = f"{DOCUMENT_SCHEMA_NAME}.{SCHEMA_MIGRATIONS_TABLE_NAME}"
-# Advisory lock that serializes migration runners (several app instances
-# may start at once). Any fixed bigint works; a transactional file takes it
-# for its transaction, a no-transaction file for its session.
+# Session advisory lock that serializes migration runners (several app
+# instances may start at once). Any fixed bigint works.
 MIGRATION_LOCK_KEY: int = 4_711_202_610_010_001
+# How long a runner waits for another one (the statement timeout of a
+# migration), asking every quarter of a second.
+DEFAULT_RUNNER_LOCK_WAIT_SECONDS: float = 30 * 60
+RUNNER_LOCK_POLL_SECONDS: float = 0.25
 TABLE: sql.Identifier = sql.Identifier(
     DOCUMENT_SCHEMA_NAME, SCHEMA_MIGRATIONS_TABLE_NAME
 )
@@ -44,6 +50,36 @@ FIND_CHECKSUM_QUERY: sql.Composed = sql.SQL(
 INSERT_QUERY: sql.Composed = sql.SQL(
     "insert into {table} (name, checksum, applied_at) values (%s, %s, %s)"
 ).format(table=TABLE)
+
+
+def lock_runners(
+    connection: PostgresConnection,
+    sleep: Callable[[float], None],
+    wait_seconds: float,
+) -> None:
+    """
+    Take the runners' session lock, asking again outside any transaction
+    while another runner holds it.
+
+    Raises:
+        ExternalServiceError: another runner held it for `wait_seconds`.
+    """
+
+    deadline: float = time.monotonic() + wait_seconds
+    while True:
+        row: TupleRow | None = connection.execute(
+            "select pg_try_advisory_lock(%s)", (MIGRATION_LOCK_KEY,)
+        ).fetchone()
+        if row is not None and row[0] is True:
+            return
+
+        if time.monotonic() >= deadline:
+            raise ExternalServiceError(
+                "Another migration runner held the migration lock for "
+                f"{wait_seconds:.0f} s; try again when it is done."
+            )
+
+        sleep(RUNNER_LOCK_POLL_SECONDS)
 
 
 def prepare_bookkeeping(connection: PostgresConnection) -> None:

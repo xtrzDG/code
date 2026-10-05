@@ -1,9 +1,11 @@
 """
 The declared lookup fields of the document collections, by collection.
 
-Each TEXT, FILTER_TEXT and INTEGER field is a generated column
-`doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103, 1112 and 1113), each
+Each TEXT, FILTER_TEXT and INTEGER field is a column `doc_<field>`: a
+stored generated one up to migration 1113 (1010, 1040, 1042, 1043, 1051,
+1052, 1061, 1062, 1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103,
+1112 and 1113), a plain one filled by the `<table>_lookup_columns` trigger
+from 1122 on (the online-safe pattern of migrations/README.md); each
 ELEMENT_TEXT field a trigger over `workshop.document_lookup_keys`;
 `document_lookup_fields` explains the kinds and checks queries against this
 catalog. The platform's own collections (jobs, incidents, the status
@@ -48,8 +50,17 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("totp_factors"): (integer_field("created_at"),),
     DocumentCollectionName("recovery_codes"): (text_field("user_id"),),
     DocumentCollectionName("mfa_challenges"): (integer_field("created_at"),),
-    # The businesses of a signed-in user.
-    DocumentCollectionName("businesses"): (element_field("members[].user_id"),),
+    # The businesses of a signed-in user. Every business in sign-up order,
+    # or those of one status (periodic jobs walk them in keyset batches);
+    # the admin client list filters and counts by status, country and
+    # niche (1122).
+    DocumentCollectionName("businesses"): (
+        element_field("members[].user_id"),
+        integer_field("created_at"),
+        text_field("status"),
+        filter_field("country_code"),
+        filter_field("niche_key"),
+    ),
     # Webhook routing: the channel of an incoming message; channels in
     # error (a navigation badge, migration 1040; the admin system page,
     # 1093) and Meta tokens that run out soon (1093).
@@ -62,11 +73,14 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # Every customer message: the contact, its open conversation, the
     # hourly message count and the transcript.
     # The CSV and full exports page through them by first contact (1113).
+    # The customer list by last activity and the exact-name search (1122).
     DocumentCollectionName("contacts"): (
         text_field("phone_number"),
         text_field("verified_phone_number"),
         element_field("channel_identities[].channel_user_id"),
         integer_field("created_at"),
+        integer_field("last_seen_at"),
+        text_field("display_name_folded"),
     ),
     # The feed newest first (keyset pages), its filters, and the dashboard's
     # counts by channel, language and local day; the team inbox's views by
@@ -132,12 +146,18 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("ends_at"),
         integer_field("created_at"),
         integer_field("value_minor"),
+        # A page of customers' bookings, counted per channel (1122).
+        text_field("contact_id"),
+        filter_field("source_channel"),
     ),
     DocumentCollectionName("leads"): (
         text_field("conversation_id"),
         text_field("status"),
         filter_field("is_sandbox"),
         integer_field("created_at"),
+        # A page of customers' leads, counted per channel (1122).
+        text_field("contact_id"),
+        filter_field("source_channel"),
     ),
     # Open handoffs by urgency and age, resolved ones by resolution time.
     DocumentCollectionName("handoffs"): (
@@ -169,6 +189,11 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # Usage of a billing period.
     DocumentCollectionName("usage_events"): (integer_field("occurred_at"),),
+    # Trials that ended, across businesses (the end-of-trial job, 1122).
+    DocumentCollectionName("subscriptions"): (
+        text_field("status"),
+        integer_field("trial_ends_at"),
+    ),
     # Webhook redelivery receipts (unique per message) and their purge.
     DocumentCollectionName("channel_message_receipts"): (
         filter_field("channel"),
@@ -203,10 +228,13 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         text_field("caller_phone_number"),
     ),
     # The FAQ of a business: the website chat's starter questions (1052);
-    # the item that corrected an assistant answer (1112).
+    # the item that corrected an assistant answer (1112); the knowledge
+    # list, last changed first, of one kind and state (1122).
     DocumentCollectionName("knowledge_items"): (
         text_field("kind"),
         text_field("correction_of"),
+        integer_field("updated_at"),
+        filter_field("is_active"),
     ),
     # The stored digests and monthly reports of a business, newest period
     # first, of one kind (1061).

@@ -52,6 +52,23 @@ class LockWaitSeconds(BaseConstrainedTypedInt):
     le = 600
 
 
+class LookupBackfillBatchCount(BaseConstrainedTypedInt):
+    """How many keyset batches `workshop backfill-lookup` ran for a column."""
+
+    ge = 0
+
+
+class LookupBackfillBatchSize(BaseConstrainedTypedInt):
+    """
+    How many rows one transaction of `workshop backfill-lookup` looks at
+    (in primary-key order): small enough that its row locks are held for
+    milliseconds, large enough that a big table takes few round trips.
+    """
+
+    ge = 1
+    le = 50_000
+
+
 class MigrationAttemptLimit(BaseConstrainedTypedInt):
     """
     How many times the migration runner tries one file whose locks were not

@@ -1,4 +1,6 @@
 import logging
+import time
+from collections.abc import Callable
 
 import psycopg
 from psycopg.rows import TupleRow
@@ -10,12 +12,14 @@ from app.adapters.storage.postgres.migration_statements import (
     execute_sql,
 )
 from app.adapters.storage.postgres.schema_migration_queries import (
+    DEFAULT_RUNNER_LOCK_WAIT_SECONDS,
     INSERT_QUERY,
     LIST_QUERY,
     MIGRATION_LOCK_KEY,
     bound_lock_waits,
     has_bookkeeping_table,
     is_recorded,
+    lock_runners,
     prepare_bookkeeping,
     read_integer,
     read_text,
@@ -43,18 +47,22 @@ class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
     """
     Records applied migrations in `workshop.schema_migrations`.
 
-    Runners are serialized by an advisory lock; whoever gets it re-checks
-    the record first. Every statement of a migration waits at most
-    `lock_timeout` for a lock (5 s by default): a file that needs a table
-    the live release keeps busy fails fast (MigrationLockTimeoutError)
-    instead of queueing every write of that table behind it, and the
-    runner tries it again later.
+    Runners are serialized by a session advisory lock, which a waiting
+    runner asks for again and again outside any transaction: a runner that
+    waited inside a transaction would hold a snapshot that the other
+    runner's `CREATE INDEX CONCURRENTLY` waits for (a deadlock). Whoever
+    gets the lock re-checks the record first.
+
+    Every statement of a migration waits at most `lock_timeout` for a lock
+    (5 s by default): a file that needs a table the live release keeps busy
+    fails fast (MigrationLockTimeoutError) instead of queueing every write
+    of that table behind it, and the runner tries it again later.
 
     A transactional file runs in one transaction together with its record
     (simple query protocol, so it may hold many statements and PL/pgSQL
     bodies): a failure leaves nothing behind. A no-transaction file
     (`-- workshop:no-transaction`, for `CREATE INDEX CONCURRENTLY`) runs
-    statement by statement under a session lock and is recorded only after
+    statement by statement and is recorded only after
     its last statement; its statements must be idempotent (`IF NOT EXISTS`,
     `CREATE OR REPLACE`), because a new try runs the file from the start,
     after the indexes a failed try left invalid were dropped.
@@ -64,9 +72,13 @@ class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
         self,
         connection_pool: PostgresConnectionPoolClient,
         lock_timeout: LockWaitSeconds = DEFAULT_LOCK_TIMEOUT,
+        sleep: Callable[[float], None] = time.sleep,
+        lock_wait_seconds: float = DEFAULT_RUNNER_LOCK_WAIT_SECONDS,
     ) -> None:
         self._connection_pool: PostgresConnectionPoolClient = connection_pool
         self._lock_timeout: LockWaitSeconds = lock_timeout
+        self._sleep: Callable[[float], None] = sleep
+        self._lock_wait_seconds: float = lock_wait_seconds
 
     def list_applied(self) -> list[AppliedSchemaMigration]:
         try:
@@ -95,71 +107,64 @@ class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
         applied_at: Microseconds,
     ) -> bool:
         try:
-            if script.is_transactional:
-                return self._apply_in_transaction(script, applied_at)
+            with self._connection_pool.connection() as connection:
+                lock_runners(connection, self._sleep, self._lock_wait_seconds)
+                try:
+                    prepare_bookkeeping(connection)
+                    if is_recorded(connection, script):
+                        return False
 
-            return self._apply_statement_by_statement(script, applied_at)
+                    if script.is_transactional:
+                        self._apply_in_transaction(connection, script, applied_at)
+                    else:
+                        self._apply_statement_by_statement(
+                            connection, script, applied_at
+                        )
+                finally:
+                    release_session(connection)
         except psycopg.Error as error:
             raise ExternalServiceError(
                 f"Could not record migration {str(script.name)!r} "
                 f"({type(error).__name__})."
             ) from error
 
+        return True
+
     def _apply_in_transaction(
         self,
+        connection: PostgresConnection,
         script: SchemaMigrationScript,
         applied_at: Microseconds,
-    ) -> bool:
-        with self._connection_pool.transaction() as connection:
-            # Waiting for another runner is fine; only the file's own locks
-            # are bounded, so the timeout starts after this lock.
-            connection.execute(
-                "select pg_advisory_xact_lock(%s)", (MIGRATION_LOCK_KEY,)
-            )
-            prepare_bookkeeping(connection)
-            if is_recorded(connection, script):
-                return False
-
+    ) -> None:
+        with connection.transaction():
             bound_lock_waits(connection, self._lock_timeout, is_local=True)
             execute_sql(connection, script, str(script.sql))
             # Session settings a script may have changed end with it.
             connection.execute("reset all")
             self._record(connection, script, applied_at)
 
-        return True
-
     def _apply_statement_by_statement(
         self,
+        connection: PostgresConnection,
         script: SchemaMigrationScript,
         applied_at: Microseconds,
-    ) -> bool:
+    ) -> None:
         statements: list[SchemaMigrationStatement] = split_sql_statements(
             str(script.sql)
         )
-        with self._connection_pool.connection() as connection:
-            connection.execute("select pg_advisory_lock(%s)", (MIGRATION_LOCK_KEY,))
-            try:
-                prepare_bookkeeping(connection)
-                if is_recorded(connection, script):
-                    return False
-
-                bound_lock_waits(connection, self._lock_timeout, is_local=False)
-                dropped: list[str] = drop_invalid_indexes(
-                    connection, script, concurrent_index_names(statements)
-                )
-                if dropped:
-                    logger.warning(
-                        "Migration %s: rebuilding invalid indexes %s.",
-                        script.name,
-                        ", ".join(dropped),
-                    )
-                for statement in statements:
-                    execute_sql(connection, script, str(statement))
-                self._record(connection, script, applied_at)
-            finally:
-                release_session(connection)
-
-        return True
+        bound_lock_waits(connection, self._lock_timeout, is_local=False)
+        dropped: list[str] = drop_invalid_indexes(
+            connection, script, concurrent_index_names(statements)
+        )
+        if dropped:
+            logger.warning(
+                "Migration %s: rebuilding invalid indexes %s.",
+                script.name,
+                ", ".join(dropped),
+            )
+        for statement in statements:
+            execute_sql(connection, script, str(statement))
+        self._record(connection, script, applied_at)
 
     def _record(
         self,
@@ -174,9 +179,9 @@ class PostgresSchemaMigrationStoreAdapter(SchemaMigrationStoreAdapterContract):
 
 def release_session(connection: PostgresConnection) -> None:
     """
-    End what a no-transaction file set on its session: its settings and the
-    runners' lock. A broken connection is discarded by the pool, and the
-    server drops a dead session's lock itself.
+    End what a migration set on its session: its settings and the runners'
+    lock. A broken connection is discarded by the pool, and the server drops
+    a dead session's lock itself.
     """
 
     try:
