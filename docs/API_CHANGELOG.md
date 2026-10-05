@@ -11,6 +11,34 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — booking confirmations, the guest's booking page, the hosted page as a link in bio
+
+Spec: `d7662b3200ec3235`
+
+- **Added** `GET /v1/public/bookings/{token}` (public: the signed token of
+  the guest's manage link is the key): the booking as its page shows it, in
+  the business's time zone, without contact details of the guest
+  (`ManagedBookingView`: business, status, local date and time, party,
+  service, address with `maps_url`, the business's public phone,
+  cancellation policy, the guest's `language`, `chat_links` to write to
+  the business, `can_cancel`, `can_reschedule`, `is_over`).
+- **Added** `GET /v1/public/bookings/{token}/calendar.ics` (the booking as
+  an iCalendar file, `text/calendar`), `GET .../slots?date=` (free times of
+  a day to move it to, `ManagedBookingSlots`), `POST .../cancel` and
+  `POST .../reschedule` (`{"date", "time"}`; the answer carries the moved
+  booking's new `token`). A forged, expired or outdated link is 404 with
+  reason `link_invalid`, `link_expired` or `booking_changed`; a booking that
+  can no longer change is 409 (`not_active`, `already_started`, or a
+  booking refusal such as `taken`); limits per link, network and platform
+  answer 429 with `Retry-After`. Responses are `Cache-Control: no-store`,
+  `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`.
+- **Changed** `HostedChatView` (`GET /v1/public/chat/{slug}`) adds
+  `timezone`, `hours`, optional `address` and `maps_url`, `takes_bookings`
+  and optional `booking_url` (the business's own booking page).
+- **Changed** `GET /v1/widget/{business_id}/messages` also lists the
+  platform's messages to the visitor (`author: system`): a booking's
+  written confirmation with its manage link.
+
 ## 2026-10-05 — wave 13 together: day 0, one story for updates, the landing page, trust fixes
 
 Spec: `f6fb07c0d144fbd5`
