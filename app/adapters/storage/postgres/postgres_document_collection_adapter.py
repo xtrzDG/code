@@ -144,7 +144,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         )
 
     def get(self, document_key: str) -> StoredDocument | None:
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 row: TupleRow | None = connection.execute(
                     self._queries.get,
@@ -159,7 +159,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
         return None if row is None else self._decode(row)
 
     def list_all(self) -> list[StoredDocument]:
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 rows: list[TupleRow] = connection.execute(
                     self._queries.list_all
@@ -202,7 +202,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
     ) -> DocumentCount:
         lookup = DocumentLookup(matches=tuple(matches), within=within)
         require_valid_lookup(self._lookup_fields, lookup, self._label())
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             query, parameters = compose_count(
                 self._queries.table,
                 self._collection_name,
@@ -275,7 +275,7 @@ class PostgresDocumentCollectionAdapter[StoredDocument: PersistentDocument](
 
     def _select(self, lookup: DocumentLookup) -> list[StoredDocument]:
         require_valid_lookup(self._lookup_fields, lookup, self._label())
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             query, parameters = compose_select(
                 self._queries.table,
                 self._collection_name,

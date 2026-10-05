@@ -20,6 +20,7 @@ from app.adapters.storage.postgres.postgres_session_settings import (
     apply_storage_scope,
     translate_storage_error,
 )
+from app.adapters.storage.postgres.read_sessions import read_session_connection
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnection,
     PostgresConnectionPoolClient,
@@ -94,14 +95,44 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
         collection is used outside a scope.
         """
 
+        with self._transaction_in(self._effective_scope()) as opened:
+            yield opened
+
+    @contextmanager
+    def _read_transaction(self) -> Generator[tuple[PostgresConnection, str | None]]:
+        """
+        Like `_transaction`, for a read: inside a read session of this
+        pool and scope (`PostgresReadSessionAdapter`) the read is one
+        statement of the session's transaction.
+        """
+
         scope: StorageScope = self._effective_scope()
-        scoped_business_id: str | None = (
-            None if scope.business_id is None else str(scope.business_id)
+        connection: PostgresConnection | None = read_session_connection(
+            self._connection_pool, scope
         )
+        if connection is None:
+            with self._transaction_in(scope) as opened:
+                yield opened
+            return
+
+        with self._translated_errors():
+            yield connection, business_id_of(scope)
+
+    @contextmanager
+    def _transaction_in(
+        self, scope: StorageScope
+    ) -> Generator[tuple[PostgresConnection, str | None]]:
+        with (
+            self._translated_errors(),
+            self._connection_pool.transaction() as connection,
+        ):
+            apply_storage_scope(connection, scope)
+            yield connection, business_id_of(scope)
+
+    @contextmanager
+    def _translated_errors(self) -> Generator[None]:
         try:
-            with self._connection_pool.transaction() as connection:
-                apply_storage_scope(connection, scope)
-                yield connection, scoped_business_id
+            yield
         except psycopg.Error as error:
             application_error = translate_storage_error(
                 error,
@@ -170,3 +201,9 @@ class PostgresDocumentTable[StoredDocument: PersistentDocument]:
 
     def _label(self) -> str:
         return f"collection {str(self._collection_name)!r}"
+
+
+def business_id_of(scope: StorageScope) -> str | None:
+    """The business of a business scope (the queries' explicit filter)."""
+
+    return None if scope.business_id is None else str(scope.business_id)

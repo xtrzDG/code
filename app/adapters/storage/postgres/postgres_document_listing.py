@@ -14,14 +14,18 @@ from app.adapters.storage.postgres.postgres_document_table import (
     PostgresDocumentTable,
 )
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
+from app.schemas.dto.storage_pages import (
+    DocumentLatestQuery,
+    DocumentPagePosition,
+    DocumentPageQuery,
+)
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.storage.constrained_integers import (
     DocumentBucketIndex,
     DocumentCount,
 )
 from app.schemas.typings.storage.integers import DocumentFieldInteger, DocumentFieldSum
-from app.schemas.typings.storage.strings import DocumentFieldText
+from app.schemas.typings.storage.strings import DocumentFieldText, StoredDocumentKey
 from app.utilities.storage.document_query_rules import (
     require_valid_aggregation,
     require_valid_latest,
@@ -33,9 +37,10 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
     PostgresDocumentTable[StoredDocument]
 ):
     """
-    `get_many`, `page_by`, `latest_by` and `count_by` of the Postgres
-    collection: one statement each, in the transaction and row-level
-    security scope of every operation (`document_listing_sql` has the SQL).
+    `get_many`, `page_by`, `page_positions_by`, `latest_by` and `count_by`
+    of the Postgres collection: one statement each, in the transaction and
+    row-level security scope of every operation, or of the read session the
+    code entered (`document_listing_sql` has the SQL).
     """
 
     def get_many(self, document_keys: Sequence[str]) -> list[StoredDocument]:
@@ -43,7 +48,7 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
         if not keys:
             return []
 
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             if scoped_business_id is None:
                 rows: list[TupleRow] = connection.execute(
                     self._queries.get_many, (keys,)
@@ -57,7 +62,7 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
 
     def page_by(self, query: DocumentPageQuery) -> list[StoredDocument]:
         require_valid_page(self._lookup_fields, query, self._label())
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             statement, parameters = compose_page(
                 self._queries.table,
                 self._collection_name,
@@ -69,12 +74,27 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
 
         return self._decode_all(rows)
 
+    def page_positions_by(self, query: DocumentPageQuery) -> list[DocumentPagePosition]:
+        require_valid_page(self._lookup_fields, query, self._label())
+        with self._read_transaction() as (connection, scoped_business_id):
+            statement, parameters = compose_page(
+                self._queries.table,
+                self._collection_name,
+                self._lookup_fields,
+                query,
+                scoped_business_id,
+                is_positions_only=True,
+            )
+            rows: list[TupleRow] = connection.execute(statement, parameters).fetchall()
+
+        return [self._read_position(row) for row in rows]
+
     def latest_by(self, query: DocumentLatestQuery) -> list[StoredDocument]:
         require_valid_latest(self._lookup_fields, query, self._label())
         if not query.groups:
             return []
 
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             statement, parameters = compose_latest(
                 self._queries.table,
                 self._collection_name,
@@ -88,7 +108,7 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
 
     def count_by(self, aggregation: DocumentAggregation) -> list[DocumentGroupCount]:
         require_valid_aggregation(self._lookup_fields, aggregation, self._label())
-        with self._transaction() as (connection, scoped_business_id):
+        with self._read_transaction() as (connection, scoped_business_id):
             statement, parameters = compose_aggregation(
                 self._queries.table,
                 self._collection_name,
@@ -134,11 +154,29 @@ class PostgresDocumentListing[StoredDocument: PersistentDocument](
             values=values, bucket=bucket, count=count, totals=totals, latest=latest
         )
 
+    def _read_position(self, row: TupleRow) -> DocumentPagePosition:
+        """A positions row: the sort values, then the storage key."""
+
+        cells: list[object] = list(row)
+        key: object = cells[-1]
+        if not isinstance(key, str):
+            raise ExternalServiceError(
+                f"Collection {str(self._collection_name)!r} returned a storage "
+                f"key that is not text ({type(key).__name__})."
+            )
+
+        return DocumentPagePosition(
+            values=tuple(
+                DocumentFieldInteger(self._read_integer(cell)) for cell in cells[:-1]
+            ),
+            document_key=StoredDocumentKey(key),
+        )
+
     def _read_integer(self, cell: object) -> int:
         if not isinstance(cell, int) or isinstance(cell, bool):
             raise ExternalServiceError(
-                f"Collection {str(self._collection_name)!r} returned a count that "
-                f"is not an integer ({type(cell).__name__})."
+                f"Collection {str(self._collection_name)!r} returned a count or "
+                f"sort value that is not an integer ({type(cell).__name__})."
             )
 
         return cell

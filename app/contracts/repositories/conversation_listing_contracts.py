@@ -22,6 +22,7 @@ from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationUsageView,
 )
 from app.schemas.dto.listing_filters import AuditLogFilter, ConversationFeedFilter
+from app.schemas.dto.message_positions import MessagePosition
 from app.schemas.dto.operations.activity_counts import (
     ActivityPeriod,
     ConversationMixCount,
@@ -119,6 +120,19 @@ class MessageListingContract(Protocol):
         The messages of these conversations together, newest first (by
         `created_at`, ties: the later write first), one keyset page: a
         widget poll reads the few newest instead of a visitor's history.
+        """
+        raise NotImplementedError
+
+    def page_newest_positions_of_conversations(
+        self,
+        business_id: BusinessId,
+        conversation_ids: Sequence[ConversationId],
+        window: KeysetSlice,
+    ) -> list[MessagePosition]:
+        """
+        The ids and creation times of the messages
+        `page_newest_of_conversations` returns, in the same order, without
+        reading the messages (the indexed columns only).
         """
         raise NotImplementedError
 
