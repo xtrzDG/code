@@ -13,6 +13,7 @@ from app.schemas.constants.assistants import (
 )
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.niches import NicheKey
+from app.schemas.domain.autotest_cases import OwnerCheckSnapshot
 from app.schemas.typings.assistants.booleans import (
     IsAutotestRunPassed,
     IsFullAutotestCoverage,
@@ -46,6 +47,7 @@ from app.schemas.typings.assistants.strings import (
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.booleans import IsVoiceEnabled
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.profiles.booleans import IsImportedFact
@@ -149,7 +151,10 @@ class AutotestScenarioResult(PersistentDocument):
     ERRORED scenario could not be evaluated; `check_codes` say the same as
     codes every language renders (empty on results stored before codes
     existed). The judge explains its scores in `judge_notes`. An owner
-    check's result names its check (`autotest_case_id`).
+    check's result names its check (`autotest_case_id`) and keeps what it
+    asked (`owner_check`). `conversation_id` and `answer_message_id` are
+    the test conversation and the assistant's first answer in it, so the
+    owner can fix that answer.
     """
 
     scenario_key: AutotestScenarioKey
@@ -171,6 +176,9 @@ class AutotestScenarioResult(PersistentDocument):
     autotest_case_id: AutotestCaseId | None = None
     sample_count: AutotestSampleCount | None = None
     passed_sample_count: AutotestPassedSampleCount | None = None
+    owner_check: OwnerCheckSnapshot | None = None
+    conversation_id: ConversationId | None = None
+    answer_message_id: MessageId | None = None
 
 
 class AutotestRunDocument(BaseDocument):
@@ -199,7 +207,10 @@ class AutotestRunDocument(BaseDocument):
     # 5: pass^k (`sample_count`, `passed_sample_count` on the results), the
     # four attack kinds, the price and attack check codes, and
     # `compared_to_run_id` (new values and optional fields, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("5")
+    # 6: what an owner check asked (`owner_check`) and the test conversation
+    # of a result (`conversation_id`, `answer_message_id`) (optional fields,
+    # no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: AutotestRunId = Field(default_factory=AutotestRunId)
     business_id: BusinessId
     assistant_version_id: AssistantVersionId

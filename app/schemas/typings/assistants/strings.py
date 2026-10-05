@@ -42,6 +42,13 @@ class LlmToolInputSchemaJson(BaseTypedString):
     """JSON Schema of a tool input, serialized as a JSON object."""
 
 
+class OwnerCheckFailureReason(BaseTypedString):
+    """
+    Why one of the owner's checks did not pass, in plain words of the
+    owner's language ("The answer must pass the conversation to a person.").
+    """
+
+
 class PromptRuleText(BaseTypedString):
     """One behavioural rule of the assistant written for the language model."""
 
