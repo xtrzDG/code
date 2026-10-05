@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   archiveSize,
-  downloadHref,
+  canDownload,
   EXPORT_STATUS_TONES,
   hasWorkingExport,
   isExportWorking,
+  isUsedUp,
+  linkHref,
+  MAX_EXPORT_DOWNLOADS,
   shownStatus,
+  withDownloadCounted,
   withExport,
   type BusinessExport,
 } from "./businessExports";
@@ -24,7 +28,7 @@ function exportOf(overrides: Partial<BusinessExport> = {}): BusinessExport {
     expires_at: NOW_US + 23 * HOUR_US,
     archive_bytes: 2_500_000,
     record_count: 1_234,
-    download_path: PATH,
+    downloads_left: MAX_EXPORT_DOWNLOADS,
     last_error: null,
     ...overrides,
   };
@@ -44,22 +48,43 @@ describe("isExportWorking / hasWorkingExport", () => {
   });
 });
 
-describe("downloadHref", () => {
-  it("goes through the cabinet's proxy while the link works", () => {
-    expect(downloadHref(exportOf(), NOW_US)).toBe(`/api/backend${PATH}`);
-    expect(downloadHref(exportOf({ expires_at: null }), NOW_US)).toBe(`/api/backend${PATH}`);
+describe("canDownload / isUsedUp", () => {
+  it("downloads a ready export that is kept and has downloads left", () => {
+    expect(canDownload(exportOf(), NOW_US)).toBe(true);
+    expect(canDownload(exportOf({ expires_at: null, downloads_left: 1 }), NOW_US)).toBe(true);
+    expect(isUsedUp(exportOf(), NOW_US)).toBe(false);
   });
 
-  it("is null once the link ran out, before it is ready, or for a path outside the API", () => {
-    expect(downloadHref(exportOf({ expires_at: NOW_US }), NOW_US)).toBeNull();
-    expect(downloadHref(exportOf({ status: "running", download_path: null }), NOW_US)).toBeNull();
-    expect(downloadHref(exportOf({ status: "expired" }), NOW_US)).toBeNull();
-    expect(downloadHref(exportOf({ download_path: "https://example.com/x" }), NOW_US)).toBeNull();
+  it("does not once it ran out, before it is ready, or after three downloads", () => {
+    expect(canDownload(exportOf({ expires_at: NOW_US }), NOW_US)).toBe(false);
+    expect(canDownload(exportOf({ status: "running" }), NOW_US)).toBe(false);
+    expect(canDownload(exportOf({ status: "expired" }), NOW_US)).toBe(false);
+    expect(canDownload(exportOf({ downloads_left: 0 }), NOW_US)).toBe(false);
+    expect(isUsedUp(exportOf({ downloads_left: 0 }), NOW_US)).toBe(true);
+    expect(isUsedUp(exportOf({ downloads_left: 0, expires_at: NOW_US }), NOW_US)).toBe(false);
+  });
+});
+
+describe("linkHref", () => {
+  it("goes through the cabinet's proxy, and only to the API", () => {
+    expect(linkHref(PATH)).toBe(`/api/backend${PATH}`);
+    expect(linkHref("https://example.com/v1/x")).toBeNull();
+    expect(linkHref("//example.com/v1/x")).toBeNull();
+  });
+});
+
+describe("withDownloadCounted", () => {
+  it("counts one download of that export, never below zero", () => {
+    const other = exportOf({ id: "export_2" });
+    const counted = withDownloadCounted([exportOf(), other], "export_1");
+    expect(counted.map((item) => item.downloads_left)).toEqual([2, 3]);
+    expect(withDownloadCounted([exportOf({ downloads_left: 0 })], "export_1")[0]?.downloads_left).toBe(0);
+    expect(withDownloadCounted(undefined, "export_1")).toEqual([]);
   });
 });
 
 describe("shownStatus", () => {
-  it("reads a ready export whose link ran out as expired", () => {
+  it("reads a ready export past its day as expired", () => {
     expect(shownStatus(exportOf(), NOW_US)).toBe("ready");
     expect(shownStatus(exportOf({ expires_at: NOW_US - 1 }), NOW_US)).toBe("expired");
     expect(shownStatus(exportOf({ status: "failed", expires_at: null }), NOW_US)).toBe("failed");
@@ -83,7 +108,7 @@ describe("archiveSize", () => {
 describe("withExport", () => {
   it("puts a new export first and replaces the one the API answered with again", () => {
     const older = exportOf({ id: "export_0", status: "expired" });
-    const running = exportOf({ id: "export_2", status: "running", download_path: null });
+    const running = exportOf({ id: "export_2", status: "running", downloads_left: 0 });
     expect(withExport([older], running).map((item) => item.id)).toEqual(["export_2", "export_0"]);
     expect(withExport([running, older], { ...running, status: "queued" }).map((item) => item.status)).toEqual([
       "queued",

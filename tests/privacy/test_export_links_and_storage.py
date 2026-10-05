@@ -1,13 +1,12 @@
 """
-The signed download links of full exports and the storage of their
-archives: a token names one export of one business and its expiry; an
-archive is sealed with its business's key and opens only there.
+The one-time download tokens of full exports and the storage of their
+archives: a token is random and stored only as its hash; an archive is
+sealed with its business's key and opens only there.
 """
 
 from pathlib import Path
 
 import pytest
-from typed_time_provider import Microseconds
 
 from app.adapters.exports.encrypted_object_export_archive_storage_adapter import (
     EncryptedObjectExportArchiveStorageAdapter,
@@ -30,35 +29,35 @@ from app.schemas.typings.privacy.strings import ExportArchivePath
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from app.utilities.privacy.export_link_signer import BusinessExportLinkSigner
+from app.utilities.privacy.export_download_tokens import (
+    download_link_id,
+    generate_download_token,
+    hash_download_token,
+    is_same_hash,
+)
 from tests.security.previous_key_fakes import DictObjectStorage
 
 BUSINESS: BusinessId = BusinessId()
 OTHER_BUSINESS: BusinessId = BusinessId()
 EXPORT: BusinessExportId = BusinessExportId()
-EXPIRES_AT: Microseconds = Microseconds(1_900_000_000_000_000)
 PATH: ExportArchivePath = ExportArchivePath(f"business-exports/{BUSINESS}/{EXPORT}.zip")
-OLD_KEY: PlatformSecret = PlatformSecret("old-export-key-0000")
 NEW_KEY: PlatformSecret = PlatformSecret("new-export-key-0000")
 
 
-def test_a_token_names_its_export_business_and_expiry() -> None:
-    signer = BusinessExportLinkSigner(NEW_KEY)
-    token = signer.sign(BUSINESS, EXPORT, EXPIRES_AT)
+def test_a_token_is_random_and_kept_only_as_its_hash() -> None:
+    token = generate_download_token()
+    other = generate_download_token()
+    token_hash = hash_download_token(token)
 
-    assert signer.expiry_of(BUSINESS, EXPORT, token) == EXPIRES_AT
-    assert signer.expiry_of(OTHER_BUSINESS, EXPORT, token) is None
-    assert signer.expiry_of(BUSINESS, BusinessExportId(), token) is None
-    assert signer.expiry_of(BUSINESS, EXPORT, BusinessExportToken("A" * 40)) is None
-    assert BusinessExportLinkSigner(OLD_KEY).expiry_of(BUSINESS, EXPORT, token) is None
-
-
-def test_a_link_of_the_previous_key_still_opens_after_a_rotation() -> None:
-    token = BusinessExportLinkSigner(OLD_KEY).sign(BUSINESS, EXPORT, EXPIRES_AT)
-
-    rotated = BusinessExportLinkSigner(NEW_KEY, previous_keys=[OLD_KEY])
-
-    assert rotated.expiry_of(BUSINESS, EXPORT, token) == EXPIRES_AT
+    assert token != other
+    assert len(str(token)) == 43
+    assert str(token) not in str(token_hash)
+    assert download_link_id(token_hash) == download_link_id(
+        hash_download_token(BusinessExportToken(str(token)))
+    )
+    assert download_link_id(token_hash) != download_link_id(hash_download_token(other))
+    assert is_same_hash(token_hash, hash_download_token(token))
+    assert not is_same_hash(token_hash, hash_download_token(other))
 
 
 def test_an_archive_is_sealed_with_its_business_key() -> None:

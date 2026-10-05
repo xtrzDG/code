@@ -32,6 +32,34 @@ class LegalDocumentVersion(BaseConstrainedTypedString):
     pattern = r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
 
 
+class RepositoryPath(BaseConstrainedTypedString):
+    """
+    A file or directory of this repository, relative to its root, that
+    implements a promise of the legal texts (a security measure of DPA
+    section 9); tests/legal checks that it exists.
+
+    Example:
+        path = RepositoryPath("app/utilities/security/totp_codes.py")
+    """
+
+    min_length = 3
+    max_length = 160
+    pattern = r"^(?!/)(?!.*\.\.)[A-Za-z0-9_.\-/\[\]]+$"
+
+
+class SecurityMeasureKey(BaseConstrainedTypedString):
+    """
+    One security measure of the DPA's section 9 as the registry names it.
+
+    Example:
+        key = SecurityMeasureKey("two_factor_sign_in")
+    """
+
+    min_length = 2
+    max_length = 40
+    pattern = r"^[a-z][a-z0-9_]*$"
+
+
 class SubprocessorChangeDate(BaseConstrainedTypedString):
     """
     A day in the life of the sub-processor list, ISO 8601 "YYYY-MM-DD":

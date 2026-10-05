@@ -39,6 +39,9 @@ class PrivacyOperatorsContainer(containers.DeclarativeContainer):
     download_business_export_operator = pipeline_operator(
         privacy_pipelines.download_business_export_pipeline, storage_scope
     )
+    create_export_download_link_operator = pipeline_operator(
+        privacy_pipelines.create_export_download_link_pipeline, storage_scope
+    )
     purge_business_exports_operator = platform_pipeline_operator(
         privacy_pipelines.purge_business_exports_pipeline, storage_scope
     )

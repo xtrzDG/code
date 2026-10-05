@@ -43,6 +43,7 @@ import { OwnersOnlyPage } from "./OwnersOnlyPage";
 import { SetupEntry } from "./setup/SetupEntry";
 import { SetupHero } from "./setup/SetupHero";
 import { ShellFrame } from "./ShellFrame";
+import { DpaBanner } from "./DpaBanner";
 import { SupportBanner } from "./SupportBanner";
 import type { ShellNavItem } from "./types";
 import { useMemberRole } from "./useMemberRole";
@@ -136,6 +137,8 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
           {isConversationPath(pathname) ? null : <PendingChangesBanner />}
           {/* Platform support looking in: always shown, the owner must see it. */}
           <SupportBanner />
+          {/* A new data processing agreement to accept (owners). */}
+          {isConversationPath(pathname) ? null : <DpaBanner />}
           {isConversationPath(pathname) ? null : <CoachMarkSlot page={page} />}
           {children}
           <MilestoneCelebrations />

@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.contracts.repositories.privacy_repositories import (
     BusinessExportChange,
     BusinessExportRepoContract,
+    ExportDownloadLinkRepoContract,
     SuppressionEntryRepoContract,
 )
 from app.repositories.business_scoped_repository import BusinessScopedRepository
@@ -13,15 +14,22 @@ from app.repositories.document_queries import (
     descending,
     time_range,
 )
-from app.schemas.domain.business_exports import BusinessExportDocument
+from app.schemas.domain.business_exports import (
+    BusinessExportDocument,
+    ExportDownloadLinkDocument,
+)
 from app.schemas.domain.suppression import SuppressionEntryDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.privacy.prefixed_id import (
     BusinessExportId,
+    ExportDownloadLinkId,
     SuppressionEntryId,
 )
 from app.schemas.typings.storage.booleans import IsDocumentInserted
-from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 EXPIRES_AT_FIELD: DocumentFieldPath = DocumentFieldPath("expires_at")
@@ -87,4 +95,44 @@ class BusinessExportRepository(
     ) -> list[BusinessExportDocument]:
         return self._collection.list_by_range(
             time_range(EXPIRES_AT_FIELD, ending_before=moment), limit=limit
+        )
+
+
+class ExportDownloadLinkRepository(
+    BusinessScopedRepository[ExportDownloadLinkDocument],
+    ExportDownloadLinkRepoContract,
+):
+    """
+    One-time export download links, keyed by the id derived from the
+    token's hash (read by id); the purge deletes expired ones by
+    `expires_at` across businesses (indexed, migration 1134).
+    """
+
+    def save(self, link: ExportDownloadLinkDocument) -> None:
+        self._store(str(link.id), link)
+
+    def get(
+        self, business_id: BusinessId, link_id: ExportDownloadLinkId
+    ) -> ExportDownloadLinkDocument | None:
+        return self._load(business_id, str(link_id))
+
+    def use(
+        self,
+        business_id: BusinessId,
+        link_id: ExportDownloadLinkId,
+        now: Microseconds,
+    ) -> ExportDownloadLinkDocument | None:
+        def mark_used(
+            link: ExportDownloadLinkDocument,
+        ) -> ExportDownloadLinkDocument | None:
+            if link.used_at is not None or int(link.expires_at) <= int(now):
+                return None
+
+            return link.model_copy(update={"used_at": now, "updated_at": now})
+
+        return self._modify_in_business(business_id, str(link_id), mark_used)
+
+    def delete_expired_before(self, moment: Microseconds) -> DocumentCount:
+        return self._collection.delete_by_range(
+            time_range(EXPIRES_AT_FIELD, ending_before=moment)
         )

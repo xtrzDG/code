@@ -19,6 +19,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
+    ClientIpAddress,
 )
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
@@ -123,6 +124,7 @@ def build_audit_entry(
     entity: AuditEntityName,
     entity_reference: str | None,
     now: Microseconds,
+    ip_address: ClientIpAddress | None = None,
 ) -> AuditLogEntryDocument:
     return AuditLogEntryDocument(
         business_id=business_id,
@@ -132,6 +134,7 @@ def build_audit_entry(
         entity_id=(
             None if entity_reference is None else AuditEntityReference(entity_reference)
         ),
+        ip_address=ip_address,
         created_at=now,
         updated_at=now,
     )

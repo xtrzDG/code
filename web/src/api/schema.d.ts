@@ -1068,6 +1068,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/business-exports/{export_id}/download-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Business Export Download Link */
+        post: operations["create_business_export_download_link_v1_businesses__business_id__business_exports__export_id__download_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/call-forwarding-instructions": {
         parameters: {
             query?: never;
@@ -5094,15 +5111,26 @@ export interface components {
         /**
          * BusinessExportView
          * @description One export as Settings → Privacy shows it: its state, when it was asked
-         *     for and finished, its size, and while READY the signed download path
-         *     (relative to the API; it works without the session until
-         *     `expires_at`). `last_error` says why a FAILED export failed.
+         *     for and finished, its size, until when its archive is kept
+         *     (`expires_at`) and how many downloads it has left (`downloads_left`,
+         *     of 3). `last_error` says why a FAILED export failed.
+         *
+         *     `download_path` is deprecated and always None: a download needs a
+         *     one-time link (POST …/business-exports/{export_id}/download-link).
          */
         BusinessExportView: {
             /** Archive Bytes */
             archive_bytes?: number | null;
-            /** Download Path */
+            /**
+             * Download Path
+             * @deprecated
+             */
             download_path?: string | null;
+            /**
+             * Downloads Left
+             * @default 0
+             */
+            downloads_left: number;
             /** Expires At */
             expires_at?: number | null;
             /** Finished At */
@@ -7126,8 +7154,14 @@ export interface components {
          *
          *     `document_url` is the API path of that version's text (None when the
          *     repository has no text for it; then it cannot be accepted).
+         *     `needs_reacceptance` is True when an owner accepted an earlier version
+         *     but not this one: the cabinet asks owners to accept it by
+         *     `acceptance_due_on` (30 days after the version's date). Until then the
+         *     assistant keeps answering, but no new version can be published.
          */
         DpaStatusView: {
+            /** Acceptance Due On */
+            acceptance_due_on?: string | null;
             /** Business Id */
             business_id: string;
             /** Current Document Version */
@@ -7137,6 +7171,11 @@ export interface components {
             /** Is Current Version Accepted */
             is_current_version_accepted: boolean;
             latest_acceptance?: components["schemas"]["DpaAcceptanceView"] | null;
+            /**
+             * Needs Reacceptance
+             * @default false
+             */
+            needs_reacceptance: boolean;
         };
         /**
          * EncryptionKeysView
@@ -7229,6 +7268,17 @@ export interface components {
          * @enum {string}
          */
         ExchangeRateSource: "nbg" | "ecb" | "planning";
+        /**
+         * ExportDownloadLinkView
+         * @description The one-time download path (relative to the API) and when it stops
+         *     working. It opens once, with a session of the owner who asked for it.
+         */
+        ExportDownloadLinkView: {
+            /** Download Path */
+            download_path: string;
+            /** Expires At */
+            expires_at: number;
+        };
         /**
          * FailedAutotestView
          * @description A scenario that did not pass in the run of the active version's verdict.
@@ -10369,8 +10419,10 @@ export interface components {
          * PrivacySettingsView
          * @description Settings → Privacy: how long conversations and the records of model
          *     calls are kept, how long call recordings are kept (Settings → General),
-         *     the latest purge, and the sub-processors whose copies are deleted with
-         *     the platform's own (only those this platform is set up with).
+         *     whether the nightly quality sample may include this business's
+         *     conversations, the latest purge, and the sub-processors whose copies are
+         *     deleted with the platform's own (only those this platform is set up
+         *     with).
          */
         PrivacySettingsView: {
             /** Conversation Retention Days */
@@ -10380,6 +10432,11 @@ export interface components {
             last_purge?: components["schemas"]["RetentionPurgeView"] | null;
             /** Llm Turn Retention Days */
             llm_turn_retention_days: number;
+            /**
+             * Quality Sampling Allowed
+             * @default true
+             */
+            quality_sampling_allowed: boolean;
             /** Recording Retention Days */
             recording_retention_days: number;
         };
@@ -11325,11 +11382,12 @@ export interface components {
          *     reminders open SETUP (the guided setup, at the saved step), CHANNELS,
          *     SHARE (the link and QR card on the Channels page) and BILLING (where
          *     the done-for-you setup is chosen). ACCOUNT_SECURITY is the person's
-         *     Account → Security page (their sessions: a sign-in from a new device).
+         *     Account → Security page (their sessions: a sign-in from a new device);
+         *     PRIVACY is Settings → Privacy (a full export was downloaded).
          *     Link targets live only in signed links, never in stored documents.
          * @enum {string}
          */
-        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing" | "account_security";
+        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing" | "account_security" | "privacy";
         /**
          * StaffLinkView
          * @description Where a link leads, for the cabinet to open (it maps the target to its
@@ -15657,7 +15715,9 @@ export interface operations {
             query?: {
                 token?: string | null;
             };
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 business_id: string;
                 export_id: string;
@@ -19895,6 +19955,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BusinessExportView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_business_export_download_link_v1_businesses__business_id__business_exports__export_id__download_link_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                export_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportDownloadLinkView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -26640,6 +26788,8 @@ export interface operations {
                     conversation_retention_days: number;
                     /** Llm Turn Retention Days */
                     llm_turn_retention_days: number;
+                    /** Quality Sampling Allowed */
+                    quality_sampling_allowed?: boolean | null;
                 };
             };
         };

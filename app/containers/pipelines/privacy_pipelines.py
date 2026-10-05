@@ -30,6 +30,9 @@ class PrivacyPipelinesContainer(containers.DeclarativeContainer):
     download_business_export_pipeline = orchestrator_pipeline(
         privacy_orchestrators.download_business_export_orchestrator
     )
+    create_export_download_link_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.create_export_download_link_orchestrator
+    )
     purge_business_exports_pipeline = orchestrator_pipeline(
         privacy_orchestrators.purge_business_exports_orchestrator
     )

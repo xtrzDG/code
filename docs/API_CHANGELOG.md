@@ -103,6 +103,32 @@ Spec: `d10b9d16b4ccb880`
   catalog list only): what one booking of the niche typically brings, the
   landing page's value calculator starts from it.
 
+## 2026-10-05 — trust fixes: one-time export links, DPA versions, quality sampling switch
+
+Spec: `b33cec1ddae27e18`
+
+- **Added** `POST /v1/businesses/{business_id}/business-exports/{export_id}/download-link`
+  (owners, after a recent sign-in or step-up: 401 `step_up_required`): a
+  one-time `download_path` and its `expires_at` (`EXPORT_DOWNLOAD_LINK_MINUTES`,
+  10 at most). 404 when the export is not ready or its archive is gone, 409
+  when it was downloaded three times.
+- **Breaking** (security; the cabinet changes in the same pull request)
+  `GET /v1/business-exports/{business_id}/{export_id}/download?token=` now
+  needs the session (`Authorization`) of the owner who asked for the link,
+  and a token opens once. Signed links issued before the deploy stop
+  working; owners ask for a new link from Settings → Privacy.
+- **Deprecated** `BusinessExportView.download_path`: always null; sunset
+  2027-04-05. Use the new route. **Added** `BusinessExportView.downloads_left`
+  (of 3).
+- **Changed** `DpaStatusView` adds `needs_reacceptance` and
+  `acceptance_due_on` (30 days after the version's date): owners who
+  accepted an earlier DPA version accept the new one (2026-10-06).
+- **Changed** `PrivacySettingsRequest` / `PrivacySettingsView` add
+  `quality_sampling_allowed` (default true): the nightly quality sample of
+  the business's real conversations can be turned off.
+- **Changed** `StaffLinkTarget` gains `privacy` (Settings → Privacy, the
+  notice of an export download). Clients that map this enum must accept it.
+
 ## 2026-10-05 — wave 12 together: deeper checks, customer memory, online migrations, retention, legal texts
 
 Spec: `0ccf13ff93342e14`

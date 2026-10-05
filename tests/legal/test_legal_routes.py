@@ -6,9 +6,13 @@ the version in force by the day, a later version announced ahead.
 
 from pathlib import Path
 
-from app.registries.legal.subprocessor_catalog import SUBPROCESSORS
 from tests.legal.legal_http import build_legal_client
-from tests.legal.legal_world import Clock, announced_entry, retiring_entry
+from tests.legal.legal_world import (
+    ORIGINAL_ENTRIES,
+    Clock,
+    announced_entry,
+    retiring_entry,
+)
 
 
 def test_the_sub_processor_list_in_the_language_asked_for() -> None:
@@ -33,14 +37,25 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
     assert body["subprocessors"][0] == {
         "key": "openai",
         "name": "OpenAI (EU data residency project)",
-        "purpose": "Language model that writes the assistant's replies",
-        "personal_data": "Messages, the Client's knowledge, booking details",
+        "purpose": (
+            "Language model that writes the assistant's replies, checks them "
+            "against the Client's facts, summarises conversations, transcribes "
+            "customers' voice notes and grades the assistant's automatic checks "
+            "and a small sample of real conversations"
+        ),
+        "personal_data": (
+            "Messages and voice notes, the Client's knowledge, booking details"
+        ),
         "location": "EU (data residency)",
         "added_on": "2026-10-01",
         "removed_on": None,
         "is_in_force": True,
     }
-    assert body["upcoming_changes"] == []
+    # Anthropic as the judge of a sample of real conversations: announced
+    # on 2026-10-06, in force 30 days later.
+    assert [
+        (change["key"], change["notice_from"]) for change in body["upcoming_changes"]
+    ] == [("anthropic_quality_review-added-2026-11-05", "2026-10-06")]
     assert russian.json()["language"] == "ru"
     assert russian.json()["subprocessors"][0]["purpose"].startswith("Языковая модель")
     assert georgian.json()["language"] == "ka"
@@ -49,7 +64,7 @@ def test_the_sub_processor_list_in_the_language_asked_for() -> None:
 def test_announced_changes_show_when_owners_hear_of_them() -> None:
     entries = (
         retiring_entry(removed_on="2027-01-01", announced_on="2026-11-15"),
-        *SUBPROCESSORS[1:],
+        *ORIGINAL_ENTRIES[1:],
         announced_entry("mailbox", added_on="2026-12-01", announced_on="2026-10-20"),
     )
     client = build_legal_client(Clock("2026-10-25"), entries=entries)
@@ -76,7 +91,7 @@ def test_announced_changes_show_when_owners_hear_of_them() -> None:
 def test_a_sub_processor_that_left_is_gone_from_the_list() -> None:
     entries = (
         retiring_entry(removed_on="2027-01-01", announced_on="2026-11-15"),
-        *SUBPROCESSORS[1:],
+        *ORIGINAL_ENTRIES[1:],
     )
     client = build_legal_client(Clock("2027-01-01"), entries=entries)
 

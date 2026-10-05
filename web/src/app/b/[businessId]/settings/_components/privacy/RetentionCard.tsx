@@ -6,12 +6,14 @@ import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 
 import { usePrivacySettings } from "../../_lib/usePrivacySettings";
+import { QualitySamplingSwitch } from "./QualitySamplingSwitch";
 import { RetentionForm } from "./RetentionForm";
 
 /**
  * Settings → Privacy → "How long data is kept": the owner's retention
- * periods, the latest nightly cleanup and the sub-processors whose copies
- * go too. Owners only: staff see why not.
+ * periods, the latest nightly cleanup, the sub-processors whose copies
+ * go too, and whether real conversations join the nightly quality sample.
+ * Owners only: staff see why not.
  */
 export function RetentionCard() {
   const { t } = useI18n();
@@ -36,12 +38,15 @@ export function RetentionCard() {
           <SkeletonRows rows={3} />
         </LoadingRegion>
       ) : (
-        // Keyed by the stored periods: a save (or another tab's) starts the form afresh.
-        <RetentionForm
-          key={`${settings.data.conversation_retention_days}:${settings.data.llm_turn_retention_days}`}
-          stored={settings.data}
-          state={state}
-        />
+        <div className="space-y-5">
+          {/* Keyed by the stored periods: a save (or another tab's) starts the form afresh. */}
+          <RetentionForm
+            key={`${settings.data.conversation_retention_days}:${settings.data.llm_turn_retention_days}`}
+            stored={settings.data}
+            state={state}
+          />
+          <QualitySamplingSwitch stored={settings.data} state={state} />
+        </div>
       )}
     </Card>
   );

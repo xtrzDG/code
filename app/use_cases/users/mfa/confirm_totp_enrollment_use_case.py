@@ -10,9 +10,12 @@ from app.contracts.repositories.user_repositories import UserSessionRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
+from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.dto.mfa import ConfirmTotpCommand, RecoveryCodesView
+from app.schemas.dto.sessions import SessionSweep
 from app.schemas.exceptions.application_errors import ConflictError
+from app.use_cases.shared.session_sweeps import end_sessions, own_session
 from app.use_cases.users.mfa.mfa_records import (
     TOTP_FACTOR_ENTITY,
     audit_mfa_change,
@@ -32,9 +35,11 @@ class ConfirmTotpEnrollmentUseCase(
     """
     The first code from the app turns the new authenticator on. The person
     gets a new set of recovery codes (shown once), their current session
-    counts as signed in with two factors from now on, and the change is
-    audited as MFA_CHANGED. From the next sign-in on, the app's code is
-    asked after the login code.
+    counts as signed in with two factors from now on, and every other
+    session of theirs ends: a device signed in before the authenticator
+    existed signs in again with it (SESSION_REVOKED with the count). The
+    change is audited as MFA_CHANGED. From the next sign-in on, the app's
+    code is asked after the login code.
     """
 
     def __init__(
@@ -75,6 +80,20 @@ class ConfirmTotpEnrollmentUseCase(
             input_data.user_id,
             AuthLevel.TWO_FACTOR,
             now,
+        )
+        end_sessions(
+            self._user_session_repo,
+            self._audit_log_repo,
+            SessionSweep(
+                user_id=input_data.user_id,
+                actor_id=input_data.user_id,
+                reason=SessionSweepReason.AUTHENTICATOR_ADDED,
+                kept_session_id=own_session(
+                    self._session_assurance, input_data.user_id
+                ),
+                client_ip_address=input_data.client_ip_address,
+                now=now,
+            ),
         )
         audit_mfa_change(
             self._audit_log_repo,

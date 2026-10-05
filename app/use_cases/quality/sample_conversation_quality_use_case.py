@@ -17,6 +17,9 @@ from app.contracts.repositories.quality_repositories import (
     QualitySampleInputRepoContract,
     QualityTotalsRepoContract,
 )
+from app.contracts.repositories.retention_repositories import (
+    BusinessPrivacySettingsRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.configurations.quality_settings import QualitySettings
@@ -62,7 +65,8 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
     """
     The nightly `sample_conversation_quality` job (production quality):
     across live and paused businesses, the conversations of the last two
-    days that have been quiet for an hour, sandbox left out, are sampled
+    days that have been quiet for an hour, sandbox left out, of businesses
+    that did not turn the sample off (Settings → Privacy), are sampled
     (QUALITY_SAMPLE_PERCENT, a stable hash of each id), at most
     QUALITY_SAMPLE_PER_BUSINESS per business, never one judged before.
     Businesses take turns, and before each call its worst case (every
@@ -80,6 +84,7 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         assistant_version_repo: AssistantVersionRepoContract,
         conversation_quality_repo: ConversationQualityRepoContract,
         quality_totals_repo: QualityTotalsRepoContract,
+        privacy_settings_repo: BusinessPrivacySettingsRepoContract,
         llm_adapter: LlmAdapterContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
@@ -91,6 +96,9 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         self._version_repo: AssistantVersionRepoContract = assistant_version_repo
         self._quality_repo: ConversationQualityRepoContract = conversation_quality_repo
         self._totals_repo: QualityTotalsRepoContract = quality_totals_repo
+        self._privacy_settings_repo: BusinessPrivacySettingsRepoContract = (
+            privacy_settings_repo
+        )
         self._settings: QualitySettings = app_settings.quality
         self._judge: ConversationQualityJudge = ConversationQualityJudge(
             llm_adapter, app_settings, llm_token_prices
@@ -156,7 +164,11 @@ class SampleConversationQualityUseCase(UseCaseContract[JobTick, JobReport]):
         )
         groups: list[list[Candidate]] = []
         for business in walk_businesses(self._business_repo):
-            if business.status not in SAMPLED_STATUSES:
+            if business.status not in SAMPLED_STATUSES or not (
+                self._privacy_settings_repo.get_or_default(
+                    business.id
+                ).quality_sampling_allowed
+            ):
                 continue
 
             picked: list[Candidate] = []

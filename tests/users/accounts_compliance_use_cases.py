@@ -93,6 +93,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         self.accept_dpa = AcceptDpaUseCase(
             authorize_business_access=self.authorize_business_access,
             dpa_acceptance_repo=self.dpa_acceptance_repo,
+            business_repo=self.business_repo,
             audit_log_repo=self.audit_log_repo,
             legal_document_registry=self.legal_document_registry,
             app_settings=self.settings,

@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory, Singleton
+from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
@@ -9,7 +9,6 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
-from app.contracts.privacy import BusinessExportLinkSignerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.privacy.business_exports import (
@@ -18,6 +17,8 @@ from app.schemas.dto.privacy.business_exports import (
     BusinessExportList,
     BusinessExportListQuery,
     BusinessExportView,
+    ExportDownloadLinkCommand,
+    ExportDownloadLinkView,
     StartBusinessExportCommand,
 )
 from app.schemas.dto.privacy.csv_exports import (
@@ -44,6 +45,9 @@ from app.use_cases.compliance.retention.purge_expired_personal_data_use_case imp
     PurgeExpiredPersonalDataUseCase,
 )
 from app.use_cases.exports.business_archive import BusinessArchiveBuilder
+from app.use_cases.exports.create_export_download_link_use_case import (
+    CreateExportDownloadLinkUseCase,
+)
 from app.use_cases.exports.download_business_export_use_case import (
     DownloadBusinessExportUseCase,
 )
@@ -63,7 +67,6 @@ from app.use_cases.exports.start_business_export_use_case import (
     StartBusinessExportUseCase,
 )
 from app.use_cases.exports.start_csv_export_use_case import StartCsvExportUseCase
-from app.utilities.privacy.export_link_signer import BusinessExportLinkSigner
 
 
 class PrivacyUseCasesContainer(containers.DeclarativeContainer):
@@ -107,12 +110,7 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
     )
 
-    # --- The full export: a ZIP the worker writes, a signed link for a day.
-    export_link_signer: Singleton[BusinessExportLinkSignerContract] = Singleton(
-        BusinessExportLinkSigner,
-        encryption_key=config.app_settings.provided.encryption_key,
-        previous_keys=config.app_settings.provided.previous_encryption_keys,
-    )
+    # --- The full export: a ZIP the worker writes, one-time download links.
     business_archive_builder: Factory[BusinessArchiveBuilder] = Factory(
         BusinessArchiveBuilder,
         contact_repo=repositories.contact_repo,
@@ -139,7 +137,6 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
-        link_signer=export_link_signer,
     )
     list_business_exports_use_case: Factory[
         UseCaseContract[BusinessExportListQuery, BusinessExportList]
@@ -148,7 +145,6 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         export_repo=repositories.business_export_repo,
         wall_clock=time_provider.microsecond_wall_clock,
-        link_signer=export_link_signer,
     )
     run_business_export_use_case: Factory[
         UseCaseContract[QueuedJobInput, JobReport]
@@ -159,23 +155,36 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
         archive_builder=business_archive_builder,
         archive_storage=adapters.export_archive_storage,
         wall_clock=time_provider.microsecond_wall_clock,
-        link_hours=config.app_settings.provided.privacy.provided.export_link_hours,
     )
     download_business_export_use_case: Factory[
         UseCaseContract[BusinessExportDownloadQuery, BusinessExportDownload]
     ] = Factory(
         DownloadBusinessExportUseCase,
-        business_repo=repositories.business_repo,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
         export_repo=repositories.business_export_repo,
+        link_repo=repositories.export_download_link_repo,
         archive_storage=adapters.export_archive_storage,
-        link_signer=export_link_signer,
         audit_log_repo=repositories.audit_log_repo,
+        download_notices=facilitators.export_download_notice_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    create_export_download_link_use_case: Factory[
+        UseCaseContract[ExportDownloadLinkCommand, ExportDownloadLinkView]
+    ] = Factory(
+        CreateExportDownloadLinkUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        export_repo=repositories.business_export_repo,
+        link_repo=repositories.export_download_link_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        step_up=utilities.step_up_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
+        link_minutes=config.app_settings.provided.privacy.provided.export_download_link_minutes,
     )
     purge_business_exports_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
             PurgeBusinessExportsUseCase,
             export_repo=repositories.business_export_repo,
+            link_repo=repositories.export_download_link_repo,
             archive_storage=adapters.export_archive_storage,
             wall_clock=time_provider.microsecond_wall_clock,
         )

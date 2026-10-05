@@ -15,12 +15,18 @@ from app.repositories.quality_repositories import (
     QualitySampleInputRepository,
     QualityTotalsRepository,
 )
+from app.repositories.retention_settings_repositories import (
+    BusinessPrivacySettingsRepository,
+)
 from app.schemas.configurations.quality_settings import QualitySettings
 from app.schemas.constants.assistants import JudgeCriterion
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.assistants import AssistantVersionDocument
+from app.schemas.domain.business_privacy_settings import (
+    BusinessPrivacySettingsDocument,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversation_quality import ConversationQualityScoreDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
@@ -103,6 +109,11 @@ class QualityBench:
                 AssistantVersionDocument
             )
         )
+        self.privacy_settings_repo = BusinessPrivacySettingsRepository(
+            InMemoryDocumentCollectionAdapter[BusinessPrivacySettingsDocument](
+                BusinessPrivacySettingsDocument
+            )
+        )
 
     def now(self) -> Microseconds:
         return self.world.clock.now_microseconds()
@@ -161,6 +172,7 @@ class QualityBench:
         percent: int = 100,
         per_business: int = 20,
         budget_cents: int = 500,
+        judge_same_provider: bool = True,
     ) -> SampleConversationQualityUseCase:
         settings = self.world.settings.model_copy(
             update={
@@ -168,6 +180,7 @@ class QualityBench:
                     sample_percent=QualitySamplePercent(percent),
                     sample_per_business=QualitySampleBusinessLimit(per_business),
                     sample_budget_cents=QualitySampleBudgetCents(budget_cents),
+                    judge_same_provider=judge_same_provider,
                 )
             }
         )
@@ -180,6 +193,7 @@ class QualityBench:
             assistant_version_repo=self.version_repo,
             conversation_quality_repo=self.quality_repo,
             quality_totals_repo=self.totals_repo,
+            privacy_settings_repo=self.privacy_settings_repo,
             llm_adapter=judge,
             app_settings=settings,
             wall_clock=self.world.clock.wall_clock,

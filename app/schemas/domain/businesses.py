@@ -15,6 +15,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName, CityName
+from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.handoffs.constrained_strings import ManagerTelegramUsername
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
 from app.schemas.typings.localization.constrained_strings import (
@@ -70,9 +71,12 @@ class BusinessDocument(BaseDocument):
     Version 4: `require_mfa_for_members` (False by default, so older rows
     read as they are): the team opens the business only with sessions
     signed in with two factors.
+    Version 5: `dpa_version_accepted`, the data processing agreement version
+    an owner accepted last (None until the first acceptance; businesses that
+    accepted before version 5 are answered by their acceptance records).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("4")
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: BusinessId = Field(default_factory=BusinessId)
     name: BusinessName
     niche_key: NicheKey
@@ -93,4 +97,5 @@ class BusinessDocument(BaseDocument):
     published_assistant_version_id: AssistantVersionId | None = None
     public_slug: BusinessPublicSlug | None = None
     require_mfa_for_members: IsMfaRequiredForMembers = False
+    dpa_version_accepted: DpaDocumentVersion | None = None
     revision: BusinessRevision = BusinessRevision(0)

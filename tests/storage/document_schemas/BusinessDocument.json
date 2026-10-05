@@ -1,7 +1,7 @@
 {
   "collection": "businesses",
   "document_type": "BusinessDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -43,6 +43,20 @@
         "minLength": 2,
         "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
         "type": "string"
+      },
+      "dpa_version_accepted": {
+        "anyOf": [
+          {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -266,7 +280,7 @@
         "type": "integer"
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "service_mode": {

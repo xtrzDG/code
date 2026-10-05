@@ -7,6 +7,7 @@ from app.contracts.repositories.mfa_repositories import RecoveryCodeRepoContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.mfa import RecoveryCodeDocument
+from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -14,6 +15,7 @@ from app.schemas.typings.compliance.strings import (
 )
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.mfa.prefixed_id import RecoveryCodeId
+from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.security.recovery_codes import (
     generate_recovery_codes,
@@ -54,8 +56,12 @@ def audit_mfa_change(
     entity: AuditEntityName,
     client_ip_address: ClientIpAddress | None,
     now: Microseconds,
+    lowered_sessions: DocumentCount | None = None,
 ) -> None:
-    """MFA_CHANGED by the person themselves; it names no business."""
+    """
+    MFA_CHANGED by the person themselves; it names no business. When the
+    change lowered other sessions to one factor, the entry counts them.
+    """
 
     audit_log_repo.append(
         AuditLogEntryDocument(
@@ -64,6 +70,9 @@ def audit_mfa_change(
             entity=entity,
             entity_id=AuditEntityReference(str(user_id)),
             ip_address=client_ip_address,
+            record_count=None
+            if lowered_sessions is None
+            else AuditRecordCount(int(lowered_sessions)),
             created_at=now,
             updated_at=now,
         )

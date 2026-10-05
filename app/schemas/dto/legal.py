@@ -3,7 +3,11 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
-from app.schemas.constants.legal import LegalDocumentKind, SubprocessorChangeKind
+from app.schemas.constants.legal import (
+    LegalDocumentKind,
+    ProcessorFlow,
+    SubprocessorChangeKind,
+)
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.compliance.strings import (
@@ -48,7 +52,13 @@ class SubprocessorEntry(ImmutableDTO):
     and when it joined (`added_on`, the DPA's first version for the
     original list) and leaves the list (`removed_on`, the first day it is
     no longer used). A change after the original list carries the day it
-    was announced, at least the notice period ahead.
+    was announced, at least the notice period ahead. `flows` are the data
+    flows its purpose covers; `chat_provider_flows` those it covers only
+    while it is the provider of the assistant's replies ("only when the
+    Provider switches the model"). The platform refuses to start in
+    production when a configured flow reaches a provider whose entries in
+    force do not cover it (`processor_coverage.py`). A new purpose of a
+    listed provider is an entry of its own, announced like an addition.
     """
 
     key: SubprocessorKey
@@ -58,6 +68,10 @@ class SubprocessorEntry(ImmutableDTO):
     location: LocalizedText
     client_modules: list[ClientModuleName] = Field(
         default_factory=list[ClientModuleName]
+    )
+    flows: list[ProcessorFlow] = Field(default_factory=list[ProcessorFlow])
+    chat_provider_flows: list[ProcessorFlow] = Field(
+        default_factory=list[ProcessorFlow]
     )
     added_on: SubprocessorChangeDate
     addition_announced_on: SubprocessorChangeDate | None = None

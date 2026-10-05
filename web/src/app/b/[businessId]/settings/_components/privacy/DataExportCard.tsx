@@ -18,17 +18,20 @@ const MINUTE_MS = 60_000;
 
 /**
  * Settings → Privacy → "Export your data": the full export of the
- * business (a ZIP the worker builds, its signed link for 24 hours) and
- * each table of the cabinet as CSV. Owners only: staff see why not.
+ * business (a ZIP the worker builds, kept for a day, downloaded at most
+ * three times through one-time links) and each table of the cabinet as
+ * CSV. Owners only: staff see why not.
  */
 export function DataExportCard() {
   const { t } = useI18n();
   const { isOwner } = useBusiness();
-  const { exports, items, isWorking, begin, isStarting } = useBusinessExports({ enabled: isOwner });
+  const { exports, items, isWorking, begin, isStarting, download, downloading } = useBusinessExports({
+    enabled: isOwner,
+  });
   const csv = useCsvExport();
   const historyId = useId();
   const tablesId = useId();
-  // Links run out while the page stays open: the rows look at the clock every minute.
+  // Archives run out while the page stays open: the rows look at the clock every minute.
   const [nowUs, setNowUs] = useState(() => Date.now() * 1000);
   useEffect(() => {
     const timer = window.setInterval(() => setNowUs(Date.now() * 1000), MINUTE_MS);
@@ -84,7 +87,13 @@ export function DataExportCard() {
                 {exports.error ? <RefreshFailed error={exports.error} onRetry={exports.reload} /> : null}
                 <ul className="divide-y divide-line rounded-xl border border-line" aria-live="polite">
                   {items.map((item) => (
-                    <BusinessExportRow key={item.id} item={item} nowUs={nowUs} />
+                    <BusinessExportRow
+                      key={item.id}
+                      item={item}
+                      nowUs={nowUs}
+                      onDownload={(chosen) => void download(chosen)}
+                      downloading={downloading}
+                    />
                   ))}
                 </ul>
               </>

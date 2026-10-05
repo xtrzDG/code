@@ -15,6 +15,7 @@ from app.schemas.typings.businesses.constrained_integers import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
+from app.schemas.typings.privacy.booleans import IsQualitySamplingAllowed
 from app.schemas.typings.privacy.constrained_integers import (
     ConversationRetentionDays,
     LlmTurnRetentionDays,
@@ -40,10 +41,15 @@ class PrivacySettingsQuery(ImmutableDTO):
 
 
 class PrivacySettingsRequest(ImmutableDTO):
-    """The owner's retention choices (Settings → Privacy)."""
+    """
+    The owner's retention choices (Settings → Privacy) and whether the
+    nightly judge may score a sample of real conversations (unchanged
+    when left out).
+    """
 
     conversation_retention_days: ConversationRetentionDays
     llm_turn_retention_days: LlmTurnRetentionDays
+    quality_sampling_allowed: IsQualitySamplingAllowed | None = None
 
 
 class UpdatePrivacySettingsCommand(ImmutableDTO):
@@ -64,12 +70,15 @@ class PrivacySettingsView(ImmutableDTO):
     """
     Settings → Privacy: how long conversations and the records of model
     calls are kept, how long call recordings are kept (Settings → General),
-    the latest purge, and the sub-processors whose copies are deleted with
-    the platform's own (only those this platform is set up with).
+    whether the nightly quality sample may include this business's
+    conversations, the latest purge, and the sub-processors whose copies are
+    deleted with the platform's own (only those this platform is set up
+    with).
     """
 
     conversation_retention_days: ConversationRetentionDays
     llm_turn_retention_days: LlmTurnRetentionDays
+    quality_sampling_allowed: IsQualitySamplingAllowed = True
     recording_retention_days: RecordingRetentionDays
     last_purge: RetentionPurgeView | None = None
     erasure_processors: list[SubProcessor] = Field(default_factory=list[SubProcessor])

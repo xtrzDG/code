@@ -5,8 +5,8 @@ Each TEXT, FILTER_TEXT and INTEGER field is a column `doc_<field>`: a
 stored generated one up to migration 1120 (1010, 1040, 1042, 1043, 1051,
 1052, 1061, 1062, 1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103,
 1112, 1113 and 1120, the last on a new table), a plain one filled by the
-`<table>_lookup_columns` trigger from 1122 on (the online-safe pattern of
-migrations/README.md); each
+`<table>_lookup_columns` trigger from 1122 on, new tables (1134) too (the
+online-safe pattern of migrations/README.md); each
 ELEMENT_TEXT field a trigger over `workshop.document_lookup_keys`;
 `document_lookup_fields` explains the kinds and checks queries against this
 catalog. The platform's own collections (jobs, incidents, the status
@@ -250,6 +250,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("created_at"),
         integer_field("expires_at"),
     ),
+    # The hourly purge of expired one-time export download links (1134).
+    DocumentCollectionName("export_download_links"): (integer_field("expires_at"),),
     # The judge's scores of real conversations (1120).
     **QUALITY_LOOKUP_FIELDS,
     # The platform's own records.

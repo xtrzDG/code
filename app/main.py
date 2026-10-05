@@ -30,6 +30,7 @@ from app.gateways.http.background_threads import (
 )
 from app.gateways.http.live_events.exit_signals import end_streams_on_exit_signals
 from app.gateways.http.router_assembly import build_application_routers
+from app.gateways.startup_checks import check_processor_uses
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
@@ -84,7 +85,8 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
     Startup: size the request thread pool (THREADPOOL_SIZE), warm the
     country catalog (every country's profile is built once), check that the
-    configured DPA has its text in this build, report the login code
+    configured DPA has its text in this build and that the sub-processor
+    list covers every configured flow of personal data, report the login code
     channels, with SEED_DEMO_DATA fill the instance with the demo businesses
     (once), point the platform Telegram bot at this API when it is
     configured, start flushing model-call traces and, with EMBEDDED_WORKER,
@@ -100,6 +102,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         set_request_thread_limit(app_container)
         app_container.registries.country_registry().list_all()
         check_dpa_document(app_container)
+        check_processor_uses(app_container)
         report_login_code_channels(app_container)
         seed_demo_data(app_container)
         configure_platform_bot(app_container)

@@ -19,9 +19,11 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.mfa import AuthLevel, TotpFactorStatus
+from app.schemas.constants.users import SessionSweepReason
 from app.schemas.domain.mfa import MfaChallengeDocument, TotpFactorDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.mfa import VerifyMfaLoginCommand
+from app.schemas.dto.sessions import SessionSweep
 from app.schemas.dto.users import LoginSessionView, UserView
 from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
@@ -29,6 +31,7 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
+from app.use_cases.shared.session_sweeps import end_sessions
 from app.use_cases.users.mfa.mfa_challenges import (
     EXPIRED_STEP_MESSAGE,
     consume_mfa_challenge,
@@ -57,7 +60,9 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
     recovery codes (SecondFactorCheck). A platform admin without one has
     just set it up (StartMfaLoginEnrollmentUseCase): its first code turns
     it on, a new set of recovery codes comes back with the session (shown
-    once) and the change is audited as MFA_CHANGED. Checks are limited per
+    once), the admin's earlier sessions end (they were signed in without
+    it; SESSION_REVOKED with the count) and the change is audited as
+    MFA_CHANGED. Checks are limited per
     step and per client network, the step locks after five wrong codes and
     is used by compare-and-swap, so it opens one session only.
     """
@@ -83,6 +88,7 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         self._user_repo: UserRepoContract = user_repo
         self._totp_factor_repo: TotpFactorRepoContract = totp_factor_repo
         self._recovery_code_repo: RecoveryCodeRepoContract = recovery_code_repo
+        self._user_session_repo: UserSessionRepoContract = user_session_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._app_settings: AppSettings = app_settings
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -150,6 +156,17 @@ class VerifyMfaLoginUseCase(UseCaseContract[VerifyMfaLoginCommand, LoginSessionV
         self._check.confirm_pending(factor, input_data.code, now)
         codes: list[RecoveryCode] = issue_recovery_codes(
             self._recovery_code_repo, user.id, now
+        )
+        end_sessions(
+            self._user_session_repo,
+            self._audit_log_repo,
+            SessionSweep(
+                user_id=user.id,
+                actor_id=user.id,
+                reason=SessionSweepReason.AUTHENTICATOR_ADDED,
+                client_ip_address=input_data.client_ip_address,
+                now=now,
+            ),
         )
         audit_mfa_change(
             self._audit_log_repo,

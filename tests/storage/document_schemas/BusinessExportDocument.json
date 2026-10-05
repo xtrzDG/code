@@ -1,7 +1,7 @@
 {
   "collection": "business_exports",
   "document_type": "BusinessExportDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -33,6 +33,11 @@
         "type": "string"
       },
       "created_at": {
+        "type": "integer"
+      },
+      "download_count": {
+        "default": 0,
+        "minimum": 0,
         "type": "integer"
       },
       "expires_at": {
@@ -103,7 +108,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "started_at": {

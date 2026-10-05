@@ -17,7 +17,13 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 
 class AuditLogRepoContract(AuditLogListingContract, RepoContract, Protocol):
     def append(self, entry: AuditLogEntryDocument) -> None:
-        """Audit entries are never updated or deleted."""
+        """
+        Store a new entry. Entries are never deleted; the one change ever
+        made to a stored entry is the count of a VIEW: a VIEW identical to
+        one stored in the last 5 minutes (same business, person, entity,
+        record and address) raises that entry's `record_count` (a single
+        view counts 1) instead of adding another line.
+        """
         raise NotImplementedError
 
     def list_by_business(

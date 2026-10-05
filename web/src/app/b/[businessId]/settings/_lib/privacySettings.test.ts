@@ -15,6 +15,7 @@ import {
   periodChoices,
   PURGE_COUNT_FIELDS,
   purgeSummary,
+  qualitySamplingBody,
   retentionBody,
   retentionForm,
   type PrivacySettingsView,
@@ -27,6 +28,7 @@ const VIEW: PrivacySettingsView = {
   recording_retention_days: 90,
   last_purge: null,
   erasure_processors: ["langfuse", "elevenlabs"],
+  quality_sampling_allowed: true,
 };
 
 const NO_COUNTS: RetentionPurgeCounts = {
@@ -58,6 +60,15 @@ describe("the retention form", () => {
     expect(isShorterRetention({ conversationDays: 365, modelRecordDays: 30 }, VIEW)).toBe(true);
     expect(isShorterRetention({ conversationDays: 730, modelRecordDays: 7 }, VIEW)).toBe(true);
     expect(isShorterRetention({ conversationDays: 1825, modelRecordDays: 30 }, VIEW)).toBe(false);
+  });
+
+  it("turns the quality sample of real conversations on or off without touching the periods", () => {
+    expect(qualitySamplingBody(VIEW, false)).toEqual({
+      conversation_retention_days: 730,
+      llm_turn_retention_days: 30,
+      quality_sampling_allowed: false,
+    });
+    expect(qualitySamplingBody({ ...VIEW, quality_sampling_allowed: false }, true).quality_sampling_allowed).toBe(true);
   });
 
   it("offers the presets within the API's bounds and keeps a stored value set some other way", () => {

@@ -17,6 +17,7 @@ from app.schemas.constants.handoffs import (
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.bookings.booleans import IsSandboxIncluded
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
@@ -43,6 +44,7 @@ class ListHandoffsQuery(ImmutableDTO):
 
     business_id: BusinessId
     actor_id: UserId
+    client_ip_address: ClientIpAddress | None = None
     status: HandoffStatus | None = None
     is_open: IsHandoffOpen | None = None
     include_sandbox: IsSandboxIncluded = False

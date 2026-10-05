@@ -27,6 +27,7 @@ def build_privacy_routers(
             current_user=current_user,
             start_export=privacy.start_business_export_operator(),
             list_exports=privacy.list_business_exports_operator(),
+            create_download_link=privacy.create_export_download_link_operator(),
             download_export=privacy.download_business_export_operator(),
         ),
         build_privacy_settings_router(

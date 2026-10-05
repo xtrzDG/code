@@ -22,7 +22,7 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
 # list with a lawyer before launch; override with RESTRICTED_COUNTRY_CODES
 # (comma-separated, an empty value disables the restriction).
 DEFAULT_RESTRICTED_COUNTRY_CODES: str = "CU,IR,KP,SY"
-DEFAULT_DPA_DOCUMENT_VERSION: str = "2026-10-01"
+DEFAULT_DPA_DOCUMENT_VERSION: str = "2026-10-06"
 
 
 class ComplianceSettingsSection(TypedDict):

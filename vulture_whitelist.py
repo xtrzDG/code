@@ -512,3 +512,9 @@ _.is_booking_made  # app/schemas/dto/public_demo.py (PublicDemoReply)
 _.is_request_made  # app/schemas/dto/public_demo.py (PublicDemoReply)
 _.is_handoff_made  # app/schemas/dto/public_demo.py (PublicDemoReply)
 _.messages_left  # app/schemas/dto/public_demo.py (PublicDemoReply)
+
+# The DPA status the cabinet's banner and Settings → Privacy read (the
+# accepted version, when to accept again); the code that implements a DPA
+# security measure, read by tests/legal (every path exists).
+_.latest_acceptance  # app/schemas/dto/compliance.py (DpaStatusView)
+_.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)

@@ -9,7 +9,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.mfa import AuthLevel
-from app.schemas.constants.users import SessionDeviceKind
+from app.schemas.constants.users import SessionDeviceKind, SessionSweepReason
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.schemas.typings.users.booleans import IsCurrentSession
@@ -112,3 +112,18 @@ class RevokedSessionsView(ImmutableDTO):
     """How many sessions were ended."""
 
     revoked_count: DocumentCount
+
+
+class SessionSweep(ImmutableDTO):
+    """
+    A change that reaches every session of `user_id` but `kept_session_id`
+    (the request's own, when it stays): who made it (the person, or the
+    SUPER admin who changed their role), why, from where and when.
+    """
+
+    user_id: UserId
+    actor_id: UserId
+    reason: SessionSweepReason
+    kept_session_id: UserSessionId | None = None
+    client_ip_address: ClientIpAddress | None = None
+    now: Microseconds

@@ -1,6 +1,6 @@
 """
 Persistence contracts of the suppression list and the full business
-exports (migration 1113).
+exports (migration 1113) and of their one-time download links (1134).
 """
 
 from collections.abc import Callable, Sequence
@@ -9,15 +9,22 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
-from app.schemas.domain.business_exports import BusinessExportDocument
+from app.schemas.domain.business_exports import (
+    BusinessExportDocument,
+    ExportDownloadLinkDocument,
+)
 from app.schemas.domain.suppression import SuppressionEntryDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.privacy.prefixed_id import (
     BusinessExportId,
+    ExportDownloadLinkId,
     SuppressionEntryId,
 )
 from app.schemas.typings.storage.booleans import IsDocumentInserted
-from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.schemas.typings.storage.constrained_integers import (
+    DocumentCount,
+    DocumentQueryLimit,
+)
 
 type BusinessExportChange = Callable[
     [BusinessExportDocument], BusinessExportDocument | None
@@ -72,4 +79,31 @@ class BusinessExportRepoContract(RepoContract, Protocol):
         self, moment: Microseconds, limit: DocumentQueryLimit
     ) -> list[BusinessExportDocument]:
         """Exports of every business whose link ran out before `moment`."""
+        raise NotImplementedError
+
+
+class ExportDownloadLinkRepoContract(RepoContract, Protocol):
+    def save(self, link: ExportDownloadLinkDocument) -> None:
+        raise NotImplementedError
+
+    def get(
+        self, business_id: BusinessId, link_id: ExportDownloadLinkId
+    ) -> ExportDownloadLinkDocument | None:
+        raise NotImplementedError
+
+    def use(
+        self,
+        business_id: BusinessId,
+        link_id: ExportDownloadLinkId,
+        now: Microseconds,
+    ) -> ExportDownloadLinkDocument | None:
+        """
+        Mark the link used in one atomic step, only while it is unused and
+        not expired: the used link, or None when it is missing, used (by
+        this or a parallel request) or expired.
+        """
+        raise NotImplementedError
+
+    def delete_expired_before(self, moment: Microseconds) -> DocumentCount:
+        """Delete every business's links that expired before `moment`."""
         raise NotImplementedError

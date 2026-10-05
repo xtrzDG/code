@@ -57,6 +57,13 @@ from app.use_cases.legal.send_subprocessor_notices_use_case import (
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 
 DAY: int = 24 * 60 * 60 * 1_000_000
+# The list as the DPA's first version had it: the real catalog without its
+# announced changes, so a test adds exactly the change it is about.
+ORIGINAL_ENTRIES: tuple[SubprocessorEntry, ...] = tuple(
+    entry
+    for entry in SUBPROCESSORS
+    if entry.addition_announced_on is None and entry.removed_on is None
+)
 
 
 def moment(day: str, hour: int = 9) -> Microseconds:

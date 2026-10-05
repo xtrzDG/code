@@ -4277,7 +4277,7 @@
       },
       "BusinessExportView": {
         "additionalProperties": false,
-        "description": "One export as Settings → Privacy shows it: its state, when it was asked\nfor and finished, its size, and while READY the signed download path\n(relative to the API; it works without the session until\n`expires_at`). `last_error` says why a FAILED export failed.",
+        "description": "One export as Settings → Privacy shows it: its state, when it was asked\nfor and finished, its size, until when its archive is kept\n(`expires_at`) and how many downloads it has left (`downloads_left`,\nof 3). `last_error` says why a FAILED export failed.\n\n`download_path` is deprecated and always None: a download needs a\none-time link (POST …/business-exports/{export_id}/download-link).",
         "properties": {
           "archive_bytes": {
             "anyOf": [
@@ -4303,7 +4303,14 @@
                 "type": "null"
               }
             ],
+            "deprecated": true,
             "title": "Download Path"
+          },
+          "downloads_left": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Downloads Left",
+            "type": "integer"
           },
           "expires_at": {
             "anyOf": [
@@ -9233,8 +9240,22 @@
       },
       "DpaStatusView": {
         "additionalProperties": false,
-        "description": "Whether the business accepted the agreement version now in force.\n\n`document_url` is the API path of that version's text (None when the\nrepository has no text for it; then it cannot be accepted).",
+        "description": "Whether the business accepted the agreement version now in force.\n\n`document_url` is the API path of that version's text (None when the\nrepository has no text for it; then it cannot be accepted).\n`needs_reacceptance` is True when an owner accepted an earlier version\nbut not this one: the cabinet asks owners to accept it by\n`acceptance_due_on` (30 days after the version's date). Until then the\nassistant keeps answering, but no new version can be published.",
         "properties": {
+          "acceptance_due_on": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Due On"
+          },
           "business_id": {
             "title": "Business Id",
             "type": "string"
@@ -9273,6 +9294,11 @@
                 "type": "null"
               }
             ]
+          },
+          "needs_reacceptance": {
+            "default": false,
+            "title": "Needs Reacceptance",
+            "type": "boolean"
           }
         },
         "required": [
@@ -9457,6 +9483,29 @@
         ],
         "title": "ExchangeRateSource",
         "type": "string"
+      },
+      "ExportDownloadLinkView": {
+        "additionalProperties": false,
+        "description": "The one-time download path (relative to the API) and when it stops\nworking. It opens once, with a session of the owner who asked for it.",
+        "properties": {
+          "download_path": {
+            "maxLength": 400,
+            "minLength": 40,
+            "pattern": "^/v1/business-exports/[a-z0-9_\\-]+/[a-z0-9_\\-]+/download\\?token=[A-Za-z0-9_\\-]+$",
+            "title": "Download Path",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "download_path",
+          "expires_at"
+        ],
+        "title": "ExportDownloadLinkView",
+        "type": "object"
       },
       "FailedAutotestView": {
         "additionalProperties": false,
@@ -17493,7 +17542,7 @@
       },
       "PrivacySettingsView": {
         "additionalProperties": false,
-        "description": "Settings → Privacy: how long conversations and the records of model\ncalls are kept, how long call recordings are kept (Settings → General),\nthe latest purge, and the sub-processors whose copies are deleted with\nthe platform's own (only those this platform is set up with).",
+        "description": "Settings → Privacy: how long conversations and the records of model\ncalls are kept, how long call recordings are kept (Settings → General),\nwhether the nightly quality sample may include this business's\nconversations, the latest purge, and the sub-processors whose copies are\ndeleted with the platform's own (only those this platform is set up\nwith).",
         "properties": {
           "conversation_retention_days": {
             "maximum": 3650.0,
@@ -17523,6 +17572,11 @@
             "minimum": 1.0,
             "title": "Llm Turn Retention Days",
             "type": "integer"
+          },
+          "quality_sampling_allowed": {
+            "default": true,
+            "title": "Quality Sampling Allowed",
+            "type": "boolean"
           },
           "recording_retention_days": {
             "maximum": 3650.0,
@@ -19766,7 +19820,7 @@
         "type": "object"
       },
       "StaffLinkTarget": {
-        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device).\nLink targets live only in signed links, never in stored documents.",
+        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device);\nPRIVACY is Settings → Privacy (a full export was downloaded).\nLink targets live only in signed links, never in stored documents.",
         "enum": [
           "conversation",
           "lead",
@@ -19778,7 +19832,8 @@
           "channels",
           "share",
           "billing",
-          "account_security"
+          "account_security",
+          "privacy"
         ],
         "title": "StaffLinkTarget",
         "type": "string"
@@ -28110,6 +28165,22 @@
               ],
               "title": "Token"
             }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
           }
         ],
         "responses": {
@@ -35521,6 +35592,133 @@
           }
         },
         "summary": "Start Business Export",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/business-exports/{export_id}/download-link": {
+      "post": {
+        "operationId": "create_business_export_download_link_v1_businesses__business_id__business_exports__export_id__download_link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "export_id",
+            "required": true,
+            "schema": {
+              "title": "Export Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportDownloadLinkView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Business Export Download Link",
         "tags": [
           "exports"
         ]
@@ -46579,7 +46777,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "The owner's retention choices (Settings → Privacy).",
+                "description": "The owner's retention choices (Settings → Privacy) and whether the\nnightly judge may score a sample of real conversations (unchanged\nwhen left out).",
                 "properties": {
                   "conversation_retention_days": {
                     "maximum": 3650,
@@ -46592,6 +46790,17 @@
                     "minimum": 1,
                     "title": "Llm Turn Retention Days",
                     "type": "integer"
+                  },
+                  "quality_sampling_allowed": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Quality Sampling Allowed"
                   }
                 },
                 "required": [

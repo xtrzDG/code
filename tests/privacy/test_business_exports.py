@@ -1,7 +1,8 @@
 """
 The full export of a business: owners ask (stepped up, audited, one at a
 time), the worker writes an encrypted ZIP of every collection and the CSV
-tables, a signed link downloads it for a day, then the archive is purged.
+tables, one-time links download it during its day, then the archive is
+purged.
 """
 
 import json
@@ -17,7 +18,6 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.privacy.prefixed_id import BusinessExportId
 from app.schemas.typings.privacy.strings import ExportArchivePath
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
@@ -54,13 +54,14 @@ def test_the_owner_asks_once_and_the_worker_writes_the_archive() -> None:
     assert int(report.processed_count) == 1
     [ready] = bed.list.run(_list_query(bed)).items
     assert ready.status is BusinessExportStatus.READY
-    assert ready.download_path is not None
+    assert ready.model_dump()["download_path"] is None
+    assert int(ready.downloads_left) == 3
     assert ready.archive_bytes is not None and int(ready.archive_bytes) > 0
     [sealed] = bed.objects.objects.values()
     assert sealed.startswith(b"AWX1")
     assert b"Giorgi" not in sealed
 
-    download = bed.download(str(ready.download_path))
+    download = bed.download(str(bed.link(ready.id).download_path))
 
     assert str(download.file_name).startswith("business-export-")
     files = read_zip(download.content)
@@ -100,7 +101,7 @@ def test_an_erased_customer_is_not_in_the_archive() -> None:
     bed.run_job()
     [ready] = bed.list.run(_list_query(bed)).items
 
-    files = read_zip(bed.download(str(ready.download_path)).content)
+    files = read_zip(bed.download(str(bed.link(ready.id).download_path)).content)
 
     contacts = json.loads(files["contacts.json"])
     assert [contact["name"] for contact in contacts] == ["Nino"]
@@ -108,28 +109,23 @@ def test_an_erased_customer_is_not_in_the_archive() -> None:
     assert str(tenants.visitor.booking.id) not in files["csv/bookings.csv"]
 
 
-def test_a_wrong_or_expired_link_is_not_found_and_the_archive_is_purged() -> None:
+def test_the_archive_is_purged_after_its_day() -> None:
     bed = BusinessExportBed(seed_two_tenants())
-    bed.ask()
-    bed.run_job()
-    [ready] = bed.list.run(_list_query(bed)).items
-    path = str(ready.download_path)
-
-    with pytest.raises(NotFoundError):
-        bed.download(path.replace("token=", "token=A"))
-    with pytest.raises(NotFoundError):
-        bed.download(path.replace(str(ready.id), str(BusinessExportId())))
+    ready = bed.ready_export()
+    path = str(bed.link(ready.id).download_path)
 
     bed.clock.advance(DAY_SECONDS + 1)
     with pytest.raises(NotFoundError):
         bed.download(path)
+    with pytest.raises(NotFoundError):
+        bed.link(ready.id)
 
     assert int(bed.run_purge().processed_count) == 1
     assert int(bed.run_purge().processed_count) == 0
     assert bed.objects.objects == {}
     [expired] = bed.list.run(_list_query(bed)).items
     assert expired.status is BusinessExportStatus.EXPIRED
-    assert expired.download_path is None
+    assert int(expired.downloads_left) == 0
 
 
 def test_a_failure_is_retried_then_left_failed() -> None:
@@ -155,7 +151,7 @@ def test_a_failure_is_retried_then_left_failed() -> None:
     [failed] = bed.list.run(_list_query(bed)).items
     assert failed.status is BusinessExportStatus.FAILED
     assert failed.last_error is not None
-    assert failed.download_path is None
+    assert failed.model_dump()["download_path"] is None
     assert bed.ask().id != failed.id  # a failed export does not block a new one
 
 

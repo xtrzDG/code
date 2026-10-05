@@ -70,6 +70,33 @@ export const AUDIT_ACTION_TONES: Record<AuditAction, BadgeTone> = {
   platform_admin_changed: "neutral",
 };
 
+/**
+ * The message key of an audit entity's name ("booking" ->
+ * "settings.audit.entities.booking"); a dotted name such as
+ * "business_profile.contacts" reads as one key with underscores.
+ */
+export function auditEntityKey(entity: string): string {
+  return `settings.audit.entities.${entity.replaceAll(".", "_")}`;
+}
+
+/**
+ * What an entry's count means: a view repeated within five minutes is one
+ * entry with the number of views; a download of the full export counts
+ * which download it was (of three); otherwise the records a purge, an
+ * export or a deletion covered.
+ */
+export function auditCountKey(
+  entry: Pick<AuditLogEntry, "action" | "entity">,
+): "settings.audit.viewCount" | "settings.audit.downloadNumber" | "settings.audit.recordCount" {
+  if (entry.action === "view") {
+    return "settings.audit.viewCount";
+  }
+  if (entry.action === "export" && entry.entity === "business_export") {
+    return "settings.audit.downloadNumber";
+  }
+  return "settings.audit.recordCount";
+}
+
 /** Who did it: a team member's name, or null for the platform / unknown users. */
 export function actorLabel(actorId: string | null | undefined, members: readonly BusinessMember[]): string | null {
   if (!actorId) {

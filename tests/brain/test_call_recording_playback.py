@@ -201,8 +201,10 @@ def test_range_requests_get_partial_content_and_a_playback_is_audited_once() -> 
     assert (several.status_code, several.content) == (200, AUDIO)
     assert (conditional.status_code, conditional.content) == (200, AUDIO)
     # Only the reads from the beginning start a playback (the probe and the
-    # two whole-recording answers); the parts of a playback are not new views.
-    assert len(playback.recording_views()) == 3
+    # two whole-recording answers); the parts of a playback are not new views,
+    # and the playbacks within five minutes are one entry with their count.
+    [views] = playback.recording_views()
+    assert views.record_count == 3
 
 
 def test_parts_of_a_playback_still_need_access() -> None:

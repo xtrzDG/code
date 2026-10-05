@@ -32,7 +32,11 @@ from app.utilities.legal.subprocessor_table import (
 )
 from app.utilities.localization.language_tags import parse_language_tag
 from scripts.render_subprocessor_table import render_files
-from tests.legal.legal_world import announced_entry, retiring_entry
+from tests.legal.legal_world import (
+    ORIGINAL_ENTRIES,
+    announced_entry,
+    retiring_entry,
+)
 
 DPA_FILES: list[Path] = sorted(DEFAULT_LEGAL_DOCUMENTS_DIRECTORY.glob("dpa-*.md"))
 
@@ -111,7 +115,7 @@ def test_changes_are_derived_from_the_entries_earliest_first() -> None:
     registry = SubprocessorRegistry(
         entries=(
             retiring_entry(removed_on="2027-01-01", announced_on="2026-11-15"),
-            *SUBPROCESSORS[1:],
+            *ORIGINAL_ENTRIES[1:],
             announced_entry(
                 "mailbox", added_on="2026-12-01", announced_on="2026-10-20"
             ),

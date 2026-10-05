@@ -10,6 +10,13 @@ class ClientModuleExclusionReason(BaseTypedString):
     """
 
 
+class ProcessorUseDescription(BaseTypedString):
+    """
+    What one flow of data to an outside provider is for, in English, e.g.
+    "The nightly judge scores a sample of real conversations".
+    """
+
+
 class SubprocessorLocation(BaseTypedString):
     """Where a sub-processor processes the data, in one language."""
 

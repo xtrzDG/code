@@ -39,6 +39,7 @@ TABLE_ORDER: tuple[str, ...] = (
     "render",
     "google_calendar",
     "anthropic",
+    "anthropic_quality_review",
     "cloudflare_turnstile",
     "object_storage",
     "email",

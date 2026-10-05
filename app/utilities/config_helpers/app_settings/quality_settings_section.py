@@ -1,6 +1,8 @@
 """
-AUTOTEST_CRITICAL_SAMPLES and QUALITY_SAMPLE_*: how strictly autotests
-judge a version and how much of real traffic the nightly judge scores.
+AUTOTEST_CRITICAL_SAMPLES, QUALITY_SAMPLE_* and
+QUALITY_SAMPLING_JUDGE_SAME_PROVIDER: how strictly autotests judge a
+version, how much of real traffic the nightly judge scores and which
+provider's model judges it.
 """
 
 from collections.abc import Mapping
@@ -21,6 +23,7 @@ from app.schemas.typings.quality.constrained_integers import (
 )
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     parse_setting,
+    read_boolean,
     read_integer,
 )
 
@@ -62,6 +65,9 @@ def read_quality_settings(
                     "QUALITY_SAMPLE_BUDGET_CENTS", DEFAULT_QUALITY_SAMPLE_BUDGET_CENTS
                 ),
                 QualitySampleBudgetCents,
+            ),
+            judge_same_provider=read_boolean(
+                environment_variables, "QUALITY_SAMPLING_JUDGE_SAME_PROVIDER", True
             ),
         )
     )

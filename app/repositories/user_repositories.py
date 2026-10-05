@@ -203,6 +203,46 @@ class UserSessionRepository(UserSessionRepoContract):
     def list_by_user(self, user_id: UserId) -> list[UserSessionDocument]:
         return self._collection.list_by_fields([field_equals(USER_ID_FIELD, user_id)])
 
+    def set_level_for_user(
+        self,
+        user_id: UserId,
+        auth_level: AuthLevel,
+        now: Microseconds,
+        except_session_id: UserSessionId | None = None,
+    ) -> DocumentCount:
+        def set_level(session: UserSessionDocument) -> UserSessionDocument | None:
+            # A legacy session without a level already counts as one factor.
+            current: AuthLevel = session.auth_level or AuthLevel.ONE_FACTOR
+            if current is auth_level:
+                return None
+
+            session.auth_level = auth_level
+            session.updated_at = now
+            return session
+
+        changed: int = 0
+        for session in self.list_by_user(user_id):
+            if session.id == except_session_id:
+                continue
+
+            if self._collection.modify(str(session.id), set_level) is not None:
+                changed += 1
+        return DocumentCount(changed)
+
+    def delete_for_user(
+        self,
+        user_id: UserId,
+        except_session_id: UserSessionId | None = None,
+    ) -> DocumentCount:
+        ended: int = 0
+        for session in self.list_by_user(user_id):
+            if session.id == except_session_id:
+                continue
+
+            self._collection.delete(str(session.id))
+            ended += 1
+        return DocumentCount(ended)
+
     def find_by_token_hash(
         self,
         token_hash: AccessTokenHash,

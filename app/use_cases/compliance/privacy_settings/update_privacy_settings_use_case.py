@@ -36,6 +36,8 @@ class UpdatePrivacySettingsUseCase(
     records of model calls (up to 30 days) are kept. A shorter period
     deletes data at the next nightly purge, so it asks for a recent
     sign-in (step-up) first; a longer one keeps only what is still there.
+    The owner may also keep the business's conversations out of the
+    nightly quality sample (left out of the request, it stays as it is).
     Audited with the owner and their address.
     """
 
@@ -86,6 +88,8 @@ class UpdatePrivacySettingsUseCase(
         now: Microseconds = self._wall_clock.now_unix()
         settings.conversation_retention_days = request.conversation_retention_days
         settings.llm_turn_retention_days = request.llm_turn_retention_days
+        if request.quality_sampling_allowed is not None:
+            settings.quality_sampling_allowed = request.quality_sampling_allowed
         settings.updated_at = now
         self._privacy_settings_repo.save(settings)
         self._audit_log_repo.append(

@@ -31,22 +31,36 @@ export function hasWorkingExport(items: readonly BusinessExport[] | undefined): 
   return (items ?? []).some(isExportWorking);
 }
 
-/**
- * The browser's address of a ready export's signed link: the API's path
- * through the cabinet's proxy; null when there is nothing to download (not
- * ready, expired by now, or no link).
- */
-export function downloadHref(item: BusinessExport, nowUs: number): string | null {
-  if (item.status !== "ready" || !item.download_path || !item.download_path.startsWith("/v1/")) {
-    return null;
-  }
-  if (item.expires_at !== null && item.expires_at !== undefined && item.expires_at <= nowUs) {
-    return null;
-  }
-  return `${BFF_BASE_PATH}${item.download_path}`;
+/** The most times one export can be downloaded (the API's MAX_EXPORT_DOWNLOADS). */
+export const MAX_EXPORT_DOWNLOADS = 3;
+
+/** A ready export the owner can still download: kept, not run out, downloads left. */
+export function canDownload(item: BusinessExport, nowUs: number): boolean {
+  return shownStatus(item, nowUs) === "ready" && item.downloads_left > 0;
 }
 
-/** The status to show: a ready export whose link ran out reads as expired before the hourly sweep. */
+/** A ready export downloaded as many times as it may be: only a new export gives another copy. */
+export function isUsedUp(item: BusinessExport, nowUs: number): boolean {
+  return shownStatus(item, nowUs) === "ready" && item.downloads_left <= 0;
+}
+
+/**
+ * The browser's address of a one-time link (POST …/download-link): the
+ * API's path through the cabinet's proxy, which adds the owner's session;
+ * null for a path outside the API.
+ */
+export function linkHref(downloadPath: string): string | null {
+  return downloadPath.startsWith("/v1/") ? `${BFF_BASE_PATH}${downloadPath}` : null;
+}
+
+/** The list with one more download of an export counted (the API counts it as the link opens). */
+export function withDownloadCounted(items: readonly BusinessExport[] | undefined, exportId: string): BusinessExport[] {
+  return (items ?? []).map((item) =>
+    item.id === exportId ? { ...item, downloads_left: Math.max(0, item.downloads_left - 1) } : item,
+  );
+}
+
+/** The status to show: a ready export past its day reads as expired before the hourly sweep. */
 export function shownStatus(item: BusinessExport, nowUs: number): BusinessExportStatus {
   if (item.status === "ready" && item.expires_at !== null && item.expires_at !== undefined && item.expires_at <= nowUs) {
     return "expired";

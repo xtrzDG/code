@@ -3,7 +3,8 @@
  * Settings → Privacy, Bookings and the Inbox (UTF-8 with a byte order
  * mark, headings in the cabinet's language, named by the table and the
  * day), and prepares the full export, which the worker builds into a ZIP
- * behind a signed link. Staff get no export buttons.
+ * downloaded through one-time links (three downloads at most). Staff get
+ * no export buttons.
  */
 
 import { readFile } from "node:fs/promises";
@@ -45,14 +46,16 @@ test("the owner downloads tables as CSV and the full export as a ZIP", async ({ 
 
   await page.getByRole("button", { name: texts.full.start }).click();
   await expect(page.getByText(texts.full.started)).toBeVisible();
-  const link = page.getByRole("link", { name: /^Download the export asked / });
-  await expect(link).toBeVisible({ timeout: 60_000 });
-  const row = page.getByRole("listitem").filter({ has: link });
+  const button = page.getByRole("button", { name: /^Download the export asked / });
+  await expect(button).toBeVisible({ timeout: 60_000 });
+  const row = page.getByRole("listitem").filter({ has: button });
   await expect(row.getByText(texts.full.status.ready, { exact: true })).toBeVisible();
-  const archive = await downloadBy(page, () => link.click());
+  await expect(row.getByText(/3 of 3 downloads left/)).toBeVisible();
+  const archive = await downloadBy(page, () => button.click());
   expect(archive.suggestedFilename()).toMatch(/^business-export-\d{4}-\d{2}-\d{2}\.zip$/);
   const bytes = await readFile(await archive.path());
   expect(bytes.subarray(0, 2).toString("latin1")).toBe("PK");
+  await expect(row.getByText(/2 of 3 downloads left/)).toBeVisible();
 });
 
 test("Bookings and the Inbox export what their filters show; staff see no export", async ({ browser, page, owner, request }) => {

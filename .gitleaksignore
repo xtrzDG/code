@@ -1813,3 +1813,6 @@ c1b77653af7791923b42874f8ef115d4558583cd:tests/storage/test_two_processes.py:gen
 4d95a5dd8b896020b25cfe6fe3aa0803793dfb62:tests/storage/golden/subprocessor_notices/v1.json:generic-api-key:3
 4d95a5dd8b896020b25cfe6fe3aa0803793dfb62:tests/storage/golden/subprocessor_announcements/v1.json:generic-api-key:2
 4d95a5dd8b896020b25cfe6fe3aa0803793dfb62:tests/storage/document_evolution/sample_values.py:generic-api-key:33
+# Reviewed: a sample SHA-256 hex digest of a test export download token (no secret), replaced by a low-entropy sample.
+a01d142ba209ed5982812e0d694a4a1ab3d36181:tests/storage/document_evolution/sample_values.py:generic-api-key:78
+a01d142ba209ed5982812e0d694a4a1ab3d36181:tests/storage/golden/export_download_links/v1.json:generic-api-key:8

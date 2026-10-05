@@ -54,6 +54,9 @@ from app.facilitators.observability.job_monitor_factory import (
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     SentryErrorReportingFacilitator,
 )
+from app.facilitators.privacy.export_download_notice_facilitator import (
+    ExportDownloadNoticeFacilitator,
+)
 from app.facilitators.product_events.record_product_event_facilitator import (
     RecordProductEventFacilitator,
 )
@@ -74,10 +77,8 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # Unexpected errors of the API and the worker, and errors of the website
-    # widget (Sentry when SENTRY_DSN is set, otherwise the log), with the
-    # release and a share of traced requests. The quality journal of model
-    # calls is AdaptersContainer.llm_trace_facilitator.
+    # Errors of the API, the worker and the widget (Sentry, else the log); the
+    # quality journal of model calls is AdaptersContainer.llm_trace_facilitator.
     error_reporter: Singleton[SentryErrorReportingFacilitator] = Singleton(
         SentryErrorReportingFacilitator,
         dsn=config.app_settings.provided.sentry_dsn,
@@ -129,10 +130,8 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         unit_of_work=adapters.storage_unit_of_work,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # Staff notifications are queued in the outbox; the worker sends them
-    # through the platform Telegram bot, a WhatsApp template, e-mail (SMTP),
-    # SMS (Twilio) or Web Push, and their delivery state is kept per
-    # contact and device.
+    # Staff notifications go through the outbox (Telegram bot, WhatsApp, e-mail,
+    # SMS, Web Push); their delivery state is kept per contact and device.
     staff_delivery_recorder: Singleton[StaffDeliveryRecorderFacilitator] = Singleton(
         StaffDeliveryRecorderFacilitator,
         staff_delivery_state_repo=repositories.staff_delivery_state_repo,
@@ -217,6 +216,20 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         localized_text_resolver=utilities.localized_text_resolver,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # A download of a full export: every owner's devices and e-mail or SMS.
+    export_download_notice_facilitator: Singleton[ExportDownloadNoticeFacilitator] = (
+        Singleton(
+            ExportDownloadNoticeFacilitator,
+            user_repo=repositories.user_repo,
+            staff_alerts=staff_alert_facilitator,
+            manager_notifier=manager_notification_facilitator,
+            text_transformer=transformers.staff_notification_text_transformer,
+            link_signer=staff_link_signer,
+            localized_text_resolver=utilities.localized_text_resolver,
+            app_settings=config.app_settings,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     # Activation nudges: e-mail, Telegram and devices, once per nudge and
     # recipient, through the same outbox.

@@ -73,9 +73,18 @@ class TeamWorld(SupportWorld):
             testbed.audit_log_repo,
             wall_clock,
             AllowStepUp(),
+            testbed.user_session_repo,
+            testbed.session_assurance,
         )
         self.remove = RemovePlatformAdminUseCase(
-            authorize, repo, testbed.audit_log_repo, wall_clock, AllowStepUp()
+            authorize,
+            repo,
+            testbed.audit_log_repo,
+            wall_clock,
+            AllowStepUp(),
+            testbed.user_repo,
+            testbed.user_session_repo,
+            testbed.session_assurance,
         )
 
     def add_by(
