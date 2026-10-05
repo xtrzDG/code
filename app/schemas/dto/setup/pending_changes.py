@@ -34,6 +34,7 @@ from app.schemas.typings.assistants.prefixed_id import (
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.setup.booleans import HasUnappliedChanges, IsAssistantLive
 from app.schemas.typings.setup.constrained_integers import PendingChangeCount
@@ -141,8 +142,9 @@ class PendingChangesView(ImmutableDTO):
 
 
 class DiscardDraftCommand(ImmutableDTO):
-    """The owner discards a draft customers never got."""
+    """The owner discards a draft customers never got (from `client_ip_address`)."""
 
     user_id: UserId
     business_id: BusinessId
     assistant_version_id: AssistantVersionId
+    client_ip_address: ClientIpAddress | None = None

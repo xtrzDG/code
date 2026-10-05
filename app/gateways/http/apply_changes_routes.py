@@ -2,12 +2,15 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.language_negotiation import parse_language_parameter
 from app.gateways.http.openapi_error_contract import standard_error_responses
-from app.gateways.http.strict_request_parsing import parse_path_identifier
+from app.gateways.http.strict_request_parsing import (
+    parse_path_identifier,
+    read_client_ip_address,
+)
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.dto.setup.apply_changes import (
     ApplyChangesCommand,
@@ -111,6 +114,7 @@ def build_apply_changes_router(
 
     @router.delete(DRAFT_PATH, status_code=status.HTTP_204_NO_CONTENT)
     def discard_assistant_draft(
+        request: Request,
         business_id: str,
         version_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
@@ -122,6 +126,7 @@ def build_apply_changes_router(
                 assistant_version_id=parse_path_identifier(
                     version_id, AssistantVersionId, "Assistant version"
                 ),
+                client_ip_address=read_client_ip_address(request),
             )
         )
 

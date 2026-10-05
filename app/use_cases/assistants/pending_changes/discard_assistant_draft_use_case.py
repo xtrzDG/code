@@ -138,6 +138,7 @@ class DiscardAssistantDraftUseCase(UseCaseContract[DiscardDraftCommand, None]):
                 action=AuditAction.DELETE,
                 entity=DRAFT_AUDIT_ENTITY,
                 entity_id=AuditEntityReference(str(discarded.id)),
+                ip_address=input_data.client_ip_address,
                 created_at=now,
                 updated_at=now,
             )
