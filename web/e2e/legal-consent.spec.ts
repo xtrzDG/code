@@ -14,6 +14,17 @@ import { apiLogSize, waitForLoginCode } from "./support/login-codes";
 import { en } from "./support/messages";
 
 test("continuing with the code accepts the terms the page names", async ({ page }) => {
+  // The country list arrives only after the code is sent (a slow catalog
+  // on a busy server): the sign-in options reload for the guessed country
+  // under the code step, which must keep its line and an open document.
+  let releaseCountries: () => void = () => undefined;
+  const countriesHeld = new Promise<void>((resolve) => {
+    releaseCountries = resolve;
+  });
+  await page.route("**/api/backend/v1/catalog/countries?*", async (route) => {
+    await countriesHeld;
+    await route.continue();
+  });
   await page.goto("/login");
   await page.getByRole("group", { name: en.auth.methodLabel }).getByText(en.auth.methodEmail, { exact: true }).click();
   await page.getByRole("textbox", { name: en.auth.email, exact: true }).fill(uniqueEmail());
@@ -25,6 +36,10 @@ test("continuing with the code accepts the terms the page names", async ({ page 
   await expect(line).toContainText("By continuing, you accept the Terms of Service");
   await line.getByRole("button", { name: en.legalConsent.terms }).click();
   const dialog = page.getByRole("dialog", { name: "Terms of Service" });
+  await expect(dialog.getByRole("heading", { level: 3, name: "1. About these terms" })).toBeVisible();
+  const optionsReloaded = page.waitForResponse((response) => response.url().includes("/v1/auth/login-options?country_code="));
+  releaseCountries();
+  await optionsReloaded;
   await expect(dialog.getByRole("heading", { level: 3, name: "1. About these terms" })).toBeVisible();
   await expect(dialog.getByText(/^Version \d{4}-\d{2}-\d{2}$/)).toBeVisible();
   await dialog.locator("footer").getByRole("button", { name: en.common.close }).click();

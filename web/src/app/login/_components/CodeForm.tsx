@@ -63,8 +63,8 @@ export function CodeForm({ flow, challenge }: { flow: LoginFlow; challenge: OtpC
       <Button type="submit" fullWidth size="lg" isLoading={isVerifying} loadingText={t("auth.verifying")}>
         {t("auth.verify")}
       </Button>
-      {flow.destination.termsVersion ? (
-        <TermsLine termsVersion={flow.destination.termsVersion} privacyVersion={flow.destination.privacyVersion} />
+      {flow.consent?.termsVersion ? (
+        <TermsLine termsVersion={flow.consent.termsVersion} privacyVersion={flow.consent.privacyVersion} />
       ) : null}
       <div className="flex flex-col items-center gap-1 border-t border-line pt-4 text-sm">
         {secondsUntilResend > 0 ? (

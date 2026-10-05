@@ -19,7 +19,7 @@ import type { MessageKey } from "@/i18n/translate";
 import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError } from "@/lib/countries";
 
 import { findBotCheckSiteKey } from "./botCheck";
-import { acceptedTermsBody } from "./legalConsent";
+import { acceptedTermsBody, preferConsentVersions, type ConsentVersions } from "./legalConsent";
 import { withDeliveryChannel } from "./loginOptions";
 import { CodeSchema, EmailSchema, PROBLEM_MESSAGES, PhoneSchema, RESEND_INTERVAL_MS } from "./loginTexts";
 import { useDestination } from "./useDestination";
@@ -27,6 +27,8 @@ import { useDestination } from "./useDestination";
 interface CodeStage {
   challenge: OtpChallengeView;
   sentAt: number;
+  /** The documents the code step names, kept from the moment the code was sent. */
+  consent: ConsentVersions;
 }
 
 /** The API asked for a bot check before sending; `attempt` remounts the widget. */
@@ -56,14 +58,25 @@ export function useLoginFlow(next: string) {
   const resendAt = codeStage ? codeStage.sentAt + RESEND_INTERVAL_MS : 0;
   const secondsUntilResend = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
+  // The versions named when the code was sent; versions that arrive later
+  // only fill in what the step did not know yet.
+  const consent = codeStage
+    ? preferConsentVersions(codeStage.consent, {
+        termsVersion: destination.termsVersion,
+        privacyVersion: destination.privacyVersion,
+      })
+    : null;
+
+  // Each code sent focuses the code field and starts the resend countdown.
+  const sentAt = codeStage?.sentAt;
   useEffect(() => {
-    if (!codeStage) {
+    if (sentAt === undefined) {
       return;
     }
     codeInputRef.current?.focus();
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, [codeStage]);
+  }, [sentAt]);
 
   async function sendCode(channelOverride?: OtpDeliveryChannel, turnstileToken?: string): Promise<boolean> {
     const { method, phoneNumber, email, countryCode, phoneChannels, deliveryChannel } = destination;
@@ -81,7 +94,12 @@ export function useLoginFlow(next: string) {
       const sentAt = Date.now();
       setBotCheck(null);
       setNow(sentAt);
-      setCodeStage({ challenge, sentAt });
+      const current = { termsVersion: destination.termsVersion, privacyVersion: destination.privacyVersion };
+      setCodeStage((previous) => ({
+        challenge,
+        sentAt,
+        consent: preferConsentVersions(current, previous?.consent ?? null),
+      }));
       return true;
     } catch (caught) {
       const error = toApiError(caught);
@@ -138,7 +156,7 @@ export function useLoginFlow(next: string) {
       const answer = await verifyLogin({
         challenge_id: codeStage.challenge.challenge_id,
         code: parsed.data,
-        ...acceptedTermsBody(destination.termsVersion),
+        ...acceptedTermsBody(consent?.termsVersion ?? null),
       });
       if (needsSecondStep(answer)) {
         setSecondStep(answer);
@@ -199,6 +217,8 @@ export function useLoginFlow(next: string) {
     botCheck,
     passBotCheck,
     challenge: codeStage?.challenge ?? null,
+    /** The terms and privacy policy the code step's acceptance line names. */
+    consent,
     code,
     codeError,
     isVerifying,

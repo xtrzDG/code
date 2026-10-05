@@ -4,7 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { ka } from "@/i18n/messages/ka";
 import { ru } from "@/i18n/messages/ru";
 
-import { acceptedTermsBody, splitConsentLine } from "./legalConsent";
+import { acceptedTermsBody, preferConsentVersions, splitConsentLine } from "./legalConsent";
 
 describe("splitConsentLine", () => {
   it("keeps the words around the two documents in order", () => {
@@ -35,5 +35,31 @@ describe("acceptedTermsBody", () => {
   it("sends the version the line showed, nothing without one", () => {
     expect(acceptedTermsBody("2026-10-05")).toEqual({ accepted_terms_version: "2026-10-05" });
     expect(acceptedTermsBody(null)).toEqual({});
+  });
+});
+
+describe("preferConsentVersions", () => {
+  const sent = { termsVersion: "2026-10-05", privacyVersion: "2026-10-05" };
+
+  it("takes the versions the options name when the code is sent", () => {
+    expect(preferConsentVersions(sent, null)).toEqual(sent);
+  });
+
+  it("keeps the versions the step named while the options reload under it", () => {
+    expect(preferConsentVersions({ termsVersion: null, privacyVersion: null }, sent)).toEqual(sent);
+  });
+
+  it("prefers the newer version a resend sees and fills in the rest", () => {
+    expect(preferConsentVersions({ termsVersion: "2026-11-01", privacyVersion: null }, sent)).toEqual({
+      termsVersion: "2026-11-01",
+      privacyVersion: "2026-10-05",
+    });
+  });
+
+  it("names nothing when no version was ever known", () => {
+    expect(preferConsentVersions({ termsVersion: null, privacyVersion: null }, null)).toEqual({
+      termsVersion: null,
+      privacyVersion: null,
+    });
   });
 });
