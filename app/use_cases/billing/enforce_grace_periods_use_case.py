@@ -35,6 +35,7 @@ from app.use_cases.shared.billing_records import (
     find_next_period_start,
     list_subscription_invoices,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 
 # An automatic charge is dated by day; wait this long past the period end
 # for its notification before treating the renewal as missed.
@@ -96,7 +97,7 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
 
     def run(self, input_data: JobTick) -> JobReport:
         processed: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             subscription: SubscriptionDocument | None = find_current_subscription(
                 self._subscription_repo,
                 business.id,

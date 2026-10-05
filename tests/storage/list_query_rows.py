@@ -96,6 +96,18 @@ LIST_TABLES: tuple[SeededTable, ...] = (
         "'kind', (array['menu_item', 'faq', 'service', 'policy'])[1 + n %% 4], "
         "'is_active', n %% 5 <> 0, 'updated_at', %(time)s + n * 1000)",
     ),
+    SeededTable("businesses", "jsonb_build_object('name', 'Business ' || n)"),
+    SeededTable(
+        "client_standings",
+        "jsonb_build_object('name', 'Client ' || n, "
+        "'business_status', (array['live', 'onboarding', 'paused'])[1 + n %% 3], "
+        "'health_status', (array['healthy', 'attention', 'healthy', 'critical'])"
+        "[1 + n %% 4], 'country_code', (array['GE', 'IT', 'US'])[1 + n %% 3], "
+        "'niche_key', 'restaurant', 'is_losing_money', n %% 10 = 0, "
+        "'health_position', n, 'name_position', (n * 7919) %% 30000, "
+        "'usage_position', 30000 - n, 'margin_position', (n * 31) %% 30000, "
+        "'cost_position', (n * 17) %% 30000, 'revenue_position', (n * 13) %% 30000)",
+    ),
     SeededTable(
         "audit_log_entries",
         "jsonb_build_object('actor_id', 'seeded_user_' || (n %% 12), "

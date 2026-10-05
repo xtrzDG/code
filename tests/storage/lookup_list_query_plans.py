@@ -3,7 +3,11 @@ The customer list and the knowledge list on the trigger-kept lookups of
 migration 1122, and the index each statement must use.
 """
 
+from app.schemas.constants.client_health import AdminClientSort, ClientHealthStatus
 from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.dto.client_standings import ClientStandingFilter
+from app.schemas.typings.businesses.constrained_integers import BusinessBatchSize
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import FoldedContactName
 from tests.storage.list_query_plans import (
@@ -57,5 +61,39 @@ LOOKUP_LIST_QUERIES: tuple[ListQuery, ...] = (
         ),
         "knowledge_items",
         "knowledge_items_doc_kind_updated_at_idx",
+    ),
+    ListQuery(
+        "admin client list, critical clients first",
+        lambda r: r.standings.page(
+            AdminClientSort.HEALTH, ClientStandingFilter(), FIRST_PAGE
+        ),
+        "client_standings",
+        "client_standings_doc_health_position_idx",
+        is_platform_wide=True,
+    ),
+    ListQuery(
+        "admin client list, a later page by name",
+        lambda r: r.standings.page(
+            AdminClientSort.NAME, ClientStandingFilter(), LATER_PAGE
+        ),
+        "client_standings",
+        "client_standings_doc_name_position_idx",
+        is_platform_wide=True,
+    ),
+    ListQuery(
+        "admin client list, critical clients counted",
+        lambda r: r.standings.count(
+            ClientStandingFilter(health_status=ClientHealthStatus.CRITICAL)
+        ),
+        "client_standings",
+        "client_standings_doc_health_status_idx",
+        is_platform_wide=True,
+    ),
+    ListQuery(
+        "periodic jobs: the next batch of businesses",
+        lambda r: r.businesses.list_batch(BusinessId(), BusinessBatchSize(200)),
+        "businesses",
+        "businesses_order_idx",
+        is_platform_wide=True,
     ),
 )

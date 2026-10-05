@@ -6,6 +6,7 @@ and history and each person's guidance (1111). Part of DOCUMENT_COLLECTIONS
 (document_collection_catalog.py).
 """
 
+from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
@@ -27,6 +28,10 @@ OPERATIONS_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
         DocumentCollectionName("maintenance_runs"), MaintenanceRunDocument
     ),
     DocumentCollectionDefinition(DocumentCollectionName("incidents"), IncidentDocument),
+    # The platform admin's client list, refreshed by a periodic job (1122).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("client_standings"), ClientStandingDocument
+    ),
     # The status page, the cabinet's banner and guidance (1111).
     DocumentCollectionDefinition(
         DocumentCollectionName("platform_announcements"), PlatformAnnouncementDocument

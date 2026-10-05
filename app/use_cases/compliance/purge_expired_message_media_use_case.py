@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from typed_time_provider import Microseconds, Seconds, WallClock
 
 from app.contracts.media_storage import MediaStorageAdapterContract
@@ -18,6 +20,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.media.constrained_integers import DeletedMediaCount
+from app.use_cases.shared.business_walk import walk_businesses
 
 SECONDS_PER_DAY: int = 24 * 60 * 60
 MESSAGE_MEDIA_ENTITY: AuditEntityName = AuditEntityName("message_media")
@@ -52,9 +55,9 @@ class PurgeExpiredMessageMediaUseCase(
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: PurgeExpiredRecordingsCommand) -> MessageMediaPurgeResult:
-        businesses: list[BusinessDocument]
+        businesses: Iterable[BusinessDocument]
         if input_data.business_id is None:
-            businesses = self._business_repo.list_all()
+            businesses = walk_businesses(self._business_repo)
         else:
             business: BusinessDocument | None = self._business_repo.get(
                 input_data.business_id

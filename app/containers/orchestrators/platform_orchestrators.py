@@ -31,6 +31,9 @@ class PlatformOrchestratorsContainer(containers.DeclarativeContainer):
     purge_stale_rows_orchestrator = use_case_orchestrator(
         platform_use_cases.purge_stale_rows_use_case
     )
+    refresh_client_standings_orchestrator = use_case_orchestrator(
+        platform_use_cases.refresh_client_standings_use_case
+    )
     sweep_rate_limit_buckets_orchestrator = use_case_orchestrator(
         platform_use_cases.sweep_rate_limit_buckets_use_case
     )

@@ -85,7 +85,9 @@ def test_list_query_uses_its_index(
         # The seeded rows carry only their lookup fields and do not decode;
         # the recorded SQL is what this test checks.
         with (
-            storage_scope.scoped_to_business(BUSINESS),
+            storage_scope.platform_wide()
+            if query.is_platform_wide
+            else storage_scope.scoped_to_business(BUSINESS),
             suppress(ValidationError, ApplicationError),
         ):
             query.run(repositories)

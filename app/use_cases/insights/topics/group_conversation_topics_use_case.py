@@ -33,6 +33,7 @@ from app.schemas.typings.platform.constrained_integers import (
 )
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.insights.topics.topic_grouper import TopicGrouper
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     microseconds_to_seconds,
@@ -94,7 +95,7 @@ class GroupConversationTopicsUseCase(UseCaseContract[JobTick, JobReport]):
     def run(self, input_data: JobTick) -> JobReport:
         del input_data
         grouped: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             if business.status not in GROUPED_STATUSES:
                 continue
 

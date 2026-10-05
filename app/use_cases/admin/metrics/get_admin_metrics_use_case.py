@@ -29,6 +29,7 @@ from app.use_cases.admin.metrics.metrics_scope import (
     keeps_owner,
     owner_sources,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.analytics.activation_math import (
     build_activation,
     build_trial_conversion,
@@ -122,7 +123,7 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
             ),
             *billing,
         ]
-        businesses: list[BusinessDocument] = self._business_repo.list_all()
+        businesses: list[BusinessDocument] = list(walk_businesses(self._business_repo))
         signed_up: list[UserDocument] = self._user_repo.list_created_between(
             period.start, period.end
         )

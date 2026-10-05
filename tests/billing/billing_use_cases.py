@@ -2,13 +2,21 @@
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.storage.in_memory_document_collection import (
+    InMemoryDocumentCollectionAdapter,
+)
 from app.contracts.catalog_registries import ExchangeRateRegistryContract
 from app.contracts.registries import PlanRegistryContract
 from app.orchestrators.billing.subscribe_orchestrator import SubscribeOrchestrator
+from app.repositories.client_standing_repository import ClientStandingRepository
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.domain.client_standings import ClientStandingDocument
 from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCase
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
+from app.use_cases.admin.refresh_client_standings_use_case import (
+    RefreshClientStandingsUseCase,
+)
 from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
 from app.use_cases.billing.assemble_billing_overview_use_case import (
     AssembleBillingOverviewUseCase,
@@ -251,8 +259,15 @@ class BillingUseCases(BillingInfrastructure):
             wall_clock=wall_clock,
         )
         self.summarize_client: SummarizeClientUseCase = summarize_client
+        self.client_standing_repo = ClientStandingRepository(
+            InMemoryDocumentCollectionAdapter(ClientStandingDocument)
+        )
+        self.refresh_client_standings = RefreshClientStandingsUseCase(
+            self.business_repo, summarize_client, self.client_standing_repo, wall_clock
+        )
         self.list_clients = ListClientsUseCase(
             authorize_platform_admin=authorize_admin,
+            client_standing_repo=self.client_standing_repo,
             business_repo=self.business_repo,
             summarize_client=summarize_client,
             wall_clock=wall_clock,

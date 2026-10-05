@@ -2,6 +2,7 @@
 
 from app.schemas.constants.compliance import AuditAction
 from tests.billing.billing_testbed import bearer
+from tests.billing.client_list_runs import refresh_standings
 from tests.billing.route_world import RouteWorld
 
 REASON_BODY: dict[str, str] = {"reason": "Owner asked about the invoice"}
@@ -10,6 +11,7 @@ REASON_BODY: dict[str, str] = {"reason": "Owner asked about the invoice"}
 def test_admin_routes() -> None:
     world = RouteWorld()
     world.start_trial()
+    refresh_standings(world.testbed)
     detail_path = f"/v1/admin/clients/{world.business.id}"
 
     listing = world.client.get("/v1/admin/clients", headers=bearer(world.admin))

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.dto.knowledge_admin import (
+    KnowledgeItemDetails,
     KnowledgeItemListQuery,
     KnowledgeItemPage,
     KnowledgeItemPatch,
@@ -23,7 +24,7 @@ def titles(page: KnowledgeItemPage) -> list[str]:
 def test_an_edited_item_moves_to_the_top_of_the_list() -> None:
     harness = KnowledgeHarness()
     business = harness.add_business()
-    created = []
+    created: list[KnowledgeItemDetails] = []
     for minute, title in enumerate(["Khinkali", "Lobio", "Parking?"]):
         harness.clock_source.set(DEFAULT_NOW + timedelta(minutes=minute))
         created.append(add_item(harness, business, title))

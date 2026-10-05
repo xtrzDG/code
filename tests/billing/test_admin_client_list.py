@@ -28,15 +28,17 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
 )
 from app.schemas.typings.platform.constrained_integers import PageSize
-from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
+from app.use_cases.admin.refresh_client_standings_use_case import (
+    RefreshClientStandingsUseCase,
+)
 from tests.billing.admin_world import AdminWorld, build_admin_world
-from tests.foundation.access_support import AuthorizeFlaggedAdmin
+from tests.billing.client_list_runs import list_clients, refresh_standings
 
 
 def test_client_list_shows_health_with_critical_clients_first() -> None:
     world = build_admin_world()
 
-    listing = world.testbed.list_clients.run(AdminClientsQuery(user_id=world.admin.id))
+    listing = list_clients(world.testbed, AdminClientsQuery(user_id=world.admin.id))
 
     assert int(listing.totals.client_count) == 3
     assert int(listing.matching_count) == 3
@@ -90,8 +92,9 @@ def test_client_list_shows_health_with_critical_clients_first() -> None:
 
 
 def list_names(world: AdminWorld, **query: object) -> list[str]:
-    page = world.testbed.list_clients.run(
-        AdminClientsQuery.model_validate({"user_id": world.admin.id, **query})
+    page = list_clients(
+        world.testbed,
+        AdminClientsQuery.model_validate({"user_id": world.admin.id, **query}),
     )
     return [str(client.name) for client in page.items]
 
@@ -99,8 +102,9 @@ def list_names(world: AdminWorld, **query: object) -> list[str]:
 def test_client_list_totals_and_filter_choices_cover_every_client() -> None:
     world = build_admin_world()
 
-    listing = world.testbed.list_clients.run(
-        AdminClientsQuery(user_id=world.admin.id, health=ClientHealthStatus.CRITICAL)
+    listing = list_clients(
+        world.testbed,
+        AdminClientsQuery(user_id=world.admin.id, health=ClientHealthStatus.CRITICAL),
     )
 
     assert [str(client.name) for client in listing.items] == ["Bella Napoli"]
@@ -164,19 +168,21 @@ def test_client_list_filters_by_status_and_niche() -> None:
 
 def test_client_list_pages_keep_their_place() -> None:
     world = build_admin_world()
-    first = world.testbed.list_clients.run(
+    first = list_clients(
+        world.testbed,
         AdminClientsQuery(
             user_id=world.admin.id,
             sort=AdminClientSort.NAME,
             page=PageRequest(size=PageSize(2)),
-        )
+        ),
     )
-    second = world.testbed.list_clients.run(
+    second = list_clients(
+        world.testbed,
         AdminClientsQuery(
             user_id=world.admin.id,
             sort=AdminClientSort.NAME,
             page=PageRequest(size=PageSize(2), cursor=first.next_cursor),
-        )
+        ),
     )
 
     assert [str(client.name) for client in first.items] == [
@@ -227,20 +233,25 @@ class CostOverridingSummarizer(
         return summary.model_copy(update={"cost": cost})
 
 
-def build_costed_list_clients(world: AdminWorld) -> ListClientsUseCase:
+def refresh_with_costs(world: AdminWorld) -> None:
+    """The standings job with a cost picked per client."""
+
     testbed = world.testbed
-    return ListClientsUseCase(
-        authorize_platform_admin=AuthorizeFlaggedAdmin(testbed.user_repo),
-        business_repo=testbed.business_repo,
-        summarize_client=CostOverridingSummarizer(
-            testbed.summarize_client,
-            {
-                "Funicular VR": (None, 9_000_000, 51_700, "GEL"),
-                "Bella Napoli": (-40.0, 30_000_000, 17_500, "EUR"),
-                "Austin Bikes": (35.0, 1_000_000, 9_900, "EUR"),
-            },
+    refresh_standings(
+        testbed,
+        RefreshClientStandingsUseCase(
+            testbed.business_repo,
+            CostOverridingSummarizer(
+                testbed.summarize_client,
+                {
+                    "Funicular VR": (None, 9_000_000, 51_700, "GEL"),
+                    "Bella Napoli": (-40.0, 30_000_000, 17_500, "EUR"),
+                    "Austin Bikes": (35.0, 1_000_000, 9_900, "EUR"),
+                },
+            ),
+            testbed.client_standing_repo,
+            testbed.clock.wall_clock,
         ),
-        wall_clock=testbed.clock.wall_clock,
     )
 
 
@@ -259,15 +270,16 @@ def test_client_list_sorts_by_money_and_pages_keep_the_order(
     sort: AdminClientSort, names: list[str]
 ) -> None:
     world = build_admin_world()
-    list_clients = build_costed_list_clients(world)
+    refresh_with_costs(world)
+    list_costed = world.testbed.list_clients
 
-    whole = list_clients.run(AdminClientsQuery(user_id=world.admin.id, sort=sort))
-    first = list_clients.run(
+    whole = list_costed.run(AdminClientsQuery(user_id=world.admin.id, sort=sort))
+    first = list_costed.run(
         AdminClientsQuery(
             user_id=world.admin.id, sort=sort, page=PageRequest(size=PageSize(2))
         )
     )
-    second = list_clients.run(
+    second = list_costed.run(
         AdminClientsQuery(
             user_id=world.admin.id,
             sort=sort,

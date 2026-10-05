@@ -53,6 +53,9 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "operations.send_booking_reminders_operator": "periodic job over every business",
     "platform.list_clients_operator": "platform admin's client list",
     "platform.purge_stale_rows_operator": "periodic purge over every business",
+    "platform.refresh_client_standings_operator": (
+        "periodic client list ranking over every business"
+    ),
     "platform_ops.check_platform_alerts_operator": "alerts job: platform-wide counts",
     "platform_ops.get_admin_system_operator": "platform admin's system page",
     "platform_ops.create_incident_operator": "incident across named businesses",

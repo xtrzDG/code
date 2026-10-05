@@ -31,6 +31,7 @@ from app.use_cases.shared.billing_records import (
     list_subscription_invoices,
     sum_invoice_amounts,
 )
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.analytics.billing_event_drafts import billing_event
 from app.utilities.billing.billing_periods import add_local_days
 
@@ -80,7 +81,7 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
 
     def run(self, input_data: JobTick) -> JobReport:
         processed: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             subscription: SubscriptionDocument | None = find_current_subscription(
                 self._subscription_repo,
                 business.id,

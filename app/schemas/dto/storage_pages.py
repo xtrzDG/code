@@ -38,6 +38,11 @@ class DocumentPageQuery(ImmutableDTO):
     (ties keep the order they were written in), all ascending or all
     descending, starting after `after`, at most `limit` of them. The cost of
     a page does not grow with how many pages came before it.
+
+    Without sort fields a page is in first-write order alone: a walk over a
+    whole collection in batches (the platform's businesses, for the
+    periodic jobs) that needs no lookup column, so it sees every row,
+    however old; `after` then names only the last document's storage key.
     """
 
     where: DocumentFilter = Field(default_factory=DocumentFilter)
@@ -48,8 +53,8 @@ class DocumentPageQuery(ImmutableDTO):
 
     @model_validator(mode="after")
     def require_matching_position(self) -> Self:
-        if not 1 <= len(self.sort_fields) <= MAX_SORT_FIELDS:
-            raise ValueError(f"A page sorts by 1 to {MAX_SORT_FIELDS} fields.")
+        if len(self.sort_fields) > MAX_SORT_FIELDS:
+            raise ValueError(f"A page sorts by at most {MAX_SORT_FIELDS} fields.")
 
         if self.after is not None and len(self.after.values) != len(self.sort_fields):
             raise ValueError("A page position needs one value per sort field.")

@@ -60,7 +60,8 @@ export const adminKa: Translation<typeof adminEn> = {
   unknown: "—",
   count: { one: "{count} კლიენტი", other: "{count} კლიენტი" },
   emptyTitle: "კლიენტები ჯერ არ არიან",
-  emptyDescription: "ბიზნესები აქ გამოჩნდება, როგორც კი მფლობელები შექმნიან.",
+  emptyDescription: "ბიზნესები აქ გამოჩნდება შექმნიდან 15 წუთში.",
+  summariesAsOf: "შეჯამებები {time}-ის მდგომარეობით, ახლდება ყოველ 15 წუთში",
   emptyFiltered: "ფილტრებს არავინ შეესაბამება.",
   openDetails: "დეტალები: {name}",
   detail: {

@@ -36,6 +36,9 @@ from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.gateways.worker.periodic.record_platform_status import (
     record_platform_status_job,
 )
+from app.gateways.worker.periodic.refresh_client_standings import (
+    refresh_client_standings_job,
+)
 from app.gateways.worker.periodic.refresh_exchange_rates import (
     refresh_exchange_rates_job,
 )
@@ -161,6 +164,10 @@ class GatewaysContainer(containers.DeclarativeContainer):
         ),
         Factory(
             purge_stale_rows_job, operator=operators.platform.purge_stale_rows_operator
+        ),
+        Factory(
+            refresh_client_standings_job,
+            operator=operators.platform.refresh_client_standings_operator,
         ),
         Factory(
             sweep_rate_limit_buckets_job,

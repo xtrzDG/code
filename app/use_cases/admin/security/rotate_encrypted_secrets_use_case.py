@@ -18,6 +18,7 @@ from app.schemas.typings.security.constrained_integers import (
 )
 from app.use_cases.admin.security.secret_resealer import RotationTally, SecretResealer
 from app.use_cases.admin.security.totp_secret_resealer import TotpSecretResealer
+from app.use_cases.shared.business_walk import walk_businesses
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MAX_ERROR_LENGTH: int = 500
@@ -75,7 +76,7 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
 
         tally = RotationTally()
         try:
-            for business in self._business_repo.list_all():
+            for business in walk_businesses(self._business_repo):
                 self._resealer.reseal_business(business.id, tally)
             self._totp_resealer.reseal_all(tally)
         except Exception as error:

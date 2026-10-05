@@ -55,6 +55,8 @@ def test_second_owner_in_italy_is_isolated_and_admin_access_is_audited(
     admin_token, admin_session = workshop.sign_in_with_email(ADMIN_EMAIL)
     admin_headers = bearer(admin_token)
     assert admin_session["user"]["is_platform_admin"] is True
+    # The worker's refresh_client_standings job ranks the clients for the list.
+    workshop.container.gateways.background_worker().run_once()
     clients = client.get("/v1/admin/clients", headers=admin_headers).json()
     assert clients["totals"]["client_count"] == 2
     # Support looks in only after "Open cabinet" with a reason: an hour,

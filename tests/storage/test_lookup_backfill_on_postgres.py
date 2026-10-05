@@ -36,35 +36,36 @@ from app.use_cases.maintenance.backfill_lookup_columns_use_case import (
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.storage_testing import RecordedRetryPause
 
-CREATED_AT = TriggerLookupColumn(
-    collection_name=DocumentCollectionName("businesses"),
-    field=DocumentFieldPath("created_at"),
+UPDATED_AT = TriggerLookupColumn(
+    collection_name=DocumentCollectionName("knowledge_items"),
+    field=DocumentFieldPath("updated_at"),
 )
 INSERT_SQL: LiteralString = (
-    "insert into workshop.businesses "
+    "insert into workshop.knowledge_items "
     "(document_key, business_id, document, created_at, updated_at) "
-    "values (%s, %s, %s::jsonb, 1, 1)"
+    "values (%s, 'business_1', %s::jsonb, 1, 1)"
 )
 
 
-def seed_businesses(connection_pool: PostgresConnectionPoolClient) -> None:
+def seed_items(connection_pool: PostgresConnectionPoolClient) -> None:
     """Eight rows: six as if written before 1122 (empty column), one
     without the field, one already filled."""
 
     with connection_pool.transaction() as connection:
         connection.execute("select set_config('app.bypass_rls', 'on', true)")
         for index in range(8):
-            key = f"business_{index:02d}"
+            key = f"item_{index:02d}"
             document: dict[str, object] = {
-                "status": "live",
-                "created_at": 1_000 + index,
+                "is_active": True,
+                "updated_at": 1_000 + index,
             }
             if index == 6:
-                del document["created_at"]
-            connection.execute(INSERT_SQL, (key, key, json.dumps(document)))
+                del document["updated_at"]
+            connection.execute(INSERT_SQL, (key, json.dumps(document)))
         connection.execute(
-            "update workshop.businesses set doc_created_at = null, doc_status = null "
-            "where document_key < 'business_06'"
+            "update workshop.knowledge_items "
+            "set doc_updated_at = null, doc_is_active = null "
+            "where document_key < 'item_06'"
         )
 
 
@@ -72,8 +73,8 @@ def column_values(connection_pool: PostgresConnectionPoolClient) -> list[TupleRo
     with connection_pool.transaction() as connection:
         connection.execute("select set_config('app.bypass_rls', 'on', true)")
         return connection.execute(
-            "select document_key, doc_created_at, doc_status from workshop.businesses "
-            "order by document_key"
+            "select document_key, doc_updated_at, doc_is_active "
+            "from workshop.knowledge_items order by document_key"
         ).fetchall()
 
 
@@ -93,12 +94,12 @@ def backfill(
 def test_the_trigger_fills_lookup_columns_on_every_write(
     connection_pool: PostgresConnectionPoolClient,
 ) -> None:
-    seed_businesses(connection_pool)
+    seed_items(connection_pool)
 
     rows = column_values(connection_pool)
 
-    assert rows[6] == ("business_06", None, "live")
-    assert rows[7] == ("business_07", 1_007, "live")
+    assert rows[6] == ("item_06", None, "true")
+    assert rows[7] == ("item_07", 1_007, "true")
 
 
 def test_trigger_columns_are_listed_from_the_catalog(
@@ -106,7 +107,7 @@ def test_trigger_columns_are_listed_from_the_catalog(
 ) -> None:
     columns = PostgresLookupBackfillAdapter(connection_pool).list_trigger_columns()
 
-    assert CREATED_AT in columns
+    assert UPDATED_AT in columns
     assert (
         TriggerLookupColumn(
             collection_name=DocumentCollectionName("contacts"),
@@ -121,10 +122,10 @@ def test_trigger_columns_are_listed_from_the_catalog(
 def test_the_backfill_fills_old_rows_in_keyset_batches_once(
     connection_pool: PostgresConnectionPoolClient,
 ) -> None:
-    seed_businesses(connection_pool)
+    seed_items(connection_pool)
     command = BackfillLookupColumnsCommand(
-        collection_name=DocumentCollectionName("businesses"),
-        field=DocumentFieldPath("created_at"),
+        collection_name=DocumentCollectionName("knowledge_items"),
+        field=DocumentFieldPath("updated_at"),
         batch_size=LookupBackfillBatchSize(3),
     )
 
@@ -139,9 +140,9 @@ def test_the_backfill_fills_old_rows_in_keyset_batches_once(
     rows = column_values(connection_pool)
     # One rewrite of a row runs the trigger: every lookup column is filled.
     assert [(row[1], row[2]) for row in rows] == [
-        *((1_000 + index, "live") for index in range(6)),
-        (None, "live"),
-        (1_007, "live"),
+        *((1_000 + index, "true") for index in range(6)),
+        (None, "true"),
+        (1_007, "true"),
     ]
 
 
@@ -150,7 +151,7 @@ def test_a_batch_waits_out_a_locked_row_and_tries_again(
     database_name: str,
     connection_pool: PostgresConnectionPoolClient,
 ) -> None:
-    seed_businesses(connection_pool)
+    seed_items(connection_pool)
     release, released, holding = threading.Event(), threading.Event(), threading.Event()
 
     def hold_a_row() -> None:
@@ -160,8 +161,8 @@ def test_a_batch_waits_out_a_locked_row_and_tries_again(
         ):
             connection.execute("select set_config('app.bypass_rls', 'on', true)")
             connection.execute(
-                "select 1 from workshop.businesses "
-                "where document_key = 'business_02' for update"
+                "select 1 from workshop.knowledge_items "
+                "where document_key = 'item_02' for update"
             )
             holding.set()
             release.wait(timeout=30)
@@ -181,7 +182,7 @@ def test_a_batch_waits_out_a_locked_row_and_tries_again(
         report = backfill(
             connection_pool,
             BackfillLookupColumnsCommand(
-                collection_name=DocumentCollectionName("businesses")
+                collection_name=DocumentCollectionName("knowledge_items")
             ),
             pause,
         )
@@ -191,5 +192,6 @@ def test_a_batch_waits_out_a_locked_row_and_tries_again(
 
     assert pause.attempts == [1]
     filled = {str(entry.field): int(entry.filled) for entry in report.columns}
-    assert filled["created_at"] == 6
+    # The first column's batches rewrite the rows, which fills every column.
+    assert filled == {"is_active": 6, "updated_at": 0}
     assert column_values(connection_pool)[2][1] == 1_002

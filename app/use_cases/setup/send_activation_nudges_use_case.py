@@ -24,6 +24,7 @@ from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.setup.nudges import NudgeMessage
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.setup.constrained_integers import NudgeRecipientCount
+from app.use_cases.shared.business_walk import walk_businesses
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
     microseconds_to_seconds,
@@ -84,7 +85,7 @@ class SendActivationNudgesUseCase(UseCaseContract[JobTick, JobReport]):
         del input_data
         sent: int = 0
         now: Microseconds = self._wall_clock.now_unix()
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             try:
                 sent += int(self._nudge(business, now))
             except Exception:

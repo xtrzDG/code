@@ -201,9 +201,12 @@ class AdminClientPage(ImmutableDTO):
     """
     One page of clients; `next_cursor` is None on the last page.
 
-    `matching_count` counts the clients that pass the filters; `totals`,
+    `matching_count` counts the clients that pass the filters (with a
+    search, the matches among the clients one request looked at); `totals`,
     `countries` and `niches` describe every client (for the summary tiles
-    and the filter choices).
+    and the filter choices). The summaries are the client standings a
+    periodic job refreshes every 15 minutes; `generated_at` is when the
+    oldest one on the page was taken.
     """
 
     generated_at: Microseconds

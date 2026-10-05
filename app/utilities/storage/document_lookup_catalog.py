@@ -50,17 +50,9 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("totp_factors"): (integer_field("created_at"),),
     DocumentCollectionName("recovery_codes"): (text_field("user_id"),),
     DocumentCollectionName("mfa_challenges"): (integer_field("created_at"),),
-    # The businesses of a signed-in user. Every business in sign-up order,
-    # or those of one status (periodic jobs walk them in keyset batches);
-    # the admin client list filters and counts by status, country and
-    # niche (1122).
-    DocumentCollectionName("businesses"): (
-        element_field("members[].user_id"),
-        integer_field("created_at"),
-        text_field("status"),
-        filter_field("country_code"),
-        filter_field("niche_key"),
-    ),
+    # The businesses of a signed-in user. Periodic jobs walk every business
+    # in first-write order, which needs no lookup column (1122).
+    DocumentCollectionName("businesses"): (element_field("members[].user_id"),),
     # Webhook routing: the channel of an incoming message; channels in
     # error (a navigation badge, migration 1040; the admin system page,
     # 1093) and Meta tokens that run out soon (1093).
@@ -189,11 +181,6 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     ),
     # Usage of a billing period.
     DocumentCollectionName("usage_events"): (integer_field("occurred_at"),),
-    # Trials that ended, across businesses (the end-of-trial job, 1122).
-    DocumentCollectionName("subscriptions"): (
-        text_field("status"),
-        integer_field("trial_ends_at"),
-    ),
     # Webhook redelivery receipts (unique per message) and their purge.
     DocumentCollectionName("channel_message_receipts"): (
         filter_field("channel"),

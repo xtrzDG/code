@@ -35,6 +35,9 @@ KEYSET_USE_CASES: tuple[str, ...] = (
     "use_cases/knowledge/list_knowledge_items_use_case.py",
     "use_cases/insights/get_dashboard_stats_use_case.py",
     "use_cases/admin/summarize_client_use_case.py",
+    "use_cases/admin/list_clients_use_case.py",
+    "use_cases/admin/client_list_search.py",
+    "use_cases/admin/refresh_client_standings_use_case.py",
     "use_cases/billing/compute_client_cost_use_case.py",
 )
 # Collections that grow with every customer message, booking or view.

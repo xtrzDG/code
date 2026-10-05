@@ -19,10 +19,10 @@
 --                   last activity and the exact-name search
 --   knowledge_items updated_at, is_active             the knowledge list
 --   bookings, leads contact_id, source_channel        a contact page's counts
---   businesses      created_at, status, country_code, niche_key
---                   periodic jobs walk businesses in keyset batches; the
---                   admin client list pages, filters and counts by them
---   subscriptions   status, trial_ends_at              trials that ended
+--
+-- And one new collection, client_standings: the platform admin's client
+-- list as a periodic job ranks it (a new, empty table, so its lookup
+-- columns and indexes cost nothing to add; they use the same trigger).
 --
 -- A plain (not generated) column `doc_<field>` of a collection table is a
 -- trigger-filled lookup column of the document field <field>: the trigger's
@@ -121,12 +121,19 @@ select workshop.add_lookup_column('bookings', 'contact_id', 'text');
 select workshop.add_lookup_column('bookings', 'source_channel', 'text');
 select workshop.add_lookup_column('leads', 'contact_id', 'text');
 select workshop.add_lookup_column('leads', 'source_channel', 'text');
-select workshop.add_lookup_column('businesses', 'created_at', 'bigint');
-select workshop.add_lookup_column('businesses', 'status', 'text');
-select workshop.add_lookup_column('businesses', 'country_code', 'text');
-select workshop.add_lookup_column('businesses', 'niche_key', 'text');
-select workshop.add_lookup_column('subscriptions', 'status', 'text');
-select workshop.add_lookup_column('subscriptions', 'trial_ends_at', 'bigint');
+
+select workshop.create_document_collection('client_standings');
+select workshop.add_lookup_column('client_standings', 'business_status', 'text');
+select workshop.add_lookup_column('client_standings', 'health_status', 'text');
+select workshop.add_lookup_column('client_standings', 'country_code', 'text');
+select workshop.add_lookup_column('client_standings', 'niche_key', 'text');
+select workshop.add_lookup_column('client_standings', 'is_losing_money', 'text');
+select workshop.add_lookup_column('client_standings', 'health_position', 'bigint');
+select workshop.add_lookup_column('client_standings', 'name_position', 'bigint');
+select workshop.add_lookup_column('client_standings', 'usage_position', 'bigint');
+select workshop.add_lookup_column('client_standings', 'margin_position', 'bigint');
+select workshop.add_lookup_column('client_standings', 'cost_position', 'bigint');
+select workshop.add_lookup_column('client_standings', 'revenue_position', 'bigint');
 
 -- The customer list, most recently active first, and the exact-name search.
 create index concurrently if not exists contacts_doc_last_seen_at_idx
@@ -147,13 +154,25 @@ create index concurrently if not exists bookings_doc_contact_id_idx
 create index concurrently if not exists leads_doc_contact_id_idx
     on workshop.leads (business_id, doc_contact_id);
 
--- Every business in sign-up order, or those of one status (periodic jobs
--- and the admin client list, platform-wide).
-create index concurrently if not exists businesses_doc_created_at_idx
-    on workshop.businesses (doc_created_at, created_at, row_sequence);
-create index concurrently if not exists businesses_doc_status_created_at_idx
-    on workshop.businesses (doc_status, doc_created_at, created_at, row_sequence);
-
--- Trials that ended (the end-of-trial job, platform-wide).
-create index concurrently if not exists subscriptions_doc_status_trial_ends_at_idx
-    on workshop.subscriptions (doc_status, doc_trial_ends_at);
+-- The platform admin's client list (platform-wide): one order of the list
+-- each, and the filters it counts by.
+create index concurrently if not exists client_standings_doc_health_position_idx
+    on workshop.client_standings (doc_health_position, created_at, row_sequence);
+create index concurrently if not exists client_standings_doc_name_position_idx
+    on workshop.client_standings (doc_name_position, created_at, row_sequence);
+create index concurrently if not exists client_standings_doc_usage_position_idx
+    on workshop.client_standings (doc_usage_position, created_at, row_sequence);
+create index concurrently if not exists client_standings_doc_margin_position_idx
+    on workshop.client_standings (doc_margin_position, created_at, row_sequence);
+create index concurrently if not exists client_standings_doc_cost_position_idx
+    on workshop.client_standings (doc_cost_position, created_at, row_sequence);
+create index concurrently if not exists client_standings_doc_revenue_position_idx
+    on workshop.client_standings (doc_revenue_position, created_at, row_sequence);
+create index concurrently if not exists client_standings_doc_business_status_idx
+    on workshop.client_standings (doc_business_status);
+create index concurrently if not exists client_standings_doc_health_status_idx
+    on workshop.client_standings (doc_health_status);
+create index concurrently if not exists client_standings_doc_country_code_idx
+    on workshop.client_standings (doc_country_code);
+create index concurrently if not exists client_standings_doc_niche_key_idx
+    on workshop.client_standings (doc_niche_key);

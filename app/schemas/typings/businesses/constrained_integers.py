@@ -3,6 +3,20 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class BusinessBatchSize(BaseConstrainedTypedInt):
+    """
+    How many businesses one read of a walk over the whole platform returns
+    (a periodic job, the admin client snapshots), 1..1000: a job holds one
+    batch in memory, never every business.
+
+    Example:
+        batch = BusinessBatchSize(200)
+    """
+
+    ge = 1
+    le = 1000
+
+
 class BusinessRevision(BaseConstrainedTypedInt):
     """
     How many times a business document has been saved; every save makes it

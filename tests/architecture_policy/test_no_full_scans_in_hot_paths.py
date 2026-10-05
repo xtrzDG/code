@@ -16,12 +16,11 @@ from pathlib import Path
 
 REPOSITORIES_DIRECTORY: Path = Path(__file__).resolve().parents[2] / "app/repositories"
 FULL_SCAN_METHOD_NAMES: frozenset[str] = frozenset({"list_all", "_list"})
-ALLOWED_FULL_SCANS: dict[str, str] = {
-    "business_repositories.py::BusinessRepository.list_all": (
-        "the platform admin's client list and the periodic jobs that walk "
-        "every business (trials, grace periods, usage, reminders, retention)"
-    ),
-}
+# Empty since the businesses are walked in keyset batches
+# (`BusinessRepository.list_batch`, `app/use_cases/shared/business_walk.py`)
+# and the admin client list reads the stored client standings (1122): the
+# exports read one business at a time, and nothing reads a whole table.
+ALLOWED_FULL_SCANS: dict[str, str] = {}
 
 
 def find_full_scans(module_path: Path) -> list[str]:

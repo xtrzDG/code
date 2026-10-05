@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-05 — online-safe migrations: the customer and knowledge lists page in the database
 
-Spec: `daebaf498eed4e83`
+Spec: `8e599fcdb6b69fee`
 
 - **Changed** `GET /v1/businesses/{business_id}/contacts`: customers come
   most recently active first (`last_activity_at` order, kept by every
@@ -28,6 +28,13 @@ Spec: `daebaf498eed4e83`
   `kind` and `is_active` filter in the database.
 - **Changed** `ContactDocument` (customer data exports) carries
   `last_seen_at` and `display_name_folded` (version 3).
+- **Changed** `GET /v1/admin/clients`: the list reads the client standings
+  a worker job refreshes every 15 minutes (summaries, health and each
+  client's place in every order) as keyset pages and database counts; a
+  client created since the last refresh appears after the next one.
+  `generated_at` is when the oldest summary on the page was taken. With
+  `search`, `matching_count` counts the matches among the clients one
+  request looked at (at most 2,000), and `next_cursor` goes on searching.
 
 ## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
 

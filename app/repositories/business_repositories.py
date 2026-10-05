@@ -12,13 +12,18 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.dto.storage_pages import DocumentPagePosition, DocumentPageQuery
 from app.schemas.exceptions.application_errors import NotFoundError
-from app.schemas.typings.businesses.constrained_integers import BusinessRevision
+from app.schemas.typings.businesses.constrained_integers import (
+    BusinessBatchSize,
+    BusinessRevision,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.prefixed_id import ChannelId
 from app.schemas.typings.channels.strings import ChannelExternalId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
+from app.schemas.typings.storage.strings import StoredDocumentKey
 from app.schemas.typings.users.prefixed_id import UserId
 
 MEMBER_USER_ID_FIELD: DocumentFieldPath = DocumentFieldPath("members[].user_id")
@@ -106,9 +111,25 @@ class BusinessRepository(BusinessRepoContract):
             [field_equals(MEMBER_USER_ID_FIELD, user_id)]
         )
 
-    def list_all(self) -> list[BusinessDocument]:
-        # Admin client list and the jobs that walk every business.
-        return self._collection.list_all()
+    def list_batch(
+        self,
+        after: BusinessId | None,
+        size: BusinessBatchSize,
+    ) -> list[BusinessDocument]:
+        # First-write order alone needs no lookup column: every business,
+        # however old, on the `businesses_order_idx` of every table.
+        return self._collection.page_by(
+            DocumentPageQuery(
+                sort_fields=(),
+                is_descending=False,
+                after=None
+                if after is None
+                else DocumentPagePosition(
+                    values=(), document_key=StoredDocumentKey(str(after))
+                ),
+                limit=DocumentQueryLimit(int(size)),
+            )
+        )
 
 
 class ChannelRepository(

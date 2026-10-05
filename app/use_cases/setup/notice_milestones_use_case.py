@@ -10,6 +10,7 @@ from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.setup.setup_guide import GuideProgressCheck
 from app.schemas.dto.setup.setup_progress import ActivationMilestoneCheck
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
+from app.use_cases.shared.business_walk import walk_businesses
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class NoticeMilestonesUseCase(UseCaseContract[JobTick, JobReport]):
     def run(self, input_data: JobTick) -> JobReport:
         del input_data
         checked: int = 0
-        for business in self._business_repo.list_all():
+        for business in walk_businesses(self._business_repo):
             if (
                 business.status is not BusinessStatus.LIVE
                 or business.published_assistant_version_id is None

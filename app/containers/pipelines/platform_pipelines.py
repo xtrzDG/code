@@ -33,6 +33,9 @@ class PlatformPipelinesContainer(containers.DeclarativeContainer):
     purge_stale_rows_pipeline = orchestrator_pipeline(
         platform_orchestrators.purge_stale_rows_orchestrator
     )
+    refresh_client_standings_pipeline = orchestrator_pipeline(
+        platform_orchestrators.refresh_client_standings_orchestrator
+    )
     sweep_rate_limit_buckets_pipeline = orchestrator_pipeline(
         platform_orchestrators.sweep_rate_limit_buckets_orchestrator
     )

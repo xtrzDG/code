@@ -1,34 +1,33 @@
-from collections.abc import Callable
-
+from pydantic import ValidationError
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.client_standing_repositories import (
+    ClientStandingRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
-from app.schemas.constants.client_health import AdminClientSort, ClientHealthStatus
+from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin import (
     AdminClientPage,
     AdminClientsQuery,
     AdminClientSummary,
-    AdminClientTotals,
     ClientSummarySource,
 )
-from app.schemas.dto.billing import Money
+from app.schemas.dto.client_standings import ClientChoices, ClientStandingFilter
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
-from app.schemas.typings.billing.constrained_floats import GrossMarginPercent
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.client_health.constrained_integers import ClientCount
 from app.schemas.typings.client_health.constrained_strings import ClientSearchText
-from app.utilities.paging.ordered_paging import take_ordered_page
-
-HEALTH_ORDER: dict[ClientHealthStatus, int] = {
-    ClientHealthStatus.CRITICAL: 0,
-    ClientHealthStatus.ATTENTION: 1,
-    ClientHealthStatus.HEALTHY: 2,
-}
-
-# Sort keys put unknown values last: (1, ...) after (0, value).
-type SortKey = tuple[object, ...]
+from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.use_cases.admin.client_list_search import (
+    ClientSearchPage,
+    position_in,
+    search_standings,
+)
+from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 
 class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
@@ -37,11 +36,15 @@ class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
     plan, published version, last autotest, handoffs, open questions, usage
     and margin.
 
-    Filters (business status, health, country, niche, part of the name or
-    id) run before paging; the order is chosen by the admin (critical
-    clients first by default, see AdminClientSort). The page also carries
-    totals over every client and the countries and niches present, for the
-    summary tiles and the filter choices.
+    The list reads the client standings the `refresh_client_standings`
+    job stores every few minutes: one keyset page in the chosen order
+    (critical clients first by default, see AdminClientSort), filtered by
+    business status, health, country and niche in the database, with
+    database counts for the matching clients, the summary tiles and the
+    filter choices; a search walks the standings (`client_list_search`).
+    `generated_at` is when the oldest summary on the page was taken; a
+    client that signed up since the last refresh appears after the next.
+    A stored summary this release cannot read is computed again.
     """
 
     def __init__(
@@ -49,6 +52,7 @@ class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
         authorize_platform_admin: UseCaseContract[
             PlatformAdminAccessRequest, UserDocument
         ],
+        client_standing_repo: ClientStandingRepoContract,
         business_repo: BusinessRepoContract,
         summarize_client: UseCaseContract[ClientSummarySource, AdminClientSummary],
         wall_clock: WallClock[Microseconds],
@@ -56,6 +60,7 @@ class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
         self._authorize_platform_admin: UseCaseContract[
             PlatformAdminAccessRequest, UserDocument
         ] = authorize_platform_admin
+        self._client_standing_repo: ClientStandingRepoContract = client_standing_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._summarize_client: UseCaseContract[
             ClientSummarySource,
@@ -70,145 +75,107 @@ class ListClientsUseCase(UseCaseContract[AdminClientsQuery, AdminClientPage]):
                 permission=PlatformAdminPermission.VIEW_CLIENTS,
             )
         )
-        summaries: list[AdminClientSummary] = [
-            self._summarize_client.run(ClientSummarySource(business=business))
-            for business in self._business_repo.list_all()
-        ]
-        matching: list[AdminClientSummary] = sorted(
-            (summary for summary in summaries if matches_filters(summary, input_data)),
-            key=SORT_KEYS[input_data.sort],
+        where = ClientStandingFilter(
+            business_status=input_data.status,
+            health_status=input_data.health,
+            country_code=input_data.country_code,
+            niche_key=input_data.niche_key,
         )
-        items, next_cursor = take_ordered_page(
-            matching,
-            input_data.page,
-            item_id=lambda summary: str(summary.business_id),
-        )
+        standings, next_cursor, matching_count = self._read_page(input_data, where)
+        choices: ClientChoices = self._client_standing_repo.list_choices()
         return AdminClientPage(
-            generated_at=self._wall_clock.now_unix(),
-            items=items,
+            generated_at=min(
+                (standing.updated_at for standing in standings),
+                default=self._wall_clock.now_unix(),
+            ),
+            items=[
+                summary
+                for summary in (self._summary_of(standing) for standing in standings)
+                if summary is not None
+            ],
             next_cursor=next_cursor,
-            matching_count=ClientCount(len(matching)),
-            totals=count_totals(summaries),
-            countries=sorted(
-                {summary.country_code for summary in summaries},
-                key=str,
-            ),
-            niches=sorted(
-                {summary.niche_key for summary in summaries},
-                key=lambda niche: niche.value,
-            ),
+            matching_count=matching_count,
+            totals=self._client_standing_repo.tally(),
+            countries=choices.countries,
+            niches=choices.niches,
         )
 
+    def _read_page(
+        self,
+        input_data: AdminClientsQuery,
+        where: ClientStandingFilter,
+    ) -> tuple[list[ClientStandingDocument], PageCursor | None, ClientCount]:
+        """
+        Raises:
+            ValidationFailedError: the cursor is broken.
+        """
 
-def matches_filters(summary: AdminClientSummary, query: AdminClientsQuery) -> bool:
-    return (
-        (query.status is None or summary.business_status is query.status)
-        and (query.health is None or summary.health_status is query.health)
-        and (query.country_code is None or summary.country_code == query.country_code)
-        and (query.niche_key is None or summary.niche_key is query.niche_key)
-        and matches_search(summary, query.search)
-    )
+        search: ClientSearchText | None = input_data.search
+        if search is not None and str(search).strip() != "":
+            exact: ClientStandingDocument | None = self._find_by_id(search, where)
+            if exact is not None:
+                return [exact], None, ClientCount(1)
 
-
-def matches_search(
-    summary: AdminClientSummary, search: ClientSearchText | None
-) -> bool:
-    if search is None:
-        return True
-
-    needle: str = str(search).strip().casefold()
-    return needle in str(summary.name).casefold() or needle in (
-        str(summary.business_id).casefold()
-    )
-
-
-def count_totals(summaries: list[AdminClientSummary]) -> AdminClientTotals:
-    def count(condition: Callable[[AdminClientSummary], bool]) -> ClientCount:
-        return ClientCount(sum(1 for summary in summaries if condition(summary)))
-
-    return AdminClientTotals(
-        client_count=ClientCount(len(summaries)),
-        critical_count=count(
-            lambda summary: summary.health_status is ClientHealthStatus.CRITICAL
-        ),
-        attention_count=count(
-            lambda summary: summary.health_status is ClientHealthStatus.ATTENTION
-        ),
-        healthy_count=count(
-            lambda summary: summary.health_status is ClientHealthStatus.HEALTHY
-        ),
-        losing_money_count=count(
-            lambda summary: (
-                summary.cost.margin is not None
-                and int(summary.cost.margin.amount_minor) < 0
+            found: ClientSearchPage = search_standings(
+                self._client_standing_repo,
+                input_data.sort,
+                where,
+                search,
+                input_data.page,
             )
-        ),
-    )
+            return found.standings, found.next_cursor, found.matching_count
 
-
-def find_usage_percent(summary: AdminClientSummary) -> float | None:
-    """The fuller of the two packages (voice minutes, dialogs), or None."""
-
-    percents: list[float] = [
-        int(used) / int(included) * 100
-        for used, included in (
-            (summary.used_voice_minutes, summary.included_voice_minutes),
-            (summary.used_dialogs, summary.included_dialogs),
+        standings, next_cursor = finish_page(
+            self._client_standing_repo.page(
+                input_data.sort, where, read_slice(input_data.page)
+            ),
+            input_data.page,
+            sort_key=lambda standing: position_in(standing, input_data.sort),
+            item_id=lambda standing: str(standing.business_id),
         )
-        if int(included) > 0
-    ]
-    return max(percents, default=None)
+        return standings, next_cursor, self._client_standing_repo.count(where)
+
+    def _find_by_id(
+        self, search: ClientSearchText, where: ClientStandingFilter
+    ) -> ClientStandingDocument | None:
+        """The client the search names by its full id, when it passes the filter."""
+
+        try:
+            business_id = BusinessId(str(search).strip())
+        except ValueError, TypeError:
+            return None
+
+        standing: ClientStandingDocument | None = self._client_standing_repo.get_many(
+            [business_id]
+        ).get(business_id)
+        if standing is None or not passes(standing, where):
+            return None
+
+        return standing
+
+    def _summary_of(
+        self, standing: ClientStandingDocument
+    ) -> AdminClientSummary | None:
+        try:
+            return AdminClientSummary.model_validate_json(str(standing.summary))
+        except ValidationError:
+            # Stored by another release (a deploy): computed again.
+            business: BusinessDocument | None = self._business_repo.get(
+                standing.business_id
+            )
+            if business is None:
+                return None
+
+            return self._summarize_client.run(ClientSummarySource(business=business))
 
 
-def health_key(summary: AdminClientSummary) -> SortKey:
-    return (
-        HEALTH_ORDER[summary.health_status],
-        -len(summary.health_issues),
-        *name_key(summary),
+def passes(standing: ClientStandingDocument, where: ClientStandingFilter) -> bool:
+    return all(
+        wanted is None or wanted == actual
+        for wanted, actual in (
+            (where.business_status, standing.business_status),
+            (where.health_status, standing.health_status),
+            (where.country_code, standing.country_code),
+            (where.niche_key, standing.niche_key),
+        )
     )
-
-
-def name_key(summary: AdminClientSummary) -> SortKey:
-    return (str(summary.name).casefold(), str(summary.business_id))
-
-
-def known_first(value: float | None) -> SortKey:
-    """Unknown values sort after every known one."""
-
-    return (1, 0.0) if value is None else (0, value)
-
-
-def usage_key(summary: AdminClientSummary) -> SortKey:
-    percent: float | None = find_usage_percent(summary)
-    return (*known_first(None if percent is None else -percent), *health_key(summary))
-
-
-def margin_key(summary: AdminClientSummary) -> SortKey:
-    margin_percent: GrossMarginPercent | None = summary.cost.margin_percent
-    return (
-        *known_first(None if margin_percent is None else float(margin_percent)),
-        *health_key(summary),
-    )
-
-
-def cost_key(summary: AdminClientSummary) -> SortKey:
-    return (-int(summary.cost.provider_cost_micro_usd), *health_key(summary))
-
-
-def revenue_key(summary: AdminClientSummary) -> SortKey:
-    revenue: Money = summary.cost.revenue
-    return (
-        str(revenue.currency_code),
-        -int(revenue.amount_minor),
-        *health_key(summary),
-    )
-
-
-SORT_KEYS: dict[AdminClientSort, Callable[[AdminClientSummary], SortKey]] = {
-    AdminClientSort.HEALTH: health_key,
-    AdminClientSort.NAME: name_key,
-    AdminClientSort.USAGE: usage_key,
-    AdminClientSort.MARGIN: margin_key,
-    AdminClientSort.COST: cost_key,
-    AdminClientSort.REVENUE: revenue_key,
-}

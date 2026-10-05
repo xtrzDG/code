@@ -1,0 +1,118 @@
+{
+  "collection": "client_standings",
+  "document_type": "ClientStandingDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "business_status": {
+        "enum": [
+          "onboarding",
+          "testing",
+          "live",
+          "paused"
+        ],
+        "type": "string"
+      },
+      "cost_position": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "country_code": {
+        "maxLength": 2,
+        "minLength": 2,
+        "pattern": "^[A-Z]{2}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "health_position": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "health_status": {
+        "enum": [
+          "healthy",
+          "attention",
+          "critical"
+        ],
+        "type": "string"
+      },
+      "is_losing_money": {
+        "default": false,
+        "type": "boolean"
+      },
+      "margin_position": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "name_position": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "niche_key": {
+        "enum": [
+          "restaurant",
+          "hotel",
+          "entertainment",
+          "beauty_salon",
+          "clinic",
+          "fitness",
+          "short_term_rental",
+          "car_service",
+          "car_rental_and_tours",
+          "event_venue",
+          "real_estate",
+          "education",
+          "online_shop",
+          "veterinary",
+          "home_services",
+          "b2b_supply"
+        ],
+        "type": "string"
+      },
+      "revenue_position": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "usage_position": {
+        "minimum": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "name",
+      "business_status",
+      "health_status",
+      "country_code",
+      "niche_key",
+      "summary",
+      "health_position",
+      "name_position",
+      "usage_position",
+      "margin_position",
+      "cost_position",
+      "revenue_position"
+    ],
+    "type": "object"
+  }
+}

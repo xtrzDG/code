@@ -15,6 +15,19 @@ class ClientCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class ClientListPosition(BaseConstrainedTypedInt):
+    """
+    Where a client stands in one order of the platform admin's client list
+    (0 is the first), as the latest refresh of the client standings ranked
+    every client.
+
+    Example:
+        position = ClientListPosition(0)
+    """
+
+    ge = 0
+
+
 class GuardedReplyCount(BaseConstrainedTypedInt):
     """
     Assistant replies of a time window, or those of them the reply guard

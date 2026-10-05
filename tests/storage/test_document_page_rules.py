@@ -65,8 +65,11 @@ def test_pages_refuse_undeclared_fields(
 
 
 def test_a_page_query_checks_its_shape() -> None:
-    with pytest.raises(ValueError, match="1 to 3"):
-        DocumentPageQuery(sort_fields=(), limit=DocumentQueryLimit(1))
+    with pytest.raises(ValueError, match="at most 3"):
+        DocumentPageQuery(
+            sort_fields=(CREATED_AT, CREATED_AT, CREATED_AT, CREATED_AT),
+            limit=DocumentQueryLimit(1),
+        )
     with pytest.raises(ValueError, match="one value per sort field"):
         DocumentPageQuery(
             sort_fields=(CREATED_AT,),
@@ -90,3 +93,35 @@ def test_get_many_reads_the_stored_keys_only(collections: CollectionFactory) -> 
         [str(stored[0].id), str(stored[2].id)]
     )
     assert conversations.get_many([]) == []
+
+
+def test_a_page_without_sort_fields_walks_in_first_write_order(
+    collections: CollectionFactory,
+) -> None:
+    conversations = collections(ConversationDocument, "conversations")
+    stored = [conversation(BusinessId(), at) for at in (50, 20, 90, 10, 70)]
+    for document in stored:
+        conversations.upsert(str(document.id), document)
+
+    walked: list[ConversationDocument] = []
+    after: ConversationDocument | None = None
+    while True:
+        page = conversations.page_by(
+            DocumentPageQuery(
+                sort_fields=(),
+                is_descending=False,
+                after=None
+                if after is None
+                else DocumentPagePosition(
+                    values=(), document_key=StoredDocumentKey(str(after.id))
+                ),
+                limit=DocumentQueryLimit(2),
+            )
+        )
+        walked.extend(page)
+        if len(page) < 2:
+            break
+        after = page[-1]
+
+    # Every row, in the order it was first written, whatever its fields.
+    assert [document.id for document in walked] == [document.id for document in stored]

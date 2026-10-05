@@ -41,6 +41,9 @@ from app.use_cases.admin.jobs.list_queued_jobs_use_case import ListQueuedJobsUse
 from app.use_cases.admin.jobs.retry_queued_job_use_case import RetryQueuedJobUseCase
 from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
 from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
+from app.use_cases.admin.refresh_client_standings_use_case import (
+    RefreshClientStandingsUseCase,
+)
 from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
 from app.use_cases.jobs.purge_finished_jobs_use_case import PurgeFinishedJobsUseCase
 from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
@@ -99,9 +102,19 @@ class PlatformUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         ListClientsUseCase,
         authorize_platform_admin=authorize_platform_admin_use_case,
+        client_standing_repo=repositories.client_standing_repo,
         business_repo=repositories.business_repo,
         summarize_client=summarize_client_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    refresh_client_standings_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            RefreshClientStandingsUseCase,
+            business_repo=repositories.business_repo,
+            summarize_client=summarize_client_use_case,
+            client_standing_repo=repositories.client_standing_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
     )
     get_client_health_use_case: Factory[
         UseCaseContract[AdminClientQuery, ClientHealthView]

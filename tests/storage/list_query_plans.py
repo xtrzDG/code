@@ -18,6 +18,8 @@ from app.repositories.booking_repositories import (
     LeadRepository,
     UnansweredQuestionRepository,
 )
+from app.repositories.business_repositories import BusinessRepository
+from app.repositories.client_standing_repository import ClientStandingRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.contact_activity_repository import ContactActivityRepository
 from app.repositories.conversation_repositories import (
@@ -30,6 +32,8 @@ from app.schemas.constants.bookings import BookingOrder, BookingStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffUrgency
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
+from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
@@ -102,6 +106,12 @@ class ListRepositories:
         self.knowledge = KnowledgeItemRepository(
             self._collection(KnowledgeItemDocument, "knowledge_items")
         )
+        self.businesses = BusinessRepository(
+            self._collection(BusinessDocument, "businesses")
+        )
+        self.standings = ClientStandingRepository(
+            self._collection(ClientStandingDocument, "client_standings")
+        )
         self.contact_activity = ContactActivityRepository(
             self._collection(ConversationDocument, "conversations"),
             self._collection(BookingDocument, "bookings"),
@@ -124,9 +134,8 @@ class ListRepositories:
 @dataclass(frozen=True)
 class ListQuery:
     """
-    A repository call of a list or count and the index its SQL must use
-    (or an equally selective one the planner may prefer, `alternatives`);
-    none of `table` and `also_tables` may be read sequentially.
+    A repository call of a list or count and the index its SQL must use (or
+    `alternatives`); no table of `table` and `also_tables` is read in full.
     """
 
     name: str
@@ -135,6 +144,7 @@ class ListQuery:
     index: str
     alternatives: tuple[str, ...] = ()
     also_tables: tuple[str, ...] = ()
+    is_platform_wide: bool = False
 
 
 LIST_QUERIES: tuple[ListQuery, ...] = (
