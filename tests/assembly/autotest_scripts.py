@@ -4,12 +4,19 @@ import re
 from collections.abc import Callable
 
 from app.schemas.constants.assistants import AutotestScenarioKind
+from app.schemas.domain.knowledge import KnowledgeItemDocument
+from app.schemas.dto.billing import Money
 from app.schemas.dto.conversations import AssistantReply, InboundMessage, LlmRequest
+from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    CurrencyCode,
+    LanguageTag,
+)
+from app.utilities.money.money_math import convert_money_to_major_units
 
 CHANNEL_USER_PATTERN: re.Pattern[str] = re.compile(
     r"^autotest-autotest_run_[0-9a-f\-]{36}-(?P<key>[a-z0-9_\-]+)$"
@@ -122,3 +129,29 @@ def build_reply(
         created_lead_ids=[LeadId()] if is_lead_created else [],
         created_handoff_ids=[HandoffId()] if is_handed_off else [],
     )
+
+
+def price_reply(
+    scenario_key: str, items: list[KnowledgeItemDocument], currency_code: str
+) -> AssistantReply:
+    """A reply in the scenario language that names every price of the list."""
+
+    language: str = read_scenario_language(scenario_key)
+    prices: str = ", ".join(
+        format_price(item.price_minor, item.currency_code or currency_code)
+        for item in items
+        if item.is_active and item.price_minor is not None
+    )
+    return build_reply(language, text=f"{ASSISTANT_TEXTS[language]} {prices}")
+
+
+def format_price(amount_minor: int, currency_code: str) -> str:
+    """An amount in major units, as many decimals as its currency has."""
+
+    major = convert_money_to_major_units(
+        Money(
+            amount_minor=MoneyAmountMinor(amount_minor),
+            currency_code=CurrencyCode(currency_code),
+        )
+    )
+    return f"{major} {currency_code}"

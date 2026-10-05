@@ -6,9 +6,14 @@ answers with that text, so an owner's corrected answer and the check
 saved from it pass on a development, staging or end-to-end server.
 """
 
+import re
+
 from app.utilities.knowledge.search_text import fold_words
 
 ANSWER_ROW_PREFIXES: tuple[str, ...] = ("- Question: ", "- Policy: ")
+QUOTED_ITEM_PATTERN: re.Pattern[str] = re.compile(r'"([^"]+)"')
+PRICE_LABEL: str = "Price: "
+PRICE_END: str = ";"
 LABEL_SEPARATOR: str = ": "
 
 
@@ -37,5 +42,25 @@ def find_fact_answer(system_prompt: str, customer_text: str) -> str | None:
                 return row[separator + len(LABEL_SEPARATOR) :].strip() or None
 
             start = separator + 1
+
+    return None
+
+
+def find_price(system_prompt: str, customer_text: str) -> str | None:
+    """
+    The price of the item the customer names in quotes, as its fact row
+    gives it ("- Product: Khachapuri: Price: 18.00 GEL" -> "18.00 GEL").
+    """
+
+    quoted: re.Match[str] | None = QUOTED_ITEM_PATTERN.search(customer_text)
+    if quoted is None:
+        return None
+
+    marker: str = f": {quoted.group(1)}: {PRICE_LABEL}"
+    for line in system_prompt.splitlines():
+        start: int = line.find(marker)
+        if line.startswith("- ") and start != -1:
+            price: str = line[start + len(marker) :]
+            return price.split(PRICE_END)[0].strip() or None
 
     return None

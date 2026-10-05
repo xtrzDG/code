@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.contracts.llm import LlmAdapterContract
+from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.dto.conversations import AssistantReply, InboundMessage, LlmRequest
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -19,7 +20,9 @@ from tests.assembly.autotest_scripts import (
     ReplyScript,
     default_customer_script,
     default_reply_script,
+    price_reply,
     read_scenario_key,
+    read_scenario_kind,
 )
 from tests.assembly.fake_engine_and_voice import (
     FakeAssistantToolCatalog,
@@ -102,5 +105,19 @@ class AssemblyScriptedModels(AssemblyStore):
 
     def _reply(self, message: InboundMessage, turn_index: int) -> AssistantReply:
         scenario_key: str = read_scenario_key(message)
-        script: ReplyScript = self.reply_scripts.get(scenario_key, default_reply_script)
-        return script(message, scenario_key, turn_index)
+        script: ReplyScript | None = self.reply_scripts.get(scenario_key)
+        if script is not None:
+            return script(message, scenario_key, turn_index)
+
+        if read_scenario_kind(scenario_key) is AutotestScenarioKind.PRICE_QUESTION:
+            # The scripted assistant names every price of the price list, so
+            # each price question finds its item's price.
+            business = self.business_repo.get(message.business_id)
+            assert business is not None
+            return price_reply(
+                scenario_key,
+                self.knowledge_repo.list_by_business(message.business_id),
+                str(business.currency_code),
+            )
+
+        return default_reply_script(message, scenario_key, turn_index)

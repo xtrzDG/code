@@ -26,6 +26,9 @@ REPLY_LANGUAGE_PATTERN: re.Pattern[str] = re.compile(
     r"^Reply language: .*\(([a-z]{2,3}(?:-[A-Za-z0-9]+)*)\)\.", re.MULTILINE
 )
 GOAL_PATTERN: re.Pattern[str] = re.compile(r"^Your goal: (.+)$", re.MULTILINE)
+GOAL_ITEM_PATTERN: re.Pattern[str] = re.compile(
+    r'^Your goal: Ask how much "(.+)" costs\.$', re.MULTILINE
+)
 PHONE_LINE_PATTERN: re.Pattern[str] = re.compile(r"Your phone number is ([+\d][\d ]+)")
 PHONE_PATTERN: re.Pattern[str] = re.compile(r"\+\d[\d \-]{6,}\d")
 NEXT_DAYS_PATTERN: re.Pattern[str] = re.compile(r"^Next days: (.+)\.$", re.MULTILINE)
@@ -155,3 +158,10 @@ def read_goal_intent(goal: str) -> RehearsalIntent:
         return RehearsalIntent.EMERGENCY
 
     return RehearsalIntent.OTHER
+
+
+def read_goal_item(system_prompt: str) -> str | None:
+    """The item a price-question customer asks about, from its goal."""
+
+    match: re.Match[str] | None = GOAL_ITEM_PATTERN.search(system_prompt)
+    return None if match is None else match.group(1)

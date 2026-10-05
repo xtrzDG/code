@@ -161,6 +161,7 @@ class UseCasesContainer(CoreUseCasesContainer):
     )
     autotests: AutotestUseCasesContainer = Container(  # type: ignore[assignment]
         AutotestUseCasesContainer,
+        config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,

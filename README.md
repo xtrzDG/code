@@ -473,7 +473,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `BACKUP_MAX_AGE_HOURS` | 26: учения падают, если свежей копии больше 26 часов |
 | `RESTORE_CHECK_DATABASE_URL` | учения не запускаются. Временный сервер Postgres и роль, которой можно создавать базы; никогда не сервер production |
 | `POSTGRES_CLIENT_BIN_DIRECTORY` | `pg_dump` и `pg_restore` ищутся в `PATH` (в образе — клиент Postgres Debian) |
-| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: репетиция, в которой проверки «Применить изменения» проходят, для разработки, staging и e2e); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов, по умолчанию та же модель провайдера |
+| `LLM_PROVIDER`, `LLM_MODEL_ID`, `LLM_JUDGE_MODEL_ID` | `openai` и `gpt-5-mini` (`anthropic` — `claude-opus-5-5`; `scripted` — без модели и ключей: репетиция, в которой проверки «Применить изменения» проходят, для разработки, staging и e2e); `LLM_JUDGE_MODEL_ID` — модель клиента и судьи автотестов и ночной оценки реальных разговоров; по умолчанию модель другого провайдера, чтобы модель не оценивала ответы своего семейства: `claude-sonnet-5-5` при `openai`, если задан `ANTHROPIC_API_KEY`, и `gpt-5-mini` при `anthropic`, если задан `OPENAI_API_KEY`; без ключа второго провайдера — модель своего |
 | `LLM_SUMMARY_MODEL_ID` | модель итогов звонков для персонала (дешёвая, например `gpt-5-nano`); по умолчанию — `LLM_MODEL_ID` |
 | `LLM_CHAT_EFFORT`, `LLM_JUDGE_EFFORT` | усилие рассуждений: `low` в чате, `medium` у судьи автотестов (`minimal`, `low`, `medium`, `high`) |
 | `LLM_MAX_OUTPUT_TOKENS`, `LLM_TOOL_ROUND_LIMIT` | 16000 токенов ответа, 8 кругов вызова инструментов на один ответ |
@@ -490,6 +490,8 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `MEDIA_MAX_VOICE_BYTES`, `MEDIA_MAX_IMAGE_BYTES` | 16 МиБ на голосовое и 5 МиБ на фото: больше не скачивается из мессенджера, клиент получает просьбу написать текстом |
 | `MEDIA_MAX_VOICE_SECONDS` | 300: голосовое длиннее не распознаётся (просьба написать текстом). Голосовые и фото хранятся там же и так же долго, как записи звонков (`RECORDINGS_STORAGE`, `RECORDING_RETENTION_DAYS`) |
 | `AUTOTEST_TURN_LIMIT` | 4 сообщения клиента в одном сценарии автотеста |
+| `AUTOTEST_CRITICAL_SAMPLES` | 2: столько раз играется каждый важный для запуска сценарий (цены, брони, проверки владельца, атаки); он пройден, только если пройдены все прогоны (pass^k) |
+| `QUALITY_SAMPLE_PERCENT`, `QUALITY_SAMPLE_PER_BUSINESS`, `QUALITY_SAMPLE_BUDGET_CENTS` | 5 %, 20 и 500: ночная оценка реальных разговоров судьёй (`LLM_JUDGE_MODEL_ID`) — доля разговоров прошедших суток, не больше 20 на бизнес и не дороже 5 долларов за ночь; 0 % выключает оценку. Тренд — в админке на странице клиента и в карточке разговора; падение качества — оповещение платформы `quality_drop` |
 | `SCRIPTED_LLM_LATENCY_MS` | 0: сколько миллисекунд модель `scripted` ждёт перед каждым ответом, как настоящий провайдер; задают нагрузочные тесты (`perf/k6`, `docs/operations/capacity.md`) |
 | `OTP_LIFETIME_SECONDS`, `OTP_MAX_FAILED_ATTEMPTS` | код входа действует 600 секунд; после 5 неверных попыток нужен новый код |
 | `OTP_SENDS_PER_DESTINATION_PER_HOUR`, `OTP_SENDS_PER_IP_PER_HOUR`, `OTP_SENDS_PER_HOUR` | 5 кодов на номер или почту, 10 с одного адреса и 300 на новые номера и почты всего за час (см. «Защита входа») |

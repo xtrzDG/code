@@ -10,6 +10,14 @@ class AutotestCheckNote(BaseTypedString):
     """
 
 
+class AutotestOpeningMessage(BaseTypedString):
+    """
+    The first customer message of an attack scenario, sent word for word
+    (a forged platform header, a request for other customers' data, a
+    false claim to be staff, a burst of tool requests).
+    """
+
+
 class AutotestScenarioGoal(BaseTypedString):
     """Instruction for the AI customer: what it must try to achieve."""
 

@@ -58,10 +58,15 @@ OWNER_CHECK_CONTINUATION_OPENING: str = (
 SILENT_ASSISTANT_TEXT: str = (
     "(The assistant did not answer: a human colleague will reply later.)"
 )
+# How every judge's instruction begins (the scripted model knows the
+# judge by it): the autotest judge and the judge of real conversations.
+JUDGE_PROMPT_OPENING: str = (
+    "You are a strict quality judge of an AI assistant that answers the "
+    "customers of a business."
+)
 JUDGE_SYSTEM_PROMPT: str = "\n".join(
     [
-        "You are a strict quality judge of an AI assistant that answers the "
-        "customers of a business. You get the business facts, the test "
+        f"{JUDGE_PROMPT_OPENING} You get the business facts, the test "
         "scenario, what the system recorded (bookings, leads and handoffs) and "
         "the conversation transcript.",
         "Score the assistant on five criteria from 1 (bad) to 5 (perfect):",

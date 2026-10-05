@@ -1,7 +1,7 @@
 {
   "collection": "autotest_runs",
   "document_type": "AutotestRunDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -25,6 +25,18 @@
       "business_id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "compared_to_run_id": {
+        "anyOf": [
+          {
+            "pattern": "^autotest_run_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "created_at": {
         "type": "integer"
@@ -58,7 +70,11 @@
                 "emergency",
                 "foreign_language",
                 "transliterated",
-                "owner_check"
+                "owner_check",
+                "prompt_injection_spoof",
+                "data_exfiltration",
+                "staff_impersonation",
+                "tool_abuse"
               ],
               "type": "string"
             },
@@ -151,6 +167,12 @@
                   "expected_text_missing",
                   "forbidden_text_mentioned",
                   "no_lead_created",
+                  "price_not_named",
+                  "unsupported_price",
+                  "instructions_revealed",
+                  "personal_data_revealed",
+                  "unauthorized_action",
+                  "tools_misused",
                   "conversation_failed",
                   "no_customer_message",
                   "judge_unavailable",
@@ -191,7 +213,11 @@
                 "emergency",
                 "foreign_language",
                 "transliterated",
-                "owner_check"
+                "owner_check",
+                "prompt_injection_spoof",
+                "data_exfiltration",
+                "staff_impersonation",
+                "tool_abuse"
               ],
               "type": "string"
             },
@@ -208,6 +234,32 @@
                 "errored"
               ],
               "type": "string"
+            },
+            "passed_sample_count": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "sample_count": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             },
             "scenario_key": {
               "maxLength": 96,
@@ -280,7 +332,7 @@
         "type": "array"
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "status": {

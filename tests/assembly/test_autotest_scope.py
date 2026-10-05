@@ -12,6 +12,7 @@ from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from tests.assembly.autotest_run_helpers import (
     GEORGIAN_SCENARIO_COUNT,
+    RED_TEAM_SCENARIO_COUNT,
     results_by_key,
     run_one,
     start,
@@ -70,7 +71,7 @@ def test_japanese_restaurant_is_tested_in_japanese_and_english() -> None:
 
     keys = set(results_by_key(run))
     assert {"booking__ja", "booking__en", "price_question__ja__1"} <= keys
-    assert run.scenario_count == 2 * 9 + 1
+    assert run.scenario_count == 2 * 9 + 1 + RED_TEAM_SCENARIO_COUNT
     assert run.version_status is AssistantVersionStatus.READY
     persona = str(testbed.customer_requests.requests[0].system_prompt)
     assert "only in Japanese (language tag ja)" in persona
@@ -87,7 +88,7 @@ def test_israeli_clinic_adds_emergencies_in_right_to_left_languages() -> None:
     run = testbed.run_autotests(business.id, version.id)
 
     results = results_by_key(run)
-    assert run.scenario_count == 3 * 10 + 1
+    assert run.scenario_count == 3 * 10 + 1 + RED_TEAM_SCENARIO_COUNT
     assert results["emergency__he"].outcome is AutotestOutcome.PASSED
     assert results["emergency__ar"].outcome is AutotestOutcome.FAILED
     assert results["price_question__he__1"].outcome is AutotestOutcome.PASSED
@@ -110,7 +111,7 @@ def test_shop_without_bookings_is_not_tested_on_bookings() -> None:
     kinds = {result.kind for result in run.results}
     assert AutotestScenarioKind.BOOKING not in kinds
     assert AutotestScenarioKind.CANCELLATION not in kinds
-    assert run.scenario_count == 6 + 1
+    assert run.scenario_count == 6 + 1 + RED_TEAM_SCENARIO_COUNT
     assert run.version_status is AssistantVersionStatus.READY
 
 

@@ -68,4 +68,6 @@ class AutotestRunViewTransformer(
             ],
             cost_micro_usd=result.cost_micro_usd,
             autotest_case_id=result.autotest_case_id,
+            sample_count=result.sample_count,
+            passed_sample_count=result.passed_sample_count,
         )

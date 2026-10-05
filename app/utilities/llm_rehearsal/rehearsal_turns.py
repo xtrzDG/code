@@ -29,10 +29,7 @@ from app.schemas.dto.llm_scripts import ScriptedLlmTurn, ScriptedToolCall
 from app.schemas.typings.conversations.strings import LlmToolInputJson, MessageText
 from app.utilities.assembly.autotest_prompts import (
     CUSTOMER_PERSONA_OPENING,
-    DONE_MARKER,
-    JUDGE_SYSTEM_PROMPT,
-    OWNER_CHECK_CONTINUATION_OPENING,
-    TRANSLITERATION_NOTE,
+    JUDGE_PROMPT_OPENING,
 )
 from app.utilities.llm_rehearsal.assistant_phrases import (
     ASSISTANT_PHRASES,
@@ -44,10 +41,10 @@ from app.utilities.llm_rehearsal.customer_phrases import (
     BOOKING_KEYWORDS,
     CUSTOMER_PHRASES,
     PERSON_KEYWORDS,
-    TRANSLITERATED_PHRASES,
     RehearsalIntent,
 )
-from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer
+from app.utilities.llm_rehearsal.rehearsal_customer import play_customer
+from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer, find_price
 from app.utilities.llm_rehearsal.rehearsal_reading import (
     JsonObject,
     detect_language,
@@ -55,10 +52,8 @@ from app.utilities.llm_rehearsal.rehearsal_reading import (
     last_customer_text,
     next_days,
     read_blocks,
-    read_customer_goal,
     read_reply_language,
     read_texts,
-    read_turn,
 )
 from app.utilities.llm_rehearsal.rehearsal_topics import rehearse_topics
 from app.utilities.value.topic_grouping import TOPIC_SYSTEM_PROMPT
@@ -73,7 +68,7 @@ HANDOFF_INTENTS: frozenset[RehearsalIntent] = frozenset(
 def play_rehearsal_turn(request: LlmRequest) -> ScriptedLlmTurn:
     """The rehearsal's answer to one request, by the role it plays."""
 
-    if str(request.system_prompt) == JUDGE_SYSTEM_PROMPT:
+    if str(request.system_prompt).startswith(JUDGE_PROMPT_OPENING):
         return say(
             json.dumps(
                 {
@@ -94,28 +89,6 @@ def play_rehearsal_turn(request: LlmRequest) -> ScriptedLlmTurn:
     return play_assistant(request)
 
 
-def play_customer(request: LlmRequest) -> ScriptedLlmTurn:
-    if any(
-        read_turn(payload).get("role") == "assistant"
-        or OWNER_CHECK_CONTINUATION_OPENING in read_texts(payload)
-        for payload in request.transcript
-    ):
-        return say(DONE_MARKER)
-
-    language, intent, phone = read_customer_goal(str(request.system_prompt))
-    base_language: str = language.split("-")[0].lower()
-    if TRANSLITERATION_NOTE in str(request.system_prompt) and (
-        base_language in TRANSLITERATED_PHRASES
-    ):
-        return say(TRANSLITERATED_PHRASES[base_language])
-
-    phrases = CUSTOMER_PHRASES.get(base_language) or CUSTOMER_PHRASES[FALLBACK_LANGUAGE]
-    if intent is RehearsalIntent.BOOKING and phone is not None:
-        return say(f"{phrases[intent]} {phone}")
-
-    return say(phrases[intent])
-
-
 def play_assistant(request: LlmRequest) -> ScriptedLlmTurn:
     customer_text: str = last_customer_text(request.transcript)
     # The platform's reading of the customer's language, as a model gets it.
@@ -132,6 +105,10 @@ def play_assistant(request: LlmRequest) -> ScriptedLlmTurn:
     known: str | None = find_fact_answer(str(request.system_prompt), customer_text)
     if known is not None:
         return say(known)
+
+    price: str | None = find_price(str(request.system_prompt), customer_text)
+    if price is not None:
+        return say(f"{reply_text(language, RehearsalReply.ANSWER)} {price}")
 
     intent: RehearsalIntent = read_intent(customer_text)
     if intent in HANDOFF_INTENTS and AssistantToolName.HANDOFF_TO_HUMAN in tool_names:

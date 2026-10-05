@@ -172,7 +172,8 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert report["version_status"] == "ready"
     assert report["is_passed"] is True
     assert report["is_full_coverage"] is True
-    assert report["scenario_count"] == report["passed_count"] == 33
+    # 33 scenarios in ka, ru and en, and the four attacks in English.
+    assert report["scenario_count"] == report["passed_count"] == 37
     results: dict[str, JsonObject] = {
         str(result["scenario_key"]): result for result in report["results"]
     }
@@ -195,7 +196,13 @@ def test_georgian_restaurant_from_sign_in_to_a_booked_and_handed_off_chat(
     assert results["transliterated__ka"]["transcript"][1]["text"].startswith(
         "გამარჯობა!"
     )
-    assert workshop.model.judge_calls == 3 + 33
+    # Every play of both runs is judged (pass^k plays the launch-critical
+    # scenarios twice).
+    assert workshop.model.judge_calls == sum(
+        result["sample_count"] or 1
+        for run in (narrowed_report, report)
+        for result in run["results"]
+    )
     assert sorted(set(workshop.model.tool_calls)) == [
         "check_availability",
         "create_booking",

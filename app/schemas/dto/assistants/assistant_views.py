@@ -25,6 +25,8 @@ from app.schemas.typings.assistants.constrained_floats import (
 )
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
+    AutotestPassedSampleCount,
+    AutotestSampleCount,
     AutotestScenarioCount,
     JudgeScore,
 )
@@ -124,6 +126,10 @@ class AutotestScenarioResultView(ImmutableDTO):
     cost_micro_usd: CostMicroUsd
     # The owner's check an OWNER_CHECK scenario played.
     autotest_case_id: AutotestCaseId | None = None
+    # pass^k: how often a launch-critical scenario was played and how many
+    # of its plays passed (None: played once).
+    sample_count: AutotestSampleCount | None = None
+    passed_sample_count: AutotestPassedSampleCount | None = None
 
 
 class AutotestRunView(ImmutableDTO):

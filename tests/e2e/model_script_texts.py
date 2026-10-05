@@ -29,6 +29,17 @@ CUSTOMER_MESSAGES: dict[str, dict[str, str]] = {
     "he": {"other": "שלום, יש לי שאלה"},
     "de": {"other": "Hallo, ich habe eine Frage"},
 }
+# What the AI customer asks about one item of the price list ({item}).
+# (long enough in the language that a title in another script does not
+# change the language the platform reads)
+PRICE_ITEM_MESSAGES: dict[str, str] = {
+    "ka": 'გამარჯობა, მითხარით, რა ღირს "{item}"? დიდი მადლობა',
+    "ru": 'Здравствуйте, подскажите, сколько стоит "{item}"? Спасибо',
+    "en": 'Hello, could you tell me how much "{item}" costs? Thank you',
+}
+PRICE_ITEM_GOAL_PATTERN: re.Pattern[str] = re.compile(r'^Ask how much "(.+)" costs\.$')
+QUOTED_ITEM_PATTERN: re.Pattern[str] = re.compile(r'"([^"]+)"')
+DEFAULT_PRICE_ITEM: str = "ხაჭაპური"
 # What the AI customer of a transliteration scenario writes.
 TRANSLITERATED_MESSAGES: dict[str, str] = {
     "ka": "gamarjoba, kitxva makvs",
@@ -67,7 +78,13 @@ ASSISTANT_TEXTS: dict[str, dict[str, str]] = {
 }
 HANDOFF_WORDS: tuple[str, ...] = ("менеджер", "მენეჯერ", "manager")
 BOOKING_WORDS: tuple[str, ...] = ("забронировать", "დაჯავშნა", "book a table")
-PRICE_WORDS: tuple[str, ...] = ("ღირს", "Сколько стоит", "How much")
+PRICE_WORDS: tuple[str, ...] = (
+    "ღირს",
+    "Сколько стоит",
+    "сколько стоит",
+    "How much",
+    "how much",
+)
 
 
 def read_customer_intent(goal: str) -> str:
