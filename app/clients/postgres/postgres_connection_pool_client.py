@@ -107,6 +107,11 @@ class PostgresConnectionPoolClient(ClientContract):
     def max_size(self) -> int:
         return self._max_size
 
+    def is_pinned(self) -> bool:
+        """Whether this thread runs inside a `pinned_connection()` block."""
+
+        return self._pins.current() is not None
+
     def open_connection_count(self) -> int:
         """Connections currently open: idle in the pool plus handed out."""
 

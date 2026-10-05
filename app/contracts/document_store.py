@@ -7,7 +7,11 @@ from base_pydantic_schemas import PersistentDocument
 
 from app.contracts.adapter_contract import AdapterContract
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
+from app.schemas.dto.storage_pages import (
+    DocumentLatestQuery,
+    DocumentPagePosition,
+    DocumentPageQuery,
+)
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -108,6 +112,15 @@ class DocumentCollectionAdapterContract(AdapterContract, Protocol[StoredDocument
         One keyset page (`DocumentPageQuery`): on Postgres an index range
         scan that starts at the position, so page 1000 costs what page 1
         costs.
+        """
+        raise NotImplementedError
+
+    def page_positions_by(self, query: DocumentPageQuery) -> list[DocumentPagePosition]:
+        """
+        Where the documents of `page_by(query)` stand, in the same order:
+        their sort field values and storage keys, without reading the
+        documents (on Postgres the indexed columns only), so a reader can
+        decide which of them it needs in full (`get_many`).
         """
         raise NotImplementedError
 

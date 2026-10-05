@@ -67,7 +67,11 @@ class LeaseHeartbeat:
                 )
             )
             for lease in held_jobs:
-                if lease.job_id not in extended:
+                # A job that finished meanwhile is no longer held (the
+                # runner lets go of it before it settles the job).
+                if lease.job_id not in extended and self._held_leases.holds_job(
+                    lease.job_id, lease.lease_token
+                ):
                     LOGGER.warning("Job %s lost its lease", lease.job_id)
 
         for run in self._held_leases.periodic_runs():

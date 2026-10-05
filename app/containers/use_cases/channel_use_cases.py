@@ -206,9 +206,10 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         language_detector=utilities.language_detector,
         app_settings=config.app_settings,
     )
-    get_widget_messages_use_case: Factory[
+    # Singleton: it remembers the web chats it found open (OpenChatMemory).
+    get_widget_messages_use_case: Singleton[
         UseCaseContract[WidgetMessagesQuery, WidgetMessagesView]
-    ] = Factory(
+    ] = Singleton(
         GetWidgetMessagesUseCase,
         channel_repo=repositories.channel_repo,
         conversation_repo=repositories.conversation_repo,
@@ -216,6 +217,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         language_registry=registries.language_registry,
         rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        read_session=adapters.storage_read_session,
     )
     accept_widget_message_use_case: Factory[
         UseCaseContract[WidgetMessageCommand, InboundMessage]

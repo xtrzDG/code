@@ -12,13 +12,16 @@ from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
     BUILD_MIGRATIONS_DIRECTORY,
     SqlFileMigrationSourceAdapter,
 )
-from app.adapters.storage.unit_of_work_factory import build_unit_of_work_adapter
+from app.adapters.storage.unit_of_work_factory import (
+    build_read_session_adapter,
+    build_unit_of_work_adapter,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.jobs import JobWakeupContract
-from app.contracts.storage import StorageUnitOfWorkContract
+from app.contracts.storage import StorageReadSessionContract, StorageUnitOfWorkContract
 
 
 class ProcessAdaptersContainer(containers.DeclarativeContainer):
@@ -39,6 +42,12 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
     # One storage transaction for a block (Postgres), None in memory.
     storage_unit_of_work: Singleton[StorageUnitOfWorkContract | None] = Singleton(
         build_unit_of_work_adapter,
+        connection_pool=clients.postgres_pool,
+        storage_scope=utilities.storage_scope,
+    )
+    # Several reads of one scope in one transaction (Postgres), None in memory.
+    storage_read_session: Singleton[StorageReadSessionContract | None] = Singleton(
+        build_read_session_adapter,
         connection_pool=clients.postgres_pool,
         storage_scope=utilities.storage_scope,
     )

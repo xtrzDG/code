@@ -6,7 +6,11 @@ from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.repositories.document_queries import document_position, of_business
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
+from app.schemas.dto.storage_pages import (
+    DocumentLatestQuery,
+    DocumentPagePosition,
+    DocumentPageQuery,
+)
 from app.schemas.dto.storage_queries import (
     DocumentFieldMatch,
     DocumentFieldOrder,
@@ -131,17 +135,22 @@ class BusinessScopedRepository[StoredDocument: PersistentDocument]:
         the window's position in the sort order, at most its limit.
         """
 
-        conditions: DocumentFilter = DocumentFilter() if where is None else where
         return self._collection.page_by(
-            DocumentPageQuery(
-                where=conditions.model_copy(
-                    update={"matches": (of_business(business_id), *conditions.matches)}
-                ),
-                sort_fields=tuple(sort_fields),
-                is_descending=is_descending,
-                after=document_position(window.after),
-                limit=DocumentQueryLimit(int(window.limit)),
-            )
+            page_query(business_id, sort_fields, window, where, is_descending)
+        )
+
+    def _page_positions_in_business(
+        self,
+        business_id: BusinessId,
+        sort_fields: Sequence[DocumentFieldPath],
+        window: KeysetSlice,
+        where: DocumentFilter | None = None,
+        is_descending: IsDescendingOrder = True,
+    ) -> list[DocumentPagePosition]:
+        """Where the documents of that page stand, without reading them."""
+
+        return self._collection.page_positions_by(
+            page_query(business_id, sort_fields, window, where, is_descending)
         )
 
     def _latest_in_business(
@@ -216,3 +225,24 @@ def read_business_id(document: PersistentDocument) -> BusinessId | None:
         return business_id
 
     return None
+
+
+def page_query(
+    business_id: BusinessId,
+    sort_fields: Sequence[DocumentFieldPath],
+    window: KeysetSlice,
+    where: DocumentFilter | None,
+    is_descending: IsDescendingOrder,
+) -> DocumentPageQuery:
+    """The keyset page of the business's documents after the window's position."""
+
+    conditions: DocumentFilter = DocumentFilter() if where is None else where
+    return DocumentPageQuery(
+        where=conditions.model_copy(
+            update={"matches": (of_business(business_id), *conditions.matches)}
+        ),
+        sort_fields=tuple(sort_fields),
+        is_descending=is_descending,
+        after=document_position(window.after),
+        limit=DocumentQueryLimit(int(window.limit)),
+    )

@@ -167,16 +167,16 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
         "messages_doc_conversation_idx",
     ),
     HotQuery(
-        "newest messages of a widget visitor (every poll)",
-        lambda r: r.messages.page_newest_of_conversations(
+        "positions of a widget visitor's newest messages (every poll)",
+        lambda r: r.messages.page_newest_positions_of_conversations(
             BUSINESS_IDS[0], [ConversationId()], KeysetSlice(limit=KeysetReadLimit(10))
         ),
         "messages",
         "messages_doc_conversation_idx",
     ),
     HotQuery(
-        "newest messages of a returning widget visitor",
-        lambda r: r.messages.page_newest_of_conversations(
+        "positions of a returning widget visitor's newest messages",
+        lambda r: r.messages.page_newest_positions_of_conversations(
             BUSINESS_IDS[0],
             [ConversationId(), ConversationId()],
             KeysetSlice(limit=KeysetReadLimit(10)),

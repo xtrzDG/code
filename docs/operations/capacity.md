@@ -99,7 +99,12 @@ target: `LLM_PROVIDER=scripted` with `SCRIPTED_LLM_LATENCY_MS` (default
 stay busy as long as in production), provider hosts resolved to nowhere
 (replies to the made-up Telegram bots fail at once and the outbox retries
 them; nothing leaves the machine), and `FORWARDED_ALLOW_IPS="*"` so k6 can
-act as many client networks. Never deploy with these settings.
+act as many client networks. Never deploy with these settings. The API
+processes and the worker get production's pools and threads (render.yaml:
+40 threads and 12 connections per API process; one worker with 20
+threads, 16 connections, 12 model calls and the default lanes), four API
+processes on the one runner; `tests/platform/test_load_stack_budget.py`
+keeps them equal to the Blueprint and within Postgres's 100 connections.
 
 ```bash
 C="docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml"
@@ -202,18 +207,135 @@ seconds). On this machine four processes (`WEB_CONCURRENCY=4`,
 453 ms where two measured 2.15 s; fewer threads (16) or a shorter
 interpreter switch interval did not help. The weekly run on GitHub's
 runner then still measured a poll p95 of 1.8 s with two processes, so the
-load override now runs four of 12 connections each, as production does
-(render.yaml: two instances of two uvicorn workers). If it still misses
-150 ms, the next lever is less Python per request, not the database.
+load override now runs four of 12 connections each (production runs two
+instances of one process each, half a CPU apiece: render.yaml sets no
+`WEB_CONCURRENCY`). With four, the weekly run measured a poll p95 of
+426 ms; the next section takes the Python out of a poll.
+
+### Widget polls: less Python per poll (October 2026)
+
+The weekly run of `5d94452` on four API processes measured a poll p95 of
+426 ms (p50 87 ms) against 150 ms while Postgres idled: the cost was
+Python per poll, and every millisecond of it queues the other polls of
+the process behind one interpreter lock.
+
+**Where a poll's CPU went.** Polls ran one after another through the
+whole application in one process (the middlewares, FastAPI, the request
+thread, Postgres with row-level security, the load dataset), measured
+with py-spy (samples of the lock holder) and CPU probes per thread
+(`time.thread_time()` around each step, so its system calls count too).
+CPU per poll, mean of two back-to-back rounds:
+
+| Step | Before | After |
+| --- | ---: | ---: |
+| Event-loop thread: middlewares, route matching, FastAPI, the hop to a request thread | 1,045 µs | 668 µs |
+| Rate-limit count (one statement) | 444 µs | 440 µs |
+| The web chat channel (every channel of the business decoded) | 659 µs | 18 µs (remembered) |
+| The visitor's conversations | 575 µs | 426 µs |
+| The newest messages | 760 µs (ten decoded) | 434 µs (ten positions) |
+| Read session: begin with the scope, commit | in the rows above | 258 µs |
+| Whole process | 3,826 µs | 2,570 µs (−33 %) |
+
+- **Statements.** A poll ran 13: the count, then begin, the scope
+  settings, the read and commit for each of three reads. On this machine
+  a statement costs about 150 µs of CPU in the request thread: psycopg,
+  and the system calls of a thread that sleeps until Postgres answers
+  and is woken (a sleep and a wake-up alone cost 50–70 µs of CPU here).
+- **Decoding.** About 54 µs a message, 29 a conversation, 21 a channel
+  (typed primitives validate field by field in Python): a poll decoded
+  up to four channels, its conversations and ten messages to learn that
+  nothing was new.
+- **Route matching**, 0.45 ms: the widget router came after about 250
+  other routes, and each is compared in turn.
+- **A second hop to a request thread**: FastAPI validates the DTO a sync
+  route returns again, in a request thread, before serializing it.
+- Smaller: the access line 23 µs (text) to 29 µs (JSON), the garbage
+  collector 25 µs. With Sentry on (production) a poll cost about 590 µs
+  more: 260 µs its wrapping of every request, the rest the 5 % of polls
+  it traced (milliseconds each).
+
+**What changed.**
+
+- The channel router (webhooks and the widget) is matched first; no
+  other route shares its paths (`test_route_matching_order.py`).
+- The poll serializes its answer itself: the same bytes and headers as
+  FastAPI's, one hop to a request thread instead of two
+  (`serialized_json_response`, `test_widget_poll_answer.py`).
+- Read sessions (`StorageReadSessionContract`): the poll's reads share
+  one connection and one transaction begun together with its row-level
+  security settings in one round trip, so each read is one statement.
+  Writes and reads in another scope inside a session keep their own
+  connections, so nothing else runs on its transaction; each statement
+  still sees what was committed when it ran (read committed), as before.
+  The count stays outside, alone, so its row locks last only while it
+  runs.
+- The newest ten messages are read as positions (id and time from the
+  index columns, `page_positions_by`); only the messages after the
+  cursor are read in full, none when nothing is new.
+- An open web chat is remembered for 10 s per process
+  (`OpenChatMemory`): polls skip the channel read. Only open chats are
+  remembered, so a widget switched on answers at once; **a widget
+  switched off answers polls for up to 10 s more** (its messages are
+  refused at once).
+- Sentry traces widget polls at a hundredth of
+  SENTRY_TRACES_SAMPLE_RATE (`sentry_trace_sampling`): 3,075 → 2,899 µs
+  per poll in-process with Sentry on; errors are reported as before.
+
+A poll now runs five statements (the count, begin with the scope, the
+conversations, the positions, commit) and decodes one conversation. The
+answers are unchanged: every cursor of random chats gets the whole
+chat's answer, in memory and on Postgres with the read session
+(`tests/storage/test_widget_poll_window.py`).
+
+**Measured.** k6 ran `widget_polling.js` unchanged with 1,000 visitors on
+four API processes (production's 40 threads and 12 connections each) and
+one worker as production's, against the harness of the section above;
+before and after ran back to back from the same seeded database. Other
+jobs kept the machine's load at 9–25 on its 4 vCPU, so latencies vary
+from pair to pair; CPU per request varies less.
+
+| Run (k6, 1,000 visitors) | Poll p50 | Poll p95 | Message p95 | API CPU per request | Postgres CPU per request |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 5 min, before / after (pair 1, load 13–19) | 46 / 19 ms | 479 / 213 ms | 311 / 204 ms | 4,822 / 3,784 µs | 3,259 / 2,795 µs |
+| 5 min, before / after (pair 2, load 14–24) | 165 / 41 ms | 2,618 / 404 ms | 1,131 / 430 ms | 5,781 / 3,647 µs | 3,649 / 2,721 µs |
+| 2 min, polls only, before / after | 18.9 / 9.3 ms | 362 / 51 ms | — | 4,424 / 3,088 µs | 2,056 / 1,396 µs |
+| 2 min, quieter machine (64 threads, the worker's defaults), before / after | 44 / 12 ms | 487 / 63 ms | 295 / 77 ms | 4,295 / 3,287 µs | 3,253 / 2,734 µs |
+
+CPU per request fell by 21–37 % in the server (30 % with polls only, a
+third in-process), not by half: uvicorn, the sockets and the access line
+add about 0.5 ms per request that did not change, and the five remaining
+statements and the hop to a request thread cost about 0.15 ms each. The
+fewer round trips matter most under contention: the old poll's CPU grew
+with the machine's load (4,295 to 5,781 µs), the new one's much less
+(3,287 to 3,784 µs). The poll p95 met the 150 ms threshold on the
+quieter machine (63 ms; 51 ms with polls only) but not while the other
+jobs loaded it (213 and 404 ms); with two API processes (production's
+count) it was 270 ms at a load of 25. The weekly run on a dedicated
+runner decides it. `tests/perf` at the small scale measured the poll at
+p50 4.4 ms, p95 5.7 ms (budget 60 ms; 9.1 and 15.7 ms in a run of the
+previous commit on a busier machine).
+
+**What remains.** The next levers, in order of what they would save:
+
+- A read model of each visitor's chat head (the latest message id and
+  time, handed off or not), kept with every web chat message write: a
+  poll that finds nothing new would be the count and one indexed read,
+  no session and no documents.
+- Database access without a request thread for the poll (an async
+  psycopg pool), so a poll needs no hop and no thread wake-up.
+- Sentry's wrapping of every request (about 260 µs with Sentry on).
 
 ## What one process carries
 
-- **Request threads.** An API instance answers `THREADPOOL_SIZE` (64)
-  requests at once. Reads of the cabinet and widget polls take
-  milliseconds (the table above), so polling is cheap: 1,000 visitors
-  polling every 4 seconds are 250 requests a second, a few threads busy
-  in the database; the Python side of two processes is the limit there
-  ("Widget polls and the shared rate-limit counters" above).
+- **Request threads.** An API instance answers `THREADPOOL_SIZE` (64 by
+  default, 40 in render.yaml) requests at once. Reads of the cabinet and
+  widget polls take milliseconds (the table above), so polling is cheap:
+  1,000 visitors polling every 4 seconds are 250 requests a second, a few
+  threads busy in the database; the Python side of the processes is the
+  limit there: a poll costs an API process about 3 ms of CPU on the load
+  harness, so 250 a second take three quarters of a CPU (production's
+  two instances have half a CPU each; "Widget polls: less Python per
+  poll" above).
   A widget message is stored and queued in one transaction and answered
   `202` at once; the worker answers it like every channel's message and
   the widget shows the typing dots until a poll brings the answer. A slow
@@ -236,9 +358,19 @@ load override now runs four of 12 connections each, as production does
   Plan one API process per 100 webhooks a second of peak.
 - **Worker throughput.** A worker answers `inbound` messages
   `WORKER_LANE_CONCURRENCY` at a time (8 by default). At 800 ms per model
-  call that is about 10 answers a second per worker: a one-minute burst
-  of 200 messages a second (12,000 messages) takes one worker about 20
-  minutes to drain, ten workers about 2. Raise the `inbound` concurrency
+  call a turn took about 1.1 s on the load harness (the rest is storage
+  round trips and Python), so one worker answers 7–8 messages a second:
+  a one-minute burst of 200 messages a second (12,000 messages) takes
+  one worker about 25 minutes to drain, ten workers about 3. 1,000
+  widget visitors writing every two minutes send 8.3 a second, more
+  than one worker answers: in the k6 scenario with production's one
+  worker the pickup delay grew all along (p50 16 s, p95 20 s after five
+  minutes; the weekly run's 12 s and later 70 s), with two workers it
+  stayed at p50 87 ms, p95 1.4 s. Production runs one worker
+  (render.yaml), and a second instance does not fit its connection
+  budget at 16 connections (2 x 2 x 17 more); raise its `inbound`
+  concurrency within `LLM_MAX_CONCURRENCY` and `DB_POOL_SIZE` (a turn
+  holds a connection while it runs) or shrink the pools first. Raise the `inbound` concurrency
   (keep `DB_POOL_SIZE` and the provider's rate limits in mind) or add
   workers when the queue's wait grows (the admin system page,
   `/admin/system`: the `inbound` lane's oldest wait; the
@@ -287,7 +419,15 @@ logs for `pickup_delay_ms`). The SLI is the p95 of `pickup_delay_ms` of
   arriving (the LISTEN connection is down, or `DATABASE_URL` goes through
   a transaction pooler without `LIVE_EVENTS_DATABASE_URL`), and only
   polling finds the jobs. Growing far beyond that: every `inbound` thread
-  is busy; raise the lane's concurrency or add workers (above).
+  is busy; raise the lane's concurrency or add workers (above). A lane
+  thread claims its next job as soon as one ends, so a busy lane has no
+  idle gap to win back in the claim itself.
+- **Lost leases.** "Job … lost its lease" means another worker could
+  take the job over (it ran past its lease without heartbeats). Before
+  October 2026 a job that finished while the heartbeat ran was reported
+  so too, about a second after its pickup (one such line in the weekly
+  run); the runner now lets go of a job before settling it and the
+  heartbeat reports only jobs it still holds.
 
 ## Readiness under load
 
@@ -374,9 +514,12 @@ pools), pick one route and update the Blueprint and the test together:
 - The customer list and the knowledge list page in the database
   (migration 1122); the customer search finds exact names, phones and ids
   through indexes and walks at most 500 customers for a part of a name.
-- A widget poll reads the visitor's ten newest messages; only a backlog
-  longer than that, an unknown cursor or none reads the visitor's whole
-  chat (bounded by one visitor's chat, not by the business).
+- A widget poll reads where the visitor's ten newest messages stand and
+  only the messages after its cursor; only a backlog longer than that,
+  an unknown cursor or none reads the visitor's whole chat (bounded by
+  one visitor's chat, not by the business).
+- A widget switched off still answers polls for up to 10 s in every API
+  process (`OpenChatMemory`); its messages are refused at once.
 - Every widget poll of the platform counts the same rate-limit row
   (`widget-poll:platform`): one short statement each (migration 1135),
   so it serializes polls only for about a millisecond apiece.

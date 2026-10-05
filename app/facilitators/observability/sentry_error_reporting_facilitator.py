@@ -14,6 +14,7 @@ from app.facilitators.observability.sentry_event_scrubbing import (
     scrub_event,
     scrub_transaction,
 )
+from app.facilitators.observability.sentry_trace_sampling import build_trace_sampler
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.dto.widget_errors import WidgetErrorReport
 from app.schemas.typings.platform.constrained_floats import TraceSampleRate
@@ -46,8 +47,9 @@ class SentryErrorReportingFacilitator(
     Every report names the deployed build (`release`) and carries the log
     context as tags (request, business, conversation, channel, job), so it
     can be traced to one request or job. A share of API requests
-    (SENTRY_TRACES_SAMPLE_RATE) is traced, by route template, without URLs
-    or bodies. Integrations are listed explicitly: none of the SDK's
+    (SENTRY_TRACES_SAMPLE_RATE; widget polls a hundredth of it,
+    `sentry_trace_sampling`) is traced, by route template, without URLs or
+    bodies. Integrations are listed explicitly: none of the SDK's
     automatic ones (model clients, HTTP clients) records prompts or URLs.
     Without a DSN every error goes to the log instead.
     """
@@ -75,6 +77,7 @@ class SentryErrorReportingFacilitator(
             send_default_pii=False,
             max_request_body_size="never",
             traces_sample_rate=float(traces_sample_rate),
+            traces_sampler=build_trace_sampler(traces_sample_rate),
             before_send=scrub_event,
             before_send_transaction=scrub_transaction,
             auto_enabling_integrations=False,

@@ -52,8 +52,12 @@ def compose_page(
     fields: dict[DocumentFieldPath, LookupFieldKind],
     query: DocumentPageQuery,
     scoped_business_id: str | None,
+    is_positions_only: bool = False,
 ) -> tuple[sql.Composed, SqlParameters]:
-    """`select document::text` of one keyset page."""
+    """
+    `select document::text` of one keyset page, or with `is_positions_only`
+    its rows' sort columns and storage key (no document is read).
+    """
 
     conditions, parameters = compose_filter(
         collection_name, fields, query.where, scoped_business_id
@@ -102,9 +106,19 @@ def compose_page(
         sql.SQL("{column} {direction}").format(column=column, direction=direction)
         for column in [*columns, *WRITE_ORDER_COLUMNS]
     )
+    selected: sql.Composable = (
+        sql.SQL(", ").join([*columns, sql.SQL("document_key")])
+        if is_positions_only
+        else sql.SQL("document::text")
+    )
     statement: sql.Composed = sql.SQL(
-        "select document::text from {table} where {where} order by {order} limit %s"
-    ).format(table=table, where=sql.SQL(" and ").join(conditions), order=order)
+        "select {selected} from {table} where {where} order by {order} limit %s"
+    ).format(
+        selected=selected,
+        table=table,
+        where=sql.SQL(" and ").join(conditions),
+        order=order,
+    )
     parameters.append(int(query.limit))
     return statement, parameters
 

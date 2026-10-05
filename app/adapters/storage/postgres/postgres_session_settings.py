@@ -15,6 +15,7 @@ tenant row (default deny); only the PLATFORM scope turns the bypass on.
 
 import psycopg
 from psycopg import errors as database_errors
+from psycopg import sql
 
 from app.clients.postgres.postgres_connection_pool_client import PostgresConnection
 from app.schemas.constants.storage import StorageScopeKind
@@ -44,6 +45,25 @@ def apply_storage_scope(connection: PostgresConnection, scope: StorageScope) -> 
             "" if scope.business_id is None else str(scope.business_id),
             "on" if scope.kind is StorageScopeKind.PLATFORM else "off",
         ),
+    )
+
+
+def begin_in_scope(connection: PostgresConnection, scope: StorageScope) -> None:
+    """
+    Begin a transaction and set its RLS settings for `scope` in one round
+    trip: the settings travel as literals (quoted by libpq, and a business
+    id is a validated typed id), so `begin` and the `set_config` select go
+    as one simple-protocol message. The caller ends the transaction.
+    """
+
+    connection.execute(
+        sql.SQL(
+            "begin; select set_config('app.business_id', {}, true), "
+            "set_config('app.bypass_rls', {}, true)"
+        ).format(
+            sql.Literal("" if scope.business_id is None else str(scope.business_id)),
+            sql.Literal("on" if scope.kind is StorageScopeKind.PLATFORM else "off"),
+        )
     )
 
 

@@ -22,6 +22,7 @@ from app.schemas.dto.conversation_feed.message_tallies import (
     ConversationUsageView,
 )
 from app.schemas.dto.listing_filters import AuditLogFilter, ConversationFeedFilter
+from app.schemas.dto.message_positions import MessagePosition
 from app.schemas.dto.operations.activity_counts import (
     ActivityPeriod,
     ConversationMixCount,
@@ -109,16 +110,18 @@ class MessageListingContract(Protocol):
         """The conversation's messages newest first, ties in write order."""
         raise NotImplementedError
 
-    def page_newest_of_conversations(
+    def page_newest_positions_of_conversations(
         self,
         business_id: BusinessId,
         conversation_ids: Sequence[ConversationId],
         window: KeysetSlice,
-    ) -> list[MessageDocument]:
+    ) -> list[MessagePosition]:
         """
-        The messages of these conversations together, newest first (by
-        `created_at`, ties: the later write first), one keyset page: a
-        widget poll reads the few newest instead of a visitor's history.
+        The ids and creation times of the messages of these conversations
+        together, newest first (by `created_at`, ties: the later write
+        first), one keyset page, without reading the messages (the indexed
+        columns only): a widget poll looks at the few newest instead of a
+        visitor's history and reads in full only what it shows.
         """
         raise NotImplementedError
 

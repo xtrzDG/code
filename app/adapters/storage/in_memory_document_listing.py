@@ -21,7 +21,11 @@ from app.adapters.storage.in_memory_document_lookup import (
 )
 from app.schemas.constants.storage import LookupFieldKind
 from app.schemas.dto.storage_aggregates import DocumentAggregation, DocumentGroupCount
-from app.schemas.dto.storage_pages import DocumentLatestQuery, DocumentPageQuery
+from app.schemas.dto.storage_pages import (
+    DocumentLatestQuery,
+    DocumentPagePosition,
+    DocumentPageQuery,
+)
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFilter
 from app.schemas.typings.storage.constrained_integers import (
     DocumentBucketIndex,
@@ -29,7 +33,7 @@ from app.schemas.typings.storage.constrained_integers import (
 )
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.schemas.typings.storage.integers import DocumentFieldInteger, DocumentFieldSum
-from app.schemas.typings.storage.strings import DocumentFieldText
+from app.schemas.typings.storage.strings import DocumentFieldText, StoredDocumentKey
 
 type GroupKey = tuple[tuple[str | None, ...], int | None]
 
@@ -41,7 +45,33 @@ def select_page(
 ) -> list[str]:
     """The serialized documents of one keyset page, in page order."""
 
-    keyed: list[tuple[tuple[int, ...], int, str]] = []
+    return [serialized for _, _, serialized in select_page_rows(entries, query, fields)]
+
+
+def select_page_positions(
+    entries: Sequence[tuple[str, str]],
+    query: DocumentPageQuery,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+) -> list[DocumentPagePosition]:
+    """The positions (sort values, storage key) of one keyset page."""
+
+    return [
+        DocumentPagePosition(
+            values=tuple(DocumentFieldInteger(value) for value in values),
+            document_key=StoredDocumentKey(key),
+        )
+        for values, key, _ in select_page_rows(entries, query, fields)
+    ]
+
+
+def select_page_rows(
+    entries: Sequence[tuple[str, str]],
+    query: DocumentPageQuery,
+    fields: dict[DocumentFieldPath, LookupFieldKind],
+) -> list[tuple[tuple[int, ...], str, str]]:
+    """(sort values, key, serialized document) of one keyset page."""
+
+    keyed: list[tuple[tuple[int, ...], int, str, str]] = []
     written_at: dict[str, int] = {}
     for written, (key, serialized) in enumerate(entries):
         written_at[key] = written
@@ -51,7 +81,7 @@ def select_page(
 
         values: tuple[int, ...] | None = integer_values(document, query.sort_fields)
         if values is not None:
-            keyed.append((values, written, serialized))
+            keyed.append((values, written, key, serialized))
 
     keyed.sort(key=lambda row: (row[0], row[1]), reverse=query.is_descending)
     if query.after is not None:
@@ -67,7 +97,10 @@ def select_page(
             )
         ]
 
-    return [serialized for _, _, serialized in keyed[: int(query.limit)]]
+    return [
+        (values, key, serialized)
+        for values, _, key, serialized in keyed[: int(query.limit)]
+    ]
 
 
 def select_latest(
