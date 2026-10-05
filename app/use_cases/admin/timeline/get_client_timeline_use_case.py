@@ -138,27 +138,27 @@ class GetClientTimelineUseCase(
     ) -> PagedLines:
         entries = self._audit_log_repo.page_by_business(
             business_id,
-            KeysetSlice(limit=KeysetReadLimit(size)),
+            KeysetSlice(limit=KeysetReadLimit(size + 1)),
             AuditLogFilter(until=before),
         )
         return PagedLines(
             lines=audit_lines(entries, credits),
             oldest=min((entry.created_at for entry in entries), key=int, default=None),
-            is_full=len(entries) >= size,
+            is_full=len(entries) > size,
         )
 
     def _health_page(
         self, business_id: BusinessId, before: Microseconds | None, size: int
     ) -> PagedLines:
         changes = self._health_change_repo.list_before(
-            business_id, before, DocumentQueryLimit(size)
+            business_id, before, DocumentQueryLimit(size + 1)
         )
         return PagedLines(
             lines=health_lines(changes),
             oldest=min(
                 (change.changed_at for change in changes), key=int, default=None
             ),
-            is_full=len(changes) >= size,
+            is_full=len(changes) > size,
         )
 
     def _named(self, lines: list[ClientTimelineEntry]) -> list[ClientTimelineEntry]:

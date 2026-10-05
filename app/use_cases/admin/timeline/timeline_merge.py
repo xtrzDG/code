@@ -15,11 +15,16 @@ from dataclasses import dataclass
 
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.client_health import ClientTimelineKind
 from app.schemas.dto.client_story import ClientTimelineEntry, ClientTimelinePage
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.utilities.paging.cursor_paging import decode_page_cursor, encode_page_cursor
 
 TIMELINE_CURSOR_ITEM: str = "timeline"
+# Lines of one moment: the action first, then what it did.
+KIND_ORDER: dict[ClientTimelineKind, int] = {
+    kind: index for index, kind in enumerate(ClientTimelineKind)
+}
 
 
 @dataclass(frozen=True)
@@ -62,7 +67,7 @@ def merge_page(
         ),
         default=None,
     )
-    candidates.sort(key=lambda line: -int(line.occurred_at))
+    candidates.sort(key=lambda line: (-int(line.occurred_at), KIND_ORDER[line.kind]))
     sure: list[ClientTimelineEntry] = [
         line
         for line in candidates

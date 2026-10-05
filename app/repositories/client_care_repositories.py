@@ -30,6 +30,9 @@ from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 CHANGED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("changed_at")
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
+# A range needs a bound: the first page of a client's changes reads from
+# the beginning of time.
+EPOCH: Microseconds = Microseconds(0)
 
 
 class BillingCreditRepository(
@@ -82,7 +85,7 @@ class ClientHealthChangeRepository(
         limit: DocumentQueryLimit,
     ) -> list[ClientHealthChangeDocument]:
         return self._collection.list_by_range(
-            time_range(CHANGED_AT_FIELD, ending_before=before),
+            time_range(CHANGED_AT_FIELD, starting_at=EPOCH, ending_before=before),
             (of_business(business_id),),
             is_descending=True,
             limit=limit,
