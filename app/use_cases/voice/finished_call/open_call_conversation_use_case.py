@@ -21,6 +21,7 @@ from app.schemas.dto.calls.missed_calls import StoredFinishedCall
 from app.schemas.dto.voice_webhooks import RecordedCall
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.use_cases.shared.contact_activity import record_contact_seen
 from app.utilities.sharing.acquisition_sources import called_number_source
 
 
@@ -133,7 +134,7 @@ class OpenCallConversationUseCase(UseCaseContract[StoredFinishedCall, RecordedCa
             business.id, identity.channel, identity.channel_user_id
         )
         if contact is not None:
-            return contact
+            return record_contact_seen(self._contact_repo, contact, now)
 
         contact = ContactDocument(
             business_id=business.id,

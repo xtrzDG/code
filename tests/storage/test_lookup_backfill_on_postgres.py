@@ -6,6 +6,7 @@ before the column existed, in keyset batches, waiting out locked rows.
 
 import json
 import threading
+from typing import LiteralString
 
 from psycopg.rows import TupleRow
 
@@ -39,7 +40,7 @@ CREATED_AT = TriggerLookupColumn(
     collection_name=DocumentCollectionName("businesses"),
     field=DocumentFieldPath("created_at"),
 )
-INSERT_SQL: str = (
+INSERT_SQL: LiteralString = (
     "insert into workshop.businesses "
     "(document_key, business_id, document, created_at, updated_at) "
     "values (%s, %s, %s::jsonb, 1, 1)"

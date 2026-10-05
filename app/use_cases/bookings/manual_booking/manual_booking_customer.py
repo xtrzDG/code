@@ -17,6 +17,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.use_cases.shared.contact_activity import record_contact_seen
 from app.use_cases.shared.operations_support import (
     CONTACT_ENTITY,
     ContactDetails,
@@ -98,6 +99,8 @@ def store_booking_contact(
     """
 
     if existing_contact is not None:
+        # A booking taken for the customer moves them up the customer list.
+        record_contact_seen(contact_repo, existing_contact, now)
         return update_contact_details(
             contact_repo,
             audit_log_repo,

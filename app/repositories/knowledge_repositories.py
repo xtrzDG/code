@@ -10,15 +10,20 @@ from app.repositories.document_queries import field_equals
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.dto.paging import KeysetSlice
+from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFilter
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import MessageId
+from app.schemas.typings.knowledge.booleans import IsKnowledgeItemActive
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 
 KNOWLEDGE_KIND_FIELD: DocumentFieldPath = DocumentFieldPath("kind")
 CORRECTION_OF_FIELD: DocumentFieldPath = DocumentFieldPath("correction_of")
+KNOWLEDGE_UPDATED_AT_FIELD: DocumentFieldPath = DocumentFieldPath("updated_at")
+KNOWLEDGE_IS_ACTIVE_FIELD: DocumentFieldPath = DocumentFieldPath("is_active")
 
 
 class KnowledgeItemRepository(
@@ -52,6 +57,27 @@ class KnowledgeItemRepository(
                 business_id, sorted({str(item_id) for item_id in item_ids})
             )
         }
+
+    def page_by_business(
+        self,
+        business_id: BusinessId,
+        window: KeysetSlice,
+        kind: KnowledgeItemKind | None,
+        is_active: IsKnowledgeItemActive | None,
+    ) -> list[KnowledgeItemDocument]:
+        matches: list[DocumentFieldMatch] = []
+        if kind is not None:
+            matches.append(field_equals(KNOWLEDGE_KIND_FIELD, kind))
+
+        if is_active is not None:
+            matches.append(field_equals(KNOWLEDGE_IS_ACTIVE_FIELD, is_active))
+
+        return self._page_in_business(
+            business_id,
+            (KNOWLEDGE_UPDATED_AT_FIELD,),
+            window,
+            DocumentFilter(matches=tuple(matches)),
+        )
 
     def list_by_kind(
         self,

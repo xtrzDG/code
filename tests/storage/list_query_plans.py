@@ -19,17 +19,22 @@ from app.repositories.booking_repositories import (
     UnansweredQuestionRepository,
 )
 from app.repositories.compliance_repositories import AuditLogRepository
+from app.repositories.contact_activity_repository import ContactActivityRepository
 from app.repositories.conversation_repositories import (
+    ContactRepository,
     ConversationRepository,
     MessageRepository,
 )
+from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.schemas.constants.bookings import BookingOrder, BookingStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffUrgency
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
+from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.listing_filters import (
     AuditLogFilter,
     BookingListFilter,
@@ -93,6 +98,15 @@ class ListRepositories:
         self.audit = AuditLogRepository(
             self._collection(AuditLogEntryDocument, "audit_log_entries")
         )
+        self.contacts = ContactRepository(self._collection(ContactDocument, "contacts"))
+        self.knowledge = KnowledgeItemRepository(
+            self._collection(KnowledgeItemDocument, "knowledge_items")
+        )
+        self.contact_activity = ContactActivityRepository(
+            self._collection(ConversationDocument, "conversations"),
+            self._collection(BookingDocument, "bookings"),
+            self._collection(LeadDocument, "leads"),
+        )
 
     def _collection[StoredDocument: PersistentDocument](
         self, document_type: type[StoredDocument], name: str
@@ -111,7 +125,8 @@ class ListRepositories:
 class ListQuery:
     """
     A repository call of a list or count and the index its SQL must use
-    (or an equally selective one the planner may prefer, `alternatives`).
+    (or an equally selective one the planner may prefer, `alternatives`);
+    none of `table` and `also_tables` may be read sequentially.
     """
 
     name: str
@@ -119,6 +134,7 @@ class ListQuery:
     table: str
     index: str
     alternatives: tuple[str, ...] = ()
+    also_tables: tuple[str, ...] = ()
 
 
 LIST_QUERIES: tuple[ListQuery, ...] = (

@@ -11,6 +11,24 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — online-safe migrations: the customer and knowledge lists page in the database
+
+Spec: `daebaf498eed4e83`
+
+- **Changed** `GET /v1/businesses/{business_id}/contacts`: customers come
+  most recently active first (`last_activity_at` order, kept by every
+  message, call, missed call or booking taken for them), a keyset page of
+  the database. A search shows the exact matches first (the contact id, the
+  full phone number, the exact name without case and accents) and then
+  partial matches from a walk of at most 500 customers per request: a page
+  may hold fewer rows than asked, even none, while `next_cursor` is set
+  ("Load more" searches further back).
+- **Changed** `GET /v1/businesses/{business_id}/knowledge`: items come
+  the last changed first (`updated_at`), a keyset page of the database;
+  `kind` and `is_active` filter in the database.
+- **Changed** `ContactDocument` (customer data exports) carries
+  `last_seen_at` and `display_name_folded` (version 3).
+
 ## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
 
 Spec: `8868b933a62e22f4`

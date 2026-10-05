@@ -13,11 +13,13 @@ Only rows whose document has the field and whose column is still empty
 are written; the rest of the batch is only looked at.
 """
 
+from typing import LiteralString
+
 from psycopg import sql
 
 from app.schemas.dto.lookup_backfill import TriggerLookupColumn
 
-TRIGGER_COLUMNS_QUERY: str = (
+TRIGGER_COLUMNS_QUERY: LiteralString = (
     "select c.relname, a.attname from pg_attribute a "
     "join pg_class c on c.oid = a.attrelid "
     "join pg_namespace n on n.oid = c.relnamespace "

@@ -12,6 +12,7 @@ built again.
 """
 
 import re
+from typing import LiteralString
 
 import psycopg
 from psycopg import errors, sql
@@ -38,7 +39,7 @@ CONCURRENT_INDEX_PATTERN: re.Pattern[str] = re.compile(
     r'"?([a-z_][a-z0-9_]*)"?\s',
     re.IGNORECASE,
 )
-INVALID_INDEXES_QUERY: str = (
+INVALID_INDEXES_QUERY: LiteralString = (
     "select c.relname from pg_index i "
     "join pg_class c on c.oid = i.indexrelid "
     "join pg_namespace n on n.oid = c.relnamespace "

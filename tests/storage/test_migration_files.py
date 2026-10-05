@@ -123,4 +123,6 @@ def test_project_migrations_are_well_formed() -> None:
         lowered_sql = script.sql.lower()
         assert "begin;" not in lowered_sql
         assert "commit;" not in lowered_sql
-        assert "concurrently" not in lowered_sql
+        # Concurrent index builds cannot run in a transaction: only a
+        # no-transaction file (`-- workshop:no-transaction`) may hold them.
+        assert script.is_transactional is ("concurrently" not in lowered_sql)

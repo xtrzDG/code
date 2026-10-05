@@ -5752,6 +5752,15 @@ export interface components {
          *     `opted_out_channels`: channels the customer asked to get no messages in
          *     that they did not ask for (reminders, text-backs after a missed call);
          *     PHONE covers SMS to their number. Version 2 adds it (optional).
+         *
+         *     Version 3 adds the customer list's lookups (migration 1122):
+         *     `last_seen_at`, the customer's latest activity (a message, a call, a
+         *     missed call, a booking taken for them, the erasure), the list's order;
+         *     a real customer has it from the moment they appear, while a contact
+         *     made only by the owner's test chat or the autotests (OWNER_TEST
+         *     identities only) never gets one and stays out of the list.
+         *     `display_name_folded`, the name as the search compares it, is kept in
+         *     step with `name` by the repository.
          */
         ContactDocument: {
             /** Business Id */
@@ -5763,12 +5772,16 @@ export interface components {
              * @description Creation wall-clock UNIX timestamp in microseconds.
              */
             created_at?: number;
+            /** Display Name Folded */
+            display_name_folded?: string | null;
             /** Erased At */
             erased_at?: number | null;
             /** Id */
             id?: string;
             /** Language */
             language?: string | null;
+            /** Last Seen At */
+            last_seen_at?: number | null;
             /** Name */
             name?: string | null;
             /** Opted Out Channels */
@@ -5777,7 +5790,7 @@ export interface components {
             phone_number?: string | null;
             /**
              * Schema Version
-             * @default 2
+             * @default 3
              */
             schema_version: string;
             /**
@@ -8092,8 +8105,9 @@ export interface components {
         KnowledgeItemKind: "faq" | "policy" | "menu_item" | "service" | "room_type" | "package" | "vehicle" | "product";
         /**
          * KnowledgeItemPage
-         * @description One page of the knowledge base, newest first (by creation time, ties by
-         *     id); `next_cursor` asks for the next page and is None on the last one.
+         * @description One page of the knowledge base, the last changed first (by the time of
+         *     the latest change, ties in the order the items were written);
+         *     `next_cursor` asks for the next page and is None on the last one.
          */
         KnowledgeItemPage: {
             /** Items */

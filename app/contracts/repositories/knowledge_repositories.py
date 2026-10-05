@@ -13,9 +13,11 @@ from app.contracts.repo_contract import RepoContract
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import MessageId
+from app.schemas.typings.knowledge.booleans import IsKnowledgeItemActive
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
@@ -43,6 +45,20 @@ class KnowledgeItemRepoContract(RepoContract, Protocol):
         item_ids: Sequence[KnowledgeItemId],
     ) -> dict[KnowledgeItemId, KnowledgeItemDocument]:
         """The business's items of these ids (missing ones left out), one read."""
+        raise NotImplementedError
+
+    def page_by_business(
+        self,
+        business_id: BusinessId,
+        window: KeysetSlice,
+        kind: KnowledgeItemKind | None,
+        is_active: IsKnowledgeItemActive | None,
+    ) -> list[KnowledgeItemDocument]:
+        """
+        One keyset page of the business's items, the last changed first
+        (`updated_at`, migration 1122), of one kind and only active or
+        inactive ones when asked.
+        """
         raise NotImplementedError
 
     def list_by_kind(

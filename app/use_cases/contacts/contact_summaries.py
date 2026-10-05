@@ -1,89 +1,54 @@
-"""Customer activity shared by the contact list and the contact page."""
+"""A customer's row in the list and the head of their page."""
 
 from typed_time_provider import Microseconds
 
-from app.contracts.repositories.booking_repositories import (
-    BookingRepoContract,
-    LeadRepoContract,
-)
-from app.contracts.repositories.conversation_repositories import (
-    ConversationRepoContract,
-)
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.contacts import ContactActivity, ContactSummaryView
-from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.contacts.booleans import (
-    HasContactTestActivity,
-    IsContactPhoneVerified,
+from app.schemas.dto.contacts import (
+    ContactActivity,
+    ContactActivityTotals,
+    ContactSummaryView,
 )
+from app.schemas.typings.contacts.booleans import IsContactPhoneVerified
 from app.schemas.typings.contacts.constrained_integers import (
     ContactBookingCount,
     ContactConversationCount,
     ContactLeadCount,
 )
-from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-def collect_contact_activity(
-    business_id: BusinessId,
-    conversation_repo: ConversationRepoContract,
-    booking_repo: BookingRepoContract,
-    lead_repo: LeadRepoContract,
-) -> dict[ContactId, ContactActivity]:
-    """Records of every customer of a business, keyed by contact id."""
+def summarize_contact_row(
+    contact: ContactDocument,
+    totals: ContactActivityTotals | None,
+) -> ContactSummaryView:
+    """
+    The list row of a customer from the counts of a page (test chats left
+    out). The channels are those the customer wrote, called or booked
+    through; the last activity is the latest of their records, their own
+    last-seen moment and their erasure.
+    """
 
-    conversations: dict[ContactId, list[ConversationDocument]] = {}
-    bookings: dict[ContactId, list[BookingDocument]] = {}
-    leads: dict[ContactId, list[LeadDocument]] = {}
-    tested: set[ContactId] = set()
-    for conversation in conversation_repo.list_by_business(business_id):
-        if conversation.is_sandbox:
-            tested.add(conversation.contact_id)
-        else:
-            conversations.setdefault(conversation.contact_id, []).append(conversation)
-
-    for booking in booking_repo.list_by_business(business_id):
-        if booking.is_sandbox:
-            tested.add(booking.contact_id)
-        else:
-            bookings.setdefault(booking.contact_id, []).append(booking)
-
-    for lead in lead_repo.list_by_business(business_id):
-        if lead.is_sandbox:
-            tested.add(lead.contact_id)
-        else:
-            leads.setdefault(lead.contact_id, []).append(lead)
-
-    return {
-        contact_id: ContactActivity(
-            conversations=conversations.get(contact_id, []),
-            bookings=bookings.get(contact_id, []),
-            leads=leads.get(contact_id, []),
-            has_test_activity=HasContactTestActivity(contact_id in tested),
+    counted: ContactActivityTotals = totals or ContactActivityTotals()
+    moments: list[Microseconds] = [
+        moment
+        for moment in (
+            contact.created_at,
+            contact.last_seen_at,
+            contact.erased_at,
+            counted.latest_at,
         )
-        for contact_id in {*conversations, *bookings, *leads, *tested}
-    }
-
-
-def is_test_contact(contact: ContactDocument, activity: ContactActivity) -> bool:
-    """
-    A "customer" made only by the owner's test chat or the autotests: no
-    real records, and test records or only test-chat identities.
-    """
-
-    if activity.conversations or activity.bookings or activity.leads:
-        return False
-
-    identities: list[ChannelKind] = [
-        identity.channel for identity in contact.channel_identities
+        if moment is not None
     ]
-    return activity.has_test_activity or (
-        identities != []
-        and all(channel is ChannelKind.OWNER_TEST for channel in identities)
+    return build_view(
+        contact,
+        channels=set(counted.channels),
+        counts=(
+            counted.conversation_count,
+            counted.booking_count,
+            counted.lead_count,
+        ),
+        last_activity_at=max(moments),
     )
 
 
@@ -91,16 +56,9 @@ def summarize_contact(
     contact: ContactDocument,
     activity: ContactActivity,
 ) -> ContactSummaryView:
-    """
-    The list row of a customer; test chats are left out of the counts. The
-    channels are those the customer wrote, called or booked through.
-    """
+    """The head of one customer's page from their records (test chats left out)."""
 
     channels: set[ChannelKind] = {
-        identity.channel
-        for identity in contact.channel_identities
-        if identity.channel is not ChannelKind.OWNER_TEST
-    } | {
         *(conversation.channel for conversation in activity.conversations),
         *(booking.source_channel for booking in activity.bookings),
         *(lead.source_channel for lead in activity.leads),
@@ -111,12 +69,36 @@ def summarize_contact(
         *(booking.created_at for booking in activity.bookings),
         *(lead.created_at for lead in activity.leads),
     ]
-    if contact.erased_at is not None:
-        moments.append(contact.erased_at)
+    for moment in (contact.last_seen_at, contact.erased_at):
+        if moment is not None:
+            moments.append(moment)
 
+    return build_view(
+        contact,
+        channels=channels,
+        counts=(
+            ContactConversationCount(len(activity.conversations)),
+            ContactBookingCount(len(activity.bookings)),
+            ContactLeadCount(len(activity.leads)),
+        ),
+        last_activity_at=max(moments),
+    )
+
+
+def build_view(
+    contact: ContactDocument,
+    channels: set[ChannelKind],
+    counts: tuple[ContactConversationCount, ContactBookingCount, ContactLeadCount],
+    last_activity_at: Microseconds,
+) -> ContactSummaryView:
     phone_number: E164PhoneNumber | None = (
         contact.verified_phone_number or contact.phone_number
     )
+    all_channels: set[ChannelKind] = {
+        identity.channel
+        for identity in contact.channel_identities
+        if identity.channel is not ChannelKind.OWNER_TEST
+    } | {channel for channel in channels if channel is not ChannelKind.OWNER_TEST}
     return ContactSummaryView(
         id=contact.id,
         name=contact.name,
@@ -125,12 +107,12 @@ def summarize_contact(
             contact.verified_phone_number is not None
         ),
         language=contact.language,
-        channels=sorted(channels, key=lambda channel: channel.value),
-        conversation_count=ContactConversationCount(len(activity.conversations)),
-        booking_count=ContactBookingCount(len(activity.bookings)),
-        lead_count=ContactLeadCount(len(activity.leads)),
+        channels=sorted(all_channels, key=lambda channel: channel.value),
+        conversation_count=counts[0],
+        booking_count=counts[1],
+        lead_count=counts[2],
         first_seen_at=contact.created_at,
-        last_activity_at=max(moments),
+        last_activity_at=last_activity_at,
         erased_at=contact.erased_at,
         opted_out_channels=list(contact.opted_out_channels),
     )

@@ -24,6 +24,7 @@ from app.schemas.exceptions.application_errors import ConflictError, NotFoundErr
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.shared.contact_activity import record_contact_seen
 from app.utilities.channels.caller_reachability import list_reachable_identities
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.voice_service import find_voice_refusal
@@ -204,7 +205,7 @@ class OpenVoiceConversationUseCase(
             contact.updated_at = now
             self._contact_repo.save(contact)
 
-        return contact
+        return record_contact_seen(self._contact_repo, contact, now)
 
     def _require_voice_service(self, business: BusinessDocument) -> None:
         published_version: AssistantVersionDocument | None = (

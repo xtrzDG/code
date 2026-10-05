@@ -218,8 +218,9 @@ class KnowledgeItemList(ImmutableDTO):
 
 class KnowledgeItemPage(ImmutableDTO):
     """
-    One page of the knowledge base, newest first (by creation time, ties by
-    id); `next_cursor` asks for the next page and is None on the last one.
+    One page of the knowledge base, the last changed first (by the time of
+    the latest change, ties in the order the items were written);
+    `next_cursor` asks for the next page and is None on the last one.
     """
 
     items: list[KnowledgeItemDetails] = Field(

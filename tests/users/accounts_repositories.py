@@ -17,6 +17,7 @@ from app.repositories.compliance_repositories import (
     AuditLogRepository,
     DpaAcceptanceRepository,
 )
+from app.repositories.contact_activity_repository import ContactActivityRepository
 from app.repositories.conversation_repositories import (
     ContactRepository,
     ConversationRepository,
@@ -119,11 +120,10 @@ class AccountsRepositories:
         self.contact_repo = ContactRepository(
             InMemoryDocumentCollectionAdapter[ContactDocument](ContactDocument)
         )
-        self.conversation_repo = ConversationRepository(
-            InMemoryDocumentCollectionAdapter[ConversationDocument](
-                ConversationDocument
-            )
+        conversations = InMemoryDocumentCollectionAdapter[ConversationDocument](
+            ConversationDocument
         )
+        self.conversation_repo = ConversationRepository(conversations)
         self.message_repo = MessageRepository(
             InMemoryDocumentCollectionAdapter[MessageDocument](MessageDocument)
         )
@@ -133,11 +133,12 @@ class AccountsRepositories:
         self.call_repo = CallRepository(
             InMemoryDocumentCollectionAdapter[CallDocument](CallDocument)
         )
-        self.booking_repo = BookingRepository(
-            InMemoryDocumentCollectionAdapter[BookingDocument](BookingDocument)
-        )
-        self.lead_repo = LeadRepository(
-            InMemoryDocumentCollectionAdapter[LeadDocument](LeadDocument)
+        bookings = InMemoryDocumentCollectionAdapter[BookingDocument](BookingDocument)
+        self.booking_repo = BookingRepository(bookings)
+        leads = InMemoryDocumentCollectionAdapter[LeadDocument](LeadDocument)
+        self.lead_repo = LeadRepository(leads)
+        self.contact_activity_repo = ContactActivityRepository(
+            conversations, bookings, leads
         )
         self.handoff_repo = HandoffRepository(
             InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)

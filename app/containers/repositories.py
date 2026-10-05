@@ -53,6 +53,7 @@ from app.repositories.compliance_repositories import (
     AuditLogRepository,
     DpaAcceptanceRepository,
 )
+from app.repositories.contact_activity_repository import ContactActivityRepository
 from app.repositories.conversation_repositories import (
     ContactRepository,
     ConversationRepository,
@@ -145,6 +146,12 @@ class RepositoriesContainer(
     contact_repo: Singleton[ContactRepository] = Singleton(
         ContactRepository,
         collection=collections.contact_collection,
+    )
+    contact_activity_repo: Singleton[ContactActivityRepository] = Singleton(
+        ContactActivityRepository,
+        conversation_collection=collections.conversation_collection,
+        booking_collection=collections.booking_collection,
+        lead_collection=collections.lead_collection,
     )
     conversation_repo: Singleton[ConversationRepository] = Singleton(
         ConversationRepository,

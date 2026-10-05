@@ -7,6 +7,7 @@ script, and the phone by its digits in any format, also national ones
 
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.typings.contacts.constrained_strings import ContactSearchText
+from app.schemas.typings.contacts.strings import ContactName, FoldedContactName
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.utilities.conversations.conversation_search import (
     digits_of,
@@ -49,3 +50,13 @@ def matches_contact_search(
 
     digits: str = digits_of(text)
     return any(phone_digits_match(digits, str(phone)) for phone in phones)
+
+
+def fold_contact_name(name: ContactName | str | None) -> FoldedContactName | None:
+    """The name as the search compares it (None for no name or only blanks)."""
+
+    if name is None:
+        return None
+
+    folded: str = normalize_search_text(str(name))
+    return FoldedContactName(folded) if folded else None

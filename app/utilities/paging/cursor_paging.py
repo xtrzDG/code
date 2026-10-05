@@ -1,16 +1,15 @@
 """
-Keyset paging over items sorted newest first.
+The page cursor of keyset paging over items sorted newest first.
 
 A cursor encodes the sort key (a timestamp) and the id of the last item of
 a page, so the next page starts right after it even when new items arrive
-in between. Ties on the sort key are broken by the id.
+in between. The pages themselves are read by the database
+(`keyset_paging`); no list is paged in memory any more.
 """
 
 import base64
 import binascii
-from collections.abc import Callable, Sequence
 
-from app.schemas.dto.paging import PageRequest
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.platform.constrained_strings import PageCursor
 
@@ -43,32 +42,3 @@ def decode_page_cursor(cursor: PageCursor) -> tuple[int, str]:
         return int(raw_key), item_id
     except ValueError as error:
         raise ValidationFailedError(INVALID_CURSOR_MESSAGE) from error
-
-
-def take_page[Item](
-    items: Sequence[Item],
-    page: PageRequest,
-    sort_key: Callable[[Item], int],
-    item_id: Callable[[Item], str],
-) -> tuple[list[Item], PageCursor | None]:
-    """
-    One page of `items` (in any order) sorted by sort key, then id, both
-    descending, and the cursor of the next page (None on the last page).
-    """
-
-    ordered: list[Item] = sorted(
-        items, key=lambda item: (sort_key(item), item_id(item)), reverse=True
-    )
-    if page.cursor is not None:
-        position: tuple[int, str] = decode_page_cursor(page.cursor)
-        ordered = [
-            item for item in ordered if (sort_key(item), item_id(item)) < position
-        ]
-
-    size: int = int(page.size)
-    selected: list[Item] = ordered[:size]
-    if len(ordered) <= size or not selected:
-        return selected, None
-
-    last: Item = selected[-1]
-    return selected, encode_page_cursor(sort_key(last), item_id(last))
