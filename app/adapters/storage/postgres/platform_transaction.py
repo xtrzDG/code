@@ -7,6 +7,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 import psycopg
+from psycopg import pq
 
 from app.adapters.storage.postgres.postgres_session_settings import (
     apply_storage_scope,
@@ -50,15 +51,21 @@ def platform_statement(
     without a transaction block: on the pool's autocommit connections the
     statement is a transaction of its own that commits as it ends, so its
     row locks last only while it runs. Inside a pinned connection's open
-    transaction it joins that transaction. Errors translate as in
-    `platform_transaction`.
+    transaction (a unit of work) it is a savepoint of that transaction, so
+    its error rolls back only itself, as with `platform_transaction`.
+    Errors translate as in `platform_transaction`.
     """
 
     with (
         storage_errors_translated(collection_name),
         connection_pool.connection() as connection,
     ):
-        yield connection
+        if connection.info.transaction_status is pq.TransactionStatus.IDLE:
+            yield connection
+            return
+
+        with connection.transaction():
+            yield connection
 
 
 @contextmanager

@@ -47,7 +47,9 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
     runs: concurrent requests of any process wait for the final counts and
     never both take the last place, and a refused request counts nowhere,
     yet no request waits for another one's round trip to the application
-    (every widget poll counts the same platform row). The table is
+    (every widget poll counts the same platform row). Inside a unit of
+    work the statement is a savepoint of its transaction
+    (`platform_statement`), so its error rolls back only itself. The table is
     UNLOGGED: counters are short-lived and not worth the write-ahead log (a
     crash empties them, which only resets the limits).
     """

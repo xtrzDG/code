@@ -1,7 +1,8 @@
 """
-A self-scoped platform statement runs on its own (autocommit) and its
-database failures become application errors like a platform transaction's;
-a programming error stays what it is.
+A self-scoped platform statement runs on its own (autocommit), or as a
+savepoint inside an open transaction (its error rolls back only itself);
+its database failures become application errors like a platform
+transaction's, and a programming error stays what it is.
 """
 
 import psycopg
@@ -32,6 +33,27 @@ def test_a_statement_commits_on_its_own(database_url: DatabaseUrl) -> None:
     # No transaction block was opened around it: it was its own transaction.
     assert in_transaction == (True,)
     assert status is psycopg.pq.TransactionStatus.IDLE
+
+
+def test_inside_a_transaction_its_error_rolls_back_only_itself(
+    database_url: DatabaseUrl,
+) -> None:
+    pool = PostgresConnectionPoolClient(database_url, max_size=1)
+    try:
+        with pool.pinned_connection() as connection, pool.transaction():
+            connection.execute("create temporary table kept (value integer)")
+            connection.execute("insert into kept values (1)")
+            with (
+                pytest.raises(ExternalServiceError),
+                platform_statement(pool, "nowhere") as inner,
+            ):
+                inner.execute("select * from workshop.nowhere")
+            # The enclosing transaction goes on.
+            rows = connection.execute("select value from kept").fetchall()
+    finally:
+        pool.close()
+
+    assert rows == [(1,)]
 
 
 def test_a_missing_table_is_an_application_error(database_url: DatabaseUrl) -> None:
