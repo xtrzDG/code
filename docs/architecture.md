@@ -1052,6 +1052,8 @@ WhatsApp, где продолжится ответ клиента; при отк
   Миграции: `python -m app.gateways.cli.migrate` — шлюз командной строки, он
   запускает use case применения миграций (`app/gateways/cli/`).
   Фоновый воркер: `app/worker_main.py`, задачи перечислены в
+  `app/containers/periodic_jobs.py` (периодические) и
+  `app/containers/queued_jobs.py` (из очереди), воркер собирает
   `app/containers/gateways.py`. Входящие (`process_inbound_message`,
   `process_platform_bot_update`, `process_post_call`) идут в полосе `inbound`,
   доставка исходящих (`deliver_outbound`) — в полосе `outbound`. В разработке

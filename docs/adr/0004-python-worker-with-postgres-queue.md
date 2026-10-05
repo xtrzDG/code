@@ -16,7 +16,8 @@ typed primitives and the tenant isolation that the API already has.
 - Background work runs in a Python worker (`app/worker_main.py`,
   `app/gateways/worker/`) that uses the same containers and use cases as
   the API.
-- Periodic jobs are listed in `app/containers/gateways.py`; one-off work
+- Periodic jobs are listed in `app/containers/periodic_jobs.py` (the
+  handlers of queued jobs in `app/containers/queued_jobs.py`); one-off work
   is queued as documents in Postgres (`QueuedJobDocument`) with attempts,
   backoff and an error text, so a crash or deploy loses no job.
 - Jobs that belong to a business run inside that business's storage scope
