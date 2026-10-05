@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — wave 13 together: day 0, one story for updates, the landing page, trust fixes
+
+Spec: `f6fb07c0d144fbd5`
+
+No change of its own: the API description with the four entries below
+merged together (periods since launch, the free trial and topics in the
+cabinet's language; owner checks pending, drafts, named failures and
+"Check now"; live landing-page demos, legal pages and honest prices;
+one-time export links, DPA versions and the quality sampling switch). Each
+of those entries names the description of its own change alone.
+
 ## 2026-10-05 — day 0: periods since launch, the free trial, topics per language
 
 Spec: `b31a87dcb4422f75`
