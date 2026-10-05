@@ -21,6 +21,7 @@ from tests.bookings.manage_journey import (
     BOOKINGS_PATH,
     BookedTable,
     book_a_table,
+    refusal_codes,
     widget_messages_after,
 )
 from tests.e2e.harness import Workshop
@@ -32,11 +33,6 @@ PRIVATE_HEADERS: dict[str, str] = {
     "referrer-policy": "no-referrer",
 }
 GUEST_PHONE: str = "+995555123456"
-
-
-def refusal_codes(response: object) -> list[str]:
-    body: JsonObject = response.json()  # type: ignore[attr-defined]
-    return [str(reason["code"]) for reason in body["reasons"]]
 
 
 def test_the_widget_shows_the_confirmation_with_its_link(workshop: Workshop) -> None:

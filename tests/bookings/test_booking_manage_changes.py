@@ -17,6 +17,7 @@ from tests.bookings.manage_journey import (
     BOOKINGS_PATH,
     book_a_table,
     manage_token,
+    refusal_codes,
     system_texts,
     widget_messages_after,
 )
@@ -26,11 +27,6 @@ from tests.e2e.journeys import JsonObject
 NEXT_DAY: str = "2026-10-07"
 # From 2026-10-05 08:00 UTC to 15:30 UTC on the 6th: the visit has begun.
 UNTIL_THE_VISIT_STARTED: int = (24 + 7) * 3600 + 30 * 60
-
-
-def reasons(response: object) -> list[str]:
-    body: JsonObject = response.json()  # type: ignore[attr-defined]
-    return [str(reason["code"]) for reason in body["reasons"]]
 
 
 def test_a_move_to_a_free_time_issues_a_new_link(workshop: Workshop) -> None:
@@ -62,7 +58,7 @@ def test_a_move_to_a_free_time_issues_a_new_link(workshop: Workshop) -> None:
     assert view["token"] != booked.token
     stale = workshop.client.get(booked.page)
     assert stale.status_code == 404
-    assert reasons(stale) == ["booking_changed"]
+    assert refusal_codes(stale) == ["booking_changed"]
     assert workshop.client.get(f"{BOOKINGS_PATH}/{view['token']}").status_code == 200
     # The chat gets the new confirmation with the new link.
     polled = widget_messages_after(workshop, booked.restaurant, booked.cursor)
@@ -80,7 +76,7 @@ def test_a_time_outside_the_hours_is_refused(workshop: Workshop) -> None:
     missing = workshop.client.post(f"{booked.page}/reschedule", json={})
 
     assert closed.status_code == 422, closed.text
-    assert reasons(closed) == ["closed"]
+    assert refusal_codes(closed) == ["closed"]
     assert missing.status_code == 422, missing.text
     still: JsonObject = workshop.client.get(booked.page).json()
     assert (still["date"], still["time"]) == ("2026-10-06", "19:00")
@@ -106,7 +102,7 @@ def test_a_guest_cancels_once_and_the_page_says_so(workshop: Workshop) -> None:
         f"{booked.page}/reschedule", json={"date": NEXT_DAY, "time": "20:00"}
     )
     assert move.status_code == 409
-    assert reasons(move) == ["not_active"]
+    assert refusal_codes(move) == ["not_active"]
     calendar = workshop.client.get(f"{booked.page}/calendar.ics")
     assert "STATUS:CANCELLED" in calendar.text
     # Staff see the cancellation in the cabinet.
@@ -129,7 +125,7 @@ def test_a_started_booking_cannot_change(workshop: Workshop) -> None:
         False,
     )
     assert cancelled.status_code == 409
-    assert reasons(cancelled) == ["already_started"]
+    assert refusal_codes(cancelled) == ["already_started"]
 
 
 def test_two_moves_through_one_link_cannot_both_win(workshop: Workshop) -> None:

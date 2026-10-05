@@ -6,6 +6,8 @@ restaurant and gets the written confirmation with its manage link.
 import re
 from dataclasses import dataclass
 
+from httpx2 import Response
+
 from tests.bookings.conftest import CABINET_BASE_URL
 from tests.e2e.harness import Workshop
 from tests.e2e.journeys import (
@@ -50,6 +52,14 @@ def widget_messages_after(
 
 def system_texts(polled: JsonObject) -> list[str]:
     return [str(item["text"]) for item in polled["items"] if item["author"] == "system"]
+
+
+def refusal_codes(response: Response) -> list[str]:
+    """The `reasons[].code` of an error answer."""
+
+    body: JsonObject = response.json()
+    listed: list[JsonObject] = body["reasons"]
+    return [str(reason["code"]) for reason in listed]
 
 
 def manage_token(text: str) -> str:
