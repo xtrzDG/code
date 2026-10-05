@@ -40,7 +40,7 @@ export function approximateLabel(money: Money, locale: string): string {
 }
 
 /** The billed price: the price book's local amount when it is not a conversion, else the plan's own. */
-function billed(local: QuotedMoney | null | undefined, plan: QuotedMoney): QuotedMoney {
+export function billed(local: QuotedMoney | null | undefined, plan: QuotedMoney): QuotedMoney {
   return local && !local.is_estimated ? local : plan;
 }
 

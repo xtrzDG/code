@@ -4,7 +4,7 @@ import type { MessageKey, Translator } from "@/i18n/translate";
 
 import { Section } from "./Section";
 
-const QUESTIONS: [MessageKey, MessageKey][] = [
+export const FAQ_QUESTIONS: [MessageKey, MessageKey][] = [
   ["landing.faq.aiQuestion", "landing.faq.aiAnswer"],
   ["landing.faq.unknownQuestion", "landing.faq.unknownAnswer"],
   ["landing.faq.numberQuestion", "landing.faq.numberAnswer"],
@@ -19,7 +19,7 @@ export function Faq({ t }: { t: Translator["t"] }) {
     <Section id="faq" title={t("landing.faq.title")}>
       {/* landing-faq: answers open smoothly where the browser can animate to auto height. */}
       <Reveal depth={1} amount={0.15} className="landing-faq divide-y divide-line rounded-2xl border border-line bg-surface">
-        {QUESTIONS.map(([question, answer]) => (
+        {FAQ_QUESTIONS.map(([question, answer]) => (
           <details key={question} className="group px-5 sm:px-6">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-base font-medium text-ink [&::-webkit-details-marker]:hidden">
               {t(question)}

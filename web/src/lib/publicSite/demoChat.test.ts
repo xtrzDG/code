@@ -41,7 +41,7 @@ describe("demo chat", () => {
       "request",
       "handoff",
     ]);
-    expect(replyOutcomes({})).toEqual([]);
+    expect(replyOutcomes({ is_booking_made: false, is_request_made: false, is_handoff_made: false })).toEqual([]);
   });
 
   it("sends only real messages within the limit", () => {

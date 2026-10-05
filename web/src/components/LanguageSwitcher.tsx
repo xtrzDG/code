@@ -7,6 +7,7 @@ import { readApiError } from "@/api/errors";
 import { LOCALES, LOCALE_NATIVE_NAMES, isLocale, type Locale } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { switchPathLocale } from "@/lib/publicSite/paths";
 
 import { IconChevronDown, IconGlobe } from "./icons";
 import { useToast } from "./ui/Toast";
@@ -27,7 +28,8 @@ export async function changeInterfaceLanguage(locale: Locale): Promise<void> {
  * Interface language picker: a globe, the current language by its own name
  * (ქართული / Русский / English) and a native select, so it works with the
  * keyboard, screen readers and phone pickers. The page stays where it is and
- * re-renders in the new language.
+ * re-renders in the new language; a public page that has its language in
+ * its address (/ru/for/hotel) opens in the new one (/ka/for/hotel).
  */
 export function LanguageSwitcher({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { t, locale } = useI18n();
@@ -60,7 +62,13 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
             startTransition(async () => {
               try {
                 await changeInterfaceLanguage(next);
-                router.refresh();
+                const { pathname, search, hash } = window.location;
+                const localized = switchPathLocale(pathname, next);
+                if (localized === pathname) {
+                  router.refresh();
+                } else {
+                  router.push(`${localized}${search}${hash}`);
+                }
               } catch (error) {
                 toast.error(error);
               }
