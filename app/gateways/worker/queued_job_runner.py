@@ -184,6 +184,9 @@ class QueuedJobRunner:
         job.run_at = Microseconds(now + delay_seconds * MICROSECONDS_PER_SECOND)
 
     def _settle(self, job: QueuedJobDocument, lease_token: JobLeaseToken) -> None:
+        # Released first: a heartbeat between the settle and the release
+        # would find the job no longer running and report a lost lease.
+        self._held_leases.release_job(job.id)
         job.lease_until = None
         job.lease_token = None
         job.updated_at = self._wall_clock.now_unix()

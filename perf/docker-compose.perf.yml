@@ -33,18 +33,26 @@ services:
     environment:
       <<: *load-environment
       FORWARDED_ALLOW_IPS: "*"
-      # Four API processes of 12 connections each, as production runs them
-      # (render.yaml: two instances of two uvicorn workers, DB_POOL_SIZE 12):
-      # with two, 1000 polling visitors queued in Python while Postgres
-      # idled (docs/operations/capacity.md, "Widget polls and the shared
-      # rate-limit counters"). 4 x (12 + 1) + the worker's stay well under
-      # Postgres's 100 connections.
+      # Four API processes with production's pool and threads (render.yaml,
+      # workshop-api: DB_POOL_SIZE 12, THREADPOOL_SIZE 40). Production runs
+      # two instances of one process each, on half a CPU each; here four
+      # share the runner's CPUs with Postgres, k6 and the worker
+      # (docs/operations/capacity.md, "Widget polls: less Python per poll").
       WEB_CONCURRENCY: "4"
       DB_POOL_SIZE: "12"
+      THREADPOOL_SIZE: "40"
     extra_hosts: *offline-providers
 
   worker:
-    environment: *load-environment
+    environment:
+      <<: *load-environment
+      # Production's worker (render.yaml, workshop-worker): one instance,
+      # 20 threads, 16 connections, 12 model calls at once and the default
+      # lanes (inbound=8). Connections: 4 x (12 + 1) API + (16 + 1) worker
+      # + 1 migrate = 70 of Postgres's 100.
+      THREADPOOL_SIZE: "20"
+      DB_POOL_SIZE: "16"
+      LLM_MAX_CONCURRENCY: "12"
     extra_hosts: *offline-providers
 
   k6:

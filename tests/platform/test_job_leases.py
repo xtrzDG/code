@@ -1,14 +1,20 @@
 """Leases of queued jobs: heartbeats, lost leases and workers that die."""
 
+import logging
+
+import pytest
+
 from app.gateways.worker.held_leases import HeldLeases
 from app.gateways.worker.job_failure_reporter import JobFailureReporter
 from app.gateways.worker.lease_heartbeat import LeaseHeartbeat
 from app.gateways.worker.queued_job_runner import QueuedJobRunner
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
+from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.typings.platform.constrained_integers import (
     JobClaimLimit,
     JobLeaseSeconds,
 )
+from app.schemas.typings.platform.constrained_strings import JobLeaseToken
 from app.schemas.typings.platform.strings import JobPayloadJson
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.platform.worker_fakes import (
@@ -104,6 +110,33 @@ def test_the_heartbeat_keeps_a_long_job_leased() -> None:
     done = stores.job_repo.get(job_id)
     assert done is not None and done.status is QueuedJobStatus.DONE
     assert done.lease_until is None and done.lease_token is None
+
+
+def test_a_heartbeat_while_a_job_is_settled_reports_no_lost_lease(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    clock = ControlledClock()
+    stores = build_job_stores()
+    operator = FlakyQueuedOperator(failures_before_success=0)
+    runner, held_leases, heartbeat = build_runner(clock, stores, operator)
+    build_worker(clock, [], stores=stores).queue.enqueue(
+        RUN_AUTOTESTS, JobPayloadJson("{}"), None
+    )
+    claimed, lease_token = runner.claim(JobLane.DEFAULT, JobClaimLimit(1))
+    settle = stores.job_repo.settle
+
+    def settle_then_beat(job: QueuedJobDocument, token: JobLeaseToken) -> bool:
+        settled = settle(job, token)
+        heartbeat.beat()  # the heartbeat thread's turn comes right now
+        return settled
+
+    monkeypatch.setattr(stores.job_repo, "settle", settle_then_beat)
+    with caplog.at_level(logging.WARNING):
+        outcome = runner.run(claimed[0], lease_token)
+
+    assert (outcome.has_run, outcome.has_failed) == (True, False)
+    assert held_leases.jobs() == []
+    assert "lost its lease" not in caplog.text
 
 
 def test_a_job_that_outlived_its_lease_leaves_the_result_to_the_new_holder() -> None:
