@@ -267,18 +267,26 @@ pools), pick one route and update the Blueprint and the test together:
 - A page's related documents come in one statement: contacts by id
   (`get_many`), message counts (`count_by`) and each conversation's
   newest message (`latest_by`, one index probe per conversation).
-- `migrations/1042_list_pages_and_aggregates.sql` adds the sort and group
-  columns with indexes that start with `business_id`;
+- `migrations/1042_list_pages_and_aggregates.sql` and
+  `1122_online_lookup_columns.sql` add the sort and group columns with
+  indexes that start with `business_id`;
   `tests/storage/test_list_query_plans.py` keeps every list on its index.
+- Periodic jobs ask by indexed predicates or walk the businesses in keyset
+  batches of 200 (`walk_businesses`); no repository reads a whole table.
 
 ## Known limits
 
-- The admin client list summarizes each business with a few indexed
-  counts: fine for hundreds of businesses, to be replaced by stored
-  per-business figures before thousands.
-- The contacts list and the knowledge list still page in memory (a
-  business's contacts are read for a page); contacts grow with customers
-  and need a stored last-activity time to page in the database.
+- The admin client list reads stored standings (one keyset page, database
+  counts); the `refresh_client_standings` job behind it summarizes every
+  business each 15 minutes (a few indexed counts each, in batches of 200)
+  and ranks them with only their sort keys in memory: fine for thousands
+  of businesses, a run of minutes at tens of thousands. A search by part
+  of a name walks at most 2,000 standings per request.
+- The admin metrics page still reads every business (walked in batches
+  of 200, but all held for the funnel): fine for thousands.
+- The customer list and the knowledge list page in the database
+  (migration 1122); the customer search finds exact names, phones and ids
+  through indexes and walks at most 500 customers for a part of a name.
 - A widget poll reads the messages of the visitor's own conversations:
   bounded by one visitor's chat, not by the business.
 - Seeding the full dataset took 21 minutes locally (the demo part of each
