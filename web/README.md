@@ -256,7 +256,8 @@ web/
                                slots (whole-day mode), details, edit, move, cancel; party sizes in the
                                niche's words (guests, clients, participants: lib/partyNoun.ts)
         assistant/             layout.tsx: the Assistant frame (live or not, "Apply changes", tabs);
-                               page.tsx: the test chat ("Try it", `?version=…`)
+                               page.tsx: the test chat ("Try it": "What customers get now" or "With
+                               your changes"; `?version=…` from History adds that update)
           knowledge/           items (layout.tsx: pill tabs; server-paged, filtered by the API; a
                                service's or package's length, break and who performs it, a room
                                type's rooms and seasonal nightly rates: lib/offers.ts,
@@ -270,10 +271,13 @@ web/
           channels/            chat channels (with the platform's last error; WhatsApp's template for
                                staff replies), website chat code and look, call forwarding, Google
                                Calendar (state, last sync), staff Telegram link
-          versions/            Advanced: versions, versions/[versionId]/ (go-live checklist, autotests
-                               with live progress, publish, rollback)
+          versions/            Advanced → History: every update, versions/[versionId]/ (go-live checklist,
+                               autotests with live progress, the owner's failed checks named by their
+                               question, publish, rollback; publishing without checks is a platform
+                               admin's tool behind the typed business name)
           checks/              Advanced: "My checks" (the owner's questions every "Apply changes"
-                               asks; dialogs and hooks in components/teaching, rules in lib/teaching*)
+                               asks, "Check now" against what customers get now, `#check-…` lands on
+                               one; dialogs and hooks in components/teaching, rules in lib/teaching*)
         settings/              layout.tsx: the Settings frame and tabs; page.tsx: business (old
                                #team-style links move to their page), team/, notifications/,
                                quick-replies/ (owners: the replies staff insert with "/", a text per
@@ -365,8 +369,10 @@ web/
       assistant/               "Apply changes" in the daily cabinet: ApplyChangesProvider (in
                                BusinessShell, owners), PendingChangesBanner over every page ("2 changes
                                are not with your customers yet · Review and apply"), ApplyChangesSheet
-                               (the changes in the owner's words, the launch's stages, why it stopped
-                               with the page that fixes it and the failed conversation), usePendingChanges
+                               (the changes in the owner's words, the owner's checks not asked yet,
+                               drafts with "Discard", the launch's stages, why it stopped with the page
+                               that fixes it; a failed check of the owner's named by its question with
+                               "Fix the answer" and "Open the check": OwnerCheckFailure), usePendingChanges
       security/                two-factor sign-in: AuthenticatorSetup, TotpQrCode (drawn in the browser),
                                RecoveryCodesPanel, OneTimeCodeField, StepUpDialog (its StepUpForm loads
                                only when a confirmation is asked for)
@@ -490,7 +496,7 @@ section tabs, page titles and the e2e suite read it):
 | Inbox | The team's one list: views Needs a person, Requests, Mine, Unassigned and All with live counts; a search and the history filters (period, status, test conversations) look through All; who handles each conversation, its notes, what waits. See [Inbox](#inbox) |
 | Inbox → a conversation | Made for a phone: the transcript under a folded header (customer, channel, who handles it; the rest in Details), what waits above it (the handoff's reason and urgency, open requests with their status), a sticky reply box with Resolve, Call and Book and quick replies after "/"; the assign menu; notes and details in a side panel (a column of their own from 1536 px, a sheet below). Calls with their summary and recording (downloaded once and audited when "Play recording" is pressed), rating, linked bookings, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels), booking for the customer with the confirmation prefilled. Model, tokens, cost and tool calls stay behind "Technical details" (open by default for platform admins) |
 | Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text; every status change and cancellation has Undo for 5 seconds (the API takes it back within 10 minutes). Phones open on **Today** (`?view=all` is the list): today's arrivals by time with a "now" line and large Arrived / No-show buttons that wait for the start time |
-| Assistant → Try it | Test chat with tool calls (`?version=…` talks to a chosen version); "Apply changes" opens the sheet with what customers do not get yet |
+| Assistant → Try it | Test chat with tool calls, talking to "What customers get now" or "With your changes" (an update opened from History adds that one); "Apply changes" opens the sheet with what customers do not get yet, the owner's new checks and drafts included |
 | Every page (owners) | The banner "N changes are not with your customers yet · Review and apply" while the profile, knowledge, hours, prices or booking rules differ from what customers get (`GET …/assistant/pending-changes`); its sheet lists them in the owner's words and applies them: the tunnel's three stages over `POST`/`GET …/assistant/apply` and the live event stream, a quick check of what changed, then the toast "Your assistant now knows: …"; a stop says why in plain words with the page that fixes it and the conversation that failed (`versions/{id}?checks=problems`) |
 | Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
 | Assistant → Business profile | Six cards (Business, Place, Offer, Hours and bookings, People, Rules) with what each holds and what is left to add; each opens the tunnel's screen in its edit mode: no step counter, no Save, every change saved as the owner types ("Saving…", "Saved") and counted by the banner over the page. The offer is a compact table (name, kind, price, minutes; Enter adds a line, lines pasted from a spreadsheet, "From your website" and "From a menu photo or file" beside it); the niche's usual hours, booking rules and ready answers are only offered until the owner takes or changes them |
