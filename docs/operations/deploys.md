@@ -177,7 +177,10 @@ workshop backfill-lookup                           # every new column, batches o
 Until then those lists show only rows written since the migration (by
 either release: the trigger fills them on every write), and a customer's
 counts leave out older bookings and leads; nothing is lost, and running
-the commands again is harmless. The old release, during the overlap,
+the commands again is harmless. A version 2 customer's latest activity
+starts as the moment they first wrote (the row knows no better), so older
+customers stand in the list by that until their next message, call or
+booking. The old release, during the overlap,
 still writes version 2 contacts, which clears their two new columns until
 `migrate-documents` (run it after the overlap ended) or the customer's
 next message. The admin client list of the new release reads the
