@@ -22,7 +22,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { secondFactorProblem } from "@/lib/security/secondFactor";
 
 export function AuthenticatorCard({
@@ -34,7 +34,8 @@ export function AuthenticatorCard({
   account: string;
   onChanged: () => Promise<void>;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
+  const when = useViewerFormat();
   const toast = useToast();
   const [enrollment, setEnrollment] = useState<TotpEnrollmentView | null>(null);
   const [isStarting, setStarting] = useState(false);
@@ -100,14 +101,14 @@ export function AuthenticatorCard({
   if (status === "active" && security.totp_confirmed_at) {
     details.push(
       t("security.app.since", {
-        date: formatDate(security.totp_confirmed_at, { locale }),
+        date: when.date(security.totp_confirmed_at),
       }),
     );
   }
   if (status === "active" && security.totp_last_used_at) {
     details.push(
       t("security.app.lastUsed", {
-        date: formatDateTime(security.totp_last_used_at, { locale }),
+        date: when.dateTime(security.totp_last_used_at),
       }),
     );
   }

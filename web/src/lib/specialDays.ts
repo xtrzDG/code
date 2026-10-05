@@ -10,6 +10,7 @@ import type { OpeningInterval, RequestBody, Schema, Weekday } from "@/api/types"
 import type { MessageKey } from "@/i18n/translate";
 
 import { formatMinutesOfDay, parseTimeOfDay } from "./format";
+import { calendarParts } from "./intl/calendarFields";
 import { dateTimeFormat } from "./intl/formatters";
 
 export type ScheduleExceptionView = Schema<"ScheduleExceptionView">;
@@ -37,14 +38,8 @@ function utcDate(localDate: string): Date {
 
 /** Today's date in a time zone as "YYYY-MM-DD". */
 export function todayInTimeZone(now: Date, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
+  const parts = calendarParts(now, timeZone, { year: "numeric", month: "2-digit", day: "2-digit" }, "en-CA");
+  return `${parts.year ?? ""}-${parts.month ?? ""}-${parts.day ?? ""}`;
 }
 
 /** ISO weekday (Monday = 1) of a local date. */

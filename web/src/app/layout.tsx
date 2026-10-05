@@ -4,11 +4,13 @@ import { MotionProvider } from "@/components/motion/MotionProvider";
 import { StepUpDialog } from "@/components/security/StepUpDialog";
 import { WebVitalsReporter } from "@/components/telemetry/WebVitalsReporter";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ViewerTimeZoneProvider } from "@/components/time/ViewerTimeZone";
 import { ToastProvider } from "@/components/ui/Toast";
 import { I18nProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";
 import { themeColors } from "@/lib/theme";
 import { getTheme } from "@/server/theme";
+import { getViewerTimeZone } from "@/server/viewerTimeZone";
 
 import "./globals.css";
 
@@ -31,7 +33,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [{ locale, messages }, theme] = await Promise.all([getI18n(), getTheme()]);
+  const [{ locale, messages }, theme, viewerTimeZone] = await Promise.all([getI18n(), getTheme(), getViewerTimeZone()]);
   return (
     // data-theme is rendered on the server, so the first paint already has the right colours.
     <html lang={locale} data-theme={theme} className="h-full">
@@ -39,12 +41,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <WebVitalsReporter />
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider initialTheme={theme}>
-            <MotionProvider>
-              <ToastProvider>
-                {children}
-                <StepUpDialog />
-              </ToastProvider>
-            </MotionProvider>
+            <ViewerTimeZoneProvider initialZone={viewerTimeZone}>
+              <MotionProvider>
+                <ToastProvider>
+                  {children}
+                  <StepUpDialog />
+                </ToastProvider>
+              </MotionProvider>
+            </ViewerTimeZoneProvider>
           </ThemeProvider>
         </I18nProvider>
       </body>

@@ -39,6 +39,31 @@ const eslintConfig = defineConfig([
     rules: { "react-hooks/immutability": "off" },
   },
   {
+    // Dates and times in a UI language come from lib/intl (Georgian in every
+    // browser) through lib/format.ts with an explicit time zone: a format
+    // without one takes the zone of whatever runs it, so the server and the
+    // browser write different text and hydration fails (React #418).
+    files: ["src/**/*.{ts,tsx,mts}"],
+    ignores: ["src/lib/intl/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "NewExpression[callee.object.name='Intl'][callee.property.name='DateTimeFormat']",
+          message: "Use formatDateTime/formatDate/formatTime (lib/format) with a timeZone, or lib/intl/calendarFields.",
+        },
+        {
+          selector: "CallExpression[callee.object.name='Intl'][callee.property.name='DateTimeFormat']",
+          message: "Use formatDateTime/formatDate/formatTime (lib/format) with a timeZone, or lib/intl/calendarFields.",
+        },
+        {
+          selector: "CallExpression[callee.property.name=/^toLocale(Date|Time)?String$/]",
+          message: "toLocale*String formats in the zone and language of whatever runs it; use lib/format with a timeZone.",
+        },
+      ],
+    },
+  },
+  {
     // Playwright fixtures receive a `use` callback that is not React's `use`.
     files: ["e2e/**/*.ts"],
     rules: { "react-hooks/rules-of-hooks": "off" },

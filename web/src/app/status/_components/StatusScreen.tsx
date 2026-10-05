@@ -4,11 +4,10 @@ import Link from "next/link";
 
 import { usePlatformStatus } from "@/components/help/usePlatformStatus";
 import { IconAlert, IconCheckCircle, IconClock } from "@/components/icons";
-import { useIsClient } from "@/components/workspace/useIsClient";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Card, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { formatDateTime } from "@/lib/format";
 import type { PlatformStatus } from "@/lib/help/platformStatus";
 import { HOME_PATH } from "@/lib/navigation";
 
@@ -25,8 +24,8 @@ const OVERALL_FRAMES: Record<PlatformStatus["level"], string> = {
 
 /** The public status page; `initial` is what the server read (null: it could not reach the API). */
 export function StatusScreen({ initial }: { initial: PlatformStatus | null }) {
-  const { t, locale } = useI18n();
-  const isClient = useIsClient();
+  const { t } = useI18n();
+  const viewer = useViewerFormat();
   const query = usePlatformStatus(initial);
   const status = query.data;
 
@@ -61,9 +60,9 @@ export function StatusScreen({ initial }: { initial: PlatformStatus | null }) {
               <h2 id="status-overall" className="text-lg font-semibold text-ink" aria-live="polite">
                 {t(`platformStatus.overall.${status.level}`)}
               </h2>
-              {status.checked_at && isClient ? (
+              {status.checked_at ? (
                 <p className="text-sm text-ink-muted">
-                  {t("platformStatus.checkedAt", { time: formatDateTime(status.checked_at, { locale }) })}
+                  {t("platformStatus.checkedAt", { time: viewer.dateTime(status.checked_at) })}
                 </p>
               ) : null}
             </div>

@@ -12,10 +12,10 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
 import { IconMegaphone, IconX } from "@/components/icons";
+import { useViewerFormat } from "@/components/time/ViewerTimeZone";
 import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { formatDateTime } from "@/lib/format";
 import {
   ANNOUNCEMENT_TONES,
   bannerAnnouncements,
@@ -83,8 +83,9 @@ export function AnnouncementBanner() {
 }
 
 function AnnouncementRow({ announcement }: { announcement: Announcement }) {
-  const { t, locale } = useI18n();
-  const when = (micros: number) => formatDateTime(micros, { locale });
+  const { t } = useI18n();
+  const viewer = useViewerFormat();
+  const when = (micros: number) => viewer.dateTime(micros);
   const timing = announcement.is_scheduled
     ? t("platformStatus.starts", { time: when(announcement.starts_at) })
     : announcement.expected_end_at
