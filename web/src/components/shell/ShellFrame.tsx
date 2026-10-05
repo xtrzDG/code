@@ -8,12 +8,17 @@
  * the page's header folds into the top bar and its primary action floats
  * above the tab bar (PhoneChromeProvider, components/ui/PhoneChrome).
  * The page's "?" opens its help article in a drawer (components/help), and
- * the platform team's announcements show above every page.
+ * the platform team's announcements show above every page. Cmd/Ctrl+K (or
+ * the search button of the phone's bar) opens the command palette: the
+ * pages of the navigation and, in a business, its customers,
+ * conversations and bookings (components/CommandPalette).
  */
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
+import { CommandPaletteProvider } from "@/components/CommandPaletteProvider";
+import type { PaletteSearchScope } from "@/components/CommandPaletteSearch";
 import { AnnouncementBanner } from "@/components/help/AnnouncementBanner";
 import { HelpLink } from "@/components/help/HelpLink";
 import { HelpProvider } from "@/components/help/HelpProvider";
@@ -62,6 +67,7 @@ export function ShellFrame({
   isWide = false,
   ring,
   helpSlug = null,
+  searchScope = null,
   children,
 }: {
   items: readonly ShellNavItem[];
@@ -85,6 +91,8 @@ export function ShellFrame({
   ring?: (compact: boolean) => ReactNode;
   /** The help article of the page that is open (the "?" beside its title). */
   helpSlug?: string | null;
+  /** The business the palette searches (customers, conversations, bookings); null: pages only. */
+  searchScope?: PaletteSearchScope | null;
   children: ReactNode;
 }) {
   const { t } = useI18n();
@@ -101,6 +109,7 @@ export function ShellFrame({
 
   return (
     <HelpProvider>
+    <CommandPaletteProvider links={items.filter((item) => !item.secondary)} searchScope={searchScope}>
     <PageHelpProvider help={helpSlug ? <HelpLink slug={helpSlug} /> : null}>
     <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
     <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
@@ -179,6 +188,7 @@ export function ShellFrame({
     </div>
     </PhoneChromeProvider>
     </PageHelpProvider>
+    </CommandPaletteProvider>
     </HelpProvider>
   );
 }

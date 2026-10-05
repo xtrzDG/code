@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * The frame of /b/[businessId]/*. Once the assistant exists: five sections
- * (Overview, Inbox, Bookings, Assistant, Settings), the ones the
+ * The frame of /b/[businessId]/*. Once the assistant exists: six sections
+ * (Overview, Inbox, Bookings, Customers, Assistant, Settings), the ones the
  * viewer's role opens, with badges where something waits; the open
  * section's pages under it in the sidebar; on phones Overview, Inbox,
  * Bookings and Assistant in the tab bar and the rest under "More". The
@@ -37,7 +37,7 @@ import { SetupRing } from "../setupGuide/SetupRing";
 import { PendingChangesBanner } from "../assistant/PendingChangesBanner";
 import { BusinessSwitcher } from "../BusinessSwitcher";
 import { useBusiness } from "../business/BusinessContext";
-import { IconCalendar, IconGauge, IconInbox, IconSettings, IconShield, IconSparkles, type IconProps } from "../icons";
+import { IconCalendar, IconGauge, IconInbox, IconSettings, IconShield, IconSparkles, IconUsers, type IconProps } from "../icons";
 import { LiveEventsProvider, useAttentionCounts } from "./LiveEvents";
 import { OwnersOnlyPage } from "./OwnersOnlyPage";
 import { SetupEntry } from "./setup/SetupEntry";
@@ -52,12 +52,13 @@ const SECTION_ICONS: Record<BusinessSection, ComponentType<IconProps>> = {
   overview: IconGauge,
   inbox: IconInbox,
   bookings: IconCalendar,
+  customers: IconUsers,
   assistant: IconSparkles,
   settings: IconSettings,
 };
 
-/** Settings live under "More" on phones; the other four sections are the tab bar. */
-const MORE_SECTIONS: ReadonlySet<BusinessSection> = new Set(["settings"]);
+/** Customers and Settings live under "More" on phones; the other four sections are the tab bar. */
+const MORE_SECTIONS: ReadonlySet<BusinessSection> = new Set(["customers", "settings"]);
 
 export type PagePrefetch = Partial<Record<BusinessPage, () => void>>;
 
@@ -119,6 +120,7 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
       isWide={page === "inbox"}
       ring={(compact) => <SetupRing compact={compact} />}
       helpSlug={helpSlugForPage(page)}
+      searchScope={{ businessId: business.id, timeZone: business.timezone }}
       switcher={(onNavigate, compact) => (
         <BusinessSwitcher
           memberships={me.memberships ?? []}

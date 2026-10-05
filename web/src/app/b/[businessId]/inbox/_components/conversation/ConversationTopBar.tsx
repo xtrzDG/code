@@ -2,7 +2,8 @@
 
 /**
  * The folded header of a conversation: back to the inbox, the customer,
- * where they wrote from, who of the team handles it, and the doors to the
+ * where they wrote from, their standing ("Regular customer · 4 visits",
+ * a link to their page), who of the team handles it, and the doors to the
  * notes and the details. On phones it is the bar at the top of the screen
  * (the transcript comes right under it); everything else about the
  * conversation waits behind "Details".
@@ -11,6 +12,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { CustomerStandingLink } from "@/components/customers/CustomerStandingLink";
 import { IconArrowLeft, IconInfo, IconPencil } from "@/components/icons";
 import { CHANNEL_LABELS, CONVERSATION_STATUS } from "@/components/insights/labels";
 import type { ConversationSummaryView } from "@/components/insights/types";
@@ -25,6 +27,7 @@ const ICON_BUTTON =
   "motion-press relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink";
 
 export function ConversationTopBar({
+  businessId,
   conversation,
   backHref,
   assignMenu,
@@ -33,6 +36,7 @@ export function ConversationTopBar({
   onDetails,
   showPanelButtons,
 }: {
+  businessId: string;
   conversation: ConversationSummaryView;
   backHref: string;
   /** The assign menu (null for test conversations: they are not team work). */
@@ -76,6 +80,7 @@ export function ConversationTopBar({
           <bdi dir={conversation.contact_name ? "auto" : "ltr"}>{name}</bdi>
         </h2>
         <p className="truncate text-xs text-ink-subtle">{subline}</p>
+        {conversation.is_sandbox ? null : <CustomerStandingLink businessId={businessId} contactId={conversation.contact_id} />}
       </div>
       {assignMenu}
       {showPanelButtons ? (

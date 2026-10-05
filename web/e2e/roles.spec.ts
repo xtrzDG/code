@@ -1,5 +1,5 @@
 /**
- * Staff see what they work with: Overview, Inbox, Bookings, the
+ * Staff see what they work with: Overview, Inbox, Bookings, Customers, the
  * assistant's test chat and their own notifications in Settings. Owner
  * pages are not in their navigation, and an old link to one says it is for
  * owners instead of failing.
@@ -18,7 +18,7 @@ test("staff get the test chat and their notifications; owner pages explain thems
 
   await page.goto(`/b/${owner.businessId}/overview`);
   const navigation = page.getByRole("navigation", { name: en.nav.mainNavigation });
-  for (const section of ["overview", "inbox", "bookings", "assistant"] as const) {
+  for (const section of ["overview", "inbox", "bookings", "customers", "assistant"] as const) {
     await expect(navigation.getByRole("link", { name: en.navigation.sections[section], exact: true })).toBeVisible();
   }
   // Settings hold only their own notifications (this device, events, quiet hours).
@@ -34,7 +34,7 @@ test("staff get the test chat and their notifications; owner pages explain thems
   await expect(navigation.getByRole("link", { name: en.navigation.pages.assistantKnowledge })).toHaveCount(0);
   await expect(page.getByRole("button", { name: en.applyChanges.sheet.apply })).toHaveCount(0);
 
-  for (const path of ["settings/billing", "assistant/knowledge", "assistant/versions"]) {
+  for (const path of ["settings/billing", "assistant/knowledge", "assistant/versions", "customers/segments"]) {
     await page.goto(`/b/${owner.businessId}/${path}`);
     await expect(page.getByRole("heading", { level: 1, name: en.navigation.ownerOnlyTitle })).toBeVisible();
   }

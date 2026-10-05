@@ -14,7 +14,7 @@ import {
   visibleSections,
 } from "./sections";
 
-describe("the five sections", () => {
+describe("the sections", () => {
   it("list every page exactly once, each in the section of its address", () => {
     expect([...listedPages()].sort()).toEqual([...BUSINESS_PAGES].sort());
     for (const section of BUSINESS_SECTIONS) {
@@ -26,12 +26,14 @@ describe("the five sections", () => {
   });
 
   it("show owners everything", () => {
-    expect(visibleSections("owner")).toEqual(["overview", "inbox", "bookings", "assistant", "settings"]);
+    expect(visibleSections("owner")).toEqual(["overview", "inbox", "bookings", "customers", "assistant", "settings"]);
     expect(BUSINESS_PAGES.every((page) => canOpenPage(page, "owner"))).toBe(true);
   });
 
-  it("show staff the overview, the inbox, bookings, the test chat and their notifications", () => {
-    expect(visibleSections("staff")).toEqual(["overview", "inbox", "bookings", "assistant", "settings"]);
+  it("show staff the overview, the inbox, bookings, customers, the test chat and their notifications", () => {
+    expect(visibleSections("staff")).toEqual(["overview", "inbox", "bookings", "customers", "assistant", "settings"]);
+    expect(visiblePages("customers", "staff").map((entry) => entry.page)).toEqual(["customers"]);
+    expect(canOpenPage("customers/segments", "staff")).toBe(false);
     expect(visiblePages("settings", "staff").map((entry) => entry.page)).toEqual(["settings/notifications"]);
     expect(visiblePages("assistant", "staff").map((entry) => entry.page)).toEqual(["assistant"]);
     expect(visiblePages("overview", "staff").map((entry) => entry.page)).toEqual(["overview"]);
