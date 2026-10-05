@@ -67,7 +67,9 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
                 if (localized === pathname) {
                   router.refresh();
                 } else {
-                  router.push(`${localized}${search}${hash}`);
+                  // A full load: the root layout (the page's lang, the
+                  // dictionary) belongs to the language too.
+                  window.location.assign(`${localized}${search}${hash}`);
                 }
               } catch (error) {
                 toast.error(error);

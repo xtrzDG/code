@@ -47,13 +47,13 @@ export function DemoTranscript({
       <p className={cn(bubble, "rounded-bl-md bg-accent-soft text-ink")}>{greeting}</p>
       {entries.map((entry) =>
         entry.role === "visitor" ? (
-          <p key={entry.id} className={cn(bubble, "ml-auto rounded-br-md bg-surface-muted text-ink")} dir="auto">
+          <p key={entry.id} className={cn(bubble, "ml-auto rounded-br-md bg-surface-muted text-ink")} dir="auto" data-role="visitor">
             <span className="sr-only">{t("publicDemo.you")}: </span>
             {entry.text}
           </p>
         ) : (
           <div key={entry.id} className="space-y-1.5">
-            <p className={cn(bubble, "rounded-bl-md bg-accent-soft text-ink")} lang={entry.lang} dir="auto">
+            <p className={cn(bubble, "rounded-bl-md bg-accent-soft text-ink")} lang={entry.lang} dir="auto" data-role="assistant">
               <span className="sr-only">{t("publicDemo.assistant")}: </span>
               {entry.text}
             </p>

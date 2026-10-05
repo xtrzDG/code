@@ -679,6 +679,10 @@ services:
         sync: false
       - key: COOKIE_SECURE
         value: "true"
+      # the public address of the site (https://app.example.com): canonical
+      # links, hreflang, sitemap.xml and robots.txt of the public pages
+      - key: SITE_URL
+        sync: false
       # Render's edge appends one X-Forwarded-For hop in front of the cabinet:
       # only that right-most entry is forwarded to the API.
       - key: TRUSTED_PROXY_HOPS
