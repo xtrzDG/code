@@ -101,13 +101,17 @@ function SheetBody({ onClose }: { onClose: () => void }) {
     );
   }
 
+  const isAttention = apply.phase === "attention";
   const changes = data.changes ?? [];
   const checks = data.owner_checks ?? [];
   const drafts = data.drafts ?? [];
   return (
     <div className="space-y-5">
-      {apply.phase === "attention" && view ? <ApplyAttention businessId={business.id} view={view} onNavigate={onClose} /> : null}
-      <p className="text-sm text-ink-muted">{t(data.count > 0 ? "applyChanges.sheet.intro" : "updates.pending.onlyDrafts")}</p>
+      {isAttention && view ? <ApplyAttention businessId={business.id} view={view} onNavigate={onClose} /> : null}
+      {/* After a stop the attention block already says customers keep the previous answers. */}
+      {isAttention && data.count > 0 ? null : (
+        <p className="text-sm text-ink-muted">{t(data.count > 0 ? "applyChanges.sheet.intro" : "updates.pending.onlyDrafts")}</p>
+      )}
       {changes.length > 0 ? (
         <div className="space-y-2">
           <h3 id={listId} className="text-sm font-semibold text-ink">

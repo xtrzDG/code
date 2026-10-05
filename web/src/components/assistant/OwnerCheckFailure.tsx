@@ -19,6 +19,7 @@ export function OwnerCheckFailure({
   failure,
   onFixAnswer,
   onNavigate,
+  showSentence = true,
   className,
 }: {
   businessId: string;
@@ -27,6 +28,8 @@ export function OwnerCheckFailure({
   onFixAnswer?: (failure: NamedFailure) => void;
   /** Called before "Open the check" leaves the page (a sheet closes). */
   onNavigate?: () => void;
+  /** False when a heading over it already says the sentence. */
+  showSentence?: boolean;
   className?: string;
 }) {
   const translator = useI18n();
@@ -35,9 +38,11 @@ export function OwnerCheckFailure({
 
   return (
     <div className={cn("space-y-2", className)} data-owner-check-failure={failure.checkId ?? ""}>
-      <p dir="auto" className="text-sm font-medium [overflow-wrap:anywhere] text-ink">
-        {failureSentence(failure, translator)}
-      </p>
+      {showSentence ? (
+        <p dir="auto" className="text-sm font-medium [overflow-wrap:anywhere] text-ink">
+          {failureSentence(failure, translator)}
+        </p>
+      ) : null}
       {failure.reason ? <p className="text-sm text-ink-muted">{failure.reason}</p> : null}
       {failure.answer ? (
         <p className="text-sm text-ink-muted">

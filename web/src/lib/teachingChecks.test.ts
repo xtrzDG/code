@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { AnswerToImprove, CheckView, CorrectionResult } from "./teaching";
 import {
+  AUTO_LANGUAGE,
   checkBody,
   checkChanges,
   checkFormFromCorrection,
@@ -180,6 +181,11 @@ describe("what a check needs before it is sent", () => {
       language: "ru",
     });
     expect(checkChanges({ ...filled, expectation: "must_hand_off" }).expected_text).toBeNull();
+  });
+
+  it("leaves a new check's language to its question unless the owner picks one", () => {
+    expect(checkBody({ ...filled, language: AUTO_LANGUAGE }).language).toBeNull();
+    expect(newCheckForm(AUTO_LANGUAGE).language).toBe(AUTO_LANGUAGE);
   });
 });
 
