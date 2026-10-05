@@ -47,6 +47,7 @@ from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
+from app.use_cases.shared.dpa_acceptance import is_dpa_version_accepted
 from app.use_cases.shared.trial_subscriptions import (
     choose_go_live_trial,
     is_trial_due_at_go_live,
@@ -273,10 +274,8 @@ class GetSetupProgressUseCase(UseCaseContract[SetupQuery, SetupView]):
         return action_view(SetupActionTarget.OVERVIEW, language, self._resolver)
 
     def _is_agreement_accepted(self, business: BusinessDocument) -> bool:
-        version: str = str(self._app_settings.dpa_document_version)
-        return any(
-            str(acceptance.document_version) == version
-            for acceptance in self._dpa_acceptance_repo.list_by_business(business.id)
+        return is_dpa_version_accepted(
+            business, self._app_settings.dpa_document_version, self._dpa_acceptance_repo
         )
 
     def _is_service_available(

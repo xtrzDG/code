@@ -11,6 +11,7 @@ from app.schemas.typings.compliance.strings import (
     LegalDocumentTitle,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.legal.security_measures_section import strip_security_markers
 from app.utilities.legal.subprocessor_table import (
     render_subprocessor_table,
     serve_table_block,
@@ -42,7 +43,8 @@ class LegalDocumentRegistry(LegalDocumentRegistryContract):
     Section 8's sub-processor table is served live from the sub-processor
     registry in place of the generated copy between its markers, so every
     version shows the list as it is (DPA 8.3: the list changes with notice,
-    not with a new agreement).
+    not with a new agreement). Section 9's security measures are served as
+    the version's file has them (they are part of what owners accept).
     """
 
     def __init__(
@@ -67,7 +69,7 @@ class LegalDocumentRegistry(LegalDocumentRegistryContract):
             return None
 
         served: LanguageTag = select_translation(list(translations), language)
-        text: str = translations[served]
+        text: str = strip_security_markers(translations[served])
         if self._subprocessor_registry is not None:
             text = serve_table_block(
                 text,

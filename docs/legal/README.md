@@ -5,7 +5,7 @@ business owners accept in the cabinet (Settings → Data protection). The API
 serves it at `GET /v1/legal/dpa/<version>?language=<tag>` (requested language,
 then its base language, then English) and links it from
 `GET /v1/businesses/{id}/dpa` as `document_url`. The version in force is
-`DPA_DOCUMENT_VERSION` (default `2026-10-01`); a version without a text cannot be
+`DPA_DOCUMENT_VERSION` (default `2026-10-06`); a version without a text cannot be
 accepted.
 
 **These texts are templates.** Before production the operator must have them
@@ -19,6 +19,48 @@ value together with a rebuild from the commit that holds the files ("Save,
 rebuild, and deploy", or Manual Deploy → "Deploy latest commit"; "Save and
 deploy" reuses the old build). In production the API refuses to start when the
 configured version has no text in its build.
+
+## Versions, the published record and the release check
+
+A text owners accepted or read is never edited in place. `docs/legal/published.json`
+records a fingerprint (SHA-256) of every published file; `tests/legal` fails when
+a recorded file changes or disappears, and when a new file is not recorded yet.
+The fingerprint leaves out the generated sub-processor table (section 8 is
+served live and changes with notice, not with a new version). To change a text:
+
+1. Copy it to a file with a new date (all three languages) and edit the copy;
+   for the DPA also add a short "Changes from version …" note under the title
+   and set `DPA_DOCUMENT_VERSION` (the default in
+   `compliance_settings_section.py` for the next release).
+2. Run `uv run python -m scripts.render_subprocessor_table`, then
+   `uv run python -m scripts.publish_legal_texts` to record the new files
+   (`--check` only compares).
+
+Owners who accepted an earlier DPA version see a banner in the cabinet asking
+them to accept the new one within 30 days of its date (`GET
+/v1/businesses/{id}/dpa` gives `needs_reacceptance` and `acceptance_due_on`);
+the assistant keeps answering meanwhile, but the go-live and publish gates
+hold until an owner accepts. The business keeps the accepted version as
+`dpa_version_accepted`.
+
+`uv run python -m scripts.check_legal_texts` counts the fields in square
+brackets of the texts in force (the DPA of `DPA_DOCUMENT_VERSION`, the latest
+terms, privacy policy and cookie statement). CI runs it on every push: while
+the repository variable `LEGAL_TEXTS_FINAL` is unset or `false` it only prints
+the counts; set it to `true` once the lawyer-reviewed texts are complete, and
+any field left fails the build.
+
+## Security measures (DPA section 9)
+
+From version 2026-10-06 on, section 9 is generated from the security measure
+registry (`app/registries/legal/security_measures_*.py`) between the
+`<!-- security-measures:start … -->` and `<!-- security-measures:end -->`
+markers. Each measure names the code that implements it (`implemented_by`; a
+test fails when a path does not exist) and the version it is first listed in
+(`listed_from`, and `listed_until` when it is dropped). Unlike the
+sub-processor table, the list is part of the accepted text: a version keeps
+the measures of its date, and a new measure appears in the next dated
+version. `scripts.render_subprocessor_table` writes both generated parts.
 
 ## Sub-processors (DPA section 8)
 

@@ -54,7 +54,7 @@ def test_a_ready_version_of_a_launch_ready_business_may_go_live() -> None:
     assert result.version_status is AssistantVersionStatus.READY
     assert summarize(result.checks) == [
         ("subscription_or_trial", True, True, ["trialing"]),
-        ("dpa", True, True, ["2026-10-01"]),
+        ("dpa", True, True, ["2026-10-06"]),
         ("profile_gaps", True, True, []),
         ("staff_contact", True, True, []),
         ("autotests", True, True, ["ready", "finished"]),
@@ -65,7 +65,7 @@ def test_a_ready_version_of_a_launch_ready_business_may_go_live() -> None:
     assert result.autotest_run.scenario_count == result.autotest_run.passed_count
     assert result.autotest_run.completed_count == result.autotest_run.scenario_count
     assert result.subscription_status is not None
-    assert str(result.dpa_document_version) == "2026-10-01"
+    assert str(result.dpa_document_version) == "2026-10-06"
 
 
 def test_every_missing_condition_is_listed_with_its_details() -> None:
@@ -85,7 +85,7 @@ def test_every_missing_condition_is_listed_with_its_details() -> None:
     # The trial is still due: it starts when the assistant goes live.
     assert summarize(result.checks) == [
         ("subscription_or_trial", True, True, ["trial_at_go_live"]),
-        ("dpa", False, True, ["2026-10-01"]),
+        ("dpa", False, True, ["2026-10-06"]),
         ("profile_gaps", False, True, ["no_opening_hours"]),
         ("staff_contact", False, True, ["no_handoff_contact"]),
         ("autotests", False, True, ["draft"]),
@@ -177,7 +177,7 @@ def test_readiness_and_refusal_reasons_over_http() -> None:
     assert [
         (reason["code"], reason["details"]) for reason in refused.json()["reasons"]
     ] == [
-        ("dpa", ["2026-10-01"]),
+        ("dpa", ["2026-10-06"]),
         ("staff_contact", ["no_handoff_contact"]),
     ]
 

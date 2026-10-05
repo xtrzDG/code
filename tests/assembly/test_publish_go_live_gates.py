@@ -62,10 +62,10 @@ def test_the_trial_starts_when_a_business_without_one_first_goes_live() -> None:
 
     message = str(refused.value)
     assert "Pay for the subscription" not in message
-    assert "Accept the data processing agreement (version 2026-10-01)." in message
+    assert "Accept the data processing agreement (version 2026-10-06)." in message
     assert "Add a staff contact" in message
     assert reason_codes(refused.value) == [
-        ("dpa", ["2026-10-01"]),
+        ("dpa", ["2026-10-06"]),
         ("staff_contact", ["no_handoff_contact"]),
     ]
     assert_nothing_went_live(testbed, business, version)

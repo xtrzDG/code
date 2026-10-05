@@ -524,7 +524,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `RECORDINGS_S3_ENDPOINT_URL`, `RECORDINGS_S3_REGION`, `RECORDINGS_S3_BUCKET` | при `s3`: адрес S3-совместимого хранилища в ЕС (AWS `eu-central-1`, Cloudflare R2 с юрисдикцией ЕС, Hetzner, Scaleway), регион подписи (`auto` у R2) и закрытый бакет без версий |
 | `RECORDINGS_S3_ACCESS_KEY_ID`, `RECORDINGS_S3_SECRET_ACCESS_KEY` | при `s3`: ключ, которому разрешены только чтение, запись и удаление в этом бакете; запросы подписываются (Signature V4, ссылки на одну минуту) |
 | `CONTACT_MESSAGE_LIMIT_PER_HOUR` | 60 сообщений одного клиента за последний час во всех каналах: на 60-м помощник предупреждает о лимите, дальше молчит |
-| `DPA_DOCUMENT_VERSION` | `2026-10-01` — действующая версия договора из `docs/legal/` |
+| `DPA_DOCUMENT_VERSION` | `2026-10-06` — действующая версия договора из `docs/legal/`; владельцев, принявших прежнюю версию, кабинет просит принять новую в течение 30 дней |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ELEVENLABS_API_BASE_URL` | голосовой агент не создаётся: в `production` публикация версии с голосом отклоняется (409, причина `voice_configuration`), в `development`/`test` версия выходит без голосового агента (предупреждение в логе). Адрес по умолчанию — `https://api.eu.residency.elevenlabs.io` (хранение в ЕС) |
 | `ELEVENLABS_ALLOW_NON_EU_REGION` | `false`: в `production` другой адрес ElevenLabs, кроме ЕС, — ошибка запуска |
 | `ZADARMA_API_KEY` | пока не используется: номер помощника покупается в Zadarma вручную и вводится в кабинете (канал «Телефон») |

@@ -40,6 +40,7 @@ from app.use_cases.shared.billing_records import (
     find_current_subscription,
     is_service_paid_for,
 )
+from app.use_cases.shared.dpa_acceptance import is_dpa_version_accepted
 from app.use_cases.shared.trial_subscriptions import (
     choose_go_live_trial,
     is_trial_due_at_go_live,
@@ -162,9 +163,8 @@ class CheckGoLiveReadinessUseCase(
 
     def _check_dpa(self, business: BusinessDocument) -> GoLiveCheck:
         version: str = str(self._app_settings.dpa_document_version)
-        is_accepted: bool = any(
-            str(acceptance.document_version) == version
-            for acceptance in self._dpa_acceptance_repo.list_by_business(business.id)
+        is_accepted: bool = is_dpa_version_accepted(
+            business, self._app_settings.dpa_document_version, self._dpa_acceptance_repo
         )
         return GoLiveCheck(
             code=GoLiveCheckCode.DPA,

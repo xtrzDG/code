@@ -1,7 +1,10 @@
+from collections.abc import Callable
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.legal_registries import LegalDocumentRegistryContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import (
     AuditLogRepoContract,
     DpaAcceptanceRepoContract,
@@ -13,11 +16,7 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
 from app.schemas.dto.access import BusinessAccessRequest
-from app.schemas.dto.compliance import (
-    AcceptDpaCommand,
-    DpaAcceptanceView,
-    DpaStatusView,
-)
+from app.schemas.dto.compliance import AcceptDpaCommand, DpaStatusView
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.compliance.strings import (
@@ -25,8 +24,8 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.compliance.dpa_status_views import dpa_status_view
 from app.utilities.analytics.product_event_drafts import dpa_accepted_event
-from app.utilities.compliance.legal_endpoints import build_dpa_document_url
 from app.utilities.localization.cldr_language_names import ENGLISH_LOCALE_IDENTIFIER
 
 
@@ -34,7 +33,8 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
     """
     Owner accepts the data processing agreement version now in force.
 
-    Each acceptance is kept (version, who, when) and audited; accepting the
+    Each acceptance is kept (version, who, when) and audited, and the
+    business remembers the version (`dpa_version_accepted`); accepting the
     same version again records another acceptance rather than failing. A
     version whose text is not in the repository cannot be accepted: the
     owner must be able to read what they accept.
@@ -47,6 +47,7 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
             BusinessDocument,
         ],
         dpa_acceptance_repo: DpaAcceptanceRepoContract,
+        business_repo: BusinessRepoContract,
         audit_log_repo: AuditLogRepoContract,
         legal_document_registry: LegalDocumentRegistryContract,
         app_settings: AppSettings,
@@ -58,6 +59,7 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
             BusinessDocument,
         ] = authorize_business_access
         self._dpa_acceptance_repo: DpaAcceptanceRepoContract = dpa_acceptance_repo
+        self._business_repo: BusinessRepoContract = business_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._legal_document_registry: LegalDocumentRegistryContract = (
             legal_document_registry
@@ -112,15 +114,18 @@ class AcceptDpaUseCase(UseCaseContract[AcceptDpaCommand, DpaStatusView]):
         self._product_events.record(
             dpa_accepted_event(input_data.user_id, business.id, version)
         )
-        return DpaStatusView(
-            business_id=business.id,
-            current_document_version=version,
-            is_current_version_accepted=True,
-            latest_acceptance=DpaAcceptanceView(
-                id=acceptance.id,
-                document_version=acceptance.document_version,
-                accepted_by=acceptance.accepted_by,
-                accepted_at=acceptance.accepted_at,
-            ),
-            document_url=build_dpa_document_url(version),
+        return dpa_status_view(
+            self._business_repo.update(business.id, record_version(version)),
+            version,
+            [acceptance],
+            has_text=True,
         )
+
+
+def record_version(
+    version: DpaDocumentVersion,
+) -> Callable[[BusinessDocument], None]:
+    def record(business: BusinessDocument) -> None:
+        business.dpa_version_accepted = version
+
+    return record

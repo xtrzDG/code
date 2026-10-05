@@ -198,7 +198,7 @@ def test_customers_and_the_agreement_text_over_http() -> None:
         "phone",
         "telegram",
     ]
-    assert status.json()["document_url"] == "/v1/legal/dpa/2026-10-01"
+    assert status.json()["document_url"] == "/v1/legal/dpa/2026-10-06"
     assert document.status_code == 200
     assert document.json()["language"] == "ka"
     assert document.json()["text"].startswith("# ")

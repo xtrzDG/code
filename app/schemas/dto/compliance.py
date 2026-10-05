@@ -19,7 +19,10 @@ from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.compliance.booleans import IsDpaAccepted
+from app.schemas.typings.compliance.booleans import (
+    IsDpaAccepted,
+    IsDpaReacceptanceNeeded,
+)
 from app.schemas.typings.compliance.constrained_integers import (
     AuditRecordCount,
     DeletedRecordingCount,
@@ -28,6 +31,7 @@ from app.schemas.typings.compliance.constrained_integers import (
     ScannedBusinessCount,
 )
 from app.schemas.typings.compliance.constrained_strings import (
+    DpaAcceptanceDueDate,
     DpaDocumentUrl,
     DpaDocumentVersion,
 )
@@ -73,11 +77,17 @@ class DpaStatusView(ImmutableDTO):
 
     `document_url` is the API path of that version's text (None when the
     repository has no text for it; then it cannot be accepted).
+    `needs_reacceptance` is True when an owner accepted an earlier version
+    but not this one: the cabinet asks owners to accept it by
+    `acceptance_due_on` (30 days after the version's date). Until then the
+    assistant keeps answering, but no new version can be published.
     """
 
     business_id: BusinessId
     current_document_version: DpaDocumentVersion
     is_current_version_accepted: IsDpaAccepted
+    needs_reacceptance: IsDpaReacceptanceNeeded = False
+    acceptance_due_on: DpaAcceptanceDueDate | None = None
     latest_acceptance: DpaAcceptanceView | None = None
     document_url: DpaDocumentUrl | None = None
 

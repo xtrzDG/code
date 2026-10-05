@@ -83,6 +83,14 @@ jobs:
       - name: Type check (pyright)
         run: uv run pyright
 
+      # Counts the fields in square brackets of the legal texts in force;
+      # fails only once the repository variable LEGAL_TEXTS_FINAL says the
+      # lawyer-reviewed texts are final (docs/legal/README.md).
+      - name: Legal texts (fields to fill in)
+        env:
+          LEGAL_TEXTS_FINAL: ${{ vars.LEGAL_TEXTS_FINAL || 'false' }}
+        run: uv run python -m scripts.check_legal_texts
+
       # In parallel (pytest-xdist) with line and branch coverage of app/,
       # which may not fall below 95 % ([tool.coverage] in pyproject.toml).
       # Includes the architecture policies: role layers (.importlinter),

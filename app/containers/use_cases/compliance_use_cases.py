@@ -81,6 +81,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
             AcceptDpaUseCase,
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
             dpa_acceptance_repo=repositories.dpa_acceptance_repo,
+            business_repo=repositories.business_repo,
             audit_log_repo=repositories.audit_log_repo,
             legal_document_registry=registries.legal_document_registry,
             app_settings=config.app_settings,
