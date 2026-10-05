@@ -1,3 +1,6 @@
+import type { Schema } from "../src/api/types";
+import { rateSourceKey } from "../src/lib/publicSite/prices";
+import { API_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { en, ka, ru } from "./support/messages";
 
@@ -89,7 +92,7 @@ test.describe("the public site", () => {
     expect(robots).toContain("Disallow: /b/");
   });
 
-  test("prices a country without a price book in euros first, the conversion rounded", async ({ page }) => {
+  test("prices a country without a price book in euros first, the conversion rounded", async ({ page, request }) => {
     await page.goto("/en?country=US");
     const pricing = page.locator("#pricing");
     await pricing.scrollIntoViewIfNeeded();
@@ -97,7 +100,12 @@ test.describe("the public site", () => {
     await expect(pricing.getByTestId("plan-price-converted").first()).toContainText(/≈ \$\d+(?!\.)/);
     // No raw conversion anywhere: "$1,145.97"-style amounts never appear.
     expect(await pricing.innerText()).not.toMatch(/\$[\d,]+\.\d{2}/);
-    await expect(pricing.getByTestId("pricing-notes")).toContainText(en.publicPricing.rateSources.planning);
+    // The note names the rate the API priced with: the ECB's once the
+    // worker has read it (CI reaches the bank), else the planning rate.
+    const response = await request.get(`${API_URL}/v1/catalog/plans?country_code=US&language=en`);
+    const { exchange_rate: rate } = (await response.json()) as Schema<"PlanQuoteList">;
+    expect(rate).toBeTruthy();
+    await expect(pricing.getByTestId("pricing-notes")).toContainText(en.publicPricing.rateSources[rateSourceKey(rate!)]);
   });
 
   test("switches a public page to another language at its own address", async ({ page }) => {
