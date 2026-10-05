@@ -3,14 +3,16 @@ from enum import StrEnum
 
 class LegalDocumentKind(StrEnum):
     """
-    The platform's own legal texts for business owners (docs/legal): the
-    terms of service, the privacy policy and the cookie statement. The data
-    processing agreement has its own versions and acceptance (DPA_*).
+    The platform's own public texts (docs/legal): the terms of service, the
+    privacy policy, the cookie statement and the security overview of the
+    public /security page. The data processing agreement has its own
+    versions and acceptance (DPA_*).
     """
 
     TERMS = "terms"
     PRIVACY = "privacy"
     COOKIES = "cookies"
+    SECURITY = "security"
 
 
 class SubprocessorChangeKind(StrEnum):

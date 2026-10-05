@@ -1,5 +1,6 @@
 """The legal router over the real texts, the registry and a set clock."""
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -15,9 +16,14 @@ from app.registries.legal.legal_document_registry import (
 )
 from app.registries.legal.legal_text_registry import LegalTextRegistry
 from app.registries.legal.subprocessor_registry import SubprocessorRegistry
+from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.dto.legal import SubprocessorEntry
 from app.use_cases.legal.get_legal_document_use_case import GetLegalDocumentUseCase
+from app.use_cases.legal.get_legal_overview_use_case import GetLegalOverviewUseCase
 from app.use_cases.legal.get_subprocessors_use_case import GetSubprocessorsUseCase
+from app.utilities.config_helpers.app_settings.app_settings_assembler import (
+    assemble_app_settings,
+)
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.legal.legal_world import Clock
 
@@ -26,7 +32,9 @@ def build_legal_client(
     clock: Clock,
     entries: tuple[SubprocessorEntry, ...] | None = None,
     documents: Path = DEFAULT_LEGAL_DOCUMENTS_DIRECTORY,
+    environment: Mapping[str, str] | None = None,
 ) -> TestClient:
+    settings: AppSettings = assemble_app_settings(dict(environment or {}))
     registry = (
         SubprocessorRegistry() if entries is None else SubprocessorRegistry(entries)
     )
@@ -38,7 +46,9 @@ def build_legal_client(
     legal_document = GetLegalDocumentUseCase(
         legal_text_registry=LegalTextRegistry(documents),
         wall_clock=clock.wall_clock,
+        app_settings=settings,
     )
+    overview = GetLegalOverviewUseCase(app_settings=settings)
     application = FastAPI()
     install_error_handlers(application)
     application.include_router(
@@ -48,6 +58,9 @@ def build_legal_client(
             ),
             get_legal_document_operator=PipelineOperator(
                 OrchestratorPipeline(UseCaseOrchestrator(legal_document))
+            ),
+            get_legal_overview_operator=PipelineOperator(
+                OrchestratorPipeline(UseCaseOrchestrator(overview))
             ),
         )
     )

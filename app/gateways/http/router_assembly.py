@@ -25,13 +25,13 @@ from app.gateways.http.help_router_assembly import build_help_routers
 from app.gateways.http.inbox_router_assembly import build_inbox_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.launch_router_assembly import build_launch_routers
-from app.gateways.http.legal_routes import build_legal_router
 from app.gateways.http.memory_router_assembly import build_memory_routers
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.notification_routes import build_notification_router
 from app.gateways.http.operations_routes import build_operations_router
 from app.gateways.http.privacy_router_assembly import build_privacy_routers
 from app.gateways.http.profile_routes import build_profile_router
+from app.gateways.http.public_site_router_assembly import build_public_site_routers
 from app.gateways.http.resource_routes import build_resource_router
 from app.gateways.http.security_router_assembly import build_security_routers
 from app.gateways.http.sharing_router_assembly import build_sharing_routers
@@ -115,11 +115,8 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             get_dpa_document_operator=compliance.get_dpa_document_operator(),
             current_user=current_user,
         ),
-        # Terms, privacy policy, cookies and the sub-processor list (public).
-        build_legal_router(
-            get_subprocessors_operator=operators.legal.get_subprocessors_operator(),
-            get_legal_document_operator=operators.legal.get_legal_document_operator(),
-        ),
+        # Legal texts, the sub-processor list and the landing page's demos.
+        *build_public_site_routers(operators),
         build_profile_router(
             current_user=current_user,
             business_access_operator=business_access_operator,

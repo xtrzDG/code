@@ -80,7 +80,9 @@ def build_client() -> tuple[TestClient, BusinessDocument]:
     router = build_catalog_router(
         list_countries_operator=PipelineOperator(
             OrchestratorPipeline(
-                UseCaseOrchestrator(ListCountriesUseCase(country_registry))
+                UseCaseOrchestrator(
+                    ListCountriesUseCase(country_registry, PlanRegistry())
+                )
             )
         ),
         get_country_profile_operator=PipelineOperator(

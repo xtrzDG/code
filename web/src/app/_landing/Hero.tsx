@@ -1,22 +1,38 @@
+import type { Schema } from "@/api/types";
 import { IconArrowRight } from "@/components/icons";
 import { MagneticButton } from "@/components/motion";
 import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
 import { CREATE_PATH } from "@/lib/navigation";
 
+import { DemoChat } from "./DemoChat";
+import { DemoSample } from "./DemoSample";
 import { HeroBackdrop } from "./HeroBackdrop";
 import { HeroVisual } from "./HeroVisual";
 
+type DemoList = Schema<"PublicDemoList">;
+
 /**
- * What the product does and the two calls to action, beside the assistant
- * in 3D (or its still picture). The text rises in with CSS, so it moves
- * from the first paint, before any script.
+ * What the product does and the two calls to action, beside a live demo
+ * assistant the visitor can talk to right away (an example conversation
+ * when no demo can answer). The assistant in 3D (or its still picture)
+ * glows behind the chat. The text rises in with CSS, so it moves from the
+ * first paint, before any script.
  */
-export function Hero({ t, trialDays }: { t: Translator["t"]; trialDays: number | null }) {
+export function Hero({
+  t,
+  trialDays,
+  demos,
+}: {
+  t: Translator["t"];
+  trialDays: number | null;
+  demos: DemoList | null;
+}) {
+  const liveDemos = demos?.demos ?? [];
   return (
     <section aria-labelledby="hero-title" className="relative isolate overflow-x-clip">
       <HeroBackdrop />
-      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-6 px-4 pt-12 pb-12 sm:px-6 sm:pt-20 sm:pb-20 lg:grid-cols-[1.2fr_1fr] lg:gap-8">
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-12 pb-14 sm:px-6 sm:pt-20 sm:pb-20 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
         <div className="space-y-7">
           <p className="inline-flex animate-rise items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1 text-xs font-medium text-ink-muted backdrop-blur">
             <span className="relative flex size-1.5" aria-hidden>
@@ -54,10 +70,18 @@ export function Hero({ t, trialDays }: { t: Translator["t"]; trialDays: number |
             {t("landing.hero.note")}
           </p>
         </div>
-        <HeroVisual
-          label={t("landing.hero.sceneLabel")}
-          className="mx-auto max-w-[22rem] animate-rise [animation-delay:200ms] sm:max-w-[30rem] lg:max-w-[34rem]"
-        />
+        <div className="relative mx-auto w-full max-w-md animate-rise [animation-delay:200ms] lg:max-w-none">
+          <div className="pointer-events-none absolute -top-20 -right-28 -z-10 hidden w-[30rem] opacity-80 lg:block">
+            <HeroVisual label={t("landing.hero.sceneLabel")} />
+          </div>
+          <div id="demo" className="scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-surface/95 shadow-2xl backdrop-blur">
+            {liveDemos.length > 0 && demos ? (
+              <DemoChat demos={liveDemos} messagesPerHour={demos.messages_per_hour} />
+            ) : (
+              <DemoSample t={t} />
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

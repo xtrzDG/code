@@ -100,7 +100,7 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
   },
   mrr: {
     title: "Движение MRR",
-    description: "Ежемесячная регулярная выручка в евро по официальным курсам: в начале периода, что её изменило и в конце.",
+    description: "Ежемесячная регулярная выручка в евро по сохранённым курсам Национального банка Грузии и ЕЦБ, а без них — по плановому курсу платформы: в начале периода, что её изменило и в конце.",
     movement: "Движение",
     amount: "Сумма",
     accounts: "Аккаунты",
@@ -113,7 +113,7 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
       contraction: "Понижение тарифа",
       churn: "Отмены",
     },
-    unconverted: "Не учтены, нет официального курса к евро: {currencies}",
+    unconverted: "Не учтены, нет курса к евро: {currencies}",
   },
   margin: {
     title: "Валовая маржа",
@@ -128,10 +128,10 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
       other: "По {count} клиента с выручкой или расходами",
     },
     withoutRate: {
-      one: "{count} клиент не учтён: нет официального курса к евро.",
-      few: "{count} клиента не учтены: нет официального курса к евро.",
-      many: "{count} клиентов не учтены: нет официального курса к евро.",
-      other: "{count} клиента не учтены: нет официального курса к евро.",
+      one: "{count} клиент не учтён: нет курса к евро.",
+      few: "{count} клиента не учтены: нет курса к евро.",
+      many: "{count} клиентов не учтены: нет курса к евро.",
+      other: "{count} клиента не учтены: нет курса к евро.",
     },
   },
   cohorts: {

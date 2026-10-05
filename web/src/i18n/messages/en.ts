@@ -6,6 +6,7 @@ import { setupFlowEn } from "./sections/setup";
 import { assistantFlowEn } from "./sections/assistant";
 import { securityFlowEn } from "./sections/security";
 import { helpEn } from "./sections/help";
+import { siteEn } from "./sections/site";
 import { onboardingEn } from "./onboarding/en";
 import { landingEn } from "./landing/en";
 
@@ -206,6 +207,7 @@ export const en = {
   ...assistantFlowEn,
   ...securityFlowEn,
   ...helpEn,
+  ...siteEn,
 } as const satisfies NestedMessages;
 
 interface NestedMessages {

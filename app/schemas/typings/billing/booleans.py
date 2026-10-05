@@ -4,6 +4,7 @@ Example:
     is_price_estimated: IsPriceEstimated = False
 """
 
+HasLocalPriceBook = bool
 IsAutoDebitActive = bool
 IsDerivedExchangeRate = bool
 IsExchangeRateStale = bool

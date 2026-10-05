@@ -41,6 +41,7 @@ development the 6-digit code appears in the API log
 | --- | --- | --- |
 | `BACKEND_URL` | `http://localhost:8000` | Base URL of the Python API, used only on the server (route handlers, proxy, Server Components). |
 | `COOKIE_SECURE` | `true` in production | `false` serves the session cookie without `Secure` (a production build over plain HTTP). |
+| `SITE_URL` | the request's own address | Public address of the site (`https://app.example.com`): the canonical links, hreflang alternates, `sitemap.xml`, `robots.txt` and structured data of the public pages name it. Set it in production: without it the address comes from the request's `Host` header. |
 | `TRUSTED_PROXY_HOPS` | `0` | How many right-most `X-Forwarded-For` entries the cabinet's own proxies add (Render: `1`). Only those are forwarded to the API; the rest of the header comes from the browser and could be forged. `0` forwards no client address. |
 | `SENTRY_DSN` | none | Sentry project of the cabinet's errors (server and browser). Empty: nothing is sent. Browser errors go through the cabinet's own `/api/monitoring` (no CSP or ad-blocker trouble; the browser never sees the DSN), at most 120 envelopes a minute per server. Events carry no request, cookies, user or breadcrumbs, and e-mails and phone numbers in error texts are masked (`src/lib/monitoring`). The browser SDK is downloaded only after the first error. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.05` | Share of server requests traced in Sentry (0 to 1). |
@@ -134,6 +135,11 @@ npm run e2e -- onboarding         # one file
 - Scenarios: the landing page (prices of a chosen country, theme and language
   kept after a reload, signed-in users sent to their businesses, the still
   hero with reduced motion and the 3D one without, every section revealed),
+  the public site (`e2e/public-site.spec.ts`, `public-demo.spec.ts`,
+  `public-a11y.spec.ts`: the live demo answers in sandbox, the value
+  calculator, niche pages in three languages with hreflang and JSON-LD, every
+  footer link opens, the legal pages' draft banner, the sitemap, no raw
+  "$1,145.97" conversions, axe in both themes),
   sign-in with a German number and with e-mail (and a wrong code),
   the whole "Create an AI assistant" tunnel on a desktop and on a phone, from
   sign-in to a live assistant and the cabinet (`e2e/setup-tunnel.spec.ts`, the
@@ -221,16 +227,30 @@ web/
       c/[slug]/                the public hosted chat page and its default privacy notice (/privacy),
                                for customers: their language, system colours, src/styles/hostedChat.css
       */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
-      page.tsx                 "/": the public landing page (signed-in users go to /businesses);
-                               its main buttons lead to /create (signing in first)
-      _landing/                its sections: Hero (+ HeroBackdrop, HeroVisual: the 3D scene or HeroFallback,
-                               its still picture), Facts, Demo (a WhatsApp conversation), Steps, Features,
-                               Channels, Niches, World, Pricing (+ PlanCard, CountryPicker), Faq, FinalCta,
-                               header, footer; Section (heading reveal, depth glow); scene/ (the lazy
-                               react-three-fiber hero: HeroScene, AssistantOrb + orbShader, ChannelBubbles,
-                               SceneAtmosphere, sceneTextures, scenePalette); landingData.ts reads the
-                               public catalog on the server
-      robots.ts                robots.txt: only "/" is for search engines
+      page.tsx                 "/": signed-in users go to /businesses, visitors to the public site in
+                               their language (/en, /ru, /ka; the query is kept)
+      [locale]/                the public site, one address per language (lib/publicSite/paths.ts; the
+                               proxy renders the page in its path's language): page.tsx the landing page,
+                               for/[niche]/ a kind of business from the niche catalog, terms/, privacy/,
+                               dpa/, security/ (texts from GET /v1/legal/*, a draft banner while
+                               LEGAL_TEXTS_FINAL is off, noindex until then), contact/ (operator and
+                               support); every page has its canonical address, hreflang alternates and
+                               JSON-LD. /privacy and the other legal pages without a language redirect
+      _landing/                the public site's parts: LandingPage (the landing's sections in order),
+                               Hero with the live sandbox demo (DemoChat, useDemoChat, DemoTranscript;
+                               DemoSample when no demo answers), Facts, Demo (an example conversation),
+                               Steps, Features, Channels, Niches, Roi (+ roi/: the value calculator),
+                               World, Pricing (+ PlanCard, CountryPicker: honest prices), SetupOptions
+                               (self-serve against done-for-you), Testimonials (src/content/
+                               testimonials.ts, hidden while empty), Faq, FinalCta, header, footer
+                               (legal links, kinds of business); niche/ and legal/ (the other public
+                               pages); publicMetadata.ts, JsonLd; Section (heading reveal, depth glow);
+                               scene/ (the lazy react-three-fiber hero: HeroScene, AssistantOrb +
+                               orbShader, ChannelBubbles, SceneAtmosphere, sceneTextures, scenePalette);
+                               landingData.ts reads the public catalog and the demos on the server
+      robots.ts, sitemap.ts    robots.txt (the cabinet is private) and sitemap.xml (every public page in
+                               every language with its alternates; legal pages once they are final),
+                               both on SITE_URL
       login/                   sign-in by phone (country picker, only the code channels that work now)
                                or e-mail, 6-digit code: LoginScreen (layout), _components/ (DestinationForm,
                                PhoneFields, CodeForm, SecondStepForm: the authenticator or recovery code,
@@ -1273,16 +1293,57 @@ reflections, the floating and billboarding are a few lines in `useFrame`).
 
 ### Landing page
 
-`/` is a Server Component for visitors without a session (signed-in users are
-redirected to `/businesses`). It reads the public catalog with
-`loadLandingData`: countries, niches and `GET /v1/catalog/plans` for the
+The public site lives under its language: `/en`, `/ru`, `/ka` (the landing
+page), `/ru/for/restaurant` (a kind of business, from the niche catalog) and
+`/ka/terms`, `/privacy`, `/dpa`, `/security`, `/contact`. `/` sends a
+signed-in user to `/businesses` and a visitor to the page in their language
+(cookie, else Accept-Language), keeping the query; `/privacy` without a
+language does the same (the proxy). The proxy sets the request's language
+from the path (`x-aw-path-locale`, never from the browser), so the page,
+`<html lang>` and its texts follow the address, and a first visit starts
+the cabinet in that language too. The language switch opens the same page
+at the other language's address.
+
+Every public page has its canonical address, hreflang alternates for the
+three languages and `x-default`, Open Graph and JSON-LD (`Organization`,
+`SoftwareApplication` with the plans' prices, `FAQPage` on the landing;
+`Service` on a niche page). `sitemap.xml` lists every page in every language
+with its alternates (the legal pages only once `LEGAL_TEXTS_FINAL` is on:
+until then they are `noindex` and show a "Draft" banner); both it and
+`robots.txt` name `SITE_URL`.
+
+The data comes from the public API on the server (`_landing/landingData.ts`):
+countries, niches, `GET /v1/public-demos` and `GET /v1/catalog/plans` for the
 country in `?country=` (else the visitor's country from `x-vercel-ip-country`
-/ `cf-ipcountry`, else a guess from Accept-Language, else Georgia). The
-country picker is a GET form (`next/form`, works without JavaScript); prices
-show in the country's currency, with the plan's euro price beside them when
-they differ and "≈" for converted amounts. It has its own metadata for search
-engines (the cabinet's pages are `noindex`) and texts in
-`i18n/messages/landing/`. Its motion and 3D hero: see [Motion](#motion).
+/ `cf-ipcountry`, else a guess from Accept-Language, both only among the
+countries with a price book, else Georgia). Honest prices
+(`lib/publicSite/prices.ts`): the price a plan is billed at comes first (the
+price book's lari, else euros), a conversion second and rounded to whole
+units ("≈ $199"), and the note under the cards names who set its rate (the
+National Bank of Georgia, the ECB, or the platform's planning rate).
+
+- **Live demo**: the hero chats with the demo businesses
+  (`PUBLIC_DEMO_BUSINESS_IDS`; in development the seeded ones) in sandbox:
+  a booking or a request is only shown as one ("Here a booking would be
+  made"), never made. The starters are the demo's own in the visitor's
+  language, else three generic ones; when no demo answers the hero shows an
+  example conversation labelled as one.
+- **Value calculator** (`lib/publicSite/roi.ts`): missed requests × the
+  after-hours share × the share that books × the average check, against the
+  chosen plan's billed price, with the arithmetic shown; the check starts at
+  the niche's typical one scaled to the plan's price level.
+- **Setup options** and **testimonials**: self-serve (free) against
+  done-for-you (its one-time fee in the billed currency); owners' quotes from
+  `src/content/testimonials.ts` (only real ones, with consent; the section is
+  hidden while a language has none).
+- **Lighthouse**: `.github/workflows/lighthouse.yml` runs Lighthouse CI
+  (`lighthouserc.json`) on `/en` and two niche pages of a production build:
+  SEO and accessibility (≥ 0.95), layout shift (≤ 0.1), hreflang, canonical,
+  title and description fail the job everywhere; performance ≥ 0.7 with
+  ≤ 350 KB of JavaScript on niche pages, ≥ 0.6 with ≤ 600 KB on the landing
+  page (its 3D hero scene loads once the page is idle, about 240 KB).
+
+Its motion and 3D hero: see [Motion](#motion).
 
 ## Channels and sign-in
 

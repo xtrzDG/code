@@ -3018,6 +3018,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/legal/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Legal Overview */
+        get: operations["get_legal_overview_v1_legal_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/legal/subprocessors": {
         parameters: {
             query?: never;
@@ -3303,6 +3320,40 @@ export interface paths {
         get: operations["get_platform_status_v1_platform_status_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public-demos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Public Demos */
+        get: operations["list_public_demos_v1_public_demos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public-demos/{business_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Public Demo Message */
+        post: operations["send_public_demo_message_v1_public_demos__business_id__messages_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6645,7 +6696,10 @@ export interface components {
         };
         /**
          * CountryListItem
-         * @description Summary of one country for a country picker.
+         * @description Summary of one country for a country picker. `has_price_book`: the
+         *     plans have explicit prices in the country's currency (the euro area's
+         *     own euro prices, the lari price book in Georgia), so nothing shown
+         *     there is a conversion.
          */
         CountryListItem: {
             /** Calling Code */
@@ -6662,6 +6716,11 @@ export interface components {
             display_name: string;
             /** English Name */
             english_name: string;
+            /**
+             * Has Price Book
+             * @default false
+             */
+            has_price_book: boolean;
             onboarding_status: components["schemas"]["CountryOnboardingStatus"];
         };
         /**
@@ -8753,26 +8812,34 @@ export interface components {
         };
         /**
          * LegalDocumentKind
-         * @description The platform's own legal texts for business owners (docs/legal): the
-         *     terms of service, the privacy policy and the cookie statement. The data
-         *     processing agreement has its own versions and acceptance (DPA_*).
+         * @description The platform's own public texts (docs/legal): the terms of service, the
+         *     privacy policy, the cookie statement and the security overview of the
+         *     public /security page. The data processing agreement has its own
+         *     versions and acceptance (DPA_*).
          * @enum {string}
          */
-        LegalDocumentKind: "terms" | "privacy" | "cookies";
+        LegalDocumentKind: "terms" | "privacy" | "cookies" | "security";
         /**
          * LegalDocumentView
-         * @description GET /v1/legal/{terms|privacy|cookies}: the text of one version.
+         * @description GET /v1/legal/{terms|privacy|cookies|security}: the text of one version.
          *
          *     `version` is the day it took effect. `upcoming_version` is a newer text
          *     already published that takes effect later (owners can read it ahead).
          *     `has_placeholders` is true while the template still has fields in
-         *     square brackets for the operator and its lawyer to fill.
+         *     square brackets for the operator and its lawyer to fill; `is_draft`
+         *     while it does or the operator has not declared the texts final
+         *     (LEGAL_TEXTS_FINAL): the public pages then say it is a draft.
          */
         LegalDocumentView: {
             /** Available Languages */
             available_languages: string[];
             /** Has Placeholders */
             has_placeholders: boolean;
+            /**
+             * Is Draft
+             * @default true
+             */
+            is_draft: boolean;
             kind: components["schemas"]["LegalDocumentKind"];
             /** Language */
             language: string;
@@ -8784,6 +8851,38 @@ export interface components {
             upcoming_version?: string | null;
             /** Version */
             version: string;
+        };
+        /**
+         * LegalOperatorView
+         * @description Who provides the service, as the invoices name the seller (SELLER_*):
+         *     a detail the operator has not set is null.
+         */
+        LegalOperatorView: {
+            /** Address */
+            address?: string | null;
+            /** Country Code */
+            country_code: string;
+            /** Email */
+            email?: string | null;
+            /** Legal Name */
+            legal_name: string;
+            /** Tax Id */
+            tax_id?: string | null;
+        };
+        /**
+         * LegalOverviewView
+         * @description GET /v1/legal/overview: what the public legal and contact pages need
+         *     besides the texts: whether the texts are still drafts
+         *     (LEGAL_TEXTS_FINAL off), the data processing agreement's version in
+         *     force (DPA_DOCUMENT_VERSION; its text is /v1/legal/dpa/{version}) and
+         *     the operator's details.
+         */
+        LegalOverviewView: {
+            /** Dpa Version */
+            dpa_version: string;
+            /** Is Draft */
+            is_draft: boolean;
+            operator: components["schemas"]["LegalOperatorView"];
         };
         /**
          * LocalNumberProvisioning
@@ -9482,7 +9581,10 @@ export interface components {
         NicheKey: "restaurant" | "hotel" | "entertainment" | "beauty_salon" | "clinic" | "fitness" | "short_term_rental" | "car_service" | "car_rental_and_tours" | "event_venue" | "real_estate" | "education" | "online_shop" | "veterinary" | "home_services" | "b2b_supply";
         /**
          * NicheSummaryView
-         * @description What a niche is and what it books, in one language.
+         * @description What a niche is and what it books, in one language. `typical_check`
+         *     (the catalog list only): what one booking or order of the niche
+         *     typically brings, in euro, the starting point of the landing page's
+         *     value calculator; null where checks vary too much to guess.
          */
         NicheSummaryView: {
             booking_unit: components["schemas"]["BookingUnit"];
@@ -9502,6 +9604,7 @@ export interface components {
             resource_noun: string;
             /** Takes Bookings */
             takes_bookings: boolean;
+            typical_check?: components["schemas"]["Money"] | null;
             wave: components["schemas"]["LaunchWave"];
         };
         /**
@@ -10381,6 +10484,74 @@ export interface components {
             steps: components["schemas"]["WizardStepView"][];
             /** Timezone */
             timezone: string;
+        };
+        /**
+         * PublicDemoCard
+         * @description A demo business a visitor can chat with: its name, kind of business
+         *     (`niche_name` in the language asked for), city and country, the
+         *     languages its assistant answers in, and up to three starter questions
+         *     per language from its FAQ.
+         */
+        PublicDemoCard: {
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name: string;
+            /** City */
+            city?: string | null;
+            /** Country Code */
+            country_code: string;
+            /** Default Language */
+            default_language: string;
+            /** Languages */
+            languages: string[];
+            niche_key: components["schemas"]["NicheKey"];
+            /** Niche Name */
+            niche_name: string;
+            /** Starters */
+            starters?: components["schemas"]["WidgetStarterQuestionView"][];
+        };
+        /**
+         * PublicDemoList
+         * @description Every demo that can answer now (a configured business without a
+         *     published assistant is left out), and how many messages one visitor
+         *     may send each demo in an hour.
+         */
+        PublicDemoList: {
+            /** Demos */
+            demos: components["schemas"]["PublicDemoCard"][];
+            /** Messages Per Hour */
+            messages_per_hour: number;
+        };
+        /**
+         * PublicDemoReply
+         * @description The demo assistant's answer and what the turn did, all in sandbox: a
+         *     booking, a request taken down or a handoff to a person happen only as
+         *     test records. `messages_left`: how many more messages this visitor may
+         *     send this demo in the current hour.
+         */
+        PublicDemoReply: {
+            /**
+             * Is Booking Made
+             * @default false
+             */
+            is_booking_made: boolean;
+            /**
+             * Is Handoff Made
+             * @default false
+             */
+            is_handoff_made: boolean;
+            /**
+             * Is Request Made
+             * @default false
+             */
+            is_request_made: boolean;
+            /** Language */
+            language: string;
+            /** Messages Left */
+            messages_left: number;
+            /** Text */
+            text: string | null;
         };
         /**
          * PushDeviceView
@@ -33199,6 +33370,89 @@ export interface operations {
             };
         };
     };
+    get_legal_overview_v1_legal_overview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalOverviewView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_subprocessors_v1_legal_subprocessors_get: {
         parameters: {
             query?: {
@@ -34773,6 +35027,185 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformStatusView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_public_demos_v1_public_demos_get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDemoList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    send_public_demo_message_v1_public_demos__business_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Session Key */
+                    session_key: string;
+                    /** Text */
+                    text: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDemoReply"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

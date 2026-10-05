@@ -73,6 +73,36 @@ Spec: `84a15085e6d9e6ed`
   without `language` takes the language its question is written in (the
   business's default when the question tells too little).
 
+## 2026-10-05 — the landing page: live demos, legal pages, honest prices
+
+Spec: `d10b9d16b4ccb880`
+
+- **Added** `GET /v1/public-demos?language=` (no token): the landing
+  page's demo businesses (`PUBLIC_DEMO_BUSINESS_IDS`) with their name,
+  niche (named in the language asked for), city, country, languages and up
+  to three starter questions per language, and how many messages one
+  visitor may send each demo in an hour. A configured business without a
+  published assistant is left out.
+- **Added** `POST /v1/public-demos/{business_id}/messages` (no token):
+  body `{"text", "session_key"}`; the demo assistant's sandbox answer
+  (`text`, `language`, `is_booking_made`, `is_request_made`,
+  `is_handoff_made`, `messages_left`). Any other business is 404; limits
+  per conversation, network, demo and the whole site answer 429 with
+  `Retry-After`; two demo turns at a time per API process.
+- **Added** `GET /v1/legal/overview` (no token): `is_draft`
+  (`LEGAL_TEXTS_FINAL` off), the DPA version in force and the operator's
+  details (`SELLER_*`) for the public legal and contact pages.
+- **Changed** `LegalDocumentKind` gains `security` (the public security
+  overview, `GET /v1/legal/security`), and `LegalDocumentView` adds
+  `is_draft` (true while the text has open fields or `LEGAL_TEXTS_FINAL` is
+  off). Clients that map the enum must accept the new value.
+- **Changed** `CountryListItem` adds `has_price_book`: every plan is billed
+  in the country's own currency (the lari price book, the euro area), so
+  nothing shown there is a conversion.
+- **Changed** `NicheSummaryView` adds optional `typical_check` (EUR; the
+  catalog list only): what one booking of the niche typically brings, the
+  landing page's value calculator starts from it.
+
 ## 2026-10-05 — wave 12 together: deeper checks, customer memory, online migrations, retention, legal texts
 
 Spec: `0ccf13ff93342e14`

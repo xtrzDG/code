@@ -115,7 +115,7 @@ export const landingEn = {
       choose: "Start with {plan}",
       unavailable: "Prices could not be loaded right now. Please try again later.",
       empty: "There are no plans for this country yet.",
-      note: "The setup fee is paid once. You can change the plan at any time in the cabinet.",
+      note: "Done-for-you setup is paid once; on your own it is free. You can change the plan at any time in the cabinet.",
     },
     faq: {
       title: "Questions and answers",

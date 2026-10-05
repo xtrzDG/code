@@ -18,6 +18,7 @@ from app.schemas.constants.niches import (
     ProfileWizardStep,
     QuestionAnswerType,
 )
+from app.schemas.dto.billing import Money
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LocalizedTextValue
 from app.schemas.typings.niches.booleans import (
@@ -70,7 +71,12 @@ class LocalizedQuestionView(ImmutableDTO):
 
 
 class NicheSummaryView(ImmutableDTO):
-    """What a niche is and what it books, in one language."""
+    """
+    What a niche is and what it books, in one language. `typical_check`
+    (the catalog list only): what one booking or order of the niche
+    typically brings, in euro, the starting point of the landing page's
+    value calculator; null where checks vary too much to guess.
+    """
 
     key: NicheKey
     wave: LaunchWave
@@ -83,6 +89,7 @@ class NicheSummaryView(ImmutableDTO):
     resource_noun: LocalizedTextValue
     requires_legal_review: RequiresLegalReview
     integrations: list[IntegrationName] = Field(default_factory=list[IntegrationName])
+    typical_check: Money | None = None
 
 
 class NicheCatalogView(ImmutableDTO):

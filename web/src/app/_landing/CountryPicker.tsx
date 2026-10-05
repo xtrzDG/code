@@ -10,17 +10,25 @@ import { useI18n } from "@/i18n/client";
 import { countryFlag, isCountryAvailable } from "@/lib/countries";
 
 /**
- * Whose prices to show: a GET form to /?country=XX. With JavaScript it
+ * Whose prices to show: a GET form to the page itself (?country=XX). With JavaScript it
  * navigates as soon as a country is picked and keeps the scroll position;
  * without, the "Show" button submits it.
  */
-export function CountryPicker({ countries, value }: { countries: readonly CountryListItem[]; value: string | null }) {
+export function CountryPicker({
+  countries,
+  value,
+  action,
+}: {
+  countries: readonly CountryListItem[];
+  value: string | null;
+  action: string;
+}) {
   const { t } = useI18n();
   const isClient = useIsClient();
   const id = useId();
 
   return (
-    <Form action="/" scroll={false} replace className="flex flex-wrap items-center gap-x-3 gap-y-2">
+    <Form action={action} scroll={false} replace className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <label htmlFor={id} className="text-sm text-ink-muted">
         {t("landing.pricing.country")}
       </label>

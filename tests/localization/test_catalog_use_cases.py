@@ -2,6 +2,7 @@
 
 import pytest
 
+from app.registries.billing.plan_registry import PlanRegistry
 from app.schemas.constants.localization import CountryOnboardingStatus, TextDirection
 from app.schemas.dto.catalog.countries import (
     CountryListRequest,
@@ -66,7 +67,9 @@ def test_countries_are_named_in_the_display_language(
     georgia_name: str,
     israel_name: str,
 ) -> None:
-    use_case = ListCountriesUseCase(country_registry=get_country_registry())
+    use_case = ListCountriesUseCase(
+        country_registry=get_country_registry(), plan_registry=PlanRegistry()
+    )
 
     country_list = use_case.run(
         CountryListRequest(display_language=LanguageTag(language))
@@ -86,7 +89,9 @@ def test_countries_are_named_in_the_display_language(
 
 
 def test_country_list_keeps_restricted_countries_with_their_status() -> None:
-    use_case = ListCountriesUseCase(country_registry=get_country_registry())
+    use_case = ListCountriesUseCase(
+        country_registry=get_country_registry(), plan_registry=PlanRegistry()
+    )
 
     countries = use_case.run(
         CountryListRequest(display_language=LanguageTag("en"))
@@ -101,7 +106,9 @@ def test_country_list_keeps_restricted_countries_with_their_status() -> None:
 
 
 def test_country_list_rejects_unknown_display_language() -> None:
-    use_case = ListCountriesUseCase(country_registry=get_country_registry())
+    use_case = ListCountriesUseCase(
+        country_registry=get_country_registry(), plan_registry=PlanRegistry()
+    )
 
     with pytest.raises(UnsupportedLanguageError):
         use_case.run(CountryListRequest(display_language=LanguageTag("xx")))
@@ -192,3 +199,22 @@ def test_languages_are_listed_in_georgian_with_support_levels() -> None:
     assert by_tag["he"].profile.direction is TextDirection.RIGHT_TO_LEFT
     names = [item.display_name.casefold() for item in language_list.languages]
     assert names == sorted(names)
+
+
+def test_country_list_says_which_countries_have_explicit_prices() -> None:
+    use_case = ListCountriesUseCase(
+        country_registry=get_country_registry(), plan_registry=PlanRegistry()
+    )
+
+    countries = use_case.run(
+        CountryListRequest(display_language=LanguageTag("en"))
+    ).countries
+    price_books = {
+        str(country.country_code): country.has_price_book for country in countries
+    }
+
+    # The lari price book and the plans' own euros; dollars are conversions.
+    assert price_books["GE"] is True
+    assert price_books["DE"] is True
+    assert price_books["US"] is False
+    assert price_books["RU"] is False

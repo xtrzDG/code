@@ -6,8 +6,10 @@ import { Badge, Button, Card, ErrorState, LoadingRegion, SkeletonCard } from "@/
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { useI18n } from "@/i18n/client";
 import type { ApiError } from "@/api/errors";
+import type { Schema } from "@/api/types";
 import { cn } from "@/lib/cn";
 import { listFormat } from "@/lib/intl/formatters";
+import { rateDayLabel, rateSourceKey } from "@/lib/publicSite/prices";
 
 import {
   hasEstimatedPrices,
@@ -50,7 +52,7 @@ export function PlansSection({
   onChoose,
 }: {
   quotes: readonly PlanQuote[] | undefined;
-  exchangeRate: { source: string; rate_date: string } | null | undefined;
+  exchangeRate: { sources?: Schema<"ExchangeRateQuote">["sources"]; rate_date: string } | null | undefined;
   error: ApiError | null;
   onRetry: () => void;
   overview: BillingOverview;
@@ -211,7 +213,10 @@ export function PlansSection({
           </ul>
           {exchangeRate && hasEstimatedPrices(quotes, period) ? (
             <p className="text-xs text-ink-subtle">
-              {t("billing.plans.estimatedNote", { source: exchangeRate.source, date: exchangeRate.rate_date })}
+              {t("billing.plans.estimatedNote", {
+                source: t(`publicPricing.rateSources.${rateSourceKey(exchangeRate)}`),
+                date: rateDayLabel(exchangeRate.rate_date, locale),
+              })}
             </p>
           ) : null}
         </>

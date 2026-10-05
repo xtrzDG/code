@@ -29,6 +29,7 @@ function country(overrides: Partial<CountryListItem>): CountryListItem {
     currency_code: "GEL",
     default_timezone: "Asia/Tbilisi",
     default_owner_language: "ka",
+    has_price_book: false,
     onboarding_status: "supported",
     ...overrides,
   };

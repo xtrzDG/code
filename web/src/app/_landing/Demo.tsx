@@ -13,7 +13,7 @@ import { Section } from "./Section";
 export function Demo({ t }: { t: Translator["t"] }) {
   const bubble = "max-w-[85%] rounded-2xl px-3.5 py-2.5";
   return (
-    <Section id="demo" title={t("landing.demo.title")} subtitle={t("landing.demo.subtitle")} glow="right" layout="split">
+    <Section id="example" title={t("landing.demo.title")} subtitle={t("landing.demo.subtitle")} glow="right" layout="split">
       <figure aria-label={t("landing.demo.label")} className="mx-auto w-full max-w-md">
         <TiltCard className="rounded-2xl border border-line bg-surface shadow-2xl">
           <div className="flex items-center gap-3 border-b border-line px-4 py-3">

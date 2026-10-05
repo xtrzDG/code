@@ -30,6 +30,9 @@ from app.containers.pipelines.platform_ops_pipelines import (
 )
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
 from app.containers.pipelines.privacy_pipelines import PrivacyPipelinesContainer
+from app.containers.pipelines.public_demo_pipelines import (
+    PublicDemoPipelinesContainer,
+)
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
 from app.containers.pipelines.sharing_pipelines import SharingPipelinesContainer
@@ -92,6 +95,12 @@ class PipelinesContainer(containers.DeclarativeContainer):
         conversation_orchestrators=orchestrators.conversations,
         registries=registries,
         setup_orchestrators=orchestrators.setup,
+    )
+    public_demos: PublicDemoPipelinesContainer = Container(  # type: ignore[assignment]
+        PublicDemoPipelinesContainer,
+        public_demo_orchestrators=orchestrators.public_demos,
+        conversation_orchestrators=orchestrators.conversations,
+        registries=registries,
     )
     assistants: AssistantPipelinesContainer = Container(  # type: ignore[assignment]
         AssistantPipelinesContainer,

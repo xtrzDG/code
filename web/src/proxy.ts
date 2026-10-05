@@ -11,13 +11,17 @@
  *  - the public hosted chat page (/c/{address}) gets its business and a
  *    stricter policy (server/hostedChatProxy.ts); no /c/ page is indexed;
  *  - a visitor's first landing or hosted chat page keeps where they came
- *    from in the `aw_attr` cookie (server/attributionCookie.ts).
+ *    from in the `aw_attr` cookie (server/attributionCookie.ts);
+ *  - a public page in a language (/ka, /ru/for/hotel) is rendered in it,
+ *    and a first-time visitor's cabinet starts in it too; a legal page
+ *    without a language (/privacy) goes to the reader's (lib/publicSite).
  */
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { LOCALE_COOKIE, matchLocale, negotiateLocale, DEFAULT_LOCALE } from "@/i18n/config";
+import { LOCALE_COOKIE, matchLocale, negotiateLocale, resolveLocale, DEFAULT_LOCALE } from "@/i18n/config";
 import { HOME_PATH, LOGIN_PATH, isProtectedPath, loginPath, safeNextPath } from "@/lib/navigation";
+import { PATH_LOCALE_HEADER, localizedRedirectPath, pathLocale } from "@/lib/publicSite/paths";
 import {
   PATHNAME_HEADER,
   buildUpstreamHeaders,
@@ -82,6 +86,14 @@ async function route(request: NextRequest): Promise<NextResponse> {
   if (token && pathname === LOGIN_PATH && !searchParams.has("reason")) {
     return NextResponse.redirect(new URL(safeNextPath(searchParams.get("next"), HOME_PATH), request.url));
   }
+  const readerLocale = resolveLocale({
+    cookieValue: request.cookies.get(LOCALE_COOKIE)?.value,
+    acceptLanguage: request.headers.get("accept-language"),
+  });
+  const localized = localizedRedirectPath(pathname, readerLocale);
+  if (localized !== null) {
+    return NextResponse.redirect(new URL(`${localized}${search}`, request.url));
+  }
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(PATHNAME_HEADER, `${pathname}${search}`);
@@ -94,8 +106,15 @@ async function route(request: NextRequest): Promise<NextResponse> {
   });
   requestHeaders.set(CSP_HEADER, policy);
   requestHeaders.set(NONCE_HEADER, nonce);
-  // Only the proxy says which business a hosted chat page shows.
+  // Only the proxy says which business a hosted chat page shows, and which
+  // language a public page is in.
   requestHeaders.delete(HOSTED_CHAT_HEADER);
+  const publicLocale = pathLocale(pathname);
+  if (publicLocale) {
+    requestHeaders.set(PATH_LOCALE_HEADER, publicLocale);
+  } else {
+    requestHeaders.delete(PATH_LOCALE_HEADER);
+  }
 
   let newLocale: string | null = null;
   if (token && !request.cookies.has(LOCALE_COOKIE)) {
@@ -105,6 +124,9 @@ async function route(request: NextRequest): Promise<NextResponse> {
       DEFAULT_LOCALE;
     request.cookies.set(LOCALE_COOKIE, newLocale);
     requestHeaders.set("cookie", request.cookies.toString());
+  } else if (publicLocale && !request.cookies.has(LOCALE_COOKIE)) {
+    // A visitor who reads the site in Georgian signs up in Georgian.
+    newLocale = publicLocale;
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });

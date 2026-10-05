@@ -132,11 +132,14 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
         names=build_localized_text(en="Plus", ru="Плюс", ka="პლუსი"),
         descriptions=build_localized_text(
             en="1,000 call minutes and 3,000 dialogs a month. For busy "
-            "restaurants and hotels, chains of 2-3 venues and real estate.",
+            "restaurants, hotels, clinics and real estate agencies that get "
+            "many calls and messages every day.",
             ru="1 000 минут звонков и 3 000 диалогов в месяц. Для загруженных "
-            "ресторанов и отелей, сетей из 2–3 точек и недвижимости.",
-            ka="თვეში 1 000 წუთი ზარი და 3 000 დიალოგი. დატვირთული რესტორნების "
-            "და სასტუმროების, 2–3 ობიექტიანი ქსელებისა და უძრავი ქონებისთვის.",
+            "ресторанов, отелей, клиник и агентств недвижимости, которым "
+            "каждый день много звонят и пишут.",
+            ka="თვეში 1 000 წუთი ზარი და 3 000 დიალოგი. დატვირთული "
+            "რესტორნების, სასტუმროების, კლინიკებისა და უძრავი ქონების "
+            "სააგენტოებისთვის, რომლებსაც ყოველდღე ბევრი ურეკავს და სწერს.",
         ),
         monthly_price=build_eur_price(34900),
         setup_fee=SETUP_FEE,

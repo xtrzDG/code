@@ -79,6 +79,10 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         "SUPPORT_WHATSAPP",
         "SUPPORT_TELEGRAM",
         "SUPPORT_EMAIL",
+        # The landing page's demo businesses: created after the first deploy,
+        # then set in the env group workshop-backend (docs/LAUNCH.md); until
+        # then the hero shows an example conversation.
+        "PUBLIC_DEMO_BUSINESS_IDS",
         # The restore drill runs in GitHub Actions (restore-drill.yml), never
         # on Render: production holds no private backup key.
         "BACKUP_AGE_IDENTITY",

@@ -88,7 +88,7 @@ export const billingRu: Translation<typeof billingEn> = {
     overageValue: "{minutes} мин · {cost}",
     overagePrice: "Каждая дополнительная минута стоит {price}.",
     none: "Расход появится здесь после начала подписки.",
-    estimatedNote: "≈ пересчитано по официальному курсу.",
+    estimatedNote: "≈ пересчитано только для ориентира; точная сумма — в счёте.",
   },
   plans: {
     title: "Тарифы",
@@ -113,7 +113,7 @@ export const billingRu: Translation<typeof billingEn> = {
     switchTo: "Перейти на этот тариф",
     startTrial: "Начать бесплатно",
     empty: "Тарифы для вашей страны пока недоступны.",
-    estimatedNote: "Цены со знаком ≈ пересчитаны по официальному курсу ({source}, {date}); итоговая сумма может немного отличаться.",
+    estimatedNote: "Цены со знаком ≈ — только ориентир: пересчитаны по {source} на {date}; точная сумма — в счёте.",
   },
   invoices: {
     title: "Счета",

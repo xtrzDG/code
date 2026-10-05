@@ -18,6 +18,9 @@ class LegalPipelinesContainer(containers.DeclarativeContainer):
     get_legal_document_pipeline = orchestrator_pipeline(
         legal_orchestrators.get_legal_document_orchestrator
     )
+    get_legal_overview_pipeline = orchestrator_pipeline(
+        legal_orchestrators.get_legal_overview_orchestrator
+    )
     send_subprocessor_notices_pipeline = orchestrator_pipeline(
         legal_orchestrators.send_subprocessor_notices_orchestrator
     )

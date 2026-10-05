@@ -23,7 +23,9 @@ from app.utilities.legal.subprocessor_dates import utc_day
 from app.utilities.localization.language_tags import parse_language_tag
 
 LEGAL_TEXT_FILE_PATTERN: re.Pattern[str] = re.compile(
-    r"^(?P<kind>terms|privacy|cookies)-(?P<version>[0-9]{4}-[0-9]{2}-[0-9]{2})\."
+    "^(?P<kind>"
+    + "|".join(kind.value for kind in LegalDocumentKind)
+    + r")-(?P<version>[0-9]{4}-[0-9]{2}-[0-9]{2})\."
     r"(?P<language>[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)\.md$"
 )
 # "[Legal name of the operator]": a field to fill; "[text](url)" is a link.
@@ -42,8 +44,9 @@ class VersionChoice:
 
 class LegalTextRegistry(LegalTextRegistryContract):
     """
-    The terms of service, the privacy policy and the cookie statement kept
-    as Markdown in the repository, one file per version and language:
+    The terms of service, the privacy policy, the cookie statement and the
+    security overview kept as Markdown in the repository, one file per
+    version and language:
     `<kind>-<version>.<language>.md`, the version being the day the text
     takes effect (docs/legal/terms-2026-10-05.ka.md). The version in force
     is the newest one whose day has come (UTC); a file with a later day is
