@@ -62,6 +62,12 @@ const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   support_access_end: "settings.audit.actions.support_access_end",
   session_revoked: "settings.audit.actions.session_revoked",
   platform_admin_changed: "settings.audit.actions.platform_admin_changed",
+  admin_trial_extended: "settings.audit.actions.admin_trial_extended",
+  admin_discount_given: "settings.audit.actions.admin_discount_given",
+  admin_credit_granted: "settings.audit.actions.admin_credit_granted",
+  admin_setup_fee_waived: "settings.audit.actions.admin_setup_fee_waived",
+  admin_invoice_marked_paid: "settings.audit.actions.admin_invoice_marked_paid",
+  admin_plan_overridden: "settings.audit.actions.admin_plan_overridden",
 };
 
 /** Actions about a person or the platform, never in a business's log. */

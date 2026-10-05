@@ -72,6 +72,12 @@ export const settingsRecordsEn = {
       support_access_end: "Platform support's access ended",
       session_revoked: "Signed out a device",
       platform_admin_changed: "Admin team changed",
+      admin_trial_extended: "Trial extended by the platform",
+      admin_discount_given: "Discount given by the platform",
+      admin_credit_granted: "Credit granted by the platform",
+      admin_setup_fee_waived: "Setup fee waived by the platform",
+      admin_invoice_marked_paid: "Invoice marked paid by the platform",
+      admin_plan_overridden: "Plan changed by the platform",
     },
     entities: {
       contact: "Customer",
@@ -137,6 +143,10 @@ export const settingsRecordsEn = {
       outbound_message: "Outgoing message",
       channel_message_receipt: "Delivery receipt",
       web_vital_sample: "Page speed samples",
+      subscription: "Subscription",
+      invoice: "Invoice",
+      billing_credit: "Billing credit",
+      onboarding_request: "Setup help request",
     },
   },
   roles: {

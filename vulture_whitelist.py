@@ -518,3 +518,25 @@ _.messages_left  # app/schemas/dto/public_demo.py (PublicDemoReply)
 # security measure, read by tests/legal (every path exists).
 _.latest_acceptance  # app/schemas/dto/compliance.py (DpaStatusView)
 _.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)
+
+# Admin account actions and the client story (R13): cash is a manual
+# payment method an admin picks in the cabinet; when a discount was given
+# and when a manual payment was recorded are stored for the record; the
+# rest are response fields the admin client page (invoices, timeline) and
+# the Metrics page (business funnel and tunnel, the admins line) read.
+_.CASH  # app/schemas/constants/billing.py (ManualPaymentMethod)
+_.granted_at  # app/schemas/domain/billing.py (SubscriptionDiscount)
+_.recorded_at  # app/schemas/domain/billing.py (ManualPayment)
+_.manual_payment_method  # app/schemas/dto/admin.py (AdminInvoiceView)
+_.share_of_created  # app/schemas/dto/analytics/growth_views.py (BusinessFunnelStepView)
+_.by_returning_owners  # app/schemas/dto/analytics/growth_views.py (BusinessGrowthView)
+_.are_platform_admins_included  # app/schemas/dto/analytics/growth_views.py (GrowthView)
+_.excluded_platform_admins  # app/schemas/dto/analytics/growth_views.py (GrowthView)
+_.excluded_admin_businesses  # app/schemas/dto/analytics/growth_views.py (GrowthView)
+_.actor_name  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+_.audit_action  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+_.audit_entity  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+_.invoice_number  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+_.payment_method  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+_.health_from  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+_.health_to  # app/schemas/dto/client_story.py (ClientTimelineEntry)

@@ -89,6 +89,12 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       support_access_end: "Доступ поддержки платформы закончился",
       session_revoked: "Выход на устройстве",
       platform_admin_changed: "Изменена команда админов",
+      admin_trial_extended: "Платформа продлила пробный период",
+      admin_discount_given: "Платформа дала скидку",
+      admin_credit_granted: "Платформа начислила кредит",
+      admin_setup_fee_waived: "Платформа отменила плату за настройку",
+      admin_invoice_marked_paid: "Платформа отметила счёт оплаченным",
+      admin_plan_overridden: "Платформа сменила тариф",
     },
     entities: {
       contact: "Клиент",
@@ -154,6 +160,10 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       outbound_message: "Исходящее сообщение",
       channel_message_receipt: "Отчёт о доставке",
       web_vital_sample: "Замеры скорости страниц",
+      subscription: "Подписка",
+      invoice: "Счёт",
+      billing_credit: "Кредит на счёт",
+      onboarding_request: "Заявка на помощь с настройкой",
     },
   },
   roles: {
