@@ -27,6 +27,9 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
     optional_text,
     read_text,
 )
+from app.utilities.config_helpers.app_settings.growth_settings_section import (
+    read_growth_settings,
+)
 from app.utilities.config_helpers.app_settings.integration_settings_section import (
     read_integration_settings,
 )
@@ -168,4 +171,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_quality_settings(environment_variables),
         **read_public_site_settings(environment_variables),
         **read_spend_guard_settings(environment_variables),
+        **read_growth_settings(environment_variables),
     )

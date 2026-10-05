@@ -544,6 +544,8 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT` | уведомлений на устройства (Web Push) нет: кнопка «Включить на этом устройстве» скрыта; задаются все три или ни одной, пара ключей проверяется при запуске |
 | `WHATSAPP_REMINDER_TEMPLATE` | напоминание о брони в WhatsApp уходит, только если клиент писал туда за последние 24 часа |
 | `WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE` | письменное подтверждение брони со ссылкой на её страницу уходит гостю в WhatsApp, только если он писал туда за последние 24 часа (в чат сайта и Telegram оно уходит всегда, в Messenger и Instagram — тоже только в течение 24 часов) |
+| `WHATSAPP_WAITLIST_TEMPLATE` | освободившееся место из листа ожидания уходит клиенту в WhatsApp, только если он писал туда за последние 24 часа (иначе — в другой подключённый мессенджер, например Telegram, а если его нет — место предлагается следующему в листе) |
+| `WHATSAPP_REBOOKING_TEMPLATE` | приглашение кампании повторной записи уходит в WhatsApp, только если клиент писал туда за последние 24 часа (иначе — в Telegram, а если нельзя никуда — пропуск с причиной «окно закрыто») |
 | `WHATSAPP_OWNER_REPORT_TEMPLATE` | владелец не может выбрать WhatsApp для сводок и отчётов (нужен ещё `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`); почта, устройства и Telegram работают |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | нет синхронизации с Google Calendar |
 | `FLITT_MERCHANT_ID`, `FLITT_SECRET_KEY` | оплата недоступна (502), вебхук оплаты отклоняется |

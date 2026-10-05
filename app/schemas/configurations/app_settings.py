@@ -2,6 +2,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
 from app.schemas.configurations.backup_settings import BackupSettings
+from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
@@ -30,9 +31,7 @@ from app.schemas.typings.assistants.constrained_integers import (
     ScriptedLlmLatencyMilliseconds,
 )
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
-from app.schemas.typings.businesses.constrained_integers import (
-    RecordingRetentionDays,
-)
+from app.schemas.typings.businesses.constrained_integers import RecordingRetentionDays
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     PublicBaseUrl,
@@ -298,3 +297,4 @@ class AppSettings(ImmutableDTO):
     public_site: PublicSiteSettings = Field(default_factory=PublicSiteSettings)
     # Spend limits, call caps, API limits (SPEND_*, CALL_*, API_*, PLATFORM_*).
     spend_guard: SpendGuardSettings = Field(default_factory=SpendGuardSettings)
+    growth: GrowthSettings = Field(default_factory=GrowthSettings)
