@@ -197,3 +197,61 @@ export function bookedValueIn(
     others: priced.filter((total) => total.currency_code !== currency),
   };
 }
+
+/** How long after going live the Overview still greets the owner with the "ready" card. */
+export const FIRST_DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Where the owner's hero is: "ready" while nothing has happened yet that a
+ * number could show — live for under 24 hours, or no conversation since
+ * the launch (the period starts at the launch and has none) — else
+ * "working", the hero with the period's numbers.
+ */
+export type ValueStage = "ready" | "working";
+
+export function valueStage(
+  model: Pick<ValueModel, "went_live_at" | "is_since_launch" | "current">,
+  nowMs: number,
+): ValueStage {
+  const liveSinceMs = model.went_live_at === null || model.went_live_at === undefined ? null : model.went_live_at / 1000;
+  if (liveSinceMs !== null && nowMs - liveSinceMs < FIRST_DAY_MS) {
+    return "ready";
+  }
+  return model.is_since_launch && model.current.conversation_count === 0 ? "ready" : "working";
+}
+
+/** The period's heading: "since 5 Oct" when it was cut at the launch, else its dates. */
+export type PeriodHeading = { kind: "since"; from: LocalDateText } | { kind: "range"; from: LocalDateText; to: LocalDateText };
+
+export function periodHeading(period: { date_from: string; date_to: string; is_since_launch?: boolean }): PeriodHeading {
+  return period.is_since_launch ? { kind: "since", from: period.date_from } : { kind: "range", from: period.date_from, to: period.date_to };
+}
+
+/**
+ * Whether "≈ N× your plan's price" shows: never in the free trial (the
+ * period costs nothing), and only for money above zero against a priced plan.
+ */
+export function showsReturnMultiple(model: ValueModel): boolean {
+  return (
+    !model.is_trial &&
+    (model.return_multiple ?? 0) > 0 &&
+    (model.plan_cost_minor ?? 0) > 0 &&
+    (model.current.estimated_revenue_minor ?? 0) > 0
+  );
+}
+
+/**
+ * The free trial's line: until when (the API's timestamp) and what the plan
+ * costs a month after it (null: not in a trial).
+ */
+export function trialTerms(model: ValueModel): { endsAt: number | null; priceMinor: number | null } | null {
+  if (!model.is_trial) {
+    return null;
+  }
+  return { endsAt: model.trial_ends_at ?? null, priceMinor: model.plan_cost_after_trial_minor ?? null };
+}
+
+/** Every counted booking has its own price: the average check plays no part, so its line hides. */
+export function usesOnlyOwnPrices(totals: Pick<ValueTotals, "revenue_source">): boolean {
+  return totals.revenue_source === "booked_values";
+}

@@ -2,7 +2,8 @@
 The rehearsal's grouping of what customers ask about (LLM_PROVIDER=scripted,
 and the demo data): each item goes to the first topic one of its keywords
 names (celebrations, bookings, opening hours, prices, the address, the
-menu and services, complaints), else to other questions; labels in the
+menu and services, complaints), else to the catch-all of other questions
+(marked, not named, as the real model is asked to); labels in every
 requested language (English for one without labels here).
 """
 
@@ -11,7 +12,7 @@ import re
 from collections.abc import Sequence
 from enum import StrEnum
 
-LABEL_LANGUAGE_LINE: re.Pattern[str] = re.compile(r"^Label language: (\S+)$", re.M)
+LABEL_LANGUAGES_LINE: re.Pattern[str] = re.compile(r"^Label languages?: (.+)$", re.M)
 ITEM_LINE: re.Pattern[str] = re.compile(r"^([CQ]\d+): (.*)$", re.M)
 FALLBACK_LANGUAGE: str = "en"
 
@@ -128,25 +129,48 @@ def topic_label(topic: RehearsalTopic, language: str) -> str:
 
 
 def group_items(
-    items: Sequence[tuple[str, str]], language: str
-) -> list[tuple[str, list[str]]]:
-    """(label, item names) per topic, in the order the topics first appear."""
+    items: Sequence[tuple[str, str]],
+) -> list[tuple[RehearsalTopic, list[str]]]:
+    """(topic, item names) per topic, in the order the topics first appear."""
 
     grouped: dict[RehearsalTopic, list[str]] = {}
     for name, text in items:
         grouped.setdefault(classify_topic(text), []).append(name)
 
-    return [(topic_label(topic, language), names) for topic, names in grouped.items()]
+    return list(grouped.items())
+
+
+def requested_languages(request_text: str) -> list[str]:
+    """The label languages of a request (English when it names none)."""
+
+    match: re.Match[str] | None = LABEL_LANGUAGES_LINE.search(request_text)
+    if match is None:
+        return [FALLBACK_LANGUAGE]
+
+    languages: list[str] = [
+        language.strip() for language in match.group(1).split(",") if language.strip()
+    ]
+    return languages or [FALLBACK_LANGUAGE]
 
 
 def rehearse_topics(request_text: str) -> str:
     """The rehearsal's answer to a grouping request, as the model answers."""
 
-    match: re.Match[str] | None = LABEL_LANGUAGE_LINE.search(request_text)
-    language: str = FALLBACK_LANGUAGE if match is None else match.group(1)
+    languages: list[str] = requested_languages(request_text)
     items: list[tuple[str, str]] = ITEM_LINE.findall(request_text)
-    topics = group_items(items, language)
     return json.dumps(
-        {"topics": [{"label": label, "items": names} for label, names in topics]},
+        {
+            "topics": [
+                {"other": True, "items": names}
+                if topic is RehearsalTopic.OTHER
+                else {
+                    "labels": {
+                        language: topic_label(topic, language) for language in languages
+                    },
+                    "items": names,
+                }
+                for topic, names in group_items(items)
+            ]
+        },
         ensure_ascii=False,
     )

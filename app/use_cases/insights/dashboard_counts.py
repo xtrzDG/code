@@ -3,11 +3,14 @@
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
+from app.contracts.repositories.conversation_repositories import MessageRepoContract
 from app.schemas.constants.billing import UsageKind
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.insights.constrained_floats import AfterHoursSharePercent
 from app.schemas.typings.insights.constrained_integers import (
+    PeriodItemCount,
     UsedVoiceMinutes,
 )
 from app.utilities.scheduling.zoned_time import (
@@ -40,3 +43,21 @@ def count_used_voice_minutes(
         and event.conversation_id not in sandbox_conversation_ids
     )
     return UsedVoiceMinutes(-(-voice_seconds // SECONDS_PER_MINUTE))
+
+
+def count_customer_messages(
+    message_repo: MessageRepoContract,
+    business_id: BusinessId,
+    start: Microseconds,
+    end: Microseconds,
+    sandbox_ids: list[ConversationId],
+) -> PeriodItemCount:
+    """Customer messages of the period outside sandbox conversations."""
+
+    total: int = int(message_repo.count_customer_messages(business_id, start, end))
+    if sandbox_ids:
+        total -= int(
+            message_repo.count_customer_messages(business_id, start, end, sandbox_ids)
+        )
+
+    return PeriodItemCount(total)

@@ -58,6 +58,7 @@ def without_money(model: ValueModel) -> ValueModel:
             "previous": counts_only(model.previous),
             "plan_cost_minor": None,
             "return_multiple": None,
+            "plan_cost_after_trial_minor": None,
         }
     )
 

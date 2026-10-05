@@ -495,3 +495,7 @@ _.has_placeholders  # app/schemas/dto/legal.py (LegalDocumentView)
 _.upcoming_version  # app/schemas/dto/legal.py (LegalDocumentView)
 _.terms_version  # app/schemas/dto/login_options.py (LoginOptionsView)
 _.privacy_version  # app/schemas/dto/login_options.py (LoginOptionsView)
+
+# Day 0 of a business (W13): the monthly price after the free trial is a
+# response field the Overview reads ("trial, then N a month").
+_.plan_cost_after_trial_minor  # app/schemas/dto/value/value_model.py (ValueModel)

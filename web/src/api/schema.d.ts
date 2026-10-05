@@ -2712,7 +2712,8 @@ export interface paths {
         };
         /**
          * Get Conversation Topics
-         * @description The topics of the last 30 days' first messages, grouped nightly.
+         * @description The topics of the last 30 days' first messages, grouped nightly,
+         *     labelled in `?language=` (the cabinet's; else the owner's).
          */
         get: operations["get_conversation_topics_v1_businesses__business_id__value_topics_get"];
         put?: never;
@@ -6504,12 +6505,17 @@ export interface components {
         };
         /**
          * ConversationTopicView
-         * @description One topic: its label in the owner's language, the conversations that
-         *     opened with it and the open questions the assistant could not answer.
+         * @description One topic: its label in the reader's language, whether it is a named
+         *     topic or the catch-all of other questions (OTHER, which the cabinet
+         *     names from its own dictionary; `label` is its text in the reader's
+         *     language), the conversations that opened with it and the open questions
+         *     the assistant could not answer.
          */
         ConversationTopicView: {
             /** Conversation Count */
             conversation_count: number;
+            /** @default named */
+            kind: components["schemas"]["TopicKind"];
             /** Label */
             label: string;
             /** Unanswered Count */
@@ -6519,7 +6525,8 @@ export interface components {
          * ConversationTopicsView
          * @description The topics of the conversations started from `window_from` to
          *     `window_to` (the last 30 days when grouped, every night), largest
-         *     language first. Never grouped yet: no window and no groups.
+         *     language first, labelled in `label_language` (the reader's). Never
+         *     grouped yet: no window and no groups.
          */
         ConversationTopicsView: {
             /** Business Id */
@@ -6811,6 +6818,10 @@ export interface components {
          *     the business was closed by its weekly hours. Both stay empty for staff,
          *     who see no money.
          *
+         *     The period never starts before the business went live (or was
+         *     created): `is_since_launch` says `date_from` was moved up to that day
+         *     from an earlier one asked for.
+         *
          *     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
          *     are ordered by count descending; `daily` has every date of the period,
          *     oldest first.
@@ -6848,6 +6859,11 @@ export interface components {
             handoffs_by_reason?: components["schemas"]["HandoffReasonCount"][];
             /** Handoffs By Urgency */
             handoffs_by_urgency?: components["schemas"]["HandoffUrgencyCount"][];
+            /**
+             * Is Since Launch
+             * @default false
+             */
+            is_since_launch: boolean;
             /** Languages */
             languages?: components["schemas"]["LanguageCount"][];
             /** Lead Count */
@@ -11695,6 +11711,15 @@ export interface components {
             tool_name: components["schemas"]["AssistantToolName"];
         };
         /**
+         * TopicKind
+         * @description What one topic of customers' questions is: a topic the nightly grouping
+         *     named (its labels are stored per cabinet language), or the catch-all of
+         *     greetings and questions that fit no other topic, which every cabinet
+         *     names in its own words.
+         * @enum {string}
+         */
+        TopicKind: "named" | "other";
+        /**
          * TopicLanguageView
          * @description The topics of the conversations started in one customer language.
          */
@@ -11922,7 +11947,17 @@ export interface components {
          *     `plan_cost_minor` is what the business's plan costs for the period's
          *     days and `return_multiple` how many times the period's money estimate
          *     covers it (both None when the plan is priced in another currency; no
-         *     multiple without an estimate).
+         *     multiple without an estimate, or for an estimate of nothing).
+         *
+         *     In the free trial (`is_trial`, until `trial_ends_at`) the period costs
+         *     nothing: no plan cost and no multiple, only the monthly price that
+         *     follows the trial (`plan_cost_after_trial_minor`, in the business
+         *     currency; None when priced in another).
+         *
+         *     The cabinet's periods never start before the business went live (or
+         *     was created): `is_since_launch` says `date_from` was moved up to that
+         *     day from an earlier one asked for, and `went_live_at` is when it first
+         *     went live (None: not yet, or before milestones were kept).
          */
         ValueModel: {
             /** Average Check Minor */
@@ -11937,6 +11972,18 @@ export interface components {
             date_from: string;
             /** Date To */
             date_to: string;
+            /**
+             * Is Since Launch
+             * @default false
+             */
+            is_since_launch: boolean;
+            /**
+             * Is Trial
+             * @default false
+             */
+            is_trial: boolean;
+            /** Plan Cost After Trial Minor */
+            plan_cost_after_trial_minor?: number | null;
             /** Plan Cost Minor */
             plan_cost_minor?: number | null;
             previous: components["schemas"]["ValueTotals"];
@@ -11952,9 +11999,13 @@ export interface components {
             seconds_per_reply: number;
             /** Timezone */
             timezone: string;
+            /** Trial Ends At */
+            trial_ends_at?: number | null;
             /** Typical Check Minor */
             typical_check_minor?: number | null;
             value_basis: components["schemas"]["ValueBasis"];
+            /** Went Live At */
+            went_live_at?: number | null;
         };
         /**
          * ValueReportDelivery
@@ -31346,7 +31397,9 @@ export interface operations {
     };
     get_conversation_topics_v1_businesses__business_id__value_topics_get: {
         parameters: {
-            query?: never;
+            query?: {
+                language?: string | null;
+            };
             header?: {
                 authorization?: string | null;
             };

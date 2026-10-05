@@ -36,7 +36,8 @@ export const queryKeys = {
     todayQueue: (businessId: Id, today: string) => ["dashboard", businessId, "todayQueue", today] as const,
     inboxViews: (businessId: Id) => ["dashboard", businessId, "inboxViews"] as const,
     /** What customers asked about, as the nightly grouping last stored it. */
-    topics: (businessId: Id) => ["dashboard", businessId, "topics"] as const,
+    /** What customers ask about, labelled in the cabinet's language. */
+    topics: (businessId: Id, language: string) => ["dashboard", businessId, "topics", language] as const,
     /** Bad ratings nobody acted on and questions without an answer (the Overview's list). */
     answersToImprove: (businessId: Id) => ["dashboard", businessId, "answersToImprove"] as const,
   },

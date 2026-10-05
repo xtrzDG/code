@@ -9,12 +9,18 @@ from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from app.schemas.domain.conversation_topics import ConversationTopic, TopicLanguageGroup
+from app.schemas.constants.value import TopicKind
+from app.schemas.domain.conversation_topics import (
+    ConversationTopic,
+    LocalizedTopicLabel,
+    TopicLanguageGroup,
+)
 from app.schemas.domain.handoffs import UnansweredQuestionDocument
 from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.insights.constrained_strings import TopicLabel
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.utilities.value.topic_grouping import GroupedTopic
+from app.utilities.value.topic_answers import GroupedTopic
+from app.utilities.value.topic_labels import label_in, other_topic_label
 
 # Languages grouped one by one; a model call each.
 MAX_TOPIC_LANGUAGES: int = 4
@@ -81,24 +87,49 @@ def language_batches(
 def previous_labels(
     groups: Sequence[TopicLanguageGroup],
     language: LanguageTag | None,
+    owner_language: LanguageTag,
 ) -> list[TopicLabel]:
-    """The labels the last grouping gave the same language (kept stable)."""
+    """
+    The owner-language labels the last grouping gave the named topics of
+    the same customer language (offered again, so a topic keeps its name).
+    """
 
     return [
-        topic.label
+        label_in(topic.labels, base_of(owner_language)) or topic.label
         for group in groups
         if base_of(group.language) == base_of(language)
         for topic in group.topics
+        if topic.kind is TopicKind.NAMED
     ]
 
 
-def to_group(batch: TopicBatch, topics: Sequence[GroupedTopic]) -> TopicLanguageGroup:
+def to_group(
+    batch: TopicBatch,
+    topics: Sequence[GroupedTopic],
+    owner_language: LanguageTag,
+) -> TopicLanguageGroup:
+    """
+    The stored group: each topic's labels by language, and as its version 1
+    `label` the owner-language one (else the first; the catch-all's text).
+    """
+
     return TopicLanguageGroup(
         language=batch.language,
         conversation_count=PeriodItemCount(len(batch.first_messages)),
         topics=[
             ConversationTopic(
-                label=topic.label,
+                label=(
+                    other_topic_label(owner_language)
+                    if topic.kind is TopicKind.OTHER
+                    else dict(topic.labels).get(
+                        base_of(owner_language), topic.labels[0][1]
+                    )
+                ),
+                kind=topic.kind,
+                labels=[
+                    LocalizedTopicLabel(language=LanguageTag(language), label=label)
+                    for language, label in topic.labels
+                ],
                 conversation_count=PeriodItemCount(topic.conversation_count),
                 unanswered_count=PeriodItemCount(topic.question_count),
             )

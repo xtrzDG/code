@@ -51,6 +51,7 @@ from app.adapters.storage.contact_upgrades import upgrade_contacts_from_v2
 from app.adapters.storage.knowledge_item_upgrades import (
     upgrade_knowledge_items_from_v1,
 )
+from app.adapters.storage.topic_upgrades import upgrade_conversation_topics_from_v1
 from app.schemas.exceptions.storage_errors import UnreadableStoredDocumentError
 from app.schemas.typings.storage.constrained_integers import (
     DocumentSchemaVersionNumber,
@@ -76,6 +77,9 @@ DOCUMENT_UPCASTERS: Mapping[
     },
     DocumentCollectionName("contacts"): {
         DocumentSchemaVersionNumber(2): upgrade_contacts_from_v2,
+    },
+    DocumentCollectionName("conversation_topics"): {
+        DocumentSchemaVersionNumber(1): upgrade_conversation_topics_from_v1,
     },
     DocumentCollectionName("knowledge_items"): {
         DocumentSchemaVersionNumber(1): upgrade_knowledge_items_from_v1,

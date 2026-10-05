@@ -7904,12 +7904,16 @@
       },
       "ConversationTopicView": {
         "additionalProperties": false,
-        "description": "One topic: its label in the owner's language, the conversations that\nopened with it and the open questions the assistant could not answer.",
+        "description": "One topic: its label in the reader's language, whether it is a named\ntopic or the catch-all of other questions (OTHER, which the cabinet\nnames from its own dictionary; `label` is its text in the reader's\nlanguage), the conversations that opened with it and the open questions\nthe assistant could not answer.",
         "properties": {
           "conversation_count": {
             "minimum": 0.0,
             "title": "Conversation Count",
             "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TopicKind",
+            "default": "named"
           },
           "label": {
             "maxLength": 60,
@@ -7934,7 +7938,7 @@
       },
       "ConversationTopicsView": {
         "additionalProperties": false,
-        "description": "The topics of the conversations started from `window_from` to\n`window_to` (the last 30 days when grouped, every night), largest\nlanguage first. Never grouped yet: no window and no groups.",
+        "description": "The topics of the conversations started from `window_from` to\n`window_to` (the last 30 days when grouped, every night), largest\nlanguage first, labelled in `label_language` (the reader's). Never\ngrouped yet: no window and no groups.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -8685,7 +8689,7 @@
       },
       "DashboardStats": {
         "additionalProperties": false,
-        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\n`booked_value` is what the bookings made in the period are worth per\ncurrency (not cancelled, not a no-show; bookings without a priced\nservice are left out), `after_hours_booked_value` the part booked while\nthe business was closed by its weekly hours. Both stay empty for staff,\nwho see no money.\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
+        "description": "Cabinet dashboard (concept /dashboard): conversations, customer messages,\nshare started outside opening hours, bookings, leads, handoffs, languages,\nchannels, open unanswered questions, package minutes used in the period,\na series per local day, and the package of the current billing window\n(None without a subscription).\n\n`booked_value` is what the bookings made in the period are worth per\ncurrency (not cancelled, not a no-show; bookings without a priced\nservice are left out), `after_hours_booked_value` the part booked while\nthe business was closed by its weekly hours. Both stay empty for staff,\nwho see no money.\n\nThe period never starts before the business went live (or was\ncreated): `is_since_launch` says `date_from` was moved up to that day\nfrom an earlier one asked for.\n\nSandbox (owner test and autotest) activity is excluded. Breakdown lists\nare ordered by count descending; `daily` has every date of the period,\noldest first.",
         "properties": {
           "after_hours_booked_value": {
             "items": {
@@ -8784,6 +8788,11 @@
             },
             "title": "Handoffs By Urgency",
             "type": "array"
+          },
+          "is_since_launch": {
+            "default": false,
+            "title": "Is Since Launch",
+            "type": "boolean"
           },
           "languages": {
             "items": {
@@ -20893,6 +20902,15 @@
         "title": "ToolCallView",
         "type": "object"
       },
+      "TopicKind": {
+        "description": "What one topic of customers' questions is: a topic the nightly grouping\nnamed (its labels are stored per cabinet language), or the catch-all of\ngreetings and questions that fit no other topic, which every cabinet\nnames in its own words.",
+        "enum": [
+          "named",
+          "other"
+        ],
+        "title": "TopicKind",
+        "type": "string"
+      },
       "TopicLanguageView": {
         "additionalProperties": false,
         "description": "The topics of the conversations started in one customer language.",
@@ -21443,7 +21461,7 @@
       },
       "ValueModel": {
         "additionalProperties": false,
-        "description": "The value of a business in a period and the period before it, in the\nbusiness currency and time zone. `average_check_minor` is the owner's\n(`OWNER`) or the niche's typical check in the business currency\n(`NICHE_DEFAULT`, also given as `typical_check_minor`); without either\nthere is no money estimate. The staff time rates explain the minutes.\n`plan_cost_minor` is what the business's plan costs for the period's\ndays and `return_multiple` how many times the period's money estimate\ncovers it (both None when the plan is priced in another currency; no\nmultiple without an estimate).",
+        "description": "The value of a business in a period and the period before it, in the\nbusiness currency and time zone. `average_check_minor` is the owner's\n(`OWNER`) or the niche's typical check in the business currency\n(`NICHE_DEFAULT`, also given as `typical_check_minor`); without either\nthere is no money estimate. The staff time rates explain the minutes.\n`plan_cost_minor` is what the business's plan costs for the period's\ndays and `return_multiple` how many times the period's money estimate\ncovers it (both None when the plan is priced in another currency; no\nmultiple without an estimate, or for an estimate of nothing).\n\nIn the free trial (`is_trial`, until `trial_ends_at`) the period costs\nnothing: no plan cost and no multiple, only the monthly price that\nfollows the trial (`plan_cost_after_trial_minor`, in the business\ncurrency; None when priced in another).\n\nThe cabinet's periods never start before the business went live (or\nwas created): `is_since_launch` says `date_from` was moved up to that\nday from an earlier one asked for, and `went_live_at` is when it first\nwent live (None: not yet, or before milestones were kept).",
         "properties": {
           "average_check_minor": {
             "anyOf": [
@@ -21488,6 +21506,28 @@
             "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date To",
             "type": "string"
+          },
+          "is_since_launch": {
+            "default": false,
+            "title": "Is Since Launch",
+            "type": "boolean"
+          },
+          "is_trial": {
+            "default": false,
+            "title": "Is Trial",
+            "type": "boolean"
+          },
+          "plan_cost_after_trial_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Cost After Trial Minor"
           },
           "plan_cost_minor": {
             "anyOf": [
@@ -21549,6 +21589,17 @@
             "title": "Timezone",
             "type": "string"
           },
+          "trial_ends_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trial Ends At"
+          },
           "typical_check_minor": {
             "anyOf": [
               {
@@ -21564,6 +21615,17 @@
           },
           "value_basis": {
             "$ref": "#/components/schemas/ValueBasis"
+          },
+          "went_live_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Went Live At"
           }
         },
         "required": [
@@ -54906,7 +54968,7 @@
     },
     "/v1/businesses/{business_id}/value/topics": {
       "get": {
-        "description": "The topics of the last 30 days' first messages, grouped nightly.",
+        "description": "The topics of the last 30 days' first messages, grouped nightly,\nlabelled in `?language=` (the cabinet's; else the owner's).",
         "operationId": "get_conversation_topics_v1_businesses__business_id__value_topics_get",
         "parameters": [
           {
@@ -54916,6 +54978,22 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
             }
           },
           {

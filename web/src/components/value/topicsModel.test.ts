@@ -5,6 +5,8 @@ import {
   needsAnswer,
   OTHER_LANGUAGES,
   topicGroupKey,
+  topicKey,
+  topicName,
   topicShare,
   wasGrouped,
   type ConversationTopics,
@@ -15,8 +17,8 @@ const russian: TopicLanguageGroup = {
   language: "ru",
   conversation_count: 8,
   topics: [
-    { label: "Бронирование", conversation_count: 5, unanswered_count: 0 },
-    { label: "Парковка", conversation_count: 3, unanswered_count: 2 },
+    { label: "Бронирование", kind: "named", conversation_count: 5, unanswered_count: 0 },
+    { label: "Парковка", kind: "named", conversation_count: 3, unanswered_count: 2 },
   ],
 };
 const others: TopicLanguageGroup = { language: null, conversation_count: 2, topics: [] };
@@ -52,5 +54,14 @@ describe("topics model", () => {
     expect(topicShare(booking!, { ...russian, conversation_count: 0 })).toBe(0);
     expect(needsAnswer(booking!)).toBe(false);
     expect(needsAnswer(parking!)).toBe(true);
+  });
+
+  it("names the catch-all in the cabinet's words and the named topics by their label", () => {
+    const other = { label: "Другие вопросы", kind: "other" as const, conversation_count: 2, unanswered_count: 0 };
+    const [booking] = russian.topics ?? [];
+
+    expect(topicName(other, "Other questions")).toBe("Other questions");
+    expect(topicName(booking!, "Other questions")).toBe("Бронирование");
+    expect(topicKey(other)).not.toBe(topicKey({ ...other, kind: "named" }));
   });
 });

@@ -27,6 +27,7 @@ from app.contracts.repositories.conversation_repositories import (
 from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
+from app.contracts.repositories.setup_repositories import ActivationEventRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -58,11 +59,15 @@ from app.use_cases.insights.dashboard_activity import (
     ranked_counts,
 )
 from app.use_cases.insights.dashboard_counts import (
+    count_customer_messages,
     count_used_voice_minutes,
     share_percent,
 )
 from app.use_cases.insights.dashboard_package_usage import build_dashboard_package_usage
-from app.use_cases.insights.dashboard_period import choose_dashboard_period
+from app.use_cases.insights.dashboard_period import (
+    DashboardDates,
+    choose_dashboard_period,
+)
 from app.use_cases.insights.dashboard_timeline import (
     TimelineStretch,
     build_timeline,
@@ -72,6 +77,7 @@ from app.use_cases.insights.dashboard_values import (
     after_hours_groups,
     booked_value_totals,
 )
+from app.use_cases.insights.value.launch_floor import read_launch_floor
 from app.use_cases.insights.value.value_access import sees_money
 from app.use_cases.shared.business_access import require_business
 from app.utilities.scheduling.opening_hours import DayRanges, business_day_ranges
@@ -85,7 +91,9 @@ from app.utilities.scheduling.zoned_time import (
 class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardStats]):
     """
     Cabinet dashboard for local dates of the business time zone (inclusive,
-    at most 366 days; the last 30 days by default).
+    at most 366 days; the last 30 days by default), never from before the
+    business went live (or was created): asked from earlier, the period
+    starts on that day and says so (`is_since_launch`).
 
     Counts what started in the period: conversations, customer messages,
     conversations outside opening hours (flagged by the conversation engine,
@@ -119,6 +127,7 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         usage_event_repo: UsageEventRepoContract,
         subscription_repo: SubscriptionRepoContract,
         plan_registry: PlanRegistryContract,
+        activation_event_repo: ActivationEventRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -137,6 +146,7 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._plan_registry: PlanRegistryContract = plan_registry
+        self._activation_event_repo: ActivationEventRepoContract = activation_event_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: DashboardStatsQuery) -> DashboardStats:
@@ -144,9 +154,13 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             self._business_repo, input_data.business_id
         )
         zone: ZoneInfo = load_time_zone(business.timezone)
-        date_from, date_to = choose_dashboard_period(
-            input_data, zone, self._wall_clock.now_unix()
+        period: DashboardDates = choose_dashboard_period(
+            input_data,
+            zone,
+            self._wall_clock.now_unix(),
+            read_launch_floor(self._activation_event_repo, business),
         )
+        date_from, date_to = period.date_from, period.date_to
         days: list[TimelineStretch] = build_timeline(date_from, date_to, zone, None)
         period_end: int = local_day_start_microseconds(
             date_to + timedelta(days=1), zone
@@ -191,9 +205,10 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             timezone=business.timezone,
             date_from=to_local_date(date_from),
             date_to=to_local_date(date_to),
+            is_since_launch=period.is_since_launch,
             conversation_count=PeriodItemCount(conversations.total),
-            customer_message_count=self._count_customer_messages(
-                business, start, end, sandbox_ids
+            customer_message_count=count_customer_messages(
+                self._message_repo, business.id, start, end, sandbox_ids
             ),
             after_hours_conversation_count=PeriodItemCount(conversations.after_hours),
             after_hours_share_percent=share_percent(
@@ -275,24 +290,3 @@ class GetDashboardStatsUseCase(UseCaseContract[DashboardStatsQuery, DashboardSta
             list(profile.hours),
             self._schedule_exception_repo.list_by_business(business.id),
         )
-
-    def _count_customer_messages(
-        self,
-        business: BusinessDocument,
-        start: Microseconds,
-        end: Microseconds,
-        sandbox_ids: list[ConversationId],
-    ) -> PeriodItemCount:
-        """Customer messages of the period outside sandbox conversations."""
-
-        total: int = int(
-            self._message_repo.count_customer_messages(business.id, start, end)
-        )
-        if sandbox_ids:
-            total -= int(
-                self._message_repo.count_customer_messages(
-                    business.id, start, end, sandbox_ids
-                )
-            )
-
-        return PeriodItemCount(total)

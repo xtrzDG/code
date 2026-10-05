@@ -26,6 +26,7 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     "90d": "90 დღე",
   },
   periodRange: "სტატისტიკა: {range}",
+  periodSince: "სტატისტიკა {date}-დან",
   status: {
     onboarding: {
       title: "შეავსეთ ბიზნესის ანკეტა",
@@ -77,6 +78,7 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     bookedValue: "ჯავშნების ღირებულება",
     bookedValueHint: { one: "{count} ჯავშანი საკუთარი ფასით", other: "{count} ჯავშანი საკუთარი ფასებით" },
     bookedValueOther: "და {money}",
+    bookedValueScope: "ყველა ჯავშანი, ხელით დამატებულების ჩათვლით",
   },
   continueSetup: "დაყენების გაგრძელება",
   usage: {
@@ -111,4 +113,6 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
   },
   emptyTitle: "ამ პერიოდში მიმართვები არ ყოფილა",
   emptyDescription: "როცა კლიენტები მოგწერენ ან დაგირეკავენ, აქ გამოჩნდება მიმართვები, ჯავშნები და საუბრები, სადაც ადამიანია საჭირო.",
+  statsEmptyTitle: "სტატისტიკა პირველი საუბრის შემდეგ გამოჩნდება",
+  statsEmptyDescription: "აქ არჩეული პერიოდის საუბრები, შეტყობინებები, ჯავშნები, მოთხოვნები და ადამიანისთვის გადაცემები დაითვლება.",
 };

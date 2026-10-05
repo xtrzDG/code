@@ -2,7 +2,12 @@
 
 from app.registries.demo import demo_tool_calls as calls
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
-from app.registries.demo.demo_lines import assistant, customer, staff
+from app.registries.demo.demo_lines import (
+    assistant,
+    customer,
+    rewrote_claim,
+    staff,
+)
 from app.registries.demo.tbilisi_restaurant.restaurant_foundation import (
     HALL_TABLE,
     SITE,
@@ -191,7 +196,16 @@ def record_georgian_question_chats(
                 calls.search("მიტანა", [story.item("Есть ли доставка")], "ka"),
                 calls.link(BusinessLinkKind.DELIVERY, f"{SITE}/delivery"),
             ),
-            customer("სუპერ, მადლობა"),
+            customer("სუპერ, მადლობა. პარკინგი გაქვთ? მანქანით მოვალთ"),
+            # The first draft said parking was free, which the facts do not
+            # say: the guard had it rewritten from the parking answer.
+            assistant(
+                "საკუთარი პარკინგი არ გვაქვს. ახლოს, კოტე აფხაზის ქუჩაზე, ქალაქის "
+                "ფასიანი პარკინგია — 2 ლარი საათში. ტაქსით მოსვლა უფრო მარტივია.",
+                calls.search("პარკინგი", [story.item("Есть ли парковка")], "ka"),
+                guard=rewrote_claim("სტუმრებისთვის პარკინგი უფასოა."),
+            ),
+            customer("გასაგებია, მადლობა!"),
         ],
     )
 

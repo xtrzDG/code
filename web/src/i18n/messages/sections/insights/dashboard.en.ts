@@ -26,6 +26,7 @@ export const dashboardEn = {
     "90d": "90 days",
   },
   periodRange: "Statistics for {range}",
+  periodSince: "Statistics since {date}",
   status: {
     onboarding: {
       title: "Finish the business profile",
@@ -74,6 +75,7 @@ export const dashboardEn = {
     bookedValue: "Booked worth",
     bookedValueHint: { one: "{count} booking at its own price", other: "{count} bookings at their own prices" },
     bookedValueOther: "and {money}",
+    bookedValueScope: "all bookings, including those added by hand",
   },
   continueSetup: "Continue setup",
   usage: {
@@ -108,4 +110,6 @@ export const dashboardEn = {
   },
   emptyTitle: "No requests in this period",
   emptyDescription: "When customers write or call, requests, bookings and conversations that need a person appear here.",
+  statsEmptyTitle: "Statistics start with the first conversation",
+  statsEmptyDescription: "Conversations, messages, bookings, requests and handoffs to a person will be counted here for the chosen period.",
 } as const;

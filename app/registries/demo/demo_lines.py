@@ -5,17 +5,28 @@ Short builders for the lines of demo conversations.
     assistant("Yes, at 20:00 ...", tool(CHECK_AVAILABILITY, {...}, {...})),
 
 Pauses are seconds after the previous line: customers take a while to
-type, the assistant answers within seconds.
+type, the assistant answers within seconds. A reply the guard handled
+carries its verdict, as the live engine stores it:
+
+    assistant("I am passing your question to a colleague ...",
+              guard=held_back_values("20 GEL")),
 """
 
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.conversations import MessageAuthor
-from app.schemas.domain.conversations import ToolCallRecord
-from app.schemas.dto.demo_data import DemoMessageLine
+from app.schemas.constants.conversations import MessageAuthor, ReplyGuardVerdict
+from app.schemas.constants.reply_safety import (
+    ClaimTopic,
+    ClaimVerdict,
+    ReplyGuardReason,
+)
+from app.schemas.domain.conversations import ClaimFinding, ToolCallRecord
+from app.schemas.dto.demo_data import DemoMessageLine, DemoReplyGuard
 from app.schemas.typings.conversations.strings import (
+    ClaimText,
     LlmToolInputJson,
     LlmToolResultJson,
     MessageText,
+    UnverifiedReplyValue,
 )
 from app.schemas.typings.demo.constrained_integers import DemoReplyPauseSeconds
 from app.utilities.conversations.llm_transcript import encode_json
@@ -37,12 +48,38 @@ def assistant(
     text: str,
     *tool_calls: ToolCallRecord,
     pause: int = ASSISTANT_PAUSE_SECONDS,
+    guard: DemoReplyGuard | None = None,
 ) -> DemoMessageLine:
     return DemoMessageLine(
         author=MessageAuthor.ASSISTANT,
         text=MessageText(text),
         tool_calls=list(tool_calls),
         pause_seconds=DemoReplyPauseSeconds(pause),
+        guard=guard,
+    )
+
+
+def held_back_values(*values: str) -> DemoReplyGuard:
+    """The model's draft named values the business's data does not back: handed over."""
+
+    return DemoReplyGuard(
+        verdict=ReplyGuardVerdict.HANDED_OFF,
+        reasons=[ReplyGuardReason.UNVERIFIED_VALUES],
+        unverified_values=[UnverifiedReplyValue(value) for value in values],
+    )
+
+
+def rewrote_claim(claim: str, topic: ClaimTopic = ClaimTopic.POLICY) -> DemoReplyGuard:
+    """The first draft made a claim the facts do not back: rewritten once."""
+
+    return DemoReplyGuard(
+        verdict=ReplyGuardVerdict.REWRITTEN,
+        reasons=[ReplyGuardReason.UNSUPPORTED_CLAIMS],
+        claim_findings=[
+            ClaimFinding(
+                claim=ClaimText(claim), topic=topic, verdict=ClaimVerdict.UNSUPPORTED
+            )
+        ],
     )
 
 

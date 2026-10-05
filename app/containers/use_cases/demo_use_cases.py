@@ -101,6 +101,7 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         message_media_repo=repositories.message_media_repo,
         media_storage=adapters.media.media_storage,
         conversation_topics_repo=repositories.conversation_topics_repo,
+        conversation_quality_repo=repositories.conversation_quality_repo,
         app_settings=config.app_settings,
         channel_repo=repositories.channel_repo,
     )

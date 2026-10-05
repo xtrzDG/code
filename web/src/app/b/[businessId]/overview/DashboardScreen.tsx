@@ -8,7 +8,7 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { useAttentionCounts } from "@/components/shell/LiveEvents";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
-import { formatLocalDateRange } from "@/components/insights/dates";
+import { formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
 import { useToday } from "@/components/insights/useToday";
 import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
 import { formatPercent } from "@/components/insights/numbers";
@@ -44,10 +44,14 @@ import { TopicsCard } from "./_components/TopicsCard";
 import { TrendChart } from "./_components/TrendChart";
 import { ValueHero } from "./_components/ValueHero";
 
+const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
+
 /**
  * The dashboard (concept /dashboard): what to do next, what waits for a
  * person, requests, bookings, after-hours share, languages, channels,
- * handoffs and the package usage, for a period in the business time zone.
+ * handoffs and the package usage, for a period in the business time zone
+ * (never from before the launch: "since 5 Oct"). Until a period has any
+ * activity its statistics are one empty card, not a wall of zeros.
  */
 export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPeriod | null }) {
   const { t, locale } = useI18n();
@@ -156,7 +160,9 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 id="dashboard-period" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
-                {t("dashboard.periodRange", { range: formatLocalDateRange(data.date_from, data.date_to, locale) })}
+                {data.is_since_launch
+                  ? t("dashboard.periodSince", { date: formatLocalDate(data.date_from, locale, SHORT_DATE) })
+                  : t("dashboard.periodRange", { range: formatLocalDateRange(data.date_from, data.date_to, locale) })}
               </h2>
               {stats.error ? (
                 <Button variant="ghost" size="sm" onClick={stats.reload}>
@@ -165,54 +171,61 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
               ) : null}
             </div>
 
-            <PeriodTiles data={data} value={value.data} isBusy={stats.isPlaceholder} />
+            {hasActivity ? (
+              <>
+                <PeriodTiles data={data} value={value.data} isBusy={stats.isPlaceholder} />
 
-            {hasActivity && (data.daily ?? []).length > 1 ? <TrendChart days={data.daily ?? []} /> : null}
+                {(data.daily ?? []).length > 1 ? <TrendChart days={data.daily ?? []} /> : null}
 
-            <div className="grid gap-4 lg:grid-cols-3">
-              <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
-              {hasActivity ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
+                  <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                    <BarList
+                      title={t("dashboard.breakdown.languages")}
+                      bars={toBars((data.languages ?? []).map((item) => ({ key: item.language, count: item.count })))}
+                      labelOf={(tag) => languageName(tag, locale)}
+                      valueOf={(bar) => barValue(bar.count, bar.percent)}
+                      emptyText={t("dashboard.breakdown.empty")}
+                    />
+                    <BarList
+                      title={t("dashboard.breakdown.channels")}
+                      bars={toBars((data.channels ?? []).map((item) => ({ key: item.channel, count: item.count })))}
+                      labelOf={(channel) => t(CHANNEL_LABELS[channel])}
+                      valueOf={(bar) => barValue(bar.count, bar.percent)}
+                      emptyText={t("dashboard.breakdown.empty")}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
                   <BarList
-                    title={t("dashboard.breakdown.languages")}
-                    bars={toBars((data.languages ?? []).map((item) => ({ key: item.language, count: item.count })))}
-                    labelOf={(tag) => languageName(tag, locale)}
-                    valueOf={(bar) => barValue(bar.count, bar.percent)}
+                    title={t("dashboard.breakdown.bookingsByStatus")}
+                    bars={toBars((data.bookings_by_status ?? []).map((item) => ({ key: item.status, count: item.count })))}
+                    labelOf={(status) => t(BOOKING_STATUS[status].label)}
+                    valueOf={(bar) => format.number(bar.count)}
                     emptyText={t("dashboard.breakdown.empty")}
                   />
                   <BarList
-                    title={t("dashboard.breakdown.channels")}
-                    bars={toBars((data.channels ?? []).map((item) => ({ key: item.channel, count: item.count })))}
-                    labelOf={(channel) => t(CHANNEL_LABELS[channel])}
-                    valueOf={(bar) => barValue(bar.count, bar.percent)}
+                    title={t("dashboard.breakdown.handoffsByReason")}
+                    bars={toBars((data.handoffs_by_reason ?? []).map((item) => ({ key: item.reason, count: item.count })))}
+                    labelOf={(reason) => t(HANDOFF_REASONS[reason])}
+                    valueOf={(bar) => format.number(bar.count)}
                     emptyText={t("dashboard.breakdown.empty")}
                   />
                 </div>
-              ) : (
-                <Card className="lg:col-span-2">
-                  <EmptyState title={t("dashboard.emptyTitle")} description={t("dashboard.emptyDescription")} />
+              </>
+            ) : (
+              // Nothing yet in the period: one card instead of a wall of zeros.
+              <div className="grid gap-4 lg:grid-cols-3">
+                <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
+                <Card className="lg:col-span-2" data-stats-empty="">
+                  <EmptyState
+                    title={t(data.is_since_launch ? "dashboard.statsEmptyTitle" : "dashboard.emptyTitle")}
+                    description={t(data.is_since_launch ? "dashboard.statsEmptyDescription" : "dashboard.emptyDescription")}
+                  />
                 </Card>
-              )}
-            </div>
-
-            {hasActivity ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <BarList
-                  title={t("dashboard.breakdown.bookingsByStatus")}
-                  bars={toBars((data.bookings_by_status ?? []).map((item) => ({ key: item.status, count: item.count })))}
-                  labelOf={(status) => t(BOOKING_STATUS[status].label)}
-                  valueOf={(bar) => format.number(bar.count)}
-                  emptyText={t("dashboard.breakdown.empty")}
-                />
-                <BarList
-                  title={t("dashboard.breakdown.handoffsByReason")}
-                  bars={toBars((data.handoffs_by_reason ?? []).map((item) => ({ key: item.reason, count: item.count })))}
-                  labelOf={(reason) => t(HANDOFF_REASONS[reason])}
-                  valueOf={(bar) => format.number(bar.count)}
-                  emptyText={t("dashboard.breakdown.empty")}
-                />
               </div>
-            ) : null}
+            )}
           </section>
         )}
 

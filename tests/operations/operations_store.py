@@ -41,6 +41,7 @@ from app.repositories.knowledge_repositories import (
     ResourceRepository,
     ScheduleExceptionRepository,
 )
+from app.repositories.setup_repositories import ActivationEventRepository
 from app.repositories.user_repositories import UserRepository
 from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
@@ -54,6 +55,7 @@ from app.schemas.domain.inbox_settings import InboxSettingsDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
+from app.schemas.domain.setup import ActivationEventDocument
 from app.schemas.domain.users import UserDocument
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.notifications.staff_alert_fakes import RecordingPushQueue, build_staff_alerts
@@ -143,6 +145,11 @@ class OperationsStore:
             )
         )
         self.plan_registry = PlanRegistry()
+        self.activation_event_repo = ActivationEventRepository(
+            InMemoryDocumentCollectionAdapter[ActivationEventDocument](
+                ActivationEventDocument
+            )
+        )
         self.audit_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument

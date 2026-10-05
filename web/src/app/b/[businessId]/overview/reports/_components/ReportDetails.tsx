@@ -3,6 +3,7 @@
 import { formatLocalDateRange } from "@/components/insights/dates";
 import { Table, TBody, Td, Th, THead, Tr } from "@/components/ui";
 import { DeltaChip } from "@/components/value/DeltaChip";
+import { FirstPeriodNote } from "@/components/value/FirstPeriodNote";
 import { formatWholeMoney, hadNoActivity, periodDays, type ValueReport } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
@@ -48,6 +49,7 @@ export function ReportDetails({ report }: { report: ValueReport }) {
 
   return (
     <div className="space-y-3">
+      {isFirstPeriod ? <FirstPeriodNote /> : null}
       {/* A phone gets a list (a four-column table would scroll sideways). */}
       <dl className="divide-y divide-line sm:hidden">
         {rows.map((row) => (

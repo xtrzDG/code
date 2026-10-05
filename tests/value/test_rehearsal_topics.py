@@ -6,15 +6,14 @@ requested language, read back as the real model's answer is.
 
 import json
 
+from app.schemas.constants.value import TopicKind
 from app.utilities.llm_rehearsal.rehearsal_topics import (
     RehearsalTopic,
     classify_topic,
     rehearse_topics,
 )
-from app.utilities.value.topic_grouping import (
-    build_topic_request_text,
-    read_grouped_topics,
-)
+from app.utilities.value.topic_answers import read_grouped_topics
+from app.utilities.value.topic_grouping import build_topic_request_text
 
 
 def test_messages_go_to_the_topic_their_words_name() -> None:
@@ -34,7 +33,7 @@ def test_messages_go_to_the_topic_their_words_name() -> None:
 
 def test_the_answer_reads_back_in_the_requested_language() -> None:
     request = build_topic_request_text(
-        "ru",
+        ["ru", "en", "ka"],
         "Mtsvane Ezo",
         [],
         ["Забронируйте стол на двоих", "Во сколько вы открываетесь?"],
@@ -42,25 +41,41 @@ def test_the_answer_reads_back_in_the_requested_language() -> None:
     )
 
     answer = rehearse_topics(request)
-    topics = read_grouped_topics(answer, conversation_total=2, question_total=1)
+    topics = read_grouped_topics(
+        answer,
+        conversation_total=2,
+        question_total=1,
+        label_languages=["ru", "en", "ka"],
+    )
 
     assert json.loads(answer)["topics"][0]["items"] == ["C1"]
+    assert json.loads(answer)["topics"][2] == {"other": True, "items": ["Q1"]}
     assert topics is not None
     counts = [
-        (topic.label, topic.conversation_count, topic.question_count)
+        (topic.kind, dict(topic.labels), topic.conversation_count, topic.question_count)
         for topic in topics
     ]
     assert counts == [
-        ("Бронирование", 1, 0),
-        ("Часы работы", 1, 0),
-        ("Другие вопросы", 0, 1),
+        (
+            TopicKind.NAMED,
+            {"ru": "Бронирование", "en": "Booking", "ka": "ჯავშანი"},
+            1,
+            0,
+        ),
+        (
+            TopicKind.NAMED,
+            {"ru": "Часы работы", "en": "Opening hours", "ka": "სამუშაო საათები"},
+            1,
+            0,
+        ),
+        (TopicKind.OTHER, {}, 0, 1),
     ]
 
 
 def test_a_language_without_labels_gets_english_ones() -> None:
-    request = build_topic_request_text("fr", "Café", [], ["Can I book a table?"], [])
+    request = build_topic_request_text(["fr"], "Café", [], ["Can I book a table?"], [])
 
-    topics = read_grouped_topics(rehearse_topics(request), 1, 0)
+    topics = read_grouped_topics(rehearse_topics(request), 1, 0, ["fr"])
 
     assert topics is not None
-    assert [topic.label for topic in topics] == ["Booking"]
+    assert [dict(topic.labels) for topic in topics] == [{"fr": "Booking"}]

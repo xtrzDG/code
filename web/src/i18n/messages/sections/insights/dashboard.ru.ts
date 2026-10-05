@@ -26,6 +26,7 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     "90d": "90 дней",
   },
   periodRange: "Статистика за {range}",
+  periodSince: "Статистика с {date}",
   status: {
     onboarding: {
       title: "Заполните анкету бизнеса",
@@ -84,6 +85,7 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
       other: "{count} брони по своим ценам",
     },
     bookedValueOther: "и {money}",
+    bookedValueScope: "все брони, включая внесённые вручную",
   },
   continueSetup: "Продолжить настройку",
   usage: {
@@ -118,4 +120,6 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
   },
   emptyTitle: "За этот период обращений нет",
   emptyDescription: "Когда клиенты напишут или позвонят, здесь появятся обращения, брони и разговоры, где нужен человек.",
+  statsEmptyTitle: "Статистика появится после первого разговора",
+  statsEmptyDescription: "Здесь будут разговоры, сообщения, брони, заявки и передачи человеку за выбранный период.",
 };

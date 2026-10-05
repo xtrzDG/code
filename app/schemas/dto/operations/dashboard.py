@@ -33,6 +33,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.value.booleans import IsPeriodSinceLaunch
 from app.schemas.typings.value.constrained_integers import BookedValueMinor
 
 
@@ -135,6 +136,10 @@ class DashboardStats(ImmutableDTO):
     the business was closed by its weekly hours. Both stay empty for staff,
     who see no money.
 
+    The period never starts before the business went live (or was
+    created): `is_since_launch` says `date_from` was moved up to that day
+    from an earlier one asked for.
+
     Sandbox (owner test and autotest) activity is excluded. Breakdown lists
     are ordered by count descending; `daily` has every date of the period,
     oldest first.
@@ -144,6 +149,7 @@ class DashboardStats(ImmutableDTO):
     timezone: TimezoneName
     date_from: LocalDate
     date_to: LocalDate
+    is_since_launch: IsPeriodSinceLaunch = False
     conversation_count: PeriodItemCount
     customer_message_count: PeriodItemCount
     after_hours_conversation_count: PeriodItemCount

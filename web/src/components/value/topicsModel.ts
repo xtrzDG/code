@@ -38,3 +38,17 @@ export function topicShare(topic: ConversationTopic, group: TopicLanguageGroup):
 export function needsAnswer(topic: ConversationTopic): boolean {
   return topic.unanswered_count > 0;
 }
+
+/**
+ * A topic as the card names it: the catch-all of other questions in the
+ * cabinet's own words (`otherTopic`), a named topic by its label (the API
+ * already labels it in the cabinet's language).
+ */
+export function topicName(topic: ConversationTopic, otherTopic: string): string {
+  return topic.kind === "other" ? otherTopic : topic.label;
+}
+
+/** A topic's key in its group (a named topic and the catch-all never clash). */
+export function topicKey(topic: ConversationTopic): string {
+  return `${topic.kind}:${topic.label}`;
+}

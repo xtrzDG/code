@@ -60,7 +60,7 @@ test("the owner reads where customers came from, per source and in total", async
   await expect(table.getByRole("row", { name: new RegExp(`^${en.sources.total}`) })).toBeVisible();
 });
 
-test("the overview weighs the value against the plan, shows what customers ask about, and the inbox where they came from", async ({
+test("the overview weighs the value against the plan's trial, shows what customers ask about, and the inbox where they came from", async ({
   page,
   context,
   request,
@@ -75,12 +75,15 @@ test("the overview weighs the value against the plan, shows what customers ask a
   });
 
   await page.goto(`/b/${owner.businessId}/overview`);
-  // The demo's plan is priced in its currency: the hero says how many times the plan the money is.
-  const [before, after] = en.value.hero.returnMultiple.split("{multiple}");
-  await expect(page.getByText(new RegExp(`^${escapeRegExp(before!)}[\\d.,]+${escapeRegExp(after!)}$`))).toBeVisible();
-  // Bookings at their own prices have a tile of their own.
+  // The demo restaurant is in its free trial: the plan costs nothing yet, so the hero says
+  // what it will cost after the trial instead of how many times the plan the money is.
+  const [before] = en.value.hero.trialUntil.split("{date}");
+  await expect(page.getByText(new RegExp(`^${escapeRegExp(before!)}.+`))).toBeVisible();
+  const [multiple] = en.value.hero.returnMultiple.split("{multiple}");
+  await expect(page.getByText(new RegExp(`^${escapeRegExp(multiple!)}[\\d.,]+`))).toHaveCount(0);
+  // Bookings at their own prices have a tile of their own, counting every booking.
   await expect(page.getByText(en.dashboard.kpi.bookedValue, { exact: true })).toBeVisible();
-  await expect(page.getByText("3 bookings at their own prices")).toBeVisible();
+  await expect(page.getByText(`3 bookings at their own prices · ${en.dashboard.kpi.bookedValueScope}`)).toBeVisible();
 
   const topics = page.getByRole("region", { name: en.topics.title });
   await expect(topics).toBeVisible();

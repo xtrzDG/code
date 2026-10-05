@@ -41,6 +41,9 @@ from app.contracts.repositories.feedback_repositories import (
     ReviewSettingsRepoContract,
 )
 from app.contracts.repositories.media_repositories import MessageMediaRepoContract
+from app.contracts.repositories.quality_repositories import (
+    ConversationQualityRepoContract,
+)
 from app.contracts.repositories.topic_repositories import (
     ConversationTopicsRepoContract,
 )
@@ -56,12 +59,12 @@ from app.schemas.dto.demo_data import (
     DemoActivityStorage,
     DemoBusinessActivity,
 )
-from app.schemas.dto.media import MediaLocation, StoredMediaFile
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.demo.demo_channel_activity import stamp_demo_channels
 from app.use_cases.demo.demo_invoice_issuing import issue_demo_invoice_if_paid
+from app.use_cases.demo.demo_media_storing import store_demo_media
 from app.utilities.assembly.autotest_evaluation import build_verdict
 
 # The owner accepted the DPA this long before the first version went live.
@@ -109,6 +112,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         message_media_repo: MessageMediaRepoContract,
         media_storage: MediaStorageAdapterContract,
         conversation_topics_repo: ConversationTopicsRepoContract,
+        conversation_quality_repo: ConversationQualityRepoContract,
         app_settings: AppSettings,
         channel_repo: ChannelRepoContract,
     ) -> None:
@@ -138,6 +142,7 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._message_media_repo: MessageMediaRepoContract = message_media_repo
         self._media_storage: MediaStorageAdapterContract = media_storage
         self._topics_repo: ConversationTopicsRepoContract = conversation_topics_repo
+        self._quality_repo: ConversationQualityRepoContract = conversation_quality_repo
         self._app_settings: AppSettings = app_settings
 
     def run(self, input_data: DemoActivityStorage) -> BusinessId:
@@ -230,14 +235,9 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
             self._handoff_repo.save(handoff)
         for question in activity.unanswered_questions:
             self._question_repo.save(question)
-        for file in activity.media_files:
-            self._media_storage.store(
-                MediaLocation(
-                    business_id=file.media.business_id, path=file.media.storage_path
-                ),
-                StoredMediaFile(content=file.content, media_type=file.media.media_type),
-            )
-            self._message_media_repo.save(file.media)
+        store_demo_media(
+            self._media_storage, self._message_media_repo, activity.media_files
+        )
         if activity.conversation_topics is not None:
             self._topics_repo.save(activity.conversation_topics)
 
@@ -246,6 +246,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
             self._review_settings_repo.save(activity.review_settings)
         for request in activity.feedback_requests:
             self._feedback_request_repo.insert_if_new(request)
+        for score in activity.quality_scores:
+            self._quality_repo.save(score)
 
     def _store_billing(
         self, business: BusinessDocument, activity: DemoBusinessActivity

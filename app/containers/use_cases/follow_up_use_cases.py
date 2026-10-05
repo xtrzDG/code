@@ -197,6 +197,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         usage_event_repo=repositories.usage_event_repo,
         subscription_repo=repositories.subscription_repo,
         plan_registry=registries.plan_registry,
+        activation_event_repo=repositories.activation_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # Every handoff (model tool, reply guard, calls) goes through the team

@@ -139,6 +139,7 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         GetBusinessValueUseCase,
         authorize_business_access=authorize,
         compute_value_model=compute_value_model_use_case,
+        activation_event_repo=repositories.activation_event_repo,
         wall_clock=wall_clock,
     )
     get_value_settings_use_case: Factory[

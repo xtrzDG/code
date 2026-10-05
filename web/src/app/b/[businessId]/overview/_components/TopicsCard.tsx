@@ -12,6 +12,8 @@ import {
   needsAnswer,
   OTHER_LANGUAGES,
   topicGroupKey,
+  topicKey,
+  topicName,
   topicShare,
   wasGrouped,
   type ConversationTopic,
@@ -25,14 +27,15 @@ import { businessPath } from "@/lib/navigation";
 /**
  * "What customers ask about" (Overview, owners and staff): the first
  * messages of the last 30 days grouped into topics every night, per
- * customer language. A topic with questions the assistant could not
- * answer links owners to them ("Add an answer").
+ * customer language, labelled in the cabinet's language (the catch-all of
+ * other questions in the cabinet's own words). A topic with questions the
+ * assistant could not answer links owners to them ("Add an answer").
  */
 export function TopicsCard() {
   const { t, locale } = useI18n();
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
-  const topics = useConversationTopics(business.id);
+  const topics = useConversationTopics(business.id, locale);
   const [language, setLanguage] = useState<string | null>(null);
   const questionsHref = `${businessPath(business.id, "assistant/knowledge")}/questions`;
 
@@ -71,7 +74,7 @@ export function TopicsCard() {
         <div className="space-y-4">
           <ul className="space-y-3.5">
             {(group.topics ?? []).map((topic) => (
-              <TopicRow key={topic.label} topic={topic} group={group} questionsHref={isOwner ? questionsHref : null} />
+              <TopicRow key={topicKey(topic)} topic={topic} group={group} questionsHref={isOwner ? questionsHref : null} />
             ))}
           </ul>
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-subtle">
@@ -107,10 +110,13 @@ function TopicRow({
 }) {
   const { t, tp } = useI18n();
   const share = topicShare(topic, group);
+  const name = topicName(topic, t("topics.otherTopic"));
   return (
     <li>
       <div className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="min-w-0 font-medium break-words text-ink">{topic.label}</span>
+        <span className="min-w-0 font-medium break-words text-ink" data-topic-kind={topic.kind}>
+          {name}
+        </span>
         <span className="shrink-0 text-ink-muted tabular-nums">{tp("topics.conversations", topic.conversation_count)}</span>
       </div>
       <div className="mt-1.5 h-2 rounded-full bg-surface-muted" aria-hidden>
@@ -125,7 +131,7 @@ function TopicRow({
               className="rounded text-sm font-medium text-accent-ink underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               {t("topics.addAnswer")}
-              <span className="sr-only">{`: ${topic.label}`}</span>
+              <span className="sr-only">{`: ${name}`}</span>
             </Link>
           ) : null}
         </div>

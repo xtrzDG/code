@@ -2,7 +2,7 @@
 
 from app.registries.demo import demo_tool_calls as calls
 from app.registries.demo.demo_activity_builder import DemoActivityBuilder
-from app.registries.demo.demo_lines import assistant, customer
+from app.registries.demo.demo_lines import assistant, customer, held_back_values
 from app.registries.demo.tbilisi_restaurant.restaurant_foundation import SITE
 from app.schemas.constants.bookings import LeadType
 from app.schemas.constants.businesses import BusinessLinkKind
@@ -115,9 +115,13 @@ def record_english_question_chats(
         clock.past(-1, "19:40"),
         [
             customer(question),
+            # The model's draft named a corkage fee of 20 GEL, which the
+            # business never gave: the guard held it back and handed over.
             assistant(
                 "Thank you! I am passing your question to a colleague, who will "
-                "get back to you soon."
+                "get back to you soon.",
+                calls.search("corkage fee own wine", [], "en"),
+                guard=held_back_values("20 GEL"),
             ),
         ],
     )
