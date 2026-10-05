@@ -6,7 +6,10 @@ it, and the tag rules every writer shares.
 from typed_time_provider import Microseconds
 
 from app.schemas.domain.contacts import ContactDocument, ContactTagMark
-from app.schemas.typings.contacts.constrained_strings import CustomerTag
+from app.schemas.typings.contacts.constrained_strings import (
+    CustomerTag,
+    CustomerTagKey,
+)
 from app.schemas.typings.users.prefixed_id import UserId
 
 # Tags one customer carries at most, and tags the business's list keeps.
@@ -36,10 +39,10 @@ def keep_card_fields(
     )
 
 
-def tag_key(tag: CustomerTag) -> str:
-    """Tags compare without case ("VIP" is "vip")."""
+def tag_key(tag: CustomerTag) -> CustomerTagKey:
+    """Tags compare without case ("VIP" is "vip"): the tag's folded key."""
 
-    return str(tag).casefold()
+    return CustomerTagKey(str(tag).casefold())
 
 
 def add_tags(
@@ -53,14 +56,17 @@ def add_tags(
     it is); returns the ones actually added. At most MAX_TAGS_PER_CUSTOMER.
     """
 
-    present: set[str] = {tag_key(mark.tag) for mark in contact.tags}
+    present: set[CustomerTagKey] = {mark.key for mark in contact.tags}
     added: list[CustomerTag] = []
     for tag in tags:
-        if tag_key(tag) in present or len(contact.tags) >= MAX_TAGS_PER_CUSTOMER:
+        key: CustomerTagKey = tag_key(tag)
+        if key in present or len(contact.tags) >= MAX_TAGS_PER_CUSTOMER:
             continue
 
-        contact.tags.append(ContactTagMark(tag=tag, added_at=now, added_by=actor_id))
-        present.add(tag_key(tag))
+        contact.tags.append(
+            ContactTagMark(tag=tag, key=key, added_at=now, added_by=actor_id)
+        )
+        present.add(key)
         added.append(tag)
 
     return added
@@ -69,8 +75,8 @@ def add_tags(
 def remove_tags(contact: ContactDocument, tags: list[CustomerTag]) -> None:
     """Take the tags off the contact, in any case."""
 
-    removed: set[str] = {tag_key(tag) for tag in tags}
-    contact.tags = [mark for mark in contact.tags if tag_key(mark.tag) not in removed]
+    removed: set[CustomerTagKey] = {tag_key(tag) for tag in tags}
+    contact.tags = [mark for mark in contact.tags if mark.key not in removed]
 
 
 def remember_tags(
@@ -78,7 +84,7 @@ def remember_tags(
 ) -> list[CustomerTag]:
     """The business's tags with the newly used ones first, at most MAX_KNOWN_TAGS."""
 
-    used_keys: set[str] = {tag_key(tag) for tag in used}
+    used_keys: set[CustomerTagKey] = {tag_key(tag) for tag in used}
     return [
         *used,
         *(tag for tag in known if tag_key(tag) not in used_keys),

@@ -26,6 +26,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CurrencyCode": "GEL",
     "CurrencyPairCode": "EUR/GEL",
     "CustomerTag": "regular",
+    "CustomerTagKey": "regular",
     "DpaDocumentVersion": "2026-07",
     "GoLiveCheckDetail": "no_opening_hours",
     "IncidentTitle": "WhatsApp replies delayed",

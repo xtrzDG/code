@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-05 — customers: cards, staff-safe list, blocking, segments, search
 
-Spec: `92e15f691b500dcf`
+Spec: `6c1658cd0245ac54`
 
 - **Changed** `GET /v1/businesses/{business_id}/contacts` is open to staff:
   their rows carry `phone_number: null`, `masked_phone_number` and

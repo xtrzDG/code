@@ -7,7 +7,10 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.booleans import IsContactBlocked, IsVipCustomer
-from app.schemas.typings.contacts.constrained_strings import CustomerTag
+from app.schemas.typings.contacts.constrained_strings import (
+    CustomerTag,
+    CustomerTagKey,
+)
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName, FoldedContactName
 from app.schemas.typings.conversations.strings import ChannelUserId
@@ -26,9 +29,13 @@ class ChannelIdentity(PersistentDocument):
 
 
 class ContactTagMark(PersistentDocument):
-    """A tag on a customer: which, when and by whom (None: the platform)."""
+    """
+    A tag on a customer: which (as written, and its case-folded `key` the
+    filters match), when and by whom (None: the platform).
+    """
 
     tag: CustomerTag
+    key: CustomerTagKey
     added_at: Microseconds
     added_by: UserId | None = None
 
@@ -69,7 +76,7 @@ class ContactDocument(BaseDocument):
     step with `name` by the repository.
 
     Version 4 adds the team's customer card (1140), all optional: `tags`
-    (indexed, `tags[].tag`), the `is_vip` flag and `block`, set while the
+    (indexed by `tags[].key`), the `is_vip` flag and `block`, set while the
     assistant must not answer the customer (`is_blocked` mirrors it for the
     list's filter). Only the card writes of the repository change them; a
     plain save keeps them as stored, so a turn that read the contact

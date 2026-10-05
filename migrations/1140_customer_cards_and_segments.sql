@@ -10,7 +10,7 @@
 -- table's index).
 --
 -- contacts (version 4): the card fields
---   tags[].tag   kept in workshop.document_lookup_keys by the
+--   tags[].key   kept in workshop.document_lookup_keys by the
 --                contacts_tags_lookup_keys trigger (the list's tag filter,
 --                a segment's tag rule); rows written before this file have
 --                no tags, so there is nothing to backfill
@@ -32,4 +32,4 @@ select workshop.add_lookup_column('contacts', 'is_blocked', 'text');
 
 create or replace trigger contacts_tags_lookup_keys
     after insert or update or delete on workshop.contacts
-    for each row execute function workshop.sync_document_lookup_keys('tags', 'tag');
+    for each row execute function workshop.sync_document_lookup_keys('tags', 'key');

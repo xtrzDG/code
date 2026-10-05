@@ -189,6 +189,12 @@
               ],
               "default": null
             },
+            "key": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,62}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
             "tag": {
               "maxLength": 32,
               "minLength": 1,
@@ -198,6 +204,7 @@
           },
           "required": [
             "tag",
+            "key",
             "added_at"
           ],
           "type": "object"

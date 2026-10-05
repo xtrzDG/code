@@ -6369,7 +6369,7 @@ export interface components {
          *     step with `name` by the repository.
          *
          *     Version 4 adds the team's customer card (1140), all optional: `tags`
-         *     (indexed, `tags[].tag`), the `is_vip` flag and `block`, set while the
+         *     (indexed by `tags[].key`), the `is_vip` flag and `block`, set while the
          *     assistant must not answer the customer (`is_blocked` mirrors it for the
          *     list's filter). Only the card writes of the repository change them; a
          *     plain save keeps them as stored, so a turn that read the contact
@@ -6603,13 +6603,16 @@ export interface components {
         };
         /**
          * ContactTagMark
-         * @description A tag on a customer: which, when and by whom (None: the platform).
+         * @description A tag on a customer: which (as written, and its case-folded `key` the
+         *     filters match), when and by whom (None: the platform).
          */
         ContactTagMark: {
             /** Added At */
             added_at: number;
             /** Added By */
             added_by?: string | null;
+            /** Key */
+            key: string;
             /** Tag */
             tag: string;
         };

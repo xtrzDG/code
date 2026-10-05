@@ -83,9 +83,10 @@ def scan_segment(
     members: list[ContactDocument] = []
     scanned: int = 0
     while scanned < scan_limit:
+        batch_size: int = min(SEGMENT_BATCH, scan_limit - scanned)
         batch: list[ContactDocument] = readers.card_repo.page_customers(
             business_id,
-            KeysetSlice(after=after, limit=KeysetReadLimit(SEGMENT_BATCH)),
+            KeysetSlice(after=after, limit=KeysetReadLimit(batch_size)),
             page_filter,
         )
         matching: set[ContactId] = matching_ids(readers, business_id, rules, now, batch)
@@ -102,7 +103,7 @@ def scan_segment(
                     next_cursor=cursor_after(members[size - 1]),
                 )
 
-        if len(batch) < SEGMENT_BATCH:
+        if len(batch) < batch_size:
             return SegmentScan(members=members, scanned=scanned)
 
         after = position_of(batch[-1])

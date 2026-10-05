@@ -21,9 +21,9 @@ from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFilter
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
-from app.utilities.customers.customer_card import keep_card_fields
+from app.utilities.customers.customer_card import keep_card_fields, tag_key
 
-TAG_FIELD: DocumentFieldPath = DocumentFieldPath("tags[].tag")
+TAG_FIELD: DocumentFieldPath = DocumentFieldPath("tags[].key")
 IS_VIP_FIELD: DocumentFieldPath = DocumentFieldPath("is_vip")
 IS_BLOCKED_FIELD: DocumentFieldPath = DocumentFieldPath("is_blocked")
 
@@ -76,7 +76,7 @@ class CustomerCardWrites(ContactListing, CustomerCardRepoContract):
     ) -> list[ContactDocument]:
         matches: list[DocumentFieldMatch] = []
         if page_filter.tag is not None:
-            matches.append(field_equals(TAG_FIELD, page_filter.tag))
+            matches.append(field_equals(TAG_FIELD, tag_key(page_filter.tag)))
         if page_filter.vip_only:
             matches.append(field_equals(IS_VIP_FIELD, True))
         if page_filter.blocked_only:

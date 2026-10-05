@@ -60,10 +60,13 @@ def mask_phone_number(phone_number: E164PhoneNumber) -> MaskedPhoneNumber:
     digits: str = str(phone_number).removeprefix("+")
     hidden: int = max(len(digits) - SHOWN_LEADING_DIGITS - SHOWN_TRAILING_DIGITS, 0)
     masked: str = MASK * hidden + digits[len(digits) - SHOWN_TRAILING_DIGITS :]
+    # Groups of three from the end, as numbers are read aloud.
     groups: list[str] = [
-        masked[index : index + 3] for index in range(0, len(masked), 3)
+        masked[max(end - 3, 0) : end] for end in range(len(masked), 0, -3)
     ]
-    return MaskedPhoneNumber(f"+{digits[:SHOWN_LEADING_DIGITS]} {' '.join(groups)}")
+    return MaskedPhoneNumber(
+        f"+{digits[:SHOWN_LEADING_DIGITS]} {' '.join(reversed(groups))}"
+    )
 
 
 def protect_phone(view: ContactSummaryView, sees_phones: bool) -> ContactSummaryView:

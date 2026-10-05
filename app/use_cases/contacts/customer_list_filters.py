@@ -27,5 +27,5 @@ def accepts(page_filter: CustomerPageFilter, contact: ContactDocument) -> bool:
         return False
 
     return page_filter.tag is None or tag_key(page_filter.tag) in {
-        tag_key(mark.tag) for mark in contact.tags
+        mark.key for mark in contact.tags
     }

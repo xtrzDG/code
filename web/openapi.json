@@ -6893,7 +6893,7 @@
       },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.\n\nVersion 4 adds the team's customer card (1140), all optional: `tags`\n(indexed, `tags[].tag`), the `is_vip` flag and `block`, set while the\nassistant must not answer the customer (`is_blocked` mirrors it for the\nlist's filter). Only the card writes of the repository change them; a\nplain save keeps them as stored, so a turn that read the contact\nearlier never undoes a tag or a block. An erased customer has none.",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.\n\nVersion 4 adds the team's customer card (1140), all optional: `tags`\n(indexed by `tags[].key`), the `is_vip` flag and `block`, set while the\nassistant must not answer the customer (`is_blocked` mirrors it for the\nlist's filter). Only the card writes of the repository change them; a\nplain save keeps them as stored, so a turn that read the contact\nearlier never undoes a tag or a block. An erased customer has none.",
         "properties": {
           "block": {
             "anyOf": [
@@ -7432,7 +7432,7 @@
       },
       "ContactTagMark": {
         "additionalProperties": false,
-        "description": "A tag on a customer: which, when and by whom (None: the platform).",
+        "description": "A tag on a customer: which (as written, and its case-folded `key` the\nfilters match), when and by whom (None: the platform).",
         "properties": {
           "added_at": {
             "title": "Added At",
@@ -7449,6 +7449,13 @@
             ],
             "title": "Added By"
           },
+          "key": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,62}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+            "title": "Key",
+            "type": "string"
+          },
           "tag": {
             "maxLength": 32,
             "minLength": 1,
@@ -7459,6 +7466,7 @@
         },
         "required": [
           "tag",
+          "key",
           "added_at"
         ],
         "title": "ContactTagMark",

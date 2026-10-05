@@ -31,6 +31,22 @@ class CustomerTag(BaseConstrainedTypedString):
     pattern = r"^[^\s\x00-\x1f\x7f](?:[^\x00-\x1f\x7f]{0,30}[^\s\x00-\x1f\x7f])?\Z"
 
 
+class CustomerTagKey(BaseConstrainedTypedString):
+    """
+    A tag as tags compare: case-folded ("Regular" and "REGULAR" are the key
+    "regular"). Stored next to the tag, so the list and segments filter by
+    it in the database. Folding may lengthen a tag ("ß" is "ss"): up to 64
+    characters.
+
+    Example:
+        key = CustomerTagKey("regular")
+    """
+
+    min_length = 1
+    max_length = 64
+    pattern = r"^[^\s\x00-\x1f\x7f](?:[^\x00-\x1f\x7f]{0,62}[^\s\x00-\x1f\x7f])?\Z"
+
+
 class SegmentName(BaseConstrainedTypedString):
     """
     The owner's name of a saved group of customers ("Not back in 60 days"):

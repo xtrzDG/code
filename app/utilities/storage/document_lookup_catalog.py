@@ -76,7 +76,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("created_at"),
         integer_field("last_seen_at"),
         text_field("display_name_folded"),
-        element_field("tags[].tag"),
+        element_field("tags[].key"),
         filter_field("is_vip"),
         filter_field("is_blocked"),
     ),
