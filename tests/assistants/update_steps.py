@@ -6,7 +6,7 @@ live yet, drafts and "Apply changes".
 
 from typing import Any, cast
 
-from httpx import Response
+from httpx2 import Response
 
 from tests.e2e.harness import Workshop
 from tests.setup.launch_steps import (

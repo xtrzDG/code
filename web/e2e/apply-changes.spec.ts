@@ -144,4 +144,8 @@ test("a check that fails is named in the sheet, its answer fixed, and the update
   const confirm = page.getByRole("dialog", { name: ru.teaching.checks.deleteTitle });
   await confirm.getByRole("button", { name: ru.teaching.checks.delete, exact: true }).click();
   await expect(check).toHaveCount(0);
+
+  // The test chat talks to what customers get now or with your changes: no version numbers.
+  await page.goto(`/b/${owner.businessId}/assistant`);
+  await expect(page.getByLabel(ru.updates.chat.target).locator("option")).toHaveText([ru.updates.chat.live, ru.updates.chat.changes]);
 });
