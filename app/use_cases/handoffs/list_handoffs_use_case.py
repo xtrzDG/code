@@ -68,6 +68,7 @@ class ListHandoffsUseCase(UseCaseContract[ListHandoffsQuery, HandoffPage]):
                 HANDOFF_ENTITY,
                 None,
                 self._wall_clock.now_unix(),
+                input_data.client_ip_address,
             )
         )
         handoffs: list[HandoffDocument]

@@ -60,6 +60,7 @@ class ListLeadsUseCase(UseCaseContract[ListLeadsQuery, LeadPage]):
                 LEAD_ENTITY,
                 None,
                 self._wall_clock.now_unix(),
+                input_data.client_ip_address,
             )
         )
         leads: list[LeadDocument]

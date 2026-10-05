@@ -142,7 +142,8 @@ class AuditLogEntryView(ImmutableDTO):
     actor_id: UserId | None = None
     ip_address: ClientIpAddress | None = None
     occurred_at: Microseconds
-    # How many records a purge or a deletion at a sub-processor covered.
+    # How many records a purge or a deletion at a sub-processor covered; on a
+    # VIEW, how many times the same view came within 5 minutes.
     record_count: AuditRecordCount | None = None
 
 

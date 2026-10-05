@@ -171,12 +171,14 @@ class TestTextBackList:
         assert latest["status"] == "sent"
         assert latest["channel"] == "sms"
         assert latest["language"] == "ka"
-        assert (
-            setup.testbed.audit_actions(setup.business.id).count(
-                ("view", "missed_call")
+        [views] = [
+            entry
+            for entry in setup.testbed.audit_log_repo.list_by_business(
+                setup.business.id
             )
-            == 2
-        )
+            if (entry.action.value, str(entry.entity)) == ("view", "missed_call")
+        ]
+        assert views.record_count == 2
 
     def test_no_text_backs_yet(self, setup: VoiceSetup, client: TestClient) -> None:
         response = client.get(text_backs_path(setup), headers=bearer("owner"))

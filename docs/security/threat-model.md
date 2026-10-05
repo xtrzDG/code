@@ -57,7 +57,7 @@ access review (`docs/security/access-review.md`).
 | 4 | A forged webhook injects messages or payments | S, T | B1 | Telegram secret token, Meta X-Hub-Signature-256, ElevenLabs HMAC and Flitt signatures checked before parsing; the business comes from the server-side channel lookup | `app/utilities/channels/webhook_signatures.py`, `app/utilities/channels/voice_webhook_auth.py`, `app/clients/flitt/flitt_protocol.py` | `tests/channels/test_webhook_signatures.py`, `tests/channels/test_webhook_isolation.py` |
 | 5 | One tenant reads or changes another tenant's data | I, E | B3, B5 | Every business route authorizes the member; repositories read by business id; Postgres row-level security keyed by business; storage scope fails closed | `app/use_cases/authorize_business_access_use_case.py`, `app/repositories/business_scoped_repository.py`, `app/utilities/storage/storage_scoping.py` | `tests/platform/test_authorization_matrix.py`, `tests/storage/test_row_level_security.py`, `tests/storage/test_fail_closed_scope.py` |
 | 6 | Platform support reads a client's data without reason or trace | I, R | B8 | Time-boxed, reasoned, read-only support grants the owner sees in a banner; every admin access audited | `app/use_cases/admin/access/`, `app/use_cases/shared/support_access.py` | `tests/users/access/test_support_access.py`, `tests/compliance/test_audit_log.py` |
-| 7 | Someone denies having exported or erased data | R | B3 | Audit log of views, exports, erasures, team and admin actions, with actor and address | `app/repositories/compliance_repositories.py` | `tests/compliance/test_audit_log.py`, `tests/privacy/test_contact_trace_erasure.py` |
+| 7 | An export, erasure or view of personal data cannot be traced to a person | R | B3 | Audit log of views (the same view within 5 minutes counted on one entry), exports, erasures, team and admin actions, with actor and address; a full export opens only through a one-time link of the owner who asked, at most three times, and every owner is told of each download. The log is a trace kept by the platform, not non-repudiation: its rows live in the application's own database and are neither signed nor append-only (see accepted risks) | `app/repositories/compliance_repositories.py`, `app/use_cases/exports/download_business_export_use_case.py` | `tests/compliance/test_audit_log.py`, `tests/compliance/test_audit_view_counts.py`, `tests/privacy/test_export_download_links.py`, `tests/privacy/test_contact_trace_erasure.py` |
 | 8 | Prompt injection makes the assistant leak data or act | T, I, E | B7 | Customer text is untrusted input; injection brake; reply guard checks claims against the business's knowledge; tools validate inputs and take the business from the conversation, never from model output | `app/utilities/reply_guard/`, `app/use_cases/conversations/tools/` | `tests/brain/test_injection_brake.py`, `tests/brain/test_injection_signals.py`, `tests/brain/test_tool_runner_inputs.py` |
 | 9 | The website import is used to reach internal hosts (SSRF) | I, E | B6 | Only public addresses after DNS resolution, re-checked on redirects, size and time limits | `app/clients/http/url_vetting.py`, `app/clients/http/safe_http_fetcher.py` | `tests/web_fetching/test_ssrf_guard.py`, `tests/web_fetching/test_safe_fetch_limits.py` |
 | 10 | Stolen database dump reveals channel tokens or recordings | I | B5, B6 | Channel and calendar tokens sealed with the key ring; recordings encrypted per business in object storage; key rotation | `app/adapters/security/secret_cipher_adapter.py`, `app/utilities/security/recording_encryption.py`, `app/utilities/security/key_ring.py` | `tests/security/test_key_ring.py`, `tests/compliance/test_recording_encryption.py` |
@@ -78,3 +78,25 @@ access review (`docs/security/access-review.md`).
 - No external penetration test yet: commission one before the first paying
   clients outside the pilot, and after every major change of the trust
   boundaries above.
+- Row-level security can be switched off by the application itself: the
+  policies let any session that sets the `app.bypass_rls` setting read every
+  tenant (the platform-wide jobs use it), and the application's database role
+  may set it. RLS therefore guards against query mistakes, not against a
+  compromised application or a leaked database password. Closed by
+  W18-DB-ROLES-PASSKEYS (separate roles; the bypass only for the jobs' role).
+- The audit log is mutable: its rows sit in the same database the application
+  writes, the application role can change or delete them, and repeated views
+  are counted by updating an entry. It is a trace, not evidence a person
+  cannot dispute (row 7). Closed by R13-AUDIT-TRAIL (append-only, hash-chained
+  log shipped outside the application's database).
+- The website widget can be embedded on any site: its API accepts every
+  origin, so someone can put a business's assistant on their own page and
+  spend that business's conversations. Closed by R12-ABUSE-SPEND-GUARD
+  (allowed sites per business).
+- No spend caps: a flood of conversations, calls or SMS is limited only by
+  rate limits, not by a monthly ceiling per business or for the platform.
+  Closed by R12-ABUSE-SPEND-GUARD (per-business and platform budgets with
+  alerts).
+- No account deletion in the cabinet: a person cannot delete their account,
+  nor an owner the business with all its data; it is done by the platform
+  team on request (DPA section 13). Closed by R15-ACCOUNT-DELETION.

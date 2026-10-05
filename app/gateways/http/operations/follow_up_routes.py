@@ -3,7 +3,7 @@ questions."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.operations.business_access import (
@@ -21,6 +21,7 @@ from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
+    read_client_ip_address,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.bookings import LeadStatus
@@ -82,6 +83,7 @@ def build_follow_up_routes(
 
     @router.get(f"{BUSINESS_PREFIX}/leads")
     def get_leads(
+        request: Request,
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         status: OptionalQuery = None,
@@ -94,6 +96,7 @@ def build_follow_up_routes(
             ListLeadsQuery(
                 business_id=business.id,
                 actor_id=user_id,
+                client_ip_address=read_client_ip_address(request),
                 status=parse_optional_text(status, LeadStatus, "status"),
                 include_sandbox=parse_flag(include_sandbox, "include_sandbox"),
                 page=parse_page_request(limit, cursor),
@@ -121,6 +124,7 @@ def build_follow_up_routes(
 
     @router.get(f"{BUSINESS_PREFIX}/handoffs")
     def get_handoffs(
+        request: Request,
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         status: OptionalQuery = None,
@@ -134,6 +138,7 @@ def build_follow_up_routes(
             ListHandoffsQuery(
                 business_id=business.id,
                 actor_id=user_id,
+                client_ip_address=read_client_ip_address(request),
                 status=parse_optional_text(status, HandoffStatus, "status"),
                 is_open=parse_optional_flag(is_open, "is_open"),
                 include_sandbox=parse_flag(include_sandbox, "include_sandbox"),

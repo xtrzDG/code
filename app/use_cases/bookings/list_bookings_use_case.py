@@ -106,6 +106,7 @@ class ListBookingsUseCase(UseCaseContract[ListBookingsQuery, BookingPage]):
                 BOOKING_ENTITY,
                 None,
                 now,
+                input_data.client_ip_address,
             )
         )
         return BookingPage(

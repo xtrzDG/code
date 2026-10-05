@@ -22,6 +22,7 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate, LocalTim
 from app.schemas.typings.bookings.prefixed_id import BookingId, ResourceId
 from app.schemas.typings.bookings.strings import BookingNote
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
@@ -43,6 +44,7 @@ class ListBookingsQuery(ImmutableDTO):
 
     business_id: BusinessId
     actor_id: UserId
+    client_ip_address: ClientIpAddress | None = None
     date_from: LocalDate | None = None
     date_to: LocalDate | None = None
     status: BookingStatus | None = None

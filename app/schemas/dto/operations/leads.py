@@ -13,6 +13,7 @@ from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import LeadId
 from app.schemas.typings.bookings.strings import LeadBudgetText, LeadDetails
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
@@ -28,6 +29,7 @@ class ListLeadsQuery(ImmutableDTO):
 
     business_id: BusinessId
     actor_id: UserId
+    client_ip_address: ClientIpAddress | None = None
     status: LeadStatus | None = None
     include_sandbox: IsSandboxIncluded = False
     page: PageRequest = PageRequest()

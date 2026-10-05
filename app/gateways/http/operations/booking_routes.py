@@ -3,7 +3,7 @@ cancelling, rescheduling, edits and undoing a status change."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.operations.business_access import (
@@ -22,6 +22,7 @@ from app.gateways.http.paging_query import parse_page_request
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
+    read_client_ip_address,
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.bookings import BookingOrder, BookingStatus, ResourceKind
@@ -119,6 +120,7 @@ def build_booking_routes(
 
     @router.get(f"{BUSINESS_PREFIX}/bookings")
     def get_bookings(
+        request: Request,
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         date_from: Annotated[str | None, Query(alias="from")] = None,
@@ -135,6 +137,7 @@ def build_booking_routes(
             ListBookingsQuery(
                 business_id=business.id,
                 actor_id=user_id,
+                client_ip_address=read_client_ip_address(request),
                 date_from=parse_optional_text(date_from, LocalDate, "from"),
                 date_to=parse_optional_text(date_to, LocalDate, "to"),
                 status=parse_optional_text(status, BookingStatus, "status"),
