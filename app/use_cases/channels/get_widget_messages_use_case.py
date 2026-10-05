@@ -197,10 +197,10 @@ class GetWidgetMessagesUseCase(
 
         window: list[MessagePosition] = sorted(newest, key=message_order)
         start: int | None = find_position_after(window, after)
-        later_ids: list[MessageId] = [
-            position.id
-            for position in window[len(window) if start is None else start :]
-        ]
+        if start is None:  # a covering window holds the cursor
+            return None
+
+        later_ids: list[MessageId] = [position.id for position in window[start:]]
         found: dict[MessageId, MessageDocument] = (
             self._message_repo.get_many(business_id, later_ids) if later_ids else {}
         )
