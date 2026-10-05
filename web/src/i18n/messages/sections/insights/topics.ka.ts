@@ -14,6 +14,7 @@ export const topicsKa: Translation<typeof topicsEn> = {
   unansweredHint: "კითხვები, რომლებსაც ასისტენტმა ვერ უპასუხა: დაამატეთ პასუხი და ის უპასუხებს.",
   addAnswer: "პასუხის დამატება",
   otherLanguages: "სხვა ენები",
+  otherTopic: "სხვა კითხვები",
   languageLabel: "ენა",
   loading: "თემები იტვირთება…",
 };

@@ -5,6 +5,7 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { formatPercent } from "@/components/insights/numbers";
 import { AnimatedNumber } from "@/components/motion";
 import { DeltaChip } from "@/components/value/DeltaChip";
+import { FirstPeriodNote } from "@/components/value/FirstPeriodNote";
 import {
   bookedValueIn,
   formatWholeMoney,
@@ -23,8 +24,10 @@ type DashboardStats = Schema<"DashboardStats">;
 /**
  * The period's six headline numbers, each with how it moved since the
  * period before (from the value model of the same dates; no chips until
- * it arrives or while it is for other dates), and for owners what the
- * period's bookings are worth at their own prices (services, stays).
+ * it arrives or while it is for other dates; after a period without any
+ * activity, one note instead of a chip on every number), and for owners
+ * what all the period's bookings are worth at their own prices (services,
+ * stays), those added by hand included.
  */
 export function PeriodTiles({
   data,
@@ -56,67 +59,76 @@ export function PeriodTiles({
     ) : null;
 
   return (
-    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={isBusy || undefined}>
-      <StatTile
-        label={t("dashboard.kpi.conversations")}
-        value={<AnimatedNumber value={data.conversation_count} format={format.number} />}
-        hint={t("dashboard.kpi.conversationsHint")}
-        chip={chip("conversation_count")}
-      />
-      <StatTile
-        label={t("dashboard.kpi.messages")}
-        value={<AnimatedNumber value={data.customer_message_count} format={format.number} />}
-        chip={chip("customer_message_count")}
-      />
-      <StatTile
-        label={t("dashboard.kpi.bookings")}
-        value={<AnimatedNumber value={data.booking_count} format={format.number} />}
-        chip={chip("booking_count")}
-      />
-      <StatTile
-        label={t("dashboard.kpi.afterHours")}
-        value={<AnimatedNumber value={data.after_hours_share_percent} format={(percent) => formatPercent(percent, locale)} />}
-        hint={t("dashboard.kpi.afterHoursHint", {
-          count: format.number(data.after_hours_conversation_count),
-          total: format.number(data.conversation_count),
-        })}
-        chip={chip("after_hours_conversation_count")}
-      />
-      <StatTile
-        label={t("dashboard.kpi.leads")}
-        value={<AnimatedNumber value={data.lead_count} format={format.number} />}
-        chip={chip("request_count")}
-      />
-      <StatTile
-        label={t("dashboard.kpi.handoffs")}
-        value={<AnimatedNumber value={data.handoff_count} format={format.number} />}
-        chip={chip("handoff_count", "neutral")}
-      />
-      {booked ? (
+    <div className="space-y-2">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={isBusy || undefined}>
         <StatTile
-          className="col-span-2 sm:col-span-3"
-          label={t("dashboard.kpi.bookedValue")}
-          value={
-            booked.main ? (
-              <AnimatedNumber value={booked.main.value_minor} format={(minor) => money(minor, business.currency_code)} />
-            ) : (
-              booked.others.map((total) => money(total.value_minor, total.currency_code)).join(" · ")
-            )
-          }
-          hint={[
-            booked.main
-              ? tp("dashboard.kpi.bookedValueHint", booked.main.booking_count, { count: format.number(booked.main.booking_count) })
-              : null,
-            booked.main && booked.others.length > 0
-              ? t("dashboard.kpi.bookedValueOther", {
-                  money: booked.others.map((total) => money(total.value_minor, total.currency_code)).join(", "),
-                })
-              : null,
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          label={t("dashboard.kpi.conversations")}
+          value={<AnimatedNumber value={data.conversation_count} format={format.number} />}
+          hint={t("dashboard.kpi.conversationsHint")}
+          chip={chip("conversation_count")}
         />
-      ) : null}
-    </dl>
+        <StatTile
+          label={t("dashboard.kpi.messages")}
+          value={<AnimatedNumber value={data.customer_message_count} format={format.number} />}
+          chip={chip("customer_message_count")}
+        />
+        <StatTile
+          label={t("dashboard.kpi.bookings")}
+          value={<AnimatedNumber value={data.booking_count} format={format.number} />}
+          chip={chip("booking_count")}
+        />
+        <StatTile
+          label={t("dashboard.kpi.afterHours")}
+          value={<AnimatedNumber value={data.after_hours_share_percent} format={(percent) => formatPercent(percent, locale)} />}
+          hint={t("dashboard.kpi.afterHoursHint", {
+            count: format.number(data.after_hours_conversation_count),
+            total: format.number(data.conversation_count),
+          })}
+          chip={chip("after_hours_conversation_count")}
+        />
+        <StatTile
+          label={t("dashboard.kpi.leads")}
+          value={<AnimatedNumber value={data.lead_count} format={format.number} />}
+          chip={chip("request_count")}
+        />
+        <StatTile
+          label={t("dashboard.kpi.handoffs")}
+          value={<AnimatedNumber value={data.handoff_count} format={format.number} />}
+          chip={chip("handoff_count", "neutral")}
+        />
+        {booked ? (
+          <StatTile
+            className="col-span-2 sm:col-span-3"
+            label={t("dashboard.kpi.bookedValue")}
+            value={
+              booked.main ? (
+                <AnimatedNumber value={booked.main.value_minor} format={(minor) => money(minor, business.currency_code)} />
+              ) : (
+                booked.others.map((total) => money(total.value_minor, total.currency_code)).join(" · ")
+              )
+            }
+            hint={[
+              [
+                booked.main
+                  ? tp("dashboard.kpi.bookedValueHint", booked.main.booking_count, { count: format.number(booked.main.booking_count) })
+                  : null,
+                booked.main && booked.others.length > 0
+                  ? t("dashboard.kpi.bookedValueOther", {
+                      money: booked.others.map((total) => money(total.value_minor, total.currency_code)).join(", "),
+                    })
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" "),
+              // Unlike the hero (the assistant's bookings), every booking counts here.
+              t("dashboard.kpi.bookedValueScope"),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          />
+        ) : null}
+      </dl>
+      {compared && isFirstPeriod ? <FirstPeriodNote /> : null}
+    </div>
   );
 }

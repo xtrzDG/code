@@ -1,18 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
-import { formatLocalDateRange } from "@/components/insights/dates";
 import { IconArrowRight, IconChat, IconClock, IconMoon, IconSparkles } from "@/components/icons";
 import { AnimatedNumber, TiltCard, TiltLayer } from "@/components/motion";
 import { AverageCheckEditor } from "@/components/value/AverageCheckEditor";
 import { DeltaChip } from "@/components/value/DeltaChip";
-import { earningCount, formatWholeMoney, hadNoActivity, moneyFormula, periodDays, savedTime, type ValueModel } from "@/components/value/valueModel";
+import { FirstPeriodNote } from "@/components/value/FirstPeriodNote";
+import {
+  earningCount,
+  formatWholeMoney,
+  hadNoActivity,
+  moneyFormula,
+  periodDays,
+  savedTime,
+  showsReturnMultiple,
+  usesOnlyOwnPrices,
+  valueStage,
+  type ValueModel,
+} from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
+
+import { heroPeriodText, TrialLine } from "./ValueHeroParts";
+import { ValueReadyCard } from "./ValueReadyCard";
 
 const ONE_DECIMAL: Intl.NumberFormatOptions = { minimumFractionDigits: 1, maximumFractionDigits: 1 };
 
@@ -20,11 +34,23 @@ const ONE_DECIMAL: Intl.NumberFormatOptions = { minimumFractionDigits: 1, maximu
  * The owner's headline: what the assistant did in the period and what it
  * is worth ("22 bookings ≈ 2,640 GEL, 18 after hours, ~9 staff hours
  * saved"), each against the period before, with the average check behind
- * the money editable in place, and what that returned against the plan's
- * price ("≈ 3.7× your plan's price"). The money tile floats in 3D under
- * the mouse.
+ * the money editable in place (unless every booking had its own price), and
+ * what that returned against the plan's price ("≈ 3.7× your plan's price";
+ * in the free trial, what the plan will cost after it). A period after one
+ * without any activity says once that there is nothing to compare with.
+ * Before there is anything to count (day 0), the "ready" card stands in.
+ * The money tile floats in 3D under the mouse.
  */
 export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlaceholder: boolean }) {
+  // The page's moment: whether the assistant went live under a day ago.
+  const [openedAt] = useState(() => Date.now());
+  if (valueStage(model, openedAt) === "ready") {
+    return <ValueReadyCard model={model} isPlaceholder={isPlaceholder} />;
+  }
+  return <WorkingHero model={model} isPlaceholder={isPlaceholder} />;
+}
+
+function WorkingHero({ model, isPlaceholder }: { model: ValueModel; isPlaceholder: boolean }) {
   const { t, tp, locale } = useI18n();
   const days = periodDays(model.date_from, model.date_to);
   const { current, previous } = model;
@@ -60,9 +86,7 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
           <span aria-hidden className="font-normal text-ink-subtle max-sm:hidden">
             ·
           </span>
-          <span className="font-normal text-ink-muted max-sm:basis-full max-sm:ps-6">
-            {formatLocalDateRange(model.date_from, model.date_to, locale)}
-          </span>
+          <span className="font-normal text-ink-muted max-sm:basis-full max-sm:ps-6">{heroPeriodText(model, locale, t)}</span>
         </h2>
         <Link
           href={businessPath(model.business_id, "overview/reports")}
@@ -101,12 +125,16 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
             )}
             <span className="text-xs text-ink-subtle">{isRequests ? t("value.hero.requestsHint") : t("value.hero.bookingsHint")}</span>
           </TiltLayer>
-          {model.return_multiple !== null && model.return_multiple !== undefined && model.plan_cost_minor ? (
+          {showsReturnMultiple(model) ? (
             <TiltLayer depth={12} className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="inline-flex items-center rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-sm font-semibold text-success tabular-nums">
-                {t("value.hero.returnMultiple", { multiple: formatNumber(model.return_multiple, locale, ONE_DECIMAL) })}
+                {t("value.hero.returnMultiple", { multiple: formatNumber(model.return_multiple ?? 0, locale, ONE_DECIMAL) })}
               </span>
-              <span className="text-xs text-ink-subtle">{t("value.hero.returnHint", { price: money(model.plan_cost_minor) })}</span>
+              <span className="text-xs text-ink-subtle">{t("value.hero.returnHint", { price: money(model.plan_cost_minor ?? 0) })}</span>
+            </TiltLayer>
+          ) : model.is_trial ? (
+            <TiltLayer depth={12} className="mt-3">
+              <TrialLine model={model} />
             </TiltLayer>
           ) : null}
           <TiltLayer depth={8} className="mt-auto pt-4">
@@ -165,16 +193,21 @@ export function ValueHero({ model, isPlaceholder }: { model: ValueModel; isPlace
         </ul>
       </div>
 
-      <AverageCheckEditor
-        businessId={model.business_id}
-        className="mt-4 border-t border-line pt-3"
-        check={{
-          currency: model.currency_code,
-          averageCheckMinor: model.average_check_minor ?? null,
-          source: model.average_check_source,
-          typicalCheckMinor: model.typical_check_minor ?? null,
-        }}
-      />
+      {first ? <FirstPeriodNote className="mt-3" /> : null}
+
+      {/* Every counted booking had its own price: the average check played no part. */}
+      {usesOnlyOwnPrices(current) ? null : (
+        <AverageCheckEditor
+          businessId={model.business_id}
+          className="mt-4 border-t border-line pt-3"
+          check={{
+            currency: model.currency_code,
+            averageCheckMinor: model.average_check_minor ?? null,
+            source: model.average_check_source,
+            typicalCheckMinor: model.typical_check_minor ?? null,
+          }}
+        />
+      )}
     </section>
   );
 }

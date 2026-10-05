@@ -17,9 +17,10 @@ const SENTIMENT_STYLES: Record<Sentiment, string> = {
  * How a number moved since the period before, as a small chip: an arrow
  * and the change ("▲ 12%"), coloured by whether it is good news, and for
  * screen readers (and as a tooltip) the whole sentence: "Up 12% vs the
- * previous 30 days". Nothing when both periods are zero; "first period"
- * when the period before had no activity at all (`isFirstPeriod`, see
- * hadNoActivity), since any change against it would be the whole total.
+ * previous 30 days". Nothing when both periods are zero, nor when the
+ * period before had no activity at all (`isFirstPeriod`, see
+ * hadNoActivity): any change against it would be the whole total, so the
+ * card says so once instead (FirstPeriodNote).
  */
 export function DeltaChip({
   current,
@@ -37,7 +38,7 @@ export function DeltaChip({
   polarity?: Polarity;
   /** How a difference from none reads ("+GEL 1,920" for money); plain numbers by default. */
   formatValue?: (value: number) => string;
-  /** The period before had no activity at all: no change to show, only that this is the first. */
+  /** The period before had no activity at all: no change to show (the card notes it once). */
   isFirstPeriod?: boolean;
   className?: string;
 }) {
@@ -47,20 +48,7 @@ export function DeltaChip({
     return null;
   }
   if (isFirstPeriod) {
-    return (
-      <span
-        title={t("value.delta.firstPeriodHint")}
-        data-first-period=""
-        className={cn(
-          "relative inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
-          SENTIMENT_STYLES.neutral,
-          className,
-        )}
-      >
-        <span aria-hidden>{t("value.delta.firstPeriod")}</span>
-        <span className="sr-only">{t("value.delta.firstPeriodHint")}</span>
-      </span>
-    );
+    return null;
   }
   const visible = changeLabel(
     change,

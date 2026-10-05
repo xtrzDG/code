@@ -82,9 +82,11 @@ export function useCustomerSources(businessId: string, period: "7d" | "30d" | "9
   );
 }
 
-/** What customers asked about in the last 30 days, grouped every night. */
-export function useConversationTopics(businessId: string) {
-  return useQuery(queryKeys.dashboard.topics(businessId), () =>
-    api.GET("/v1/businesses/{business_id}/value/topics", { params: { path: { business_id: businessId } } }),
+/** What customers asked about in the last 30 days, grouped every night, labelled in `language` (the cabinet's). */
+export function useConversationTopics(businessId: string, language: string) {
+  return useQuery(queryKeys.dashboard.topics(businessId, language), () =>
+    api.GET("/v1/businesses/{business_id}/value/topics", {
+      params: { path: { business_id: businessId }, query: { language } },
+    }),
   );
 }

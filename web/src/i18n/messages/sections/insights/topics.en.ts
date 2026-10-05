@@ -15,6 +15,7 @@ export const topicsEn = {
   unansweredHint: "Questions the assistant could not answer: add an answer and it will.",
   addAnswer: "Add an answer",
   otherLanguages: "Other languages",
+  otherTopic: "Other questions",
   languageLabel: "Language",
   loading: "Loading the topics…",
 } as const;

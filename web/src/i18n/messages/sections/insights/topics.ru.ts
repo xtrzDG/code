@@ -24,6 +24,7 @@ export const topicsRu: Translation<typeof topicsEn> = {
   unansweredHint: "Вопросы, на которые помощник не смог ответить: добавьте ответ — и он будет отвечать.",
   addAnswer: "Добавить ответ",
   otherLanguages: "Другие языки",
+  otherTopic: "Другие вопросы",
   languageLabel: "Язык",
   loading: "Загружаем темы…",
 };

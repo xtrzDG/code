@@ -2,6 +2,7 @@
 
 import { AnimatedNumber } from "@/components/motion";
 import { DeltaChip } from "@/components/value/DeltaChip";
+import { FirstPeriodNote } from "@/components/value/FirstPeriodNote";
 import { earningCount, formatWholeMoney, hadNoActivity, savedTime, type ValueTotals } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
@@ -9,7 +10,8 @@ import { formatNumber } from "@/lib/format";
 /**
  * A period in one glance: the assistant's bookings (or requests) and what
  * they are worth, the conversations after hours and the staff time saved,
- * each with its change against the period before.
+ * each with its change against the period before (or, when that period had
+ * nothing, one note that this is the first).
  */
 export function ReportSummary({
   current,
@@ -85,6 +87,7 @@ export function ReportSummary({
           <DeltaChip isFirstPeriod={first} current={current.conversation_count} previous={previous.conversation_count} days={days} />
         </li>
       </ul>
+      {first ? <FirstPeriodNote /> : null}
       {hasEstimate ? null : <p className="text-sm text-ink-muted">{t("value.hero.noMoney")}</p>}
     </div>
   );
