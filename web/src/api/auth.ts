@@ -68,6 +68,8 @@ export function startLogin(body: OtpStartBody): Promise<OtpChallengeView> {
 export function verifyLogin(body: {
   challenge_id: string;
   code: string;
+  /** The terms version the acceptance line showed: continuing accepts it. */
+  accepted_terms_version?: string;
 }): Promise<LoginCodeAnswer> {
   return postJson<LoginCodeAnswer>("/api/auth/verify", body);
 }

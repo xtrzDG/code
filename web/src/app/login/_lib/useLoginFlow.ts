@@ -19,6 +19,7 @@ import type { MessageKey } from "@/i18n/translate";
 import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError } from "@/lib/countries";
 
 import { findBotCheckSiteKey } from "./botCheck";
+import { acceptedTermsBody } from "./legalConsent";
 import { withDeliveryChannel } from "./loginOptions";
 import { CodeSchema, EmailSchema, PROBLEM_MESSAGES, PhoneSchema, RESEND_INTERVAL_MS } from "./loginTexts";
 import { useDestination } from "./useDestination";
@@ -134,7 +135,11 @@ export function useLoginFlow(next: string) {
     setCodeError(null);
     setVerifying(true);
     try {
-      const answer = await verifyLogin({ challenge_id: codeStage.challenge.challenge_id, code: parsed.data });
+      const answer = await verifyLogin({
+        challenge_id: codeStage.challenge.challenge_id,
+        code: parsed.data,
+        ...acceptedTermsBody(destination.termsVersion),
+      });
       if (needsSecondStep(answer)) {
         setSecondStep(answer);
         setVerifying(false);

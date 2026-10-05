@@ -98,6 +98,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       review_settings: "შეფასებების პარამეტრები",
       feedback_request: "შეფასების მოთხოვნები",
       incident: "პლატფორმის ინციდენტი",
+      subprocessor_notice: "შეტყობინება ქვე-უფლებამოსილი პირების ცვლილების შესახებ",
     },
   },
   roles: {

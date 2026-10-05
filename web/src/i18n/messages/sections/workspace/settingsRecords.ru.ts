@@ -103,6 +103,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       review_settings: "Настройки отзывов",
       feedback_request: "Запросы отзывов",
       incident: "Инцидент платформы",
+      subprocessor_notice: "Уведомление о смене субобработчиков",
     },
   },
   roles: {

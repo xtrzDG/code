@@ -96,6 +96,7 @@ export const settingsRecordsEn = {
       review_settings: "Review settings",
       feedback_request: "Feedback requests",
       incident: "Platform incident",
+      subprocessor_notice: "Sub-processor change notice",
     },
   },
   roles: {

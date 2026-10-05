@@ -64,6 +64,9 @@ export function useDestination() {
     phoneChannels,
     deliveryChannel: chooseDeliveryChannel(phoneChannels, chosenChannel),
     isUnavailable,
+    /** The terms and privacy policy the code step's acceptance line names. */
+    termsVersion: options?.terms_version ?? null,
+    privacyVersion: options?.privacy_version ?? null,
     canSend: !isUnavailable && (method === "email" || phoneBlock === null),
     phoneNumber,
     email,

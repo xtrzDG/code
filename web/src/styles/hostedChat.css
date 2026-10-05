@@ -214,6 +214,17 @@
   color: var(--hc-muted);
 }
 
+/* A translation not reviewed yet: a quiet note with the link to English. */
+.hc-document .hc-document-draft {
+  margin: 14px 0 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--hc-line);
+  background: color-mix(in srgb, var(--hc-accent) 7%, transparent);
+  color: var(--hc-muted);
+  font-size: 14px;
+}
+
 .hc-document a {
   color: inherit;
   font-weight: 500;
