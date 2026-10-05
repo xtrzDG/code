@@ -29,7 +29,7 @@ export function QualityCard({ businessId, timeZone }: { businessId: string; time
   );
 
   return (
-    <Card title={t("quality.admin.title")} description={t("quality.admin.description")}>
+    <Card data-quality-card title={t("quality.admin.title")} description={t("quality.admin.description")}>
       {quality.error && !quality.data ? (
         <ErrorState error={quality.error} onRetry={quality.reload} />
       ) : !quality.data ? (

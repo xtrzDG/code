@@ -30,13 +30,17 @@ export function changeTone(change: number): StatusTone {
   return change <= -VISIBLE_CHANGE ? "danger" : "neutral";
 }
 
-/** Whether anything moved: a new failure, a fix or a score change. */
+/**
+ * Whether anything moved: a new failure, a fix, a scenario's score (the API
+ * lists only half a point or more) or a criterion's average (the API lists
+ * all five; a move under a tenth of a point does not count).
+ */
 export function hasComparisonChanges(comparison: AutotestRunComparison): boolean {
   return (
     comparison.new_failures.length > 0 ||
     comparison.fixed.length > 0 ||
     comparison.score_changes.length > 0 ||
-    comparison.criterion_changes.length > 0
+    comparison.criterion_changes.some((change) => Math.abs(change.change) >= VISIBLE_CHANGE)
   );
 }
 

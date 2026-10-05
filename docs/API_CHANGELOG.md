@@ -31,9 +31,10 @@ Spec: `705d0e6d7f63f2a1`
   not live when the run started, the live version's run
   (`baseline_run_id`, `baseline_version_number`), the scenarios both runs
   played, `new_failures` and `fixed` (scenario key, kind, language, both
-  outcomes, check codes), `score_changes` per scenario and
-  `criterion_changes` per judge criterion that moved by half a point or
-  more, worst first, and the average score of both runs.
+  outcomes, check codes), `score_changes` per scenario that moved by half
+  a point or more (worst first), `criterion_changes` with every judge
+  criterion's average over those scenarios in both runs, and the average
+  score of both runs.
 - **Added** `GET /v1/admin/clients/{business_id}/quality` (platform admins
   who view clients): `ClientQualityView`, the judge's scores of the
   client's real conversations from the nightly sample — 30 local days

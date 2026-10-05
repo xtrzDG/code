@@ -49,18 +49,24 @@ def find_fact_answer(system_prompt: str, customer_text: str) -> str | None:
 def find_price(system_prompt: str, customer_text: str) -> str | None:
     """
     The price of the item the customer names in quotes, as its fact row
-    gives it ("- Product: Khachapuri: Price: 18.00 GEL" -> "18.00 GEL").
+    gives it after the title and any description ("- Product: Khachapuri:
+    Cheese bread; Price: 18.00 GEL; Tags: bakery" -> "18.00 GEL").
     """
 
     quoted: re.Match[str] | None = QUOTED_ITEM_PATTERN.search(customer_text)
     if quoted is None:
         return None
 
-    marker: str = f": {quoted.group(1)}: {PRICE_LABEL}"
+    title: str = f": {quoted.group(1)}: "
     for line in system_prompt.splitlines():
-        start: int = line.find(marker)
-        if line.startswith("- ") and start != -1:
-            price: str = line[start + len(marker) :]
+        start: int = line.find(title)
+        if not line.startswith("- ") or start == -1:
+            continue
+
+        details: str = line[start + len(title) :]
+        price_at: int = details.find(PRICE_LABEL)
+        if price_at != -1:
+            price: str = details[price_at + len(PRICE_LABEL) :]
             return price.split(PRICE_END)[0].strip() or None
 
     return None

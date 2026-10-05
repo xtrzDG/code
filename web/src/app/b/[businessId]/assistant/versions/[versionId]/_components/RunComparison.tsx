@@ -50,7 +50,7 @@ export function RunComparison({ comparison }: { comparison: AutotestRunCompariso
   const averageChange = comparison.average_score_change;
 
   return (
-    <section aria-labelledby="run-comparison-title" className="space-y-4 rounded-xl border border-line px-4 py-4">
+    <section data-run-comparison aria-labelledby="run-comparison-title" className="space-y-4 rounded-xl border border-line px-4 py-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 id="run-comparison-title" className="text-sm font-semibold text-ink">

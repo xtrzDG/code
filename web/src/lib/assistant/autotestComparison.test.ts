@@ -51,6 +51,9 @@ describe("changeTone", () => {
 describe("comparison lists", () => {
   it("sees no change in an identical run", () => {
     expect(hasComparisonChanges(comparison())).toBe(false);
+    const steady = { criterion: "handoff", average_score: 4.8, baseline_average_score: 4.77, change: 0.03 } as const;
+    expect(hasComparisonChanges(comparison({ criterion_changes: [steady] }))).toBe(false);
+    expect(hasComparisonChanges(comparison({ criterion_changes: [{ ...steady, change: -0.4 }] }))).toBe(true);
   });
 
   it("splits score changes into drops and rises", () => {

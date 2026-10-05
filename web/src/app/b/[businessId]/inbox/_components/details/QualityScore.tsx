@@ -38,7 +38,7 @@ export function QualityScore({ conversationId }: { conversationId: string }) {
 
   const notes = score.judge_notes ?? [];
   return (
-    <section aria-labelledby={`quality-${conversationId}`} className="space-y-3 rounded-2xl border border-line bg-surface px-4 py-3">
+    <section data-quality-score aria-labelledby={`quality-${conversationId}`} className="space-y-3 rounded-2xl border border-line bg-surface px-4 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 id={`quality-${conversationId}`} className="text-sm font-semibold text-ink">
