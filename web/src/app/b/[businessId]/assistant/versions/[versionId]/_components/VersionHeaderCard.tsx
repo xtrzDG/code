@@ -7,26 +7,36 @@ import { IconChat, IconFlask, IconRocket, IconUndo } from "@/components/icons";
 import { Alert, Button, ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatScore } from "@/lib/assistant/autotests";
+import type { NamedFailure } from "@/lib/assistant/ownerChecks";
 import type { AssistantVersionDetails, VersionActions } from "@/lib/assistant/versions";
 import { languageName } from "@/lib/format";
 import { businessPath } from "@/lib/navigation";
 
 import { VersionStatusBadge } from "../../../_components/VersionStatusBadge";
+import { OwnerCheckVerdict } from "./OwnerCheckVerdict";
 
 export type VersionDialog = "publish" | "forcePublish" | "rollback" | "autotests";
 
-/** The version's number, status, dates, languages and score, and what can be done with it now. */
+/**
+ * The version's number, status, dates, languages and score, and what can
+ * be done with it now. When only the owner's own checks failed, the card
+ * names them ("Your check did not pass: “…” — the answer must …"). Publishing
+ * without checks is a platform admin's tool, kept small and apart.
+ */
 export function VersionHeaderCard({
   details,
   actions,
   canRunAutotests,
   isRunning,
+  ownerFailures,
   onOpen,
 }: {
   details: AssistantVersionDetails;
   actions: VersionActions;
   canRunAutotests: boolean;
   isRunning: boolean;
+  /** The owner's checks the latest run failed, when nothing else failed. */
+  ownerFailures: readonly NamedFailure[];
   onOpen: (dialog: VersionDialog) => void;
 }) {
   const { t, locale } = useI18n();
@@ -84,11 +94,6 @@ export function VersionHeaderCard({
               {t("assistant.publish.open")}
             </Button>
           ) : null}
-          {actions.forcePublish && !isRunning ? (
-            <Button variant="danger" leadingIcon={<IconRocket className="size-4" aria-hidden />} onClick={() => onOpen("forcePublish")}>
-              {t("assistant.publish.forceOpen")}
-            </Button>
-          ) : null}
           {actions.rollback ? (
             <Button variant="danger" leadingIcon={<IconUndo className="size-4" aria-hidden />} onClick={() => onOpen("rollback")}>
               {t("assistant.rollback.open")}
@@ -96,6 +101,15 @@ export function VersionHeaderCard({
           ) : null}
         </div>
       </div>
+      <OwnerCheckVerdict failures={ownerFailures} />
+      {actions.forcePublish && !isRunning ? (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+          <span className="text-xs text-ink-subtle">{t("updates.publishGate.adminOnly")}</span>
+          <Button variant="danger-ghost" size="sm" leadingIcon={<IconRocket className="size-4" aria-hidden />} onClick={() => onOpen("forcePublish")}>
+            {t("assistant.publish.forceOpen")}
+          </Button>
+        </div>
+      ) : null}
       {details.status === "published" ? (
         <Alert tone="success" className="mt-5" title={t("assistant.detail.liveTitle")}>
           {t("assistant.detail.liveDescription")}

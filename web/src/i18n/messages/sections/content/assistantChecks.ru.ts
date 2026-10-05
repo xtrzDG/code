@@ -168,7 +168,6 @@ export const assistantChecksRu: Translation<typeof assistantChecksEn> = {
     forceTitle: "Опубликовать обновление {number}, не прошедшее проверки?",
     forceWarningTitle: "Это обновление не прошло проверки",
     forceWarning: "Клиенты могут получить неверные цены или брони. Решение записывается в журнал действий.",
-    forceAcknowledge: "Я проверил непройденные сценарии и беру ответственность на себя",
     forceConfirm: "Всё равно опубликовать",
   },
   rollback: {

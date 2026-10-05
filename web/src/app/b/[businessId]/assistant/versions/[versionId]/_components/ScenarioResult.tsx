@@ -16,6 +16,7 @@ import {
   type AutotestScenarioResult,
   type JudgeCriterion,
 } from "@/lib/assistant/autotests";
+import { expectationSentence } from "@/lib/assistant/ownerChecks";
 import { cn } from "@/lib/cn";
 import { languageName } from "@/lib/format";
 
@@ -35,15 +36,26 @@ const OUTCOMES: Record<AutotestOutcome, { tone: BadgeTone; label: MessageKey; ic
   errored: { tone: "warning", label: "assistant.autotests.outcomes.errored", icon: IconAlert },
 };
 
-/** One scenario of a run, folded: outcome and score; open, the judge's scores, notes and the transcript. */
+/**
+ * One scenario of a run, folded: outcome and score; open, the judge's
+ * scores, notes and the transcript. The owner's own check is named by its
+ * question, with what the answer had to do under it.
+ */
 export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
-  const { t, locale } = useI18n();
+  const translator = useI18n();
+  const { t, locale } = translator;
   const outcome = OUTCOMES[result.outcome];
   const average = scenarioAverage(result);
   const number = scenarioNumber(result.scenario_key);
   const plays = scenarioPlays(result);
   const Icon = outcome.icon;
   const notes = [...result.check_notes, ...result.judge_notes];
+  const asked = result.kind === "owner_check" ? result.owner_check : null;
+  const title = asked
+    ? asked.question
+    : number !== null
+      ? t("assistant.autotests.numbered", { name: t(SCENARIO_KIND_LABELS[result.kind]), number })
+      : t(SCENARIO_KIND_LABELS[result.kind]);
 
   return (
     <li>
@@ -51,11 +63,14 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
         <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-4 py-3 hover:bg-surface-muted/60 focus-visible:outline-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
           <Icon className={cn("size-5 shrink-0", result.outcome === "passed" ? "text-success" : result.outcome === "failed" ? "text-danger" : "text-warning")} aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-medium text-ink">
-              {number !== null
-                ? t("assistant.autotests.numbered", { name: t(SCENARIO_KIND_LABELS[result.kind]), number })
-                : t(SCENARIO_KIND_LABELS[result.kind])}
+            <span dir={asked ? "auto" : undefined} className="block text-sm font-medium [overflow-wrap:anywhere] text-ink">
+              {title}
             </span>
+            {asked ? (
+              <span dir="auto" className="block text-sm [overflow-wrap:anywhere] text-ink-muted">
+                {expectationSentence(asked, translator)}
+              </span>
+            ) : null}
             <span className="block text-sm text-ink-subtle">
               {languageName(result.language, locale)}
               {average !== null ? ` · ${t("assistant.autotests.scoreValue", { score: formatScore(average, locale) })}` : ""}

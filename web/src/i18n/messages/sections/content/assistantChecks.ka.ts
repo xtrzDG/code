@@ -166,7 +166,6 @@ export const assistantChecksKa: Translation<typeof assistantChecksEn> = {
     forceTitle: "გამოვაქვეყნოთ შემოწმებაგაუვლელი განახლება {number}?",
     forceWarningTitle: "ამ განახლებამ შემოწმებები ვერ გაიარა",
     forceWarning: "კლიენტებმა შეიძლება არასწორი ფასები ან ჯავშნები მიიღონ. გადაწყვეტილება მოქმედებების ჟურნალში ჩაიწერება.",
-    forceAcknowledge: "შევამოწმე ვერგავლილი სცენარები და პასუხისმგებლობას ვიღებ",
     forceConfirm: "მაინც გამოქვეყნება",
   },
   rollback: {
