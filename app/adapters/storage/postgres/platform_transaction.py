@@ -1,9 +1,13 @@
-"""One platform-wide transaction for statements beyond a single collection."""
+"""
+One platform-wide transaction (or one self-scoped statement) beyond a
+single collection.
+"""
 
 from collections.abc import Generator
 from contextlib import contextmanager
 
 import psycopg
+from psycopg import pq
 
 from app.adapters.storage.postgres.postgres_session_settings import (
     apply_storage_scope,
@@ -28,10 +32,48 @@ def platform_transaction(
     same way as in the document collections.
     """
 
-    try:
-        with connection_pool.transaction() as connection:
-            apply_storage_scope(connection, StorageScope.platform_wide())
+    with (
+        storage_errors_translated(collection_name),
+        connection_pool.transaction() as connection,
+    ):
+        apply_storage_scope(connection, StorageScope.platform_wide())
+        yield connection
+
+
+@contextmanager
+def platform_statement(
+    connection_pool: PostgresConnectionPoolClient,
+    collection_name: str,
+) -> Generator[PostgresConnection]:
+    """
+    A connection for one statement that sets its own platform scope (a
+    database function that turns `app.bypass_rls` on for its statements),
+    without a transaction block: on the pool's autocommit connections the
+    statement is a transaction of its own that commits as it ends, so its
+    row locks last only while it runs. Inside a pinned connection's open
+    transaction (a unit of work) it is a savepoint of that transaction, so
+    its error rolls back only itself, as with `platform_transaction`.
+    Errors translate as in `platform_transaction`.
+    """
+
+    with (
+        storage_errors_translated(collection_name),
+        connection_pool.connection() as connection,
+    ):
+        if connection.info.transaction_status is pq.TransactionStatus.IDLE:
             yield connection
+            return
+
+        with connection.transaction():
+            yield connection
+
+
+@contextmanager
+def storage_errors_translated(collection_name: str) -> Generator[None]:
+    """Database failures of the block as application errors (or re-raised)."""
+
+    try:
+        yield
     except psycopg.Error as error:
         application_error = translate_storage_error(error, collection_name)
         if application_error is None:

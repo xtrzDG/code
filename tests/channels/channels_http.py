@@ -106,7 +106,6 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
             ),
             widget_messages_operator=wrap_use_case(
                 GetWidgetMessagesUseCase(
-                    testbed.business_repo,
                     testbed.channel_repo,
                     testbed.conversation_repo,
                     testbed.message_repo,

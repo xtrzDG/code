@@ -3,12 +3,15 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds
 
 from app.adapters.rate_limits.rate_limit_bucket_queries import (
-    COUNT_REQUESTS,
+    COUNT_REQUEST_WITHIN_LIMITS,
     DELETE_EXPIRED_BATCH,
     RATE_LIMIT_BUCKETS_TABLE,
     READ_COUNTS,
 )
-from app.adapters.storage.postgres.platform_transaction import platform_transaction
+from app.adapters.storage.postgres.platform_transaction import (
+    platform_statement,
+    platform_transaction,
+)
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
@@ -24,19 +27,11 @@ from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.schemas.typings.storage.constrained_integers import DocumentCount
 from app.utilities.limits.sliding_window_limits import (
     bucket_expiry,
-    is_within_limit,
     previous_window_start,
+    window_microseconds,
 )
 
 DELETE_BATCH_SIZE: int = 5_000
-
-
-class _OverLimit(Exception):
-    """Rolls the counting transaction back: one of its limits is used up."""
-
-    def __init__(self, key: RateLimitKey) -> None:
-        super().__init__(str(key))
-        self.key: RateLimitKey = key
 
 
 class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
@@ -44,15 +39,19 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
     Request buckets in `workshop.rate_limit_buckets`, shared by every API
     instance and worker.
 
-    A request is one transaction with one statement: `insert ... on
-    conflict do update set request_count = request_count + 1 returning`
-    for every key (in key order), joined with the previous window's
-    counts. When a limit is over, the transaction is rolled back, so the
-    refused request counted nowhere; the upserted rows stay locked until
-    then, so concurrent requests of any process see each other's counts
-    and never both take the last place. The table is UNLOGGED: counters
-    are short-lived and not worth the write-ahead log (a crash empties
-    them, which only resets the limits).
+    A request is one statement: `workshop.count_request_within_limits`
+    (migration 1125) upserts one request more for every key (in key
+    order), weighs each counter against its limit as `is_within_limit`
+    does, and takes the request back out of every key when one is over,
+    all inside the database. The rows are locked only while that statement
+    runs: concurrent requests of any process wait for the final counts and
+    never both take the last place, and a refused request counts nowhere,
+    yet no request waits for another one's round trip to the application
+    (every widget poll counts the same platform row). Inside a unit of
+    work the statement is a savepoint of its transaction
+    (`platform_statement`), so its error rolls back only itself. The table is
+    UNLOGGED: counters are short-lived and not worth the write-ahead log (a
+    crash empties them, which only resets the limits).
     """
 
     def __init__(self, connection_pool: PostgresConnectionPoolClient) -> None:
@@ -63,36 +62,25 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
         counters: Sequence[RateLimitCounter],
         window: RateLimitWindow,
     ) -> RateLimitKey | None:
-        keys: list[str] = sorted({str(counter.key) for counter in counters})
-        try:
-            with platform_transaction(
-                self._connection_pool, RATE_LIMIT_BUCKETS_TABLE
-            ) as connection:
-                rows = connection.execute(
-                    COUNT_REQUESTS,
-                    {
-                        "keys": keys,
-                        "window_seconds": int(window.length_seconds),
-                        "window_start": int(window.started_at),
-                        "previous_start": previous_window_start(window),
-                        "expires_at": bucket_expiry(window),
-                    },
-                ).fetchall()
-                counts: dict[str, RateLimitBucketCounts] = {
-                    str(row[0]): RateLimitBucketCounts(
-                        key=RateLimitKey(str(row[0])),
-                        current_count=RateLimitRequestCount(read_count(row[1])),
-                        previous_count=RateLimitRequestCount(read_count(row[2])),
-                    )
-                    for row in rows
-                }
-                for counter in counters:
-                    if not is_within_limit(counts[str(counter.key)], counter, window):
-                        raise _OverLimit(counter.key)
-        except _OverLimit as over_limit:
-            return over_limit.key
+        with platform_statement(
+            self._connection_pool, RATE_LIMIT_BUCKETS_TABLE
+        ) as connection:
+            row = connection.execute(
+                COUNT_REQUEST_WITHIN_LIMITS,
+                {
+                    "bucket_keys": sorted({str(counter.key) for counter in counters}),
+                    "counter_keys": [str(counter.key) for counter in counters],
+                    "counter_limits": [int(counter.limit) for counter in counters],
+                    "window_seconds": int(window.length_seconds),
+                    "window_start": int(window.started_at),
+                    "previous_start": previous_window_start(window),
+                    "expires_at": bucket_expiry(window),
+                    "window_microseconds": window_microseconds(window.length_seconds),
+                    "elapsed_microseconds": int(window.now) - int(window.started_at),
+                },
+            ).fetchone()
 
-        return None
+        return find_refused_key(counters, None if row is None else row[0])
 
     def read_counts(
         self,
@@ -136,6 +124,25 @@ class PostgresRateLimitBucketAdapter(RateLimitBucketAdapterContract):
             deleted_total += max(deleted, 0)
             if deleted < DELETE_BATCH_SIZE:
                 return DocumentCount(deleted_total)
+
+
+def find_refused_key(
+    counters: Sequence[RateLimitCounter],
+    refused_key: object,
+) -> RateLimitKey | None:
+    """The counter key the counting statement refused (None: it counted)."""
+
+    if refused_key is None:
+        return None
+
+    for counter in counters:
+        if str(counter.key) == refused_key:
+            return counter.key
+
+    raise ExternalServiceError(
+        f"{RATE_LIMIT_BUCKETS_TABLE} refused a key that no counter of the "
+        f"request names ({type(refused_key).__name__})."
+    )
 
 
 def read_count(value: object) -> int:

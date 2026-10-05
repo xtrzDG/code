@@ -7,12 +7,14 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
+from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import ChannelExternalId, ManagerLinkCodeHash
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.schemas.typings.users.strings import AccessTokenHash
@@ -161,6 +163,24 @@ HOT_QUERIES: tuple[HotQuery, ...] = (
     HotQuery(
         "transcript of a conversation",
         lambda r: r.messages.list_by_conversation(BUSINESS_IDS[0], ConversationId()),
+        "messages",
+        "messages_doc_conversation_idx",
+    ),
+    HotQuery(
+        "newest messages of a widget visitor (every poll)",
+        lambda r: r.messages.page_newest_of_conversations(
+            BUSINESS_IDS[0], [ConversationId()], KeysetSlice(limit=KeysetReadLimit(10))
+        ),
+        "messages",
+        "messages_doc_conversation_idx",
+    ),
+    HotQuery(
+        "newest messages of a returning widget visitor",
+        lambda r: r.messages.page_newest_of_conversations(
+            BUSINESS_IDS[0],
+            [ConversationId(), ConversationId()],
+            KeysetSlice(limit=KeysetReadLimit(10)),
+        ),
         "messages",
         "messages_doc_conversation_idx",
     ),

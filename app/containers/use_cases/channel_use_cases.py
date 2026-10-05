@@ -210,7 +210,6 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[WidgetMessagesQuery, WidgetMessagesView]
     ] = Factory(
         GetWidgetMessagesUseCase,
-        business_repo=repositories.business_repo,
         channel_repo=repositories.channel_repo,
         conversation_repo=repositories.conversation_repo,
         message_repo=repositories.message_repo,

@@ -62,7 +62,13 @@ def is_within_limit(
     counter: RateLimitCounter,
     window: RateLimitWindow,
 ) -> bool:
-    """Whether the estimate, the request itself counted, stays within the limit."""
+    """
+    Whether the estimate, the request itself counted, stays within the limit.
+
+    The Postgres counters decide the same inequality inside the database
+    (`workshop.count_request_within_limits`, migration 1125); keep the two
+    in step (`tests/storage/test_rate_limit_parity.py`).
+    """
 
     length: int = window_microseconds(window.length_seconds)
     elapsed: int = int(window.now) - int(window.started_at)

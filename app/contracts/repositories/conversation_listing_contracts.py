@@ -109,6 +109,19 @@ class MessageListingContract(Protocol):
         """The conversation's messages newest first, ties in write order."""
         raise NotImplementedError
 
+    def page_newest_of_conversations(
+        self,
+        business_id: BusinessId,
+        conversation_ids: Sequence[ConversationId],
+        window: KeysetSlice,
+    ) -> list[MessageDocument]:
+        """
+        The messages of these conversations together, newest first (by
+        `created_at`, ties: the later write first), one keyset page: a
+        widget poll reads the few newest instead of a visitor's history.
+        """
+        raise NotImplementedError
+
     def list_by_conversations(
         self, business_id: BusinessId, conversation_ids: Sequence[ConversationId]
     ) -> list[MessageDocument]:

@@ -5,7 +5,6 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds
 
 from app.repositories.aggregate_reading import parse_choice, period_count
-from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.conversation_lookup_fields import (
     AUTHOR_FIELD,
     CONVERSATION_ID_FIELD,
@@ -17,6 +16,7 @@ from app.repositories.document_queries import (
     stored_text,
     time_range,
 )
+from app.repositories.listing.recent_message_reading import RecentMessageReading
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.dto.conversation_feed.message_tallies import (
@@ -53,7 +53,7 @@ WRITTEN_AUTHORS: tuple[MessageAuthor, ...] = (
 )
 
 
-class MessageListing(BusinessScopedRepository[MessageDocument]):
+class MessageListing(RecentMessageReading):
     """Pages of a transcript and the counts and sums the database computes."""
 
     def page_transcript(

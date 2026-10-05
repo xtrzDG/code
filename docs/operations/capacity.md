@@ -123,12 +123,96 @@ Outside CI, `k6 run -e MANIFEST=$PWD/perf/manifest.json -e
 API_URL=http://localhost:8000 perf/k6/cabinet_browsing.js` runs a scenario
 against any stack you seeded (only ever a load-test one).
 
+### Widget polls and the shared rate-limit counters (October 2026)
+
+The weekly run of `bd4f29c` (`small` scale) met every cabinet budget
+(p95 73–214 ms) but failed `widget_polling.js`: poll p95 1.12 s against
+150 ms.
+
+**The bottleneck.** Reproduced on a local stack (below), the database
+said it at once. `pg_stat_statements` of the first reproduction: the
+rate-limit upsert of a poll averaged 282 ms (45,126 calls) while every read of the poll stayed under
+0.1 ms; `pg_stat_activity` sampled every 50 ms: on average 39 of the
+API's 64 connections waited on `Lock:transactionid`, at most 62. Every
+poll counts the same two rows of `rate_limit_buckets` (its business and
+`widget-poll:platform`), and the adapter upserted them in a transaction,
+read the counts back into Python, compared them with the limits there
+and only then committed: the rows stayed locked for a round trip to a
+busy Python process, so all polls of both API processes queued behind
+each other, one Python round trip each.
+
+**What changed.**
+
+- `workshop.count_request_within_limits` (migration 1125) counts a
+  request for every key, weighs each counter like `is_within_limit` and
+  takes a refused request back out of every key, all in one autocommitted
+  statement: the rows are locked only while it runs. Same contract (all
+  or nothing, no bucket for a refused request, never two requests in the
+  last place: `tests/storage/test_rate_limit_concurrency.py`, 32 threads
+  over four pools; `test_rate_limit_parity.py`, request by request
+  against the in-memory counters). Under the same load it averaged
+  about 1 ms, and lock waits went from 39 connections to 0.05.
+- A poll reads the web chat channel, the visitor's conversations and the
+  visitor's ten newest messages (one keyset page on
+  `messages_doc_conversation_idx`); when the cursor is among them and
+  they reach back past it, the answer is the whole chat's
+  (`widget_message_window`, `tests/storage/test_widget_poll_window.py`
+  compares every cursor of random chats). The business document is no
+  longer read (a channel exists only for an existing business), and a
+  poll's cost no longer grows with the visitor's history; only a backlog
+  of more than ten new messages, an unknown cursor or none reads the
+  whole chat.
+
+**Measured.** k6 1.3.0 ran `widget_polling.js` unchanged against a local
+stack shaped like the load job's: Postgres 16 with its defaults (100
+connections), the migrations, `seed-load --businesses 50 --messages
+200000 --bookings 20000 --visitors 1000`, the API with two uvicorn
+processes (64 threads and 32 connections each), the worker, the scripted
+model at 800 ms. The machine had 4 vCPU shared with k6, Postgres and
+other jobs (load average often 5–25), so absolute numbers are higher
+than a dedicated runner's (the weekly run's 1.12 s was 4.8 s here);
+before and after ran back to back from the same seeded database.
+
+| Visitors (k6 VUs), run | Requests/s | Poll p50 | Poll p95 | Poll p99 | Message p95 | Counting statement (mean) | Connections waiting on a row lock (mean / max) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1,000, 5 min, before | 162 | 2,232 ms | 4,815 ms | 5,559 ms | 3,579 ms | 234 ms | 36 / 63 |
+| 1,000, 5 min, after | 208 | 702 ms | 2,506 ms | 2,973 ms | 1,374 ms | 1.1 ms | 0.1 / 23 |
+| 600, 3 min, before | 150 | 21 ms | 151 ms | 608 ms | 92 ms | 7.5 ms | 0.9 / 53 |
+| 600, 3 min, after | 150 | 14 ms | 76 ms | 388 ms | 88 ms | 0.5 ms | 0 / 7 |
+| 500, 2 min, before | 123 | 29 ms | 272 ms | 633 ms | 215 ms | 8.9 ms | 1.0 / 48 |
+| 500, 2 min, after | 124 | 16 ms | 138 ms | 498 ms | 129 ms | 0.5 ms | 0 / 13 |
+| 400, 3 min, before (two runs) | 100 | 19 / 17 ms | 84 / 106 ms | 298 / 448 ms | 82 / 104 ms | 3.8 ms | 0.4 / 55 |
+| 400, 3 min, after (two runs) | 100 | 12 / 11 ms | 36 / 34 ms | 111 / 86 ms | 40 / 39 ms | 0.4 ms | 0 / 7 |
+
+The database columns of the 400 rows are those of each pair's first run.
+At 400 visitors the API processes also used a quarter less CPU after the
+change (0.49–0.50 CPU against 0.61–0.69 for the same 100 requests a
+second). On this machine the scenario now meets its thresholds up to
+about 600 visitors (before: about 400); at 1,000 the poll p95 halved but
+still misses 150 ms.
+
+**What remains.** After the change Postgres is mostly idle during the
+scenario (each poll's statements take about 0.1 ms; the counting
+statement about 1 ms) and the limit is each API process: its 64 request
+threads and its event loop share one interpreter lock, and with 250
+polls a second on two processes the event loop waits for the lock more
+than it works (each process used about 0.65 CPU while polls queued for
+seconds). On this machine four processes (`WEB_CONCURRENCY=4`,
+`DB_POOL_SIZE=12` to stay within 100 connections) measured a poll p95 of
+453 ms where two measured 2.15 s; fewer threads (16) or a shorter
+interpreter switch interval did not help. The load stack keeps its two
+processes (this change is the code's); if the weekly run still misses
+150 ms, the lever is API processes (or less Python per request), not the
+database.
+
 ## What one process carries
 
 - **Request threads.** An API instance answers `THREADPOOL_SIZE` (64)
   requests at once. Reads of the cabinet and widget polls take
   milliseconds (the table above), so polling is cheap: 1,000 visitors
-  polling every 4 seconds are 250 requests a second, a few threads busy.
+  polling every 4 seconds are 250 requests a second, a few threads busy
+  in the database; the Python side of two processes is the limit there
+  ("Widget polls and the shared rate-limit counters" above).
   A widget message is stored and queued in one transaction and answered
   `202` at once; the worker answers it like every channel's message and
   the widget shows the typing dots until a poll brings the answer. A slow
@@ -288,8 +372,12 @@ pools), pick one route and update the Blueprint and the test together:
 - The customer list and the knowledge list page in the database
   (migration 1122); the customer search finds exact names, phones and ids
   through indexes and walks at most 500 customers for a part of a name.
-- A widget poll reads the messages of the visitor's own conversations:
-  bounded by one visitor's chat, not by the business.
+- A widget poll reads the visitor's ten newest messages; only a backlog
+  longer than that, an unknown cursor or none reads the visitor's whole
+  chat (bounded by one visitor's chat, not by the business).
+- Every widget poll of the platform counts the same rate-limit row
+  (`widget-poll:platform`): one short statement each (migration 1125),
+  so it serializes polls only for about a millisecond apiece.
 - Seeding the full dataset took 21 minutes locally (the demo part of each
   business dominates); the weekly budgets job allows two hours.
 - The scripted model answers every message with one sentence; a
