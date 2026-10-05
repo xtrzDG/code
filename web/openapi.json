@@ -2307,7 +2307,7 @@
       },
       "AutotestCaseResultView": {
         "additionalProperties": false,
-        "description": "How the check did in the latest finished autotest run that played it:\nthe outcome, why it failed, the assistant's first answer and when.",
+        "description": "How the check did in the latest finished autotest run that played it:\nthe outcome, why it failed, the assistant's first answer, the test\nconversation and that answer in it (\"Fix this answer\"), and when.",
         "properties": {
           "answer": {
             "anyOf": [
@@ -2319,6 +2319,17 @@
               }
             ],
             "title": "Answer"
+          },
+          "answer_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Message Id"
           },
           "assistant_version_number": {
             "minimum": 1.0,
@@ -2335,6 +2346,17 @@
           "checked_at": {
             "title": "Checked At",
             "type": "integer"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
           },
           "outcome": {
             "$ref": "#/components/schemas/AutotestOutcome"

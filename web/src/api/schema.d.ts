@@ -4359,17 +4359,22 @@ export interface components {
         /**
          * AutotestCaseResultView
          * @description How the check did in the latest finished autotest run that played it:
-         *     the outcome, why it failed, the assistant's first answer and when.
+         *     the outcome, why it failed, the assistant's first answer, the test
+         *     conversation and that answer in it ("Fix this answer"), and when.
          */
         AutotestCaseResultView: {
             /** Answer */
             answer?: string | null;
+            /** Answer Message Id */
+            answer_message_id?: string | null;
             /** Assistant Version Number */
             assistant_version_number: number;
             /** Check Codes */
             check_codes?: components["schemas"]["AutotestCheckCode"][];
             /** Checked At */
             checked_at: number;
+            /** Conversation Id */
+            conversation_id?: string | null;
             outcome: components["schemas"]["AutotestOutcome"];
             /** Run Id */
             run_id: string;
