@@ -1275,6 +1275,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/contacts/{contact_id}/blocking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change Customer Blocking */
+        put: operations["change_customer_blocking_v1_businesses__business_id__contacts__contact_id__blocking_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/contacts/{contact_id}/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change Customer Card */
+        patch: operations["change_customer_card_v1_businesses__business_id__contacts__contact_id__card_patch"];
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/contacts/{contact_id}/export": {
         parameters: {
             query?: never;
@@ -1284,6 +1318,23 @@ export interface paths {
         };
         /** Export Contact Data */
         get: operations["export_contact_data_v1_businesses__business_id__contacts__contact_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/contacts/{contact_id}/standing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Contact Standing */
+        get: operations["get_contact_standing_v1_businesses__business_id__contacts__contact_id__standing_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1458,6 +1509,111 @@ export interface paths {
         get?: never;
         /** Rate Conversation */
         put: operations["rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/customer-segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Customer Segments */
+        get: operations["list_customer_segments_v1_businesses__business_id__customer_segments_get"];
+        put?: never;
+        /** Create Customer Segment */
+        post: operations["create_customer_segment_v1_businesses__business_id__customer_segments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/customer-segments/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Customer Segment */
+        post: operations["preview_customer_segment_v1_businesses__business_id__customer_segments_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/customer-segments/{segment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Customer Segment */
+        put: operations["update_customer_segment_v1_businesses__business_id__customer_segments__segment_id__put"];
+        post?: never;
+        /** Delete Customer Segment */
+        delete: operations["delete_customer_segment_v1_businesses__business_id__customer_segments__segment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/customer-segments/{segment_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Customer Segment */
+        get: operations["export_customer_segment_v1_businesses__business_id__customer_segments__segment_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/customer-segments/{segment_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Customer Segment Members */
+        get: operations["list_customer_segment_members_v1_businesses__business_id__customer_segments__segment_id__members_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/customer-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Customer Settings */
+        get: operations["get_customer_settings_v1_businesses__business_id__customer_settings_get"];
+        /** Update Customer Settings */
+        put: operations["update_customer_settings_v1_businesses__business_id__customer_settings_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2336,6 +2492,23 @@ export interface paths {
         post?: never;
         /** Delete Schedule Exception */
         delete: operations["delete_schedule_exception_v1_businesses__business_id__schedule_exceptions__exception_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Business */
+        get: operations["search_business_v1_businesses__business_id__search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4905,6 +5078,24 @@ export interface components {
             value_minor?: number | null;
         };
         /**
+         * BookingHit
+         * @description A booking of a customer the search found (or named by its id).
+         */
+        BookingHit: {
+            /** Contact Id */
+            contact_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Id */
+            id: string;
+            /** Party Size */
+            party_size: number;
+            source_channel: components["schemas"]["ChannelKind"];
+            /** Starts At */
+            starts_at: number;
+            status: components["schemas"]["BookingStatus"];
+        };
+        /**
          * BookingPage
          * @description One page of bookings; `next_cursor` is None on the last page.
          */
@@ -5236,6 +5427,21 @@ export interface components {
             tone?: string | null;
             /** Updated At */
             updated_at?: number | null;
+        };
+        /**
+         * BusinessSearchResults
+         * @description The hits, grouped: customers (exact matches first, then the most
+         *     recently active), their latest conversations and their bookings (the
+         *     latest start first), at most a few of each. Phones are masked for staff
+         *     the owner did not allow to see them.
+         */
+        BusinessSearchResults: {
+            /** Bookings */
+            bookings?: components["schemas"]["BookingHit"][];
+            /** Conversations */
+            conversations?: components["schemas"]["ConversationHit"][];
+            /** Customers */
+            customers?: components["schemas"]["ContactSummaryView"][];
         };
         /**
          * BusinessSecurityView
@@ -6054,6 +6260,16 @@ export interface components {
             business_id: string;
         };
         /**
+         * ContactBlock
+         * @description Why the assistant no longer answers a customer: who blocked them, when.
+         */
+        ContactBlock: {
+            /** Blocked At */
+            blocked_at: number;
+            /** Blocked By */
+            blocked_by: string;
+        };
+        /**
          * ContactBookingView
          * @description A booking of the customer (start in UTC seconds, as bookings use).
          */
@@ -6095,16 +6311,34 @@ export interface components {
         };
         /**
          * ContactDetailView
-         * @description One customer with their conversations, bookings and leads, newest first.
+         * @description One customer with their conversations, bookings and leads, newest
+         *     first, and their history across channels as one `timeline` (calls
+         *     too), the latest moment first: a booking by its start, so upcoming
+         *     visits lead. `standing`, `visit_count` and `last_visit_at` say how well
+         *     the business knows them; `blocked_at` since when the assistant does
+         *     not answer them.
          */
         ContactDetailView: {
+            /** Blocked At */
+            blocked_at?: number | null;
             /** Bookings */
             bookings?: components["schemas"]["ContactBookingView"][];
             contact: components["schemas"]["ContactSummaryView"];
             /** Conversations */
             conversations?: components["schemas"]["ContactConversationView"][];
+            /** Last Visit At */
+            last_visit_at?: number | null;
             /** Leads */
             leads?: components["schemas"]["ContactLeadView"][];
+            /** @default new */
+            standing: components["schemas"]["CustomerStanding"];
+            /** Timeline */
+            timeline?: components["schemas"]["CustomerTimelineEntry"][];
+            /**
+             * Visit Count
+             * @default 0
+             */
+            visit_count: number;
         };
         /**
          * ContactDocument
@@ -6133,8 +6367,16 @@ export interface components {
          *     identities only) never gets one and stays out of the list.
          *     `display_name_folded`, the name as the search compares it, is kept in
          *     step with `name` by the repository.
+         *
+         *     Version 4 adds the team's customer card (1140), all optional: `tags`
+         *     (indexed by `tags[].key`), the `is_vip` flag and `block`, set while the
+         *     assistant must not answer the customer (`is_blocked` mirrors it for the
+         *     list's filter). Only the card writes of the repository change them; a
+         *     plain save keeps them as stored, so a turn that read the contact
+         *     earlier never undoes a tag or a block. An erased customer has none.
          */
         ContactDocument: {
+            block?: components["schemas"]["ContactBlock"] | null;
             /** Business Id */
             business_id: string;
             /** Channel Identities */
@@ -6150,6 +6392,16 @@ export interface components {
             erased_at?: number | null;
             /** Id */
             id?: string;
+            /**
+             * Is Blocked
+             * @default false
+             */
+            is_blocked: boolean;
+            /**
+             * Is Vip
+             * @default false
+             */
+            is_vip: boolean;
             /** Language */
             language?: string | null;
             /** Last Seen At */
@@ -6162,9 +6414,11 @@ export interface components {
             phone_number?: string | null;
             /**
              * Schema Version
-             * @default 3
+             * @default 4
              */
             schema_version: string;
+            /** Tags */
+            tags?: components["schemas"]["ContactTagMark"][];
             /**
              * Updated At
              * @description Last update wall-clock UNIX timestamp in microseconds.
@@ -6248,6 +6502,41 @@ export interface components {
             outbound_messages?: components["schemas"]["OutboundMessageDocument"][];
         };
         /**
+         * ContactStandingView
+         * @description "Regular customer · 4 visits": the standing (CustomerStanding), the
+         *     visits and when the latest started, the conversations and bookings
+         *     (test chats left out) and the card's flags. No personal data, so it is
+         *     not audited.
+         */
+        ContactStandingView: {
+            /** Booking Count */
+            booking_count: number;
+            /** Contact Id */
+            contact_id: string;
+            /** Conversation Count */
+            conversation_count: number;
+            /**
+             * Is Blocked
+             * @default false
+             */
+            is_blocked: boolean;
+            /**
+             * Is Erased
+             * @default false
+             */
+            is_erased: boolean;
+            /**
+             * Is Vip
+             * @default false
+             */
+            is_vip: boolean;
+            /** Last Visit At */
+            last_visit_at?: number | null;
+            standing: components["schemas"]["CustomerStanding"];
+            /** Visit Count */
+            visit_count: number;
+        };
+        /**
          * ContactSummaryView
          * @description One customer in the list: how to recognise them and how active they are.
          *
@@ -6257,7 +6546,10 @@ export interface components {
          *     (`erased_at`) has no name, phone or language left; their anonymous
          *     conversations and bookings still count. `opted_out_channels`: where the
          *     customer sent STOP; while any is listed they get no reminders, feedback
-         *     requests or messages after a missed call.
+         *     requests or messages after a missed call. The team's card: `tags`,
+         *     `is_vip` and `is_blocked` (the assistant does not answer them). For
+         *     staff the owner did not allow to see phone numbers, `phone_number` is
+         *     None and `masked_phone_number` shows its ends (`is_phone_masked`).
          */
         ContactSummaryView: {
             /** Booking Count */
@@ -6273,22 +6565,56 @@ export interface components {
             /** Id */
             id: string;
             /**
+             * Is Blocked
+             * @default false
+             */
+            is_blocked: boolean;
+            /**
+             * Is Phone Masked
+             * @default false
+             */
+            is_phone_masked: boolean;
+            /**
              * Is Phone Verified
              * @default false
              */
             is_phone_verified: boolean;
+            /**
+             * Is Vip
+             * @default false
+             */
+            is_vip: boolean;
             /** Language */
             language?: string | null;
             /** Last Activity At */
             last_activity_at: number;
             /** Lead Count */
             lead_count: number;
+            /** Masked Phone Number */
+            masked_phone_number?: string | null;
             /** Name */
             name?: string | null;
             /** Opted Out Channels */
             opted_out_channels?: components["schemas"]["ChannelKind"][];
             /** Phone Number */
             phone_number?: string | null;
+            /** Tags */
+            tags?: string[];
+        };
+        /**
+         * ContactTagMark
+         * @description A tag on a customer: which (as written, and its case-folded `key` the
+         *     filters match), when and by whom (None: the platform).
+         */
+        ContactTagMark: {
+            /** Added At */
+            added_at: number;
+            /** Added By */
+            added_by?: string | null;
+            /** Key */
+            key: string;
+            /** Tag */
+            tag: string;
         };
         /**
          * ConversationAssignmentView
@@ -6462,6 +6788,22 @@ export interface components {
              * @description Last update wall-clock UNIX timestamp in microseconds.
              */
             updated_at?: number;
+        };
+        /**
+         * ConversationHit
+         * @description A conversation of a customer the search found (or named by its id).
+         */
+        ConversationHit: {
+            channel: components["schemas"]["ChannelKind"];
+            /** Contact Id */
+            contact_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Id */
+            id: string;
+            /** Last Message At */
+            last_message_at: number;
+            status: components["schemas"]["ConversationStatus"];
         };
         /**
          * ConversationNoteDocument
@@ -6838,6 +7180,31 @@ export interface components {
             current?: components["schemas"]["WebsiteImportView"] | null;
         };
         /**
+         * CustomerCardView
+         * @description The card after a change: the customer's tags, VIP flag and block, and
+         *     the business's tags (the latest used first) to offer next.
+         */
+        CustomerCardView: {
+            /** Blocked At */
+            blocked_at?: number | null;
+            /** Contact Id */
+            contact_id: string;
+            /**
+             * Is Blocked
+             * @default false
+             */
+            is_blocked: boolean;
+            /**
+             * Is Vip
+             * @default false
+             */
+            is_vip: boolean;
+            /** Known Tags */
+            known_tags?: string[];
+            /** Tags */
+            tags?: string[];
+        };
+        /**
          * CustomerRecipient
          * @description A customer in the business's channel. The credential is read from the
          *     channel at send time (never stored here), so a reconnected bot is used.
@@ -6848,6 +7215,19 @@ export interface components {
             channel_id: string;
             /** Channel User Id */
             channel_user_id: string;
+        };
+        /**
+         * CustomerSettingsView
+         * @description Off by default: staff see phones masked in Customers and the search.
+         */
+        CustomerSettingsView: {
+            /** Known Tags */
+            known_tags?: string[];
+            /**
+             * Staff Sees Phone Numbers
+             * @default false
+             */
+            staff_sees_phone_numbers: boolean;
         };
         /**
          * CustomerSourceKind
@@ -6906,6 +7286,58 @@ export interface components {
             rows?: components["schemas"]["CustomerSourceRow"][];
             value_basis: components["schemas"]["ValueBasis"];
         };
+        /**
+         * CustomerStanding
+         * @description How well the business knows a customer, as the conversation header
+         *     says it: NEW (first contact, no visit), RETURNING (wrote or called
+         *     before, no visit yet), VISITED (one visit) or REGULAR (two visits or
+         *     more). A visit is a booking that started already and was not
+         *     cancelled, missed or left unconfirmed.
+         * @enum {string}
+         */
+        CustomerStanding: "new" | "returning" | "visited" | "regular";
+        /**
+         * CustomerTimelineEntry
+         * @description A conversation (by its latest message, with the summary the worker
+         *     wrote once it went quiet), a booking (by its start), a request for a
+         *     manager or a call; `occurred_at` orders the history. The fields of the
+         *     other kinds are None.
+         */
+        CustomerTimelineEntry: {
+            /** Booking Id */
+            booking_id?: string | null;
+            booking_status?: components["schemas"]["BookingStatus"] | null;
+            /** Call Id */
+            call_id?: string | null;
+            call_outcome?: components["schemas"]["CallOutcome"] | null;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            conversation_status?: components["schemas"]["ConversationStatus"] | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            kind: components["schemas"]["CustomerTimelineKind"];
+            /** Lead Id */
+            lead_id?: string | null;
+            lead_status?: components["schemas"]["LeadStatus"] | null;
+            lead_type?: components["schemas"]["LeadType"] | null;
+            /** Occurred At */
+            occurred_at: number;
+            /** Party Size */
+            party_size?: number | null;
+            /** Resource Id */
+            resource_id?: string | null;
+            /** Starts At */
+            starts_at?: number | null;
+            /** Summary */
+            summary?: string | null;
+        };
+        /**
+         * CustomerTimelineKind
+         * @description What one entry of a customer's history is.
+         * @enum {string}
+         */
+        CustomerTimelineKind: "conversation" | "booking" | "lead" | "call";
         /**
          * DashboardDay
          * @description What started on one local day of the dashboard period.
@@ -11056,6 +11488,63 @@ export interface components {
             nightly_rate_minor: number;
             /** Starts On */
             starts_on: string;
+        };
+        /**
+         * SegmentList
+         * @description The business's segments, the oldest first, and its tags to build one with.
+         */
+        SegmentList: {
+            /** Items */
+            items?: components["schemas"]["SegmentView"][];
+            /** Known Tags */
+            known_tags?: string[];
+        };
+        /**
+         * SegmentPreview
+         * @description How many customers belong (`is_count_exact` False when the business
+         *     has more customers than one count reads: then "at least"), and the
+         *     first few of them.
+         */
+        SegmentPreview: {
+            /** Is Count Exact */
+            is_count_exact: boolean;
+            /** Member Count */
+            member_count: number;
+            /** Sample */
+            sample?: components["schemas"]["ContactSummaryView"][];
+        };
+        /**
+         * SegmentRulesBody
+         * @description Who belongs to a segment (every rule given must hold): a tag, the
+         *     latest visit more than N days ago, at least / at most so many bookings,
+         *     VIPs only. Blocked and erased customers never belong.
+         */
+        SegmentRulesBody: {
+            /** Last Visit Days Ago */
+            last_visit_days_ago?: number | null;
+            /** Max Bookings */
+            max_bookings?: number | null;
+            /** Min Bookings */
+            min_bookings?: number | null;
+            /** Tag */
+            tag?: string | null;
+            /**
+             * Vip Only
+             * @default false
+             */
+            vip_only: boolean;
+        };
+        /** SegmentView */
+        SegmentView: {
+            /** Created At */
+            created_at: number;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            rules: components["schemas"]["SegmentRulesBody"];
+            /** Updated At */
+            updated_at: number;
         };
         /**
          * ServiceMode
@@ -21164,6 +21653,8 @@ export interface operations {
         parameters: {
             query?: {
                 search?: string | null;
+                tag?: string | null;
+                filter?: string | null;
                 limit?: string | null;
                 cursor?: string | null;
             };
@@ -21425,6 +21916,200 @@ export interface operations {
             };
         };
     };
+    change_customer_blocking_v1_businesses__business_id__contacts__contact_id__blocking_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Is Blocked */
+                    is_blocked: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerCardView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    change_customer_card_v1_businesses__business_id__contacts__contact_id__card_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Add Tags */
+                    add_tags?: string[];
+                    /** Is Vip */
+                    is_vip?: boolean | null;
+                    /** Remove Tags */
+                    remove_tags?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerCardView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     export_contact_data_v1_businesses__business_id__contacts__contact_id__export_get: {
         parameters: {
             query?: never;
@@ -21446,6 +22131,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactDataExport"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_contact_standing_v1_businesses__business_id__contacts__contact_id__standing_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactStandingView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -22663,6 +23436,877 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConversationSummaryView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_customer_segments_v1_businesses__business_id__customer_segments_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_customer_segment_v1_businesses__business_id__customer_segments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name: string;
+                    /**
+                     * SegmentRulesBody
+                     * @description Who belongs to a segment (every rule given must hold): a tag, the
+                     *     latest visit more than N days ago, at least / at most so many bookings,
+                     *     VIPs only. Blocked and erased customers never belong.
+                     */
+                    rules?: {
+                        /** Last Visit Days Ago */
+                        last_visit_days_ago?: number | null;
+                        /** Max Bookings */
+                        max_bookings?: number | null;
+                        /** Min Bookings */
+                        min_bookings?: number | null;
+                        /** Tag */
+                        tag?: string | null;
+                        /**
+                         * Vip Only
+                         * @default false
+                         */
+                        vip_only?: boolean;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    preview_customer_segment_v1_businesses__business_id__customer_segments_preview_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Last Visit Days Ago */
+                    last_visit_days_ago?: number | null;
+                    /** Max Bookings */
+                    max_bookings?: number | null;
+                    /** Min Bookings */
+                    min_bookings?: number | null;
+                    /** Tag */
+                    tag?: string | null;
+                    /**
+                     * Vip Only
+                     * @default false
+                     */
+                    vip_only?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentPreview"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_customer_segment_v1_businesses__business_id__customer_segments__segment_id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                segment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Name */
+                    name: string;
+                    /**
+                     * SegmentRulesBody
+                     * @description Who belongs to a segment (every rule given must hold): a tag, the
+                     *     latest visit more than N days ago, at least / at most so many bookings,
+                     *     VIPs only. Blocked and erased customers never belong.
+                     */
+                    rules?: {
+                        /** Last Visit Days Ago */
+                        last_visit_days_ago?: number | null;
+                        /** Max Bookings */
+                        max_bookings?: number | null;
+                        /** Min Bookings */
+                        min_bookings?: number | null;
+                        /** Tag */
+                        tag?: string | null;
+                        /**
+                         * Vip Only
+                         * @default false
+                         */
+                        vip_only?: boolean;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_customer_segment_v1_businesses__business_id__customer_segments__segment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                segment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    export_customer_segment_v1_businesses__business_id__customer_segments__segment_id__export_get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                segment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The table as CSV (UTF-8 with a byte order mark). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_customer_segment_members_v1_businesses__business_id__customer_segments__segment_id__members_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                segment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_customer_settings_v1_businesses__business_id__customer_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_customer_settings_v1_businesses__business_id__customer_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Staff Sees Phone Numbers */
+                    staff_sees_phone_numbers: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerSettingsView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -29368,6 +31012,95 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    search_business_v1_businesses__business_id__search_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessSearchResults"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

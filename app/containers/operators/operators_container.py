@@ -12,6 +12,7 @@ from app.containers.operators.compliance_operators import ComplianceOperatorsCon
 from app.containers.operators.conversation_operators import (
     ConversationOperatorsContainer,
 )
+from app.containers.operators.customer_operators import CustomerOperatorsContainer
 from app.containers.operators.demo_operators import DemoOperatorsContainer
 from app.containers.operators.feedback_operators import FeedbackOperatorsContainer
 from app.containers.operators.inbox_operators import InboxOperatorsContainer
@@ -83,6 +84,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     memory: MemoryOperatorsContainer = Container(  # type: ignore[assignment]
         MemoryOperatorsContainer,
         memory_pipelines=pipelines.memory,
+        utilities=utilities,
+    )
+    customers: CustomerOperatorsContainer = Container(  # type: ignore[assignment]
+        CustomerOperatorsContainer,
+        customer_pipelines=pipelines.customers,
         utilities=utilities,
     )
     knowledge: KnowledgeOperatorsContainer = Container(  # type: ignore[assignment]

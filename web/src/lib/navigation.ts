@@ -2,12 +2,14 @@
  * Routes of the cabinet. Business pages live under /b/{businessId}/{page},
  * where a page is one of BUSINESS_PAGES ("overview", "inbox",
  * "assistant/knowledge", …); which of them a person sees, and how they are
- * grouped into the five sections of the sidebar, is in lib/sections.ts.
+ * grouped into the sections of the sidebar, is in lib/sections.ts.
  * Addresses of earlier versions are redirected by lib/legacyRoutes.ts.
  *
  * The team inbox is one page with views (`?view=needs_person|requests|
  * mine|unassigned|all`) and its conversations under it
  * (/b/{id}/inbox/{conversationId}): `inboxPath` and `conversationPath`.
+ * One customer's page is under Customers (/b/{id}/customers/{contactId}):
+ * `customerPath`.
  */
 
 import type { BusinessSection } from "./sections";
@@ -18,6 +20,8 @@ export const BUSINESS_PAGES = [
   "overview/reports",
   "inbox",
   "bookings",
+  "customers",
+  "customers/segments",
   "assistant",
   "assistant/knowledge",
   "assistant/profile",
@@ -98,6 +102,11 @@ export function inboxPath(businessId: string, view: InboxView = DEFAULT_INBOX_VI
 /** One conversation of the inbox: `/b/{id}/inbox/{conversationId}`. */
 export function conversationPath(businessId: string, conversationId: string): string {
   return `${businessPath(businessId, "inbox")}/${encodeURIComponent(conversationId)}`;
+}
+
+/** One customer's page (Customers): `/b/{id}/customers/{contactId}`. */
+export function customerPath(businessId: string, contactId: string): string {
+  return `${businessPath(businessId, "customers")}/${encodeURIComponent(contactId)}`;
 }
 
 /**

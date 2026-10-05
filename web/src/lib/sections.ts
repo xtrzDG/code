@@ -1,21 +1,23 @@
 /**
- * The information architecture of a business: five sections (Overview,
- * Inbox, Bookings, Assistant, Settings), the pages inside each and who
- * may open them. The sidebar, the phone tab bar, the section tabs and the
- * page titles are all built from these tables.
+ * The information architecture of a business: six sections (Overview,
+ * Inbox, Bookings, Customers, Assistant, Settings), the pages inside each
+ * and who may open them. The sidebar, the phone tab bar, the section tabs
+ * and the page titles are all built from these tables.
  *
  * The Inbox is one page: conversations, the ones that need a person and
  * customers' requests are its views. Staff see Overview (without the
- * reports), Inbox, Bookings, the assistant's test chat and Settings →
- * Notifications (their own devices); owners see everything. Versions and
- * autotests sit in the "advanced" group of the Assistant.
+ * reports), Inbox, Bookings, the customer list (phones masked unless the
+ * owner allows them), the assistant's test chat and Settings →
+ * Notifications (their own devices); owners see everything, saved
+ * segments among it. Versions and autotests sit in the "advanced" group
+ * of the Assistant.
  */
 
 import type { MessageKey } from "@/i18n/translate";
 
 import type { BusinessPage } from "./navigation";
 
-export const BUSINESS_SECTIONS = ["overview", "inbox", "bookings", "assistant", "settings"] as const;
+export const BUSINESS_SECTIONS = ["overview", "inbox", "bookings", "customers", "assistant", "settings"] as const;
 
 export type BusinessSection = (typeof BUSINESS_SECTIONS)[number];
 
@@ -38,6 +40,7 @@ export const SECTION_LABELS: Record<BusinessSection, MessageKey> = {
   overview: "navigation.sections.overview",
   inbox: "navigation.sections.inbox",
   bookings: "navigation.sections.bookings",
+  customers: "navigation.sections.customers",
   assistant: "navigation.sections.assistant",
   settings: "navigation.sections.settings",
 };
@@ -46,6 +49,7 @@ export const SECTION_DESCRIPTIONS: Record<BusinessSection, MessageKey> = {
   overview: "navigation.descriptions.overview",
   inbox: "navigation.descriptions.inbox",
   bookings: "navigation.descriptions.bookings",
+  customers: "navigation.descriptions.customers",
   assistant: "navigation.descriptions.assistant",
   settings: "navigation.descriptions.settings",
 };
@@ -58,6 +62,10 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
   ],
   inbox: [{ page: "inbox", label: "navigation.sections.inbox", roles: EVERYONE }],
   bookings: [{ page: "bookings", label: "navigation.sections.bookings", roles: EVERYONE }],
+  customers: [
+    { page: "customers", label: "navigation.pages.customersList", roles: EVERYONE },
+    { page: "customers/segments", label: "navigation.pages.customersSegments", roles: OWNERS },
+  ],
   assistant: [
     { page: "assistant", label: "navigation.pages.assistantTest", roles: EVERYONE },
     { page: "assistant/knowledge", label: "navigation.pages.assistantKnowledge", roles: OWNERS },
@@ -85,6 +93,8 @@ export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
   "overview/reports": "reports.description",
   inbox: "navigation.descriptions.inbox",
   bookings: "pages.bookings.description",
+  customers: "navigation.descriptions.customersList",
+  "customers/segments": "navigation.descriptions.customersSegments",
   assistant: "navigation.descriptions.assistantTest",
   "assistant/knowledge": "pages.knowledge.description",
   "assistant/profile": "navigation.descriptions.assistantProfile",

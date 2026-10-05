@@ -1,5 +1,5 @@
 /**
- * The five sections: every section and page opens from the sidebar (the
+ * The six sections: every section and page opens from the sidebar (the
  * open section's pages under it) and on a phone from the tab bar and
  * "More", fits the screen, and the sidebar folds to icons and stays so.
  */
@@ -105,7 +105,7 @@ test.describe("on a phone", () => {
       });
     }
 
-    for (const entry of SECTION_PAGES.settings) {
+    for (const entry of [...SECTION_PAGES.customers, ...SECTION_PAGES.settings]) {
       await test.step(entry.page, async () => {
         await tabBar.getByRole("button", { name: en.navigation.more }).click();
         const sheet = page.getByRole("dialog", { name: en.navigation.more });

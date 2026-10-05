@@ -1,5 +1,5 @@
 /**
- * `navigation.*` texts: the five sections of a business, their pages, the
+ * `navigation.*` texts: the sections of a business, their pages, the
  * sidebar and the phone tab bar, in English: the reference that ru and ka
  * are typed against.
  */
@@ -9,6 +9,7 @@ export const navigationEn = {
     overview: "Overview",
     inbox: "Inbox",
     bookings: "Bookings",
+    customers: "Customers",
     assistant: "Assistant",
     settings: "Settings",
   },
@@ -16,6 +17,9 @@ export const navigationEn = {
     overview: "How your assistant is doing and what needs you today.",
     inbox: "Every conversation in one place: the customers waiting for a person, requests, and who of the team handles what.",
     bookings: "Bookings with their statuses; add one by hand.",
+    customers: "Everyone who wrote, called or booked: their history across channels, tags, VIPs and saved groups.",
+    customersList: "Find a customer by name, phone or tag and open their history across channels.",
+    customersSegments: "Saved groups of customers by tag, last visit and bookings, with a CSV for your campaigns.",
     assistant: "Try your assistant, teach it, choose where it answers and apply your changes.",
     settings: "Your business, team, notifications, quick replies, calls, reviews, plan, privacy and the audit log.",
     assistantTest: "Write as a customer would. Nothing reaches real customers.",
@@ -32,6 +36,8 @@ export const navigationEn = {
     assistantChannels: "Channels",
     assistantVersions: "History",
     assistantChecks: "My checks",
+    customersList: "All customers",
+    customersSegments: "Segments",
     settingsGeneral: "Business",
     settingsTeam: "Team",
     settingsNotifications: "Notifications",

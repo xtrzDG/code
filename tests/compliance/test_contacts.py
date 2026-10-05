@@ -8,7 +8,7 @@ from app.schemas.domain.contacts import ChannelIdentity, ContactDocument
 from app.schemas.dto.compliance import ContactDataCommand
 from app.schemas.dto.contacts import ContactQuery
 from app.schemas.dto.paging import PageRequest
-from app.schemas.exceptions.application_errors import AccessDeniedError, NotFoundError
+from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.contacts.constrained_strings import ContactSearchText
@@ -20,6 +20,7 @@ from app.schemas.typings.platform.constrained_integers import PageSize
 from app.utilities.contacts.contact_search import matches_contact_search
 from tests.compliance.customer_records import list_contacts, seed_customers
 from tests.compliance.visitor_records import build_conversation
+from tests.users.accounts_phones import USA_MOBILE
 
 
 def test_owner_lists_the_customers_of_the_business_most_recent_first() -> None:
@@ -127,11 +128,23 @@ def test_test_chat_customers_are_left_out() -> None:
     assert walk_in.id in ids
 
 
-def test_only_owners_list_customers() -> None:
+def test_staff_list_customers_with_masked_phones() -> None:
     customers = seed_customers()
 
-    with pytest.raises(AccessDeniedError):
-        list_contacts(customers, user_id=customers.staff_id)
+    page = list_contacts(customers, user_id=customers.staff_id)
+
+    giorgi = page.items[1]
+    assert giorgi.phone_number is None
+    assert giorgi.masked_phone_number == "+995 ••• ••• •56"
+    assert giorgi.is_phone_masked is True
+
+
+def test_strangers_do_not_list_customers() -> None:
+    customers = seed_customers()
+    stranger = customers.testbed.sign_in_with_phone(USA_MOBILE)
+
+    with pytest.raises(NotFoundError):
+        list_contacts(customers, user_id=stranger.user.id)
 
 
 def test_owner_opens_one_customer_and_the_view_is_audited() -> None:

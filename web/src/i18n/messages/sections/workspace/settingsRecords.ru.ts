@@ -22,14 +22,6 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
     someone: "участник команды",
   },
   requests: {
-    title: "Запросы клиентов о данных",
-    description: "Когда клиент просит выдать или удалить свои данные, найдите его здесь. Выгрузка — это файл JSON; удаление стирает сообщения, расшифровки и записи, а брони и заявки обезличивает.",
-    search: "Найти клиента",
-    searchPlaceholder: "Имя, телефон или ID контакта",
-    empty: "Клиентов пока нет",
-    emptyDescription: "Клиенты появятся здесь после первого разговора.",
-    noMatches: "Никто не подходит под поиск.",
-    unnamed: "Без имени",
     conversations: {
       one: "{count} разговор",
       few: "{count} разговора",
@@ -44,9 +36,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
     deleteTitle: "Удалить все данные клиента ({name})?",
     deleteDescription: "Сообщения, расшифровки звонков и записи этого клиента будут удалены навсегда; разговоры, брони и заявки останутся без персональных данных. Это нельзя отменить.",
     deleteConfirm: "Удалить навсегда",
-    deleted: "Данные клиента удалены",
     deletedSummary: "{name}: сообщения, расшифровки и записи звонков удалены; разговоры, брони и заявки остались без персональных данных.",
-    showMore: "Показать ещё клиентов",
   },
   audit: {
     title: "Журнал действий",
@@ -154,6 +144,9 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       outbound_message: "Исходящее сообщение",
       channel_message_receipt: "Отчёт о доставке",
       web_vital_sample: "Замеры скорости страниц",
+      customer_search: "Поиск по клиентам",
+      customer_segment: "Сегмент клиентов",
+      customer_settings: "Настройки клиентов",
     },
   },
   roles: {

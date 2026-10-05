@@ -1,10 +1,35 @@
 {
   "collection": "contacts",
   "document_type": "ContactDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
+      "block": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "blocked_at": {
+                "type": "integer"
+              },
+              "blocked_by": {
+                "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "blocked_at",
+              "blocked_by"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "business_id": {
         "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
@@ -66,6 +91,14 @@
       "id": {
         "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "is_blocked": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_vip": {
+        "default": false,
+        "type": "boolean"
       },
       "language": {
         "anyOf": [
@@ -134,8 +167,49 @@
         "default": null
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
+      },
+      "tags": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "added_at": {
+              "type": "integer"
+            },
+            "added_by": {
+              "anyOf": [
+                {
+                  "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "key": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,62}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
+            "tag": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            }
+          },
+          "required": [
+            "tag",
+            "key",
+            "added_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
       },
       "updated_at": {
         "type": "integer"

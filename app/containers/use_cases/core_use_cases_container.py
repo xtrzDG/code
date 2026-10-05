@@ -13,6 +13,7 @@ from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
+from app.containers.use_cases.customer_use_cases import CustomerUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.help_use_cases import HelpUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
@@ -213,5 +214,13 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         facilitators=facilitators,
         repositories=repositories,
         time_provider=time_provider,
+        account_use_cases=accounts,
+    )
+    # Customers: the team's card, segments and the cabinet's search (1140).
+    customers: CustomerUseCasesContainer = Container(  # type: ignore[assignment]
+        CustomerUseCasesContainer,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
         account_use_cases=accounts,
     )

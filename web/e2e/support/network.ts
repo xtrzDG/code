@@ -14,27 +14,49 @@ const POLL_INTERVAL_MS = 50;
 
 const inFlight = new WeakMap<Page, Set<Request>>();
 
+/** A URL without its fragment (a Referer header never carries one). */
+function withoutFragment(url: string): string {
+  return url.replace(/#.*$/s, "");
+}
+
 /** Starts counting the page's requests (fixtures.ts does it for every test). */
 export function trackRequests(page: Page): void {
   const requests = new Set<Request>();
   inFlight.set(page, requests);
   let isLoadingDocument = false;
+  let documentUrl = "";
+  let abandonedUrl = "";
   page.on("request", (request) => {
-    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) {
+    const isNavigation = request.isNavigationRequest();
+    if (isNavigation && request.frame() === page.mainFrame()) {
       isLoadingDocument = true;
     }
-    if (!EVENT_STREAM.test(request.url())) {
-      requests.add(request);
+    if (EVENT_STREAM.test(request.url())) {
+      return;
     }
+    // A request the old document made just before the new one took over can
+    // be reported after the switch; it is abandoned with its document (its
+    // Referer still names the old page).
+    const referer = isNavigation ? "" : withoutFragment(request.headers()["referer"] ?? "");
+    if (abandonedUrl !== "" && referer === abandonedUrl && referer !== documentUrl) {
+      return;
+    }
+    requests.add(request);
   });
   page.on("framenavigated", (frame) => {
-    if (frame !== page.mainFrame() || !isLoadingDocument) {
-      return; // a frame, or the same document (history.pushState)
+    if (frame !== page.mainFrame()) {
+      return;
+    }
+    if (!isLoadingDocument) {
+      documentUrl = withoutFragment(frame.url()); // the same document (history.pushState)
+      return;
     }
     // A new document: what the old one had in flight, even what it asked for
     // while the new one loaded, was abandoned with it (and Chromium does not
     // always report those requests as failed).
     isLoadingDocument = false;
+    abandonedUrl = documentUrl;
+    documentUrl = withoutFragment(frame.url());
     for (const request of requests) {
       if (!request.isNavigationRequest()) {
         requests.delete(request);

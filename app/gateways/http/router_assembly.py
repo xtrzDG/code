@@ -18,6 +18,7 @@ from app.gateways.http.channel_setup_router_assembly import (
 )
 from app.gateways.http.compliance_routes import build_compliance_router
 from app.gateways.http.conversation_routes import build_conversation_router
+from app.gateways.http.customers_router_assembly import build_customer_routers
 from app.gateways.http.events_routes import build_events_router
 from app.gateways.http.feedback_router_assembly import build_feedback_routers
 from app.gateways.http.health_routes import build_readiness_router
@@ -292,4 +293,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_help_routers(operators, current_user),
         *build_teaching_routers(operators, current_user),
         *build_memory_routers(operators, current_user),
+        *build_customer_routers(operators, current_user),
     ]

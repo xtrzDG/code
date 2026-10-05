@@ -91,7 +91,7 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 | knowledge_items | `KnowledgeItemDocument` |
 | resources, schedules, schedule_exceptions | `ResourceDocument`, `ScheduleExceptionDocument` |
 | channels | `ChannelDocument` (токены только в зашифрованном виде) |
-| contacts | `ContactDocument` |
+| contacts | `ContactDocument` (карточка команды: метки, VIP, блокировка), `CustomerSegmentDocument`, `CustomerSettingsDocument` |
 | conversations, messages, calls | `ConversationDocument`, `MessageDocument`, `CallDocument`, `LlmTurnDocument` |
 | bookings, leads, handoffs, unanswered_questions | `BookingDocument`, `LeadDocument`, `HandoffDocument`, `UnansweredQuestionDocument` |
 | test_runs | `AutotestRunDocument` |
@@ -508,6 +508,47 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   по умолчанию включено; `shares_team_notes`, по умолчанию выключено),
   `GET·PUT …/assistant-settings`, изменение пишется в аудит. Удаление данных
   клиента стирает сводки его разговоров.
+
+## Клиенты и поиск
+
+- Карточка клиента живёт в `ContactDocument` (v4): `tags[]` (`ContactTagMark`:
+  метка `CustomerTag` как её ввели, ключ `CustomerTagKey` — свёрнутый регистр,
+  кто и когда), `is_vip`, `block` (кто и когда) с поисковым `is_blocked`.
+  Обычное сохранение контакта ходом разговора не трогает карточку
+  (`keep_card_fields`): ход, прочитавший контакт до того, как коллега его
+  пометил или заблокировал, не откатывает это. Изменения карточки —
+  `_modify_in_business` под блокировкой строки (в памяти — под замком), в
+  аудит. Миграция 1140 добавляет столбцы `doc_is_vip`, `doc_is_blocked` и
+  ключи `tags[].key` триггером в одной транзакции; заполняет старые строки
+  `workshop backfill-lookup` (1122).
+- Список клиентов (`GET …/contacts?search=&tag=&filter=all|vip|blocked`) —
+  постраничный по ключу; для сотрудников телефон маскируется
+  (`customer_phone_privacy`: код страны и две последние цифры, группы по три
+  с конца), пока владелец не включит `CustomerSettingsDocument.staff_sees_phone_numbers`;
+  каждый просмотр списка и карточки — запись аудита `view`.
+- Страница клиента (`GET …/contacts/{id}`): положение (`standing_of`: NEW,
+  RETURNING, VISITED, REGULAR с двух визитов), число визитов (завершённые
+  брони), хронология (`build_timeline`: разговоры по последнему сообщению,
+  брони по началу, заявки, звонки — новые сверху). Над разговором —
+  `GET …/contacts/{id}/standing` («Постоянный клиент · 4 визита»).
+- Блокировка (`PUT …/contacts/{id}/blocking`, только владелец): ход разговора
+  заблокированного клиента записывает сообщение во «Входящие», но помощник
+  молчит (`BLOCKED_SILENCE`); напоминания, просьбы об отзыве и ответы на
+  пропущенные звонки проверяют блокировку так же, как отказ от рассылок.
+- Сегменты (`…/customer-segments`, только владелец, до 50): правила (метка,
+  последний визит больше N дней назад, броней не меньше / не больше, только
+  VIP) хранятся в `CustomerSegmentDocument` и проверяются при чтении:
+  `scan_segment` идёт по клиентам бизнеса страницами с пределом просмотра
+  (подсчёт помечает «не меньше», если предел достигнут), заблокированные,
+  стёртые и тестовые не входят никогда. Участники и CSV
+  (`…/{id}/export?language=`, повторная проверка входа, аудит, телефоны с
+  защитой от формул) — для W17-WAITLIST-REBOOKING тот же `scan_segment`.
+- Поиск (`GET …/search?q=`): клиенты по имени, телефону и id (сначала
+  точные совпадения по индексу, затем ограниченный обход списка), последние
+  разговоры и брони найденных клиентов и разговор или бронь по своему id, до
+  пяти в группе; найденное пишется в аудит; в кабинете — палитра
+  Cmd/Ctrl+K в `ShellFrame` (и кнопка поиска в верхней панели телефона),
+  «/» остаётся поиском во «Входящих».
 
 ## Путь сообщения (ТЗ §1)
 

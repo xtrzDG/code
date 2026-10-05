@@ -94,6 +94,7 @@ export function ConversationView({ conversationId }: { conversationId: string })
     >
       <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
         <ConversationTopBar
+          businessId={business.id}
           conversation={conversation}
           backHref={backHref}
           assignMenu={

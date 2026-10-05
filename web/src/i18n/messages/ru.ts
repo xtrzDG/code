@@ -8,6 +8,7 @@ import { assistantFlowRu } from "./sections/assistant";
 import { securityFlowRu } from "./sections/security";
 import { helpRu } from "./sections/help";
 import { siteRu } from "./sections/site";
+import { customersSectionRu } from "./sections/customers";
 import { onboardingRu } from "./onboarding/ru";
 import { landingRu } from "./landing/ru";
 
@@ -201,4 +202,5 @@ export const ru: Messages = {
   ...securityFlowRu,
   ...helpRu,
   ...siteRu,
+  ...customersSectionRu,
 };

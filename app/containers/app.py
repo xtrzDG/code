@@ -196,6 +196,7 @@ class AppContainer(containers.DeclarativeContainer):
         rate_collections=rate_collections,
         analytics_collections=analytics_collections,
         inbox_collections=inbox_collections,
+        customer_collections=adapters.collections,
         security_collections=security_collections,
         value_collections=value_collections,
         insight_collections=adapters.collections,

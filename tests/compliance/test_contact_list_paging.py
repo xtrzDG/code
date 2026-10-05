@@ -14,11 +14,11 @@ from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.platform.constrained_strings import PageCursor
-from app.use_cases.contacts.contact_list_search import SEARCH_SCAN_LIMIT
 from app.use_cases.shared.contact_activity import (
     LAST_SEEN_STEP_MICROSECONDS,
     mark_contact_seen,
 )
+from app.use_cases.shared.contact_search_scan import SEARCH_SCAN_LIMIT
 from tests.compliance.customer_records import Customers, list_contacts, seed_customers
 
 START: int = 1_700_000_000_000_000

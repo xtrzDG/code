@@ -1,4 +1,4 @@
-"""Version 2 contacts read with the customer list's lookups (version 3, 1122)."""
+"""Version 2 contacts read with the customer list's lookups (version 3, 1122) and on."""
 
 import json
 
@@ -35,7 +35,7 @@ def read(document: StoredJsonObject) -> tuple[StoredJsonObject, ContactDocument]
 def test_a_customer_gets_a_folded_name_and_is_seen_since_creation() -> None:
     upgraded, contact = read(stored_v2(name="  Níno ÄBASHIDZE "))
 
-    assert upgraded["schema_version"] == "3"
+    assert upgraded["schema_version"] == str(int(CURRENT_SCHEMA_VERSION[CONTACTS]))
     assert upgraded["last_seen_at"] == 1_700_000_000_000_000
     assert contact.last_seen_at == 1_700_000_000_000_000
     assert contact.display_name_folded is not None

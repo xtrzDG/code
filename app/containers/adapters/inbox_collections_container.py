@@ -8,6 +8,8 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.schemas.domain.assistant_settings import AssistantSettingsDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
+from app.schemas.domain.customer_segments import CustomerSegmentDocument
+from app.schemas.domain.customer_settings import CustomerSettingsDocument
 from app.schemas.domain.inbox_settings import InboxSettingsDocument
 from app.schemas.domain.quick_replies import QuickReplyLibraryDocument
 
@@ -17,7 +19,8 @@ class InboxCollectionsContainer(containers.DeclarativeContainer):
     The document collections of the team inbox (migration 1053): internal
     notes on conversations, each business's saved replies and its
     auto-assignment settings; and how the assistant remembers returning
-    customers (migration 1121). A sibling of DocumentCollectionsContainer
+    customers (migration 1121); Customers' saved segments and settings
+    (1140). A sibling of DocumentCollectionsContainer
     with the same storage factory (Postgres with DATABASE_URL, else in
     memory).
     """
@@ -55,6 +58,23 @@ class InboxCollectionsContainer(containers.DeclarativeContainer):
     assistant_settings_collection = document_collection(
         AssistantSettingsDocument,
         "assistant_settings",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # Customers: saved segments and the team's customer settings (1140).
+    customer_segment_collection = document_collection(
+        CustomerSegmentDocument,
+        "customer_segments",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    customer_settings_collection = document_collection(
+        CustomerSettingsDocument,
+        "customer_settings",
         config,
         clients,
         utilities,

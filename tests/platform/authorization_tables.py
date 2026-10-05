@@ -5,6 +5,7 @@ without a token 401, staff are let through, and the request runs only in
 the storage scope of its business.
 """
 
+from tests.platform.authorization_customers import OWNER_ONLY_CUSTOMER_OPERATIONS
 from tests.platform.authorization_requests import BUSINESS_PREFIX as B
 
 CORRECTION: str = (
@@ -13,7 +14,8 @@ CORRECTION: str = (
 
 # Operations only owners may use; staff get 403 (AuthorizeBusinessAccess
 # with required_role=OWNER): settings, team, billing, publishing, channels,
-# the customers' personal data and the audit log.
+# the customers' personal data (export, erasure, blocking, segments) and the
+# audit log. Staff read the customers with their phone numbers masked.
 OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
     {
         f"PATCH {B}",
@@ -50,10 +52,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"PUT {B}/channels/whatsapp/staff-templates",
         f"PUT {B}/channels/{{channel}}",
         f"DELETE {B}/channels/{{channel}}",
-        f"GET {B}/contacts",
         f"GET {CORRECTION}",
         f"POST {CORRECTION}",
-        f"GET {B}/contacts/{{contact_id}}",
         f"DELETE {B}/contacts/{{contact_id}}",
         f"GET {B}/contacts/{{contact_id}}/export",
         f"POST {B}/dpa",
@@ -96,6 +96,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"GET {B}/value/settings",
         f"GET {B}/value/sources",
         f"PUT {B}/value/settings",
+        *OWNER_ONLY_CUSTOMER_OPERATIONS,
     }
 )
 

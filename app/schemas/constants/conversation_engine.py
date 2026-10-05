@@ -10,7 +10,9 @@ class TurnGate(StrEnum):
     the phone. Past the per-contact message limit the assistant answers once
     with a polite stop message and then stays silent until the hour passes.
     A message with nothing the assistant can read (a sticker, a file, a voice
-    note without words) gets the platform's request to write instead.
+    note without words) gets the platform's request to write instead. A
+    customer the owner blocked gets nothing at all (BLOCKED_SILENCE; a call
+    ends), whatever they send; their messages still reach the inbox.
     """
 
     ANSWER = "answer"
@@ -19,6 +21,7 @@ class TurnGate(StrEnum):
     LIMIT_NOTICE = "limit_notice"
     LIMIT_SILENCE = "limit_silence"
     ATTACHMENT_NOTICE = "attachment_notice"
+    BLOCKED_SILENCE = "blocked_silence"
 
 
 class ReplyFailureKind(StrEnum):

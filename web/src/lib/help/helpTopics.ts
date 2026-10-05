@@ -32,6 +32,8 @@ export const PAGE_HELP: Readonly<Record<BusinessPage, HelpArticleSlug>> = {
   "overview/reports": "getting-started",
   inbox: "inbox",
   bookings: "bookings",
+  customers: "privacy",
+  "customers/segments": "privacy",
   assistant: "teach-your-assistant",
   "assistant/knowledge": "teach-your-assistant",
   "assistant/profile": "teach-your-assistant",

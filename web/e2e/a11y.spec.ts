@@ -18,6 +18,8 @@ const OWNER_PAGES = [
   "inbox",
   "inbox?view=all",
   "bookings",
+  "customers",
+  "customers/segments",
   "assistant",
   "assistant/knowledge",
   "assistant/profile",

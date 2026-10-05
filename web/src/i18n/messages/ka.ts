@@ -8,6 +8,7 @@ import { assistantFlowKa } from "./sections/assistant";
 import { securityFlowKa } from "./sections/security";
 import { helpKa } from "./sections/help";
 import { siteKa } from "./sections/site";
+import { customersSectionKa } from "./sections/customers";
 import { onboardingKa } from "./onboarding/ka";
 import { landingKa } from "./landing/ka";
 
@@ -201,4 +202,5 @@ export const ka: Messages = {
   ...securityFlowKa,
   ...helpKa,
   ...siteKa,
+  ...customersSectionKa,
 };

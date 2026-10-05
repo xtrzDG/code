@@ -41,11 +41,9 @@ from app.repositories.document_queries import (
     field_equals,
     time_range,
 )
-from app.repositories.listing.contact_listing import (
-    ContactListing,
-    with_folded_name,
-)
+from app.repositories.listing.contact_listing import with_folded_name
 from app.repositories.listing.conversation_listing import ConversationListing
+from app.repositories.listing.customer_card_writes import CustomerCardWrites
 from app.repositories.listing.guard_activity_reading import GuardActivityReading
 from app.repositories.listing.inbox_listing import InboxListing
 from app.repositories.listing.message_listing import MessageListing
@@ -73,9 +71,9 @@ from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-class ContactRepository(ContactListing, ContactRepoContract):
+class ContactRepository(CustomerCardWrites, ContactRepoContract):
     def save(self, contact: ContactDocument) -> None:
-        self._store(str(contact.id), with_folded_name(contact))
+        self._save_keeping_card(contact)
 
     def save_many(self, contacts: Sequence[ContactDocument]) -> None:
         self._store_many(

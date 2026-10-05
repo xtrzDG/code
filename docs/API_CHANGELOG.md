@@ -11,6 +11,34 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — customers: cards, staff-safe list, blocking, segments, search
+
+Spec: `6c1658cd0245ac54`
+
+- **Changed** `GET /v1/businesses/{business_id}/contacts` is open to staff:
+  their rows carry `phone_number: null`, `masked_phone_number` and
+  `is_phone_masked: true` until the owner allows phones
+  (`staff_sees_phone_numbers`). New filters `tag` and `filter` (`vip`,
+  `blocked`); rows add `tags`, `is_vip`, `is_blocked`.
+- **Changed** `GET /v1/businesses/{business_id}/contacts/{contact_id}` is
+  open to staff (phones masked the same way) and adds `standing`,
+  `visit_count`, `last_visit_at`, `blocked_at` and `timeline`
+  (conversations, bookings, leads and calls, newest first).
+- **Added** `PATCH …/contacts/{contact_id}/card` (tags, VIP; owner and
+  staff), `PUT …/contacts/{contact_id}/blocking` (owner only: a blocked
+  customer gets no assistant reply and no reminder, text-back or feedback
+  request), `GET …/contacts/{contact_id}/standing` (the conversation
+  header's "Regular customer · 4 visits").
+- **Added** `GET·PUT /v1/businesses/{business_id}/customer-settings`
+  (`staff_sees_phone_numbers`, `known_tags`).
+- **Added** saved segments, owner only: `GET·POST …/customer-segments`,
+  `POST …/customer-segments/preview`, `PUT·DELETE
+  …/customer-segments/{segment_id}`, `GET
+  …/customer-segments/{segment_id}/members` (pages) and `GET
+  …/customer-segments/{segment_id}/export` (CSV, a recent sign-in).
+- **Added** `GET /v1/businesses/{business_id}/search?q=`: customers,
+  conversations and bookings, up to five of each.
+
 ## 2026-10-05 — wave 13 together: day 0, one story for updates, the landing page, trust fixes
 
 Spec: `f6fb07c0d144fbd5`

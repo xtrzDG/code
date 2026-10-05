@@ -15,6 +15,7 @@ from app.containers.pipelines.compliance_pipelines import CompliancePipelinesCon
 from app.containers.pipelines.conversation_pipelines import (
     ConversationPipelinesContainer,
 )
+from app.containers.pipelines.customer_pipelines import CustomerPipelinesContainer
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
 from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
@@ -81,6 +82,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     memory: MemoryPipelinesContainer = Container(  # type: ignore[assignment]
         MemoryPipelinesContainer,
         memory=orchestrators.memory,
+    )
+    customers: CustomerPipelinesContainer = Container(  # type: ignore[assignment]
+        CustomerPipelinesContainer,
+        customers=orchestrators.customers,
     )
     knowledge: KnowledgePipelinesContainer = Container(  # type: ignore[assignment]
         KnowledgePipelinesContainer,

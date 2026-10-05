@@ -5,13 +5,14 @@
  * are, which is also the page's title (its own header steps aside there):
  * a dot beside it says whether the page is live, and an (i) opens what the
  * page is for (PhonePageInfo), and a "?" its help article. The language and theme moved to the account
- * panel ("More"), so the bar stays calm; `action` adds one button at its
- * end (the account, when there is no tab bar), and `ring` the setup
- * guide's progress before it.
+ * panel ("More"), so the bar stays calm; a search button opens the
+ * command palette, `action` adds one button at its end (the account, when
+ * there is no tab bar), and `ring` the setup guide's progress before it.
  */
 
 import type { ReactNode } from "react";
 
+import { CommandPaletteButton } from "@/components/CommandPaletteButton";
 import { usePageHelp, usePhoneChromeSnapshot } from "@/components/ui";
 import { HOME_PATH } from "@/lib/navigation";
 
@@ -47,6 +48,7 @@ export function PhoneTopBar({
         </div>
         {help}
         <PageInfoButton title={title} />
+        <CommandPaletteButton className="-mx-1.5" />
         {ring}
         {action}
       </div>

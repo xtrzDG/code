@@ -6,6 +6,11 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.booleans import IsContactBlocked, IsVipCustomer
+from app.schemas.typings.contacts.constrained_strings import (
+    CustomerTag,
+    CustomerTagKey,
+)
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import ContactName, FoldedContactName
 from app.schemas.typings.conversations.strings import ChannelUserId
@@ -13,6 +18,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 
 
 class ChannelIdentity(PersistentDocument):
@@ -20,6 +26,25 @@ class ChannelIdentity(PersistentDocument):
 
     channel: ChannelKind
     channel_user_id: ChannelUserId
+
+
+class ContactTagMark(PersistentDocument):
+    """
+    A tag on a customer: which (as written, and its case-folded `key` the
+    filters match), when and by whom (None: the platform).
+    """
+
+    tag: CustomerTag
+    key: CustomerTagKey
+    added_at: Microseconds
+    added_by: UserId | None = None
+
+
+class ContactBlock(PersistentDocument):
+    """Why the assistant no longer answers a customer: who blocked them, when."""
+
+    blocked_at: Microseconds
+    blocked_by: UserId
 
 
 class ContactDocument(BaseDocument):
@@ -49,9 +74,16 @@ class ContactDocument(BaseDocument):
     identities only) never gets one and stays out of the list.
     `display_name_folded`, the name as the search compares it, is kept in
     step with `name` by the repository.
+
+    Version 4 adds the team's customer card (1140), all optional: `tags`
+    (indexed by `tags[].key`), the `is_vip` flag and `block`, set while the
+    assistant must not answer the customer (`is_blocked` mirrors it for the
+    list's filter). Only the card writes of the repository change them; a
+    plain save keeps them as stored, so a turn that read the contact
+    earlier never undoes a tag or a block. An erased customer has none.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: ContactId = Field(default_factory=ContactId)
     business_id: BusinessId
     name: ContactName | None = None
@@ -65,6 +97,10 @@ class ContactDocument(BaseDocument):
     opted_out_channels: list[ChannelKind] = Field(default_factory=list[ChannelKind])
     last_seen_at: Microseconds | None = None
     display_name_folded: FoldedContactName | None = None
+    tags: list[ContactTagMark] = Field(default_factory=list[ContactTagMark])
+    is_vip: IsVipCustomer = False
+    block: ContactBlock | None = None
+    is_blocked: IsContactBlocked = False
 
     @property
     def is_test_only(self) -> bool:
@@ -81,5 +117,15 @@ class ContactDocument(BaseDocument):
 
         if self.last_seen_at is None and not self.is_test_only:
             self.last_seen_at = self.created_at
+
+        return self
+
+    @model_validator(mode="after")
+    def mirror_block(self) -> Self:
+        """`is_blocked` (the list's filter) follows `block`."""
+
+        is_blocked: bool = self.block is not None
+        if self.is_blocked != is_blocked:
+            self.is_blocked = is_blocked
 
         return self
