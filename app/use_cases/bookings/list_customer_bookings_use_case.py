@@ -13,6 +13,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBookingsQuery
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.use_cases.shared.customer_bookings import find_customer_bookings
 from app.utilities.scheduling.zoned_time import microseconds_to_seconds
@@ -69,7 +70,9 @@ class ListCustomerBookingsUseCase(
                 self._customer_contact_ids(input_data),
                 LISTED_STATUSES,
                 is_sandbox=input_data.is_sandbox,
-                now_seconds=microseconds_to_seconds(int(self._wall_clock.now_unix())),
+                ends_after=BookingSearchBoundSeconds(
+                    microseconds_to_seconds(int(self._wall_clock.now_unix()))
+                ),
             )[:MAX_LISTED_BOOKINGS]
         )
 

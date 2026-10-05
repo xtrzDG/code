@@ -1,7 +1,7 @@
 """
 A customer's own bookings that are not over yet, as the assistant reads
 them: the customer memory's upcoming bookings and the list_my_bookings
-tool. Read from the bookings not over at `now` (indexed by their end),
+tool. Read from the bookings not over yet (indexed by their end),
 never across businesses.
 """
 
@@ -20,6 +20,7 @@ from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView
 from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import load_time_zone
@@ -32,20 +33,18 @@ def find_customer_bookings(
     business: BusinessDocument,
     contact_ids: Collection[ContactId],
     statuses: Collection[BookingStatus],
-    is_sandbox: bool,
-    now_seconds: int,
+    is_sandbox: IsSandboxConversation,
+    ends_after: BookingSearchBoundSeconds,
 ) -> list[BookingView]:
     """
     The bookings of these contacts in these statuses and sandbox mode that
-    have not ended at `now_seconds`, the soonest first, in the business's
+    have not ended at `ends_after`, the soonest first, in the business's
     time zone with their resource and service.
     """
 
     bookings: list[BookingDocument] = [
         booking
-        for booking in booking_repo.list_ending_after(
-            business.id, BookingSearchBoundSeconds(now_seconds)
-        )
+        for booking in booking_repo.list_ending_after(business.id, ends_after)
         if booking.contact_id in contact_ids
         and booking.status in statuses
         and booking.is_sandbox == is_sandbox

@@ -25,6 +25,7 @@ from app.schemas.dto.customer_memory.returning_customers import (
     ReturningCustomerContext,
 )
 from app.schemas.typings.assistants.booleans import SharesTeamNotesWithAssistant
+from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.conversations.constrained_integers import (
     EarlierConversationCount,
 )
@@ -158,7 +159,9 @@ class RecallCustomerMemoryUseCase(
                 {input_data.contact.id},
                 BLOCKING_BOOKING_STATUSES,
                 is_sandbox=False,
-                now_seconds=microseconds_to_seconds(int(input_data.now)),
+                ends_after=BookingSearchBoundSeconds(
+                    microseconds_to_seconds(int(input_data.now))
+                ),
             )[:MAX_UPCOMING_BOOKINGS],
             open_leads=open_leads(
                 self._lead_repo, business_id, [input_data.conversation, *earlier]
