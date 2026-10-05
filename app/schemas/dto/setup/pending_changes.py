@@ -9,7 +9,10 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.assistants import AssistantVersionStatus
+from app.schemas.constants.assistants import (
+    AssistantVersionStatus,
+    AutotestExpectation,
+)
 from app.schemas.constants.businesses import BusinessLinkKind, Weekday
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.constants.setup import (
@@ -21,6 +24,10 @@ from app.schemas.constants.setup import (
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.assistants.constrained_integers import AssistantVersionNumber
+from app.schemas.typings.assistants.constrained_strings import (
+    AutotestCaseQuestion,
+    AutotestExpectedText,
+)
 from app.schemas.typings.assistants.prefixed_id import (
     AssistantVersionId,
     AutotestCaseId,
@@ -56,6 +63,23 @@ class PendingChange(ImmutableDTO):
     before: PendingChangeValue | None = None
     after: PendingChangeValue | None = None
     autotest_case_id: AutotestCaseId | None = None
+
+
+class PendingOwnerCheckView(ImmutableDTO):
+    """
+    One of the owner's checks the live version was not checked against:
+    the next "Apply changes" asks it before customers get anything. ADDED
+    when the live version was never asked it, CHANGED when the check was
+    edited since; with its question, what the answer must do and the
+    language it is asked in.
+    """
+
+    autotest_case_id: AutotestCaseId
+    action: PendingChangeAction
+    question: AutotestCaseQuestion
+    expectation: AutotestExpectation
+    expected_text: AutotestExpectedText | None = None
+    language: LanguageTag
 
 
 class PendingDraftView(ImmutableDTO):
@@ -96,9 +120,12 @@ class PendingChangesView(ImmutableDTO):
     The changes customers do not get yet. Before the first go-live there is
     nothing to compare with: `is_live` is False and `changes` is empty,
     while `has_unapplied_changes` says whether there is a profile to
-    launch. `count` counts `changes` (owner checks included), which the
-    next "Apply changes" takes to customers; `drafts` are the versions
-    built since the live one that customers never got.
+    launch. `changes` are what the owner changed in the business,
+    `owner_checks` the owner's checks the live version was not checked
+    against (a field of their own, so a cabinet that does not know them
+    yet lists nothing it cannot name); `count` counts both, which the next
+    "Apply changes" takes to customers. `drafts` are the versions built
+    since the live one that customers never got.
     """
 
     business_id: BusinessId
@@ -107,6 +134,9 @@ class PendingChangesView(ImmutableDTO):
     has_unapplied_changes: HasUnappliedChanges
     count: PendingChangeCount
     changes: list[PendingChange] = Field(default_factory=list[PendingChange])
+    owner_checks: list[PendingOwnerCheckView] = Field(
+        default_factory=list[PendingOwnerCheckView]
+    )
     drafts: list[PendingDraftView] = Field(default_factory=list[PendingDraftView])
 
 

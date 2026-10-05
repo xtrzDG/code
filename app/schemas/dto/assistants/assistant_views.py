@@ -8,6 +8,7 @@ from app.schemas.constants.assistants import (
     AssistantToolName,
     AssistantVersionStatus,
     AutotestCheckCode,
+    AutotestExpectation,
     AutotestOutcome,
     AutotestRunStatus,
     AutotestScenarioKind,
@@ -34,6 +35,8 @@ from app.schemas.typings.assistants.constrained_integers import (
     JudgeScore,
 )
 from app.schemas.typings.assistants.constrained_strings import (
+    AutotestCaseQuestion,
+    AutotestExpectedText,
     AutotestScenarioKey,
     LlmModelId,
 )
@@ -51,6 +54,7 @@ from app.schemas.typings.assistants.strings import (
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
 from app.schemas.typings.businesses.booleans import IsVoiceEnabled
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.conversations.prefixed_id import ConversationId, MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.profiles.constrained_strings import FactKey
@@ -112,8 +116,21 @@ class AutotestTranscriptLineView(ImmutableDTO):
     text: MessageText
 
 
+class OwnerCheckAskedView(ImmutableDTO):
+    """What an owner check asked when it was played: its question and expectation."""
+
+    question: AutotestCaseQuestion
+    expectation: AutotestExpectation
+    expected_text: AutotestExpectedText | None = None
+
+
 class AutotestScenarioResultView(ImmutableDTO):
-    """Result of one autotest scenario."""
+    """
+    Result of one autotest scenario. An owner check names its check and
+    what it asked (`owner_check`; None for results stored before);
+    `conversation_id` and `answer_message_id` are the test conversation and
+    the assistant's first answer in it ("Fix this answer" opens it).
+    """
 
     scenario_key: AutotestScenarioKey
     kind: AutotestScenarioKind
@@ -133,6 +150,9 @@ class AutotestScenarioResultView(ImmutableDTO):
     # of its plays passed (None: played once).
     sample_count: AutotestSampleCount | None = None
     passed_sample_count: AutotestPassedSampleCount | None = None
+    owner_check: OwnerCheckAskedView | None = None
+    conversation_id: ConversationId | None = None
+    answer_message_id: MessageId | None = None
 
 
 class AutotestRunView(ImmutableDTO):

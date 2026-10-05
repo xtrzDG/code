@@ -14,7 +14,10 @@ from app.schemas.constants.assistants import AutotestOutcome
 from app.schemas.constants.setup import PendingChangeAction, PendingChangeArea
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
 from app.schemas.domain.autotest_cases import AutotestCaseDocument, OwnerCheckProbe
-from app.schemas.dto.setup.pending_changes import PendingChange
+from app.schemas.dto.setup.pending_changes import (
+    PendingChange,
+    PendingOwnerCheckView,
+)
 from app.schemas.typings.assistants.prefixed_id import AutotestCaseId, AutotestRunId
 from app.schemas.typings.setup.strings import PendingChangeSubject
 
@@ -89,3 +92,42 @@ def collect_owner_check_changes(
         )
 
     return changes
+
+
+def is_owner_check_change(change: PendingChange) -> bool:
+    return change.area is PendingChangeArea.OWNER_CHECKS
+
+
+def describe_owner_check_changes(
+    changes: Sequence[PendingChange], cases: Sequence[AutotestCaseDocument]
+) -> list[PendingOwnerCheckView]:
+    """
+    The OWNER_CHECKS changes with what each check asks, in their order; a
+    check removed since the changes were collected is left out.
+    """
+
+    by_id: dict[AutotestCaseId, AutotestCaseDocument] = {
+        case.id: case for case in cases
+    }
+    views: list[PendingOwnerCheckView] = []
+    for change in changes:
+        case: AutotestCaseDocument | None = (
+            None
+            if change.autotest_case_id is None
+            else by_id.get(change.autotest_case_id)
+        )
+        if not is_owner_check_change(change) or case is None:
+            continue
+
+        views.append(
+            PendingOwnerCheckView(
+                autotest_case_id=case.id,
+                action=change.action,
+                question=case.question,
+                expectation=case.expectation,
+                expected_text=case.expected_text,
+                language=case.language,
+            )
+        )
+
+    return views

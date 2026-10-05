@@ -1,6 +1,9 @@
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.autotest_case_repositories import (
+    AutotestCaseRepoContract,
+)
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
@@ -14,8 +17,13 @@ from app.schemas.dto.setup.pending_changes import (
     PendingChangesRequest,
     PendingChangesView,
     PendingDraftView,
+    PendingOwnerCheckView,
 )
 from app.schemas.typings.setup.constrained_integers import PendingChangeCount
+from app.utilities.assembly.owner_check_coverage import (
+    describe_owner_check_changes,
+    is_owner_check_change,
+)
 from app.utilities.assembly.version_retirement import list_pending_drafts
 
 
@@ -26,10 +34,10 @@ class GetPendingChangesUseCase(
     An owner or staff member reads what customers do not get yet: every
     change since the live version, typed so the cabinet says it in the
     owner's words (niche questions in `language`, the owner's language by
-    default), the owner's checks the live version was not checked against,
-    and the drafts built since that customers never got. Before the first
-    go-live nothing is compared: the view only says whether there is a
-    profile to launch.
+    default), the owner's checks the live version was not checked against
+    (with what each asks, in a list of their own), and the drafts built
+    since that customers never got. Before the first go-live nothing is
+    compared: the view only says whether there is a profile to launch.
     """
 
     def __init__(
@@ -43,6 +51,7 @@ class GetPendingChangesUseCase(
         collect_pending_changes: UseCaseContract[
             PendingChangesRequest, list[PendingChange]
         ],
+        autotest_case_repo: AutotestCaseRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -55,6 +64,7 @@ class GetPendingChangesUseCase(
         self._collect_pending_changes: UseCaseContract[
             PendingChangesRequest, list[PendingChange]
         ] = collect_pending_changes
+        self._autotest_case_repo: AutotestCaseRepoContract = autotest_case_repo
 
     def run(self, input_data: PendingChangesQuery) -> PendingChangesView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -91,13 +101,24 @@ class GetPendingChangesUseCase(
                 language=input_data.language or business.owner_language,
             )
         )
+        owner_checks: list[PendingOwnerCheckView] = (
+            describe_owner_check_changes(
+                changes, self._autotest_case_repo.list_by_business(business.id)
+            )
+            if any(is_owner_check_change(change) for change in changes)
+            else []
+        )
+        business_changes: list[PendingChange] = [
+            change for change in changes if not is_owner_check_change(change)
+        ]
         return PendingChangesView(
             business_id=business.id,
             is_live=True,
             live_version_number=live.version_number,
-            has_unapplied_changes=bool(changes),
-            count=PendingChangeCount(len(changes)),
-            changes=changes,
+            has_unapplied_changes=bool(business_changes or owner_checks),
+            count=PendingChangeCount(len(business_changes) + len(owner_checks)),
+            changes=business_changes,
+            owner_checks=owner_checks,
             drafts=[
                 PendingDraftView(
                     assistant_version_id=draft.id,

@@ -21,6 +21,10 @@ from app.schemas.dto.assistants.autotest_cases import (
     AutotestCaseView,
     CreateAutotestCaseCommand,
     ListAutotestCasesQuery,
+    OwnerCheckOutcomeView,
+    OwnerCheckProbeCommand,
+    OwnerCheckProbeOutcome,
+    OwnerCheckProbeStart,
     UpdateAutotestCaseCommand,
 )
 from app.schemas.dto.assistants.autotest_runs import (
@@ -45,6 +49,12 @@ from app.use_cases.autotests.cases.delete_autotest_case_use_case import (
 )
 from app.use_cases.autotests.cases.list_autotest_cases_use_case import (
     ListAutotestCasesUseCase,
+)
+from app.use_cases.autotests.cases.prepare_owner_check_probe_use_case import (
+    PrepareOwnerCheckProbeUseCase,
+)
+from app.use_cases.autotests.cases.record_owner_check_probe_use_case import (
+    RecordOwnerCheckProbeUseCase,
 )
 from app.use_cases.autotests.cases.update_autotest_case_use_case import (
     UpdateAutotestCaseUseCase,
@@ -170,6 +180,7 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         autotest_case_repo=repositories.autotest_case_repo,
         assistant_version_repo=repositories.assistant_version_repo,
         autotest_run_repo=repositories.autotest_run_repo,
+        localized_text_resolver=utilities.localized_text_resolver,
     )
     create_autotest_case_use_case: Factory[
         UseCaseContract[CreateAutotestCaseCommand, AutotestCaseView]
@@ -190,6 +201,26 @@ class AutotestUseCasesContainer(containers.DeclarativeContainer):
         UpdateAutotestCaseUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         autotest_case_repo=repositories.autotest_case_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    prepare_owner_check_probe_use_case: Factory[
+        UseCaseContract[OwnerCheckProbeCommand, OwnerCheckProbeStart]
+    ] = Factory(
+        PrepareOwnerCheckProbeUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        autotest_case_repo=repositories.autotest_case_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        language_registry=registries.language_registry,
+        rate_limit_registry=registries.request_rate_limit_registry,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    record_owner_check_probe_use_case: Factory[
+        UseCaseContract[OwnerCheckProbeOutcome, OwnerCheckOutcomeView]
+    ] = Factory(
+        RecordOwnerCheckProbeUseCase,
+        autotest_case_repo=repositories.autotest_case_repo,
+        localized_text_resolver=utilities.localized_text_resolver,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     delete_autotest_case_use_case: Factory[

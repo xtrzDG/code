@@ -10,6 +10,9 @@ from app.schemas.constants.assistants import (
     AutotestExpectation,
     AutotestOutcome,
 )
+from app.schemas.domain.assistants import AutotestScenarioResult
+from app.schemas.domain.autotest_cases import AutotestCaseDocument
+from app.schemas.dto.assistants.autotest_runs import AutotestScenarioRun
 from app.schemas.typings.assistants.booleans import IsAutotestCaseActive
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
@@ -63,8 +66,11 @@ class AutotestCaseChanges(ImmutableDTO):
 
 
 class ListAutotestCasesQuery(ImmutableDTO):
+    """The business's checks; reasons of failures in `language`."""
+
     user_id: UserId
     business_id: BusinessId
+    language: LanguageTag | None = None
 
 
 class CreateAutotestCaseCommand(ImmutableDTO):
@@ -156,3 +162,34 @@ class AutotestCaseList(ImmutableDTO):
 
     items: list[AutotestCaseView] = Field(default_factory=list[AutotestCaseView])
     limit: AutotestCaseLimit
+
+
+class OwnerCheckProbeCommand(ImmutableDTO):
+    """
+    "Check now": ask one check of the version customers talk to; the reason
+    of a failure in `language` (the owner's language by default).
+    """
+
+    user_id: UserId
+    business_id: BusinessId
+    case_id: AutotestCaseId
+    language: LanguageTag | None = None
+
+
+class OwnerCheckProbeStart(ImmutableDTO):
+    """
+    A "Check now" ready to play: the check as it was read (its last change
+    is `case.updated_at`), its scenario against the live version, and the
+    language its reason is written in.
+    """
+
+    case: AutotestCaseDocument
+    scenario_run: AutotestScenarioRun
+    language: LanguageTag
+
+
+class OwnerCheckProbeOutcome(ImmutableDTO):
+    """A played "Check now": what was asked and how the play went."""
+
+    start: OwnerCheckProbeStart
+    result: AutotestScenarioResult

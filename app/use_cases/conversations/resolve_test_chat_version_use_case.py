@@ -6,7 +6,7 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatVersionQuery
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
-from app.use_cases.shared.test_chat_versions import TESTABLE_STATUSES
+from app.use_cases.shared.test_chat_versions import is_chosen_for_test_chat
 
 
 class ResolveTestChatVersionUseCase(
@@ -15,8 +15,8 @@ class ResolveTestChatVersionUseCase(
     """
     The assistant version that answers the owner's test chat: the requested
     version (of this business), else the newest version that is not
-    archived - the one being prepared (ready, failed, under test or a
-    draft) when it is newer than the live one, else the live one.
+    archived or discarded - the one being prepared (ready, failed, under
+    test or a draft) when it is newer than the live one, else the live one.
     """
 
     def __init__(self, assistant_version_repo: AssistantVersionRepoContract) -> None:
@@ -44,7 +44,7 @@ class ResolveTestChatVersionUseCase(
             for version in self._assistant_version_repo.list_by_business(
                 input_data.business_id
             )
-            if version.status in TESTABLE_STATUSES
+            if is_chosen_for_test_chat(version)
         ]
         if candidates:
             return max(candidates, key=lambda version: int(version.version_number)).id

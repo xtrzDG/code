@@ -23,7 +23,7 @@ from app.schemas.dto.assistants.assistant_commands import (
 from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.exceptions.base_exception import ApplicationError
-from app.use_cases.shared.test_chat_versions import TESTABLE_STATUSES
+from app.use_cases.shared.test_chat_versions import is_chosen_for_test_chat
 from app.utilities.setup.pending_changes import has_unapplied_changes
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
         candidates: list[AssistantVersionDocument] = [
             version
             for version in self._assistant_version_repo.list_by_business(business.id)
-            if version.status in TESTABLE_STATUSES
+            if is_chosen_for_test_chat(version)
         ]
         tested: AssistantVersionDocument | None = max(
             candidates,

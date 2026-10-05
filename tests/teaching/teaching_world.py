@@ -54,6 +54,7 @@ from app.use_cases.conversations.rate_conversation_use_case import (
     RateConversationUseCase,
 )
 from app.utilities.conversations.language_detector import LanguageDetector
+from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from tests.brain.brain_world import BrainWorld, build_world
 from tests.brain.scripted_turns import scripted
 
@@ -176,6 +177,7 @@ def build_teaching_world(*turns: ScriptedLlmTurn) -> TeachingWorld:
             autotest_case_repo=case_repo,
             assistant_version_repo=brain.version_repo,
             autotest_run_repo=run_repo,
+            localized_text_resolver=LocalizedTextResolver(),
         ),
         create_case=CreateAutotestCaseUseCase(
             authorize_business_access=brain.authorize,

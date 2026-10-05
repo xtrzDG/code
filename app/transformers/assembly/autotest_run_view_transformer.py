@@ -6,6 +6,7 @@ from app.schemas.dto.assistants.assistant_views import (
     AutotestScenarioResultView,
     AutotestTranscriptLineView,
     JudgeCriterionScoreView,
+    OwnerCheckAskedView,
 )
 from app.schemas.dto.assistants.autotest_runs import AutotestRunViewSource
 from app.schemas.typings.assistants.constrained_integers import AutotestScenarioCount
@@ -81,4 +82,15 @@ class AutotestRunViewTransformer(
             autotest_case_id=result.autotest_case_id,
             sample_count=result.sample_count,
             passed_sample_count=result.passed_sample_count,
+            owner_check=(
+                None
+                if result.owner_check is None
+                else OwnerCheckAskedView(
+                    question=result.owner_check.question,
+                    expectation=result.owner_check.expectation,
+                    expected_text=result.owner_check.expected_text,
+                )
+            ),
+            conversation_id=result.conversation_id,
+            answer_message_id=result.answer_message_id,
         )
