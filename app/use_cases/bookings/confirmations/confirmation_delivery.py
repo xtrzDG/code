@@ -2,14 +2,18 @@
 How a guest's confirmation reaches the chat the booking was made in: the
 website chat's widget shows it as a message of the conversation (the widget
 reads its conversation, nothing is sent), a messenger gets it through the
-outbox with retries. WhatsApp, Messenger and Instagram carry free text only
-within 24 hours of the guest's last message there; after that WhatsApp
-takes the approved confirmation template, the others cannot carry it.
+outbox with retries, held a few seconds so the assistant's own answer,
+written after the tool call, normally arrives first (the widget shows the
+confirmation as soon as it is written, just above that answer). WhatsApp,
+Messenger and Instagram carry free text only within 24 hours of the
+guest's last message there; after that WhatsApp takes the approved
+confirmation template, the others cannot carry it.
 """
 
+import hashlib
 import logging
 from dataclasses import dataclass
-from uuid import UUID, uuid5
+from uuid import UUID
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -70,12 +74,15 @@ CONFIRMABLE_CHANNELS: frozenset[ChannelKind] = frozenset(
         ChannelKind.INSTAGRAM,
     }
 )
-# A messenger confirmation waits this long, so the assistant's own answer,
-# written after the tool call and queued later, normally arrives first.
+# A messenger confirmation waits this long, so the assistant's answer,
+# queued after the tool call, normally goes first (a held message never
+# blocks the ones queued after it).
 CONFIRMATION_HOLD_SECONDS: int = 5
 MICROSECONDS_PER_SECOND: int = 1_000_000
-# Fixed namespace of the widget confirmations' message ids (never change it).
+# Fixed namespace of the widget confirmations' message ids (never change it:
+# a confirmation sent again must find the message it already wrote).
 WIDGET_CONFIRMATION_NAMESPACE: UUID = UUID("4d6c1f0e-8a2b-4f37-9b5e-2c7a1d9e3f61")
+UUID_BYTES: int = 16
 
 
 def confirmation_key(booking: BookingDocument) -> OutboundIdempotencyKey:
@@ -84,6 +91,20 @@ def confirmation_key(booking: BookingDocument) -> OutboundIdempotencyKey:
     return OutboundIdempotencyKey(
         f"booking_confirmation:{booking.id}:{int(booking.starts_at)}"
     )
+
+
+def widget_confirmation_id(
+    business: BusinessDocument, booking: BookingDocument
+) -> MessageId:
+    """
+    The widget message of one confirmation: the same booking and start, the
+    same id (message ids are version-4 UUIDs, so the digest takes that shape).
+    """
+
+    digest: bytes = hashlib.sha256(
+        f"{WIDGET_CONFIRMATION_NAMESPACE}|{business.id}|{confirmation_key(booking)}".encode()
+    ).digest()
+    return MessageId(UUID(bytes=digest[:UUID_BYTES], version=4))
 
 
 @dataclass(frozen=True)
@@ -131,12 +152,7 @@ class BookingConfirmationDelivery:
         booking: BookingDocument,
         letter: ConfirmationLetter,
     ) -> bool:
-        message_id = MessageId(
-            uuid5(
-                WIDGET_CONFIRMATION_NAMESPACE,
-                f"{business.id}|{confirmation_key(booking)}",
-            )
-        )
+        message_id: MessageId = widget_confirmation_id(business, booking)
         if self.message_repo.get(business.id, message_id) is None:
             now: Microseconds = self.wall_clock.now_unix()
             self.message_repo.save(

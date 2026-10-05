@@ -69,10 +69,17 @@ def test_a_stop_outlives_the_erasure_of_the_customer(workshop: Workshop) -> None
     )
     assert settings.status_code == 200, settings.text
 
+    # The written confirmation of the booking follows the assistant's
+    # answer a few seconds later: the customer asked for it, so the STOP
+    # does not hold it back.
+    worker = workshop.container.gateways.background_worker()
+    workshop.clock.advance(10)
+    assert worker.run_once().failures == 0
+    assert customer.received()[-1].startswith("Salobie Bia: ваша бронь подтверждена.")
+
     # The visit happens and ends; the worker's reminders and requests for
     # feedback come due, and none reaches the customer.
     sent_before_the_visit = len(customer.received())
-    worker = workshop.container.gateways.background_worker()
     for _ in range(4 * 9):  # 36 hours in steps of an hour
         workshop.clock.advance(60 * 60)
         assert worker.run_once().failures == 0

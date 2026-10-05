@@ -518,3 +518,13 @@ _.messages_left  # app/schemas/dto/public_demo.py (PublicDemoReply)
 # security measure, read by tests/legal (every path exists).
 _.latest_acceptance  # app/schemas/dto/compliance.py (DpaStatusView)
 _.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)
+
+# What a guest's booking page (/r/{token}) and the hosted chat page read
+# from the API: the ways to write, what may still change, the stay's
+# availability and the owner's own booking page.
+_.chat_links  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.can_cancel  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.can_reschedule  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.is_over  # app/schemas/dto/booking_manage.py (ManagedBookingView)
+_.is_stay_available  # app/schemas/dto/booking_manage.py (ManagedBookingSlots)
+_.booking_url  # app/schemas/dto/sharing.py (HostedChatView)

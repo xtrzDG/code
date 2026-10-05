@@ -1,7 +1,7 @@
 {
   "collection": "outbound_messages",
   "document_type": "OutboundMessageDocument",
-  "schema_version": 5,
+  "schema_version": 6,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -190,7 +190,8 @@
           "booking_reminder",
           "call_confirmation",
           "call_links",
-          "text_back"
+          "text_back",
+          "booking_confirmation"
         ],
         "type": "string"
       },
@@ -332,7 +333,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "5",
+        "default": "6",
         "type": "string"
       },
       "send_before": {

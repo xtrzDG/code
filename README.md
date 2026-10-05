@@ -534,6 +534,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | уведомления сотрудникам в Telegram и WhatsApp не уходят (контакт показывает причину). Почта и SMS сотрудникам идут через `SMTP_*` и `TWILIO_*` (как коды входа); без них вне `production` пишутся в лог |
 | `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT` | уведомлений на устройства (Web Push) нет: кнопка «Включить на этом устройстве» скрыта; задаются все три или ни одной, пара ключей проверяется при запуске |
 | `WHATSAPP_REMINDER_TEMPLATE` | напоминание о брони в WhatsApp уходит, только если клиент писал туда за последние 24 часа |
+| `WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE` | письменное подтверждение брони со ссылкой на её страницу уходит гостю в WhatsApp, только если он писал туда за последние 24 часа (в чат сайта и Telegram оно уходит всегда, в Messenger и Instagram — тоже только в течение 24 часов) |
 | `WHATSAPP_OWNER_REPORT_TEMPLATE` | владелец не может выбрать WhatsApp для сводок и отчётов (нужен ещё `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`); почта, устройства и Telegram работают |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | нет синхронизации с Google Calendar |
 | `FLITT_MERCHANT_ID`, `FLITT_SECRET_KEY` | оплата недоступна (502), вебхук оплаты отклоняется |
