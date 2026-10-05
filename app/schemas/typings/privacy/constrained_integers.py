@@ -49,6 +49,15 @@ class LlmTurnRetentionDays(BaseConstrainedTypedInt):
     le = 30
 
 
+class ProcessorErasureJobCount(BaseConstrainedTypedInt):
+    """
+    How many deletion jobs were queued for the sub-processors (one per
+    processor and batch of up to 100 conversations or calls).
+    """
+
+    ge = 0
+
+
 class RetentionBatchSize(BaseConstrainedTypedInt):
     """
     How many records the retention purge reads in one keyset batch (the

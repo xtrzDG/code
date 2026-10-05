@@ -96,7 +96,10 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
             self._storage_scope.scoped_to_business(input_data.business_id),
         ):
             turn: PreparedTurn = self._prepare_turn.run(input_data)
-            with bound_log_context(conversation_id=turn.conversation.id):
+            with bound_log_context(
+                conversation_id=turn.conversation.id,
+                contact_id=turn.conversation.contact_id,
+            ):
                 record: ReplyRecord = self._answer(turn, input_data.is_reply_deferred)
                 return self._record_reply.run(
                     record.model_copy(

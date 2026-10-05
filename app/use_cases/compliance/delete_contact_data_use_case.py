@@ -2,6 +2,7 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.media_storage import MediaStorageAdapterContract
 from app.contracts.privacy import SuppressionListContract
+from app.contracts.processor_erasure import ProcessorErasureFacilitatorContract
 from app.contracts.recording_storage import RecordingStorageAdapterContract
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
@@ -35,6 +36,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.handoffs import HandoffSummaryCode
+from app.schemas.constants.privacy import ProcessorErasureReason
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -46,7 +48,7 @@ from app.schemas.dto.compliance import (
     ContactRecords,
     ContactRecordsQuery,
 )
-from app.schemas.typings.bookings.strings import LeadDetails
+from app.schemas.dto.processor_erasure import ProcessorErasureScope
 from app.schemas.typings.compliance.constrained_integers import (
     DeletedRecordingCount,
     ErasedRecordCount,
@@ -56,15 +58,21 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
-from app.schemas.typings.handoffs.strings import HandoffSummary
+from app.schemas.typings.privacy.constrained_integers import ProcessorErasureJobCount
 from app.use_cases.compliance.contact_file_erasure import ContactFileEraser
 from app.use_cases.compliance.contact_trace_erasure import (
     ContactTraceEraser,
     TraceErasure,
 )
+from app.use_cases.compliance.record_anonymization import (
+    ERASED_TEXT,
+    anonymized_booking,
+    anonymized_handoff,
+    anonymized_lead,
+    erased_call,
+)
 from app.utilities.privacy.suppressed_identities import contact_identities
 
-ERASED_TEXT: str = "[erased at the visitor's request]"
 ERASED_CHANNEL_USER_ID_PREFIX: str = "erased-"
 
 
@@ -88,8 +96,11 @@ class DeleteContactDataUseCase(
     events and requests for feedback lose what identifies the person
     (`contact_trace_erasure`). A customer who said STOP stays on the
     suppression list (only digests, kept on purpose), so the erasure never
-    makes them reachable again. The erasure is audited with the contact id
-    only.
+    makes them reachable again. The copies the sub-processors keep (the
+    traces of the conversations' model calls at Langfuse, the calls at
+    ElevenLabs) are deleted by queued jobs with retries
+    (`processor_erasure`), so a processor's outage never fails the
+    erasure. The erasure is audited with the contact id only.
     """
 
     def __init__(
@@ -119,7 +130,9 @@ class DeleteContactDataUseCase(
         outbound_message_repo: OutboundMessageRepoContract,
         inbound_event_repo: InboundEventRepoContract,
         feedback_request_repo: FeedbackRequestRepoContract,
+        processor_erasure: ProcessorErasureFacilitatorContract,
     ) -> None:
+        self._processor_erasure: ProcessorErasureFacilitatorContract = processor_erasure
         self._step_up: StepUpGuardContract = step_up
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -179,6 +192,14 @@ class DeleteContactDataUseCase(
         self._erase_calls(records, now)
         deleted_llm_turns: int = self._erase_conversations(business, records, now)
         self._anonymize_business_records(records, now)
+        queued: ProcessorErasureJobCount = self._processor_erasure.request_erasure(
+            ProcessorErasureScope(
+                business_id=business.id,
+                reason=ProcessorErasureReason.CONTACT_ERASURE,
+                conversation_ids=[item.id for item in records.conversations],
+                provider_call_ids=[call.provider_call_id for call in records.calls],
+            )
+        )
         self._contact_repo.save(
             ContactDocument(
                 id=contact.id,
@@ -216,18 +237,14 @@ class DeleteContactDataUseCase(
             redacted_outbound_messages=traces.outbound_messages,
             redacted_inbound_events=traces.inbound_events,
             anonymized_feedback_requests=traces.feedback_requests,
+            queued_processor_erasures=queued,
         )
 
     def _erase_calls(self, records: ContactRecords, now: Microseconds) -> None:
         for call in records.calls:
-            call.recording_path = None
-            call.transcript = None
-            call.from_phone_number = None
-            if call.to_phone_number == records.contact.phone_number:
-                call.to_phone_number = None
-
-            call.updated_at = now
-            self._call_repo.save(call)
+            erased = erased_call(call, now, records.contact.phone_number)
+            if erased is not None:
+                self._call_repo.save(erased)
 
     def _erase_conversations(
         self,
@@ -259,21 +276,17 @@ class DeleteContactDataUseCase(
         now: Microseconds,
     ) -> None:
         for booking in records.bookings:
-            booking.notes = None
-            booking.updated_at = now
-            self._booking_repo.save(booking)
+            if (anonymized := anonymized_booking(booking, now)) is not None:
+                self._booking_repo.save(anonymized)
 
         for lead in records.leads:
-            lead.details = LeadDetails(ERASED_TEXT)
-            lead.budget = None
-            lead.updated_at = now
-            self._lead_repo.save(lead)
+            if (lead_left := anonymized_lead(lead, ERASED_TEXT, now)) is not None:
+                self._lead_repo.save(lead_left)
 
         for handoff in records.handoffs:
             # The cabinet shows the code in the reader's language.
-            handoff.summary = HandoffSummary(ERASED_TEXT)
-            handoff.summary_code = HandoffSummaryCode.DATA_ERASED
-            handoff.quoted_text = None
-            handoff.flagged_values = []
-            handoff.updated_at = now
-            self._handoff_repo.save(handoff)
+            handoff_left = anonymized_handoff(
+                handoff, ERASED_TEXT, HandoffSummaryCode.DATA_ERASED, now
+            )
+            if handoff_left is not None:
+                self._handoff_repo.save(handoff_left)

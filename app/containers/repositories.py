@@ -15,8 +15,8 @@ from app.containers.launch_repositories import LaunchRepositoriesContainer
 from app.containers.media_repositories import MediaRepositoriesContainer
 from app.containers.operations_repositories import OperationsRepositoriesContainer
 from app.containers.privacy_repositories import PrivacyRepositoriesContainer
-from app.containers.retention_repositories import RetentionRepositoriesContainer
 from app.containers.rate_repositories import RateRepositoriesContainer
+from app.containers.retention_repositories import RetentionRepositoriesContainer
 from app.containers.security_repositories import SecurityRepositoriesContainer
 from app.containers.value_repositories import ValueRepositoriesContainer
 from app.repositories.assistant_repositories import (

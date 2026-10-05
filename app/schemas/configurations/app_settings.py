@@ -64,6 +64,7 @@ from app.schemas.typings.platform.booleans import (
     IsDemoDataSeedingEnabled,
     IsEmbeddedWorkerEnabled,
     IsLlmContentTraced,
+    IsLlmRawTextTraced,
 )
 from app.schemas.typings.platform.constrained_floats import TraceSampleRate
 from app.schemas.typings.platform.constrained_integers import (
@@ -227,6 +228,7 @@ class AppSettings(ImmutableDTO):
     langfuse_secret_key: PlatformSecret | None = None
     langfuse_host: PublicBaseUrl
     is_llm_content_traced: IsLlmContentTraced
+    is_llm_raw_text_traced: IsLlmRawTextTraced = False
     cors_allowed_origins: list[PublicBaseUrl]
     # Request handlers running at once in threads (THREADPOOL_SIZE) and the
     # Postgres connections of one process (DB_POOL_SIZE, half as many by

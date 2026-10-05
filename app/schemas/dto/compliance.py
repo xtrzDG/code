@@ -45,6 +45,7 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.privacy.booleans import IsMessagingSuppressed
+from app.schemas.typings.privacy.constrained_integers import ProcessorErasureJobCount
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -235,7 +236,8 @@ class ContactErasureResult(ImmutableDTO):
     messages queued to them and webhook events they sent lose their text
     and account (queued ones are no longer sent or processed), and requests
     for feedback lose their review link; a STOP stays on the suppression
-    list.
+    list. `queued_processor_erasures`: the deletion jobs queued for the
+    copies at the sub-processors (Langfuse traces, ElevenLabs calls).
     """
 
     business_id: BusinessId
@@ -253,6 +255,7 @@ class ContactErasureResult(ImmutableDTO):
     redacted_outbound_messages: ErasedRecordCount = ErasedRecordCount(0)
     redacted_inbound_events: ErasedRecordCount = ErasedRecordCount(0)
     anonymized_feedback_requests: ErasedRecordCount = ErasedRecordCount(0)
+    queued_processor_erasures: ProcessorErasureJobCount = ProcessorErasureJobCount(0)
 
 
 class PurgeExpiredRecordingsCommand(ImmutableDTO):
