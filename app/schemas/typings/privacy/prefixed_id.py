@@ -23,6 +23,18 @@ class BusinessPrivacySettingsId(BasePrefixedTypedId):
     uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
 
 
+class ExportDownloadLinkId(BasePrefixedTypedId):
+    """
+    Identifier of one one-time download link of a full export.
+
+    Derived from the SHA-256 of the link's token (a version-4-shaped UUID of
+    its first 16 bytes), so a download finds its link by one read by id and
+    the token itself is never stored.
+    """
+
+    prefix = "export_download_link"
+
+
 class RetentionPurgeStateId(BasePrefixedTypedId):
     """
     Identifier of how far the retention purge of one business got.

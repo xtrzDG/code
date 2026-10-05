@@ -6,7 +6,10 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
-from app.schemas.domain.business_exports import BusinessExportDocument
+from app.schemas.domain.business_exports import (
+    BusinessExportDocument,
+    ExportDownloadLinkDocument,
+)
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
 )
@@ -17,7 +20,8 @@ from app.schemas.domain.suppression import SuppressionEntryDocument
 class PrivacyCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of data-subject rights (migration 1113): each
-    business's suppression list and its full exports; and of retention
+    business's suppression list, its full exports and their one-time
+    download links (1134); and of retention
     (1123): its privacy settings and purge state. A sibling of
     DocumentCollectionsContainer with the same storage factory (Postgres
     with DATABASE_URL, else in memory).
@@ -39,6 +43,14 @@ class PrivacyCollectionsContainer(containers.DeclarativeContainer):
     business_export_collection = document_collection(
         BusinessExportDocument,
         "business_exports",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    export_download_link_collection = document_collection(
+        ExportDownloadLinkDocument,
+        "export_download_links",
         config,
         clients,
         utilities,

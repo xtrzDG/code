@@ -495,3 +495,8 @@ _.has_placeholders  # app/schemas/dto/legal.py (LegalDocumentView)
 _.upcoming_version  # app/schemas/dto/legal.py (LegalDocumentView)
 _.terms_version  # app/schemas/dto/login_options.py (LoginOptionsView)
 _.privacy_version  # app/schemas/dto/login_options.py (LoginOptionsView)
+# The DPA status the cabinet's banner and Settings → Privacy read (the
+# accepted version, when to accept again); the code that implements a DPA
+# security measure, read by tests/legal (every path exists).
+_.latest_acceptance  # app/schemas/dto/compliance.py (DpaStatusView)
+_.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)

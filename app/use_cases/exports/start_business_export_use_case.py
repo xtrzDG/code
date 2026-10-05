@@ -1,7 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
-from app.contracts.privacy import BusinessExportLinkSignerContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.privacy_repositories import (
     BusinessExportRepoContract,
@@ -41,7 +40,8 @@ class StartBusinessExportUseCase(
     """
     The owner asks for everything the business keeps: the worker writes a
     ZIP (a JSON file per collection and the CSV tables) into the encrypted
-    export storage, and Settings → Privacy offers a signed link for a day.
+    export storage, and Settings → Privacy offers it for a day: up to three
+    downloads, each through a one-time link of the owner who downloads.
 
     Owners only (never staff or read-only support), after a recent sign-in
     or step-up, audited (EXPORT of "business", the export's id). One export
@@ -58,7 +58,6 @@ class StartBusinessExportUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         step_up: StepUpGuardContract,
-        link_signer: BusinessExportLinkSignerContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -68,7 +67,6 @@ class StartBusinessExportUseCase(
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._step_up: StepUpGuardContract = step_up
-        self._link_signer: BusinessExportLinkSignerContract = link_signer
 
     def run(self, input_data: StartBusinessExportCommand) -> BusinessExportView:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -90,7 +88,7 @@ class StartBusinessExportUseCase(
             None,
         )
         if active is not None:
-            return build_export_view(active, self._link_signer, now)
+            return build_export_view(active, now)
 
         export: BusinessExportDocument = queue_business_export(
             self._export_repo,
@@ -112,4 +110,4 @@ class StartBusinessExportUseCase(
                 updated_at=now,
             )
         )
-        return build_export_view(export, self._link_signer, now)
+        return build_export_view(export, now)

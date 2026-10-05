@@ -1,0 +1,12 @@
+{
+  "business_id": "business_794d8151-7b5a-4c01-8ed0-0a5309672348",
+  "created_at": 1790000000000000,
+  "expires_at": 1790000000000000,
+  "export_id": "business_export_fa8567fc-2a4c-4e8f-a5f5-0f6af8de2e4d",
+  "id": "export_download_link_4bbf5cd9-92b5-406c-966c-07c00d009622",
+  "schema_version": "1",
+  "token_hash": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+  "updated_at": 1790000000000000,
+  "used_at": 1790000000000000,
+  "user_id": "user_bb4e7231-464c-4f9e-9c1f-1c5210460b19"
+}

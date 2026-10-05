@@ -88,7 +88,9 @@ def test_staff_are_refused_and_a_stale_sign_in_steps_up(workshop: Workshop) -> N
     assert log == []
 
 
-def test_the_owner_downloads_the_full_export_by_its_link(workshop: Workshop) -> None:
+def test_the_owner_downloads_the_full_export_by_a_one_time_link(
+    workshop: Workshop,
+) -> None:
     client = workshop.client
     restaurant = open_restaurant(workshop)
     TelegramCustomer(workshop, restaurant).writes(BOOKING_REQUEST_RU)
@@ -107,10 +109,17 @@ def test_the_owner_downloads_the_full_export_by_its_link(workshop: Workshop) -> 
         f"{restaurant.base}/business-exports", headers=restaurant.headers
     ).json()["items"]
     assert ready["status"] == "ready"
-    link: str = ready["download_path"]
+    assert ready["downloads_left"] == 3
+    made = client.post(
+        f"{restaurant.base}/business-exports/{ready['id']}/download-link",
+        headers=restaurant.headers,
+    )
+    assert made.status_code == 200, made.text
+    link: str = made.json()["download_path"]
 
-    # The link is the permission: no session needed, nothing cached.
-    downloaded = client.get(link)
+    # The link needs the session of the owner who asked; nothing cached.
+    assert client.get(link).status_code == 401
+    downloaded = client.get(link, headers=restaurant.headers)
     assert downloaded.status_code == 200, downloaded.text
     assert downloaded.headers["content-type"] == "application/zip"
     assert downloaded.headers["cache-control"] == "no-store"
@@ -122,8 +131,16 @@ def test_the_owner_downloads_the_full_export_by_its_link(workshop: Workshop) -> 
     assert bookings_csv.startswith(BOM + "ჯავშნის ID,")
     assert [contact["name"] for contact in contacts] == ["Нино"]
 
-    tampered = client.get(link[:-2] + ("AA" if not link.endswith("AA") else "BB"))
-    assert tampered.status_code == 404
-    assert client.get(link.split("?")[0]).status_code == 404
-    workshop.clock.advance(25 * 3600)
-    assert client.get(link).status_code == 404
+    # Used once; a tampered or missing token is the same 404.
+    assert client.get(link, headers=restaurant.headers).status_code == 404
+    again = client.post(
+        f"{restaurant.base}/business-exports/{ready['id']}/download-link",
+        headers=restaurant.headers,
+    ).json()["download_path"]
+    tampered = again[:-2] + ("AA" if not again.endswith("AA") else "BB")
+    assert client.get(tampered, headers=restaurant.headers).status_code == 404
+    assert (
+        client.get(again.split("?")[0], headers=restaurant.headers).status_code == 404
+    )
+    workshop.clock.advance(11 * 60)
+    assert client.get(again, headers=restaurant.headers).status_code == 404

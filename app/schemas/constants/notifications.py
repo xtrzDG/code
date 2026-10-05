@@ -22,7 +22,8 @@ class StaffLinkTarget(StrEnum):
     reminders open SETUP (the guided setup, at the saved step), CHANNELS,
     SHARE (the link and QR card on the Channels page) and BILLING (where
     the done-for-you setup is chosen). ACCOUNT_SECURITY is the person's
-    Account → Security page (their sessions: a sign-in from a new device).
+    Account → Security page (their sessions: a sign-in from a new device);
+    PRIVACY is Settings → Privacy (a full export was downloaded).
     Link targets live only in signed links, never in stored documents.
     """
 
@@ -37,6 +38,7 @@ class StaffLinkTarget(StrEnum):
     SHARE = "share"
     BILLING = "billing"
     ACCOUNT_SECURITY = "account_security"
+    PRIVACY = "privacy"
 
 
 class StaffTextStyle(StrEnum):

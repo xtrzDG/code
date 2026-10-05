@@ -290,8 +290,8 @@ class AppSettings(ImmutableDTO):
     sessions: SessionSettings = Field(default_factory=SessionSettings)
     # The cabinet's "Help and support" contacts (SUPPORT_*).
     support: SupportSettings = Field(default_factory=SupportSettings)
-    # The suppression list's key and the full exports' link (SUPPRESSION_LIST_KEY,
-    # BUSINESS_EXPORT_LINK_HOURS).
+    # The suppression list's key and the full exports' one-time links
+    # (SUPPRESSION_LIST_KEY, EXPORT_DOWNLOAD_LINK_MINUTES).
     privacy: PrivacySettings = Field(default_factory=PrivacySettings)
     # The seller on invoices and its VAT (SELLER_*, PLATFORM_VAT_REGISTERED).
     seller: SellerSettings = Field(default_factory=SellerSettings)

@@ -16,7 +16,7 @@ from app.schemas.dto.privacy.business_exports import BusinessExportJobPayload
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.privacy.constrained_integers import (
     ExportArchiveByteCount,
-    ExportLinkLifetimeHours,
+    ExportArchiveLifetimeHours,
 )
 from app.schemas.typings.privacy.strings import ExportArchivePath, ExportErrorText
 from app.use_cases.exports.business_archive import BuiltArchive, BusinessArchiveBuilder
@@ -26,6 +26,8 @@ from app.use_cases.shared.business_access import require_business
 logger: logging.Logger = logging.getLogger(__name__)
 
 MICROSECONDS_PER_HOUR: int = 3_600 * 1_000_000
+# How long a written archive is kept for its downloads: a day.
+EXPORT_ARCHIVE_HOURS: ExportArchiveLifetimeHours = ExportArchiveLifetimeHours(24)
 FAILED_TEXT: ExportErrorText = ExportErrorText(
     "The archive could not be written. Ask for a new export; if it fails "
     "again, write to support."
@@ -39,9 +41,10 @@ class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     """
     The worker writes one full export: the archive of the business's data
     (`BusinessArchiveBuilder`) into the export storage, encrypted with the
-    business's key, then the export is READY with a link that works for
-    BUSINESS_EXPORT_LINK_HOURS. A failure is retried by the queue; the last
-    attempt leaves the export FAILED with a reason the owner can read.
+    business's key, then the export is READY: owners download it through
+    one-time links while the archive is kept (EXPORT_ARCHIVE_HOURS). A
+    failure is retried by the queue; the last attempt leaves the export
+    FAILED with a reason the owner can read.
     """
 
     def __init__(
@@ -51,14 +54,12 @@ class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         archive_builder: BusinessArchiveBuilder,
         archive_storage: ExportArchiveStorageContract,
         wall_clock: WallClock[Microseconds],
-        link_hours: ExportLinkLifetimeHours,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._export_repo: BusinessExportRepoContract = export_repo
         self._archive_builder: BusinessArchiveBuilder = archive_builder
         self._archive_storage: ExportArchiveStorageContract = archive_storage
         self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._link_hours: ExportLinkLifetimeHours = link_hours
 
     def run(self, input_data: QueuedJobInput) -> JobReport:
         payload = BusinessExportJobPayload.model_validate_json(str(input_data.payload))
@@ -112,7 +113,7 @@ class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
                 "archive_bytes": ExportArchiveByteCount(len(built.content)),
                 "record_count": built.record_count,
                 "expires_at": Microseconds(
-                    int(finished_at) + int(self._link_hours) * MICROSECONDS_PER_HOUR
+                    int(finished_at) + int(EXPORT_ARCHIVE_HOURS) * MICROSECONDS_PER_HOUR
                 ),
                 "last_error": None,
             },

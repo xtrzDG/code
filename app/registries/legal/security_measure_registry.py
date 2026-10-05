@@ -26,9 +26,6 @@ class SecurityMeasureRegistry(SecurityMeasureRegistryContract):
 
         self._measures: tuple[SecurityMeasure, ...] = measures
 
-    def list_measures(self) -> list[SecurityMeasure]:
-        return list(self._measures)
-
     def measures_of(self, version: DpaDocumentVersion) -> list[SecurityMeasure]:
         return [
             measure

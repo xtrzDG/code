@@ -28,6 +28,9 @@ class PrivacyOrchestratorsContainer(containers.DeclarativeContainer):
     download_business_export_orchestrator = use_case_orchestrator(
         privacy_use_cases.download_business_export_use_case
     )
+    create_export_download_link_orchestrator = use_case_orchestrator(
+        privacy_use_cases.create_export_download_link_use_case
+    )
     purge_business_exports_orchestrator = use_case_orchestrator(
         privacy_use_cases.purge_business_exports_use_case
     )

@@ -20,6 +20,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"GET {B}/exports/{{table}}",
         f"GET {B}/business-exports",
         f"POST {B}/business-exports",
+        f"POST {B}/business-exports/{{export_id}}/download-link",
         f"POST {B}/assistant-versions",
         f"POST {B}/assistant-versions/{{version_id}}/autotests",
         f"POST {B}/assistant-versions/{{version_id}}/publish",

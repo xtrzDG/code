@@ -22,20 +22,34 @@ class ExportArchiveByteCount(BaseConstrainedTypedInt):
     ge = 0
 
 
-class ExportedRecordCount(BaseConstrainedTypedInt):
-    """How many records (rows, documents) one export wrote."""
+class ExportArchiveLifetimeHours(BaseConstrainedTypedInt):
+    """How long a written export archive is kept before it is deleted, in hours."""
+
+    ge = 1
+    le = 168
+
+
+class ExportDownloadCount(BaseConstrainedTypedInt):
+    """How many times a full business export was downloaded (at most 3)."""
 
     ge = 0
 
 
-class ExportLinkLifetimeHours(BaseConstrainedTypedInt):
+class ExportDownloadLinkMinutes(BaseConstrainedTypedInt):
     """
-    How long the download link of a full business export works, in hours
-    (BUSINESS_EXPORT_LINK_HOURS); the archive is deleted after it.
+    How long a one-time download link of a full business export works, in
+    minutes (EXPORT_DOWNLOAD_LINK_MINUTES; DPA section 9 promises 10 at
+    most).
     """
 
     ge = 1
-    le = 168
+    le = 10
+
+
+class ExportedRecordCount(BaseConstrainedTypedInt):
+    """How many records (rows, documents) one export wrote."""
+
+    ge = 0
 
 
 class LlmTurnRetentionDays(BaseConstrainedTypedInt):

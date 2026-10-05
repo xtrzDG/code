@@ -1,14 +1,14 @@
-"""SUPPRESSION_LIST_KEY and BUSINESS_EXPORT_LINK_HOURS: data-subject rights."""
+"""SUPPRESSION_LIST_KEY and EXPORT_DOWNLOAD_LINK_MINUTES: data-subject rights."""
 
 from collections.abc import Mapping
 from typing import TypedDict
 
 from app.schemas.configurations.privacy_settings import (
-    DEFAULT_EXPORT_LINK_HOURS,
+    DEFAULT_EXPORT_DOWNLOAD_LINK_MINUTES,
     PrivacySettings,
 )
 from app.schemas.typings.platform.strings import PlatformSecret
-from app.schemas.typings.privacy.constrained_integers import ExportLinkLifetimeHours
+from app.schemas.typings.privacy.constrained_integers import ExportDownloadLinkMinutes
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_text,
     parse_setting,
@@ -32,14 +32,14 @@ def read_privacy_settings(
             suppression_list_key=optional_text(
                 environment_variables, "SUPPRESSION_LIST_KEY", PlatformSecret
             ),
-            export_link_hours=parse_setting(
-                "BUSINESS_EXPORT_LINK_HOURS",
+            export_download_link_minutes=parse_setting(
+                "EXPORT_DOWNLOAD_LINK_MINUTES",
                 read_integer(
                     environment_variables,
-                    "BUSINESS_EXPORT_LINK_HOURS",
-                    DEFAULT_EXPORT_LINK_HOURS,
+                    "EXPORT_DOWNLOAD_LINK_MINUTES",
+                    DEFAULT_EXPORT_DOWNLOAD_LINK_MINUTES,
                 ),
-                ExportLinkLifetimeHours,
+                ExportDownloadLinkMinutes,
             ),
         )
     )

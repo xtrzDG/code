@@ -1,12 +1,16 @@
 """
 The catalog entries of data-subject rights (1113): each business's
 suppression list (the customers who said STOP, kept through erasure) and
-the full exports of a business's data; and of retention (1123): each
+the full exports of a business's data, with their one-time download
+links (1134); and of retention (1123): each
 business's privacy settings and how far its retention purge got. Part of
 DOCUMENT_COLLECTIONS (document_collection_catalog.py).
 """
 
-from app.schemas.domain.business_exports import BusinessExportDocument
+from app.schemas.domain.business_exports import (
+    BusinessExportDocument,
+    ExportDownloadLinkDocument,
+)
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
 )
@@ -23,6 +27,10 @@ PRIVACY_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("business_exports"), BusinessExportDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("export_download_links"),
+        ExportDownloadLinkDocument,
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("business_privacy_settings"),

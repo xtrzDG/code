@@ -1,6 +1,5 @@
 from typed_time_provider import Microseconds, WallClock
 
-from app.contracts.privacy import BusinessExportLinkSignerContract
 from app.contracts.repositories.privacy_repositories import (
     BusinessExportRepoContract,
 )
@@ -23,9 +22,10 @@ class ListBusinessExportsUseCase(
     UseCaseContract[BusinessExportListQuery, BusinessExportList]
 ):
     """
-    The business's latest full exports, the newest first, each READY one
-    with a freshly signed download link. A link is the data itself, so the
-    list is the owner's alone (never staff or read-only support).
+    The business's latest full exports, the newest first, each with how
+    many downloads it has left. The archives are the business's data, so
+    the list is the owner's alone (never staff or read-only support); a
+    download needs a one-time link (CreateExportDownloadLinkUseCase).
     """
 
     def __init__(
@@ -35,14 +35,12 @@ class ListBusinessExportsUseCase(
         ],
         export_repo: BusinessExportRepoContract,
         wall_clock: WallClock[Microseconds],
-        link_signer: BusinessExportLinkSignerContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
         self._export_repo: BusinessExportRepoContract = export_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
-        self._link_signer: BusinessExportLinkSignerContract = link_signer
 
     def run(self, input_data: BusinessExportListQuery) -> BusinessExportList:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -56,7 +54,7 @@ class ListBusinessExportsUseCase(
         now: Microseconds = self._wall_clock.now_unix()
         return BusinessExportList(
             items=[
-                build_export_view(export, self._link_signer, now)
+                build_export_view(export, now)
                 for export in self._export_repo.list_latest(business.id, LISTED)
             ]
         )
