@@ -25,7 +25,8 @@ const HOSTED_VIEW: HostedChatView = {
   accent_color: "#2F7D4F",
   api_base_url: "https://api.workshop.example",
   widget_script_url: "https://api.workshop.example/widget.js",
-  privacy_url: null,
+  privacy_url: null,  conversation_retention_days: 730,
+  llm_turn_retention_days: 30,
 };
 
 afterEach(() => {

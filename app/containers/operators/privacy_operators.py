@@ -11,9 +11,10 @@ from app.containers.utilities import UtilitiesContainer
 
 class PrivacyOperatorsContainer(containers.DeclarativeContainer):
     """
-    Operators of the exports of a business's data; each runs inside the
-    storage scope of the business it exports, except the hourly purge of
-    expired archives, which looks across every business.
+    Operators of the exports and the retention of a business's data; each
+    runs inside the storage scope of its business, except the hourly purge
+    of expired archives and the nightly retention purge, which look across
+    every business.
     """
 
     privacy_pipelines: PrivacyPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -40,4 +41,16 @@ class PrivacyOperatorsContainer(containers.DeclarativeContainer):
     )
     purge_business_exports_operator = platform_pipeline_operator(
         privacy_pipelines.purge_business_exports_pipeline, storage_scope
+    )
+    get_privacy_settings_operator = pipeline_operator(
+        privacy_pipelines.get_privacy_settings_pipeline, storage_scope
+    )
+    update_privacy_settings_operator = pipeline_operator(
+        privacy_pipelines.update_privacy_settings_pipeline, storage_scope
+    )
+    retention_purge_operator = platform_pipeline_operator(
+        privacy_pipelines.purge_expired_personal_data_pipeline, storage_scope
+    )
+    erase_copies_operator = pipeline_operator(
+        privacy_pipelines.erase_processor_copies_pipeline, storage_scope
     )

@@ -61,6 +61,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
     ip: "IP-адрес",
     system: "Система",
     platform: "Сотрудник платформы",
+    recordCount: { one: "{count} запись", few: "{count} записи", many: "{count} записей", other: "{count} записи" },
     actions: {
       view: "Просмотр",
       create: "Создание",
@@ -104,6 +105,14 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       assistant_settings: "Память о клиентах",
       feedback_request: "Запросы отзывов",
       incident: "Инцидент платформы",
+      messages: "Сообщения",
+      llm_turns: "Записи обращений к ИИ",
+      message_media: "Файлы клиентов",
+      missed_call: "Пропущенные звонки",
+      call_recording: "Запись звонка",
+      privacy_settings: "Сроки хранения данных",
+      langfuse_copies: "Копии в Langfuse",
+      elevenlabs_copies: "Копии в ElevenLabs",
     },
   },
   roles: {

@@ -54,4 +54,12 @@ class PlatformSecret(BaseTypedString):
     """Platform-level credential (API key, webhook secret). Never logged."""
 
 
+class TraceSessionId(BaseTypedString):
+    """
+    The session of the quality journal (Langfuse `sessionId`) a trace
+    belongs to: the id of the conversation the model call answered, so the
+    traces of a conversation can be found and deleted together.
+    """
+
+
 # Keep abc order for all non example types, if possible.

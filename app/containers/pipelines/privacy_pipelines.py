@@ -8,7 +8,7 @@ from app.containers.provider_chains import orchestrator_pipeline
 
 
 class PrivacyPipelinesContainer(containers.DeclarativeContainer):
-    """Pipelines of the exports of a business's data."""
+    """Pipelines of the exports and the retention of a business's data."""
 
     privacy_orchestrators: PrivacyOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
@@ -32,4 +32,16 @@ class PrivacyPipelinesContainer(containers.DeclarativeContainer):
     )
     purge_business_exports_pipeline = orchestrator_pipeline(
         privacy_orchestrators.purge_business_exports_orchestrator
+    )
+    get_privacy_settings_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.get_privacy_settings_orchestrator
+    )
+    update_privacy_settings_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.update_privacy_settings_orchestrator
+    )
+    purge_expired_personal_data_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.purge_expired_personal_data_orchestrator
+    )
+    erase_processor_copies_pipeline = orchestrator_pipeline(
+        privacy_orchestrators.erase_processor_copies_orchestrator
     )

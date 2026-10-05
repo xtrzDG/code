@@ -1,0 +1,117 @@
+{
+  "collection": "retention_purge_states",
+  "document_type": "RetentionPurgeStateDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "conversations_purged_before": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^retention_purge_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "last_counts": {
+        "additionalProperties": false,
+        "properties": {
+          "anonymized_bookings": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "anonymized_handoffs": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "anonymized_leads": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "deleted_llm_turns": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "deleted_media": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "deleted_messages": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "deleted_missed_calls": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "deleted_notes": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "erased_calls": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "last_run_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "llm_turns_purged_before": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id"
+    ],
+    "type": "object"
+  }
+}

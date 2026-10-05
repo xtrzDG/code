@@ -75,4 +75,5 @@ def view_entry(entry: AuditLogEntryDocument) -> AuditLogEntryView:
         actor_id=entry.actor_id,
         ip_address=entry.ip_address,
         occurred_at=entry.created_at,
+        record_count=entry.record_count,
     )

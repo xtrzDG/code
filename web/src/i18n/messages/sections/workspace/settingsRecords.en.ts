@@ -54,6 +54,7 @@ export const settingsRecordsEn = {
     ip: "IP address",
     system: "System",
     platform: "Platform staff",
+    recordCount: { one: "{count} record", other: "{count} records" },
     actions: {
       view: "Viewed",
       create: "Created",
@@ -97,6 +98,14 @@ export const settingsRecordsEn = {
       assistant_settings: "Customer memory",
       feedback_request: "Feedback requests",
       incident: "Platform incident",
+      messages: "Messages",
+      llm_turns: "AI call records",
+      message_media: "Customer files",
+      missed_call: "Missed calls",
+      call_recording: "Call recording",
+      privacy_settings: "Data retention",
+      langfuse_copies: "Copies at Langfuse",
+      elevenlabs_copies: "Copies at ElevenLabs",
     },
   },
   roles: {

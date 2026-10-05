@@ -4,7 +4,7 @@ code works for, so every log line and error report can be traced to them.
 
 It lives in a context variable: the request middleware binds the request
 id, `BusinessScopedPipelineOperator` the business, the conversation turn
-its conversation and channel, the background worker the job. Bindings nest
+its conversation, contact and channel, the background worker the job. Bindings nest
 and are undone on exit; asyncio tasks and the request threads of AnyIO
 (`to_thread.run_sync` copies the context) inherit them, a new
 `threading.Thread` starts empty.
@@ -21,6 +21,7 @@ from contextvars import ContextVar, Token
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.observability import LogContext
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.platform.constrained_strings import JobName, RequestId
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
@@ -47,6 +48,7 @@ def bound_log_context(
     request_id: RequestId | None = None,
     business_id: BusinessId | None = None,
     conversation_id: ConversationId | None = None,
+    contact_id: ContactId | None = None,
     channel: ChannelKind | None = None,
     job_name: JobName | None = None,
     job_id: QueuedJobId | None = None,
@@ -62,6 +64,7 @@ def bound_log_context(
             ("request_id", request_id),
             ("business_id", business_id),
             ("conversation_id", conversation_id),
+            ("contact_id", contact_id),
             ("channel", channel),
             ("job_name", job_name),
             ("job_id", job_id),

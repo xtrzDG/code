@@ -4,6 +4,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.compliance.prefixed_id import (
     AuditLogEntryId,
@@ -31,7 +32,9 @@ class AuditLogEntryDocument(BaseDocument):
     # person, no business, like `mfa_changed`) and `support_access_start`
     # and `support_access_end` (in the business's log; an exception to the
     # enum rule, docs/operations/deploys.md).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: `record_count`, how many records a purge or a deletion at a
+    # sub-processor covered (optional, so version 3 needs no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
     actor_id: UserId | None = None
@@ -39,6 +42,7 @@ class AuditLogEntryDocument(BaseDocument):
     entity: AuditEntityName
     entity_id: AuditEntityReference | None = None
     ip_address: ClientIpAddress | None = None
+    record_count: AuditRecordCount | None = None
 
 
 class DpaAcceptanceDocument(BaseDocument):

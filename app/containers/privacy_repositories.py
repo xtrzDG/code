@@ -8,12 +8,18 @@ from app.repositories.privacy_repositories import (
     BusinessExportRepository,
     SuppressionEntryRepository,
 )
+from app.repositories.retention_settings_repositories import (
+    BusinessPrivacySettingsRepository,
+    RetentionPurgeStateRepository,
+)
 
 
 class PrivacyRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories of data-subject rights (migration 1113): the
-    suppression list and the full business exports. `RepositoriesContainer`
+    suppression list and the full business exports; and of retention
+    (1123): each business's privacy settings and purge state.
+    `RepositoriesContainer`
     extends it, so they are read as `repositories.suppression_entry_repo`
     like every other repository.
     """
@@ -27,4 +33,12 @@ class PrivacyRepositoriesContainer(containers.DeclarativeContainer):
     business_export_repo: Singleton[BusinessExportRepository] = Singleton(
         BusinessExportRepository,
         collection=privacy_collections.business_export_collection,
+    )
+    privacy_settings_repo: Singleton[BusinessPrivacySettingsRepository] = Singleton(
+        BusinessPrivacySettingsRepository,
+        collection=privacy_collections.business_privacy_settings_collection,
+    )
+    retention_purge_state_repo: Singleton[RetentionPurgeStateRepository] = Singleton(
+        RetentionPurgeStateRepository,
+        collection=privacy_collections.retention_purge_state_collection,
     )

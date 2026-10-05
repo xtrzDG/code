@@ -9,13 +9,18 @@ from app.contracts.llm import LlmAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
 from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
 from app.schemas.dto.media import LlmImageInput
-from app.schemas.dto.observability import LlmGenerationTrace
+from app.schemas.dto.observability import LlmGenerationTrace, LogContext
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
-from app.schemas.typings.platform.booleans import IsLlmContentTraced
+from app.schemas.typings.platform.booleans import (
+    IsLlmContentTraced,
+    IsLlmRawTextTraced,
+)
 from app.schemas.typings.platform.constrained_integers import ElapsedMilliseconds
 from app.schemas.typings.platform.strings import CorrelationId, JobErrorText
+from app.utilities.observability.log_context import current_log_context
+from app.utilities.observability.trace_redaction import redact_contact_details
 
 NANOSECONDS_PER_MILLISECOND: int = 1_000_000
 
@@ -25,6 +30,11 @@ class TracingLlmAdapter(LlmAdapterContract):
     Decorator that writes every model call to the quality journal (concept:
     "Langfuse — каждый ответ модели") and otherwise behaves like the wrapped
     adapter. Tracing problems never affect the reply.
+
+    Each trace names the business, contact and conversation of the call
+    (the log context), so erasure and retention find its copy. Texts go
+    only with content tracing on, and without phone numbers and e-mail
+    addresses unless raw text is allowed (LANGFUSE_RAW_TEXT).
     """
 
     def __init__(
@@ -34,12 +44,14 @@ class TracingLlmAdapter(LlmAdapterContract):
         wall_clock: WallClock[Microseconds],
         monotonic_clock: MonotonicClock[Nanoseconds],
         is_content_traced: IsLlmContentTraced,
+        is_raw_text_traced: IsLlmRawTextTraced = False,
     ) -> None:
         self._inner_adapter: LlmAdapterContract = inner_adapter
         self._trace_facilitator: LlmTraceFacilitatorContract = trace_facilitator
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._monotonic_clock: MonotonicClock[Nanoseconds] = monotonic_clock
         self._is_content_traced: IsLlmContentTraced = is_content_traced
+        self._is_raw_text_traced: IsLlmRawTextTraced = is_raw_text_traced
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return self._inner_adapter.build_user_text_turn(text)
@@ -80,6 +92,7 @@ class TracingLlmAdapter(LlmAdapterContract):
         elapsed_nanoseconds: int = int(self._monotonic_clock.now_monotonic()) - int(
             started_monotonic
         )
+        context: LogContext = current_log_context()
         trace = LlmGenerationTrace(
             trace_id=CorrelationId(str(uuid.uuid4())),
             # The model that answered: the fallback when it stood in.
@@ -106,15 +119,26 @@ class TracingLlmAdapter(LlmAdapterContract):
             elapsed=ElapsedMilliseconds(
                 max(0, elapsed_nanoseconds // NANOSECONDS_PER_MILLISECOND)
             ),
-            input_text=self._last_user_text(request),
-            output_text=(
+            input_text=self._traced_text(self._last_user_text(request)),
+            output_text=self._traced_text(
                 response.text
                 if self._is_content_traced and response is not None
                 else None
             ),
             error=None if error is None else JobErrorText(type(error).__name__),
+            business_id=context.business_id,
+            contact_id=context.contact_id,
+            conversation_id=context.conversation_id,
         )
         self._trace_facilitator.record_generation(trace)
+
+    def _traced_text(self, text: MessageText | None) -> MessageText | None:
+        """The text as the journal may keep it (contact details out)."""
+
+        if text is None or self._is_raw_text_traced:
+            return text
+
+        return MessageText(redact_contact_details(str(text)))
 
     def _last_user_text(self, request: LlmRequest) -> MessageText | None:
         if not self._is_content_traced or not request.transcript:

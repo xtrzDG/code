@@ -46,6 +46,7 @@ from app.gateways.worker.periodic.refresh_exchange_rates import (
 from app.gateways.worker.periodic.request_visit_feedback import (
     request_visit_feedback_job,
 )
+from app.gateways.worker.periodic.retention import retention_purge_job
 from app.gateways.worker.periodic.send_value_reports import send_value_reports_job
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     sweep_rate_limit_buckets_job,
@@ -77,6 +78,7 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_POST_CALL_JOB,
 )
 from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
+from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
 
 MINUTE_SECONDS: int = 60
 HOUR_SECONDS: int = 60 * MINUTE_SECONDS
@@ -245,6 +247,9 @@ class GatewaysContainer(containers.DeclarativeContainer):
             purge_business_exports_job,
             operator=operators.privacy.purge_business_exports_operator,
         ),
+        Factory(
+            retention_purge_job, operator=operators.privacy.retention_purge_operator
+        ),
     )
     # Handlers of queued jobs by job name (the queue is filled by use cases
     # through the job queue facilitator).
@@ -281,6 +286,7 @@ class GatewaysContainer(containers.DeclarativeContainer):
             ),
             # A quiet conversation summarized for the customer memory.
             SUMMARIZE_CONVERSATION_JOB: operators.memory.summarize_conversation_operator,  # noqa: E501
+            ERASE_PROCESSOR_COPIES_JOB: operators.privacy.erase_copies_operator,
         }
     )
     # The pulse of this worker process (GET /readyz reports its age).

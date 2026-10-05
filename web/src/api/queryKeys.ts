@@ -204,6 +204,8 @@ export const queryKeys = {
     security: (businessId: Id) => ["settings", businessId, "security"] as const,
     /** Settings → Privacy: the latest full exports of the business. */
     businessExports: (businessId: Id) => ["settings", businessId, "businessExports"] as const,
+    /** Settings → Privacy: how long data is kept, the latest cleanup. */
+    privacy: (businessId: Id) => ["settings", businessId, "privacy"] as const,
   },
 
   calls: {

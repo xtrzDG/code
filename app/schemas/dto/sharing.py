@@ -4,6 +4,10 @@ from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.channels import WidgetPosition
 from app.schemas.constants.sharing import ShareLinkGap, ShareLinkKind
+from app.schemas.domain.business_privacy_settings import (
+    DEFAULT_CONVERSATION_RETENTION_DAYS,
+    DEFAULT_LLM_TURN_RETENTION_DAYS,
+)
 from app.schemas.dto.channels.widget import WidgetLanguageView
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -15,6 +19,10 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetScriptUrl,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.privacy.constrained_integers import (
+    ConversationRetentionDays,
+    LlmTurnRetentionDays,
+)
 from app.schemas.typings.sharing.constrained_strings import (
     BusinessPublicSlug,
     HostedChatUrl,
@@ -93,7 +101,9 @@ class HostedChatView(ImmutableDTO):
     its current address (`slug`; a page opened under an older address or
     the id moves there), its name, colour and customer languages, whether
     the chat is on, where the widget script and API live (None while
-    APP_BASE_URL is not set), and the privacy notice.
+    APP_BASE_URL is not set), and the privacy notice with how long the
+    business keeps conversations and the records of model calls (its
+    Settings → Privacy, the defaults until it chose).
     """
 
     business_id: BusinessId
@@ -107,3 +117,7 @@ class HostedChatView(ImmutableDTO):
     api_base_url: PublicBaseUrl | None = None
     widget_script_url: WidgetScriptUrl | None = None
     privacy_url: WebLink | None = None
+    conversation_retention_days: ConversationRetentionDays = (
+        DEFAULT_CONVERSATION_RETENTION_DAYS
+    )
+    llm_turn_retention_days: LlmTurnRetentionDays = DEFAULT_LLM_TURN_RETENTION_DAYS

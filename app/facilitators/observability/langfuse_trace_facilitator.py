@@ -19,7 +19,10 @@ class LangfuseTraceFacilitator(LlmTraceFacilitatorContract):
 
     Tracing must never slow down or break a customer reply: recording only
     appends to a bounded buffer, and delivery errors are logged and dropped.
-    Call `flush` from a background job or at shutdown.
+    Call `flush` from a background job or at shutdown. A trace carries the
+    ids of its business, contact and conversation as metadata and the
+    conversation as its `sessionId`, so `LangfuseTraceErasureAdapter` can
+    delete a conversation's traces.
     """
 
     def __init__(self, client: LangfuseIngestionClient) -> None:
@@ -68,7 +71,9 @@ def build_generation_events(trace: LlmGenerationTrace) -> list[dict[str, object]
 
     start_time: str = format_timestamp(int(trace.started_at))
     end_time: str = format_timestamp(int(trace.started_at) + int(trace.elapsed) * 1000)
+    owners: dict[str, object] = trace_owners(trace)
     metadata: dict[str, object] = {
+        **owners,
         "effort": str(trace.effort),
         "offered_tools": [str(tool) for tool in trace.offered_tools],
         "called_tools": [str(tool) for tool in trace.called_tools],
@@ -99,16 +104,20 @@ def build_generation_events(trace: LlmGenerationTrace) -> list[dict[str, object]
     if trace.error is not None:
         generation_body["statusMessage"] = str(trace.error)
 
+    trace_body: dict[str, object] = {
+        "id": str(trace.trace_id),
+        "name": "assistant_reply",
+        "metadata": {"model": str(trace.model_id), **owners},
+    }
+    if trace.conversation_id is not None:
+        trace_body["sessionId"] = str(trace.conversation_id)
+
     return [
         {
             "id": str(uuid.uuid4()),
             "timestamp": start_time,
             "type": "trace-create",
-            "body": {
-                "id": str(trace.trace_id),
-                "name": "assistant_reply",
-                "metadata": {"model": str(trace.model_id)},
-            },
+            "body": trace_body,
         },
         {
             "id": str(uuid.uuid4()),
@@ -117,6 +126,26 @@ def build_generation_events(trace: LlmGenerationTrace) -> list[dict[str, object]
             "body": generation_body,
         },
     ]
+
+
+def trace_owners(trace: LlmGenerationTrace) -> dict[str, object]:
+    """
+    The business, contact and conversation the call answered (those known):
+    the keys erasure and retention find a trace by. The conversation is
+    also the trace's `sessionId`.
+    """
+
+    owners: dict[str, object] = {}
+    if trace.business_id is not None:
+        owners["business_id"] = str(trace.business_id)
+
+    if trace.contact_id is not None:
+        owners["contact_id"] = str(trace.contact_id)
+
+    if trace.conversation_id is not None:
+        owners["conversation_id"] = str(trace.conversation_id)
+
+    return owners
 
 
 def format_timestamp(unix_microseconds: int) -> str:

@@ -6,10 +6,16 @@ from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
 )
+from app.contracts.repositories.retention_repositories import (
+    BusinessPrivacySettingsRepoContract,
+)
 from app.contracts.repositories.setup_repositories import SetupStateRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.domain.business_privacy_settings import (
+    BusinessPrivacySettingsDocument,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
 from app.schemas.domain.profiles import BusinessProfileDocument
@@ -34,7 +40,8 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
     What the hosted chat page (/c/{slug} on the cabinet's site) needs before
     the widget loads: the business's current address, name, colour,
     customer languages, whether the chat is on, where the widget script and
-    the API live (APP_BASE_URL) and the privacy notice. The widget loads
+    the API live (APP_BASE_URL) and the privacy notice, with the retention
+    periods the business chose in Settings → Privacy. The widget loads
     the rest itself, with its usual limits. Nothing personal or secret is
     returned; an unknown business is not found.
 
@@ -52,7 +59,11 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         setup_state_repo: SetupStateRepoContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        privacy_settings_repo: BusinessPrivacySettingsRepoContract,
     ) -> None:
+        self._privacy_settings_repo: BusinessPrivacySettingsRepoContract = (
+            privacy_settings_repo
+        )
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -87,6 +98,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         if is_enabled and business.published_assistant_version_id is not None:
             self._note_first_visit(business)
 
+        retention: BusinessPrivacySettingsDocument = (
+            self._privacy_settings_repo.get_or_default(business.id)
+        )
         return HostedChatView(
             business_id=business.id,
             slug=business.public_slug,
@@ -109,6 +123,8 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
             privacy_url=choose_privacy_url(
                 business, profile, self._app_settings.cabinet_base_url
             ),
+            conversation_retention_days=retention.conversation_retention_days,
+            llm_turn_retention_days=retention.llm_turn_retention_days,
         )
 
     def _note_first_visit(self, business: BusinessDocument) -> None:

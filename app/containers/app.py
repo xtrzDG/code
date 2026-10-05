@@ -174,6 +174,8 @@ class AppContainer(containers.DeclarativeContainer):
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
         privacy_collections=privacy_collections,
+        retention_collections=adapters.collections,
+        retention_call_adapters=adapters.calls,
         invoicing_collections=invoicing_collections,
         payment_collections=adapters.collections,
         operations_collections=operations_collections,

@@ -26,6 +26,23 @@ from app.schemas.dto.privacy.csv_exports import (
     CsvExportPageQuery,
     StartCsvExportCommand,
 )
+from app.schemas.dto.retention import (
+    PrivacySettingsQuery,
+    PrivacySettingsView,
+    UpdatePrivacySettingsCommand,
+)
+from app.use_cases.compliance.erase_processor_copies_use_case import (
+    EraseProcessorCopiesUseCase,
+)
+from app.use_cases.compliance.privacy_settings.get_privacy_settings_use_case import (
+    GetPrivacySettingsUseCase,
+)
+from app.use_cases.compliance.privacy_settings.update_privacy_settings_use_case import (  # noqa: E501
+    UpdatePrivacySettingsUseCase,
+)
+from app.use_cases.compliance.retention.purge_expired_personal_data_use_case import (  # noqa: E501
+    PurgeExpiredPersonalDataUseCase,
+)
 from app.use_cases.exports.business_archive import BusinessArchiveBuilder
 from app.use_cases.exports.download_business_export_use_case import (
     DownloadBusinessExportUseCase,
@@ -52,7 +69,8 @@ from app.utilities.privacy.export_link_signer import BusinessExportLinkSigner
 class PrivacyUseCasesContainer(containers.DeclarativeContainer):
     """
     Exports of a business's data: the cabinet's tables as streamed CSV and
-    the full export of every collection.
+    the full export of every collection; and its retention: Settings →
+    Privacy, the nightly purge, the deletions at the sub-processors.
     """
 
     adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
@@ -161,4 +179,59 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
             archive_storage=adapters.export_archive_storage,
             wall_clock=time_provider.microsecond_wall_clock,
         )
+    )
+
+    # --- Retention (1123): the owner's periods, the nightly purge, and the
+    # queued deletions at the sub-processors.
+    get_privacy_settings_use_case: Factory[
+        UseCaseContract[PrivacySettingsQuery, PrivacySettingsView]
+    ] = Factory(
+        GetPrivacySettingsUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        privacy_settings_repo=repositories.privacy_settings_repo,
+        purge_state_repo=repositories.retention_purge_state_repo,
+        processor_erasure=facilitators.processor_erasure,
+    )
+    update_privacy_settings_use_case: Factory[
+        UseCaseContract[UpdatePrivacySettingsCommand, PrivacySettingsView]
+    ] = Factory(
+        UpdatePrivacySettingsUseCase,
+        authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        privacy_settings_repo=repositories.privacy_settings_repo,
+        purge_state_repo=repositories.retention_purge_state_repo,
+        processor_erasure=facilitators.processor_erasure,
+        audit_log_repo=repositories.audit_log_repo,
+        step_up=utilities.step_up_guard,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    purge_expired_personal_data_use_case: Factory[
+        UseCaseContract[JobTick, JobReport]
+    ] = Factory(
+        PurgeExpiredPersonalDataUseCase,
+        business_repo=repositories.business_repo,
+        privacy_settings_repo=repositories.privacy_settings_repo,
+        purge_state_repo=repositories.retention_purge_state_repo,
+        quiet_conversation_repo=repositories.quiet_conversation_repo,
+        llm_turn_repo=repositories.expired_llm_turn_repo,
+        note_repo=repositories.conversation_note_repo,
+        call_repo=repositories.call_repo,
+        recording_storage=adapters.recording_storage,
+        message_repo=repositories.expired_message_repo,
+        message_media_repo=repositories.message_media_repo,
+        media_storage=adapters.media.media_storage,
+        missed_call_repo=repositories.expired_missed_call_repo,
+        lead_repo=repositories.expiring_lead_repo,
+        booking_repo=repositories.expiring_booking_repo,
+        handoff_repo=repositories.expiring_handoff_repo,
+        processor_erasure=facilitators.processor_erasure,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    erase_processor_copies_use_case: Factory[
+        UseCaseContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        EraseProcessorCopiesUseCase,
+        processor_erasure=facilitators.processor_erasure,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

@@ -3,6 +3,15 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class AuditRecordCount(BaseConstrainedTypedInt):
+    """
+    How many records one audited operation covered, when it covered many
+    at once (a retention purge, a deletion at a sub-processor).
+    """
+
+    ge = 0
+
+
 class DeletedRecordingCount(BaseConstrainedTypedInt):
     """Number of call recording files removed from recording storage."""
 

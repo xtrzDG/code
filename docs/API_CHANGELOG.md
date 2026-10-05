@@ -90,6 +90,30 @@ Spec: `8e599fcdb6b69fee`
   `search`, `matching_count` counts the matches among the clients one
   request looked at (at most 2,000), and `next_cursor` goes on searching.
 
+## 2026-10-05 — retention: Settings → Privacy periods, the erasure reaches the sub-processors
+
+Spec: `db25fd7f093858f0`
+
+- **Added** `GET /v1/businesses/{business_id}/privacy-settings` and
+  `PUT /v1/businesses/{business_id}/privacy-settings` (owners; body
+  `{conversation_retention_days, llm_turn_retention_days}`, 30–3650 and
+  1–30 days): `PrivacySettingsView` with the two periods (defaults 730 and
+  30), `recording_retention_days`, `last_purge` (`ran_at` and the
+  `counts` of the latest nightly purge, or null) and `erasure_processors`
+  (the sub-processors whose copies are deleted with the platform's own:
+  `langfuse`, `elevenlabs`). A shorter period answers 401
+  `step_up_required` to a session that signed in long ago. Audited.
+- **Changed** `GET /v1/public/chat/{address}` (`HostedChatView`): adds
+  `conversation_retention_days` and `llm_turn_retention_days`, the periods
+  the hosted chat's privacy notice names.
+- The erasure of a contact (`DELETE …/contacts/{contact_id}`, still 204)
+  now also queues the deletion of its copies at Langfuse and ElevenLabs
+  (audited in the business's log as `langfuse_copies` and
+  `elevenlabs_copies`).
+- **Changed** `GET /v1/businesses/{business_id}/audit-log`
+  (`AuditLogEntryView`): adds `record_count`, how many records a retention
+  purge or a deletion at a sub-processor covered (null for other entries).
+
 ## 2026-10-04 — wave 11 together: guided channels, help and status, teaching, exports, invoices
 
 Spec: `8868b933a62e22f4`

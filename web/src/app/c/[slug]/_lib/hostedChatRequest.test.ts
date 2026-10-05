@@ -17,7 +17,8 @@ const VIEW: HostedChatView = {
   languages: [
     { tag: "ka", native_name: "ქართული", direction: "ltr" },
     { tag: "ar", native_name: "العربية", direction: "rtl" },
-  ],
+  ],  conversation_retention_days: 730,
+  llm_turn_retention_days: 30,
 };
 
 beforeEach(() => {

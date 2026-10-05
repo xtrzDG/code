@@ -56,6 +56,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
     ip: "IP მისამართი",
     system: "სისტემა",
     platform: "პლატფორმის თანამშრომელი",
+    recordCount: { one: "{count} ჩანაწერი", other: "{count} ჩანაწერი" },
     actions: {
       view: "ნახვა",
       create: "შექმნა",
@@ -99,6 +100,14 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       assistant_settings: "მომხმარებლების მეხსიერება",
       feedback_request: "შეფასების მოთხოვნები",
       incident: "პლატფორმის ინციდენტი",
+      messages: "შეტყობინებები",
+      llm_turns: "AI მიმართვების ჩანაწერები",
+      message_media: "კლიენტების ფაილები",
+      missed_call: "გამოტოვებული ზარები",
+      call_recording: "ზარის ჩანაწერი",
+      privacy_settings: "მონაცემების შენახვის ვადები",
+      langfuse_copies: "ასლები Langfuse-ში",
+      elevenlabs_copies: "ასლები ElevenLabs-ში",
     },
   },
   roles: {

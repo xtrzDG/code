@@ -8,7 +8,10 @@ from typing import TypedDict
 
 from app.schemas.constants.observability import LogFormat
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
-from app.schemas.typings.platform.booleans import IsLlmContentTraced
+from app.schemas.typings.platform.booleans import (
+    IsLlmContentTraced,
+    IsLlmRawTextTraced,
+)
 from app.schemas.typings.platform.constrained_floats import TraceSampleRate
 from app.schemas.typings.platform.constrained_strings import ReleaseVersion
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
@@ -39,6 +42,7 @@ class ObservabilitySettingsSection(TypedDict):
     log_format: LogFormat
     langfuse_host: PublicBaseUrl
     is_llm_content_traced: IsLlmContentTraced
+    is_llm_raw_text_traced: IsLlmRawTextTraced
 
 
 def read_observability_settings(
@@ -69,6 +73,11 @@ def read_observability_settings(
         ),
         is_llm_content_traced=IsLlmContentTraced(
             read_boolean(environment_variables, "LANGFUSE_CAPTURE_CONTENT", False)
+        ),
+        # Traced texts keep phone numbers and e-mail addresses only on
+        # request (support debugging a number the assistant got wrong).
+        is_llm_raw_text_traced=IsLlmRawTextTraced(
+            read_boolean(environment_variables, "LANGFUSE_RAW_TEXT", False)
         ),
     )
 

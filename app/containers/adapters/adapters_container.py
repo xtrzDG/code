@@ -229,6 +229,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         monotonic_clock=time_provider.monotonic_clock,
         is_content_traced=config.app_settings.provided.is_llm_content_traced,
+        is_raw_text_traced=config.app_settings.provided.is_llm_raw_text_traced,
     )
     # Signal counters of the platform alerts; every model call counted.
     monitoring: MonitoringAdaptersContainer = Container(  # type: ignore[assignment]

@@ -6,7 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
-from app.containers.privacy_factories import build_suppression_list
+from app.containers.privacy_facilitators import PrivacyFacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.sign_in_facilitators import SignInFacilitatorsContainer
@@ -53,9 +53,6 @@ from app.facilitators.observability.job_monitor_factory import (
 )
 from app.facilitators.observability.sentry_error_reporting_facilitator import (
     SentryErrorReportingFacilitator,
-)
-from app.facilitators.privacy.suppression_list_facilitator import (
-    SuppressionListFacilitator,
 )
 from app.facilitators.product_events.record_product_event_facilitator import (
     RecordProductEventFacilitator,
@@ -235,12 +232,16 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # Customers who said STOP, as digests kept through erasure (1113).
-    suppression_list: Singleton[SuppressionListFacilitator] = Singleton(
-        build_suppression_list,
-        settings=config.app_settings,
-        suppression_entry_repo=repositories.suppression_entry_repo,
+    # Data-subject rights: the suppression list, the sub-processors' copies.
+    privacy: PrivacyFacilitatorsContainer = Container(  # type: ignore[assignment]
+        PrivacyFacilitatorsContainer,
+        clients=clients,
+        config=config,
+        repositories=repositories,
+        job_queue=job_queue_facilitator,
     )
+    suppression_list = privacy.suppression_list
+    processor_erasure = privacy.processor_erasure
     # The claim check of the reply guard: a cheap verifier model
     # (LLM_VERIFIER_MODEL_ID; none: the check is off).
     claim_check: Singleton[ClaimCheckFacilitator] = Singleton(

@@ -11,6 +11,29 @@ class BusinessExportId(BasePrefixedTypedId):
     prefix = "business_export"
 
 
+class BusinessPrivacySettingsId(BasePrefixedTypedId):
+    """
+    Identifier of the privacy settings of one business (Settings → Privacy).
+
+    Derived (UUID v5) from the business, so a business has one settings
+    document and reading it is one read by id.
+    """
+
+    prefix = "privacy_settings"
+    uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
+
+
+class RetentionPurgeStateId(BasePrefixedTypedId):
+    """
+    Identifier of how far the retention purge of one business got.
+
+    Derived (UUID v5) from the business: one state document per business.
+    """
+
+    prefix = "retention_purge"
+    uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
+
+
 class SuppressionEntryId(BasePrefixedTypedId):
     """
     Identifier of one entry of a business's suppression list.

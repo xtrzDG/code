@@ -1,7 +1,7 @@
 {
   "collection": "audit_log_entries",
   "document_type": "AuditLogEntryDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -80,8 +80,20 @@
         ],
         "default": null
       },
+      "record_count": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "updated_at": {

@@ -186,6 +186,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         outbound_message_repo=repositories.outbound_message_repo,
         inbound_event_repo=repositories.inbound_event_repo,
         feedback_request_repo=repositories.feedback_request_repo,
+        processor_erasure=facilitators.processor_erasure,
     )
     purge_expired_message_media_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]

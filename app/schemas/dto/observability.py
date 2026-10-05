@@ -7,6 +7,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.conversations import LlmStopReason
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
@@ -29,6 +30,9 @@ class LlmGenerationTrace(ImmutableDTO):
 
     Texts are present only when content tracing is enabled; by default the
     journal keeps metadata only, because conversations hold personal data.
+    The business, contact and conversation the call answered (from the log
+    context) tag the trace, so its copies can be found and deleted with
+    theirs.
     """
 
     trace_id: CorrelationId
@@ -48,6 +52,9 @@ class LlmGenerationTrace(ImmutableDTO):
     input_text: MessageText | None = None
     output_text: MessageText | None = None
     error: JobErrorText | None = None
+    business_id: BusinessId | None = None
+    contact_id: ContactId | None = None
+    conversation_id: ConversationId | None = None
 
 
 class LogContext(ImmutableDTO):
@@ -60,6 +67,7 @@ class LogContext(ImmutableDTO):
     request_id: RequestId | None = None
     business_id: BusinessId | None = None
     conversation_id: ConversationId | None = None
+    contact_id: ContactId | None = None
     channel: ChannelKind | None = None
     job_name: JobName | None = None
     job_id: QueuedJobId | None = None

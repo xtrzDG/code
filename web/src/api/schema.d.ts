@@ -1993,6 +1993,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/privacy-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Privacy Settings */
+        get: operations["get_privacy_settings_v1_businesses__business_id__privacy_settings_get"];
+        /** Update Privacy Settings */
+        put: operations["update_privacy_settings_v1_businesses__business_id__privacy_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/profile": {
         parameters: {
             query?: never;
@@ -4226,6 +4244,8 @@ export interface components {
             ip_address?: string | null;
             /** Occurred At */
             occurred_at: number;
+            /** Record Count */
+            record_count?: number | null;
         };
         /**
          * AuditLogPage
@@ -7639,7 +7659,9 @@ export interface components {
          *     its current address (`slug`; a page opened under an older address or
          *     the id moves there), its name, colour and customer languages, whether
          *     the chat is on, where the widget script and API live (None while
-         *     APP_BASE_URL is not set), and the privacy notice.
+         *     APP_BASE_URL is not set), and the privacy notice with how long the
+         *     business keeps conversations and the records of model calls (its
+         *     Settings → Privacy, the defaults until it chose).
          */
         HostedChatView: {
             /** Accent Color */
@@ -7650,12 +7672,22 @@ export interface components {
             business_id: string;
             /** Business Name */
             business_name: string;
+            /**
+             * Conversation Retention Days
+             * @default 730
+             */
+            conversation_retention_days: number;
             /** Default Language */
             default_language: string;
             /** Is Enabled */
             is_enabled: boolean;
             /** Languages */
             languages: components["schemas"]["WidgetLanguageView"][];
+            /**
+             * Llm Turn Retention Days
+             * @default 30
+             */
+            llm_turn_retention_days: number;
             position?: components["schemas"]["WidgetPosition"] | null;
             /** Privacy Url */
             privacy_url?: string | null;
@@ -9995,6 +10027,24 @@ export interface components {
             status: components["schemas"]["PostCallEventStatus"];
         };
         /**
+         * PrivacySettingsView
+         * @description Settings → Privacy: how long conversations and the records of model
+         *     calls are kept, how long call recordings are kept (Settings → General),
+         *     the latest purge, and the sub-processors whose copies are deleted with
+         *     the platform's own (only those this platform is set up with).
+         */
+        PrivacySettingsView: {
+            /** Conversation Retention Days */
+            conversation_retention_days: number;
+            /** Erasure Processors */
+            erasure_processors?: components["schemas"]["SubProcessor"][];
+            last_purge?: components["schemas"]["RetentionPurgeView"] | null;
+            /** Llm Turn Retention Days */
+            llm_turn_retention_days: number;
+            /** Recording Retention Days */
+            recording_retention_days: number;
+        };
+        /**
          * ProfileAnswer
          * @description Owner's answer to one niche-specific profile question.
          */
@@ -10367,6 +10417,66 @@ export interface components {
             unit_count: number;
             /** Updated At */
             updated_at: number;
+        };
+        /**
+         * RetentionPurgeCounts
+         * @description What one run of a business's retention purge deleted or anonymized.
+         */
+        RetentionPurgeCounts: {
+            /**
+             * Anonymized Bookings
+             * @default 0
+             */
+            anonymized_bookings: number;
+            /**
+             * Anonymized Handoffs
+             * @default 0
+             */
+            anonymized_handoffs: number;
+            /**
+             * Anonymized Leads
+             * @default 0
+             */
+            anonymized_leads: number;
+            /**
+             * Deleted Llm Turns
+             * @default 0
+             */
+            deleted_llm_turns: number;
+            /**
+             * Deleted Media
+             * @default 0
+             */
+            deleted_media: number;
+            /**
+             * Deleted Messages
+             * @default 0
+             */
+            deleted_messages: number;
+            /**
+             * Deleted Missed Calls
+             * @default 0
+             */
+            deleted_missed_calls: number;
+            /**
+             * Deleted Notes
+             * @default 0
+             */
+            deleted_notes: number;
+            /**
+             * Erased Calls
+             * @default 0
+             */
+            erased_calls: number;
+        };
+        /**
+         * RetentionPurgeView
+         * @description The latest run of the business's retention purge and what it removed.
+         */
+        RetentionPurgeView: {
+            counts: components["schemas"]["RetentionPurgeCounts"];
+            /** Ran At */
+            ran_at: number;
         };
         /**
          * RevenueSource
@@ -11110,6 +11220,18 @@ export interface components {
          * @enum {string}
          */
         StepUpMethod: "totp" | "login_code";
+        /**
+         * SubProcessor
+         * @description The sub-processors that may keep copies of a business's customer data
+         *     outside the platform's own database and storage, and so are asked to
+         *     delete them when the platform deletes its own (an erasure, the
+         *     retention purge): Langfuse (traces of model calls), ElevenLabs (call
+         *     audio and transcripts), and Meta and Telegram, whose copies are the
+         *     customer's own chat and cannot be deleted by the business (see
+         *     `messaging_platform_erasure_adapter`).
+         * @enum {string}
+         */
+        SubProcessor: "langfuse" | "elevenlabs" | "meta" | "telegram";
         /**
          * SubscriptionStatus
          * @description Subscription state driven by the payment provider.
@@ -25655,6 +25777,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyNotificationSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_privacy_settings_v1_businesses__business_id__privacy_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivacySettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_privacy_settings_v1_businesses__business_id__privacy_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Conversation Retention Days */
+                    conversation_retention_days: number;
+                    /** Llm Turn Retention Days */
+                    llm_turn_retention_days: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivacySettingsView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
