@@ -9,9 +9,22 @@
 
 import { readFileSync } from "node:fs";
 
+import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
+
 import { bookThroughWebChat, bookingDate, chatAnswers, dayAfter } from "./support/booking-page";
 import { DEMO_RESTAURANT, signInAsDemoOwner } from "./support/demo";
 import { expect, test } from "./support/fixtures";
+import { waitForNetworkQuiet } from "./support/network";
+
+/** Serious and critical WCAG 2.1 A/AA violations on the page (axe-core). */
+async function seriousViolations(page: Page): Promise<string[]> {
+  await waitForNetworkQuiet(page);
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  return results.violations
+    .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
+    .map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`);
+}
 
 test("an English guest opens the link, saves the calendar file and moves the booking", async ({ page, request }) => {
   const { businessId } = await signInAsDemoOwner(request);
@@ -124,6 +137,21 @@ test.describe("in Hebrew", () => {
     await move.getByRole("button", { name: "סגירה" }).click();
     await expect(move).toBeHidden();
   });
+});
+
+test("the page passes the accessibility audit in the light and the dark scheme", async ({ page, request }) => {
+  const { businessId } = await signInAsDemoOwner(request);
+  const booked = await bookThroughWebChat(request, businessId, "en");
+
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme });
+    await page.goto(booked.path);
+    await expect(page.getByRole("heading", { level: 1, name: "Your booking" })).toBeVisible();
+    expect(await seriousViolations(page), colorScheme).toEqual([]);
+  }
+  await page.getByRole("button", { name: "Change time" }).click();
+  await expect(page.getByRole("region", { name: "Choose a new time" }).getByRole("button").first()).toBeVisible();
+  expect(await seriousViolations(page), "with the move panel open").toEqual([]);
 });
 
 test("a link that does not work says so", async ({ page }) => {
