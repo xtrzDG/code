@@ -1,7 +1,7 @@
 {
   "collection": "audit_log_entries",
   "document_type": "AuditLogEntryDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -20,7 +20,13 @@
           "support_access_start",
           "support_access_end",
           "session_revoked",
-          "platform_admin_changed"
+          "platform_admin_changed",
+          "admin_trial_extended",
+          "admin_discount_given",
+          "admin_credit_granted",
+          "admin_setup_fee_waived",
+          "admin_invoice_marked_paid",
+          "admin_plan_overridden"
         ],
         "type": "string"
       },
@@ -80,6 +86,20 @@
         ],
         "default": null
       },
+      "reason": {
+        "anyOf": [
+          {
+            "maxLength": 300,
+            "minLength": 8,
+            "pattern": "^\\S[\\s\\S]*\\S$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "record_count": {
         "anyOf": [
           {
@@ -93,7 +113,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "updated_at": {

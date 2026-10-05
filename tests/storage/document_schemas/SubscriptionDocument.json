@@ -1,7 +1,7 @@
 {
   "collection": "subscriptions",
   "document_type": "SubscriptionDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -25,6 +25,41 @@
         "pattern": "^[A-Z]{3}$",
         "type": "string"
       },
+      "discount": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "ends_at": {
+                "type": "integer"
+              },
+              "granted_at": {
+                "type": "integer"
+              },
+              "granted_by": {
+                "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "percent": {
+                "maximum": 100,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "percent",
+              "ends_at",
+              "granted_by",
+              "granted_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "grace_until": {
         "anyOf": [
           {
@@ -39,6 +74,10 @@
       "id": {
         "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
+      },
+      "is_setup_fee_waived": {
+        "default": false,
+        "type": "boolean"
       },
       "period_end": {
         "type": "integer"
@@ -70,7 +109,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "setup_option": {

@@ -7,6 +7,9 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
+from app.containers.adapters.client_care_collections_container import (
+    ClientCareCollectionsContainer,
+)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -182,8 +185,17 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # The admin's credit ledger, notes, health changes and digests (1143).
+    client_care_collections: ClientCareCollectionsContainer = Container(  # type: ignore[assignment]
+        ClientCareCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        client_care_collections=client_care_collections,
         legal_collections=legal_collections,
         privacy_collections=privacy_collections,
         retention_collections=adapters.collections,

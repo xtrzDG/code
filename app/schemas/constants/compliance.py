@@ -12,6 +12,10 @@ class AuditAction(StrEnum):
     client's cabinet (with the reason, the address and how it ended);
     SESSION_REVOKED (a person ended sessions of theirs) and
     PLATFORM_ADMIN_CHANGED (the admin team changed) name no business.
+    The ADMIN_* actions are a platform admin's changes to a client's
+    account, each with the admin's reason: a longer trial, a discount,
+    credit, a waived setup fee, an invoice paid by bank transfer or in
+    cash, a plan set by hand.
     """
 
     VIEW = "view"
@@ -28,3 +32,9 @@ class AuditAction(StrEnum):
     SUPPORT_ACCESS_END = "support_access_end"
     SESSION_REVOKED = "session_revoked"
     PLATFORM_ADMIN_CHANGED = "platform_admin_changed"
+    ADMIN_TRIAL_EXTENDED = "admin_trial_extended"
+    ADMIN_DISCOUNT_GIVEN = "admin_discount_given"
+    ADMIN_CREDIT_GRANTED = "admin_credit_granted"
+    ADMIN_SETUP_FEE_WAIVED = "admin_setup_fee_waived"
+    ADMIN_INVOICE_MARKED_PAID = "admin_invoice_marked_paid"
+    ADMIN_PLAN_OVERRIDDEN = "admin_plan_overridden"

@@ -69,6 +69,7 @@ from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
 from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
+from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
@@ -276,6 +277,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *QUALITY_COLLECTIONS,  # The judge's scores of real conversations (1120).
     *MEMORY_COLLECTIONS,  # How the assistant remembers customers (1121).
     *LEGAL_COLLECTIONS,  # Sub-processor change notices (1124).
+    *CLIENT_CARE_COLLECTIONS,  # Credits, notes, health changes, digests (1143).
 )
 
 

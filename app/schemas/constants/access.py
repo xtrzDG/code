@@ -29,6 +29,8 @@ class PlatformAdminPermission(StrEnum):
     VIEW_OPERATIONS = "view_operations"
     MANAGE_OPERATIONS = "manage_operations"
     MANAGE_ADMINS = "manage_admins"
+    MANAGE_CLIENT_BILLING = "manage_client_billing"
+    WRITE_CLIENT_NOTES = "write_client_notes"
 
 
 class SupportAccessKind(StrEnum):

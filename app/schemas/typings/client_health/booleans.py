@@ -5,3 +5,4 @@ Example:
 """
 
 IsClientLosingMoney = bool
+IsClientNotePinned = bool

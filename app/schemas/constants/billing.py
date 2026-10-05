@@ -110,3 +110,24 @@ class ExchangeRateSource(StrEnum):
     NBG = "nbg"
     ECB = "ecb"
     PLANNING = "planning"
+
+
+class ManualPaymentMethod(StrEnum):
+    """
+    How money a platform admin recorded by hand arrived, outside the
+    payment provider: a BANK_TRANSFER to the platform's account, or CASH.
+    """
+
+    BANK_TRANSFER = "bank_transfer"
+    CASH = "cash"
+
+
+class BillingCreditKind(StrEnum):
+    """
+    One line of a business's credit ledger: credit a platform admin
+    GRANTED (with the reason), or credit an invoice USED when it was
+    issued (given back by voiding that invoice).
+    """
+
+    GRANTED = "granted"
+    USED = "used"

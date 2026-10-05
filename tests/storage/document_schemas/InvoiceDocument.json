@@ -1,7 +1,7 @@
 {
   "collection": "invoices",
   "document_type": "InvoiceDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -88,6 +88,18 @@
       "created_at": {
         "type": "integer"
       },
+      "credit_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "currency_code": {
         "maxLength": 3,
         "minLength": 3,
@@ -96,6 +108,31 @@
       },
       "description": {
         "type": "string"
+      },
+      "discount_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "discount_percent": {
+        "anyOf": [
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "id": {
         "pattern": "^invoice_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -131,6 +168,46 @@
           "type": "object"
         },
         "type": "array"
+      },
+      "manual_payment": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "method": {
+                "enum": [
+                  "bank_transfer",
+                  "cash"
+                ],
+                "type": "string"
+              },
+              "recorded_at": {
+                "type": "integer"
+              },
+              "recorded_by": {
+                "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "reference": {
+                "maxLength": 120,
+                "minLength": 1,
+                "pattern": "^\\S(.*\\S)?$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "reference",
+              "recorded_by",
+              "recorded_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "number": {
         "anyOf": [
@@ -214,7 +291,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "seller": {
