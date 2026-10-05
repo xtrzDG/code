@@ -1,6 +1,6 @@
 """
-Whether the assistant answers a message: handoffs, the injection brake and
-the hourly limit.
+Whether the assistant answers a message: a blocked customer, handoffs, the
+injection brake and the hourly limit.
 """
 
 from datetime import timedelta
@@ -40,11 +40,15 @@ def choose_turn_gate(
     injection_flag_limit: InjectionFlagLimit,
 ) -> TurnGate:
     """
-    Staff own a conversation in HANDOFF (silence in chat, a call-back
-    promise on the phone); a contact who keeps trying prompt injection, or
-    is past the hourly per-contact limit, is answered once with a stop
-    message, then the assistant stays silent.
+    A customer the owner blocked hears nothing (Customers → block). Staff
+    own a conversation in HANDOFF (silence in chat, a call-back promise on
+    the phone); a contact who keeps trying prompt injection, or is past the
+    hourly per-contact limit, is answered once with a stop message, then
+    the assistant stays silent.
     """
+
+    if contact.block is not None and not conversation.is_sandbox:
+        return TurnGate.BLOCKED_SILENCE
 
     if conversation.status is ConversationStatus.HANDOFF:
         return (

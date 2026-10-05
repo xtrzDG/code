@@ -116,7 +116,9 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
             ListContactsUseCase,
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
             contact_repo=repositories.contact_repo,
+            card_repo=repositories.contact_repo,
             contact_activity_repo=repositories.contact_activity_repo,
+            customer_settings_repo=repositories.customer_settings_repo,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
             phone_number_parser=utilities.phone_number_parser,
@@ -128,6 +130,8 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
             authorize_business_access=account_use_cases.authorize_business_access_use_case,
             contact_repo=repositories.contact_repo,
             contact_activity_repo=repositories.contact_activity_repo,
+            customer_history_repo=repositories.customer_history_repo,
+            customer_settings_repo=repositories.customer_settings_repo,
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
         )

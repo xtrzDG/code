@@ -154,6 +154,9 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       outbound_message: "Исходящее сообщение",
       channel_message_receipt: "Отчёт о доставке",
       web_vital_sample: "Замеры скорости страниц",
+      customer_search: "Поиск по клиентам",
+      customer_segment: "Сегмент клиентов",
+      customer_settings: "Настройки клиентов",
     },
   },
   roles: {

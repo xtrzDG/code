@@ -29,6 +29,9 @@ from app.containers.orchestrators.compliance_orchestrators import (
 from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
 )
+from app.containers.orchestrators.customer_orchestrators import (
+    CustomerOrchestratorsContainer,
+)
 from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsContainer
 from app.containers.orchestrators.feedback_orchestrators import (
     FeedbackOrchestratorsContainer,
@@ -131,6 +134,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     memory: MemoryOrchestratorsContainer = Container(  # type: ignore[assignment]
         MemoryOrchestratorsContainer,
         memory_use_cases=use_cases.memory,
+    )
+    customers: CustomerOrchestratorsContainer = Container(  # type: ignore[assignment]
+        CustomerOrchestratorsContainer,
+        customer_use_cases=use_cases.customers,
     )
     knowledge: KnowledgeOrchestratorsContainer = Container(  # type: ignore[assignment]
         KnowledgeOrchestratorsContainer,

@@ -518,3 +518,15 @@ _.messages_left  # app/schemas/dto/public_demo.py (PublicDemoReply)
 # security measure, read by tests/legal (every path exists).
 _.latest_acceptance  # app/schemas/dto/compliance.py (DpaStatusView)
 _.implemented_by  # app/schemas/dto/security_measures.py (SecurityMeasure)
+
+# Customers (R11): who added a tag and when, and who blocked a customer, are
+# kept for the audit trail; the masked phone, the segment's member count and
+# the timeline's statuses are response fields the Customers pages read.
+_.added_at  # app/schemas/domain/contacts.py (ContactTagMark)
+_.blocked_by  # app/schemas/domain/contacts.py (ContactBlock)
+_.masked_phone_number  # app/schemas/dto/contacts.py (ContactSummaryView)
+_.is_phone_masked  # app/schemas/dto/contacts.py (ContactSummaryView)
+_.member_count  # app/schemas/dto/customers/customer_segments.py (SegmentPreview)
+_.is_count_exact  # app/schemas/dto/customers/customer_segments.py (SegmentPreview)
+_.conversation_status  # app/schemas/dto/customers/customer_timeline.py
+_.call_outcome  # app/schemas/dto/customers/customer_timeline.py

@@ -24,6 +24,11 @@ from app.repositories.conversation_repositories import (
     LlmTurnRepository,
     MessageRepository,
 )
+from app.repositories.customer_history_repository import CustomerHistoryRepository
+from app.repositories.customer_repositories import (
+    CustomerSegmentRepository,
+    CustomerSettingsRepository,
+)
 from app.repositories.inbox_repositories import ConversationNoteRepository
 from app.repositories.mfa_repositories import (
     MfaChallengeRepository,
@@ -48,6 +53,8 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     MessageDocument,
 )
+from app.schemas.domain.customer_segments import CustomerSegmentDocument
+from app.schemas.domain.customer_settings import CustomerSettingsDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.mfa import (
     MfaChallengeDocument,
@@ -130,15 +137,28 @@ class AccountsRepositories:
         self.llm_turn_repo = LlmTurnRepository(
             InMemoryDocumentCollectionAdapter[LlmTurnDocument](LlmTurnDocument)
         )
-        self.call_repo = CallRepository(
-            InMemoryDocumentCollectionAdapter[CallDocument](CallDocument)
-        )
+        calls = InMemoryDocumentCollectionAdapter[CallDocument](CallDocument)
+        self.call_repo = CallRepository(calls)
         bookings = InMemoryDocumentCollectionAdapter[BookingDocument](BookingDocument)
         self.booking_repo = BookingRepository(bookings)
         leads = InMemoryDocumentCollectionAdapter[LeadDocument](LeadDocument)
         self.lead_repo = LeadRepository(leads)
         self.contact_activity_repo = ContactActivityRepository(
             conversations, bookings, leads
+        )
+        # Customers (1140): what customers did, segments, the team's settings.
+        self.customer_history_repo = CustomerHistoryRepository(
+            conversations, bookings, calls
+        )
+        self.customer_settings_repo = CustomerSettingsRepository(
+            InMemoryDocumentCollectionAdapter[CustomerSettingsDocument](
+                CustomerSettingsDocument
+            )
+        )
+        self.customer_segment_repo = CustomerSegmentRepository(
+            InMemoryDocumentCollectionAdapter[CustomerSegmentDocument](
+                CustomerSegmentDocument
+            )
         )
         self.handoff_repo = HandoffRepository(
             InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)

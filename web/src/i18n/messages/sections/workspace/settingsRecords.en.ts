@@ -137,6 +137,9 @@ export const settingsRecordsEn = {
       outbound_message: "Outgoing message",
       channel_message_receipt: "Delivery receipt",
       web_vital_sample: "Page speed samples",
+      customer_search: "Customer search",
+      customer_segment: "Customer segment",
+      customer_settings: "Customer settings",
     },
   },
   roles: {

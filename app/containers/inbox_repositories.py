@@ -34,7 +34,8 @@ class InboxRepositoriesContainer(containers.DeclarativeContainer):
     """
 
     inbox_collections: InboxCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
-    collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
+    # The conversations, bookings and calls a customer's history is read from.
+    customer_collections: DocumentCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]
 
     conversation_note_repo: Singleton[ConversationNoteRepository] = Singleton(
         ConversationNoteRepository,
@@ -64,7 +65,7 @@ class InboxRepositoriesContainer(containers.DeclarativeContainer):
     )
     customer_history_repo: Singleton[CustomerHistoryRepository] = Singleton(
         CustomerHistoryRepository,
-        conversation_collection=collections.conversation_collection,
-        booking_collection=collections.booking_collection,
-        call_collection=collections.call_collection,
+        conversation_collection=customer_collections.conversation_collection,
+        booking_collection=customer_collections.booking_collection,
+        call_collection=customer_collections.call_collection,
     )

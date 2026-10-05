@@ -139,6 +139,9 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       outbound_message: "გამავალი შეტყობინება",
       channel_message_receipt: "მიწოდების დადასტურება",
       web_vital_sample: "გვერდების სიჩქარის გაზომვები",
+      customer_search: "კლიენტების ძიება",
+      customer_segment: "კლიენტების სეგმენტი",
+      customer_settings: "კლიენტების პარამეტრები",
     },
   },
   roles: {

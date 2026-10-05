@@ -1,13 +1,13 @@
 -- 1140_customer_cards_and_segments
 --
--- workshop:no-transaction
---
 -- Customers (R11-CUSTOMERS-SEARCH): the team's card on a customer, saved
 -- segments and the team's customer settings. Online-safe
--- (migrations/README.md): this file runs statement by statement outside a
--- transaction, every statement idempotent (a failed try runs it again from
--- the top), and nothing in it rewrites, scans or locks a busy table for
--- longer than a catalog change.
+-- (migrations/README.md): one transaction of catalog changes only, every
+-- statement idempotent; nothing in it rewrites, scans or locks a busy
+-- table for longer than a catalog change (the runner's lock_timeout bounds
+-- the wait), and it builds no index (the filter columns narrow a page the
+-- last-activity index already reads; the tag keys share the lookup key
+-- table's index).
 --
 -- contacts (version 4): the card fields
 --   tags[].tag   kept in workshop.document_lookup_keys by the

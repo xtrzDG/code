@@ -86,6 +86,7 @@ modules =
     app.use_cases.profiles
     app.use_cases.quality
     app.use_cases.resources
+    app.use_cases.search
     app.use_cases.setup
     app.use_cases.sharing
     app.use_cases.telemetry

@@ -13,6 +13,7 @@ looked at, so "Load more" searches further back (the page may then hold
 fewer rows than asked, even none), as the conversation feed's search does.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
@@ -50,8 +51,12 @@ def search_contacts(
     search: ContactSearchText,
     search_phone: E164PhoneNumber | None,
     page: PageRequest,
+    accept: Callable[[ContactDocument], bool] = lambda _contact: True,
 ) -> ContactSearchPage:
     """
+    `accept` narrows the matches further (the list's tag, VIP and blocked
+    filters).
+
     Raises:
         ValidationFailedError: the cursor is broken.
     """
@@ -59,9 +64,13 @@ def search_contacts(
     size: int = int(page.size)
     # One row of every page is kept for the walk, so the exact matches a
     # first page shows are the same ones later pages leave out.
-    leading: list[ContactDocument] = find_exact_matches(
-        contact_repo, business_id, search, search_phone
-    )[: size - 1]
+    leading: list[ContactDocument] = [
+        contact
+        for contact in find_exact_matches(
+            contact_repo, business_id, search, search_phone
+        )
+        if accept(contact)
+    ][: size - 1]
     shown_ids: set[ContactId] = {contact.id for contact in leading}
     matches: list[ContactDocument] = [] if page.cursor is not None else list(leading)
     after: KeysetPosition | None = read_slice(page).after
@@ -75,8 +84,10 @@ def search_contacts(
         for contact in batch:
             scanned += 1
             last_scanned = contact
-            if contact.id in shown_ids or not matches_contact_search(
-                contact, search, search_phone
+            if (
+                contact.id in shown_ids
+                or not accept(contact)
+                or not matches_contact_search(contact, search, search_phone)
             ):
                 continue
 

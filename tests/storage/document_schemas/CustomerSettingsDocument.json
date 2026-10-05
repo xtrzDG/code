@@ -13,7 +13,7 @@
         "type": "integer"
       },
       "id": {
-        "pattern": "^custset_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "pattern": "^customer_settings_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
       },
       "known_tags": {

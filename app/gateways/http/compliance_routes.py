@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from typed_time_provider import Microseconds
 
 from app.contracts.operator_contract import OperatorContract
@@ -15,6 +15,7 @@ from app.gateways.http.strict_request_parsing import (
 )
 from app.gateways.http.user_authentication import CurrentUserDependency
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.customers import CustomerListFilter
 from app.schemas.dto.businesses import BusinessQuery
 from app.schemas.dto.compliance import (
     AcceptDpaCommand,
@@ -37,7 +38,10 @@ from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
 from app.schemas.typings.compliance.strings import AuditEntityName
-from app.schemas.typings.contacts.constrained_strings import ContactSearchText
+from app.schemas.typings.contacts.constrained_strings import (
+    ContactSearchText,
+    CustomerTag,
+)
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
@@ -73,10 +77,11 @@ def build_compliance_router(
         GET    /v1/legal/dpa/{version}?language=                agreement text
         GET    /v1/businesses/{business_id}/audit-log           owner: newest first
                ?limit=&cursor=&action=&entity=&actor_id=&since=&until=
-        GET    /v1/businesses/{business_id}/contacts?search=&limit=&cursor=
-                                                                owner: customers
+        GET    /v1/businesses/{business_id}/contacts?search=&tag=&filter=&limit=&cursor=
+                                                                team: customers
+               filter: all | vip | blocked
         GET    /v1/businesses/{business_id}/contacts/{contact_id}
-                                                                owner: one customer
+                                                                team: one customer
         GET    /v1/businesses/{business_id}/contacts/{contact_id}/export
                                                                 owner: visitor data
         DELETE /v1/businesses/{business_id}/contacts/{contact_id}
@@ -162,6 +167,8 @@ def build_compliance_router(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         search: str | None = None,
+        tag: str | None = None,
+        list_filter: Annotated[str | None, Query(alias="filter")] = None,
         limit: str | None = None,
         cursor: str | None = None,
     ) -> ContactPage:
@@ -174,6 +181,9 @@ def build_compliance_router(
                     ContactSearchText,
                     "search",
                 ),
+                tag=parse_optional(tag, CustomerTag, "tag"),
+                list_filter=parse_optional(list_filter, CustomerListFilter, "filter")
+                or CustomerListFilter.ALL,
                 page=parse_page_request(limit, cursor),
                 client_ip_address=read_client_ip_address(request),
             )

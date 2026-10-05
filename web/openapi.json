@@ -3682,6 +3682,58 @@
         "title": "BookingDocument",
         "type": "object"
       },
+      "BookingHit": {
+        "additionalProperties": false,
+        "description": "A booking of a customer the search found (or named by its id).",
+        "properties": {
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "party_size": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Party Size",
+            "type": "integer"
+          },
+          "source_channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "starts_at": {
+            "minimum": 0.0,
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "starts_at",
+          "status",
+          "party_size",
+          "source_channel"
+        ],
+        "title": "BookingHit",
+        "type": "object"
+      },
       "BookingPage": {
         "additionalProperties": false,
         "description": "One page of bookings; `next_cursor` is None on the last page.",
@@ -4630,6 +4682,35 @@
           "is_saved"
         ],
         "title": "BusinessProfileView",
+        "type": "object"
+      },
+      "BusinessSearchResults": {
+        "additionalProperties": false,
+        "description": "The hits, grouped: customers (exact matches first, then the most\nrecently active), their latest conversations and their bookings (the\nlatest start first), at most a few of each. Phones are masked for staff\nthe owner did not allow to see them.",
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/BookingHit"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationHit"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
+          "customers": {
+            "items": {
+              "$ref": "#/components/schemas/ContactSummaryView"
+            },
+            "title": "Customers",
+            "type": "array"
+          }
+        },
+        "title": "BusinessSearchResults",
         "type": "object"
       },
       "BusinessSecurityView": {
@@ -6626,6 +6707,26 @@
         "title": "ConfirmImportedItemsResult",
         "type": "object"
       },
+      "ContactBlock": {
+        "additionalProperties": false,
+        "description": "Why the assistant no longer answers a customer: who blocked them, when.",
+        "properties": {
+          "blocked_at": {
+            "title": "Blocked At",
+            "type": "integer"
+          },
+          "blocked_by": {
+            "title": "Blocked By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "blocked_at",
+          "blocked_by"
+        ],
+        "title": "ContactBlock",
+        "type": "object"
+      },
       "ContactBookingView": {
         "additionalProperties": false,
         "description": "A booking of the customer (start in UTC seconds, as bookings use).",
@@ -6718,8 +6819,19 @@
       },
       "ContactDetailView": {
         "additionalProperties": false,
-        "description": "One customer with their conversations, bookings and leads, newest first.",
+        "description": "One customer with their conversations, bookings and leads, newest\nfirst, and their history across channels as one `timeline` (calls\ntoo), the latest moment first: a booking by its start, so upcoming\nvisits lead. `standing`, `visit_count` and `last_visit_at` say how well\nthe business knows them; `blocked_at` since when the assistant does\nnot answer them.",
         "properties": {
+          "blocked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked At"
+          },
           "bookings": {
             "items": {
               "$ref": "#/components/schemas/ContactBookingView"
@@ -6737,12 +6849,40 @@
             "title": "Conversations",
             "type": "array"
           },
+          "last_visit_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit At"
+          },
           "leads": {
             "items": {
               "$ref": "#/components/schemas/ContactLeadView"
             },
             "title": "Leads",
             "type": "array"
+          },
+          "standing": {
+            "$ref": "#/components/schemas/CustomerStanding",
+            "default": "new"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerTimelineEntry"
+            },
+            "title": "Timeline",
+            "type": "array"
+          },
+          "visit_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Visit Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -6753,8 +6893,18 @@
       },
       "ContactDocument": {
         "additionalProperties": false,
-        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.",
+        "description": "A customer of one business (concept table `contacts`).\n\n`phone_number` may come from what the customer typed (the model passes\nit to booking and lead tools); `verified_phone_number` only ever comes\nfrom a channel that proves it (WhatsApp sender, a contact the Telegram\nuser shared about themselves, the caller ID of a call). Only the\nverified phone proves that bookings under that phone are the\ncustomer's own.\n\n`erased_at` marks a customer erased at their request: the document then\nkeeps no personal data (no name, phones, language or channel\nidentities), only its id, so records that point to it read as erased.\n\n`opted_out_channels`: channels the customer asked to get no messages in\nthat they did not ask for (reminders, text-backs after a missed call);\nPHONE covers SMS to their number. Version 2 adds it (optional).\n\nVersion 3 adds the customer list's lookups (migration 1122):\n`last_seen_at`, the customer's latest activity (a message, a call, a\nmissed call, a booking taken for them, the erasure), the list's order;\na real customer has it from the moment they appear, while a contact\nmade only by the owner's test chat or the autotests (OWNER_TEST\nidentities only) never gets one and stays out of the list.\n`display_name_folded`, the name as the search compares it, is kept in\nstep with `name` by the repository.\n\nVersion 4 adds the team's customer card (1140), all optional: `tags`\n(indexed, `tags[].tag`), the `is_vip` flag and `block`, set while the\nassistant must not answer the customer (`is_blocked` mirrors it for the\nlist's filter). Only the card writes of the repository change them; a\nplain save keeps them as stored, so a turn that read the contact\nearlier never undoes a tag or a block. An erased customer has none.",
         "properties": {
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactBlock"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "business_id": {
             "title": "Business Id",
             "type": "string"
@@ -6796,6 +6946,16 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "is_blocked": {
+            "default": false,
+            "title": "Is Blocked",
+            "type": "boolean"
+          },
+          "is_vip": {
+            "default": false,
+            "title": "Is Vip",
+            "type": "boolean"
           },
           "language": {
             "anyOf": [
@@ -6855,9 +7015,16 @@
             "title": "Phone Number"
           },
           "schema_version": {
-            "default": "3",
+            "default": "4",
             "title": "Schema Version",
             "type": "string"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/ContactTagMark"
+            },
+            "title": "Tags",
+            "type": "array"
           },
           "updated_at": {
             "description": "Last update wall-clock UNIX timestamp in microseconds.",
@@ -7052,9 +7219,72 @@
         "title": "ContactRecords",
         "type": "object"
       },
+      "ContactStandingView": {
+        "additionalProperties": false,
+        "description": "\"Regular customer · 4 visits\": the standing (CustomerStanding), the\nvisits and when the latest started, the conversations and bookings\n(test chats left out) and the card's flags. No personal data, so it is\nnot audited.",
+        "properties": {
+          "booking_count": {
+            "minimum": 0.0,
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "conversation_count": {
+            "minimum": 0.0,
+            "title": "Conversation Count",
+            "type": "integer"
+          },
+          "is_blocked": {
+            "default": false,
+            "title": "Is Blocked",
+            "type": "boolean"
+          },
+          "is_erased": {
+            "default": false,
+            "title": "Is Erased",
+            "type": "boolean"
+          },
+          "is_vip": {
+            "default": false,
+            "title": "Is Vip",
+            "type": "boolean"
+          },
+          "last_visit_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit At"
+          },
+          "standing": {
+            "$ref": "#/components/schemas/CustomerStanding"
+          },
+          "visit_count": {
+            "minimum": 0.0,
+            "title": "Visit Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "contact_id",
+          "standing",
+          "visit_count",
+          "conversation_count",
+          "booking_count"
+        ],
+        "title": "ContactStandingView",
+        "type": "object"
+      },
       "ContactSummaryView": {
         "additionalProperties": false,
-        "description": "One customer in the list: how to recognise them and how active they are.\n\n`phone_number` is the phone a channel proved when there is one\n(`is_phone_verified`), otherwise the one the customer typed. Counts and\nchannels leave out the owner's test chats. An erased customer\n(`erased_at`) has no name, phone or language left; their anonymous\nconversations and bookings still count. `opted_out_channels`: where the\ncustomer sent STOP; while any is listed they get no reminders, feedback\nrequests or messages after a missed call.",
+        "description": "One customer in the list: how to recognise them and how active they are.\n\n`phone_number` is the phone a channel proved when there is one\n(`is_phone_verified`), otherwise the one the customer typed. Counts and\nchannels leave out the owner's test chats. An erased customer\n(`erased_at`) has no name, phone or language left; their anonymous\nconversations and bookings still count. `opted_out_channels`: where the\ncustomer sent STOP; while any is listed they get no reminders, feedback\nrequests or messages after a missed call. The team's card: `tags`,\n`is_vip` and `is_blocked` (the assistant does not answer them). For\nstaff the owner did not allow to see phone numbers, `phone_number` is\nNone and `masked_phone_number` shows its ends (`is_phone_masked`).",
         "properties": {
           "booking_count": {
             "minimum": 0.0,
@@ -7092,9 +7322,24 @@
             "title": "Id",
             "type": "string"
           },
+          "is_blocked": {
+            "default": false,
+            "title": "Is Blocked",
+            "type": "boolean"
+          },
+          "is_phone_masked": {
+            "default": false,
+            "title": "Is Phone Masked",
+            "type": "boolean"
+          },
           "is_phone_verified": {
             "default": false,
             "title": "Is Phone Verified",
+            "type": "boolean"
+          },
+          "is_vip": {
+            "default": false,
+            "title": "Is Vip",
             "type": "boolean"
           },
           "language": {
@@ -7119,6 +7364,17 @@
             "minimum": 0.0,
             "title": "Lead Count",
             "type": "integer"
+          },
+          "masked_phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masked Phone Number"
           },
           "name": {
             "anyOf": [
@@ -7151,6 +7407,16 @@
               }
             ],
             "title": "Phone Number"
+          },
+          "tags": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
           }
         },
         "required": [
@@ -7162,6 +7428,40 @@
           "last_activity_at"
         ],
         "title": "ContactSummaryView",
+        "type": "object"
+      },
+      "ContactTagMark": {
+        "additionalProperties": false,
+        "description": "A tag on a customer: which, when and by whom (None: the platform).",
+        "properties": {
+          "added_at": {
+            "title": "Added At",
+            "type": "integer"
+          },
+          "added_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Added By"
+          },
+          "tag": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "added_at"
+        ],
+        "title": "ContactTagMark",
         "type": "object"
       },
       "ConversationAssignmentView": {
@@ -7550,6 +7850,50 @@
           "last_message_at"
         ],
         "title": "ConversationDocument",
+        "type": "object"
+      },
+      "ConversationHit": {
+        "additionalProperties": false,
+        "description": "A conversation of a customer the search found (or named by its id).",
+        "properties": {
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_message_at": {
+            "title": "Last Message At",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConversationStatus"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "channel",
+          "status",
+          "last_message_at"
+        ],
+        "title": "ConversationHit",
         "type": "object"
       },
       "ConversationNoteDocument": {
@@ -8505,6 +8849,62 @@
         "title": "CurrentWebsiteImport",
         "type": "object"
       },
+      "CustomerCardView": {
+        "additionalProperties": false,
+        "description": "The card after a change: the customer's tags, VIP flag and block, and\nthe business's tags (the latest used first) to offer next.",
+        "properties": {
+          "blocked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked At"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "is_blocked": {
+            "default": false,
+            "title": "Is Blocked",
+            "type": "boolean"
+          },
+          "is_vip": {
+            "default": false,
+            "title": "Is Vip",
+            "type": "boolean"
+          },
+          "known_tags": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
+            "title": "Known Tags",
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "contact_id"
+        ],
+        "title": "CustomerCardView",
+        "type": "object"
+      },
       "CustomerRecipient": {
         "additionalProperties": false,
         "description": "A customer in the business's channel. The credential is read from the\nchannel at send time (never stored here), so a reconnected bot is used.",
@@ -8527,6 +8927,29 @@
           "channel_user_id"
         ],
         "title": "CustomerRecipient",
+        "type": "object"
+      },
+      "CustomerSettingsView": {
+        "additionalProperties": false,
+        "description": "Off by default: staff see phones masked in Customers and the search.",
+        "properties": {
+          "known_tags": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
+            "title": "Known Tags",
+            "type": "array"
+          },
+          "staff_sees_phone_numbers": {
+            "default": false,
+            "title": "Staff Sees Phone Numbers",
+            "type": "boolean"
+          }
+        },
+        "title": "CustomerSettingsView",
         "type": "object"
       },
       "CustomerSourceKind": {
@@ -8659,6 +9082,213 @@
         ],
         "title": "CustomerSourcesView",
         "type": "object"
+      },
+      "CustomerStanding": {
+        "description": "How well the business knows a customer, as the conversation header\nsays it: NEW (first contact, no visit), RETURNING (wrote or called\nbefore, no visit yet), VISITED (one visit) or REGULAR (two visits or\nmore). A visit is a booking that started already and was not\ncancelled, missed or left unconfirmed.",
+        "enum": [
+          "new",
+          "returning",
+          "visited",
+          "regular"
+        ],
+        "title": "CustomerStanding",
+        "type": "string"
+      },
+      "CustomerTimelineEntry": {
+        "additionalProperties": false,
+        "description": "A conversation (by its latest message, with the summary the worker\nwrote once it went quiet), a booking (by its start), a request for a\nmanager or a call; `occurred_at` orders the history. The fields of the\nother kinds are None.",
+        "properties": {
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "booking_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Call Id"
+          },
+          "call_outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "conversation_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CustomerTimelineKind"
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Id"
+          },
+          "lead_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lead_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "integer"
+          },
+          "party_size": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Size"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "kind",
+          "occurred_at"
+        ],
+        "title": "CustomerTimelineEntry",
+        "type": "object"
+      },
+      "CustomerTimelineKind": {
+        "description": "What one entry of a customer's history is.",
+        "enum": [
+          "conversation",
+          "booking",
+          "lead",
+          "call"
+        ],
+        "title": "CustomerTimelineKind",
+        "type": "string"
       },
       "DashboardDay": {
         "additionalProperties": false,
@@ -19093,6 +19723,161 @@
           "nightly_rate_minor"
         ],
         "title": "SeasonalNightlyRate",
+        "type": "object"
+      },
+      "SegmentList": {
+        "additionalProperties": false,
+        "description": "The business's segments, the oldest first, and its tags to build one with.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "known_tags": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+              "type": "string"
+            },
+            "title": "Known Tags",
+            "type": "array"
+          }
+        },
+        "title": "SegmentList",
+        "type": "object"
+      },
+      "SegmentPreview": {
+        "additionalProperties": false,
+        "description": "How many customers belong (`is_count_exact` False when the business\nhas more customers than one count reads: then \"at least\"), and the\nfirst few of them.",
+        "properties": {
+          "is_count_exact": {
+            "title": "Is Count Exact",
+            "type": "boolean"
+          },
+          "member_count": {
+            "minimum": 0.0,
+            "title": "Member Count",
+            "type": "integer"
+          },
+          "sample": {
+            "items": {
+              "$ref": "#/components/schemas/ContactSummaryView"
+            },
+            "title": "Sample",
+            "type": "array"
+          }
+        },
+        "required": [
+          "member_count",
+          "is_count_exact"
+        ],
+        "title": "SegmentPreview",
+        "type": "object"
+      },
+      "SegmentRulesBody": {
+        "additionalProperties": false,
+        "description": "Who belongs to a segment (every rule given must hold): a tag, the\nlatest visit more than N days ago, at least / at most so many bookings,\nVIPs only. Blocked and erased customers never belong.",
+        "properties": {
+          "last_visit_days_ago": {
+            "anyOf": [
+              {
+                "maximum": 3650.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit Days Ago"
+          },
+          "max_bookings": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Bookings"
+          },
+          "min_bookings": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Bookings"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag"
+          },
+          "vip_only": {
+            "default": false,
+            "title": "Vip Only",
+            "type": "boolean"
+          }
+        },
+        "title": "SegmentRulesBody",
+        "type": "object"
+      },
+      "SegmentView": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,58}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+            "title": "Name",
+            "type": "string"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/SegmentRulesBody"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "rules",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SegmentView",
         "type": "object"
       },
       "ServiceMode": {
@@ -37397,6 +38182,38 @@
           },
           {
             "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -37777,6 +38594,330 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/contacts/{contact_id}/blocking": {
+      "put": {
+        "operationId": "change_customer_blocking_v1_businesses__business_id__contacts__contact_id__blocking_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Block the customer (the assistant stops answering them) or unblock them.",
+                "properties": {
+                  "is_blocked": {
+                    "title": "Is Blocked",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "is_blocked"
+                ],
+                "title": "CustomerBlockingRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCardView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Change Customer Blocking",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/contacts/{contact_id}/card": {
+      "patch": {
+        "operationId": "change_customer_card_v1_businesses__business_id__contacts__contact_id__card_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A change of the card: tags to add and to take off (any case), and the\nVIP flag (unchanged when left out). At most 20 tags at a time.",
+                "properties": {
+                  "add_tags": {
+                    "items": {
+                      "maxLength": 32,
+                      "minLength": 1,
+                      "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                      "type": "string"
+                    },
+                    "maxItems": 20,
+                    "title": "Add Tags",
+                    "type": "array"
+                  },
+                  "is_vip": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Is Vip"
+                  },
+                  "remove_tags": {
+                    "items": {
+                      "maxLength": 32,
+                      "minLength": 1,
+                      "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                      "type": "string"
+                    },
+                    "maxItems": 20,
+                    "title": "Remove Tags",
+                    "type": "array"
+                  }
+                },
+                "title": "CustomerCardRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCardView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Change Customer Card",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/contacts/{contact_id}/export": {
       "get": {
         "operationId": "export_contact_data_v1_businesses__business_id__contacts__contact_id__export_get",
@@ -37901,6 +39042,133 @@
         "summary": "Export Contact Data",
         "tags": [
           "compliance"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/contacts/{contact_id}/standing": {
+      "get": {
+        "operationId": "get_contact_standing_v1_businesses__business_id__contacts__contact_id__standing_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactStandingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Contact Standing",
+        "tags": [
+          "customers"
         ]
       }
     },
@@ -39978,6 +41246,1415 @@
         "summary": "Rate Conversation",
         "tags": [
           "conversations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/customer-segments": {
+      "get": {
+        "operationId": "list_customer_segments_v1_businesses__business_id__customer_segments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Customer Segments",
+        "tags": [
+          "customers"
+        ]
+      },
+      "post": {
+        "operationId": "create_customer_segment_v1_businesses__business_id__customer_segments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A segment as the owner names and defines it.",
+                "properties": {
+                  "name": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,58}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "rules": {
+                    "additionalProperties": false,
+                    "description": "Who belongs to a segment (every rule given must hold): a tag, the\nlatest visit more than N days ago, at least / at most so many bookings,\nVIPs only. Blocked and erased customers never belong.",
+                    "properties": {
+                      "last_visit_days_ago": {
+                        "anyOf": [
+                          {
+                            "maximum": 3650,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Last Visit Days Ago"
+                      },
+                      "max_bookings": {
+                        "anyOf": [
+                          {
+                            "maximum": 10000,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Max Bookings"
+                      },
+                      "min_bookings": {
+                        "anyOf": [
+                          {
+                            "maximum": 10000,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Min Bookings"
+                      },
+                      "tag": {
+                        "anyOf": [
+                          {
+                            "maxLength": 32,
+                            "minLength": 1,
+                            "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Tag"
+                      },
+                      "vip_only": {
+                        "default": false,
+                        "title": "Vip Only",
+                        "type": "boolean"
+                      }
+                    },
+                    "title": "SegmentRulesBody",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "SegmentRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Customer Segment",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/customer-segments/preview": {
+      "post": {
+        "operationId": "preview_customer_segment_v1_businesses__business_id__customer_segments_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Who belongs to a segment (every rule given must hold): a tag, the\nlatest visit more than N days ago, at least / at most so many bookings,\nVIPs only. Blocked and erased customers never belong.",
+                "properties": {
+                  "last_visit_days_ago": {
+                    "anyOf": [
+                      {
+                        "maximum": 3650,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Last Visit Days Ago"
+                  },
+                  "max_bookings": {
+                    "anyOf": [
+                      {
+                        "maximum": 10000,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Max Bookings"
+                  },
+                  "min_bookings": {
+                    "anyOf": [
+                      {
+                        "maximum": 10000,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Min Bookings"
+                  },
+                  "tag": {
+                    "anyOf": [
+                      {
+                        "maxLength": 32,
+                        "minLength": 1,
+                        "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Tag"
+                  },
+                  "vip_only": {
+                    "default": false,
+                    "title": "Vip Only",
+                    "type": "boolean"
+                  }
+                },
+                "title": "SegmentRulesBody",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Preview Customer Segment",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/customer-segments/{segment_id}": {
+      "delete": {
+        "operationId": "delete_customer_segment_v1_businesses__business_id__customer_segments__segment_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "segment_id",
+            "required": true,
+            "schema": {
+              "title": "Segment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Delete Customer Segment",
+        "tags": [
+          "customers"
+        ]
+      },
+      "put": {
+        "operationId": "update_customer_segment_v1_businesses__business_id__customer_segments__segment_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "segment_id",
+            "required": true,
+            "schema": {
+              "title": "Segment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A segment as the owner names and defines it.",
+                "properties": {
+                  "name": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,58}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "rules": {
+                    "additionalProperties": false,
+                    "description": "Who belongs to a segment (every rule given must hold): a tag, the\nlatest visit more than N days ago, at least / at most so many bookings,\nVIPs only. Blocked and erased customers never belong.",
+                    "properties": {
+                      "last_visit_days_ago": {
+                        "anyOf": [
+                          {
+                            "maximum": 3650,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Last Visit Days Ago"
+                      },
+                      "max_bookings": {
+                        "anyOf": [
+                          {
+                            "maximum": 10000,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Max Bookings"
+                      },
+                      "min_bookings": {
+                        "anyOf": [
+                          {
+                            "maximum": 10000,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Min Bookings"
+                      },
+                      "tag": {
+                        "anyOf": [
+                          {
+                            "maxLength": 32,
+                            "minLength": 1,
+                            "pattern": "^[^\\s\\x00-\\x1f\\x7f](?:[^\\x00-\\x1f\\x7f]{0,30}[^\\s\\x00-\\x1f\\x7f])?\\Z",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "title": "Tag"
+                      },
+                      "vip_only": {
+                        "default": false,
+                        "title": "Vip Only",
+                        "type": "boolean"
+                      }
+                    },
+                    "title": "SegmentRulesBody",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "SegmentRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Customer Segment",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/customer-segments/{segment_id}/export": {
+      "get": {
+        "operationId": "export_customer_segment_v1_businesses__business_id__customer_segments__segment_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "segment_id",
+            "required": true,
+            "schema": {
+              "title": "Segment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The table as CSV (UTF-8 with a byte order mark)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Export Customer Segment",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/customer-segments/{segment_id}/members": {
+      "get": {
+        "operationId": "list_customer_segment_members_v1_businesses__business_id__customer_segments__segment_id__members_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "segment_id",
+            "required": true,
+            "schema": {
+              "title": "Segment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Customer Segment Members",
+        "tags": [
+          "customers"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/customer-settings": {
+      "get": {
+        "operationId": "get_customer_settings_v1_businesses__business_id__customer_settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Customer Settings",
+        "tags": [
+          "customers"
+        ]
+      },
+      "put": {
+        "operationId": "update_customer_settings_v1_businesses__business_id__customer_settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "staff_sees_phone_numbers": {
+                    "title": "Staff Sees Phone Numbers",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "staff_sees_phone_numbers"
+                ],
+                "title": "CustomerSettingsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Customer Settings",
+        "tags": [
+          "customers"
         ]
       }
     },
@@ -52067,6 +54744,134 @@
         "summary": "Delete Schedule Exception",
         "tags": [
           "resources"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/search": {
+      "get": {
+        "operationId": "search_business_v1_businesses__business_id__search_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSearchResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Search Business",
+        "tags": [
+          "customers"
         ]
       }
     },

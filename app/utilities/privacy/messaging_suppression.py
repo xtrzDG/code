@@ -22,10 +22,11 @@ def is_messaging_suppressed(
     """
     True when the customer said STOP: on their contact, or on the
     business's suppression list for any of their numbers and accounts (and
-    `also`, e.g. the number about to be texted), which outlives an erasure.
+    `also`, e.g. the number about to be texted), which outlives an erasure;
+    and while the owner blocked them (Customers), who gets nothing at all.
     """
 
-    if is_opted_out(contact):
+    if is_opted_out(contact) or (contact is not None and contact.block is not None):
         return True
 
     identities: list[SuppressedIdentity] = [*contact_identities(contact), *also]
