@@ -502,6 +502,47 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   `GET·PUT …/assistant-settings`, изменение пишется в аудит. Удаление данных
   клиента стирает сводки его разговоров.
 
+## Предохранитель расходов и лимиты
+
+- Расход дня бизнеса: `CheckBusinessSpendUseCase` перед каждым ходом модели
+  (`ConversationTurnOrchestrator`, хук `spend_brake`) и перед звонком
+  (`StartVoiceCallUseCase`) суммирует в базе `usage_events` его дня (в его
+  часовом поясе; столбцы `doc_kind`, `doc_cost_micro_usd`, `doc_quantity`,
+  миграция 1142), где цены нет — по плановым ценам провайдеров
+  (`planned_provider_costs`). Лимиты — свои у бизнеса
+  (`BusinessLimitsDocument`, их ставит админ:
+  `PUT /v1/admin/clients/{id}/spend-limits`) или кратные плановому дню тарифа
+  (`SPEND_SOFT_LIMIT_MULTIPLE`, `SPEND_HARD_LIMIT_MULTIPLE`). После мягкого —
+  ход идёт на дешёвой модели; после жёсткого до конца дня только заявки:
+  разговор уходит команде через обычную передачу, голосовой агент не
+  принимает звонок. Первый переход дня записывается один раз
+  (`spend_limit_marks`, `insert_if_absent`): владельцам и команде платформы
+  уходит одно сообщение, жёсткий пишет в аудит `spend_limit_reached`;
+  дальше жёсткая отметка избавляет ходы от суммы. Автопроверки идут мимо
+  (у них свои лимиты).
+- Расход платформы: плитка «Расходы сегодня» в админке
+  (`GET /v1/admin/spend`, единственный платформенный оператор пакета) и
+  правила `spend_spike` (день больше трёх средних за 7 дней) и
+  `spend_budget` (80% `PLATFORM_DAILY_SPEND_BUDGET_USD`) задачи оповещений
+  суммируют день UTC по BRIN-индексу `usage_events`.
+- Лимиты запросов (`rate_limit_buckets`, `RequestRateLimitRegistry`):
+  общие — на человека в зависимости `current_user` (600 в минуту, выгрузки
+  строже) и на адрес без токена или с отвергнутым токеном
+  (`AnonymousRequestLimitMiddleware`, 120 в минуту; виджет, веб-хуки и
+  демо — со своими лимитами); действия владельца (`AdmitOwnerActionUseCase`:
+  пробный чат 30 в минуту на человека, импорт меню 10 в час, автопроверки
+  20 в день и одна идущая — кроме проверок «Применить изменения»). Сверх
+  лимита — 429 с `Retry-After`.
+- Сайты чата: `BusinessLimitsDocument.widget_allowed_origins`
+  (`GET·PUT …/channels/web/allowed-origins`, меняет владелец). Зависимость
+  маршрутов `/v1/widget/{business_id}/*` сверяет `Origin` (иначе `Referer`)
+  по хосту без `www.` и порту; пустой список — любой сайт, свои страницы
+  платформы (`CABINET_BASE_URL`, `APP_BASE_URL`, `CORS_ALLOWED_ORIGINS`) —
+  всегда, чужой сайт — 403.
+- Звонки: `CALL_MAX_DURATION_SECONDS` и `CALL_SILENCE_END_SECONDS` попадают
+  в конфигурацию агента (`build_agent_config`: `max_duration_seconds`,
+  `silence_end_call_timeout`) при каждой его настройке.
+
 ## Путь сообщения (ТЗ §1)
 
 Вебхук канала → адаптер канала (`parse_webhook`, `verify_signature`) → бизнес

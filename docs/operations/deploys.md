@@ -231,6 +231,31 @@ the new collection and the version 3 fields, so a rollback needs nothing
 beyond the usual. `BusinessRepoContract.list_all` is gone: a job over
 every business walks them with `walk_businesses` (keyset batches of 200).
 
+The release with the spend guard (R12, migration 1142,
+`AuditLogEntryDocument` version 5, `PlatformAlertStateDocument` version 3)
+also writes new enum values in the release that introduces them, an
+exception to the enum rule below: the audit action `spend_limit_reached`
+(a business passed its hard daily spend limit) and the alert codes
+`spend_spike` and `spend_budget`. An old API instance that lists an audit
+log holding such an entry may fail that page, and an old alert job that
+reads such an alert state fails that tick and runs again on the next,
+both only during the overlap: nothing is lost. The new collections
+(`business_limits`, `spend_limit_marks`) are unknown to the old release,
+which ignores them: during the overlap an old instance answers model turns
+and calls without the spend check and serves the website chat to any site.
+The three new lookup columns of `usage_events` (`doc_kind`,
+`doc_cost_micro_usd`, `doc_quantity`) are empty for rows written before
+the migration, so the spend of a day that began before the deploy reads
+low (limits pass later, the spend alerts and the admin's spend tile
+under-count) until, **right after the deploy**:
+
+```
+workshop backfill-lookup --collection usage_events
+```
+
+Running it again is harmless; a rollback needs nothing beyond the usual
+(the old release ignores the new columns and collections).
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their
