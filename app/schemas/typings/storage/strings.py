@@ -12,7 +12,17 @@ class DocumentFieldText(BaseTypedString):
 
 
 class SchemaMigrationSql(BaseTypedString):
-    """SQL text of one migration file, executed as one transaction."""
+    """
+    SQL text of one migration file: executed as one transaction, or
+    statement by statement when the file says `-- workshop:no-transaction`.
+    """
+
+
+class SchemaMigrationStatement(BaseTypedString):
+    """
+    One SQL statement of a migration file, without its terminating
+    semicolon (what a no-transaction file runs at a time).
+    """
 
 
 class StoredDocumentKey(BaseTypedString):

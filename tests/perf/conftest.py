@@ -37,7 +37,11 @@ from tests.storage.postgres_server import (
     is_postgres_available,
     postgres_bin_directory,
 )
-from tests.storage.storage_testing import MIGRATIONS_DIRECTORY, build_fixed_wall_clock
+from tests.storage.storage_testing import (
+    MIGRATIONS_DIRECTORY,
+    RecordedRetryPause,
+    build_fixed_wall_clock,
+)
 
 
 @dataclass(frozen=True)
@@ -56,6 +60,7 @@ def migrate(database_url: DatabaseUrl) -> None:
             migration_source=SqlFileMigrationSourceAdapter(MIGRATIONS_DIRECTORY),
             migration_store=PostgresSchemaMigrationStoreAdapter(pool),
             wall_clock=build_fixed_wall_clock(),
+            retry_pause=RecordedRetryPause(),
         ).run(ApplyDatabaseMigrationsCommand())
     finally:
         pool.close()

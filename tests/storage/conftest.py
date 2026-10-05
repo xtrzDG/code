@@ -44,6 +44,7 @@ from tests.storage.postgres_server import (
 )
 from tests.storage.storage_testing import (
     MIGRATIONS_DIRECTORY,
+    RecordedRetryPause,
     build_fixed_wall_clock,
 )
 
@@ -120,6 +121,7 @@ def migrated_template_database(postgres_server: ThrowawayPostgresServer) -> str:
             migration_source=SqlFileMigrationSourceAdapter(MIGRATIONS_DIRECTORY),
             migration_store=PostgresSchemaMigrationStoreAdapter(connection_pool),
             wall_clock=build_fixed_wall_clock(),
+            retry_pause=RecordedRetryPause(),
         ).run(ApplyDatabaseMigrationsCommand())
     finally:
         connection_pool.close()

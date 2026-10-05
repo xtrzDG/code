@@ -52,4 +52,21 @@ class LockWaitSeconds(BaseConstrainedTypedInt):
     le = 600
 
 
+class MigrationAttemptLimit(BaseConstrainedTypedInt):
+    """
+    How many times the migration runner tries one file whose locks were not
+    granted in time (`lock_timeout`) before the deploy fails.
+    """
+
+    ge = 1
+    le = 20
+
+
+class MigrationAttemptNumber(BaseConstrainedTypedInt):
+    """Which try of one migration file this is (the first is 1)."""
+
+    ge = 1
+    le = 20
+
+
 # Keep abc order for all non example types, if possible.
