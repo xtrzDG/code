@@ -116,6 +116,8 @@ def test_fixing_the_named_answer_takes_the_check_live(workshop: Workshop) -> Non
     [listed] = [item for item in list_checks(workshop, assistant)]
     assert listed["id"] == check["id"]
     assert listed["last_result"]["outcome"] == "passed"
+    assert listed["last_result"]["conversation_id"]
+    assert listed["last_result"]["answer_message_id"]
     assert DOG_WORDS in listed["last_result"]["answer"]
     after = read_pending(workshop, assistant)
     assert (after["count"], after["drafts"]) == (0, [])

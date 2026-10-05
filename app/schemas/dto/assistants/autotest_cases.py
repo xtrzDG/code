@@ -97,7 +97,8 @@ class AutotestCaseCommand(ImmutableDTO):
 class AutotestCaseResultView(ImmutableDTO):
     """
     How the check did in the latest finished autotest run that played it:
-    the outcome, why it failed, the assistant's first answer and when.
+    the outcome, why it failed, the assistant's first answer, the test
+    conversation and that answer in it ("Fix this answer"), and when.
     """
 
     run_id: AutotestRunId
@@ -107,6 +108,8 @@ class AutotestCaseResultView(ImmutableDTO):
         default_factory=list[AutotestCheckCode]
     )
     answer: MessageText | None = None
+    conversation_id: ConversationId | None = None
+    answer_message_id: MessageId | None = None
     checked_at: Microseconds
 
 

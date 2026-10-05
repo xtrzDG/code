@@ -46,6 +46,8 @@ Spec: `14b1f6f07f1450cf`
 - **Changed** `AutotestScenarioResultView` adds optional `owner_check`
   (`OwnerCheckAskedView`: question, expectation, expected text as the run
   asked them), `conversation_id` and `answer_message_id`.
+- **Changed** `AutotestCaseResultView` adds optional `conversation_id` and
+  `answer_message_id` (the test answer "Fix this answer" opens).
 - **Changed** `AutotestCaseView` adds optional `last_probe` (the latest
   "Check now" while the check is asked the same way), and `GET
   .../autotest-cases` takes `?language=` for its reasons. A new check

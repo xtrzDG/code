@@ -97,5 +97,7 @@ def to_result_view(
         outcome=result.outcome,
         check_codes=list(result.check_codes),
         answer=answer,
+        conversation_id=result.conversation_id,
+        answer_message_id=result.answer_message_id,
         checked_at=checked_at,
     )
