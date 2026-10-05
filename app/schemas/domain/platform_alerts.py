@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.monitoring import (
@@ -27,6 +27,8 @@ class PlatformAlertStateDocument(BaseDocument):
     are those of the latest check, for the admin system page.
     """
 
+    # 2: `code` may be `quality_drop` (production quality, migration 1120).
+    schema_version: SchemaVersion = SchemaVersion("2")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

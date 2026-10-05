@@ -25,10 +25,12 @@ from app.repositories.platform_activity_repository import PlatformActivityReposi
 from app.repositories.platform_alert_state_repository import (
     PlatformAlertStateRepository,
 )
+from app.repositories.quality_repositories import QualityTotalsRepository
 from app.repositories.system_health_repository import SystemHealthRepository
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.conversation_quality import ConversationQualityScoreDocument
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
@@ -114,6 +116,9 @@ class OpsWorld:
         self.messages = InMemoryDocumentCollectionAdapter[MessageDocument](
             MessageDocument
         )
+        self.quality_scores = InMemoryDocumentCollectionAdapter[
+            ConversationQualityScoreDocument
+        ](ConversationQualityScoreDocument)
         self.alert_states = InMemoryDocumentCollectionAdapter[
             PlatformAlertStateDocument
         ](PlatformAlertStateDocument)
@@ -137,6 +142,7 @@ class OpsWorld:
             system_health_repo=self.health_repo,
             platform_activity_repo=self.activity_repo,
             signal_counter=self.signals,
+            quality_totals_repo=QualityTotalsRepository(self.quality_scores),
         )
 
     def alerts_use_case(

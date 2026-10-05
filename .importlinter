@@ -83,6 +83,7 @@ modules =
     app.use_cases.observability
     app.use_cases.platform_status
     app.use_cases.profiles
+    app.use_cases.quality
     app.use_cases.resources
     app.use_cases.setup
     app.use_cases.sharing

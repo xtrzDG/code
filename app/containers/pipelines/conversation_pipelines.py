@@ -76,6 +76,9 @@ class ConversationPipelinesContainer(containers.DeclarativeContainer):
     get_conversation_pipeline = orchestrator_pipeline(
         conversation_orchestrators.get_conversation_orchestrator
     )
+    get_conversation_quality_pipeline = orchestrator_pipeline(
+        conversation_orchestrators.get_conversation_quality_orchestrator
+    )
     list_conversation_messages_pipeline = orchestrator_pipeline(
         conversation_orchestrators.list_conversation_messages_orchestrator
     )

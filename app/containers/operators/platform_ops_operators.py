@@ -46,6 +46,14 @@ class PlatformOpsOperatorsContainer(containers.DeclarativeContainer):
     check_channel_credentials_operator = platform_pipeline_operator(
         platform_ops_pipelines.check_channel_credentials_pipeline, storage_scope
     )
+    # Production quality: the nightly sample reads and judges conversations
+    # of every business; a client's trend is read in that client's scope.
+    sample_conversation_quality_operator = platform_pipeline_operator(
+        platform_ops_pipelines.sample_conversation_quality_pipeline, storage_scope
+    )
+    get_client_quality_operator = pipeline_operator(
+        platform_ops_pipelines.get_client_quality_pipeline, storage_scope
+    )
 
     # The public status page, its daily record and the admin's
     # announcements, the help center (no storage) and each person's

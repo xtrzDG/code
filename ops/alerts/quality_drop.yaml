@@ -1,0 +1,14 @@
+# Production quality falls: the average judge score of the real
+# conversations scored in the last day (the nightly sample) is more than
+# 10% below the average of the 7 days before, once each holds at least 10
+# scored conversations.
+code: quality_drop
+severity: sev3
+summary: The judge's scores of real conversations fell against the week before.
+measure: average judge score of the last day's sample against the 7 days before
+threshold: 10
+unit: percent
+window_minutes: 1440
+volume_floor: 10
+source: conversation_quality_scores (doc_judged_at), migration 1120
+runbook: docs/operations/runbooks/assistant-quality.md

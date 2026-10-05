@@ -44,6 +44,12 @@ class QualitySampleBusinessLimit(BaseConstrainedTypedInt):
     le = 500
 
 
+class QualitySampleCount(BaseConstrainedTypedInt):
+    """How many real conversations the judge scored in a stretch of time."""
+
+    ge = 0
+
+
 class QualitySamplePercent(BaseConstrainedTypedInt):
     """
     The share of a day's real conversations the nightly sampling judges, in
@@ -52,6 +58,15 @@ class QualitySamplePercent(BaseConstrainedTypedInt):
 
     ge = 0
     le = 100
+
+
+class QualityScoreHundredthsTotal(BaseConstrainedTypedInt):
+    """
+    The sum of the average scores (in hundredths) of a stretch's scored
+    conversations: divided by their count, the stretch's average.
+    """
+
+    ge = 0
 
 
 # Keep abc order for all non example types, if possible.

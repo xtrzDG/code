@@ -33,6 +33,7 @@ from app.gateways.worker.periodic.purge_business_exports import (
     purge_business_exports_job,
 )
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
+from app.gateways.worker.periodic.quality_sampling import quality_sampling_job
 from app.gateways.worker.periodic.record_platform_status import (
     record_platform_status_job,
 )
@@ -180,6 +181,11 @@ class GatewaysContainer(containers.DeclarativeContainer):
         Factory(
             group_conversation_topics_job,
             operator=operators.value.group_conversation_topics_operator,
+        ),
+        # The judge scores a cost-capped sample of real conversations daily.
+        Factory(
+            quality_sampling_job,
+            operator=operators.platform_ops.sample_conversation_quality_operator,
         ),
         # Customers asked how their visit went (Settings → Reviews).
         Factory(

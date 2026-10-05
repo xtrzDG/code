@@ -8,6 +8,11 @@ from app.containers.adapters.value_collections_container import (
     ValueCollectionsContainer,
 )
 from app.repositories.customer_source_repository import CustomerSourceRepository
+from app.repositories.quality_repositories import (
+    ConversationQualityRepository,
+    QualitySampleInputRepository,
+    QualityTotalsRepository,
+)
 from app.repositories.topic_repositories import (
     ConversationTopicsRepository,
     TopicInputRepository,
@@ -23,7 +28,8 @@ class ValueRepositoriesContainer(containers.DeclarativeContainer):
     """
     The repositories of what the assistant is worth (migration 1061): the
     average check, each owner's digest choices and the stored reports; and
-    where customers came from and what they ask about (1100).
+    where customers came from and what they ask about (1100); and how good
+    the assistant's real conversations are (production quality, 1120).
     `RepositoriesContainer` extends it, so they are read as
     `repositories.value_report_repo` like every other repository; the
     counts the value model adds to the dashboard's are `value_count_repo`.
@@ -60,4 +66,16 @@ class ValueRepositoriesContainer(containers.DeclarativeContainer):
         conversation_collection=insight_collections.conversation_collection,
         booking_collection=insight_collections.booking_collection,
         lead_collection=insight_collections.lead_collection,
+    )
+    conversation_quality_repo: Singleton[ConversationQualityRepository] = Singleton(
+        ConversationQualityRepository,
+        collection=value_collections.conversation_quality_collection,
+    )
+    quality_totals_repo: Singleton[QualityTotalsRepository] = Singleton(
+        QualityTotalsRepository,
+        collection=value_collections.conversation_quality_collection,
+    )
+    quality_sample_input_repo: Singleton[QualitySampleInputRepository] = Singleton(
+        QualitySampleInputRepository,
+        conversation_collection=insight_collections.conversation_collection,
     )

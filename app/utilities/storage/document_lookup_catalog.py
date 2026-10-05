@@ -3,7 +3,7 @@ The declared lookup fields of the document collections, by collection.
 
 Each TEXT, FILTER_TEXT and INTEGER field is a generated column
 `doc_<field>` (migrations 1010, 1040, 1042, 1043, 1051, 1052, 1061, 1062,
-1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103, 1112 and 1113), each
+1074, 1081, 1082, 1090, 1093, 1094, 1100, 1102, 1103, 1112, 1113 and 1120), each
 ELEMENT_TEXT field a trigger over `workshop.document_lookup_keys`;
 `document_lookup_fields` explains the kinds and checks queries against this
 catalog. The platform's own collections (jobs, incidents, the status
@@ -21,6 +21,7 @@ from app.utilities.storage.lookup_field_builders import (
     text_field,
 )
 from app.utilities.storage.platform_lookup_catalog import PLATFORM_LOOKUP_FIELDS
+from app.utilities.storage.quality_collections import QUALITY_LOOKUP_FIELDS
 
 DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName, tuple[DocumentLookupField, ...]
@@ -233,6 +234,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("created_at"),
         integer_field("expires_at"),
     ),
+    # The judge's scores of real conversations (1120).
+    **QUALITY_LOOKUP_FIELDS,
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

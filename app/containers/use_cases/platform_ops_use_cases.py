@@ -10,6 +10,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.admin import AdminClientQuery
 from app.schemas.dto.admin_system import (
     AdminSystemQuery,
     AdminSystemView,
@@ -31,6 +32,7 @@ from app.schemas.dto.platform_announcements import (
     UpdateAnnouncementCommand,
 )
 from app.schemas.dto.platform_status import PlatformStatusQuery, PlatformStatusView
+from app.schemas.dto.quality import ClientQualityView
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
@@ -67,6 +69,12 @@ from app.use_cases.platform_status.record_platform_status_use_case import (
 from app.use_cases.platform_status.update_announcement_use_case import (
     UpdateAnnouncementUseCase,
 )
+from app.use_cases.quality.get_client_quality_use_case import (
+    GetClientQualityUseCase,
+)
+from app.use_cases.quality.sample_conversation_quality_use_case import (
+    SampleConversationQualityUseCase,
+)
 
 
 class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
@@ -91,6 +99,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         system_health_repo=repositories.system_health_repo,
         platform_activity_repo=repositories.platform_activity_repo,
         signal_counter=adapters.signal_counter,
+        quality_totals_repo=repositories.quality_totals_repo,
     )
     check_platform_alerts_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
@@ -109,6 +118,32 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         SendPlatformAlertUseCase,
         staff_sender=facilitators.staff_notification_sender,
+    )
+
+    # --- Production quality: the nightly sample of real conversations the
+    # judge scores (cost-capped) and a client's trend for the admin.
+    sample_conversation_quality_use_case: Factory[
+        UseCaseContract[JobTick, JobReport]
+    ] = Factory(
+        SampleConversationQualityUseCase,
+        business_repo=repositories.business_repo,
+        sample_input_repo=repositories.quality_sample_input_repo,
+        message_repo=repositories.message_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        conversation_quality_repo=repositories.conversation_quality_repo,
+        quality_totals_repo=repositories.quality_totals_repo,
+        llm_adapter=adapters.llm_adapter,
+        app_settings=config.app_settings,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    get_client_quality_use_case: Factory[
+        UseCaseContract[AdminClientQuery, ClientQualityView]
+    ] = Factory(
+        GetClientQualityUseCase,
+        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
+        business_repo=repositories.business_repo,
+        conversation_quality_repo=repositories.conversation_quality_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
 
     # --- The admin system page.

@@ -1,0 +1,24 @@
+{
+  "assistant_version_id": "assistant_version_225b5530-4c9b-4f0f-9e86-41fad5670fab",
+  "business_id": "business_fb867cef-9636-493a-bb5c-21b8aec594ac",
+  "channel": "phone",
+  "conversation_id": "conversation_61b53a2e-0667-4cf9-911d-d583709b8804",
+  "cost_micro_usd": 1,
+  "created_at": 1790000000000000,
+  "id": "conversation_quality_0060a3a1-288d-4362-9acc-4c370ab72367",
+  "judge_model_id": "gpt-5-mini",
+  "judge_notes": [
+    "Sample JudgeNote"
+  ],
+  "judged_at": 1790000000000000,
+  "language": "ka",
+  "schema_version": "1",
+  "score_hundredths": 100,
+  "scores": [
+    {
+      "criterion": "facts_and_prices",
+      "score": 1
+    }
+  ],
+  "updated_at": 1790000000000000
+}
