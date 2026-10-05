@@ -3,11 +3,7 @@
 from collections.abc import Sequence
 from statistics import median
 
-from app.schemas.constants.analytics import (
-    FunnelStep,
-    ProductEventName,
-    TunnelStepKey,
-)
+from app.schemas.constants.analytics import FunnelStep, ProductEventName
 from app.schemas.dto.analytics.growth_views import FunnelStepView, TunnelStepView
 from app.schemas.typings.analytics.constrained_floats import ConversionPercent
 from app.schemas.typings.analytics.constrained_integers import (
@@ -15,6 +11,7 @@ from app.schemas.typings.analytics.constrained_integers import (
     TimeToLiveSeconds,
 )
 from app.utilities.analytics.owner_journeys import OwnerJourney
+from app.utilities.analytics.tunnel_math import TunnelUnit, count_tunnel
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # What reaching each funnel step means; SIGNED_UP is every owner.
@@ -103,36 +100,22 @@ def build_tunnel(journeys: Sequence[OwnerJourney]) -> list[TunnelStepView]:
     they entered and they never went live.
     """
 
-    order: list[TunnelStepKey] = list(TunnelStepKey)
-    stopped: dict[TunnelStepKey, int] = dict.fromkeys(order, 0)
-    for journey in journeys:
-        entered = journey.tunnel.get(ProductEventName.TUNNEL_STEP_ENTERED, frozenset())
-        if not entered or journey.reached(LIVE_EVENTS) is not None:
-            continue
-
-        stopped[max(entered, key=order.index)] += 1
-
-    def owners_with(name: ProductEventName, step: TunnelStepKey) -> set[str]:
-        return {
-            str(journey.user_id)
-            for journey in journeys
-            if step in journey.tunnel.get(name, frozenset())
-        }
-
-    views: list[TunnelStepView] = []
-    for step in order:
-        skipped = owners_with(ProductEventName.TUNNEL_STEP_SKIPPED, step)
-        completed = owners_with(ProductEventName.TUNNEL_STEP_COMPLETED, step) - skipped
-        views.append(
-            TunnelStepView(
-                step=step,
-                entered=OwnerCount(
-                    len(owners_with(ProductEventName.TUNNEL_STEP_ENTERED, step))
-                ),
-                completed=OwnerCount(len(completed)),
-                skipped=OwnerCount(len(skipped)),
-                stopped_here=OwnerCount(stopped[step]),
-            )
+    return [
+        TunnelStepView(
+            step=counts.step,
+            entered=OwnerCount(counts.entered),
+            completed=OwnerCount(counts.completed),
+            skipped=OwnerCount(counts.skipped),
+            stopped_here=OwnerCount(counts.stopped_here),
         )
-
-    return views
+        for counts in count_tunnel(
+            [
+                TunnelUnit(
+                    key=str(journey.user_id),
+                    tunnel=journey.tunnel,
+                    is_live=journey.reached(LIVE_EVENTS) is not None,
+                )
+                for journey in journeys
+            ]
+        )
+    ]

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.openapi_error_contract import standard_error_responses
-from app.gateways.http.query_parsing import parse_optional
+from app.gateways.http.query_parsing import parse_boolean_text, parse_optional
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -46,7 +46,10 @@ def build_analytics_router(
         GET  /v1/admin/metrics          the founder's growth metrics: funnel,
              ?from=&to=&country=        tunnel, activation, trial to paid,
              &niche=&source=            MRR movements in euros, margin,
-                                        cohorts, sources, Web Vitals
+             &include_admins=           cohorts, sources, Web Vitals, the
+                                        business funnel and tunnel; owners
+                                        who are platform admins count with
+                                        include_admins=true
                                         (platform admins; others get 403)
         POST /v1/telemetry/events       up to 50 cabinet reports (Web Vitals,
                                         tunnel steps); 202, or 429 past 30
@@ -63,6 +66,7 @@ def build_analytics_router(
         country: str | None = None,
         niche: str | None = None,
         source: str | None = None,
+        include_admins: str | None = None,
     ) -> AdminMetricsView:
         return get_admin_metrics_operator.operate(
             AdminMetricsQuery(
@@ -79,6 +83,9 @@ def build_analytics_router(
                     None if source is None else source.strip().lower(),
                     AcquisitionSourceKey,
                     "source",
+                ),
+                include_platform_admins=bool(
+                    parse_optional(include_admins, parse_boolean_text, "include_admins")
                 ),
             )
         )

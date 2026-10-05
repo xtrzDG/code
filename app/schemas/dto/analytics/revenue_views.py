@@ -1,9 +1,11 @@
 """Recurring revenue, its movements, ARPA and gross margin, in euros."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 
 from app.schemas.constants.analytics import MrrMovementKind
 from app.schemas.dto.billing import Money
+from app.schemas.dto.catalog.plan_quotes import ExchangeRateQuote
 from app.schemas.typings.analytics.constrained_integers import AccountCount
 from app.schemas.typings.analytics.integers import MrrChangeMinor
 from app.schemas.typings.billing.constrained_floats import GrossMarginPercent
@@ -27,7 +29,9 @@ class MrrView(ImmutableDTO):
     the movements between (start + new + reactivation + expansion -
     contraction - churn = end), the paying accounts at the end and the
     average revenue per account. Subscriptions in a currency without an
-    official rate to euros are left out and named.
+    official rate to euros are left out and named; `rates` are the rates
+    the others were converted with (their source and date), so the page
+    can name them truthfully.
     """
 
     start: Money
@@ -37,6 +41,7 @@ class MrrView(ImmutableDTO):
     paying_accounts: AccountCount
     arpa: Money | None = None
     unconverted_currencies: list[CurrencyCode]
+    rates: list[ExchangeRateQuote] = Field(default_factory=list[ExchangeRateQuote])
 
 
 class MarginView(ImmutableDTO):
