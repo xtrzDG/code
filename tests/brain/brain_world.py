@@ -1,10 +1,6 @@
-"""
-A complete in-memory conversation engine for tests: real repositories over
-InMemoryDocumentCollectionAdapter, the real language detector, phone parser,
-tool registry and localized texts; fake tool use cases, a fake claim check
-(`GuardOptions`), a scripted language model and a manual clock. Built by
-brain_repositories, brain_business_seed, brain_tools and brain_orchestrators.
-"""
+"""In-memory conversation engine for tests: real repositories, detector, phone
+parser, tool registry, texts and customer memory (`BrainMemory`); fake tools
+and claim check (`GuardOptions`), a scripted model, a manual clock."""
 
 from dataclasses import dataclass, field
 
@@ -86,6 +82,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.brain.brain_business_seed import seed_business
+from tests.brain.brain_memory import BrainMemory
 from tests.brain.brain_orchestrators import GuardOptions, build_brain_orchestrators
 from tests.brain.brain_repositories import build_brain_repositories
 from tests.brain.brain_tools import build_brain_tools
@@ -129,6 +126,7 @@ class BrainWorld:
     user_repo: UserRepository
     knowledge_item_repo: KnowledgeItemRepository
     feedback_request_repo: FeedbackRequestRepository
+    memory: BrainMemory
     bookings: FakeBookings
     search_knowledge: FakeSearchKnowledge
     get_price: FakeGetPrice
@@ -268,6 +266,7 @@ def build_world(
         user_repo=repos.user_repo,
         knowledge_item_repo=repos.knowledge_item_repo,
         feedback_request_repo=repos.feedback_request_repo,
+        memory=repos.memory,
         bookings=brain_tools.bookings,
         search_knowledge=brain_tools.search_knowledge,
         get_price=brain_tools.get_price,

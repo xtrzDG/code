@@ -8,6 +8,7 @@ from app.schemas.typings.assistants.booleans import (
     SharesTeamNotesWithAssistant,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.users.prefixed_id import UserId
 
 
@@ -28,9 +29,12 @@ class AssistantSettingsQuery(ImmutableDTO):
 
 
 class AssistantSettingsCommand(ImmutableDTO):
+    """An owner changes the settings (audited)."""
+
     user_id: UserId
     business_id: BusinessId
     settings: AssistantSettingsRequest
+    client_ip_address: ClientIpAddress | None = None
 
 
 class AssistantSettingsView(ImmutableDTO):

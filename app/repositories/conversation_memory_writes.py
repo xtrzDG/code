@@ -10,7 +10,11 @@ from app.repositories.conversation_lookup_fields import (
     CONTACT_ID_FIELD,
     LAST_MESSAGE_AT_FIELD,
 )
-from app.repositories.document_queries import descending, field_equals
+from app.repositories.document_queries import (
+    IS_SANDBOX_FIELD,
+    descending,
+    field_equals,
+)
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.customer_memory.conversation_summaries import (
     ConversationSummaryWrite,
@@ -45,7 +49,11 @@ class ConversationMemoryWrites(BusinessScopedRepository[ConversationDocument]):
         return ListItemCount(
             int(
                 self._count_in_business(
-                    business_id, [field_equals(CONTACT_ID_FIELD, contact_id)]
+                    business_id,
+                    [
+                        field_equals(CONTACT_ID_FIELD, contact_id),
+                        field_equals(IS_SANDBOX_FIELD, False),
+                    ],
                 )
             )
         )

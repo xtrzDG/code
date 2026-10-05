@@ -32,12 +32,19 @@ from app.schemas.dto.conversations import (
     VoiceToolCallRequest,
     VoiceToolCallResult,
 )
+from app.schemas.dto.customer_memory.returning_customers import (
+    CustomerMemory,
+    CustomerMemoryRequest,
+)
 from app.schemas.dto.media import (
     VoiceNoteTranscription,
     VoiceNoteTranscriptionRequest,
 )
 from app.use_cases.conversations.build_call_greeting_use_case import (
     BuildCallGreetingUseCase,
+)
+from app.use_cases.conversations.memory.recall_customer_memory_use_case import (
+    RecallCustomerMemoryUseCase,
 )
 from app.use_cases.conversations.open_voice_conversation_use_case import (
     OpenVoiceConversationUseCase,
@@ -96,6 +103,20 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
     )
+    # What the assistant remembers of a returning customer (1121).
+    recall_customer_memory_use_case: Factory[
+        UseCaseContract[CustomerMemoryRequest, CustomerMemory]
+    ] = Factory(
+        RecallCustomerMemoryUseCase,
+        assistant_settings_repo=repositories.assistant_settings_repo,
+        conversation_memory_repo=repositories.conversation_repo,
+        booking_repo=repositories.booking_repo,
+        lead_repo=repositories.lead_repo,
+        resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        note_repo=repositories.conversation_note_repo,
+        job_queue=facilitators.job_queue_facilitator,
+    )
     prepare_conversation_turn_use_case: Factory[
         UseCaseContract[InboundMessage, PreparedTurn]
     ] = Factory(
@@ -112,6 +133,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         contact_message_limit=config.app_settings.provided.contact_message_limit_per_hour,
         injection_flag_limit=config.app_settings.provided.reply_safety.injection_flag_limit,
+        recall_customer_memory=recall_customer_memory_use_case,
     )
     generate_assistant_reply_use_case: Factory[
         UseCaseContract[PreparedTurn, GeneratedReply]

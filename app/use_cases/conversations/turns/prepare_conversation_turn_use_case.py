@@ -29,11 +29,14 @@ from app.schemas.constants.reply_safety import InjectionSignal
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
-from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.message_media import MessageAttachment
-from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.conversation_engine import PreparedTurn
 from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.customer_memory.returning_customers import (
+    CustomerMemory,
+    CustomerMemoryRequest,
+)
 from app.schemas.dto.language_detection import DetectedLanguage
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.schemas.typings.conversations.booleans import IsAfterHours
@@ -54,6 +57,8 @@ from app.use_cases.conversations.turns.inbound_message_rules import (
 from app.use_cases.conversations.turns.prepared_turn_parts import (
     build_tool_context,
     build_turn_context_line,
+    has_assistant_reply,
+    is_business_open,
     touch_conversation,
 )
 from app.use_cases.conversations.turns.turn_gate import choose_turn_gate
@@ -65,7 +70,6 @@ from app.use_cases.shared.conversation_resolution import (
     resolve_conversation,
 )
 from app.use_cases.shared.turn_time import to_local_datetime
-from app.utilities.conversations.opening_hours import is_open_at
 from app.utilities.conversations.tool_selection import select_available_tools
 from app.utilities.media.attachment_texts import (
     describe_message_for_model,
@@ -109,6 +113,8 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
        can read (a sticker, a file, a voice note without words) is answered
        with the platform's request to write (ATTACHMENT_NOTICE); voice-note
        transcripts and places count as what the customer said.
+    6. The customer memory (`RecallCustomerMemoryUseCase`): a returning
+       customer's memory joins the context line of the first reply only.
     """
 
     def __init__(
@@ -125,6 +131,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         wall_clock: WallClock[Microseconds],
         contact_message_limit: ContactMessageLimit,
         injection_flag_limit: InjectionFlagLimit,
+        recall_customer_memory: UseCaseContract[CustomerMemoryRequest, CustomerMemory],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
@@ -142,6 +149,9 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         self._live_events: EventPublisherFacilitatorContract = live_events
         self._contact_message_limit: ContactMessageLimit = contact_message_limit
         self._injection_flag_limit: InjectionFlagLimit = injection_flag_limit
+        self._recall_customer_memory: UseCaseContract[
+            CustomerMemoryRequest, CustomerMemory
+        ] = recall_customer_memory
 
     def run(self, input_data: InboundMessage) -> PreparedTurn:
         input_data = remove_nul_characters(input_data)
@@ -167,6 +177,9 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             input_data,
             is_sandbox,
             now,
+        )
+        previous_last_message_at: Microseconds | None = (
+            None if is_new_conversation else conversation.last_message_at
         )
         version: AssistantVersionDocument | None = self._assistant_version_repo.get(
             business.id, conversation.assistant_version_id
@@ -201,19 +214,15 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         )
         language: LanguageTag = detected.language
         local_now: datetime = to_local_datetime(now, business)
-        profile: BusinessProfileDocument | None = (
-            self._business_profile_repo.get_by_business(business.id)
+        is_open: bool | None = is_business_open(
+            self._business_profile_repo,
+            self._schedule_exception_repo,
+            business,
+            local_now,
         )
-        is_open: bool | None = (
-            None
-            if profile is None
-            else is_open_at(
-                local_now,
-                list(profile.hours),
-                self._schedule_exception_repo.list_by_business(business.id),
-            )
+        is_first_reply: bool = not has_assistant_reply(
+            self._message_repo, business, conversation
         )
-        is_first_reply: bool = not self._has_assistant_reply(business, conversation)
         self._message_repo.save(
             MessageDocument(
                 # The inbox's id: a turn run again stores the message once.
@@ -239,6 +248,17 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
             is_sandbox=conversation.is_sandbox,
         )
         remember_contact_language(self._contact_repo, contact, detected, now)
+        memory: CustomerMemory = self._recall_customer_memory.run(
+            CustomerMemoryRequest(
+                business=business,
+                contact=contact,
+                conversation=conversation,
+                is_new_conversation=is_new_conversation,
+                previous_last_message_at=previous_last_message_at,
+                wants_context=is_first_reply,
+                now=now,
+            )
+        )
         return PreparedTurn(
             business=business,
             version=version,
@@ -263,6 +283,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 local_now,
                 is_open is False,
                 is_first_reply,
+                memory,
             ),
             tool_context=build_tool_context(
                 business,
@@ -273,21 +294,4 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 select_available_tools(version, business),
             ),
             received_at=now,
-        )
-
-    def _has_assistant_reply(
-        self,
-        business: BusinessDocument,
-        conversation: ConversationDocument,
-    ) -> bool:
-        return (
-            int(
-                self._message_repo.count_by_conversation(
-                    business.id,
-                    conversation.id,
-                    MessageDirection.OUTBOUND,
-                    author=MessageAuthor.ASSISTANT,
-                )
-            )
-            > 0
         )

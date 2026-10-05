@@ -56,7 +56,7 @@ class ConversationMemoryRepoContract(RepoContract, Protocol):
     def count_by_contact(
         self, business_id: BusinessId, contact_id: ContactId
     ) -> ListItemCount:
-        """How many conversations a customer had with the business."""
+        """How many real (not sandbox) conversations a customer had."""
         raise NotImplementedError
 
     def set_summary(
