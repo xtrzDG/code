@@ -11,6 +11,25 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-05 — day 0: periods since launch, the free trial, topics per language
+
+Spec: `b31a87dcb4422f75`
+
+- **Changed** `GET /v1/businesses/{business_id}/value` and
+  `GET /v1/businesses/{business_id}/dashboard` never start a period before
+  the business went live (or was created): asked from earlier, `date_from`
+  is that day and the new `is_since_launch` is true (the period before is
+  as many days before it). `ValueModel` adds optional `went_live_at`.
+- **Changed** `ValueModel` adds optional `is_trial`, `trial_ends_at` and
+  `plan_cost_after_trial_minor` (the monthly price after the free trial,
+  owners only). During the trial `plan_cost_minor` and `return_multiple`
+  are null; `return_multiple` is also null for an estimate of nothing (or
+  one that rounds to 0.0).
+- **Changed** `GET /v1/businesses/{business_id}/value/topics` takes
+  `?language=` (the cabinet's; else the owner's) and labels every topic in
+  it; `ConversationTopicView` adds `kind` (`named` or `other`, the
+  catch-all of other questions, which clients name in their own words).
+
 ## 2026-10-05 — wave 12 together: deeper checks, customer memory, online migrations, retention, legal texts
 
 Spec: `0ccf13ff93342e14`
