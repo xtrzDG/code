@@ -50,6 +50,7 @@ from app.gateways.worker.periodic.refresh_exchange_rates import (
 from app.gateways.worker.periodic.request_visit_feedback import (
     REQUEST_VISIT_FEEDBACK_JOB,
 )
+from app.gateways.worker.periodic.retention import PURGE_EXPIRED_PERSONAL_DATA_JOB
 from app.gateways.worker.periodic.send_value_reports import SEND_VALUE_REPORTS_JOB
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     SWEEP_RATE_LIMIT_BUCKETS_JOB,
@@ -79,6 +80,7 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
     PROCESS_POST_CALL_JOB,
 )
+from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
 from app.worker_main import STOP_SIGNALS, install_stop_signal_handlers, main
 from tests.e2e.harness import start_workshop
 
@@ -122,6 +124,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (RECORD_PLATFORM_STATUS_JOB, 300),
         (END_EXPIRED_SUPPORT_ACCESS_JOB, 600),
         (PURGE_BUSINESS_EXPORTS_JOB, 3600),
+        (PURGE_EXPIRED_PERSONAL_DATA_JOB, 86_400),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -141,8 +144,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         IMPORT_WEBSITE_JOB,
         ROTATE_ENCRYPTED_SECRETS_JOB,
         SEND_PLATFORM_ALERT_JOB,
+        ERASE_PROCESSOR_COPIES_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (24, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (25, 0, 0)
     assert right_after.periodic_runs == 0
     assert a_minute_later.periodic_runs == 1  # the trace flush
     # Trials, overage, grace periods, reminders, the trace flush, the sweep

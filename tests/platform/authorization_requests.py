@@ -60,6 +60,10 @@ REQUEST_BODIES: dict[str, JsonObject] = {
     f"POST {B}/manager-contacts/telegram-link": {"name": "Nino"},
     f"POST {B}/members": {"phone_number": "+995 555 77 88 99", "role": "staff"},
     f"PATCH {B}/members/{{user_id}}": {"role": "staff"},
+    f"PUT {B}/privacy-settings": {
+        "conversation_retention_days": 730,
+        "llm_turn_retention_days": 30,
+    },
     f"PUT {B}/public-slug": {"slug": "matrix-cafe"},
     f"PUT {B}/security": {"require_mfa_for_members": False},
     f"POST {B}/resources": {"name": "Terrace", "capacity": 4},

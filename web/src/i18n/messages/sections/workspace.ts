@@ -60,6 +60,9 @@ import { notificationsEn } from "./workspace/notifications.en";
 import { notificationsKa } from "./workspace/notifications.ka";
 import { notificationsRu } from "./workspace/notifications.ru";
 import { privacyNoticeEn } from "./workspace/privacyNotice.en";
+import { privacyRetentionEn } from "./workspace/privacyRetention.en";
+import { privacyRetentionKa } from "./workspace/privacyRetention.ka";
+import { privacyRetentionRu } from "./workspace/privacyRetention.ru";
 import { privacyNoticeKa } from "./workspace/privacyNotice.ka";
 import { privacyNoticeRu } from "./workspace/privacyNotice.ru";
 import { quickRepliesEn } from "./workspace/quickReplies.en";
@@ -100,6 +103,7 @@ export const workspaceEn = {
   share: shareEn,
   privacyNotice: privacyNoticeEn,
   dataExports: dataExportsEn,
+  privacyRetention: privacyRetentionEn,
 } as const;
 
 export const workspaceRu: Translation<typeof workspaceEn> = {
@@ -124,6 +128,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   share: shareRu,
   privacyNotice: privacyNoticeRu,
   dataExports: dataExportsRu,
+  privacyRetention: privacyRetentionRu,
 };
 
 export const workspaceKa: Translation<typeof workspaceEn> = {
@@ -148,4 +153,5 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   share: shareKa,
   privacyNotice: privacyNoticeKa,
   dataExports: dataExportsKa,
+  privacyRetention: privacyRetentionKa,
 };

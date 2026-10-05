@@ -448,3 +448,12 @@ _.suggested_scope  # app/schemas/dto/conversation_feed/answer_corrections.py
 _.current_fact  # app/schemas/dto/conversation_feed/answer_corrections.py
 _.is_corrected  # app/schemas/dto/conversation_feed/answer_corrections.py
 _.bad_rating_count  # app/schemas/dto/conversation_feed/answers_to_improve.py
+
+# Retention (1123): what the latest purge removed, when it ran and the jobs
+# queued at the sub-processors after an erasure are response fields only
+# the cabinet reads.
+_.deleted_media  # app/schemas/domain/retention_purges.py (RetentionPurgeCounts)
+_.deleted_missed_calls  # app/schemas/domain/retention_purges.py
+_.queued_processor_erasures  # app/schemas/dto/compliance.py (ContactErasureResult)
+_.ran_at  # app/schemas/dto/retention.py (RetentionPurgeView)
+_.last_purge  # app/schemas/dto/retention.py (PrivacySettingsView)

@@ -41,6 +41,7 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
 from tests.media.media_fakes import InMemoryMediaStorage
+from tests.privacy.processor_erasure_doubles import ProcessorErasureBed
 from tests.privacy.suppression_doubles import build_suppression_list
 from tests.users.accounts_user_use_cases import AccountsUserUseCases
 
@@ -143,6 +144,8 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
         self.message_media_repo = MessageMediaRepository(
             InMemoryDocumentCollectionAdapter(MessageMediaDocument)
         )
+        # Langfuse and ElevenLabs, whose copies the erasure deletes by jobs.
+        self.processor_erasure = ProcessorErasureBed()
         self.delete_contact_data = DeleteContactDataUseCase(
             authorize_business_access=self.authorize_business_access,
             collect_contact_records=collect_contact_records,
@@ -166,6 +169,7 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             outbound_message_repo=self.outbound_message_repo,
             inbound_event_repo=self.inbound_event_repo,
             feedback_request_repo=self.feedback_request_repo,
+            processor_erasure=self.processor_erasure.facilitator(),
         )
         self.purge_expired_recordings = PurgeExpiredRecordingsUseCase(
             business_repo=self.business_repo,

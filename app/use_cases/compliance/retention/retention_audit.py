@@ -13,8 +13,8 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 # The audit entity of each count (the names other purges and the erasure
 # use for the same records, so the cabinet's audit filter groups them).
 PURGED_ENTITIES: tuple[tuple[str, str], ...] = (
-    ("message", "deleted_messages"),
-    ("llm_turn", "deleted_llm_turns"),
+    ("messages", "deleted_messages"),
+    ("llm_turns", "deleted_llm_turns"),
     ("conversation_note", "deleted_notes"),
     ("message_media", "deleted_media"),
     ("missed_call", "deleted_missed_calls"),

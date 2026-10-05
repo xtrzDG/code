@@ -152,7 +152,14 @@ def test_the_public_page_config_names_no_secret(workshop: Workshop) -> None:
         "api_base_url",
         "widget_script_url",
         "privacy_url",
+        "conversation_retention_days",
+        "llm_turn_retention_days",
     }
+    # The privacy notice names the business's own periods (the defaults).
+    assert (body["conversation_retention_days"], body["llm_turn_retention_days"]) == (
+        730,
+        30,
+    )
 
 
 def test_a_business_without_an_address_is_found_by_its_id(workshop: Workshop) -> None:

@@ -20,7 +20,8 @@ export const privacyNoticeEn = {
   sharedTitle: "Who sees it",
   shared: "The staff of {business}. To write answers, the text of the conversation is processed by the AI model provider the assistant runs on, only for that purpose.",
   keptTitle: "How long",
-  kept: "{business} decides how long conversations are kept. You can ask it to delete yours at any time.",
+  kept:
+    "{business} keeps conversations for {conversations} after their last message, then they are deleted automatically, and the records of the assistant's AI calls for {modelRecords}. You can ask it to delete yours at any time.",
   rightsTitle: "Your choices",
   rights: "You can ask {business} what it keeps about you, and to correct or delete it: write in the chat or contact the business directly. The assistant can make mistakes, so check important details (prices, times) with the business.",
   platformNote: "This is the default notice of the Assistant Workshop platform. {business} may publish its own.",

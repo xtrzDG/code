@@ -53,6 +53,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"DELETE {B}/contacts/{{contact_id}}",
         f"GET {B}/contacts/{{contact_id}}/export",
         f"POST {B}/dpa",
+        f"GET {B}/privacy-settings",
+        f"PUT {B}/privacy-settings",
         f"GET {B}/feedback-requests",
         f"PUT {B}/inbox/settings",
         f"DELETE {B}/integrations/google-calendar",

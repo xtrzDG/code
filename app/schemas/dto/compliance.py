@@ -21,6 +21,7 @@ from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.booleans import IsDpaAccepted
 from app.schemas.typings.compliance.constrained_integers import (
+    AuditRecordCount,
     DeletedRecordingCount,
     ErasedRecordCount,
     PurgedCallCount,
@@ -131,6 +132,8 @@ class AuditLogEntryView(ImmutableDTO):
     actor_id: UserId | None = None
     ip_address: ClientIpAddress | None = None
     occurred_at: Microseconds
+    # How many records a purge or a deletion at a sub-processor covered.
+    record_count: AuditRecordCount | None = None
 
 
 class AuditLogPage(ImmutableDTO):

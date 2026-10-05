@@ -70,7 +70,7 @@ const ACTIONS = (Object.keys(ACTION_LABELS) as AuditAction[]).filter((action) =>
 
 /** Operations on personal data, newest first, 50 at a time, filtered on the server. */
 export function AuditTab() {
-  const { t, tDynamic } = useI18n();
+  const { t, tp, tDynamic } = useI18n();
   const format = useBusinessFormat();
   const { business } = useBusiness();
   const [filters, setFilters] = useState<AuditFilters>(EMPTY_AUDIT_FILTERS);
@@ -90,6 +90,11 @@ export function AuditTab() {
 
   const update = (patch: Partial<AuditFilters>) => setFilters((current) => ({ ...current, ...patch }));
   const entityText = (entity: string) => tDynamic(`settings.audit.entities.${entity}`, entity);
+  // How many records a purge or a deletion at a sub-processor covered.
+  const recordCount = (count: number | null | undefined) =>
+    count === null || count === undefined ? null : (
+      <span className="ml-2 text-xs text-ink-subtle">{tp("settings.audit.recordCount", count)}</span>
+    );
   const actorName = (actorId: string | null | undefined, action?: AuditAction) =>
     actorLabel(actorId, business.members) ??
     (action === "admin_access" ? t("settings.audit.platform") : actorId ? shortId(actorId) : t("settings.audit.system"));
@@ -212,6 +217,7 @@ export function AuditTab() {
                           {shortId(entry.entity_id)}
                         </span>
                       ) : null}
+                      {recordCount(entry.record_count)}
                     </Td>
                     <Td dir="auto">{actorName(entry.actor_id, entry.action)}</Td>
                     <Td className="font-mono text-xs text-ink-muted">{entry.ip_address ?? "—"}</Td>
@@ -230,6 +236,7 @@ export function AuditTab() {
                 <p className="text-sm text-ink">
                   {entityText(entry.entity)}
                   {entry.entity_id ? <span className="ml-2 font-mono text-xs text-ink-subtle">{shortId(entry.entity_id)}</span> : null}
+                  {recordCount(entry.record_count)}
                 </p>
                 <p className="text-xs text-ink-muted" dir="auto">
                   {actorName(entry.actor_id, entry.action)}

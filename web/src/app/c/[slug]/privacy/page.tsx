@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { getI18n } from "@/i18n/server";
+import { periodLabel } from "@/lib/retentionPeriods";
 import { hostedChatPath, lookUpHostedChat, type HostedChatLookup } from "@/server/hostedChat";
 
 import { HostedChatNotice, HostedChatShell } from "../_components/HostedChatShell";
@@ -25,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function PrivacyNoticePage({ params }: PageProps<"/c/[slug]/privacy">) {
   const { slug } = await params;
-  const [{ t, locale }, lookup] = await Promise.all([getI18n(), lookUp(slug)]);
+  const [{ t, tp, locale }, lookup] = await Promise.all([getI18n(), lookUp(slug)]);
   const page = { language: locale, direction: "ltr" as const };
   if (lookup.kind === "missing") {
     notFound();
@@ -57,7 +58,17 @@ export default async function PrivacyNoticePage({ params }: PageProps<"/c/[slug]
     },
     { title: t("privacyNotice.whyTitle"), body: [t("privacyNotice.why", values)] },
     { title: t("privacyNotice.sharedTitle"), body: [t("privacyNotice.shared", values)] },
-    { title: t("privacyNotice.keptTitle"), body: [t("privacyNotice.kept", values)] },
+    {
+      title: t("privacyNotice.keptTitle"),
+      body: [
+        // The periods the business chose in Settings → Privacy.
+        t("privacyNotice.kept", {
+          ...values,
+          conversations: periodLabel(tp, view.conversation_retention_days),
+          modelRecords: periodLabel(tp, view.llm_turn_retention_days),
+        }),
+      ],
+    },
     { title: t("privacyNotice.rightsTitle"), body: [t("privacyNotice.rights", values)] },
   ];
 
