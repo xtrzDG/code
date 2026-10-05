@@ -50,7 +50,8 @@ from app.gateways.http.widget_script_routes import build_widget_script_router
 
 def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     """
-    Routers of every module, sharing one bearer-token dependency.
+    Routers of every module, sharing one bearer-token dependency, the
+    public channel routes (webhooks and the website widget) first.
 
     Operators are built once here; their use cases are stateless and the
     stateful collaborators (locks, caches, storage) are container singletons.
@@ -72,6 +73,21 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     )
     business_access_operator = accounts.authorize_business_access_operator()
     return [
+        # First: a request is matched against the routes one by one, and
+        # widget polls (every open chat every 4 s) and webhook bursts are
+        # most of the traffic; no other route answers these paths
+        # (tests/platform/test_route_matching_order.py).
+        build_channel_router(
+            telegram_webhook_operator=channels.telegram_webhook_operator(),
+            meta_webhook_verification_operator=channels.verify_meta_webhook_operator(),
+            meta_webhook_operator=channels.meta_webhook_operator(),
+            platform_bot_webhook_operator=(
+                channels.handle_platform_bot_update_operator()
+            ),
+            widget_config_operator=channels.get_widget_config_operator(),
+            widget_message_operator=channels.widget_message_operator(),
+            widget_messages_operator=channels.get_widget_messages_operator(),
+        ),
         build_catalog_router(
             list_countries_operator=accounts.list_countries_operator(),
             get_country_profile_operator=accounts.get_country_profile_operator(),
@@ -233,17 +249,6 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
                 assistants.rollback_assistant_version_operator()
             ),
             current_user=current_user,
-        ),
-        build_channel_router(
-            telegram_webhook_operator=channels.telegram_webhook_operator(),
-            meta_webhook_verification_operator=channels.verify_meta_webhook_operator(),
-            meta_webhook_operator=channels.meta_webhook_operator(),
-            platform_bot_webhook_operator=(
-                channels.handle_platform_bot_update_operator()
-            ),
-            widget_config_operator=channels.get_widget_config_operator(),
-            widget_message_operator=channels.widget_message_operator(),
-            widget_messages_operator=channels.get_widget_messages_operator(),
         ),
         *build_channel_setup_routers(operators, current_user),
         build_voice_router(

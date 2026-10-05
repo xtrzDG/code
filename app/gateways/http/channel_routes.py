@@ -7,6 +7,7 @@ from fastapi.responses import PlainTextResponse
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.openapi_error_contract import standard_error_responses
+from app.gateways.http.serialized_json_response import serialized_json_response
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
     describe_json_body,
@@ -200,16 +201,16 @@ def build_channel_router(
             )
         )
 
-    @router.get(WIDGET_MESSAGES_PATH)
+    # Every open chat polls every 4 s: the answer is serialized here, so
+    # the request makes one hop to a request thread, not two.
+    @router.get(WIDGET_MESSAGES_PATH, response_model=WidgetMessagesView)
     def list_widget_messages(
         request: Request,
         business_id: str,
-        response: Response,
         session_key: Annotated[str, Header(alias=WIDGET_SESSION_KEY_HEADER)],
         after: Annotated[str | None, Query()] = None,
-    ) -> WidgetMessagesView:
-        response.headers.update(WIDGET_CORS_HEADERS)
-        return widget_messages_operator.operate(
+    ) -> Response:
+        view: WidgetMessagesView = widget_messages_operator.operate(
             WidgetMessagesQuery(
                 business_id=parse_path_identifier(business_id, BusinessId, "Chat"),
                 session_key=parse_session_key(session_key),
@@ -217,6 +218,7 @@ def build_channel_router(
                 client_ip_address=read_client_ip_address(request),
             )
         )
+        return serialized_json_response(view, WIDGET_CORS_HEADERS)
 
     return router
 
