@@ -117,28 +117,10 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
             trial_ends_at,
         ) or find_covering_paid_invoice(invoices, now)
         if paid_invoice is not None:
-            subscription.status = SubscriptionStatus.ACTIVE
-            subscription.period_start = paid_invoice.period_start
-            subscription.period_end = paid_invoice.period_end
-            subscription.grace_until = None
-            advance_to_paid_periods(subscription, invoices, now)
-            subscription.updated_at = now
-            self._subscription_repo.save(subscription)
-            self._product_events.record(
-                billing_event(ProductEventName.SUBSCRIBED, subscription)
-            )
-
-            def restore_full_service(current: BusinessDocument) -> None:
-                # Changed on the business as stored now, so an owner's edit
-                # saved while the job runs is kept.
-                if current.service_mode is not ServiceMode.FULL:
-                    current.service_mode = ServiceMode.FULL
-                    current.updated_at = now
-
-            self._business_repo.update(business.id, restore_full_service)
+            self._activate(business, subscription, paid_invoice, invoices, now)
             return
 
-        self._issue_due_invoices.run(
+        issued: list[InvoiceDocument] = self._issue_due_invoices.run(
             DueInvoicesRequest(
                 business=business,
                 subscription=subscription,
@@ -146,6 +128,16 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
                 is_setup_fee_included=True,
             )
         )
+        # The team's discount or credit may have paid the first period.
+        paid_by_credit: InvoiceDocument | None = find_paid_period_invoice(
+            issued, trial_ends_at
+        )
+        if paid_by_credit is not None and list_open_invoices(issued) == []:
+            self._activate(
+                business, subscription, paid_by_credit, invoices + issued, now
+            )
+            return
+
         plan: PlanDefinition = self._plan_registry.get(subscription.plan_key)
         subscription.status = SubscriptionStatus.PAST_DUE
         subscription.grace_until = add_local_days(
@@ -173,3 +165,31 @@ class EndTrialsUseCase(UseCaseContract[JobTick, JobReport]):
                 )
             ),
         )
+
+    def _activate(
+        self,
+        business: BusinessDocument,
+        subscription: SubscriptionDocument,
+        paid_invoice: InvoiceDocument,
+        invoices: list[InvoiceDocument],
+        now: Microseconds,
+    ) -> None:
+        subscription.status = SubscriptionStatus.ACTIVE
+        subscription.period_start = paid_invoice.period_start
+        subscription.period_end = paid_invoice.period_end
+        subscription.grace_until = None
+        advance_to_paid_periods(subscription, invoices, now)
+        subscription.updated_at = now
+        self._subscription_repo.save(subscription)
+        self._product_events.record(
+            billing_event(ProductEventName.SUBSCRIBED, subscription)
+        )
+
+        def restore_full_service(current: BusinessDocument) -> None:
+            # Changed on the business as stored now, so an owner's edit
+            # saved while the job runs is kept.
+            if current.service_mode is not ServiceMode.FULL:
+                current.service_mode = ServiceMode.FULL
+                current.updated_at = now
+
+        self._business_repo.update(business.id, restore_full_service)

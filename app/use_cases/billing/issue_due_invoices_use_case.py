@@ -1,8 +1,12 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.billing_credits import BillingCreditLockRegistryContract
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
+from app.contracts.repositories.client_care_repositories import (
+    BillingCreditRepoContract,
+)
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.billing import (
@@ -17,6 +21,10 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.billing import Money, PlanDefinition
 from app.schemas.dto.billing_ledger import DueInvoicesRequest, InvoiceDescriptionInput
 from app.schemas.typings.billing.strings import InvoiceDescription
+from app.use_cases.billing.invoice_issuing_adjustments import (
+    InvoiceIssuingAdjustments,
+    settled_status,
+)
 from app.use_cases.shared.billing_records import OPEN_INVOICE_STATUSES
 from app.use_cases.shared.invoice_payments import record_invoice_payment
 from app.use_cases.shared.subscription_pricing import price_setup_fee
@@ -44,6 +52,13 @@ class IssueDueInvoicesUseCase(
     the seller and the buyer, and carries the VAT of the tax policy on top
     of the price (`InvoiceIssuingFacilitator`); a paid one records when
     and with which card.
+
+    What the platform team granted (R13) comes off the price before tax of
+    an invoice issued to be paid: the client's discount on its service
+    periods, then its credit (`InvoiceIssuingAdjustments`); a setup fee the
+    team waived is never invoiced. An invoice that leaves nothing to pay is
+    paid at once. A period the provider has already charged totals exactly
+    the charge, so neither applies to it.
     """
 
     def __init__(
@@ -60,7 +75,12 @@ class IssueDueInvoicesUseCase(
             InvoiceDescriptionInput,
             list[InvoiceLineText],
         ],
+        billing_credit_repo: BillingCreditRepoContract,
+        credit_lock: BillingCreditLockRegistryContract,
     ) -> None:
+        self._adjustments: InvoiceIssuingAdjustments = InvoiceIssuingAdjustments(
+            invoice_repo, billing_credit_repo, credit_lock
+        )
         self._invoice_issuing: InvoiceIssuingFacilitatorContract = invoice_issuing
         self._invoice_repo: InvoiceRepoContract = invoice_repo
         self._plan_registry: PlanRegistryContract = plan_registry
@@ -97,6 +117,7 @@ class IssueDueInvoicesUseCase(
             not input_data.is_setup_fee_included
             or input_data.subscription.billing_period is not BillingPeriod.MONTHLY
             or input_data.subscription.setup_option is not SetupOption.DONE_FOR_YOU
+            or input_data.subscription.is_setup_fee_waived
         ):
             return False
 
@@ -195,20 +216,37 @@ class IssueDueInvoicesUseCase(
         draft: InvoiceDocument,
         now: Microseconds,
     ) -> InvoiceDocument:
-        """Number, parties and VAT, the requested status, then stored."""
+        """
+        Discount and credit off the price of a bill to pay, then number,
+        parties and VAT, the requested status (paid when nothing is left to
+        pay), and stored.
+        """
 
-        invoice: InvoiceDocument = self._invoice_issuing.issue(
-            input_data.business,
-            draft,
-            charged=(
-                input_data.charged_amount
-                if draft.kind is InvoiceKind.SERVICE_PERIOD
-                else None
-            ),
+        charged: Money | None = (
+            input_data.charged_amount
+            if draft.kind is InvoiceKind.SERVICE_PERIOD
+            else None
         )
-        record_invoice_payment(invoice, input_data.status, input_data.payment_card, now)
-        self._invoice_repo.save(invoice)
-        return invoice
+
+        def issue_and_store(adjusted: InvoiceDocument) -> InvoiceDocument:
+            invoice: InvoiceDocument = self._invoice_issuing.issue(
+                input_data.business, adjusted, charged=charged
+            )
+            record_invoice_payment(
+                invoice,
+                settled_status(input_data.status, invoice),
+                input_data.payment_card,
+                now,
+            )
+            self._invoice_repo.save(invoice)
+            return invoice
+
+        if charged is not None:
+            return issue_and_store(draft)
+
+        return self._adjustments.issue(
+            input_data.subscription, draft, issue_and_store, now
+        )
 
     def _settle_existing(
         self,

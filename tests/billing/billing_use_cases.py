@@ -102,6 +102,8 @@ class BillingUseCases(BillingInfrastructure):
             wall_clock=wall_clock,
             invoice_issuing=self.invoicing.invoice_issuing,
             invoice_line_texts_transformer=self.invoice_line_texts_transformer,
+            billing_credit_repo=self.billing_credit_repo,
+            credit_lock=self.credit_lock,
         )
         self.get_overview = GetBillingOverviewUseCase(
             authorize_business_access=authorize,
