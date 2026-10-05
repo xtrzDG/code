@@ -34,6 +34,9 @@ from app.containers.adapters.rate_collections_container import (
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,
 )
+from app.containers.adapters.spend_guard_collections_container import (
+    SpendGuardCollectionsContainer,
+)
 from app.containers.adapters.value_collections_container import (
     ValueCollectionsContainer,
 )
@@ -182,8 +185,18 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # Spend limits and the websites allowed to show a chat (1142).
+    spend_guard_collections: SpendGuardCollectionsContainer = Container(  # type: ignore[assignment]
+        SpendGuardCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
     repositories: RepositoriesContainer = Container(  # type: ignore[assignment]
         RepositoriesContainer,
+        spend_guard_collections=spend_guard_collections,
+        usage_collections=adapters.collections,
         legal_collections=legal_collections,
         privacy_collections=privacy_collections,
         retention_collections=adapters.collections,

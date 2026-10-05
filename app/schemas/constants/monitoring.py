@@ -13,7 +13,9 @@ class PlatformAlertCode(StrEnum):
     tools fail. STALE_WORKER: a worker of the current release stopped
     beating. OTP_CAP_TRIPS: a platform cap refused login codes.
     QUALITY_DROP: the judge's scores of real conversations fell against the
-    week before (production quality).
+    week before (production quality). SPEND_SPIKE: today's provider spend
+    is far above the daily mean of the week before. SPEND_BUDGET: today's
+    provider spend passed 80 % of the platform's daily budget.
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -25,6 +27,8 @@ class PlatformAlertCode(StrEnum):
     STALE_WORKER = "stale_worker"
     OTP_CAP_TRIPS = "otp_cap_trips"
     QUALITY_DROP = "quality_drop"
+    SPEND_SPIKE = "spend_spike"
+    SPEND_BUDGET = "spend_budget"
 
 
 class PlatformAlertStatus(StrEnum):

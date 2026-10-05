@@ -28,7 +28,9 @@ class PlatformAlertStateDocument(BaseDocument):
     """
 
     # 2: `code` may be `quality_drop` (production quality, migration 1120).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: `code` may be `spend_spike` or `spend_budget` (the spend guard,
+    # migration 1142).
+    schema_version: SchemaVersion = SchemaVersion("3")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

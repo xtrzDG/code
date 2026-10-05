@@ -25,6 +25,7 @@ from app.utilities.storage.lookup_field_builders import (
 )
 from app.utilities.storage.platform_lookup_catalog import PLATFORM_LOOKUP_FIELDS
 from app.utilities.storage.quality_collections import QUALITY_LOOKUP_FIELDS
+from app.utilities.storage.spend_guard_collections import SPEND_GUARD_LOOKUP_FIELDS
 
 DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName, tuple[DocumentLookupField, ...]
@@ -181,8 +182,14 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         filter_field("entity"),
         integer_field("created_at"),
     ),
-    # Usage of a billing period.
-    DocumentCollectionName("usage_events"): (integer_field("occurred_at"),),
+    # Usage of a billing period; today's spend of a business and of the
+    # platform, summed by kind (the spend guard, 1142).
+    DocumentCollectionName("usage_events"): (
+        integer_field("occurred_at"),
+        filter_field("kind"),
+        integer_field("cost_micro_usd"),
+        integer_field("quantity"),
+    ),
     # Webhook redelivery receipts (unique per message) and their purge.
     DocumentCollectionName("channel_message_receipts"): (
         filter_field("channel"),
@@ -254,6 +261,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("export_download_links"): (integer_field("expires_at"),),
     # The judge's scores of real conversations (1120).
     **QUALITY_LOOKUP_FIELDS,
+    # The spend guard's marks of a day (1142).
+    **SPEND_GUARD_LOOKUP_FIELDS,
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

@@ -88,6 +88,9 @@ from app.utilities.config_helpers.app_settings.seller_settings_section import (
 from app.utilities.config_helpers.app_settings.session_settings_section import (
     read_session_settings,
 )
+from app.utilities.config_helpers.app_settings.spend_guard_settings_section import (
+    read_spend_guard_settings,
+)
 from app.utilities.config_helpers.app_settings.support_settings_section import (
     read_support_settings,
 )
@@ -164,4 +167,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_seller_settings(environment_variables),
         **read_quality_settings(environment_variables),
         **read_public_site_settings(environment_variables),
+        **read_spend_guard_settings(environment_variables),
     )

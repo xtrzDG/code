@@ -34,7 +34,9 @@ class AuditLogEntryDocument(BaseDocument):
     # enum rule, docs/operations/deploys.md).
     # 4: `record_count`, how many records a purge or a deletion at a
     # sub-processor covered (optional, so version 3 needs no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 5: the action `spend_limit_reached` (in the business's log; an
+    # exception to the enum rule, docs/operations/deploys.md).
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
     actor_id: UserId | None = None

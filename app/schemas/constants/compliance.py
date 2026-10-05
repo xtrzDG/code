@@ -12,6 +12,8 @@ class AuditAction(StrEnum):
     client's cabinet (with the reason, the address and how it ended);
     SESSION_REVOKED (a person ended sessions of theirs) and
     PLATFORM_ADMIN_CHANGED (the admin team changed) name no business.
+    SPEND_LIMIT_REACHED: the business passed its hard daily spend limit and
+    its assistant only takes messages for the team until the day ends.
     """
 
     VIEW = "view"
@@ -28,3 +30,4 @@ class AuditAction(StrEnum):
     SUPPORT_ACCESS_END = "support_access_end"
     SESSION_REVOKED = "session_revoked"
     PLATFORM_ADMIN_CHANGED = "platform_admin_changed"
+    SPEND_LIMIT_REACHED = "spend_limit_reached"

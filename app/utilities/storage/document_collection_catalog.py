@@ -81,6 +81,7 @@ from app.utilities.storage.quality_collections import QUALITY_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
     SIGN_IN_DOCUMENT_COLLECTIONS,
 )
+from app.utilities.storage.spend_guard_collections import SPEND_GUARD_COLLECTIONS
 from app.utilities.storage.teaching_collections import TEACHING_COLLECTIONS
 from app.utilities.storage.value_collections import VALUE_COLLECTIONS
 
@@ -276,6 +277,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *QUALITY_COLLECTIONS,  # The judge's scores of real conversations (1120).
     *MEMORY_COLLECTIONS,  # How the assistant remembers customers (1121).
     *LEGAL_COLLECTIONS,  # Sub-processor change notices (1124).
+    *SPEND_GUARD_COLLECTIONS,  # Spend limits, allowed chat websites (1142).
 )
 
 
