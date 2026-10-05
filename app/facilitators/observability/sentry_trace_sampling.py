@@ -14,6 +14,7 @@ decision) keeps that decision, and errors are reported as before.
 
 import re
 from collections.abc import Callable, Mapping
+from typing import cast
 
 from app.schemas.typings.platform.constrained_floats import TraceSampleRate
 
@@ -30,7 +31,7 @@ def is_widget_poll(asgi_scope: object) -> bool:
     if not isinstance(asgi_scope, Mapping):
         return False
 
-    scope: Mapping[object, object] = asgi_scope
+    scope: Mapping[object, object] = cast(Mapping[object, object], asgi_scope)
     path: object = scope.get("path")
     return (
         scope.get("type") == "http"
