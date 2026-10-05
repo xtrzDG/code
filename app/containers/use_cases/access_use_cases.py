@@ -102,6 +102,8 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
     )
     remove_platform_admin_use_case: Factory[
         UseCaseContract[RemovePlatformAdminCommand, None]
@@ -112,6 +114,9 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         step_up=utilities.step_up_guard,
+        user_repo=repositories.user_repo,
+        user_session_repo=repositories.user_session_repo,
+        session_assurance=utilities.session_assurance,
     )
 
     # --- Support access: the admin's side and its expiry.

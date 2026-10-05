@@ -48,3 +48,16 @@ class SessionDeviceKind(StrEnum):
     PHONE = "phone"
     TABLET = "tablet"
     UNKNOWN = "unknown"
+
+
+class SessionSweepReason(StrEnum):
+    """
+    Why every session of a person was lowered to one factor or ended: their
+    authenticator was removed or a new one confirmed, their recovery codes
+    were replaced, or their platform-admin role changed or was taken away.
+    """
+
+    AUTHENTICATOR_REMOVED = "authenticator_removed"
+    AUTHENTICATOR_ADDED = "authenticator_added"
+    RECOVERY_CODES_REPLACED = "recovery_codes_replaced"
+    ADMIN_ROLE_CHANGED = "admin_role_changed"

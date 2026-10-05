@@ -5,8 +5,14 @@ from app.contracts.platform_admins import (
     PlatformAdminRepoContract,
 )
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
-from app.contracts.repositories.user_repositories import UserRepoContract
-from app.contracts.session_assurance import StepUpGuardContract
+from app.contracts.repositories.user_repositories import (
+    UserRepoContract,
+    UserSessionRepoContract,
+)
+from app.contracts.session_assurance import (
+    SessionAssuranceContract,
+    StepUpGuardContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.domain.platform_admins import PlatformAdminDocument
@@ -17,6 +23,7 @@ from app.schemas.dto.platform_admins import (
     PlatformAdminTeamView,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.use_cases.admin.team.admin_session_ending import AdminSessionEnding
 from app.use_cases.admin.team.admin_team import (
     audit_team_change,
     refuse_losing_last_super,
@@ -28,9 +35,10 @@ class ChangePlatformAdminRoleUseCase(
     UseCaseContract[ChangePlatformAdminRoleCommand, PlatformAdminTeamView]
 ):
     """
-    A SUPER admin gives a team member another role; it applies from their
-    next request. The team always keeps a SUPER admin (ConflictError).
-    Needs a fresh confirmation (step-up); audited as PLATFORM_ADMIN_CHANGED.
+    A SUPER admin gives a team member another role: their sessions end,
+    so they sign in again under the new role (AdminSessionEnding). The
+    team always keeps a SUPER admin (ConflictError). Needs a fresh
+    confirmation (step-up); audited as PLATFORM_ADMIN_CHANGED.
     """
 
     def __init__(
@@ -41,6 +49,8 @@ class ChangePlatformAdminRoleUseCase(
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         step_up: StepUpGuardContract,
+        user_session_repo: UserSessionRepoContract,
+        session_assurance: SessionAssuranceContract,
     ) -> None:
         self._authorize_platform_admin: PlatformAdminCheck = authorize_platform_admin
         self._platform_admin_repo: PlatformAdminRepoContract = platform_admin_repo
@@ -48,6 +58,9 @@ class ChangePlatformAdminRoleUseCase(
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._step_up: StepUpGuardContract = step_up
+        self._sessions: AdminSessionEnding = AdminSessionEnding(
+            user_repo, user_session_repo, session_assurance, audit_log_repo
+        )
 
     def run(self, input_data: ChangePlatformAdminRoleCommand) -> PlatformAdminTeamView:
         actor: UserDocument = self._authorize_platform_admin.run(
@@ -76,5 +89,6 @@ class ChangePlatformAdminRoleUseCase(
                 input_data.client_ip_address,
                 now,
             )
+            self._sessions.end(admin, actor.id, input_data.client_ip_address, now)
 
         return team_view(self._platform_admin_repo, self._user_repo, actor.id)

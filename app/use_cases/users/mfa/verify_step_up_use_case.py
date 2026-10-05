@@ -96,7 +96,9 @@ class VerifyStepUpUseCase(UseCaseContract[VerifyStepUpCommand, SessionAssuranceV
             now,
         )
         factor: TotpFactorDocument | None = self._totp_factor_repo.get_for_user(user.id)
-        auth_level: AuthLevel = assurance.auth_level
+        # Two factors only with an authenticator that is on: a login code
+        # alone never keeps a level the person can no longer prove.
+        auth_level: AuthLevel = AuthLevel.ONE_FACTOR
         if factor is not None and factor.status is TotpFactorStatus.ACTIVE:
             self._check.verify(user.id, input_data.code, input_data.recovery_code, now)
             auth_level = AuthLevel.TWO_FACTOR

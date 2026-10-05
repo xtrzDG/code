@@ -147,6 +147,31 @@ class UserSessionRepoContract(RepoContract, Protocol):
         """Every stored session of a person (indexed; a short list)."""
         raise NotImplementedError
 
+    def set_level_for_user(
+        self,
+        user_id: UserId,
+        auth_level: AuthLevel,
+        now: Microseconds,
+        except_session_id: UserSessionId | None = None,
+    ) -> DocumentCount:
+        """
+        Make every session of the person (but `except_session_id`) count as
+        signed in with `auth_level`, each in one atomic step; when they last
+        proved it is them stays. Returns how many sessions changed level.
+        """
+        raise NotImplementedError
+
+    def delete_for_user(
+        self,
+        user_id: UserId,
+        except_session_id: UserSessionId | None = None,
+    ) -> DocumentCount:
+        """
+        End every session of the person but `except_session_id` (their
+        tokens stop working with the next request); returns how many ended.
+        """
+        raise NotImplementedError
+
     def delete(self, session_id: UserSessionId) -> None:
         raise NotImplementedError
 
