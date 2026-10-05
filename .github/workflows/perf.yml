@@ -103,10 +103,17 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Start Postgres, migrations, the API and the worker
+      # `--wait` only for the API: the worker has no health check (its
+      # heartbeat is in the database), so compose cannot wait for it.
+      - name: Start Postgres, migrations and the API
         run: >-
           docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
-          up --detach --build --wait api worker
+          up --detach --build --wait api
+
+      - name: Start the worker
+        run: >-
+          docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml
+          up --detach worker
 
       # A shared runner holds a tenth of the weekly dataset next to the
       # services; the latency budgets above cover the full scale.

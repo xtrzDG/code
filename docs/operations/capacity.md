@@ -103,7 +103,8 @@ act as many client networks. Never deploy with these settings.
 
 ```bash
 C="docker compose -f docker-compose.yml -f perf/docker-compose.perf.yml"
-$C up --detach --build --wait api worker
+$C up --detach --build --wait api   # the worker has no health check to wait for
+$C up --detach worker
 $C run --rm -T api seed-load --businesses 50 --messages 200000 \
     --bookings 20000 --visitors 1000 --manifest - > perf/manifest.json
 $C --profile load run --rm k6 run /perf/k6/cabinet_browsing.js
