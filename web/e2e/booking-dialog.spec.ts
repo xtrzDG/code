@@ -20,20 +20,25 @@ async function openNewBooking(page: Page, businessId: string, texts: Texts) {
   await page.goto(`/b/${businessId}/bookings`);
   await waitForNetworkQuiet(page);
   await page.getByRole("button", { name: texts.bookings.newBooking }).first().click();
-  return page.getByRole("dialog", { name: texts.bookings.form.title });
+  const dialog = page.getByRole("dialog", { name: texts.bookings.form.title });
+  await expect(dialog).toBeVisible();
+  // The form loads its places and services after it opens and grows with them.
+  await waitForNetworkQuiet(page);
+  return dialog;
 }
 
 async function expectInsideWindow(page: Page, dialog: ReturnType<Page["getByRole"]>, submitName: string) {
   const height = page.viewportSize()?.height ?? 0;
-  const box = await dialog.boundingBox();
-  expect(box, "the dialog is on screen").not.toBeNull();
-  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(height);
   const submit = dialog.getByRole("button", { name: submitName });
   await expect(submit).toBeInViewport({ ratio: 1 });
-  const footer = dialog.locator("[data-modal-footer]");
-  const footerBox = await footer.boundingBox();
+  // Both edges in one measurement, so content arriving in between cannot skew them.
+  const edges = await dialog.evaluate((element) => ({
+    dialogBottom: element.getBoundingClientRect().bottom,
+    footerBottom: element.querySelector("[data-modal-footer]")?.getBoundingClientRect().bottom ?? Number.NaN,
+  }));
+  expect(edges.dialogBottom, "the dialog ends inside the window").toBeLessThanOrEqual(height);
   // The actions sit at the dialog's bottom edge, not somewhere below the fold of its body.
-  expect(Math.abs((footerBox?.y ?? 0) + (footerBox?.height ?? 0) - ((box?.y ?? 0) + (box?.height ?? 0)))).toBeLessThanOrEqual(2);
+  expect(Math.abs(edges.footerBottom - edges.dialogBottom)).toBeLessThanOrEqual(2);
 }
 
 for (const [locale, texts] of Object.entries(DICTIONARIES)) {
