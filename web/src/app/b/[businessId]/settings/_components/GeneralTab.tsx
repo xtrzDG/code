@@ -11,11 +11,12 @@ import { useI18n } from "@/i18n/client";
 
 import type { BusinessView } from "../_lib/general";
 import { AssistantStatusCard } from "./general/AssistantStatusCard";
+import { CustomerMemoryCard } from "./general/CustomerMemoryCard";
 import { GeneralSettingsForm } from "./general/GeneralSettingsForm";
 
 /**
- * Business details, languages and time, recording retention; and the
- * assistant's live/paused switch. The form starts from the business as
+ * Business details, languages and time, recording retention; the
+ * assistant's live/paused switch and its memory of returning customers. The form starts from the business as
  * stored when the tab opens (the layout's copy may be older), and saves
  * carry the business revision they were made from. A save refused because
  * someone saved since is put on top of what is stored now: when nobody
@@ -42,6 +43,7 @@ export function GeneralTab() {
   return (
     <div className="space-y-6">
       <AssistantStatusCard onSaved={setSwitched} />
+      <CustomerMemoryCard />
       {stored.data ? (
         <GeneralSettingsForm key={business.id} initial={stored.data} switched={switched} />
       ) : stored.error ? (

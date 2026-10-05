@@ -149,6 +149,7 @@ export const conversationsEn = {
     create_booking: "Made a booking",
     cancel_booking: "Cancelled a booking",
     reschedule_booking: "Moved a booking",
+    list_my_bookings: "Looked up their bookings",
     create_lead: "Created a lead",
     handoff_to_human: "Passed to a person",
     send_link: "Sent a link",

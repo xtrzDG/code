@@ -47,6 +47,9 @@ import { channelSetupRu } from "./workspace/channelSetup.ru";
 import { channelsEn } from "./workspace/channels.en";
 import { channelsKa } from "./workspace/channels.ka";
 import { channelsRu } from "./workspace/channels.ru";
+import { customerMemoryEn } from "./workspace/customerMemory.en";
+import { customerMemoryKa } from "./workspace/customerMemory.ka";
+import { customerMemoryRu } from "./workspace/customerMemory.ru";
 import { dataExportsEn } from "./workspace/dataExports.en";
 import { dataExportsKa } from "./workspace/dataExports.ka";
 import { dataExportsRu } from "./workspace/dataExports.ru";
@@ -100,6 +103,7 @@ export const workspaceEn = {
   share: shareEn,
   privacyNotice: privacyNoticeEn,
   dataExports: dataExportsEn,
+  customerMemory: customerMemoryEn,
 } as const;
 
 export const workspaceRu: Translation<typeof workspaceEn> = {
@@ -124,6 +128,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   share: shareRu,
   privacyNotice: privacyNoticeRu,
   dataExports: dataExportsRu,
+  customerMemory: customerMemoryRu,
 };
 
 export const workspaceKa: Translation<typeof workspaceEn> = {
@@ -148,4 +153,5 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   share: shareKa,
   privacyNotice: privacyNoticeKa,
   dataExports: dataExportsKa,
+  customerMemory: customerMemoryKa,
 };

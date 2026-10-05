@@ -101,6 +101,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       inbox_settings: "Автоматическое назначение",
       message_opt_out: "Отказ клиента от рассылок",
       review_settings: "Настройки отзывов",
+      assistant_settings: "Память о клиентах",
       feedback_request: "Запросы отзывов",
       incident: "Инцидент платформы",
     },

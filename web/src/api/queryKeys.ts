@@ -285,6 +285,11 @@ export const queryKeys = {
     sessions: () => ["account", "sessions"] as const,
   },
 
+  assistantSettings: {
+    /** Settings → General: whether the assistant remembers returning customers. */
+    detail: (businessId: Id) => ["assistantSettings", businessId] as const,
+  },
+
   supportAccess: {
     /** Platform support in a business now: open looks and the consent to changes. */
     status: (businessId: Id) => ["supportAccess", businessId] as const,

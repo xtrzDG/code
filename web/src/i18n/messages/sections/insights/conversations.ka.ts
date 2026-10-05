@@ -149,6 +149,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     create_booking: "შექმნა ჯავშანი",
     cancel_booking: "გააუქმა ჯავშანი",
     reschedule_booking: "გადაიტანა ჯავშანი",
+    list_my_bookings: "მოძებნა კლიენტის ჯავშნები",
     create_lead: "შექმნა მოთხოვნა",
     handoff_to_human: "გადასცა ადამიანს",
     send_link: "გაგზავნა ბმული",
