@@ -9,11 +9,13 @@ from app.adapters.storage.in_memory_document_collection import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.dto.storage_pages import DocumentPageQuery
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFieldOrder
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
+from app.use_cases.channels.get_widget_messages_use_case import RECENT_MESSAGE_WINDOW
 from tests.channels.test_widget import SESSION_KEY, enable_widget
 from tests.channels.testbed import ChannelsTestbed
 from tests.channels.widget_polling_steps import (
@@ -48,14 +50,30 @@ class CountingCollection[StoredDocument: PersistentDocument](
         self.read_count += len(documents)
         return documents
 
+    def page_by(self, query: DocumentPageQuery) -> list[StoredDocument]:
+        documents = super().page_by(query)
+        self.read_count += len(documents)
+        return documents
+
+
+def build_counted_testbed() -> tuple[
+    ChannelsTestbed,
+    CountingCollection[ConversationDocument],
+    CountingCollection[MessageDocument],
+]:
+    """A testbed whose conversation and message reads are counted."""
+
+    testbed = ChannelsTestbed()
+    conversations = CountingCollection(ConversationDocument)
+    messages = CountingCollection(MessageDocument)
+    testbed.conversation_repo._collection = conversations  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
+    testbed.message_repo._collection = messages  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
+    return testbed, conversations, messages
+
 
 class TestWidgetPollingCost:
     def test_a_poll_reads_only_the_visitors_conversations_and_messages(self) -> None:
-        testbed = ChannelsTestbed()
-        conversations = CountingCollection(ConversationDocument)
-        messages = CountingCollection(MessageDocument)
-        testbed.conversation_repo._collection = conversations  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
-        testbed.message_repo._collection = messages  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
+        testbed, conversations, messages = build_counted_testbed()
         business = enable_widget(testbed)
         client = testbed.build_http_client()
         for number in range(50):
@@ -85,6 +103,55 @@ class TestWidgetPollingCost:
             poll(client, business.id, session_key=OTHER_VISITOR).json()["items"] == []
         )
         assert (conversations.read_count, messages.read_count) == (0, 0)
+
+    def test_a_poll_in_a_long_chat_reads_only_its_newest_messages(self) -> None:
+        testbed, _, messages = build_counted_testbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        testbed.pipeline.is_silent = True
+        send(testbed, business.id, "Hello?")
+        conversation_id = testbed.pipeline.conversation_id
+        notes = [
+            add_staff_message(testbed, business.id, conversation_id, f"Note {number}")
+            for number in range(40)
+        ]
+        messages.read_count = 0
+
+        caught_up = poll(client, business.id, after=str(notes[-1].id)).json()
+        caught_up_reads = messages.read_count
+        messages.read_count = 0
+        three_new = poll(client, business.id, after=str(notes[-4].id)).json()
+
+        assert caught_up["items"] == []
+        assert caught_up["cursor"] == str(notes[-1].id)
+        assert caught_up_reads <= int(RECENT_MESSAGE_WINDOW)
+        assert [item["text"] for item in three_new["items"]] == [
+            "Note 37",
+            "Note 38",
+            "Note 39",
+        ]
+        assert three_new["cursor"] == str(notes[-1].id)
+        assert messages.read_count <= int(RECENT_MESSAGE_WINDOW)
+
+    def test_a_backlog_longer_than_the_window_reads_the_whole_chat(self) -> None:
+        testbed, _, messages = build_counted_testbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        testbed.pipeline.is_silent = True
+        reply = send(testbed, business.id, "Hello?")
+        conversation_id = testbed.pipeline.conversation_id
+        for number in range(int(RECENT_MESSAGE_WINDOW) + 5):
+            add_staff_message(testbed, business.id, conversation_id, f"Note {number}")
+        messages.read_count = 0
+
+        body = poll(client, business.id, after=reply["cursor"]).json()
+
+        assert [item["text"] for item in body["items"]] == [
+            f"Note {number}" for number in range(int(RECENT_MESSAGE_WINDOW) + 5)
+        ]
+        assert body["has_more"] is False
+        # The newest window, then the whole chat: the visitor's message too.
+        assert messages.read_count == int(RECENT_MESSAGE_WINDOW) + 16
 
     def test_polling_too_fast_is_rate_limited(self) -> None:
         testbed = ChannelsTestbed()
