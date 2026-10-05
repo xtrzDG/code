@@ -12,7 +12,7 @@ export const privacyRetentionRu: Translation<typeof privacyRetentionEn> = {
     hint: "Считается от последнего сообщения разговора. Затем удаляются его сообщения, заметки команды, расшифровки и записи звонков; у бронирований, заявок и обращений остаётся только то, что не относится к личным данным.",
   },
   modelRecords: {
-    label: "Записи обращений ассистента к ИИ",
+    label: "Записи обращений помощника к ИИ",
     hint: "Точный текст, отправленный модели ИИ, — хранится для проверки ответов. Удаляется у нас и в журнале качества (Langfuse). Не дольше 30 дней.",
   },
   periods: {
@@ -26,11 +26,12 @@ export const privacyRetentionRu: Translation<typeof privacyRetentionEn> = {
   changeRecordings: "Изменить в разделе «Общие»",
   processorsTitle: "Копии у наших субподрядчиков",
   processors: {
-    langfuse: "Langfuse: журнал обращений ассистента к ИИ",
+    langfuse: "Langfuse: журнал обращений помощника к ИИ",
     elevenlabs: "ElevenLabs: телефонные звонки (запись и расшифровка)",
   },
   processorsDeleted: "удаляются вместе с нашими — по этим срокам и когда вы удаляете данные клиента:",
-  processorsNone: "На этой платформе ни один субподрядчик не хранит копий данных ваших клиентов.",
+  processorsNone:
+    "Langfuse и ElevenLabs на этой платформе не используются, поэтому копий данных ваших клиентов у них нет.",
   messagingApps:
     "Переписка в WhatsApp, Messenger, Instagram и Telegram остаётся в приложении клиента: удалить её там может только сам клиент.",
   lastCleanupTitle: "Последняя очистка",

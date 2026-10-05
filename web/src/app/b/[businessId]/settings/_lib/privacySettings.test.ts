@@ -4,7 +4,7 @@ import { en } from "@/i18n/messages/en";
 import { ka } from "@/i18n/messages/ka";
 import { ru } from "@/i18n/messages/ru";
 import { createTranslator } from "@/i18n/translate";
-import { periodLabel, periodParts } from "@/lib/retentionPeriods";
+import { daysLabel, periodLabel, periodParts } from "@/lib/retentionPeriods";
 
 import {
   CONVERSATION_PERIODS,
@@ -82,6 +82,8 @@ describe("periods as people say them", () => {
     expect(periodLabel(createTranslator("ru", ru).tp, 730)).toBe("2 года");
     expect(periodLabel(createTranslator("ru", ru).tp, 1825)).toBe("5 лет");
     expect(periodLabel(createTranslator("ka", ka).tp, 90)).toBe("3 თვე");
+    expect(daysLabel(createTranslator("ru", ru).tp, 30)).toBe("30 дней");
+    expect(daysLabel(createTranslator("en", en).tp, 1)).toBe("1 day");
   });
 });
 

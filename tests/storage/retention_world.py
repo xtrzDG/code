@@ -125,6 +125,9 @@ class RetentionWorld:
         self.settings = BusinessPrivacySettingsRepository(
             build(BusinessPrivacySettingsDocument, "business_privacy_settings")
         )
+        self.quiet_conversations = QuietConversationRepository(conversation_collection)
+        self.expiring_leads = ExpiringLeadRepository(lead_collection)
+        self.expiring_bookings = ExpiringBookingRepository(booking_collection)
         self.states = RetentionPurgeStateRepository(
             build(RetentionPurgeStateDocument, "retention_purge_states")
         )
@@ -132,9 +135,7 @@ class RetentionWorld:
             business_repo=self.businesses,
             privacy_settings_repo=self.settings,
             purge_state_repo=self.states,
-            quiet_conversation_repo=QuietConversationRepository(
-                conversation_collection
-            ),
+            quiet_conversation_repo=self.quiet_conversations,
             llm_turn_repo=ExpiredLlmTurnRepository(turn_collection),
             note_repo=self.notes,
             call_repo=self.calls,
@@ -143,8 +144,8 @@ class RetentionWorld:
             message_media_repo=self.media,
             media_storage=self.media_storage,
             missed_call_repo=ExpiredMissedCallRepository(missed_call_collection),
-            lead_repo=ExpiringLeadRepository(lead_collection),
-            booking_repo=ExpiringBookingRepository(booking_collection),
+            lead_repo=self.expiring_leads,
+            booking_repo=self.expiring_bookings,
             handoff_repo=ExpiringHandoffRepository(handoff_collection),
             processor_erasure=self.processors.facilitator(),
             audit_log_repo=self.audit,

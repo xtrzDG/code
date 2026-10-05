@@ -33,3 +33,8 @@ export function periodLabel(tp: Translator["tp"], days: number): string {
   const parts = periodParts(days);
   return tp(PERIOD_UNIT_KEYS[parts.unit], parts.count);
 }
+
+/** A short period counted in days, as the DPA counts model records ("30 days"). */
+export function daysLabel(tp: Translator["tp"], days: number): string {
+  return tp(PERIOD_UNIT_KEYS.days, days);
+}

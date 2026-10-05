@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { getI18n } from "@/i18n/server";
-import { periodLabel } from "@/lib/retentionPeriods";
+import { daysLabel, periodLabel } from "@/lib/retentionPeriods";
 import { hostedChatPath, lookUpHostedChat, type HostedChatLookup } from "@/server/hostedChat";
 
 import { HostedChatNotice, HostedChatShell } from "../_components/HostedChatShell";
@@ -65,7 +65,7 @@ export default async function PrivacyNoticePage({ params }: PageProps<"/c/[slug]
         t("privacyNotice.kept", {
           ...values,
           conversations: periodLabel(tp, view.conversation_retention_days),
-          modelRecords: periodLabel(tp, view.llm_turn_retention_days),
+          modelRecords: daysLabel(tp, view.llm_turn_retention_days),
         }),
       ],
     },

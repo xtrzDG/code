@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-05 — retention: Settings → Privacy periods, the erasure reaches the sub-processors
 
-Spec: `SPEC_PLACEHOLDER`
+Spec: `db25fd7f093858f0`
 
 - **Added** `GET /v1/businesses/{business_id}/privacy-settings` and
   `PUT /v1/businesses/{business_id}/privacy-settings` (owners; body

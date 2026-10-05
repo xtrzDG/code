@@ -32,7 +32,8 @@ export const privacyRetentionEn = {
     elevenlabs: "ElevenLabs: phone calls (audio and transcript)",
   },
   processorsDeleted: "are deleted together with ours, by these periods and when you erase a customer's data:",
-  processorsNone: "No sub-processor keeps copies of your customers' data on this platform.",
+  processorsNone:
+    "Langfuse and ElevenLabs are not used on this platform, so they keep no copies of your customers' data.",
   messagingApps:
     "Chats in WhatsApp, Messenger, Instagram and Telegram stay in the customer's own app: those platforms let only the customer delete them.",
   lastCleanupTitle: "Latest cleanup",

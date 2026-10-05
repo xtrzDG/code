@@ -20,9 +20,9 @@ test("the owner shortens how long conversations are kept, and the privacy notice
 
   await page.goto(`/b/${business.id}/settings/privacy`);
   await expect(page.getByRole("heading", { name: texts.title })).toBeVisible();
-  const conversations = page.getByLabel(texts.conversations.label);
+  const conversations = page.getByLabel(texts.conversations.label, { exact: true });
   await expect(conversations).toHaveValue("730");
-  await expect(page.getByLabel(texts.modelRecords.label)).toHaveValue("30");
+  await expect(page.getByLabel(texts.modelRecords.label, { exact: true })).toHaveValue("30");
   await expect(page.getByText(texts.noCleanupYet)).toBeVisible();
   await expect(page.getByText(texts.messagingApps)).toBeVisible();
 
