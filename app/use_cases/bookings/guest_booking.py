@@ -28,11 +28,12 @@ from app.schemas.typings.knowledge.strings import KnowledgeTitle
 
 @dataclass(frozen=True)
 class GuestBooking:
-    """One booking with its business, profile, unit and service title."""
+    """One booking with its business, profile, resource, unit and service."""
 
     business: BusinessDocument
     profile: BusinessProfileDocument | None
     booking: BookingDocument
+    resource: ResourceDocument | None
     booking_unit: BookingUnit
     service_title: KnowledgeTitle | None
 
@@ -71,6 +72,7 @@ class GuestBookingReader:
             business=business,
             profile=self.business_profile_repo.get_by_business(business_id),
             booking=booking,
+            resource=resource,
             booking_unit=(
                 BookingUnit.TIME_SLOT if resource is None else resource.booking_unit
             ),

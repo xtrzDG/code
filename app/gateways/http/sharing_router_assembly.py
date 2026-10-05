@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
+from app.gateways.http.public_booking_routes import build_public_booking_router
 from app.gateways.http.public_chat_routes import build_public_chat_router
 from app.gateways.http.sharing_routes import build_sharing_router
 from app.gateways.http.user_authentication import CurrentUserDependency
@@ -13,9 +14,13 @@ def build_sharing_routers(
     operators: OperatorsContainer,
     current_user: CurrentUserDependency,
 ) -> list[APIRouter]:
-    """The routers that let customers reach a business without a website."""
+    """
+    The routers that let customers reach a business without a website, and
+    a guest's own booking page behind its manage link.
+    """
 
     sharing = operators.sharing
+    booking_links = operators.booking_links
     return [
         build_sharing_router(
             current_user=current_user,
@@ -24,4 +29,11 @@ def build_sharing_routers(
         ),
         build_public_chat_router(sharing.hosted_chat_operator()),
         build_widget_handoff_router(sharing.widget_handoff_operator()),
+        build_public_booking_router(
+            view_operator=booking_links.managed_booking_operator(),
+            calendar_operator=booking_links.managed_booking_calendar_operator(),
+            slots_operator=booking_links.managed_booking_slots_operator(),
+            cancel_operator=booking_links.cancel_managed_booking_operator(),
+            reschedule_operator=booking_links.reschedule_managed_booking_operator(),
+        ),
     ]

@@ -11,6 +11,10 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.booking_manage import (
+    BookingConfirmationReceipt,
+    BookingConfirmationRequest,
+)
 from app.schemas.dto.bookings import (
     AvailabilityQuery,
     AvailabilityResult,
@@ -34,7 +38,17 @@ from app.schemas.dto.operations.bookings import (
 )
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
+from app.use_cases.bookings.confirmations.confirmation_delivery import (
+    BookingConfirmationDelivery,
+)
+from app.use_cases.bookings.confirmations.confirmation_message import (
+    ConfirmationWriter,
+)
+from app.use_cases.bookings.confirmations.send_booking_confirmation_use_case import (
+    SendBookingConfirmationUseCase,
+)
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
+from app.use_cases.bookings.guest_booking import GuestBookingReader
 from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
 from app.use_cases.bookings.list_customer_bookings_use_case import (
     ListCustomerBookingsUseCase,
@@ -243,4 +257,41 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
             ),
             unit_of_work=adapters.storage_unit_of_work,
         )
+    )
+    # A booking as its guest is told about it (confirmation and manage page).
+    guest_booking_reader: Factory[GuestBookingReader] = Factory(
+        GuestBookingReader,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        booking_repo=repositories.booking_repo,
+        resource_repo=repositories.resource_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+    )
+    # The guest's written confirmation after the assistant books or moves.
+    send_booking_confirmation_use_case: Factory[
+        UseCaseContract[BookingConfirmationRequest, BookingConfirmationReceipt]
+    ] = Factory(
+        SendBookingConfirmationUseCase,
+        guest_bookings=guest_booking_reader,
+        conversation_repo=repositories.conversation_repo,
+        delivery=Factory(
+            BookingConfirmationDelivery,
+            contact_repo=repositories.contact_repo,
+            conversation_repo=repositories.conversation_repo,
+            message_repo=repositories.message_repo,
+            channel_repo=repositories.channel_repo,
+            outbound_message_repo=repositories.outbound_message_repo,
+            job_queue=facilitators.job_queue_facilitator,
+            live_events=facilitators.event_publisher,
+            unit_of_work=adapters.storage_unit_of_work,
+            wall_clock=time_provider.microsecond_wall_clock,
+            whatsapp_template=(
+                config.app_settings.provided.whatsapp_booking_confirmation_template_name
+            ),
+        ),
+        writer=Factory(
+            ConfirmationWriter, text_resolver=utilities.localized_text_resolver
+        ),
+        link_signer=utilities.booking_manage_token_signer,
+        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
     )

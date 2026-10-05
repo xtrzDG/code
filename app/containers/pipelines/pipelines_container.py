@@ -9,6 +9,9 @@ from app.containers.pipelines.account_pipelines import AccountPipelinesContainer
 from app.containers.pipelines.analytics_pipelines import AnalyticsPipelinesContainer
 from app.containers.pipelines.assistant_pipelines import AssistantPipelinesContainer
 from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
+from app.containers.pipelines.booking_link_pipelines import (
+    BookingLinkPipelinesContainer,
+)
 from app.containers.pipelines.call_pipelines import CallPipelinesContainer
 from app.containers.pipelines.channel_pipelines import ChannelPipelinesContainer
 from app.containers.pipelines.compliance_pipelines import CompliancePipelinesContainer
@@ -147,6 +150,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
         SharingPipelinesContainer,
         sharing_orchestrators=orchestrators.sharing,
         registries=registries,
+    )
+    booking_links: BookingLinkPipelinesContainer = Container(  # type: ignore[assignment]
+        BookingLinkPipelinesContainer,
+        booking_link_orchestrators=orchestrators.booking_links,
     )
     feedback: FeedbackPipelinesContainer = Container(  # type: ignore[assignment]
         FeedbackPipelinesContainer,

@@ -11,9 +11,14 @@ from app.schemas.constants.bookings import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.bookable_offers import BookableOfferView, StayQuote
-from app.schemas.typings.bookings.booleans import IsFullDayAvailability, IsOpenOnDate
+from app.schemas.typings.bookings.booleans import (
+    IsFullDayAvailability,
+    IsOpenOnDate,
+    ListsEveryFreeTime,
+)
 from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
+    BookingStartsAtUnixSeconds,
     BookingValueMinor,
     NightCount,
     PartySize,
@@ -82,6 +87,10 @@ class AvailabilityQuery(ImmutableDTO):
     is_sandbox: IsSandboxConversation = False
     conversation_id: ConversationId | None = None
     full_day: IsFullDayAvailability = False
+    # A guest moving their booking: every free time of the date by the
+    # customer rules, and the booking itself does not block its own time.
+    lists_every_time: ListsEveryFreeTime = False
+    excluded_booking_id: BookingId | None = None
 
 
 class AvailableSlot(ImmutableDTO):
@@ -150,7 +159,8 @@ class RescheduleBookingCommand(ImmutableDTO):
     A customer request (contact or phone given) reaches only bookings of
     the same sandbox mode: owner tests never touch real bookings and real
     customers never touch test bookings. `is_sandbox` None (cabinet) does
-    not filter.
+    not filter. `expected_starts_at` (a guest's manage link) moves the
+    booking only while it still starts then (checked under the lock).
     """
 
     business_id: BusinessId
@@ -162,13 +172,15 @@ class RescheduleBookingCommand(ImmutableDTO):
     new_time: LocalTimeOfDay | None = None
     language: LanguageTag
     is_sandbox: IsSandboxConversation | None = None
+    expected_starts_at: BookingStartsAtUnixSeconds | None = None
 
 
 class CancelBookingCommand(ImmutableDTO):
     """
     Cancel a booking found by id, or by contact phone and date (sandbox
     rule as for rescheduling). `actor_id` names the staff member who
-    cancels in the cabinet (they may undo it for a short while).
+    cancels in the cabinet (they may undo it for a short while);
+    `expected_starts_at` as for rescheduling.
     """
 
     business_id: BusinessId
@@ -179,6 +191,7 @@ class CancelBookingCommand(ImmutableDTO):
     language: LanguageTag
     is_sandbox: IsSandboxConversation | None = None
     actor_id: UserId | None = None
+    expected_starts_at: BookingStartsAtUnixSeconds | None = None
 
 
 class BookingView(ImmutableDTO):

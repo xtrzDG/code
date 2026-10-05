@@ -80,7 +80,7 @@ def escape_text(value: str) -> str:
 
     return (
         value.replace("\\", "\\\\")
-        .replace(";", "\;")
+        .replace(";", "\\;")
         .replace(",", "\\,")
         .replace("\r\n", "\\n")
         .replace("\n", "\\n")

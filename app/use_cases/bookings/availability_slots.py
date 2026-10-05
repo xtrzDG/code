@@ -90,7 +90,7 @@ def nearest_time_slots(
         minutes = nearest_minutes(
             minutes, parse_time_of_day(query.time), NEAREST_SLOT_LIMIT
         )
-    else:
+    elif not query.lists_every_time:
         minutes = minutes[:FIRST_SLOT_LIMIT]
 
     return [best_by_minute[minute] for minute in minutes]

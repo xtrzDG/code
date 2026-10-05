@@ -13,7 +13,11 @@ from app.contracts.repositories.conversation_repositories import (
     MessageRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import (
+    ChannelKind,
+    ChannelStatus,
+    MessageDirection,
+)
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.constants.localization import TextDirection
 from app.schemas.domain.businesses import BusinessDocument
@@ -48,7 +52,8 @@ class GetWidgetMessagesUseCase(
 ):
     """
     The website widget polls for answers it has not shown yet: the
-    assistant's and staff's messages of its visitor's conversations (the
+    assistant's, staff's and the platform's messages (a booking's written
+    confirmation) of its visitor's conversations (the
     visitor is the widget's random session key) after the message `after`,
     oldest first, at most 50 at a time. Staff replies written in the
     cabinet after a handoff reach the visitor this way.
@@ -125,9 +130,7 @@ class GetWidgetMessagesUseCase(
             )
 
         shown: list[MessageDocument] = [
-            message
-            for message in messages[start:]
-            if message.author in WIDGET_MESSAGE_AUTHORS
+            message for message in messages[start:] if is_shown_in_widget(message)
         ]
         page: list[MessageDocument] = shown[:WIDGET_MESSAGE_PAGE_SIZE]
         has_more: bool = len(shown) > len(page)
@@ -184,6 +187,18 @@ class GetWidgetMessagesUseCase(
             direction=direction,
             created_at=message.created_at,
         )
+
+
+def is_shown_in_widget(message: MessageDocument) -> bool:
+    """
+    The assistant's and staff's messages, and the platform's messages to the
+    visitor (a booking's written confirmation with its manage link).
+    """
+
+    return message.author in WIDGET_MESSAGE_AUTHORS or (
+        message.author is MessageAuthor.SYSTEM
+        and message.direction is MessageDirection.OUTBOUND
+    )
 
 
 def find_position_after(

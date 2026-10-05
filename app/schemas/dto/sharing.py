@@ -1,6 +1,7 @@
 """Sharing the assistant: the hosted chat page, channel links and QR codes."""
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 
 from app.schemas.constants.channels import WidgetPosition
 from app.schemas.constants.sharing import ShareLinkGap, ShareLinkKind
@@ -8,21 +9,26 @@ from app.schemas.domain.business_privacy_settings import (
     DEFAULT_CONVERSATION_RETENTION_DAYS,
     DEFAULT_LLM_TURN_RETENTION_DAYS,
 )
+from app.schemas.domain.profiles import OpeningInterval
 from app.schemas.dto.channels.widget import WidgetLanguageView
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.businesses.strings import BusinessName
+from app.schemas.typings.businesses.strings import AddressText, BusinessName
 from app.schemas.typings.channels.booleans import IsWebChatEnabled
 from app.schemas.typings.channels.constrained_strings import (
     PublicBaseUrl,
     WidgetAccentColor,
     WidgetScriptUrl,
 )
-from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.schemas.typings.localization.constrained_strings import (
+    LanguageTag,
+    TimezoneName,
+)
 from app.schemas.typings.privacy.constrained_integers import (
     ConversationRetentionDays,
     LlmTurnRetentionDays,
 )
+from app.schemas.typings.sharing.booleans import TakesBookings
 from app.schemas.typings.sharing.constrained_strings import (
     BusinessPublicSlug,
     HostedChatUrl,
@@ -104,6 +110,12 @@ class HostedChatView(ImmutableDTO):
     APP_BASE_URL is not set), and the privacy notice with how long the
     business keeps conversations and the records of model calls (its
     Settings → Privacy, the defaults until it chose).
+
+    As a "link in bio" page it also shows the business: its opening hours
+    (local minutes of the day in `timezone`), its address with a map link
+    and a booking button when it takes bookings (`booking_url`: the
+    owner's own booking page, else the button starts a booking in the
+    chat).
     """
 
     business_id: BusinessId
@@ -121,3 +133,9 @@ class HostedChatView(ImmutableDTO):
         DEFAULT_CONVERSATION_RETENTION_DAYS
     )
     llm_turn_retention_days: LlmTurnRetentionDays = DEFAULT_LLM_TURN_RETENTION_DAYS
+    timezone: TimezoneName | None = None
+    hours: list[OpeningInterval] = Field(default_factory=list[OpeningInterval])
+    address: AddressText | None = None
+    maps_url: WebLink | None = None
+    takes_bookings: TakesBookings = False
+    booking_url: WebLink | None = None

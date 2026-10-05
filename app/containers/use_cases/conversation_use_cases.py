@@ -103,6 +103,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         record_unanswered_question=follow_up_use_cases.record_unanswered_question_use_case,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
+        send_booking_confirmation=booking_use_cases.send_booking_confirmation_use_case,
     )
     # What the assistant remembers of a returning customer (1121).
     recall_customer_memory_use_case: Factory[

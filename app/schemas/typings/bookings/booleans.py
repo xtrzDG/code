@@ -17,5 +17,6 @@ IsManagedStayAvailable = bool
 IsOpenOnDate = bool
 IsResourceActive = bool
 IsSandboxIncluded = bool
+ListsEveryFreeTime = bool
 WasCalendarConnected = bool
 # Keep abc order for all non example types, if possible.
