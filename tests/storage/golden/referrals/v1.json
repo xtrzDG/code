@@ -1,0 +1,14 @@
+{
+  "business_id": "business_3463c932-b2b3-4ba3-af02-45675414a396",
+  "code": "partner-42",
+  "created_at": 1790000000000000,
+  "first_paid_at": 1790000000000000,
+  "id": "referral_fc0b0a3e-7f52-46c7-8b9a-4dd2961b559e",
+  "owner_kind": "partner",
+  "partner_id": "partner_1f822877-beca-42f6-b7c4-32e1b49a2d10",
+  "referred_at": 1790000000000000,
+  "referred_business_id": "business_c7916d2f-097d-4197-9a1d-d0011a5dcfec",
+  "rewarded_at": 1790000000000000,
+  "schema_version": "1",
+  "updated_at": 1790000000000000
+}

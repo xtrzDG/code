@@ -80,6 +80,7 @@ from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
 from app.utilities.storage.operations_collections import OPERATIONS_COLLECTIONS
 from app.utilities.storage.privacy_collections import PRIVACY_COLLECTIONS
 from app.utilities.storage.quality_collections import QUALITY_COLLECTIONS
+from app.utilities.storage.referral_collections import REFERRAL_COLLECTIONS
 from app.utilities.storage.sign_in_document_collections import (
     SIGN_IN_DOCUMENT_COLLECTIONS,
 )
@@ -267,10 +268,8 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("web_vital_samples"), WebVitalSampleDocument
     ),
-    # Activation follow-up: nudges sent, done-for-you setup requests (1080).
-    *ACTIVATION_COLLECTIONS,
-    # Alerts, backups and incidents of the platform itself (1093).
-    *OPERATIONS_COLLECTIONS,
+    *ACTIVATION_COLLECTIONS,  # Nudges sent, done-for-you setup requests (1080).
+    *OPERATIONS_COLLECTIONS,  # The platform's alerts, backups, incidents (1093).
     # Platform admins and support's time-boxed access to a business (1103).
     *ACCESS_COLLECTIONS,
     *TEACHING_COLLECTIONS,  # The owner's own checks (1112).
@@ -282,6 +281,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *CUSTOMER_COLLECTIONS,  # Saved segments, customer settings (1140).
     *SPEND_GUARD_COLLECTIONS,  # Spend limits, allowed chat websites (1142).
     *CLIENT_CARE_COLLECTIONS,  # Credits, notes, health changes, digests (1143).
+    *REFERRAL_COLLECTIONS,  # Partners, codes, referrals, commissions (1150).
 )
 
 

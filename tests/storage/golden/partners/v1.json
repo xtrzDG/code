@@ -1,0 +1,13 @@
+{
+  "added_by": "user_b02a686d-9e27-4355-9cdb-0345bd3565aa",
+  "commission_rate_basis_points": 1,
+  "created_at": 1790000000000000,
+  "email": "owner@example.com",
+  "id": "partner_3dd2aa08-5c8b-4aa2-af91-8b888c1d477a",
+  "login_method": "phone",
+  "name": "Tbilisi Digital Agency",
+  "phone_number": "+995599123456",
+  "schema_version": "1",
+  "status": "active",
+  "updated_at": 1790000000000000
+}

@@ -14,8 +14,8 @@ from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
-from app.containers.adapters.client_care_collections_container import (
-    ClientCareCollectionsContainer,
+from app.containers.adapters.referral_collections_container import (
+    ReferralCollectionsContainer,
 )
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
@@ -114,7 +114,8 @@ COLLECTION_CONTAINERS = (
     invoicing.InvoicingCollectionsContainer,
     LegalCollectionsContainer,
     SpendGuardCollectionsContainer,
-    ClientCareCollectionsContainer,
+    # The client care collections and the referral program's on top (1150).
+    ReferralCollectionsContainer,
 )
 
 

@@ -1,9 +1,9 @@
-from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.containers.adapters.client_care_collections_container import (
     ClientCareCollectionsContainer,
 )
+from app.containers.referral_repositories import ReferralRepositoriesContainer
 from app.repositories.client_care_repositories import (
     AdminDigestStateRepository,
     BillingCreditRepository,
@@ -12,9 +12,10 @@ from app.repositories.client_care_repositories import (
 )
 
 
-class ClientCareRepositoriesContainer(containers.DeclarativeContainer):
+class ClientCareRepositoriesContainer(ReferralRepositoriesContainer):
     """
-    The repositories of the admin's client care (migration 1143).
+    The repositories of the admin's client care (migration 1143), on top
+    of the referral program's (1150).
     `RepositoriesContainer` extends it, so they are read as
     `repositories.billing_credit_repo` like every other repository.
     """

@@ -1,4 +1,4 @@
-from base_pydantic_schemas import BaseDocument
+from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 
 from app.schemas.constants.billing import BillingCreditKind
@@ -21,8 +21,15 @@ class BillingCreditDocument(BaseDocument):
     in another currency leaves it be. The balance of a currency is what was
     granted minus what invoices used, an invoice that was voided since
     giving its credit back, so nothing has to remember to return it.
+
+    Version 2: `referral_of`, on credit the referral program GRANTED (no
+    admin, no reason): the month a business earned when the business it
+    invited paid its first invoice, or the month the invited business got
+    for it. Its id derives from the referred business and the side, so it
+    is granted once. None on every other line, so version 1 reads as is.
     """
 
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: BillingCreditId = Field(default_factory=BillingCreditId)
     business_id: BusinessId
     kind: BillingCreditKind
@@ -31,3 +38,4 @@ class BillingCreditDocument(BaseDocument):
     invoice_id: InvoiceId | None = None
     granted_by: UserId | None = None
     reason: AdminActionReason | None = None
+    referral_of: BusinessId | None = None
