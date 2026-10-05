@@ -95,8 +95,20 @@ npm run e2e -- onboarding         # one file
   `account` and `owner` fixtures (`e2e/support/fixtures.ts`) sign up through
   the API and put the session cookie into the browser, so only the sign-in
   tests type codes.
-- Every test fails on a browser console error or an uncaught exception;
-  `consoleErrors.allow(/…/)` accepts one a test provokes on purpose.
+- The console-clean gate (`e2e/support/consoleClean.ts`, automatic): a test
+  fails when any page of its browser context throws or logs a console error
+  it did not accept (`consoleErrors.allow(/…/)` accepts one a test provokes
+  on purpose), and always on a hydration failure (React #418/#423), which
+  `allow` cannot hide. `cyrillicCheck` (`E2E_CYRILLIC_CHECK=1` or
+  `test.use({ cyrillicCheck: true })`) also fails English and Georgian pages
+  that show interface text in Cyrillic (user content, form fields and text
+  marked with another `lang` are left out); it becomes the default once the
+  topic labels come in the reader's language (W13-DAY0-TRUE-NUMBERS).
+- The cabinet's server runs with `TZ=UTC` while the browser reads in
+  Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-routes.spec.ts`, run by
+  `npm run e2e` like the rest) opens every route of the screenshot tour from
+  Asia/Tbilisi, first without and then with the remembered reader's zone, so
+  a date formatted without its zone fails on the hydration error.
 - A business page keeps its live event stream open, so
   `waitForLoadState("networkidle")` never comes there: wait with
   `waitForNetworkQuiet(page)` (`e2e/support/network.ts`, every other request
@@ -517,7 +529,9 @@ separate Messages, Needs a person and Requests pages (their addresses
 redirect):
 
 - **Views** (`?view=`, `lib/navigation.ts` `inboxPath`): Needs a person
-  (the default, no query), Requests, Mine, Unassigned, All. The four work
+  (the default, no query), Requests, Mine, Unassigned, All. The first three
+  stay in the row; Unassigned and All sit under "More ▾", and one chosen
+  there takes the More button's place in full (`_lib/viewTabs.ts`). The four work
   views come from `GET …/inbox` with live counts from `GET …/inbox/counts`
   (not audited, kept fresh by every live event); a search or a history
   filter (period, status, test conversations) belongs to All and is answered
@@ -720,7 +734,11 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
   tips they closed.
 - **Tips** on the Inbox, the Assistant's test page and Channels show once
   per person, on any device: "Got it" or "Read the guide" stores it
-  (`PUT /v1/me/help/coach-marks/{key}`).
+  (`PUT /v1/me/help/coach-marks/{key}`). On a phone a tip is one line above
+  the tab bar (above the floating action when the page has one) and counts
+  as seen once it has been on screen for a moment.
+- **Still stuck?** names the support team's channels (`SUPPORT_*` on the
+  API); with none set it points at the status page instead.
 - **"What's new"** (`/help/whats-new`): entries in `content/changelog/`; the
   account button has a dot and "Help and support" counts the entries
   newer than the last one read (a new account sees only the newest).
@@ -1059,7 +1077,16 @@ as `reasonMessages` to `useMutation`); never match the English message.
 - Pass `language: locale` to API calls that return display texts (catalog,
   wizard, gaps); the BFF also sends `Accept-Language` with the interface language.
 - Dates, times, numbers and money: `src/lib/format.ts` and
-  `useBusinessFormat()`, in the business time zone and currency; other
+  `useBusinessFormat()`, in the business time zone and currency
+  (`formatDateTime`, `formatDate` and `formatTime` require the zone). Pages
+  without a business (Account → Security, the status page, the platform
+  admin, the announcement banner, the live status line) use
+  `useViewerFormat()` (`src/components/time/ViewerTimeZone.tsx`): the
+  reader's zone, which the browser keeps in the `aw_tz` cookie so the server
+  renders the same text; before the first visit times read "… UTC" until
+  hydration ends. ESLint forbids `new Intl.DateTimeFormat` and
+  `toLocale*String` outside `src/lib/intl/` (fixed-locale calendar fields
+  come from `src/lib/intl/calendarFields.ts`); other
   formats in a UI language (lists, relative times, plural forms) through the
   factories of `src/lib/intl/formatters.ts`, never `new Intl.*(locale)`
   (`intlUsage.test.ts`). Chrome's Intl has no Georgian (it writes "ka" as
@@ -1123,8 +1150,8 @@ Tailwind CSS v4 with semantic tokens defined in `src/app/globals.css`:
 | `text-ink`, `text-ink-muted`, `text-ink-subtle` | text, secondary text, hints and meta |
 | `border-line`, `border-line-strong` | 1px hairlines between blocks; borders of form controls |
 | `bg-accent-solid` (+ `-hover`, `text-on-accent`), `text-accent`, `bg-accent-soft` + `text-accent-ink` | the one accent colour: primary buttons, links, selected items |
-| `text-success|warning|danger|info` and `bg-…-soft`, `bg-danger-solid` | statuses, alerts, badges, destructive buttons |
-| `text-chart-1|2|3` | chart series (blue, orange, green) |
+| `text-success|warning|danger|info` and `bg-…-soft`, `bg-danger-solid` | statuses (olive-khaki "done", ochre, brick, slate), alerts, badges, destructive buttons |
+| `text-chart-1|2|3` | chart series (clay, slate, ochre) |
 | `outline-focus` | focus rings (`:focus-visible` gets one everywhere) |
 
 Each token holds a light and a dark value, `light-dark(<light>, <dark>)`, and
@@ -1132,7 +1159,10 @@ Each token holds a light and a dark value, `light-dark(<light>, <dark>)`, and
 exists and follows the theme). Both themes are checked for WCAG AA: text
 tokens ≥ 4.5:1 on canvas, surface and surface-muted; status colours ≥ 4.5:1
 on their `-soft` backgrounds; `line-strong`, `focus` and the chart colours
-≥ 3:1. The look is flat: blocks are separated by hairlines, not shadows
+≥ 3:1. The palette is warm graphite and paper with one clay accent: no
+green, mint, cyan, indigo or purple anywhere the browser sees it (the
+cabinet, its public files, the widget and its demo page, the demo seeds),
+which `tests/platform/test_palette_guard.py` enforces. The look is flat: blocks are separated by hairlines, not shadows
 (`shadow-sm` is none and the larger shadows are faint), corners are
 restrained (`rounded-xl` 10 px, `rounded-2xl` 12 px). Fonts are the system's
 (Georgian, Cyrillic and Latin), nothing is downloaded. Layouts are
