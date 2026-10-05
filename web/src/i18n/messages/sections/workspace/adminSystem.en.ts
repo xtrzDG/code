@@ -58,6 +58,8 @@ export const adminSystemEn = {
       stale_worker: "Stale worker",
       otp_cap_trips: "Login code cap reached",
       quality_drop: "Conversation quality dropped",
+      spend_spike: "Spend spike",
+      spend_budget: "Daily budget nearly used",
     },
   },
   workers: {

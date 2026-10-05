@@ -62,6 +62,7 @@ const ACTION_LABELS: Record<AuditAction, MessageKey> = {
   support_access_end: "settings.audit.actions.support_access_end",
   session_revoked: "settings.audit.actions.session_revoked",
   platform_admin_changed: "settings.audit.actions.platform_admin_changed",
+  spend_limit_reached: "settings.audit.actions.spend_limit_reached",
 };
 
 /** Actions about a person or the platform, never in a business's log. */

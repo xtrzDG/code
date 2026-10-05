@@ -27,6 +27,9 @@ import { adminReplySpeedEn } from "./workspace/adminReplySpeed.en";
 import { adminReplySpeedKa } from "./workspace/adminReplySpeed.ka";
 import { adminReplySpeedRu } from "./workspace/adminReplySpeed.ru";
 import { adminSecurityEn } from "./workspace/adminSecurity.en";
+import { adminSpendEn } from "./workspace/adminSpend.en";
+import { adminSpendKa } from "./workspace/adminSpend.ka";
+import { adminSpendRu } from "./workspace/adminSpend.ru";
 import { adminSecurityKa } from "./workspace/adminSecurity.ka";
 import { adminSecurityRu } from "./workspace/adminSecurity.ru";
 import { adminSystemEn } from "./workspace/adminSystem.en";
@@ -86,6 +89,9 @@ import { settingsRecordsRu } from "./workspace/settingsRecords.ru";
 import { shareEn } from "./workspace/share.en";
 import { shareKa } from "./workspace/share.ka";
 import { shareRu } from "./workspace/share.ru";
+import { widgetSitesEn } from "./workspace/widgetSites.en";
+import { widgetSitesKa } from "./workspace/widgetSites.ka";
+import { widgetSitesRu } from "./workspace/widgetSites.ru";
 
 export const workspaceEn = {
   workspace: workspaceCommonEn,
@@ -112,6 +118,8 @@ export const workspaceEn = {
   quality: qualityEn,
   customerMemory: customerMemoryEn,
   privacyRetention: privacyRetentionEn,
+  widgetSites: widgetSitesEn,
+  adminSpend: adminSpendEn,
 } as const;
 
 export const workspaceRu: Translation<typeof workspaceEn> = {
@@ -139,6 +147,8 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   quality: qualityRu,
   customerMemory: customerMemoryRu,
   privacyRetention: privacyRetentionRu,
+  widgetSites: widgetSitesRu,
+  adminSpend: adminSpendRu,
 };
 
 export const workspaceKa: Translation<typeof workspaceEn> = {
@@ -166,4 +176,6 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   quality: qualityKa,
   customerMemory: customerMemoryKa,
   privacyRetention: privacyRetentionKa,
+  widgetSites: widgetSitesKa,
+  adminSpend: adminSpendKa,
 };

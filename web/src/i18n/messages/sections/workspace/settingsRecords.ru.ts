@@ -89,6 +89,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       support_access_end: "Доступ поддержки платформы закончился",
       session_revoked: "Выход на устройстве",
       platform_admin_changed: "Изменена команда админов",
+      spend_limit_reached: "Достигнут дневной лимит расходов",
     },
     entities: {
       contact: "Клиент",
@@ -154,6 +155,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       outbound_message: "Исходящее сообщение",
       channel_message_receipt: "Отчёт о доставке",
       web_vital_sample: "Замеры скорости страниц",
+      spend_limits: "Дневные лимиты расходов",
     },
   },
   roles: {

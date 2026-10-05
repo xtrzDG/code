@@ -72,6 +72,7 @@ export const settingsRecordsEn = {
       support_access_end: "Platform support's access ended",
       session_revoked: "Signed out a device",
       platform_admin_changed: "Admin team changed",
+      spend_limit_reached: "Daily spend limit reached",
     },
     entities: {
       contact: "Customer",
@@ -137,6 +138,7 @@ export const settingsRecordsEn = {
       outbound_message: "Outgoing message",
       channel_message_receipt: "Delivery receipt",
       web_vital_sample: "Page speed samples",
+      spend_limits: "Daily spend limits",
     },
   },
   roles: {

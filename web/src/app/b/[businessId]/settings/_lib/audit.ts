@@ -68,6 +68,7 @@ export const AUDIT_ACTION_TONES: Record<AuditAction, BadgeTone> = {
   support_access_end: "neutral",
   session_revoked: "neutral",
   platform_admin_changed: "neutral",
+  spend_limit_reached: "warning",
 };
 
 /**

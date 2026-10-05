@@ -57,6 +57,8 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       stale_worker: "დამმუშავებელი გაჩუმდა",
       otp_cap_trips: "შესვლის კოდების ლიმიტი ამოიწურა",
       quality_drop: "საუბრების ხარისხი დაეცა",
+      spend_spike: "ხარჯების მკვეთრი ზრდა",
+      spend_budget: "დღიური ბიუჯეტი თითქმის ამოიწურა",
     },
   },
   workers: {

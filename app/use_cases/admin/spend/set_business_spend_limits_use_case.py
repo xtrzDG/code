@@ -26,7 +26,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 
-AUDITED_ENTITY: AuditEntityName = AuditEntityName("business")
+AUDITED_ENTITY: AuditEntityName = AuditEntityName("spend_limits")
 
 
 class SetBusinessSpendLimitsUseCase(
