@@ -16,7 +16,7 @@ import type { Transition, Variants } from "motion/react";
 import { cubicBezierCss, springToCssLinear, type SpringToken } from "./motionMath";
 
 /** Seconds (motion's unit); CSS gets the same in milliseconds. */
-export const DURATIONS = {
+const DURATIONS = {
   instant: 0.1,
   fast: 0.15,
   base: 0.24,
@@ -58,7 +58,7 @@ export type SpringName = keyof typeof SPRINGS;
 export const DISTANCES = { cabinet: 8, landing: 28 } as const;
 
 /** Delay between siblings appearing one after another (seconds). */
-export const STAGGER = { cabinet: 0.035, landing: 0.08 } as const;
+const STAGGER = { cabinet: 0.035, landing: 0.08 } as const;
 
 /** Largest tilt of a TiltCard at its edge (degrees). */
 export const TILT_DEGREES = { subtle: 4, expressive: 9 } as const;

@@ -52,7 +52,7 @@ export const PAGE_HELP: Readonly<Record<BusinessPage, HelpArticleSlug>> = {
 };
 
 /** The one-time tips: the page each shows on, and the article its "Read the guide" opens. */
-export const COACH_MARKS = [
+const COACH_MARKS = [
   { key: "inbox", page: "inbox", article: "inbox" },
   { key: "assistant", page: "assistant", article: "teach-your-assistant" },
   { key: "channels", page: "assistant/channels", article: "channels" },

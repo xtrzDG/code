@@ -42,7 +42,7 @@ export function ViewerTimeZoneProvider({ initialZone, children }: { initialZone:
 }
 
 /** The reader's zone, or null while it is unknown (first visit, during hydration). */
-export function useViewerTimeZone(): string | null {
+function useViewerTimeZone(): string | null {
   const remembered = useContext(RememberedZoneContext);
   return useSyncExternalStore(
     subscribeNever,

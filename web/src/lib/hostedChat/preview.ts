@@ -10,13 +10,13 @@
  * it is ready. The message names match widget.js (header.js).
  */
 
-export const PREVIEW_QUERY = "preview";
+const PREVIEW_QUERY = "preview";
 const PREVIEW_ON = "1";
 
 export const PREVIEW_LOOK_MESSAGE = "assistant-workshop:preview-look";
 export const PREVIEW_READY_MESSAGE = "assistant-workshop:preview-ready";
 
-export type PreviewPosition = "left" | "right";
+type PreviewPosition = "left" | "right";
 
 export interface PreviewLook {
   color: string | null;
@@ -67,7 +67,7 @@ export function readPreviewLook(searchParams: SearchParams): PreviewLook | null 
 }
 
 /** Only well-formed values: the widget gets nothing it would have to guess about. */
-export function cleanPreviewLook(look: PreviewLook): PreviewLook {
+function cleanPreviewLook(look: PreviewLook): PreviewLook {
   return {
     color: look.color && COLOR_PATTERN.test(look.color) ? look.color.toLowerCase() : null,
     position: look.position === "left" || look.position === "right" ? look.position : null,

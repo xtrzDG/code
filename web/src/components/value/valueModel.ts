@@ -5,7 +5,7 @@
  */
 
 import type { Schema } from "@/api/types";
-import { addDays, daysBetween, type LocalDateText } from "@/components/insights/dates";
+import { daysBetween, type LocalDateText } from "@/components/insights/dates";
 import { currencyFractionDigits } from "@/lib/format";
 import { dateTimeFormat, numberFormat } from "@/lib/intl/formatters";
 
@@ -26,7 +26,7 @@ export function isReportKind(value: unknown): value is ValueReportKind {
   return typeof value === "string" && (REPORT_KINDS as readonly string[]).includes(value);
 }
 
-export type Direction = "up" | "down" | "same";
+type Direction = "up" | "down" | "same";
 
 export interface Change {
   direction: Direction;
@@ -145,7 +145,7 @@ export function moneyFormula(
 }
 
 /** The dates of the month a "YYYY-MM" key names: "2026-09" -> Sep 1 to Sep 30. */
-export function monthOfKey(periodKey: string): { year: number; month: number } | null {
+function monthOfKey(periodKey: string): { year: number; month: number } | null {
   const match = /^(\d{4})-(\d{2})$/.exec(periodKey);
   return match ? { year: Number(match[1]), month: Number(match[2]) } : null;
 }
@@ -170,11 +170,6 @@ export function nextMonthStart(today: LocalDateText): LocalDateText {
 /** The days of the month up to today, the period the "this month" card shows. */
 export function monthSoFar(today: LocalDateText): { from: LocalDateText; to: LocalDateText } {
   return { from: `${today.slice(0, 8)}01`, to: today };
-}
-
-/** The day before a local date (the "today" period compares with it). */
-export function dayBefore(date: LocalDateText): LocalDateText {
-  return addDays(date, -1);
 }
 
 export type BookedValueTotal = Schema<"BookedValueTotal">;

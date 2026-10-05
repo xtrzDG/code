@@ -25,7 +25,7 @@ import type { ApiError } from "./errors";
 import { executeMutation, type MutationOptions, type MutationResult } from "./mutations";
 import type { ApiResult } from "./result";
 
-export type { MutationOptions, MutationResult } from "./mutations";
+export type { MutationOptions } from "./mutations";
 
 export interface Mutation<Args extends unknown[], T> {
   run: (...args: Args) => Promise<MutationResult<T>>;

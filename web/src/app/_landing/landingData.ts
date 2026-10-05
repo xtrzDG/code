@@ -25,7 +25,7 @@ export interface LandingData {
  * (the visitor's country by the hosting proxy, else by the browser's
  * languages), so a first look never lands on mere conversions.
  */
-export async function pickPricedCountry(
+async function pickPricedCountry(
   countries: readonly CountryListItem[],
   requestedCountry: string | undefined,
 ): Promise<string | null> {

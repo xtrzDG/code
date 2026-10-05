@@ -15,7 +15,7 @@ import {
   type SubscriptionStatus,
 } from "../_lib/billing";
 
-export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> = {
+const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> = {
   incomplete: "billing.subscribe.statusIncomplete",
   trialing: "billing.status.trialing",
   active: "billing.status.active",

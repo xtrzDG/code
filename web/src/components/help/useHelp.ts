@@ -18,7 +18,6 @@ import { useI18n } from "@/i18n/client";
 
 export type HelpArticle = Schema<"HelpArticleView">;
 export type HelpCenter = Schema<"HelpCenterView">;
-export type HelpProgress = Schema<"HelpProgressView">;
 export type SupportContacts = Schema<"SupportContactsView">;
 
 /** Articles change with a deployment only. */

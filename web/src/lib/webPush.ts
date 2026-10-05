@@ -176,7 +176,7 @@ export function browserStorage(): Storage | null {
 }
 
 /** The worker that receives pushes: the registered one, or registered now. */
-export async function pushRegistration(isProduction: boolean): Promise<ServiceWorkerRegistration> {
+async function pushRegistration(isProduction: boolean): Promise<ServiceWorkerRegistration> {
   const existing = await navigator.serviceWorker.getRegistration("/");
   if (existing) {
     return existing;

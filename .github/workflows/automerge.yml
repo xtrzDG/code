@@ -1,0 +1,66 @@
+name: Dependabot automerge
+
+# Merges a Dependabot pull request once CI has passed on it, when it is a
+# group (.github/dependabot.yml) and every update in it is a patch or a
+# minor (scripts/dependabot_automerge.py reads Dependabot's commit
+# metadata). Majors, single updates and security fixes outside a group wait
+# for a person. This runs from the default branch: no code of the pull
+# request is checked out or run, and the merge names the exact head commit
+# CI passed on, so a later push to the branch stops it.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automerge-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge a green grouped patch or minor update
+    if: >-
+      github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.actor.login == 'dependabot[bot]'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Merge when every update of the group is a patch or a minor
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          pr="$(gh api "repos/${GH_REPO}/commits/${HEAD_SHA}/pulls" \
+            --jq '.[] | select(.state == "open" and .user.login == "dependabot[bot]") | "\(.number) \(.head.sha)"' \
+            | awk -v sha="$HEAD_SHA" '$2 == sha { print $1; exit }')"
+          if [ -z "$pr" ]; then
+            echo "No open Dependabot pull request has ${HEAD_SHA} as its head: nothing to merge."
+            exit 0
+          fi
+          author="$(gh api "repos/${GH_REPO}/commits/${HEAD_SHA}" --jq '.author.login // ""')"
+          if [ "$author" != "dependabot[bot]" ]; then
+            echo "The head commit of #${pr} is not Dependabot's (${author}): left for review."
+            exit 0
+          fi
+          if gh api "repos/${GH_REPO}/commits/${HEAD_SHA}" --jq '.commit.message' \
+              | uv run --no-project python -m scripts.dependabot_automerge; then
+            gh pr merge "$pr" --squash --match-head-commit "$HEAD_SHA"
+          fi

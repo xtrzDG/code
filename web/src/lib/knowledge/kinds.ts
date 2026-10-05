@@ -6,7 +6,7 @@
 import type { KnowledgeItemDetails, KnowledgeItemKind } from "@/api/types";
 
 /** Every kind, in the order the API lists them. */
-export const KNOWLEDGE_KINDS: readonly KnowledgeItemKind[] = [
+const KNOWLEDGE_KINDS: readonly KnowledgeItemKind[] = [
   "menu_item",
   "service",
   "room_type",

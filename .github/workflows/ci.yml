@@ -16,21 +16,22 @@ concurrency:
 # Every `uses:` is pinned to a commit SHA (the comment names the release);
 # Dependabot (.github/dependabot.yml) proposes updates weekly. Downloaded
 # tools are pinned by version and checked against their SHA-256.
+#
+# Kept fast by running in parallel: the backend tests in two parts (on
+# Postgres and the rest) whose coverage is combined, the end-to-end suite in
+# four shards that start the cabinet build of the web job. The last job
+# writes every job's duration to the run summary and warns above 8 minutes.
 env:
   GITLEAKS_VERSION: "8.30.1"
   GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
   PIP_AUDIT_VERSION: "2.10.1"
 
 jobs:
-  backend:
-    name: Backend (ruff, mypy, pyright, pytest with coverage)
+  backend-checks:
+    name: Backend checks (ruff, mypy, pyright, legal texts)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # The storage tests start a throwaway Postgres 16 from these binaries
-      # (tests/storage/postgres_server.py); they are skipped without them, so
-      # the job checks they are present.
-      POSTGRES_BIN_DIRECTORY: /usr/lib/postgresql/16/bin
       UV_FROZEN: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,30 +44,6 @@ jobs:
           python-version: "3.14"
           enable-cache: true
           cache-dependency-glob: uv.lock
-
-      - name: Install PostgreSQL 16 binaries
-        run: |
-          if [ ! -x "$POSTGRES_BIN_DIRECTORY/initdb" ]; then
-            sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends postgresql-16
-          fi
-          "$POSTGRES_BIN_DIRECTORY/postgres" --version
-
-      # Backups must open with the age tool (tests/backups/test_age_cli_interop.py).
-      - name: Install age
-        run: |
-          if ! command -v age > /dev/null; then
-            sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends age
-          fi
-          age --version
-
-      # The invoice and receipt PDFs (WeasyPrint) lay text out with Pango.
-      - name: Install the PDF engine's libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
 
       - name: Install dependencies
         run: uv sync --frozen
@@ -91,16 +68,106 @@ jobs:
           LEGAL_TEXTS_FINAL: ${{ vars.LEGAL_TEXTS_FINAL || 'false' }}
         run: uv run python -m scripts.check_legal_texts
 
-      # In parallel (pytest-xdist) with line and branch coverage of app/,
-      # which may not fall below 95 % ([tool.coverage] in pyproject.toml).
-      # Includes the architecture policies: role layers (.importlinter),
-      # dead code (vulture), at most 300 lines per file in app/, scripts/,
-      # tests/ and web/src/, typed domain primitives, the API changelog.
+  backend-tests:
+    name: Backend tests (${{ matrix.part }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # tests/conftest.py marks the tests that run on Postgres.
+        part: [postgres, rest]
+    env:
+      # The storage tests start a throwaway Postgres 16 from these binaries
+      # (tests/storage/postgres_server.py); they are skipped without them, so
+      # the postgres part checks they are present.
+      POSTGRES_BIN_DIRECTORY: /usr/lib/postgresql/16/bin
+      UV_FROZEN: "1"
+      COVERAGE_FILE: .coverage.${{ matrix.part }}
+      MARKERS: ${{ matrix.part == 'postgres' && 'postgres and not perf' || 'not postgres and not perf' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install PostgreSQL 16 binaries
+        if: ${{ matrix.part == 'postgres' }}
+        run: |
+          if [ ! -x "$POSTGRES_BIN_DIRECTORY/initdb" ]; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends postgresql-16
+          fi
+          "$POSTGRES_BIN_DIRECTORY/postgres" --version
+
+      # Backups must open with the age tool (tests/backups/test_age_cli_interop.py);
+      # the invoice and receipt PDFs (WeasyPrint) lay text out with Pango.
+      - name: Install age and the PDF engine's libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            age libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
+          age --version
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # In parallel (pytest-xdist) with line and branch coverage of app/; the
+      # 95 % floor applies to both parts together (job "coverage"). The rest
+      # includes the architecture policies: role layers (.importlinter), dead
+      # code (vulture), at most 300 lines per file in app/, scripts/, tests/
+      # and web/src/, typed domain primitives, the API changelog.
       - name: Tests with coverage
         run: >-
-          uv run pytest -ra -n auto
-          --cov=app --cov-branch --cov-fail-under=95
-          --cov-report=term:skip-covered
+          uv run pytest -ra -n auto -m "$MARKERS"
+          --cov=app --cov-branch --cov-report= --cov-fail-under=0
+
+      - name: Keep the coverage data
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-${{ matrix.part }}
+          path: ${{ env.COVERAGE_FILE }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  coverage:
+    name: Backend coverage (both parts, at least 95 %)
+    needs: backend-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Download both parts' coverage data
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: coverage-*
+          path: coverage-parts
+          merge-multiple: true
+
+      # Line and branch coverage of app/ may not fall below 95 %
+      # ([tool.coverage] in pyproject.toml; relative paths combine across jobs).
+      - name: Combine and check the floor
+        run: |
+          uv run --frozen --only-group dev coverage combine coverage-parts
+          uv run --frozen --only-group dev coverage report
+          echo "Backend line and branch coverage: $(uv run --frozen --only-group dev coverage report --format=total) %" >> "$GITHUB_STEP_SUMMARY"
 
   web:
     name: Cabinet (lint, typecheck, test with coverage, generated client, build)
@@ -134,10 +201,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Unused files, exports and dependencies (knip.config.ts).
+      - name: Unused code (knip)
+        run: npm run knip
+
       - name: Type check
         run: npm run typecheck
 
-      # Coverage floors of src/lib and the routes' _lib (vitest.config.mts).
+      # Coverage floors of src/lib and the routes' _lib (vitest.config.mts);
+      # the components project renders React in jsdom.
       - name: Tests with coverage
         run: npm run test:coverage
 
@@ -151,6 +223,18 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # The end-to-end shards start this build instead of each building it.
+      - name: Keep the build for the end-to-end shards
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cabinet-build
+          path: |
+            web/.next
+            !web/.next/cache
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
   security:
     name: Security (dependencies, secrets, static analysis)
@@ -279,10 +363,14 @@ jobs:
           upload-artifact-retention: 30
 
   e2e:
-    name: End-to-end (Playwright, API + cabinet)
+    name: End-to-end (${{ matrix.shard }}/4)
     needs: web
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: web
@@ -325,9 +413,21 @@ jobs:
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
-      # Builds the cabinet, starts it and the API (in-memory, development
-      # login codes) and runs e2e/*.spec.ts; see e2e/playwright.config.ts.
+      - name: Download the cabinet build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cabinet-build
+          path: web/.next
+
+      # Starts the downloaded build and an API of its own (in-memory, demo
+      # data, development login codes) and runs this shard's spec files:
+      # the platform admin specs share one shard (e2e/support/shards.ts).
+      # A test that passes only on a retry is listed in the summary and in
+      # e2e/flaky.json; on main a new one fails the job.
       - name: End-to-end tests
+        env:
+          E2E_SKIP_BUILD: "1"
+          E2E_SHARD: ${{ matrix.shard }}/4
         run: npm run e2e
 
       # A failed test's page snapshot and the API's last lines, readable in
@@ -345,14 +445,43 @@ jobs:
           tail -n 300 e2e/.artifacts/api.log 2>/dev/null || true
           echo "::endgroup::"
 
-      - name: Keep the report, traces and API log
+      - name: Keep the report, traces, API log and flaky tests
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: e2e-report
+          name: e2e-report-${{ matrix.shard }}
           path: |
             web/e2e/.artifacts/report
             web/e2e/.artifacts/results
             web/e2e/.artifacts/api.log
+            web/e2e/flaky.json
           if-no-files-found: ignore
           retention-days: 7
+
+  durations:
+    name: CI job durations
+    needs: [backend-checks, backend-tests, coverage, web, security, images, e2e]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+
+      # A table in the run summary, slowest first, and a warning for every
+      # job over 8 minutes (scripts/ci_job_durations.py).
+      - name: Every job's duration to the summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100" \
+            | uv run --no-project python -m scripts.ci_job_durations --summary "$GITHUB_STEP_SUMMARY"

@@ -12,7 +12,7 @@ import { invalidate as invalidateCache, type QueryKey } from "./queryCache";
 import { hashKey, startsWithKey } from "./queryKey";
 
 /** Events closer together than this reload once. */
-export const BATCH_MS = 200;
+const BATCH_MS = 200;
 
 export interface LiveInvalidationOptions {
   /** Keys that reload even in a hidden tab (the counts). */

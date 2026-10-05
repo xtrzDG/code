@@ -10,7 +10,7 @@ import type { CountryListItem } from "@/api/types";
 import { REGION_NAMES } from "./displayNames.generated";
 
 /** The first market: the default when nothing hints at the user's country. */
-export const FALLBACK_COUNTRY_CODE = "GE";
+const FALLBACK_COUNTRY_CODE = "GE";
 
 /** Countries whose people usually set a region-less browser language. */
 const COUNTRY_OF_LANGUAGE: Record<string, string> = {

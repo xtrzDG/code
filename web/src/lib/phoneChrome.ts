@@ -25,7 +25,7 @@ export interface ChromeLive {
   isFetching: boolean;
 }
 
-export interface ChromeFab<Icon> {
+interface ChromeFab<Icon> {
   label: string;
   icon: Icon;
   /** Runs the page's latest handler (the registration keeps it fresh). */

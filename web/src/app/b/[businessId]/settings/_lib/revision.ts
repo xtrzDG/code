@@ -15,7 +15,7 @@ import {
 } from "./general";
 
 /** The API's reason for a settings save made from an older revision of the business. */
-export const STALE_REVISION_REASON = "stale_revision";
+const STALE_REVISION_REASON = "stale_revision";
 
 /**
  * The PATCH body for changes made to `business` as it was shown: the API

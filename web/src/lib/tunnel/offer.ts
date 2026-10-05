@@ -89,8 +89,8 @@ export function pastedOfferRows(pasted: readonly PastedOffer[], kind: KnowledgeI
   return pasted.map((offer, index) => editOfferRow(blankOfferRow(kind, keys(index)), { title: offer.title, price: offer.price, duration: offer.duration }));
 }
 
-export type KnowledgeItemCreate = RequestBody<"/v1/businesses/{business_id}/knowledge", "post">;
-export type KnowledgeItemChange = RequestBody<"/v1/businesses/{business_id}/knowledge/{item_id}", "patch">;
+type KnowledgeItemCreate = RequestBody<"/v1/businesses/{business_id}/knowledge", "post">;
+type KnowledgeItemChange = RequestBody<"/v1/businesses/{business_id}/knowledge/{item_id}", "patch">;
 
 export type OfferSave =
   | { kind: "none" }

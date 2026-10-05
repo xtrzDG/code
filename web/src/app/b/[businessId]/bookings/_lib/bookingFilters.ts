@@ -10,7 +10,7 @@ import { BOOKING_STATUSES } from "@/components/insights/labels";
 import type { BookingStatus } from "@/components/insights/types";
 
 export const BOOKING_RANGES = ["upcoming", "today", "tomorrow", "week", "past", "custom"] as const;
-export type BookingRange = (typeof BOOKING_RANGES)[number];
+type BookingRange = (typeof BOOKING_RANGES)[number];
 
 /** What a phone shows: today's agenda or the filtered list. */
 export type PhoneBookingsView = "today" | "all";

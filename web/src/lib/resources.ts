@@ -15,10 +15,10 @@ export type ResourcePatchBody = RequestBody<"/v1/businesses/{business_id}/resour
 export const RESOURCE_KINDS: readonly ResourceKind[] = ["table", "room", "staff", "arena", "bay", "vehicle", "slot"];
 export const BOOKING_UNITS: readonly BookingUnit[] = ["time_slot", "night"];
 
-export const MAX_CAPACITY = 10_000;
-export const MAX_UNITS = 1000;
-export const MIN_SLOT_MINUTES = 5;
-export const MAX_SLOT_MINUTES = 43_200;
+const MAX_CAPACITY = 10_000;
+const MAX_UNITS = 1000;
+const MIN_SLOT_MINUTES = 5;
+const MAX_SLOT_MINUTES = 43_200;
 
 // --- Resources -------------------------------------------------------------------
 

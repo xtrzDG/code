@@ -8,7 +8,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import type { MessagePage } from "@/components/insights/types";
 
 /** How many earlier messages one click loads. */
-export const EARLIER_PAGE_SIZE = 100;
+const EARLIER_PAGE_SIZE = 100;
 
 export interface EarlierMessages {
   hasMore: boolean;

@@ -14,7 +14,6 @@ import { majorToMinor, moneyInputProblem, parseDecimalInput, type MoneyInputProb
 export type CorrectionScope = Schema<"AnswerCorrectionScope">;
 export type CorrectionDraft = Schema<"AnswerCorrectionDraft">;
 export type CorrectionResult = Schema<"AnswerCorrectionResult">;
-export type CorrectionFact = Schema<"CorrectionFactView">;
 export type CorrectionBody = RequestBody<
   "/v1/businesses/{business_id}/conversations/{conversation_id}/messages/{message_id}/correction",
   "post"

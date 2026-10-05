@@ -12,10 +12,10 @@
  * is wrapped, and a broken value reads as nothing remembered.
  */
 
-export const OFFER_MEMORY_PREFIX = "aw_offer_examples_done:";
+const OFFER_MEMORY_PREFIX = "aw_offer_examples_done:";
 
 /** The prefix of a table row that came from a niche example ("starter-haircut"). */
-export const EXAMPLE_ROW_PREFIX = "starter-";
+const EXAMPLE_ROW_PREFIX = "starter-";
 
 export type MemoryStorage = Pick<Storage, "getItem" | "setItem">;
 

@@ -42,4 +42,4 @@ export function useTeam(): Team {
   return { members, find, isLoading: assignees.isLoading, reload: assignees.reload };
 }
 
-export type { TeamMember };
+

@@ -23,7 +23,7 @@ import { dateTimeFormat } from "../intl/formatters";
 import type { SeasonalNightlyRate } from "../offers";
 
 export const MAX_SEASONS = 24;
-export const MAX_SEASON_NAME_LENGTH = 100;
+const MAX_SEASON_NAME_LENGTH = 100;
 /** Days of each month in a leap year: "02-29" is a day of a season (it counts in leap years). */
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
 

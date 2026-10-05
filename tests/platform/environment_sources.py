@@ -91,11 +91,16 @@ def table_variables(relative_path: str, heading: str) -> set[str]:
 
 
 def cabinet_variables() -> set[str]:
-    """Variables the cabinet's own code reads (`process.env` passed as `env`)."""
+    """Variables the cabinet's own code reads (`process.env` passed as `env`).
+
+    Tests and their helpers (`web/src/test/`, e.g. FC_SEED of the property
+    tests) are not the cabinet's code and configure no deployment.
+    """
 
     names: set[str] = set()
+    test_helpers: Path = ROOT / "web" / "src" / "test"
     for path in (ROOT / "web" / "src").rglob("*.ts*"):
-        if ".test." not in path.name:
+        if ".test." not in path.name and not path.is_relative_to(test_helpers):
             source: str = path.read_text(encoding="utf-8")
             names.update(re.findall(r"\benv\.([A-Z][A-Z0-9_]*)", source))
 

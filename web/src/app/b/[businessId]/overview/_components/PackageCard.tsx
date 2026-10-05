@@ -7,9 +7,10 @@ import type { DashboardPackageUsage } from "@/components/insights/types";
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath, setupPath } from "@/lib/navigation";
+import { isUsageWarned, usageLevel } from "@/lib/usage";
 
 import { Meter } from "./DashboardWidgets";
-import { isLaunched, usageLevel } from "./dashboardModel";
+import { isLaunched } from "./dashboardModel";
 
 /**
  * Package minutes and dialogues of the current billing window (from the
@@ -28,9 +29,10 @@ export function PackageCard({
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const businessId = business.id;
-  const voiceLevel = usage ? usageLevel(usage.voice_usage_percent) : "ok";
-  const dialogLevel = usage ? usageLevel(usage.dialog_usage_percent) : "ok";
-  const needsPrice = isOwner && usage !== null && (voiceLevel !== "ok" || dialogLevel !== "ok");
+  const voiceLevel = usageLevel(usage?.voice_usage_percent);
+  const dialogLevel = usageLevel(usage?.dialog_usage_percent);
+  const isWarned = isUsageWarned(voiceLevel) || isUsageWarned(dialogLevel);
+  const needsPrice = isOwner && usage !== null && isWarned;
   const beforeLaunch = usage === null && !isLaunched(business.status);
 
   const billingQuery = sectionQueries.billingOverview(businessId, locale);
@@ -111,7 +113,7 @@ export function PackageCard({
                 })
               : t("dashboard.usage.overStaff", { minutes: format.number(usage.overage_voice_minutes) })}
           </Alert>
-        ) : voiceLevel !== "ok" || dialogLevel !== "ok" ? (
+        ) : isWarned ? (
           <Alert tone="warning">
             {prices
               ? t("dashboard.usage.warning", { price: prices.overage_price_per_minute.text })

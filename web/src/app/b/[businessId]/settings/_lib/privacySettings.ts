@@ -12,9 +12,6 @@ export type PrivacySettingsBody = RequestBody<"/v1/businesses/{business_id}/priv
 export type RetentionPurgeCounts = Schema<"RetentionPurgeCounts">;
 export type SubProcessor = Schema<"SubProcessor">;
 
-/** The API's bounds (ConversationRetentionDays, LlmTurnRetentionDays). */
-export const CONVERSATION_DAYS_MIN = 30;
-export const CONVERSATION_DAYS_MAX = 3650;
 export const MODEL_RECORD_DAYS_MAX = 30;
 export const RECOMMENDED_CONVERSATION_DAYS = 730;
 

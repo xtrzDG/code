@@ -61,7 +61,8 @@ Behind a reverse proxy, run the API with
 | `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
 | `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
 | `npm run check:intl` | Fails when this Node lacks full ICU or cannot format Georgian, Russian and English (dates, plurals, relative time, lists); CI runs it before the build, and the cabinet's image before `next build` |
-| `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
+| `npm test` | Vitest: the `unit` project (`src/**/*.test.ts` and the e2e suite's own helpers `e2e/**/*.test.ts`, in Node) and the `components` project (`src/**/*.test.tsx`: React components in jsdom with Testing Library and user-event; helpers in `src/test/`). Property tests (`*.property.test.ts`, fast-check) run with a fixed seed; `FC_SEED=<n>` replays another |
+| `npm run knip` | Unused files, exports and dependencies (`knip.config.ts`); CI fails on any |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
 | `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |
 | `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file |
@@ -70,7 +71,8 @@ Behind a reverse proxy, run the API with
 | `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
 
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
-(CI job "web"); the CI job "e2e" then runs `npm run e2e`.
+(CI job "web", which also runs `npm run knip` and keeps the build); the CI job
+"e2e" then runs `npm run e2e` in four shards that start that build.
 
 ## End-to-end tests
 
@@ -82,6 +84,7 @@ npx playwright install chromium   # once (CI: --with-deps)
 npm run e2e                       # builds the cabinet, starts API + cabinet, runs e2e/*.spec.ts
 E2E_SKIP_BUILD=1 npm run e2e      # reuse the last `next build`
 npm run e2e -- onboarding         # one file
+E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
 ```
 
 - `e2e/playwright.config.ts` starts the API from the repository root
@@ -193,11 +196,17 @@ npm run e2e -- onboarding         # one file
 | --- | --- | --- |
 | `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
+| `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: every spec that signs in through `support/admin.ts` shares one shard, as they build one admin team on the shard's API; the rest are balanced by test count) |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.56.1, Chromium 141) |
 
 Failures leave screenshots and traces in `e2e/.artifacts/results/`
 (`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
-and the API log as the `e2e-report` artifact.
+and the API log as the `e2e-report-<shard>` artifact.
+
+A test that passes only on a retry (CI retries once) is flaky: the reporter
+`e2e/reporters/flakyReporter.ts` writes it to `e2e/flaky.json` and the job
+summary. On `main` a flaky test that `e2e/flaky-known.json` does not list fails
+the job: open an issue and add `{"file", "title", "issue"}` there, or fix it.
 
 ## Structure
 

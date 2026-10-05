@@ -17,7 +17,7 @@ export interface BrowserSentry {
   linkedErrorsIntegration(): unknown;
 }
 
-export function browserOptions(sentry: BrowserSentry, environment: string): Record<string, unknown> {
+function browserOptions(sentry: BrowserSentry, environment: string): Record<string, unknown> {
   return {
     dsn: TUNNEL_PLACEHOLDER_DSN,
     tunnel: TUNNEL_PATH,

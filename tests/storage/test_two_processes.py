@@ -136,6 +136,37 @@ def wait_until_inbox_answered(world: TwoProcesses) -> bool:
     return False
 
 
+def read_transcript_authors(world: TwoProcesses, session_key: str) -> list[str]:
+    """The authors of one widget visitor's messages, in stored order."""
+
+    with world.postgres_server.admin_connection(world.database_name) as connection:
+        return [
+            str(row[0])
+            for row in connection.execute(
+                "select m.document ->> 'author' from workshop.messages m "
+                "join workshop.conversations c "
+                "on c.document_key = m.document ->> 'conversation_id' "
+                "where c.document ->> 'channel_user_id' = %s "
+                "order by m.row_sequence",
+                (session_key,),
+            ).fetchall()
+        ]
+
+
+def wait_for_transcript(
+    world: TwoProcesses, session_key: str, replies: int
+) -> list[str]:
+    """The visitor's transcript once `replies` assistant replies are stored."""
+
+    deadline = time.monotonic() + ANSWER_SECONDS
+    authors = read_transcript_authors(world, session_key)
+    while authors.count("assistant") < replies and time.monotonic() < deadline:
+        time.sleep(0.2)
+        authors = read_transcript_authors(world, session_key)
+
+    return authors
+
+
 def outside_a_minute_boundary() -> None:
     """Let a burst of requests fall into one minute of the rate limits."""
 
@@ -220,21 +251,9 @@ def test_one_customers_messages_are_answered_one_at_a_time(
     for (_, _, previous_end), (_, next_start, _) in zip(calls, calls[1:], strict=False):
         assert next_start >= previous_end - 0.001
     # A call is logged as the model answers; its reply is stored after the
-    # checks, before the turn's job is done.
+    # checks, before the turn's job is done: wait for the fourth stored reply
+    # (an empty queue alone can be seen before the last reply commits).
+    authors = wait_for_transcript(two_processes, session_key, replies=4)
     assert wait_until_inbox_answered(two_processes)
     # The transcript alternates: every reply follows its own message.
-    with two_processes.postgres_server.admin_connection(
-        two_processes.database_name
-    ) as connection:
-        authors = [
-            str(row[0])
-            for row in connection.execute(
-                "select m.document ->> 'author' from workshop.messages m "
-                "join workshop.conversations c "
-                "on c.document_key = m.document ->> 'conversation_id' "
-                "where c.document ->> 'channel_user_id' = %s "
-                "order by m.row_sequence",
-                (session_key,),
-            ).fetchall()
-        ]
     assert authors == ["customer", "assistant"] * 4

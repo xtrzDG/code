@@ -116,7 +116,7 @@ export function codeForStatus(status: number): ApiErrorCode {
 }
 
 /** The well-formed entries of a body's `reasons` list (others are skipped). */
-export function parseErrorReasons(value: unknown): ApiErrorReason[] {
+function parseErrorReasons(value: unknown): ApiErrorReason[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -215,7 +215,7 @@ const ERROR_MESSAGE_KEYS: Record<ApiErrorCode, MessageKey> = {
 export type ErrorMessageOverrides = Partial<Record<ApiErrorCode, MessageKey>>;
 
 /** The text of one refusal reason: a message key and values from its details. */
-export type ReasonMessage = (reason: ApiErrorReason) => { key: MessageKey; values?: MessageValues };
+type ReasonMessage = (reason: ApiErrorReason) => { key: MessageKey; values?: MessageValues };
 
 /**
  * Localized texts for refusal reason codes, e.g. a booking refused because

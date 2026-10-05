@@ -36,7 +36,7 @@ async function loadKind(businessId: string, kind: KnowledgeItemDetails["kind"]):
   return items;
 }
 
-export async function loadBookableOffers(businessId: string): Promise<KnowledgeItemDetails[]> {
+async function loadBookableOffers(businessId: string): Promise<KnowledgeItemDetails[]> {
   const kinds = await Promise.all(BOOKABLE_KINDS.map((kind) => loadKind(businessId, kind)));
   return kinds.flat();
 }

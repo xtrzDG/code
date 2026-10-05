@@ -9,7 +9,7 @@ import type { ServerSentEvent } from "./eventStreamParser";
 import type { QueryKey } from "./queryKey";
 import { queryKeys } from "./queryKeys";
 
-export const LIVE_EVENT_NAMES = [
+const LIVE_EVENT_NAMES = [
   "handoff.created",
   "handoff.resolved",
   "handoff.reopened",
@@ -27,7 +27,7 @@ export const LIVE_EVENT_NAMES = [
   "assistant.apply",
 ] as const;
 
-export type LiveEventName = (typeof LIVE_EVENT_NAMES)[number];
+type LiveEventName = (typeof LIVE_EVENT_NAMES)[number];
 
 /** Messages of the stream itself. */
 export const STREAM_READY = "stream.ready";

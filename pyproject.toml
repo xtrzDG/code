@@ -35,6 +35,7 @@ dev = [
     "bandit>=1.9.4",
     "flask>=3.1",
     "flask-cors>=6.0",
+    "hypothesis>=6.140",
     "import-linter>=2.15",
     "moto[s3]>=5.1",
     "mypy",
@@ -82,14 +83,23 @@ testpaths = ["tests"]
 # `uv run pytest -m perf` (tests/perf: PERF_SCALE, PERF_REPORT; weekly in
 # .github/workflows/perf.yml, docs/operations/capacity.md).
 addopts = "-m 'not perf'"
-markers = ["perf: timing budgets on large tables (run with -m perf)"]
+markers = [
+    "perf: timing budgets on large tables (run with -m perf)",
+    # Set by tests/conftest.py; CI runs `-m postgres` and `-m "not postgres"`
+    # in parallel jobs and combines their coverage.
+    "postgres: runs against a throwaway Postgres server (set automatically)",
+]
 
-# CI: `uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`.
-# The floor is line and branch coverage of app/ together; lower it never,
-# raise it when the suite allows.
+# CI: `uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`,
+# split into `-m postgres` and `-m "not postgres"` jobs whose data files
+# `coverage combine` joins before the floor is checked. The floor is line
+# and branch coverage of app/ together; lower it never, raise it when the
+# suite allows.
 [tool.coverage.run]
 source = ["app"]
 branch = true
+# Data files from different jobs (checkouts) combine into one report.
+relative_files = true
 
 [tool.coverage.report]
 fail_under = 95

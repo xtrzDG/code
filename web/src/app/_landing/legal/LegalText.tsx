@@ -5,7 +5,7 @@ import { languageName } from "@/lib/format";
 import { dateTimeFormat } from "@/lib/intl/formatters";
 
 /** A version's day ("2026-10-05") in the page's language: "5 October 2026". */
-export function legalDay(day: string, locale: string): string {
+function legalDay(day: string, locale: string): string {
   return dateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${day}T00:00:00Z`),
   );

@@ -76,8 +76,3 @@ export function parseStoredTestChat(raw: string | null): StoredTestChat | null {
     return null;
   }
 }
-
-/** Messages shown in the chat: customer and assistant lines (system notes too). */
-export function chatMessages(messages: readonly MessageView[]): MessageView[] {
-  return [...messages].sort((left, right) => left.created_at - right.created_at);
-}

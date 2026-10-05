@@ -12,7 +12,7 @@ import type { BusinessPage } from "@/lib/navigation";
 type ChannelKind = Schema<"ChannelKind">;
 
 /** The messengers the finale suggests connecting, most asked for first. */
-export const SUGGESTED_CHANNELS: readonly ChannelKind[] = ["whatsapp", "instagram", "telegram", "messenger"];
+const SUGGESTED_CHANNELS: readonly ChannelKind[] = ["whatsapp", "instagram", "telegram", "messenger"];
 
 /** How many missing messengers the line names ("Connect WhatsApp and Instagram"). */
 const NAMED_CHANNELS = 2;

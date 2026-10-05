@@ -46,7 +46,7 @@ export const DAY_COLOURS: Readonly<Record<StatusLevel, string>> = {
 };
 
 /** Days of history a share is shown for; before that the row says since when it is observed. */
-export const DAYS_FOR_SHARE = 7;
+const DAYS_FOR_SHARE = 7;
 
 /** What a day counts towards the share: a degraded day is partly good, an unrecorded one not at all. */
 const DAY_WEIGHTS: Readonly<Record<StatusLevel, number>> = {

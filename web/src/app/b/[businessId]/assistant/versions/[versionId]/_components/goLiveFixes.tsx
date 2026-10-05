@@ -14,7 +14,7 @@ import { businessPath } from "@/lib/navigation";
 
 type ProfileGapKind = Schema<"ProfileGapKind">;
 
-export const GAP_KIND_LABELS: Record<ProfileGapKind, MessageKey> = {
+const GAP_KIND_LABELS: Record<ProfileGapKind, MessageKey> = {
   missing_required_answer: "assistant.gapKinds.missing_required_answer",
   no_opening_hours: "assistant.gapKinds.no_opening_hours",
   no_address: "assistant.gapKinds.no_address",

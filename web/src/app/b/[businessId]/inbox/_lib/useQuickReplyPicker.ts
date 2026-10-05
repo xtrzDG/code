@@ -17,7 +17,6 @@ import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 
 import { matchQuickReplies, slashQuery } from "./quickReplyMatching";
-import type { FilledQuickReplyView } from "./types";
 
 export function useQuickReplyPicker(conversationId: string, draft: string) {
   const { business } = useBusiness();
@@ -70,4 +69,3 @@ export function useQuickReplyPicker(conversationId: string, draft: string) {
 }
 
 export type QuickReplyPicker = ReturnType<typeof useQuickReplyPicker>;
-export type { FilledQuickReplyView };

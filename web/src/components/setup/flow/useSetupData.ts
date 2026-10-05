@@ -51,5 +51,3 @@ export function useSetupData(businessId: string, enabled = true) {
 
   return { setup, starters, wizard, refresh };
 }
-
-export type SetupData = ReturnType<typeof useSetupData>;

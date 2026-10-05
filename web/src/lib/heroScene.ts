@@ -92,7 +92,7 @@ export function orbitPosition(orbit: Orbit, seconds: number): Vector3 {
 }
 
 /** One message every 1.1 s, the channels in turn; each takes 0.95 s to reach the orb. */
-export const MESSAGE_PULSE = { gapSeconds: 1.1, travelSeconds: 0.95 } as const;
+const MESSAGE_PULSE = { gapSeconds: 1.1, travelSeconds: 0.95 } as const;
 
 /** 0…1 while bubble `index` (of `count`) has a message on its way to the orb at `seconds`, else null. */
 export function messagePulseProgress(index: number, seconds: number, count: number): number | null {

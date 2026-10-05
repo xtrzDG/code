@@ -79,7 +79,7 @@ export function languageAlternates(rest: string): Record<string, string> {
  * Integrations the platform connects today. The niche catalog also names
  * systems planned for a kind of business; a public page names only these.
  */
-export const LIVE_INTEGRATIONS: readonly string[] = ["Google Calendar"];
+const LIVE_INTEGRATIONS: readonly string[] = ["Google Calendar"];
 
 export function liveIntegrations(names: readonly string[] | undefined): string[] {
   return (names ?? []).filter((name) => LIVE_INTEGRATIONS.includes(name));

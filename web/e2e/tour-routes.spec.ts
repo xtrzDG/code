@@ -24,6 +24,10 @@ const TBILISI = "Asia/Tbilisi";
 
 /** Opens a route as a first-time reader and again with the remembered zone. */
 async function visitTwice(page: Page, path: string): Promise<void> {
+  // Clearing one cookie clears them all and adds the others back: a request
+  // in flight meanwhile (the page a click just opened) goes without the
+  // session and ends it. So the page settles first.
+  await waitForNetworkQuiet(page);
   await page.context().clearCookies({ name: "aw_tz" });
   for (const visit of ["first", "remembered"] as const) {
     const response = await page.goto(path);

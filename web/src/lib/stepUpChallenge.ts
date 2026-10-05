@@ -5,7 +5,7 @@
  * cabinet's proxy keeps the cookie and the page asks for a code.
  */
 
-export const STEP_UP_CHALLENGE_ERROR = "insufficient_user_authentication";
+const STEP_UP_CHALLENGE_ERROR = "insufficient_user_authentication";
 
 export function isStepUpChallenge(status: number, headers: Headers): boolean {
   return status === 401 && (headers.get("www-authenticate") ?? "").includes(STEP_UP_CHALLENGE_ERROR);

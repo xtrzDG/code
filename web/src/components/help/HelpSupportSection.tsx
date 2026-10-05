@@ -21,7 +21,7 @@ import { SupportContacts } from "./SupportContacts";
 import { useHelpProgress } from "./useHelp";
 
 /** How many "What's new" entries the signed-in person has not read (0 until known). */
-export function useUnreadChangelog(): number {
+function useUnreadChangelog(): number {
   const { progress } = useHelpProgress();
   return progress.data ? unreadKeys(CHANGELOG, progress.data.changelog_read_key).length : 0;
 }

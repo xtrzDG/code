@@ -11,8 +11,8 @@
  * forms post only to itself or to the Flitt checkout.
  */
 
-export const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
-export const FLITT_CHECKOUT_ORIGIN = "https://pay.flitt.com";
+const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
+const FLITT_CHECKOUT_ORIGIN = "https://pay.flitt.com";
 /** Request header with the page's nonce, for Server Components that need it. */
 export const NONCE_HEADER = "x-nonce";
 const NONCE_BYTES = 16;

@@ -8,7 +8,7 @@
 import type { ApiError } from "@/api/errors";
 import type { Theme } from "@/lib/theme";
 
-export const BOT_CHECK_REASON = "challenge_required";
+const BOT_CHECK_REASON = "challenge_required";
 /** Loaded only when the API asks for the check (allowed by the page's CSP). */
 export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 /** The API accepts tokens of this action only. */

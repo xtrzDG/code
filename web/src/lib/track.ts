@@ -24,7 +24,7 @@ export const MAX_BATCH = 50;
 export const MAX_QUEUE = 200;
 export const FLUSH_DELAY_MS = 5_000;
 
-export interface SendResult {
+interface SendResult {
   status: number;
   retryAfterSeconds?: number;
 }

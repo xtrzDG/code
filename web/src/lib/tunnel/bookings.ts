@@ -12,9 +12,9 @@ type BookingRulesInput = Schema<"BookingRulesInput">;
 type StarterResource = Schema<"StarterResourceView">;
 
 /** Minutes of notice the owner picks from (none, an hour, three hours, a day). */
-export const NOTICE_CHOICES: readonly number[] = [0, 60, 180, 1440];
+const NOTICE_CHOICES: readonly number[] = [0, 60, 180, 1440];
 /** Visit lengths in minutes for niches that book time slots. */
-export const SLOT_CHOICES: readonly number[] = [15, 30, 45, 60, 90, 120, 180, 240];
+const SLOT_CHOICES: readonly number[] = [15, 30, 45, 60, 90, 120, 180, 240];
 
 export interface BookingForm {
   slotMinutes: number;

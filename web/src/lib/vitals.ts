@@ -10,7 +10,7 @@
 import { isProtectedPath } from "./navigation";
 import type { WebVitalReport } from "./track";
 
-export type VitalName = WebVitalReport["metric"];
+type VitalName = WebVitalReport["metric"];
 export type DeviceClass = WebVitalReport["device_class"];
 
 const REPORTED: Readonly<Record<string, VitalName>> = { LCP: "lcp", INP: "inp", CLS: "cls" };

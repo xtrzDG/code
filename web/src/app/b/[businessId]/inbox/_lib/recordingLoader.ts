@@ -8,7 +8,7 @@
  * told apart.
  */
 
-export type RecordingLoadFailure = "expired" | "missing" | "unavailable";
+type RecordingLoadFailure = "expired" | "missing" | "unavailable";
 
 export type RecordingLoad = { ok: true; blob: Blob } | { ok: false; failure: RecordingLoadFailure };
 

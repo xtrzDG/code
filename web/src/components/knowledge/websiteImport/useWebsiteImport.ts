@@ -11,7 +11,7 @@ import { useQuery } from "@/api/useQuery";
 import { isImportRunning, type WebsiteImport } from "@/lib/knowledge/websiteImport";
 
 /** While the worker reads the site and no live event arrives, look again this often. */
-export const WEBSITE_IMPORT_POLL_MS = 3_000;
+const WEBSITE_IMPORT_POLL_MS = 3_000;
 
 /**
  * The business's import from its website: the current one (if any), the
@@ -87,5 +87,3 @@ export function useWebsiteImport(businessId: string) {
     acknowledgeFinished: () => setFinished(null),
   };
 }
-
-export type WebsiteImportState = ReturnType<typeof useWebsiteImport>;

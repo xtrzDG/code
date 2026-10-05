@@ -31,7 +31,7 @@ export function isLocalTime(text: string): boolean {
 }
 
 /** "2026-10-02" -> Date at 00:00 UTC of that day. */
-export function localDateToUtc(date: LocalDateText): Date {
+function localDateToUtc(date: LocalDateText): Date {
   const [year, month, day] = date.split("-").map(Number);
   return new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1));
 }

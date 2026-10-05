@@ -26,7 +26,7 @@ import { QuestionField } from "../fields/QuestionField";
 import { StepScreen, type StepActions } from "../StepScreen";
 import type { StepMode } from "../stepMode";
 
-export const MAX_BUSINESS_NAME = 120;
+const MAX_BUSINESS_NAME = 120;
 
 export interface BusinessForm {
   name: string;
