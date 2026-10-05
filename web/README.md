@@ -1299,8 +1299,10 @@ National Bank of Georgia, the ECB, or the platform's planning rate).
   hidden while a language has none).
 - **Lighthouse**: `.github/workflows/lighthouse.yml` runs Lighthouse CI
   (`lighthouserc.json`) on `/en` and two niche pages of a production build:
-  SEO, accessibility (≥ 0.95), performance (≥ 0.7), layout shift, hreflang,
-  canonical and the JavaScript and page weight budgets fail the job.
+  SEO and accessibility (≥ 0.95), layout shift (≤ 0.1), hreflang, canonical,
+  title and description fail the job everywhere; performance ≥ 0.7 with
+  ≤ 350 KB of JavaScript on niche pages, ≥ 0.6 with ≤ 600 KB on the landing
+  page (its 3D hero scene loads once the page is idle, about 240 KB).
 
 Its motion and 3D hero: see [Motion](#motion).
 

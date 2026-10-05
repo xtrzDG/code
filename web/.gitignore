@@ -28,3 +28,6 @@ npm-debug.log*
 
 # end-to-end tests (logs, traces, reports)
 /e2e/.artifacts/
+
+# Lighthouse CI's local working folder
+/.lighthouseci/
