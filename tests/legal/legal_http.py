@@ -1,8 +1,7 @@
 """The legal router over the real texts, the registry and a set clock."""
 
-from pathlib import Path
-
 from collections.abc import Mapping
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

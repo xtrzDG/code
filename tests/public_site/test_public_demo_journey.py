@@ -25,7 +25,8 @@ UNKNOWN_BUSINESS_ID: str = "business_0f8f6bd6-e9b2-4a4c-8b8c-3c1f2a7e9d10"
 def list_demos(client: TestClient, language: str = "en") -> JsonObject:
     response = client.get("/v1/public-demos", params={"language": language})
     assert response.status_code == 200, response.text
-    return response.json()
+    body: JsonObject = response.json()
+    return body
 
 
 def demo_by_name(client: TestClient) -> dict[str, JsonObject]:

@@ -59,9 +59,7 @@ def test_a_wrong_public_site_setting_stops_the_start(
 
 
 def test_configured_demos_keep_their_order_and_win_over_seeded_ones() -> None:
-    directory = PublicDemoDirectoryRegistry(
-        [BusinessId(SALON), BusinessId(RESTAURANT)]
-    )
+    directory = PublicDemoDirectoryRegistry([BusinessId(SALON), BusinessId(RESTAURANT)])
 
     directory.adopt_seeded([BusinessId(CLINIC)])
 
