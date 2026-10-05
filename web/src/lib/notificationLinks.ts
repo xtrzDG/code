@@ -84,5 +84,8 @@ export function linkTargetPath(view: StaffLinkView): string {
     // A sign-in from a new device: the person's sessions.
     case "account_security":
       return ACCOUNT_SECURITY_PATH;
+    // A download of the business's full export: where exports are made.
+    case "privacy":
+      return businessPath(business, "settings/privacy");
   }
 }

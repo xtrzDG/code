@@ -2,7 +2,8 @@
  * Texts of the cabinet's frame: the five sections and the navigation,
  * the user menu and installing the app, "Create an AI assistant" before
  * the assistant exists, the offline page, the live cabinet and the
- * phone's compact page chrome.
+ * phone's compact page chrome, and the notice of a new data processing
+ * agreement.
  *
  * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
  * ka.ts, so they must not clash with the namespaces of the other
@@ -22,6 +23,9 @@ import { appRu } from "./shell/app.ru";
 import { chromeEn } from "./shell/chrome.en";
 import { chromeKa } from "./shell/chrome.ka";
 import { chromeRu } from "./shell/chrome.ru";
+import { dpaNoticeEn } from "./shell/dpaNotice.en";
+import { dpaNoticeKa } from "./shell/dpaNotice.ka";
+import { dpaNoticeRu } from "./shell/dpaNotice.ru";
 import { liveEn } from "./shell/live.en";
 import { liveKa } from "./shell/live.ka";
 import { liveRu } from "./shell/live.ru";
@@ -39,6 +43,7 @@ export const shellEn = {
   app: appEn,
   live: liveEn,
   chrome: chromeEn,
+  dpaNotice: dpaNoticeEn,
 } as const;
 
 export const shellRu: Translation<typeof shellEn> = {
@@ -48,6 +53,7 @@ export const shellRu: Translation<typeof shellEn> = {
   app: appRu,
   live: liveRu,
   chrome: chromeRu,
+  dpaNotice: dpaNoticeRu,
 };
 
 export const shellKa: Translation<typeof shellEn> = {
@@ -57,4 +63,5 @@ export const shellKa: Translation<typeof shellEn> = {
   app: appKa,
   live: liveKa,
   chrome: chromeKa,
+  dpaNotice: dpaNoticeKa,
 };

@@ -35,6 +35,8 @@ import type { MessageKey } from "@/i18n/translate";
 import {
   actorLabel,
   AUDIT_ACTION_TONES,
+  auditCountKey,
+  auditEntityKey,
   AUDIT_PAGE_SIZE,
   auditQuery,
   EMPTY_AUDIT_FILTERS,
@@ -89,11 +91,11 @@ export function AuditTab() {
   );
 
   const update = (patch: Partial<AuditFilters>) => setFilters((current) => ({ ...current, ...patch }));
-  const entityText = (entity: string) => tDynamic(`settings.audit.entities.${entity}`, entity);
-  // How many records a purge or a deletion at a sub-processor covered.
-  const recordCount = (count: number | null | undefined) =>
-    count === null || count === undefined ? null : (
-      <span className="ml-2 text-xs text-ink-subtle">{tp("settings.audit.recordCount", count)}</span>
+  const entityText = (entity: string) => tDynamic(auditEntityKey(entity), entity);
+  // Views within five minutes, which download of the full export, or the records covered.
+  const recordCount = (entry: AuditLogEntry) =>
+    entry.record_count === null || entry.record_count === undefined ? null : (
+      <span className="ml-2 text-xs text-ink-subtle">{tp(auditCountKey(entry), entry.record_count)}</span>
     );
   const actorName = (actorId: string | null | undefined, action?: AuditAction) =>
     actorLabel(actorId, business.members) ??
@@ -217,7 +219,7 @@ export function AuditTab() {
                           {shortId(entry.entity_id)}
                         </span>
                       ) : null}
-                      {recordCount(entry.record_count)}
+                      {recordCount(entry)}
                     </Td>
                     <Td dir="auto">{actorName(entry.actor_id, entry.action)}</Td>
                     <Td className="font-mono text-xs text-ink-muted">{entry.ip_address ?? "—"}</Td>
@@ -236,7 +238,7 @@ export function AuditTab() {
                 <p className="text-sm text-ink">
                   {entityText(entry.entity)}
                   {entry.entity_id ? <span className="ml-2 font-mono text-xs text-ink-subtle">{shortId(entry.entity_id)}</span> : null}
-                  {recordCount(entry.record_count)}
+                  {recordCount(entry)}
                 </p>
                 <p className="text-xs text-ink-muted" dir="auto">
                   {actorName(entry.actor_id, entry.action)}

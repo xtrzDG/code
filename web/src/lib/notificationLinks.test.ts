@@ -61,5 +61,6 @@ describe("notification links", () => {
     expect(linkTargetPath(view({ target: "channels" }))).toBe(`${business}/assistant/channels`);
     expect(linkTargetPath(view({ target: "share" }))).toBe(`${business}/assistant/channels#share`);
     expect(linkTargetPath(view({ target: "billing" }))).toBe(`${business}/settings/billing#setup-options`);
+    expect(linkTargetPath(view({ target: "privacy" }))).toBe(`${business}/settings/privacy`);
   });
 });

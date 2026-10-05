@@ -40,6 +40,15 @@ export function retentionBody(form: RetentionForm): PrivacySettingsBody {
   };
 }
 
+/** Turning the nightly quality sample of real conversations on or off: the stored periods unchanged. */
+export function qualitySamplingBody(view: PrivacySettingsView, allowed: boolean): PrivacySettingsBody {
+  return {
+    conversation_retention_days: view.conversation_retention_days,
+    llm_turn_retention_days: view.llm_turn_retention_days,
+    quality_sampling_allowed: allowed,
+  };
+}
+
 export function isSameRetention(form: RetentionForm, view: PrivacySettingsView): boolean {
   return (
     form.conversationDays === view.conversation_retention_days && form.modelRecordDays === view.llm_turn_retention_days

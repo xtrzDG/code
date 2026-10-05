@@ -55,7 +55,7 @@ export function DpaCard() {
   const canAccept = data !== undefined && !data.is_current_version_accepted && isOwner && hasText;
 
   return (
-    <Card title={t("settings.dpa.title")} description={t("settings.dpa.description")}>
+    <Card id="dpa" title={t("settings.dpa.title")} description={t("settings.dpa.description")}>
       {dpa.error?.code === "access_denied" ? (
         <OwnerOnlyState className="py-4" />
       ) : dpa.error && !data ? (
