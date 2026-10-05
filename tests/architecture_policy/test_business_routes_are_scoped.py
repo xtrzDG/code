@@ -26,6 +26,9 @@ from tests.e2e.harness import start_workshop
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
 # Operators that run platform-wide, by container context, and why.
 PLATFORM_WIDE_OPERATORS: dict[str, str] = {
+    "admin_actions.send_critical_clients_digest_operator": (
+        "daily digest of clients that turned critical, across businesses"
+    ),
     "analytics.get_admin_metrics_operator": "platform admin's growth metrics",
     "analytics.reconcile_product_events_operator": "daily job over every business",
     "billing.process_payment_webhook_operator": "payment webhook: order first",

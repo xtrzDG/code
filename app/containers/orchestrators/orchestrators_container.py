@@ -8,6 +8,9 @@ from app.containers.facilitators import FacilitatorsContainer
 from app.containers.orchestrators.account_orchestrators import (
     AccountOrchestratorsContainer,
 )
+from app.containers.orchestrators.admin_action_orchestrators import (
+    AdminActionOrchestratorsContainer,
+)
 from app.containers.orchestrators.analytics_orchestrators import (
     AnalyticsOrchestratorsContainer,
 )
@@ -208,6 +211,10 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         PlatformOpsOrchestratorsContainer,
         platform_ops_use_cases=use_cases.platform_ops,
         help_use_cases=use_cases.help,
+    )
+    admin_actions: AdminActionOrchestratorsContainer = Container(  # type: ignore[assignment]
+        AdminActionOrchestratorsContainer,
+        admin_action_use_cases=use_cases.admin_actions,
     )
     security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
         SecurityOrchestratorsContainer,

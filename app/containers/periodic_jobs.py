@@ -14,6 +14,9 @@ from app.gateways.worker.periodic.activation_follow_up import (
 from app.gateways.worker.periodic.channel_credentials import (
     check_channel_credentials_job,
 )
+from app.gateways.worker.periodic.critical_clients_digest import (
+    critical_clients_digest_job,
+)
 from app.gateways.worker.periodic.end_expired_support_access import (
     end_expired_support_access_job,
 )
@@ -195,6 +198,11 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         Factory(
             check_channel_credentials_job,
             operator=operators.platform_ops.check_channel_credentials_operator,
+        ),
+        # Clients that newly turned critical, once a day to the team's chats.
+        Factory(
+            critical_clients_digest_job,
+            operator=operators.admin_actions.send_critical_clients_digest_operator,
         ),
         # The status page's daily history (1111).
         Factory(

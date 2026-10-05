@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.containers.app import AppContainer
 from app.containers.operators.operators_container import OperatorsContainer
+from app.gateways.http.admin_client_router_assembly import build_admin_client_routers
 from app.gateways.http.admin_ops_router_assembly import build_admin_ops_routers
 from app.gateways.http.admin_routes import build_admin_router
 from app.gateways.http.analytics_router_assembly import build_analytics_routers
@@ -284,6 +285,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_privacy_routers(operators, current_user),
         *build_analytics_routers(operators, current_user),
         *build_admin_ops_routers(operators, current_user),
+        *build_admin_client_routers(operators, current_user),
         *build_help_routers(operators, current_user),
         *build_teaching_routers(operators, current_user),
         *build_memory_routers(operators, current_user),

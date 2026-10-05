@@ -1,5 +1,6 @@
 from dependency_injector.providers import Container, Factory
 
+from app.containers.use_cases.admin_action_use_cases import AdminActionUseCasesContainer
 from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
 from app.containers.use_cases.apply_use_cases import ApplyUseCasesContainer
 from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
@@ -40,12 +41,11 @@ from app.use_cases.example_use_case import ExampleUseCase
 class UseCasesContainer(CoreUseCasesContainer):
     """
     Every use case, one child container per bounded context, typed by its
-    contract (input and output), so the orchestrator, pipeline and operator
-    chains built on them are checked. The edges and the contexts the others
-    build on come from `CoreUseCasesContainer`.
-
-    Use cases are stateless Factories, except ones holding a cache. A context
-    running another's use cases gets that (earlier) child container as edge.
+    contract, so the orchestrator, pipeline and operator chains built on them
+    are checked; the edges and the contexts the others build on come from
+    `CoreUseCasesContainer`. Use cases are stateless Factories, except ones
+    holding a cache; a context running another's use cases gets that
+    (earlier) child container as edge.
     """
 
     conversations: ConversationUseCasesContainer = Container(  # type: ignore[assignment]
@@ -248,53 +248,51 @@ class UseCasesContainer(CoreUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities, platform_use_cases=platform,
     )  # fmt: skip
     sharing: SharingUseCasesContainer = Container(  # type: ignore[assignment]
-        SharingUseCasesContainer,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities,
+        SharingUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,
-    )
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        registries=CoreUseCasesContainer.registries,
+        utilities=CoreUseCasesContainer.utilities, config=CoreUseCasesContainer.config,
+    )  # fmt: skip
     value: ValueUseCasesContainer = Container(  # type: ignore[assignment]
-        ValueUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
+        ValueUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,
-    )
-    feedback: FeedbackUseCasesContainer = Container(  # type: ignore[assignment]
-        FeedbackUseCasesContainer,
-        config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        registries=CoreUseCasesContainer.registries,
+        adapters=CoreUseCasesContainer.adapters, config=CoreUseCasesContainer.config,
+    )  # fmt: skip
+    feedback: FeedbackUseCasesContainer = Container(  # type: ignore[assignment]
+        FeedbackUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        registries=CoreUseCasesContainer.registries,
+        utilities=CoreUseCasesContainer.utilities, config=CoreUseCasesContainer.config,
+    )  # fmt: skip
+    analytics: AnalyticsUseCasesContainer = Container(  # type: ignore[assignment]
+        AnalyticsUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        facilitators=CoreUseCasesContainer.facilitators, platform_use_cases=platform,
+        repositories=CoreUseCasesContainer.repositories, billing_use_cases=billing,
+        registries=CoreUseCasesContainer.registries,
+    )  # fmt: skip
+    demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]
+        DemoUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        registries=CoreUseCasesContainer.registries,
+        adapters=CoreUseCasesContainer.adapters, config=CoreUseCasesContainer.config,
+    )  # fmt: skip
+    admin_actions: AdminActionUseCasesContainer = Container(  # type: ignore[assignment]
+        AdminActionUseCasesContainer, platform_use_cases=platform,
+        adapters=CoreUseCasesContainer.adapters, config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators, voice_use_cases=voice,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-    )
-    analytics: AnalyticsUseCasesContainer = Container(  # type: ignore[assignment]
-        AnalyticsUseCasesContainer,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        billing_use_cases=billing,
-        platform_use_cases=platform,
-    )
-    demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]
-        DemoUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-    )
+    )  # fmt: skip
 
     # --- Template example (keeps its concrete type).
     example_use_case: Factory[ExampleUseCase] = Factory(ExampleUseCase)

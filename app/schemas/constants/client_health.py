@@ -95,7 +95,6 @@ class ClientTimelineEvent(StrEnum):
     INVOICE_ISSUED = "invoice_issued"
     INVOICE_PAID = "invoice_paid"
     INVOICE_FAILED = "invoice_failed"
-    CREDIT_GRANTED = "credit_granted"
     CREDIT_USED = "credit_used"
     TRIAL_STARTED = "trial_started"
     SUBSCRIBED = "subscribed"

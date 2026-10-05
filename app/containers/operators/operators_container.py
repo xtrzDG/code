@@ -3,6 +3,9 @@ from dependency_injector.providers import Container, DependenciesContainer
 
 from app.containers.container_edges import composed_container_edge
 from app.containers.operators.account_operators import AccountOperatorsContainer
+from app.containers.operators.admin_action_operators import (
+    AdminActionOperatorsContainer,
+)
 from app.containers.operators.analytics_operators import AnalyticsOperatorsContainer
 from app.containers.operators.assistant_operators import AssistantOperatorsContainer
 from app.containers.operators.billing_operators import BillingOperatorsContainer
@@ -138,6 +141,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOperatorsContainer,
         platform_ops_pipelines=pipelines.platform_ops,
+        utilities=utilities,
+    )
+    admin_actions: AdminActionOperatorsContainer = Container(  # type: ignore[assignment]
+        AdminActionOperatorsContainer,
+        admin_action_pipelines=pipelines.admin_actions,
         utilities=utilities,
     )
     security: SecurityOperatorsContainer = Container(  # type: ignore[assignment]
