@@ -160,7 +160,7 @@ def build_restaurant_foundation(
             whatsapp_number=RESTAURANT_PUBLIC_NUMBER.removeprefix("+"),
         ),
         connected_channel(
-            business, ChannelKind.WEB_CHAT, opened, accent_color="#2F7D4F"
+            business, ChannelKind.WEB_CHAT, opened, accent_color="#AD5732"
         ),
         connected_channel(
             business, ChannelKind.PHONE, opened, RESTAURANT_ASSISTANT_LINE

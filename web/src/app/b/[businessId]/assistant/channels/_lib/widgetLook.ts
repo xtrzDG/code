@@ -15,7 +15,7 @@ export const WIDGET_COLOR_PRESETS = ["#ad5732", "#8f7438", "#4e6c88", "#3d5c79",
 export const WIDGET_POSITIONS: readonly WidgetPosition[] = ["right", "left"];
 
 /**
- * "#0F766E", "0f766e" or "#abc" as the API's six-digit form ("#0f766e");
+ * "#AD5732", "ad5732" or "#abc" as the API's six-digit form ("#ad5732");
  * null when it is not a hex colour.
  */
 export function normalizeHexColor(value: string): string | null {

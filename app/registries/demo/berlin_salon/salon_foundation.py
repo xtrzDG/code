@@ -256,7 +256,7 @@ def build_salon_foundation(request: DemoFoundationRequest) -> DemoBusinessFounda
                 whatsapp_number=SALON_PUBLIC_NUMBER.removeprefix("+"),
             ),
             connected_channel(
-                business, ChannelKind.WEB_CHAT, opened, accent_color="#8E5A9B"
+                business, ChannelKind.WEB_CHAT, opened, accent_color="#4E6C88"
             ),
         ],
         channel_credentials=[

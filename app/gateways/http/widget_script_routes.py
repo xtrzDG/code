@@ -10,6 +10,12 @@ from fastapi import APIRouter, Header, Query, Response, status
 from fastapi.responses import HTMLResponse
 
 from app.gateways.http.strict_request_parsing import parse_path_identifier
+from app.gateways.http.widget_demo_page import (
+    demo_page_fields,
+    demo_page_language,
+    render_business_form,
+    render_embed_code,
+)
 from app.gateways.http.widget_script_assembly import assemble_widget_script
 from app.schemas.constants.channels import WidgetPosition
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -97,27 +103,38 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
         language: Annotated[str | None, Query()] = None,
         color: Annotated[str | None, Query()] = None,
         position: Annotated[str | None, Query()] = None,
+        accept_language: Annotated[str | None, Header()] = None,
     ) -> HTMLResponse:
-        page: str
+        forced_language: LanguageTag | None = parse_language(language)
+        page_language: str = demo_page_language(forced_language, accept_language)
+        fields: dict[str, str]
         if business_id is None or business_id.strip() == "":
-            page = demo_template.substitute(content=render_business_form(), widget="")
+            fields = demo_page_fields(
+                page_language,
+                render_business_form(DEMO_FORM_ACTION, page_language),
+                "",
+            )
         else:
             parsed_business_id: BusinessId = parse_path_identifier(
                 business_id.strip(),
                 BusinessId,
                 "Chat",
             )
-            page = demo_template.substitute(
-                content=render_embed_code(parsed_business_id),
-                widget=render_widget_tag(
+            fields = demo_page_fields(
+                page_language,
+                render_embed_code(parsed_business_id, page_language),
+                render_widget_tag(
                     parsed_business_id,
-                    parse_language(language),
+                    forced_language,
                     parse_accent_color(color),
                     parse_position(position),
                 ),
             )
 
-        return HTMLResponse(content=page, headers=WIDGET_DEMO_HEADERS)
+        return HTMLResponse(
+            content=demo_template.substitute(fields),
+            headers={**WIDGET_DEMO_HEADERS, "Content-Language": page_language},
+        )
 
     return router
 
@@ -144,7 +161,7 @@ def parse_language(raw_language: str | None) -> LanguageTag | None:
 
 
 def parse_accent_color(raw_color: str | None) -> WidgetAccentColor | None:
-    """A previewed brand colour ("#0f766e"); anything else is ignored."""
+    """A previewed brand colour ("#ad5732"); anything else is ignored."""
 
     if raw_color is None:
         return None
@@ -191,46 +208,3 @@ def render_widget_tag(
         attributes.append(f'data-position="{position.value}"')
 
     return f"<script {' '.join(attributes)} async></script>"
-
-
-def render_embed_code(business_id: BusinessId) -> str:
-    snippet: str = (
-        f'<script src="https://<your API address>{WIDGET_SCRIPT_PATH}" '
-        f'{WIDGET_BUSINESS_ATTRIBUTE}="{business_id}" async></script>'
-    )
-    return (
-        "  <section>\n"
-        "    <h2>Embed code</h2>\n"
-        "    <p>Paste it before the closing &lt;/body&gt; tag of every page of "
-        "the website. The cabinet (Channels &rarr; Website chat) shows it with "
-        "the right address.</p>\n"
-        f"    <pre><code>{html.escape(snippet)}</code></pre>\n"
-        "  </section>\n"
-        "  <section>\n"
-        "    <h2>Options</h2>\n"
-        "    <ul>\n"
-        '      <li><code>data-color="#0f766e"</code> &mdash; accent colour</li>\n'
-        '      <li><code>data-position="left"</code> &mdash; launcher on the '
-        "left</li>\n"
-        '      <li><code>data-language="ka"</code> &mdash; interface '
-        "language</li>\n"
-        '      <li><code>data-open="true"</code> &mdash; open the chat on the '
-        "first page of a visit</li>\n"
-        '      <li><code>data-mode="page"</code> &mdash; the chat fills the page '
-        "(the hosted chat page uses it)</li>\n"
-        "    </ul>\n"
-        "  </section>\n"
-    )
-
-
-def render_business_form() -> str:
-    return (
-        "  <section>\n"
-        f'    <form method="get" action="{html.escape(DEMO_FORM_ACTION)}">\n'
-        '      <label for="business_id">Business id</label>\n'
-        '      <input id="business_id" name="business_id" required '
-        'placeholder="business_…" autocomplete="off">\n'
-        '      <button type="submit">Show the widget</button>\n'
-        "    </form>\n"
-        "  </section>\n"
-    )
