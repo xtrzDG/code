@@ -330,6 +330,21 @@ jobs:
       - name: End-to-end tests
         run: npm run e2e
 
+      # A failed test's page snapshot and the API's last lines, readable in
+      # the log itself: the artifact below has to be downloaded first.
+      - name: Show the failed tests' page snapshots and the API log's end
+        if: ${{ failure() }}
+        run: |
+          find e2e/.artifacts/results -name error-context.md -print0 2>/dev/null |
+            while IFS= read -r -d '' context; do
+              echo "::group::${context}"
+              head -c 20000 "${context}"
+              echo "::endgroup::"
+            done
+          echo "::group::api.log, last 300 lines"
+          tail -n 300 e2e/.artifacts/api.log 2>/dev/null || true
+          echo "::endgroup::"
+
       - name: Keep the report, traces and API log
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
