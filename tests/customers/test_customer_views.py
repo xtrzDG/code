@@ -235,3 +235,19 @@ def test_the_list_filters_by_tag_vip_and_block() -> None:
             bed, user_id=bed.staff_id, list_filter=CustomerListFilter.VIP
         ).items
     ) == ["Giorgi"]
+
+
+def test_a_search_keeps_the_vip_and_blocked_filters() -> None:
+    bed = CustomerBed()
+    giorgi = bed.customers.giorgi.contact
+    nino = bed.customers.nino.contact
+    bed.tag(giorgi.id, is_vip=True)
+    bed.block(nino.id)
+
+    def found(name: str, list_filter: CustomerListFilter) -> list[str]:
+        return names_of(list_customers(bed, list_filter=list_filter, search=name).items)
+
+    assert found("gior", CustomerListFilter.VIP) == ["Giorgi"]
+    assert found("nin", CustomerListFilter.VIP) == []
+    assert found("nin", CustomerListFilter.BLOCKED) == ["Nino"]
+    assert found("gior", CustomerListFilter.BLOCKED) == []

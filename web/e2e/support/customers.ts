@@ -48,7 +48,7 @@ export async function bookedCustomer(
       contact_phone_number: customer.phone,
       date: dayAhead(3),
       time: "12:00",
-      party_size: 2,
+      party_size: 1,
       duration_minutes: 60,
       resource_id: resourceId,
     },
