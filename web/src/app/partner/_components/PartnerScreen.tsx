@@ -39,7 +39,7 @@ export function PartnerScreen() {
       <div className="space-y-6">
         {view.status === "paused" ? <Alert tone="warning">{t("partnerPortal.paused")}</Alert> : null}
         <Card title={t("partnerPortal.totals.title")} description={t("partnerPortal.rate", { rate })}>
-          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Tile label={t("partnerPortal.totals.businesses")} value={formatNumber(view.referred_businesses, locale)} />
             <Tile label={t("partnerPortal.totals.paying")} value={formatNumber(view.paid_businesses, locale)} />
             <Tile label={t("partnerPortal.totals.accrued")} value={sumOf(view.totals ?? [], "accrued", locale) ?? "—"} />
