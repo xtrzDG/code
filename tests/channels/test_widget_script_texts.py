@@ -6,6 +6,7 @@ import shutil
 import subprocess
 
 import pytest
+from pydantic import TypeAdapter
 
 from app.registries.localization.curated_country_languages import (
     CURATED_CUSTOMER_LANGUAGES,
@@ -91,8 +92,8 @@ class TestWidgetTexts:
             ), language
 
 
-def run_colour_script(call: str) -> object:
-    """Run the script's colour helpers (colors.js) in node; JSON of the call."""
+def run_colour_script(call: str) -> str:
+    """Run the script's colour helpers (colors.js) in node; the call's JSON."""
 
     node = shutil.which("node")
     assert node is not None
@@ -110,14 +111,14 @@ def run_colour_script(call: str) -> object:
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
+    return result.stdout
 
 
 def wcag_contrast(first: str, second: str) -> float:
     """The WCAG 2 contrast ratio of two #rrggbb colours, computed here."""
 
     def luminance(colour: str) -> float:
-        linear = []
+        linear: list[float] = []
         for offset in (1, 3, 5):
             value = int(colour[offset : offset + 2], 16) / 255
             linear.append(
@@ -129,6 +130,9 @@ def wcag_contrast(first: str, second: str) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
+# The accent and the text on it, as accentColors returns them.
+PAINTED: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str])
+PAINTED_LIST: TypeAdapter[list[dict[str, str]]] = TypeAdapter(list[dict[str, str]])
 # Every #rgb colour: 4096 accents from black to white through every hue.
 EVERY_SHORT_HEX: list[str] = [
     f"#{red:x}{green:x}{blue:x}"
@@ -156,7 +160,9 @@ class TestWidgetColours:
     def test_text_on_the_accent_is_white_else_ink(
         self, accent: str, painted: str, text_colour: str
     ) -> None:
-        assert run_colour_script(f'accentColors("{accent}")') == {
+        assert PAINTED.validate_json(
+            run_colour_script(f'accentColors("{accent}")')
+        ) == {
             "accent": painted,
             "onAccent": text_colour,
         }
@@ -164,8 +170,7 @@ class TestWidgetColours:
     def test_a_mid_tone_neither_text_reads_on_is_darkened_until_white_does(
         self,
     ) -> None:
-        colours = run_colour_script('accentColors("#808080")')
-        assert isinstance(colours, dict)
+        colours = PAINTED.validate_json(run_colour_script('accentColors("#808080")'))
 
         assert colours["onAccent"] == "#ffffff"
         assert colours["accent"] != "#808080"
@@ -174,8 +179,9 @@ class TestWidgetColours:
     def test_any_business_colour_keeps_wcag_aa_on_header_launcher_and_send(
         self,
     ) -> None:
-        painted = run_colour_script(f"{json.dumps(EVERY_SHORT_HEX)}.map(accentColors)")
-        assert isinstance(painted, list)
+        painted = PAINTED_LIST.validate_json(
+            run_colour_script(f"{json.dumps(EVERY_SHORT_HEX)}.map(accentColors)")
+        )
 
         failing = [
             (accent, colours)
@@ -191,7 +197,7 @@ class TestWidgetColours:
     def test_the_script_tag_may_ask_for_a_theme(
         self, attribute: str, theme: str
     ) -> None:
-        assert run_colour_script(f'chooseTheme("{attribute}")') == theme
+        assert json.loads(run_colour_script(f'chooseTheme("{attribute}")')) == theme
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")

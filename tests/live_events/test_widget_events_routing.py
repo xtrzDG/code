@@ -76,7 +76,10 @@ def test_a_staff_reply_in_a_website_chat_reaches_the_visitors_stream() -> None:
         LiveEventKind.CONVERSATION_MESSAGE,
         LiveEventKind.WIDGET_REPLY,
     ]
-    assert announced[1].ids == (str(widget_visitor_id(SESSION_KEY)), str(sent.message.id))
+    assert announced[1].ids == (
+        str(widget_visitor_id(SESSION_KEY)),
+        str(sent.message.id),
+    )
 
 
 def test_cabinet_streams_never_carry_widget_events() -> None:
