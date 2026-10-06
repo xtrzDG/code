@@ -156,3 +156,31 @@ def open_restaurant(workshop: Workshop) -> IntegrationShop:
         business_id=business_id,
         resource_id=str(table.json()["id"]),
     )
+
+
+OTHER_OWNER_PHONE: str = "+995 555 98 76 54"
+
+
+def open_other_business(workshop: Workshop) -> IntegrationShop:
+    """A second restaurant of another owner in the same application."""
+
+    token, _ = workshop.sign_in_with_phone(OTHER_OWNER_PHONE)
+    created = workshop.client.post(
+        "/v1/businesses",
+        json={"name": "Shavi Lomi", "niche_key": "restaurant"},
+        headers=bearer(token),
+    )
+    assert created.status_code == 201, created.text
+    business_id = str(created.json()["id"])
+    table = workshop.client.post(
+        f"/v1/businesses/{business_id}/resources",
+        json={"name": "Bar", "capacity": 2, "slot_minutes": 60, "schedule": OPEN_ALL_WEEK},
+        headers=bearer(token),
+    )
+    assert table.status_code == 201, table.text
+    return IntegrationShop(
+        workshop=workshop,
+        token=token,
+        business_id=business_id,
+        resource_id=str(table.json()["id"]),
+    )
