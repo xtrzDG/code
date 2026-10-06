@@ -184,9 +184,9 @@ export function TimeField({
               onPaste={(event) => field.onPaste(segment, event)}
               onFocus={() => field.onFocus(segment)}
               className={cn(
-                "h-7 rounded-md bg-transparent px-0.5 text-center tabular-nums caret-transparent outline-none",
+                "h-7 rounded-md bg-transparent px-px text-center tabular-nums caret-transparent outline-none",
                 "placeholder:text-ink-subtle focus:bg-accent-soft focus:text-accent-ink disabled:cursor-not-allowed",
-                segment === "period" ? "w-[3.25ch] uppercase" : "w-[2.6ch]",
+                segment === "period" ? "w-[3.4ch] uppercase" : "w-[2.4ch]",
               )}
             />
           </span>

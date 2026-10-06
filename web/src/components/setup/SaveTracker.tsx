@@ -2,53 +2,42 @@
 
 /**
  * Autosave's voice in the top bar: every screen hands its saves to
- * `track()` and the bar says "Saving…", "Saved" or "Not saved yet". Saves
- * running at once are counted, so the bar says "Saved" only when all of
- * them are done. `onSaved` hears of every save that went through (the
- * profile editor marks what the assistant knows as changed, so the
- * "not with your customers yet" banner counts it).
+ * `track()` and the bar says "Saving…", "Saved" or "Not saved yet". The
+ * counting lives in components/forms/saveTracking (the settings forms that
+ * save themselves use it too). `onSaved` hears of every save that went
+ * through (the profile editor marks what the assistant knows as changed,
+ * so the "not with your customers yet" banner counts it).
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import type { SaveState } from "./TunnelHeader";
+import { createSaveCounter, type SaveState, type TrackSave } from "@/components/forms/saveTracking";
 
 interface SaveTracker {
   state: SaveState;
   /** Follow one save; resolves to whether it succeeded. */
-  track: (save: Promise<boolean>) => Promise<boolean>;
+  track: TrackSave;
 }
 
 const SaveTrackerContext = createContext<SaveTracker | null>(null);
 
 export function SaveTrackerProvider({ children, onSaved }: { children: (state: SaveState) => ReactNode; onSaved?: () => void }) {
   const [state, setState] = useState<SaveState>("idle");
-  const running = useRef(0);
-  const failed = useRef(false);
   const savedListener = useRef(onSaved);
   useEffect(() => {
     savedListener.current = onSaved;
   });
-
-  const track = useCallback(async (save: Promise<boolean>) => {
-    running.current += 1;
-    setState("saving");
-    let ok = false;
-    try {
-      ok = await save;
+  const [counter] = useState(() => createSaveCounter(setState));
+  const track = useCallback<TrackSave>(
+    async (save) => {
+      const ok = await counter(save);
       if (ok) {
         savedListener.current?.();
       }
-    } finally {
-      running.current -= 1;
-      failed.current = failed.current || !ok;
-      if (running.current === 0) {
-        setState(failed.current ? "failed" : "saved");
-        failed.current = false;
-      }
-    }
-    return ok;
-  }, []);
+      return ok;
+    },
+    [counter],
+  );
 
   const value = useMemo(() => ({ state, track }), [state, track]);
   return <SaveTrackerContext.Provider value={value}>{children(state)}</SaveTrackerContext.Provider>;

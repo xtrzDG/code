@@ -16,7 +16,9 @@ import { Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
-export type SaveState = "idle" | "saving" | "saved" | "failed";
+import type { SaveState } from "@/components/forms/saveTracking";
+
+export type { SaveState };
 
 const SAVE_STATES = ["saving", "saved", "failed"] as const;
 
