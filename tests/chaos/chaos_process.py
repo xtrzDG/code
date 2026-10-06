@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 from typing import cast
 
+import httpx
 import openai
 import uvicorn
 from dependency_injector import providers
@@ -27,6 +28,7 @@ from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
 from app.clients.meta.meta_typing_client import MetaTypingClient
 from app.clients.openai.openai_responses_client import OpenAiResponsesClient
+from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.containers.app import AppContainer
 from app.main import build_application
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -39,6 +41,7 @@ from tests.chaos.chaos_clock import (
     shifted_wall_clock,
 )
 from tests.chaos.chaos_sends import SENDS_FILE_VARIABLE, RecordingStaffSender
+from tests.e2e.edge_fakes import answer_telegram
 from tests.e2e.workshop_container import OverridableProvider, replace_provider
 
 PROVIDER_URL_VARIABLE: str = "CHAOS_PROVIDER_URL"
@@ -92,9 +95,19 @@ def use_fake_providers(container: AppContainer, provider_url: str) -> None:
     )
 
 
+def answer_telegram_locally(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, json=answer_telegram(request))
+
+
 def build_container() -> AppContainer:
     container = AppContainer()
     move_the_clock(container, Path(os.environ[CLOCK_FILE_VARIABLE]))
+    # The platform bot is configured (staff notifications go out) but its
+    # webhook registration at startup stays here.
+    replace_provider(
+        container.clients.telegram_bot_client,
+        TelegramBotClient(transport=httpx.MockTransport(answer_telegram_locally)),
+    )
     # The concrete provider takes the recorder that keeps its contract.
     cast(
         OverridableProvider, container.facilitators.staff_notification_sender

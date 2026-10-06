@@ -52,8 +52,9 @@ def is_flowing(url: str) -> bool:
 def test_a_killed_worker_pages_once_and_its_return_is_told_once(
     world: ChaosWorld,
 ) -> None:
-    apis = [world.start_api(WATCHDOG_EVERY_SECOND) for _ in range(2)]
+    # The worker first: with no pulse at all, the pipeline is rightly down.
     worker = world.start_worker()
+    apis = [world.start_api(WATCHDOG_EVERY_SECOND) for _ in range(2)]
     for url in apis:
         wait_for(partial(is_flowing, url), what="a flowing pipeline")
     assert component_levels(apis[0])["chat"] == "operational"
@@ -77,7 +78,7 @@ def test_a_killed_worker_pages_once_and_its_return_is_told_once(
     [firing] = world.alerts(WORKER_DOWN_TITLE)
     assert firing.headline == f"[SEV1] FIRING: {WORKER_DOWN_TITLE}"
     assert firing.channel == "telegram"
-    assert firing.pid in {process.pid for process in world.processes[:2]}
+    assert firing.pid in {process.pid for process in world.processes[1:3]}
     levels = component_levels(apis[1])
     assert {levels["chat"], levels["meta"], levels["telegram"]} == {"outage"}
     assert levels["cabinet"] == "operational"

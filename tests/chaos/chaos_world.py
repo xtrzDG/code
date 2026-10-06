@@ -88,6 +88,12 @@ class ChaosWorld:
             "THREADPOOL_SIZE": "12",
             "LOG_FORMAT": "json",
             "META_APP_SECRET": META_APP_SECRET,
+            # Staff notifications and WhatsApp replies are configured: what
+            # fails in a game day is the provider, never the settings.
+            "TELEGRAM_PLATFORM_BOT_TOKEN": E2E_ENVIRONMENT[
+                "TELEGRAM_PLATFORM_BOT_TOKEN"
+            ],
+            "WHATSAPP_SYSTEM_USER_TOKEN": "EAAG-chaos-system-user-0000",
             "PLATFORM_ALERT_TELEGRAM_CHAT_IDS": ALERT_CHAT,
             "WORKER_POLL_SECONDS": "1",
             "WORKER_INBOUND_POLL_SECONDS": "1",
@@ -150,6 +156,10 @@ class ChaosWorld:
         with self.postgres_server.admin_connection(self.database_name) as connection:
             return list(connection.execute(statement, parameters).fetchall())
 
+    def execute(self, statement: LiteralString, *parameters: object) -> None:
+        with self.postgres_server.admin_connection(self.database_name) as connection:
+            connection.execute(statement, parameters)
+
 
 def get_json(url: str, path: str) -> tuple[int, dict[str, Any]]:
     response = httpx.get(f"{url}{path}", timeout=10)
@@ -193,6 +203,9 @@ def chaos_world(
             clock=ChaosClock(directory / "clock-offset"),
             provider_url=provider_url,
         )
+        # The seeding workshop ran its jobs once and left a pulse: it is no
+        # worker of this world (after a clock jump it would look stuck).
+        world.execute("delete from workshop.worker_heartbeats")
         try:
             yield world
         finally:
