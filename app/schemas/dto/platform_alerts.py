@@ -35,7 +35,8 @@ class PlatformAlertRule(ImmutableDTO):
     One platform alert as ops/alerts/*.yaml defines it: it fires when its
     figure, measured over the window, reaches the threshold (a rate rule
     only once the window holds `volume_floor` events), and points to the
-    runbook of what to do.
+    runbook of what to do. A burn-rate rule also names its short window
+    (`short_window_minutes`): it fires only when both windows burn.
     """
 
     code: PlatformAlertCode
@@ -46,6 +47,7 @@ class PlatformAlertRule(ImmutableDTO):
     window_minutes: AlertWindowMinutes
     volume_floor: AlertVolumeFloor = AlertVolumeFloor(0)
     runbook: AlertRunbookPath
+    short_window_minutes: AlertWindowMinutes | None = None
 
 
 class AlertObservation(ImmutableDTO):

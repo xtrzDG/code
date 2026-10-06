@@ -16,6 +16,10 @@ class PlatformAlertCode(StrEnum):
     week before (production quality). SPEND_SPIKE: today's provider spend
     is far above the daily mean of the week before. SPEND_BUDGET: today's
     provider spend passed 80 % of the platform's daily budget.
+    ANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of
+    "answered within 60 s" burns 14.4 times too fast over 1 h and 5 min, or
+    6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN
+    the same for API availability (docs/operations/slo.md).
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -29,6 +33,10 @@ class PlatformAlertCode(StrEnum):
     QUALITY_DROP = "quality_drop"
     SPEND_SPIKE = "spend_spike"
     SPEND_BUDGET = "spend_budget"
+    ANSWER_BUDGET_FAST_BURN = "answer_budget_fast_burn"
+    ANSWER_BUDGET_SLOW_BURN = "answer_budget_slow_burn"
+    API_BUDGET_FAST_BURN = "api_budget_fast_burn"
+    API_BUDGET_SLOW_BURN = "api_budget_slow_burn"
 
 
 class PlatformAlertStatus(StrEnum):

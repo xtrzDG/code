@@ -2,8 +2,9 @@
 The catalog entries of the platform's own operations (1093, platform-wide
 collections): the episodes of the platform alerts, the recorded backups
 and restore drills, the incident log; the status page's announcements
-and history and each person's guidance (1111). Part of DOCUMENT_COLLECTIONS
-(document_collection_catalog.py).
+and history and each person's guidance (1111); the service level
+indicators in five-minute slots and hourly rows (1163). Part of
+DOCUMENT_COLLECTIONS (document_collection_catalog.py).
 """
 
 from app.schemas.domain.client_standings import ClientStandingDocument
@@ -14,6 +15,10 @@ from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
+)
+from app.schemas.domain.service_levels import (
+    ServiceLevelHourDocument,
+    ServiceLevelSlotDocument,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.document_collection_definition import (
@@ -41,5 +46,12 @@ OPERATIONS_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("help_progress"), HelpProgressDocument
+    ),
+    # The SLIs: five-minute slots per series, one row per hour (1163).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("service_level_slots"), ServiceLevelSlotDocument
+    ),
+    DocumentCollectionDefinition(
+        DocumentCollectionName("service_level_hours"), ServiceLevelHourDocument
     ),
 )

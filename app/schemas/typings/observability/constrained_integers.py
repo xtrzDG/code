@@ -3,6 +3,17 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class AnswerLatencyP95Milliseconds(BaseConstrainedTypedInt):
+    """
+    The 95th percentile of how long customers of every business waited for
+    the assistant's reply in one hour (`reply_latency_ms` of the replies),
+    read from latency buckets.
+    """
+
+    ge = 0
+    le = 86_400_000
+
+
 class BurnRatePercent(BaseConstrainedTypedInt):
     """
     How fast an error budget burns, in percent of the pace that would spend
@@ -37,6 +48,13 @@ class MetricsPort(BaseConstrainedTypedInt):
 
     ge = 1024
     le = 65535
+
+
+class ServiceLevelHourCount(BaseConstrainedTypedInt):
+    """Hours of the service level rows (e.g. those whose p95 missed 15 s)."""
+
+    ge = 0
+    le = 1_000_000
 
 
 class ServiceLevelEventCount(BaseConstrainedTypedInt):
