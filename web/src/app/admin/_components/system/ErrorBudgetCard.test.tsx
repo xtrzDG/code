@@ -68,6 +68,22 @@ describe("ErrorBudgetCard: what is left of each SLO's budget", () => {
     expect(screen.getByRole("region", { name: t("adminSystem.errorBudget.latency.title") })).toBeTruthy();
   });
 
+  it("says when the measured hours held no event instead of counting 0 of 0", async () => {
+    const { t } = textsIn("en");
+    const quiet: ErrorBudget = {
+      ...budget,
+      objectives: budget.objectives.map((objective) => ({ ...objective, events: 0, good_events: 0 })),
+      latency: { ...budget.latency, last_hour_p95_ms: null },
+    };
+    answerGet(() => ok(quiet));
+    renderInLocale(<ErrorBudgetCard />);
+
+    expect(await screen.findByText(t("adminSystem.errorBudget.noEvents.inbound_answered"))).toBeTruthy();
+    expect(screen.getByText(t("adminSystem.errorBudget.noEvents.api_availability"))).toBeTruthy();
+    expect(screen.getByText(t("adminSystem.errorBudget.latency.noLastHour"))).toBeTruthy();
+    expect(screen.queryByText(/0 of 0/)).toBeNull();
+  });
+
   it("says so before the first hourly row", async () => {
     const { t } = textsIn("en");
     answerGet(() => ok({ ...budget, measured_since: null, measured_until: null }));

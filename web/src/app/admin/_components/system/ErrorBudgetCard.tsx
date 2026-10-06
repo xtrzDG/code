@@ -126,10 +126,12 @@ function ObjectiveTile({ objective }: { objective: ObjectiveBudget }) {
           : t("adminSystem.errorBudget.overspent", { percent: percent(-permille / 1000) })}
       </p>
       <p className="text-sm text-ink-muted">
-        {t(`adminSystem.errorBudget.events.${objective.series}`, {
-          good: formatNumber(objective.good_events, locale),
-          total: formatNumber(objective.events, locale),
-        })}
+        {objective.events > 0
+          ? t(`adminSystem.errorBudget.events.${objective.series}`, {
+              good: formatNumber(objective.good_events, locale),
+              total: formatNumber(objective.events, locale),
+            })
+          : t(`adminSystem.errorBudget.noEvents.${objective.series}`)}
       </p>
       <div className="mt-auto">
         <Badge tone={burnTone(objective.burn_rate_last_hour_percent)}>
@@ -167,7 +169,7 @@ function LatencyTile({ budget }: { budget: ErrorBudget }) {
       </p>
       <p className="text-sm text-ink-muted">
         {latency.last_hour_p95_ms != null
-          ? t("adminSystem.errorBudget.latency.lastHour", { value: seconds(latency.last_hour_p95_ms) })
+          ? t("adminSystem.errorBudget.latency.lastHour")
           : t("adminSystem.errorBudget.latency.noLastHour")}
       </p>
       <p className="mt-auto text-sm text-ink-muted">

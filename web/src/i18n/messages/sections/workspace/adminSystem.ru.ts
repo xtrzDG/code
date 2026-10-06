@@ -87,6 +87,10 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
     left: "Осталось {percent} бюджета",
     overspent: "Перерасход {percent} бюджета",
     meterLabel: "Остаток бюджета ошибок: {name}",
+    noEvents: {
+      inbound_answered: "За эти часы сообщений от клиентов ещё не было",
+      api_availability: "За эти часы запросов к API ещё не было",
+    },
     events: {
       inbound_answered: "{good} из {total} сообщений клиентов получили ответ вовремя",
       api_availability: "{good} из {total} запросов без ошибки сервера",
@@ -95,8 +99,8 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
     latency: {
       title: "Время ответа, p95",
       objective: "Цель — меньше {target}",
-      lastHour: "Последний час: {value}",
-      noLastHour: "Последний час: ответов не измерено",
+      lastHour: "Ответы помощника за последний измеренный час",
+      noLastHour: "За последний час ответы не измерялись",
       overTarget: {
         one: "{count} из {total} измеренных часов выше цели",
         few: "{count} из {total} измеренных часов выше цели",

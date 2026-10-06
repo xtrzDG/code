@@ -83,6 +83,10 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
     left: "ბიუჯეტიდან დარჩა {percent}",
     overspent: "ბიუჯეტი გადაჭარბებულია {percent}-ით",
     meterLabel: "შეცდომების ბიუჯეტის ნაშთი: {name}",
+    noEvents: {
+      inbound_answered: "ამ საათებში კლიენტების შეტყობინებები ჯერ არ ყოფილა",
+      api_availability: "ამ საათებში API-ზე მოთხოვნები ჯერ არ ყოფილა",
+    },
     events: {
       inbound_answered: "კლიენტების {total} შეტყობინებიდან {good}-ს დროულად უპასუხეს",
       api_availability: "{total} მოთხოვნიდან {good} სერვერის შეცდომის გარეშე",
@@ -91,8 +95,8 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
     latency: {
       title: "პასუხის დრო, p95",
       objective: "მიზანი: {target}-ზე ნაკლები",
-      lastHour: "ბოლო საათი: {value}",
-      noLastHour: "ბოლო საათი: პასუხი არ გაზომილა",
+      lastHour: "ასისტენტის პასუხები ბოლო გაზომილ საათში",
+      noLastHour: "ბოლო საათში პასუხი არ გაზომილა",
       overTarget: {
         one: "გაზომილი {total} საათიდან {count} მიზანს აჭარბებს",
         other: "გაზომილი {total} საათიდან {count} მიზანს აჭარბებს",

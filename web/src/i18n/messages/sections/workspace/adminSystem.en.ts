@@ -84,6 +84,10 @@ export const adminSystemEn = {
     left: "{percent} of the budget left",
     overspent: "Spent {percent} more than the budget",
     meterLabel: "Error budget left: {name}",
+    noEvents: {
+      inbound_answered: "No customer messages in these hours yet",
+      api_availability: "No API requests counted in these hours yet",
+    },
     events: {
       inbound_answered: "{good} of {total} customer messages answered in time",
       api_availability: "{good} of {total} requests without a server error",
@@ -92,8 +96,8 @@ export const adminSystemEn = {
     latency: {
       title: "Answer latency, p95",
       objective: "Objective under {target}",
-      lastHour: "Last hour: {value}",
-      noLastHour: "Last hour: no reply measured",
+      lastHour: "The assistant's replies in the last measured hour",
+      noLastHour: "No reply was measured in the last hour",
       overTarget: {
         one: "{count} of {total} measured hours over the objective",
         other: "{count} of {total} measured hours over the objective",
