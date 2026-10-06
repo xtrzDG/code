@@ -598,6 +598,7 @@ _.recent_counts  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsVie
 _.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 
 # Two-way availability (R13): response fields the cabinet reads (a resource's
-# calendars, the Google calendar list to link one).
+# calendars, the Google calendar list to link one, each resource's summary).
 _.access_role  # app/schemas/dto/calendar_sync/busy_reads.py (GoogleCalendarEntry)
 _.ical_export  # app/schemas/dto/calendar_sync/resource_calendar.py
+_.problem_count  # app/schemas/dto/calendar_sync/integrations.py (ResourceSyncSummary)
