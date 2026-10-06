@@ -146,7 +146,6 @@ class SendWinBackMessagesUseCase(UseCaseContract[JobTick, JobReport]):
                 business_id=business.id,
                 subscription_id=subscription.id,
                 stage=stage,
-                cancelled_at=cancellation.occurred_at,
                 reason=cancellation.cancellation_reason,
                 conversations_since=self._conversations_since(
                     business, cancellation, now

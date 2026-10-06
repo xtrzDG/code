@@ -596,3 +596,15 @@ _.niche_delay_days  # app/schemas/dto/growth/campaign_views.py (CampaignSettings
 _.month_sent_count  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.recent_counts  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+
+# The subscription lifecycle (R14): the win-back stage is stored for the
+# record; the rest are response fields the cabinet reads (the pause card,
+# the cancel dialog's offers, the admin Metrics churn section).
+_.win_back_stage  # app/schemas/domain/subscription_events.py (SubscriptionEventDocument)
+_.churn  # app/schemas/dto/analytics/admin_metrics_view.py (AdminMetricsView)
+_.pauses_scheduled  # app/schemas/dto/analytics/churn_views.py (ChurnView)
+_.pauses_ended  # app/schemas/dto/analytics/churn_views.py (ChurnView)
+_.win_back_sent  # app/schemas/dto/analytics/churn_views.py (ChurnView)
+_.returned_after_win_back  # app/schemas/dto/analytics/churn_views.py (ChurnView)
+_.price_percent  # app/schemas/dto/subscription_lifecycle.py (PauseOptionsView)
+_.plan_price  # app/schemas/dto/subscription_lifecycle.py (RetentionOfferView)

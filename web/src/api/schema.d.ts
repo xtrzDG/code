@@ -1181,6 +1181,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/billing/lifecycle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Subscription Lifecycle */
+        get: operations["get_subscription_lifecycle_v1_businesses__business_id__billing_lifecycle_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/billing/offers/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Retention Offer */
+        post: operations["accept_retention_offer_v1_businesses__business_id__billing_offers_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/billing/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause Subscription */
+        post: operations["pause_subscription_v1_businesses__business_id__billing_pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/billing/plan": {
         parameters: {
             query?: never;
@@ -1210,6 +1261,23 @@ export interface paths {
         /** Save Billing Profile */
         put: operations["save_billing_profile_v1_businesses__business_id__billing_profile_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/billing/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Subscription */
+        post: operations["resume_subscription_v1_businesses__business_id__billing_resume_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4546,10 +4614,12 @@ export interface components {
          * AdminMetricsView
          * @description The founder's growth metrics of a period (UTC days, both included): the
          *     owners' funnel and what explains it, recurring revenue in euros, gross
-         *     margin and the cabinet's Web Vitals. First-party data only.
+         *     margin, why owners cancelled and what kept or brought them back
+         *     (`churn`), and the cabinet's Web Vitals. First-party data only.
          */
         AdminMetricsView: {
             choices: components["schemas"]["MetricsFilterChoices"];
+            churn?: components["schemas"]["ChurnView"];
             /** Generated At */
             generated_at: number;
             growth: components["schemas"]["GrowthView"];
@@ -6639,6 +6709,22 @@ export interface components {
             status: components["schemas"]["CampaignMessageStatus"];
         };
         /**
+         * CancellationOfferView
+         * @description What the dialog offers for one reason (None: nothing to offer).
+         */
+        CancellationOfferView: {
+            offer?: components["schemas"]["RetentionOfferView"] | null;
+            reason: components["schemas"]["CancellationReason"];
+        };
+        /**
+         * CancellationReason
+         * @description Why an owner cancels, chosen in the cancel dialog (with optional words
+         *     of their own). The founder reads them on the admin Metrics page; the
+         *     dialog answers some with an offer (`RetentionOfferKind`).
+         * @enum {string}
+         */
+        CancellationReason: "too_expensive" | "seasonal_break" | "not_enough_use" | "missing_feature" | "answer_quality" | "switched_provider" | "closing_business" | "other";
+        /**
          * CarrierForwardingInstructions
          * @description Ready-to-dial codes of one named mobile carrier.
          */
@@ -6841,6 +6927,72 @@ export interface components {
             invoice_ids: string[];
             /** Payment Order Id */
             payment_order_id: string;
+        };
+        /**
+         * ChurnComment
+         * @description What one owner wrote when cancelling, newest first.
+         */
+        ChurnComment: {
+            /** Business Id */
+            business_id: string;
+            /** Details */
+            details: string;
+            /** Occurred At */
+            occurred_at: number;
+            reason?: components["schemas"]["CancellationReason"] | null;
+        };
+        /**
+         * ChurnReasonRow
+         * @description One reason of the period: how many cancelled with it and how many took
+         *     the offer it brought instead (`saved`). `reason` None: cancelled
+         *     without saying why (a cabinet from before the question).
+         */
+        ChurnReasonRow: {
+            /** Cancellations */
+            cancellations: number;
+            reason?: components["schemas"]["CancellationReason"] | null;
+            /** Saved */
+            saved: number;
+        };
+        /**
+         * ChurnView
+         * @description The period's cancellations by reason (most first) with the owners'
+         *     own words, the offers taken instead, the seasonal pauses scheduled and
+         *     ended, the win-back messages sent, and the businesses that subscribed
+         *     again after one (`returned_after_win_back`).
+         */
+        ChurnView: {
+            /**
+             * Cancellations
+             * @default 0
+             */
+            cancellations: number;
+            /** Comments */
+            comments?: components["schemas"]["ChurnComment"][];
+            /** Offers */
+            offers?: components["schemas"]["RetentionOfferRow"][];
+            /**
+             * Pauses Ended
+             * @default 0
+             */
+            pauses_ended: number;
+            /**
+             * Pauses Scheduled
+             * @default 0
+             */
+            pauses_scheduled: number;
+            /** Reasons */
+            reasons?: components["schemas"]["ChurnReasonRow"][];
+            /**
+             * Returned After Win Back
+             * @default 0
+             */
+            returned_after_win_back: number;
+            /**
+             * Win Back Sent
+             * @default 0
+             */
+            win_back_sent: number;
         };
         /**
          * ClaimFinding
@@ -11751,6 +11903,45 @@ export interface components {
          */
         PartnerStatus: "active" | "paused";
         /**
+         * PauseOptionsView
+         * @description Whether the business can pause now and on what terms: from
+         *     `starts_at` (the end of the paid period) for up to `max_months`
+         *     months at `monthly_price` a month (`price_percent` of the plan);
+         *     `paused_months` of the `cap_months` allowed in any `window_months` are
+         *     used. `unavailable_reason` says why not when it cannot.
+         */
+        PauseOptionsView: {
+            /** Cap Months */
+            cap_months: number;
+            /** Is Available */
+            is_available: boolean;
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Max Months */
+            max_months: number;
+            monthly_price?: components["schemas"]["QuotedMoney"] | null;
+            /** Paused Months */
+            paused_months: number;
+            /** Price Percent */
+            price_percent: number;
+            /** Starts At */
+            starts_at?: number | null;
+            unavailable_reason?: components["schemas"]["PauseUnavailableReason"] | null;
+            /** Window Months */
+            window_months: number;
+        };
+        /**
+         * PauseUnavailableReason
+         * @description Why a business cannot pause now: the platform has not turned pausing
+         *     on yet (FEATURE_OFF), the subscription is not active and paid
+         *     (NOT_ACTIVE: a trial, an unpaid or cancelled one), it is billed
+         *     yearly (NOT_MONTHLY), a pause is already scheduled or running
+         *     (ALREADY_PAUSED), or four months of the last twelve are used
+         *     (ALLOWANCE_USED).
+         * @enum {string}
+         */
+        PauseUnavailableReason: "feature_off" | "not_active" | "not_monthly" | "already_paused" | "allowance_used";
+        /**
          * PaymentStatus
          * @description Status of a payment as the provider reports it (Flitt `order_status`).
          *
@@ -12753,6 +12944,40 @@ export interface components {
             updated_at: number;
         };
         /**
+         * RetentionOfferKind
+         * @description What the cancel dialog offers instead of cancelling: a seasonal PAUSE
+         *     (the assistant takes requests for a fraction of the price), a
+         *     DOWNGRADE to the next cheaper plan, or a one-time CREDIT on the
+         *     business's ledger.
+         * @enum {string}
+         */
+        RetentionOfferKind: "pause" | "downgrade" | "credit";
+        /**
+         * RetentionOfferRow
+         * @description How many owners took one kind of offer instead of cancelling.
+         */
+        RetentionOfferRow: {
+            /** Accepted */
+            accepted: number;
+            kind: components["schemas"]["RetentionOfferKind"];
+        };
+        /**
+         * RetentionOfferView
+         * @description An offer instead of cancelling: a PAUSE of up to `pause_months`, a
+         *     DOWNGRADE to `plan_key` at `plan_price`, or a one-time `credit`.
+         */
+        RetentionOfferView: {
+            credit?: components["schemas"]["QuotedMoney"] | null;
+            kind: components["schemas"]["RetentionOfferKind"];
+            /** Pause Months */
+            pause_months?: number | null;
+            pause_price?: components["schemas"]["QuotedMoney"] | null;
+            plan_key?: components["schemas"]["PlanKey"] | null;
+            /** Plan Name */
+            plan_name?: string | null;
+            plan_price?: components["schemas"]["QuotedMoney"] | null;
+        };
+        /**
          * RetentionPurgeCounts
          * @description What one run of a business's retention purge deleted or anonymized.
          */
@@ -13719,20 +13944,38 @@ export interface components {
             removed_on?: string | null;
         };
         /**
+         * SubscriptionLifecycleView
+         * @description The cancel dialog's reasons with their offers, in the order shown, and
+         *     the pause card.
+         */
+        SubscriptionLifecycleView: {
+            /** Business Id */
+            business_id: string;
+            /** Offers */
+            offers?: components["schemas"]["CancellationOfferView"][];
+            pause: components["schemas"]["PauseOptionsView"];
+        };
+        /**
          * SubscriptionStatus
          * @description Subscription state driven by the payment provider.
          *
          *     INCOMPLETE: chosen without a trial and waiting for its first payment;
          *     the business has no service from it until that payment arrives.
+         *     PAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;
+         *     the assistant only takes requests, the channels stay connected and
+         *     the pause costs a share of the price (R14). Written only with
+         *     SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
+         *     every reader the value (docs/operations/deploys.md).
          * @enum {string}
          */
-        SubscriptionStatus: "incomplete" | "trialing" | "active" | "past_due" | "cancelled";
+        SubscriptionStatus: "incomplete" | "trialing" | "active" | "past_due" | "cancelled" | "paused";
         /**
          * SubscriptionView
          * @description The subscription as the billing page shows it; `setup_option` is how
          *     the business is set up (None: chosen before the choice existed, free),
          *     `onboarding_requested_at` when the owner asked the platform team to set
-         *     it up.
+         *     it up; `pause_starts_at` and `pause_until` a seasonal pause scheduled or
+         *     running.
          */
         SubscriptionView: {
             billing_period: components["schemas"]["BillingPeriod"];
@@ -13744,6 +13987,10 @@ export interface components {
             id: string;
             /** Onboarding Requested At */
             onboarding_requested_at?: number | null;
+            /** Pause Starts At */
+            pause_starts_at?: number | null;
+            /** Pause Until */
+            pause_until?: number | null;
             /** Period End */
             period_end: number;
             /** Period Start */
@@ -22569,7 +22816,16 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    declined_offer?: ("pause" | "downgrade" | "credit") | null;
+                    /** Details */
+                    details?: string | null;
+                    reason?: ("too_expensive" | "seasonal_break" | "not_enough_use" | "missing_feature" | "answer_quality" | "switched_provider" | "closing_business" | "other") | null;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -22765,6 +23021,304 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_subscription_lifecycle_v1_businesses__business_id__billing_lifecycle_get: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionLifecycleView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    accept_retention_offer_v1_businesses__business_id__billing_offers_accept_post: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * RetentionOfferKind
+                     * @description What the cancel dialog offers instead of cancelling: a seasonal PAUSE
+                     *     (the assistant takes requests for a fraction of the price), a
+                     *     DOWNGRADE to the next cheaper plan, or a one-time CREDIT on the
+                     *     business's ledger.
+                     * @enum {string}
+                     */
+                    kind: "pause" | "downgrade" | "credit";
+                    /** Pause Months */
+                    pause_months?: number | null;
+                    /**
+                     * CancellationReason
+                     * @description Why an owner cancels, chosen in the cancel dialog (with optional words
+                     *     of their own). The founder reads them on the admin Metrics page; the
+                     *     dialog answers some with an offer (`RetentionOfferKind`).
+                     * @enum {string}
+                     */
+                    reason: "too_expensive" | "seasonal_break" | "not_enough_use" | "missing_feature" | "answer_quality" | "switched_provider" | "closing_business" | "other";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingOverview"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    pause_subscription_v1_businesses__business_id__billing_pause_post: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Months */
+                    months: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingOverview"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -23060,6 +23614,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingProfileView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    resume_subscription_v1_businesses__business_id__billing_resume_post: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingOverview"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

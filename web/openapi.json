@@ -616,10 +616,13 @@
       },
       "AdminMetricsView": {
         "additionalProperties": false,
-        "description": "The founder's growth metrics of a period (UTC days, both included): the\nowners' funnel and what explains it, recurring revenue in euros, gross\nmargin and the cabinet's Web Vitals. First-party data only.",
+        "description": "The founder's growth metrics of a period (UTC days, both included): the\nowners' funnel and what explains it, recurring revenue in euros, gross\nmargin, why owners cancelled and what kept or brought them back\n(`churn`), and the cabinet's Web Vitals. First-party data only.",
         "properties": {
           "choices": {
             "$ref": "#/components/schemas/MetricsFilterChoices"
+          },
+          "churn": {
+            "$ref": "#/components/schemas/ChurnView"
           },
           "generated_at": {
             "title": "Generated At",
@@ -6376,6 +6379,45 @@
         "title": "CampaignStatusCount",
         "type": "object"
       },
+      "CancellationOfferView": {
+        "additionalProperties": false,
+        "description": "What the dialog offers for one reason (None: nothing to offer).",
+        "properties": {
+          "offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetentionOfferView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "$ref": "#/components/schemas/CancellationReason"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "CancellationOfferView",
+        "type": "object"
+      },
+      "CancellationReason": {
+        "description": "Why an owner cancels, chosen in the cancel dialog (with optional words\nof their own). The founder reads them on the admin Metrics page; the\ndialog answers some with an offer (`RetentionOfferKind`).",
+        "enum": [
+          "too_expensive",
+          "seasonal_break",
+          "not_enough_use",
+          "missing_feature",
+          "answer_quality",
+          "switched_provider",
+          "closing_business",
+          "other"
+        ],
+        "title": "CancellationReason",
+        "type": "string"
+      },
       "CarrierForwardingInstructions": {
         "additionalProperties": false,
         "description": "Ready-to-dial codes of one named mobile carrier.",
@@ -6826,6 +6868,135 @@
           "invoice_ids"
         ],
         "title": "CheckoutSessionView",
+        "type": "object"
+      },
+      "ChurnComment": {
+        "additionalProperties": false,
+        "description": "What one owner wrote when cancelling, newest first.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "details": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "pattern": "^\\S(.*\\S)?$",
+            "title": "Details",
+            "type": "string"
+          },
+          "occurred_at": {
+            "title": "Occurred At",
+            "type": "integer"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CancellationReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "business_id",
+          "details",
+          "occurred_at"
+        ],
+        "title": "ChurnComment",
+        "type": "object"
+      },
+      "ChurnReasonRow": {
+        "additionalProperties": false,
+        "description": "One reason of the period: how many cancelled with it and how many took\nthe offer it brought instead (`saved`). `reason` None: cancelled\nwithout saying why (a cabinet from before the question).",
+        "properties": {
+          "cancellations": {
+            "minimum": 0.0,
+            "title": "Cancellations",
+            "type": "integer"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CancellationReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saved": {
+            "minimum": 0.0,
+            "title": "Saved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cancellations",
+          "saved"
+        ],
+        "title": "ChurnReasonRow",
+        "type": "object"
+      },
+      "ChurnView": {
+        "additionalProperties": false,
+        "description": "The period's cancellations by reason (most first) with the owners'\nown words, the offers taken instead, the seasonal pauses scheduled and\nended, the win-back messages sent, and the businesses that subscribed\nagain after one (`returned_after_win_back`).",
+        "properties": {
+          "cancellations": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Cancellations",
+            "type": "integer"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/ChurnComment"
+            },
+            "title": "Comments",
+            "type": "array"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/RetentionOfferRow"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "pauses_ended": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Pauses Ended",
+            "type": "integer"
+          },
+          "pauses_scheduled": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Pauses Scheduled",
+            "type": "integer"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ChurnReasonRow"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "returned_after_win_back": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Returned After Win Back",
+            "type": "integer"
+          },
+          "win_back_sent": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Win Back Sent",
+            "type": "integer"
+          }
+        },
+        "title": "ChurnView",
         "type": "object"
       },
       "ClaimFinding": {
@@ -19206,6 +19377,103 @@
         "title": "PartnerStatus",
         "type": "string"
       },
+      "PauseOptionsView": {
+        "additionalProperties": false,
+        "description": "Whether the business can pause now and on what terms: from\n`starts_at` (the end of the paid period) for up to `max_months`\nmonths at `monthly_price` a month (`price_percent` of the plan);\n`paused_months` of the `cap_months` allowed in any `window_months` are\nused. `unavailable_reason` says why not when it cannot.",
+        "properties": {
+          "cap_months": {
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Cap Months",
+            "type": "integer"
+          },
+          "is_available": {
+            "title": "Is Available",
+            "type": "boolean"
+          },
+          "is_enabled": {
+            "title": "Is Enabled",
+            "type": "boolean"
+          },
+          "max_months": {
+            "maximum": 12.0,
+            "minimum": 0.0,
+            "title": "Max Months",
+            "type": "integer"
+          },
+          "monthly_price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paused_months": {
+            "minimum": 0.0,
+            "title": "Paused Months",
+            "type": "integer"
+          },
+          "price_percent": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Price Percent",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PauseUnavailableReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "window_months": {
+            "maximum": 24.0,
+            "minimum": 1.0,
+            "title": "Window Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "is_enabled",
+          "is_available",
+          "price_percent",
+          "max_months",
+          "paused_months",
+          "cap_months",
+          "window_months"
+        ],
+        "title": "PauseOptionsView",
+        "type": "object"
+      },
+      "PauseUnavailableReason": {
+        "description": "Why a business cannot pause now: the platform has not turned pausing\non yet (FEATURE_OFF), the subscription is not active and paid\n(NOT_ACTIVE: a trial, an unpaid or cancelled one), it is billed\nyearly (NOT_MONTHLY), a pause is already scheduled or running\n(ALREADY_PAUSED), or four months of the last twelve are used\n(ALLOWANCE_USED).",
+        "enum": [
+          "feature_off",
+          "not_active",
+          "not_monthly",
+          "already_paused",
+          "allowance_used"
+        ],
+        "title": "PauseUnavailableReason",
+        "type": "string"
+      },
       "PaymentStatus": {
         "description": "Status of a payment as the provider reports it (Flitt `order_status`).\n\nAPPROVED pays the invoices; DECLINED fails them; EXPIRED means the owner\nleft the payment page unpaid; REVERSED is a refund of an approved payment.",
         "enum": [
@@ -21737,6 +22005,114 @@
         "title": "ResourceView",
         "type": "object"
       },
+      "RetentionOfferKind": {
+        "description": "What the cancel dialog offers instead of cancelling: a seasonal PAUSE\n(the assistant takes requests for a fraction of the price), a\nDOWNGRADE to the next cheaper plan, or a one-time CREDIT on the\nbusiness's ledger.",
+        "enum": [
+          "pause",
+          "downgrade",
+          "credit"
+        ],
+        "title": "RetentionOfferKind",
+        "type": "string"
+      },
+      "RetentionOfferRow": {
+        "additionalProperties": false,
+        "description": "How many owners took one kind of offer instead of cancelling.",
+        "properties": {
+          "accepted": {
+            "minimum": 0.0,
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RetentionOfferKind"
+          }
+        },
+        "required": [
+          "kind",
+          "accepted"
+        ],
+        "title": "RetentionOfferRow",
+        "type": "object"
+      },
+      "RetentionOfferView": {
+        "additionalProperties": false,
+        "description": "An offer instead of cancelling: a PAUSE of up to `pause_months`, a\nDOWNGRADE to `plan_key` at `plan_price`, or a one-time `credit`.",
+        "properties": {
+          "credit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RetentionOfferKind"
+          },
+          "pause_months": {
+            "anyOf": [
+              {
+                "maximum": 12.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause Months"
+          },
+          "pause_price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plan_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plan_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Name"
+          },
+          "plan_price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuotedMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "RetentionOfferView",
+        "type": "object"
+      },
       "RetentionPurgeCounts": {
         "additionalProperties": false,
         "description": "What one run of a business's retention purge deleted or anonymized.",
@@ -23994,21 +24370,48 @@
         "title": "SubprocessorView",
         "type": "object"
       },
+      "SubscriptionLifecycleView": {
+        "additionalProperties": false,
+        "description": "The cancel dialog's reasons with their offers, in the order shown, and\nthe pause card.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/CancellationOfferView"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "pause": {
+            "$ref": "#/components/schemas/PauseOptionsView"
+          }
+        },
+        "required": [
+          "business_id",
+          "pause"
+        ],
+        "title": "SubscriptionLifecycleView",
+        "type": "object"
+      },
       "SubscriptionStatus": {
-        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.",
+        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.\nPAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;\nthe assistant only takes requests, the channels stay connected and\nthe pause costs a share of the price (R14). Written only with\nSUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught\nevery reader the value (docs/operations/deploys.md).",
         "enum": [
           "incomplete",
           "trialing",
           "active",
           "past_due",
-          "cancelled"
+          "cancelled",
+          "paused"
         ],
         "title": "SubscriptionStatus",
         "type": "string"
       },
       "SubscriptionView": {
         "additionalProperties": false,
-        "description": "The subscription as the billing page shows it; `setup_option` is how\nthe business is set up (None: chosen before the choice existed, free),\n`onboarding_requested_at` when the owner asked the platform team to set\nit up.",
+        "description": "The subscription as the billing page shows it; `setup_option` is how\nthe business is set up (None: chosen before the choice existed, free),\n`onboarding_requested_at` when the owner asked the platform team to set\nit up; `pause_starts_at` and `pause_until` a seasonal pause scheduled or\nrunning.",
         "properties": {
           "billing_period": {
             "$ref": "#/components/schemas/BillingPeriod"
@@ -24042,6 +24445,28 @@
               }
             ],
             "title": "Onboarding Requested At"
+          },
+          "pause_starts_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause Starts At"
+          },
+          "pause_until": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause Until"
           },
           "period_end": {
             "title": "Period End",
@@ -39901,6 +40326,74 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a cancellation (optional): why, in the owner's words too, and\nthe offer the dialog showed that they turned down.\n\nExample: {\"reason\": \"seasonal_break\", \"details\": \"Closed until May\",\n\"declined_offer\": \"pause\"}.",
+                "properties": {
+                  "declined_offer": {
+                    "anyOf": [
+                      {
+                        "description": "What the cancel dialog offers instead of cancelling: a seasonal PAUSE\n(the assistant takes requests for a fraction of the price), a\nDOWNGRADE to the next cheaper plan, or a one-time CREDIT on the\nbusiness's ledger.",
+                        "enum": [
+                          "pause",
+                          "downgrade",
+                          "credit"
+                        ],
+                        "title": "RetentionOfferKind",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "details": {
+                    "anyOf": [
+                      {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "pattern": "^\\S(.*\\S)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Details"
+                  },
+                  "reason": {
+                    "anyOf": [
+                      {
+                        "description": "Why an owner cancels, chosen in the cancel dialog (with optional words\nof their own). The founder reads them on the admin Metrics page; the\ndialog answers some with an offer (`RetentionOfferKind`).",
+                        "enum": [
+                          "too_expensive",
+                          "seasonal_break",
+                          "not_enough_use",
+                          "missing_feature",
+                          "answer_quality",
+                          "switched_provider",
+                          "closing_business",
+                          "other"
+                        ],
+                        "title": "CancellationReason",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "title": "CancelSubscriptionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
@@ -40300,6 +40793,489 @@
           }
         },
         "summary": "Get Billing Document",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/billing/lifecycle": {
+      "get": {
+        "operationId": "get_subscription_lifecycle_v1_businesses__business_id__billing_lifecycle_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionLifecycleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Subscription Lifecycle",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/billing/offers/accept": {
+      "post": {
+        "operationId": "accept_retention_offer_v1_businesses__business_id__billing_offers_accept_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of an offer taken instead of cancelling: the reason the owner\nchose, the offer the dialog showed for it and, for a pause, its months.\n\nExample: {\"reason\": \"too_expensive\", \"kind\": \"downgrade\"}.",
+                "properties": {
+                  "kind": {
+                    "description": "What the cancel dialog offers instead of cancelling: a seasonal PAUSE\n(the assistant takes requests for a fraction of the price), a\nDOWNGRADE to the next cheaper plan, or a one-time CREDIT on the\nbusiness's ledger.",
+                    "enum": [
+                      "pause",
+                      "downgrade",
+                      "credit"
+                    ],
+                    "title": "RetentionOfferKind",
+                    "type": "string"
+                  },
+                  "pause_months": {
+                    "anyOf": [
+                      {
+                        "maximum": 4,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Pause Months"
+                  },
+                  "reason": {
+                    "description": "Why an owner cancels, chosen in the cancel dialog (with optional words\nof their own). The founder reads them on the admin Metrics page; the\ndialog answers some with an offer (`RetentionOfferKind`).",
+                    "enum": [
+                      "too_expensive",
+                      "seasonal_break",
+                      "not_enough_use",
+                      "missing_feature",
+                      "answer_quality",
+                      "switched_provider",
+                      "closing_business",
+                      "other"
+                    ],
+                    "title": "CancellationReason",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason",
+                  "kind"
+                ],
+                "title": "AcceptRetentionOfferRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Accept Retention Offer",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/billing/pause": {
+      "post": {
+        "operationId": "pause_subscription_v1_businesses__business_id__billing_pause_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a seasonal pause: how many whole months, from the end of the\npaid period.\n\nExample: {\"months\": 3}.",
+                "properties": {
+                  "months": {
+                    "maximum": 4,
+                    "minimum": 1,
+                    "title": "Months",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "months"
+                ],
+                "title": "PauseSubscriptionRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Pause Subscription",
         "tags": [
           "billing"
         ]
@@ -40781,6 +41757,140 @@
           }
         },
         "summary": "Save Billing Profile",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/billing/resume": {
+      "post": {
+        "operationId": "resume_subscription_v1_businesses__business_id__billing_resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Resume Subscription",
         "tags": [
           "billing"
         ]

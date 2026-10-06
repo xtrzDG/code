@@ -7,5 +7,4 @@ Example:
 IsPauseAvailable = bool
 IsPauseEnabled = bool
 IsPausePeriod = bool
-IsSaveCreditAvailable = bool
 # Keep abc order for all non example types, if possible.
