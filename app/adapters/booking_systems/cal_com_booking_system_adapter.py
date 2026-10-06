@@ -30,6 +30,17 @@ from app.utilities.calendar_sync.busy_periods import (
 
 MAX_TITLE_LENGTH: int = 120
 SECONDS_PER_MINUTE: int = 60
+# The attendee languages Cal.com accepts (API v2, 2024-08-13); it refuses a
+# booking with any other, so another language (Georgian) is left out and
+# Cal.com writes to the guest in English.
+CAL_COM_LANGUAGES: frozenset[str] = frozenset(
+    {
+        "ar", "az", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
+        "es-419", "et", "eu", "fi", "fr", "he", "hr", "hu", "id", "it", "iw",
+        "ja", "km", "ko", "lv", "nl", "no", "pl", "pt", "pt-BR", "ro", "ru",
+        "sk", "sr", "sv", "ta", "th", "tr", "uk", "vi", "zh-CN", "zh-TW",
+    }
+)  # fmt: skip
 
 
 class CalComBookingSystemAdapter(BookingSystemConnectorContract):
@@ -92,8 +103,10 @@ class CalComBookingSystemAdapter(BookingSystemConnectorContract):
         attendee: dict[str, object] = {
             "name": str(draft.guest_name),
             "timeZone": str(draft.time_zone),
-            "language": str(draft.language).split("-")[0],
         }
+        language: str | None = cal_com_language(str(draft.language))
+        if language is not None:
+            attendee["language"] = language
         if draft.guest_email is not None:
             attendee["email"] = str(draft.guest_email)
         fields: dict[str, object] = self._client.create_booking(
@@ -135,3 +148,13 @@ def event_type_number(credentials: BookingSystemCredentials) -> int | str:
 
     text: str = str(credentials.external_resource_id)
     return int(text) if text.isdigit() else text
+
+
+def cal_com_language(language_tag: str) -> str | None:
+    """Cal.com's code of the guest's language ("pt-BR", "ru"), when it has one."""
+
+    if language_tag in CAL_COM_LANGUAGES:
+        return language_tag
+
+    language: str = language_tag.split("-")[0]
+    return language if language in CAL_COM_LANGUAGES else None

@@ -17,12 +17,14 @@ from scripts.vendor_specs.spec_model import (
     JsonObject,
     JsonValue,
     RepairSectionReferences,
+    RetypeProperty,
     VendorSpec,
 )
 from scripts.vendor_specs.spec_patches import (
     apply_definition_patch,
     describe_patch,
     repair_section_references,
+    retype_property,
 )
 
 JSON_SCHEMA_DIALECT: str = "https://json-schema.org/draft/2020-12/schema"
@@ -55,7 +57,9 @@ def build_spec_file(
     converter = SchemaConverter(schemas.components, schemas.resolve_reference)
     definitions: JsonObject = converter.extract_definitions(schemas.roots)
     for patch in spec.patches:
-        if not isinstance(patch, RepairSectionReferences):
+        if isinstance(patch, RetypeProperty):
+            retype_property(definitions, patch)
+        elif not isinstance(patch, RepairSectionReferences):
             apply_definition_patch(definitions, patch)
 
     return {

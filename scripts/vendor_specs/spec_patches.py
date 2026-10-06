@@ -21,6 +21,7 @@ from scripts.vendor_specs.spec_model import (
     JsonObject,
     JsonValue,
     RepairSectionReferences,
+    RetypeProperty,
     SpecPatch,
 )
 
@@ -94,6 +95,30 @@ def apply_definition_patch(definitions: JsonObject, patch: DefinitionPatch) -> N
         drop_property_keyword(target, patch)
     else:
         drop_property(target, patch)
+
+
+def retype_property(definitions: JsonObject, patch: RetypeProperty) -> None:
+    retyped: int = 0
+    for definition in definitions.values():
+        if not isinstance(definition, dict):
+            continue
+
+        for schema in composed_schemas(cast(JsonObject, definition)):
+            properties: object = schema.get("properties")
+            target: object = (
+                cast(JsonObject, properties).get(patch.property_name)
+                if isinstance(properties, dict)
+                else None
+            )
+            if isinstance(target, dict) and target.get("type") == patch.wrong_type:
+                cast(JsonObject, properties)[patch.property_name] = {
+                    **{k: v for k, v in target.items() if k != "type"},
+                    **patch.schema,
+                }
+                retyped += 1
+
+    if retyped == 0:
+        raise StalePatchError(f"No {patch.property_name} is typed {patch.wrong_type}.")
 
 
 def drop_property_keyword(definition: JsonObject, patch: DropPropertyKeyword) -> None:
@@ -170,5 +195,8 @@ def describe_patch(patch: SpecPatch) -> str:
 
     if isinstance(patch, RepairSectionReferences):
         return f"references from {patch.first_schema} on: {patch.reason}"
+
+    if isinstance(patch, RetypeProperty):
+        return f"every {patch.property_name} typed {patch.wrong_type}: {patch.reason}"
 
     return f"{patch.definition}.{patch.property_name}: {patch.reason}"

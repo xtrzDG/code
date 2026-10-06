@@ -1,19 +1,21 @@
 """
 The vendored files generated from machine-readable vendor documents.
 
-Providers without one (Messenger and Instagram, ElevenLabs, Flitt,
-Cloudflare Turnstile, the National Bank of Georgia) have hand-written
-files in tests/contracts/specs, marked `"kind": "documented"` with the
-documentation pages they follow; the refresh leaves them alone.
+Providers without one (Messenger and Instagram, the ElevenLabs webhooks,
+Flitt, Cloudflare Turnstile, the National Bank of Georgia) have
+hand-written files in tests/contracts/specs, marked `"kind": "documented"`
+with the documentation pages they follow; the refresh leaves them alone.
+Files read from SDK types are in `sdk_specs`.
 """
 
+from scripts.vendor_specs.sdk_specs import ANTHROPIC_SPEC, ELEVENLABS_SPEC
 from scripts.vendor_specs.spec_model import (
     AddProperty,
     DocumentFormat,
-    DropProperty,
     DropPropertyKeyword,
     DropRequired,
     RepairSectionReferences,
+    RetypeProperty,
     SchemaRoot,
     VendorSpec,
 )
@@ -117,85 +119,6 @@ OPENAI_SPEC = VendorSpec(
     ),
 )
 
-ANTHROPIC_SPEC = VendorSpec(
-    file_name="anthropic_messages_api.json",
-    provider="anthropic",
-    title="Anthropic Messages API (beta surface of the Python SDK)",
-    source_url="https://github.com/anthropics/anthropic-sdk-python",
-    document_format=DocumentFormat.PYTHON_SDK,
-    roots=(
-        SchemaRoot(
-            "request:messages.create",
-            "python:anthropic.types.beta.message_create_params:"
-            "MessageCreateParamsNonStreaming",
-        ),
-        SchemaRoot(
-            "response:messages.create", "python:anthropic.types.beta:BetaMessage"
-        ),
-    ),
-    patches=(
-        DropProperty(
-            definition="request:messages.create",
-            property_name="betas",
-            reason="the SDK sends the beta names in the anthropic-beta header",
-        ),
-    ),
-)
-
-ELEVENLABS_TYPES: str = "python:elevenlabs.types"
-ELEVENLABS_AGENTS: str = "python-body:elevenlabs.conversational_ai.agents.raw_client"
-ELEVENLABS_SPEC = VendorSpec(
-    file_name="elevenlabs_agents_api.json",
-    provider="elevenlabs",
-    title="ElevenLabs Agents Platform (types of the Fern-generated Python SDK)",
-    source_url="https://github.com/elevenlabs/elevenlabs-python",
-    document_format=DocumentFormat.PYTHON_SDK,
-    roots=(
-        SchemaRoot(
-            "request:agents.create", f"{ELEVENLABS_AGENTS}:RawAgentsClient.create"
-        ),
-        SchemaRoot(
-            "request:agents.update", f"{ELEVENLABS_AGENTS}:RawAgentsClient.update"
-        ),
-        SchemaRoot(
-            "response:agents.create",
-            f"{ELEVENLABS_TYPES}.create_agent_response_model:CreateAgentResponseModel",
-        ),
-        SchemaRoot(
-            "request:tools.create",
-            f"{ELEVENLABS_TYPES}.tool_request_model:ToolRequestModel",
-        ),
-        SchemaRoot(
-            "response:tools.create",
-            f"{ELEVENLABS_TYPES}.tool_response_model:ToolResponseModel",
-        ),
-        # The answer of the conversation-initiation webhook.
-        SchemaRoot(
-            "ConversationInitiationClientData",
-            f"{ELEVENLABS_TYPES}.conversation_initiation_client_data_request_input:"
-            "ConversationInitiationClientDataRequestInput",
-        ),
-        # `data` of a post-call transcription webhook: the conversation as
-        # GET /v1/convai/conversations/{id} answers it.
-        SchemaRoot(
-            "Conversation",
-            f"{ELEVENLABS_TYPES}.get_conversation_response_model:"
-            "GetConversationResponseModel",
-        ),
-    ),
-    patches=(
-        AddProperty(
-            definition="ConversationInitiationClientData",
-            property_name="type",
-            schema={"const": "conversation_initiation_client_data"},
-            reason=(
-                "the webhook's answer names its type (ElevenLabs' example); the "
-                "SDK type is the WebSocket message, which carries it elsewhere"
-            ),
-        ),
-    ),
-)
-
 GOOGLE_SPEC = VendorSpec(
     file_name="google_calendar_api.json",
     provider="google",
@@ -265,8 +188,17 @@ CAL_COM_SPEC = VendorSpec(
             "request:bookings.cancel", "request:post /v2/bookings/{bookingUid}/cancel"
         ),
         SchemaRoot("response:bookings.create", "response:post /v2/bookings 201"),
+        SchemaRoot("response:bookings.list", "response:get /v2/bookings 200"),
         SchemaRoot(
             "response:event-types.get", "response:get /v2/event-types/{eventTypeId} 200"
+        ),
+    ),
+    patches=(
+        RetypeProperty(
+            property_name="isDefault",
+            wrong_type="object",
+            schema={"type": "boolean"},
+            reason="the booking fields' isDefault is a boolean (its default says so)",
         ),
     ),
 )

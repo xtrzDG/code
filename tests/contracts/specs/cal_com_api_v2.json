@@ -11,7 +11,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -456,7 +456,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -598,7 +598,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1203,7 +1203,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1657,6 +1657,48 @@
    ],
    "type": "object"
   },
+  "GetBookingsOutput_2024_08_13": {
+   "properties": {
+    "data": {
+     "items": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/BookingOutput_2024_08_13"
+       },
+       {
+        "$ref": "#/$defs/RecurringBookingOutput_2024_08_13"
+       },
+       {
+        "$ref": "#/$defs/GetSeatedBookingOutput_2024_08_13"
+       },
+       {
+        "$ref": "#/$defs/GetRecurringSeatedBookingOutput_2024_08_13"
+       }
+      ]
+     },
+     "type": "array"
+    },
+    "error": {
+     "type": "object"
+    },
+    "pagination": {
+     "$ref": "#/$defs/PaginationMetaDto"
+    },
+    "status": {
+     "enum": [
+      "success",
+      "error"
+     ],
+     "type": "string"
+    }
+   },
+   "required": [
+    "status",
+    "data",
+    "pagination"
+   ],
+   "type": "object"
+  },
   "GetEventTypeOutput_2024_06_14": {
    "properties": {
     "data": {
@@ -1683,6 +1725,236 @@
    ],
    "type": "object"
   },
+  "GetRecurringSeatedBookingOutput_2024_08_13": {
+   "properties": {
+    "absentHost": {
+     "type": "boolean"
+    },
+    "attendees": {
+     "items": {
+      "$ref": "#/$defs/SeatedAttendee"
+     },
+     "type": "array"
+    },
+    "cancellationReason": {
+     "type": "string"
+    },
+    "cancelledByEmail": {
+     "type": "string"
+    },
+    "createdAt": {
+     "type": "string"
+    },
+    "description": {
+     "type": "string"
+    },
+    "duration": {
+     "type": "number"
+    },
+    "end": {
+     "type": "string"
+    },
+    "eventType": {
+     "$ref": "#/$defs/EventType"
+    },
+    "eventTypeId": {
+     "type": "number"
+    },
+    "hosts": {
+     "items": {
+      "$ref": "#/$defs/BookingHost"
+     },
+     "type": "array"
+    },
+    "icsUid": {
+     "type": "string"
+    },
+    "id": {
+     "type": "number"
+    },
+    "location": {
+     "type": "string"
+    },
+    "meetingUrl": {
+     "type": "string"
+    },
+    "metadata": {
+     "type": "object"
+    },
+    "rating": {
+     "type": "number"
+    },
+    "recurringBookingUid": {
+     "type": "string"
+    },
+    "rescheduledByEmail": {
+     "type": "string"
+    },
+    "rescheduledFromUid": {
+     "type": "string"
+    },
+    "rescheduledToUid": {
+     "type": "string"
+    },
+    "reschedulingReason": {
+     "type": "string"
+    },
+    "start": {
+     "type": "string"
+    },
+    "status": {
+     "enum": [
+      "cancelled",
+      "accepted",
+      "rejected",
+      "pending"
+     ],
+     "type": "string"
+    },
+    "title": {
+     "type": "string"
+    },
+    "uid": {
+     "type": "string"
+    },
+    "updatedAt": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "uid",
+    "title",
+    "description",
+    "hosts",
+    "status",
+    "start",
+    "end",
+    "duration",
+    "eventTypeId",
+    "eventType",
+    "location",
+    "absentHost",
+    "createdAt",
+    "updatedAt",
+    "attendees",
+    "recurringBookingUid"
+   ],
+   "type": "object"
+  },
+  "GetSeatedBookingOutput_2024_08_13": {
+   "properties": {
+    "absentHost": {
+     "type": "boolean"
+    },
+    "attendees": {
+     "items": {
+      "$ref": "#/$defs/SeatedAttendee"
+     },
+     "type": "array"
+    },
+    "cancellationReason": {
+     "type": "string"
+    },
+    "cancelledByEmail": {
+     "type": "string"
+    },
+    "createdAt": {
+     "type": "string"
+    },
+    "description": {
+     "type": "string"
+    },
+    "duration": {
+     "type": "number"
+    },
+    "end": {
+     "type": "string"
+    },
+    "eventType": {
+     "$ref": "#/$defs/EventType"
+    },
+    "eventTypeId": {
+     "type": "number"
+    },
+    "hosts": {
+     "items": {
+      "$ref": "#/$defs/BookingHost"
+     },
+     "type": "array"
+    },
+    "icsUid": {
+     "type": "string"
+    },
+    "id": {
+     "type": "number"
+    },
+    "location": {
+     "type": "string"
+    },
+    "meetingUrl": {
+     "type": "string"
+    },
+    "metadata": {
+     "type": "object"
+    },
+    "rating": {
+     "type": "number"
+    },
+    "rescheduledByEmail": {
+     "type": "string"
+    },
+    "rescheduledFromUid": {
+     "type": "string"
+    },
+    "rescheduledToUid": {
+     "type": "string"
+    },
+    "reschedulingReason": {
+     "type": "string"
+    },
+    "start": {
+     "type": "string"
+    },
+    "status": {
+     "enum": [
+      "cancelled",
+      "accepted",
+      "rejected",
+      "pending"
+     ],
+     "type": "string"
+    },
+    "title": {
+     "type": "string"
+    },
+    "uid": {
+     "type": "string"
+    },
+    "updatedAt": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "uid",
+    "title",
+    "description",
+    "hosts",
+    "status",
+    "start",
+    "end",
+    "duration",
+    "eventTypeId",
+    "eventType",
+    "location",
+    "absentHost",
+    "createdAt",
+    "updatedAt",
+    "attendees"
+   ],
+   "type": "object"
+  },
   "GuestsDefaultFieldOutput_2024_06_14": {
    "properties": {
     "disableOnPrefill": {
@@ -1693,7 +1965,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1727,7 +1999,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1764,7 +2036,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1803,7 +2075,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1842,7 +2114,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1882,7 +2154,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -1919,7 +2191,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -2083,6 +2355,50 @@
    ],
    "type": "object"
   },
+  "PaginationMetaDto": {
+   "properties": {
+    "currentPage": {
+     "minimum": 1,
+     "type": "number"
+    },
+    "hasNextPage": {
+     "type": "boolean"
+    },
+    "hasPreviousPage": {
+     "type": "boolean"
+    },
+    "itemsPerPage": {
+     "minimum": 1,
+     "type": "number"
+    },
+    "remainingItems": {
+     "minimum": 0,
+     "type": "number"
+    },
+    "returnedItems": {
+     "type": "number"
+    },
+    "totalItems": {
+     "minimum": 0,
+     "type": "number"
+    },
+    "totalPages": {
+     "minimum": 0,
+     "type": "number"
+    }
+   },
+   "required": [
+    "totalItems",
+    "remainingItems",
+    "returnedItems",
+    "itemsPerPage",
+    "currentPage",
+    "totalPages",
+    "hasNextPage",
+    "hasPreviousPage"
+   ],
+   "type": "object"
+  },
   "PhoneFieldOutput_2024_06_14": {
    "properties": {
     "disableOnPrefill": {
@@ -2093,7 +2409,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -2132,7 +2448,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -2348,7 +2664,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -2523,7 +2839,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -2943,7 +3259,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -2982,7 +3298,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -3021,7 +3337,7 @@
     },
     "isDefault": {
      "default": true,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -3058,7 +3374,7 @@
     },
     "isDefault": {
      "default": false,
-     "type": "object"
+     "type": "boolean"
     },
     "label": {
      "type": "string"
@@ -3110,6 +3426,9 @@
   "response:bookings.create": {
    "$ref": "#/$defs/CreateBookingOutput_2024_08_13"
   },
+  "response:bookings.list": {
+   "$ref": "#/$defs/GetBookingsOutput_2024_08_13"
+  },
   "response:event-types.get": {
    "$ref": "#/$defs/GetEventTypeOutput_2024_06_14"
   }
@@ -3119,12 +3438,15 @@
   "request:bookings.cancel": "request:post /v2/bookings/{bookingUid}/cancel",
   "request:bookings.create": "request:post /v2/bookings",
   "response:bookings.create": "response:post /v2/bookings 201",
+  "response:bookings.list": "response:get /v2/bookings 200",
   "response:event-types.get": "response:get /v2/event-types/{eventTypeId} 200"
  },
  "x-vendor": {
   "format": "openapi",
   "kind": "generated",
-  "patches": [],
+  "patches": [
+   "every isDefault typed object: the booking fields' isDefault is a boolean (its default says so)"
+  ],
   "provider": "cal_com",
   "refresh": "uv run python -m scripts.refresh_vendor_specs --only cal_com",
   "source": "https://raw.githubusercontent.com/calcom/cal.com/main/docs/api-reference/v2/openapi.json",

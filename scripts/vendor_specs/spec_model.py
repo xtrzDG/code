@@ -89,8 +89,21 @@ class DropPropertyKeyword:
     reason: str
 
 
+@dataclass(frozen=True)
+class RetypeProperty:
+    """
+    A property the vendor's generator types wrongly in many schemas: every
+    `property_name` of type `wrong_type` gets `schema` instead.
+    """
+
+    property_name: str
+    wrong_type: str
+    schema: JsonObject
+    reason: str
+
+
 type DefinitionPatch = DropRequired | AddProperty | DropProperty | DropPropertyKeyword
-type SpecPatch = RepairSectionReferences | DefinitionPatch
+type SpecPatch = RepairSectionReferences | RetypeProperty | DefinitionPatch
 
 
 @dataclass(frozen=True)
