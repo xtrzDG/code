@@ -135,16 +135,16 @@ class TestSplitting:
 
 class TestStoryContext:
     def test_a_story_reply_and_a_story_mention(self) -> None:
-        reply = {
+        reply: dict[str, object] = {
             "mid": "m",
             "text": "Hi",
             "reply_to": {"story": {"id": "1", "url": "u"}},
         }
-        mention = {
+        mention: dict[str, object] = {
             "mid": "m",
             "attachments": [{"type": "story_mention", "payload": {}}],
         }
-        plain = {"mid": "m", "text": "Hi", "reply_to": {"mid": "m0"}}
+        plain: dict[str, object] = {"mid": "m", "text": "Hi", "reply_to": {"mid": "m0"}}
 
         assert read_story_note(reply) is InboundContextNote.STORY_REPLY
         assert read_story_note(mention) is InboundContextNote.STORY_MENTION

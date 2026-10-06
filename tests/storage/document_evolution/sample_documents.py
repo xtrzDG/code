@@ -68,10 +68,15 @@ def at_least_min_length(value: JsonValue, metadata: list[object]) -> JsonValue:
         (int(item.min_length) for item in metadata if isinstance(item, MinLen)),
         default=0,
     )
-    if isinstance(value, list) and value and len(value) < shortest:
-        return value * shortest
+    sample: JsonValue = value
+    if not isinstance(value, list):
+        return sample
 
-    return value
+    items: list[JsonValue] = typing.cast(list[JsonValue], value)
+    if not items or len(items) >= shortest:
+        return sample
+
+    return items * shortest
 
 
 def sample_value(annotation: object, path: str) -> JsonValue:

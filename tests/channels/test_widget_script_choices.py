@@ -110,8 +110,14 @@ class TestOfferedChoices:
         offered: list[dict[str, object]] = [
             {"role": "assistant", "text": "Which time?", "choices": ["18:00", "19:30"]}
         ]
-        answered = [*offered, {"role": "visitor", "text": "18:00"}]
+        answered: list[dict[str, object]] = [
+            *offered,
+            {"role": "visitor", "text": "18:00"},
+        ]
         assert self.offered(answered, handed_off=False) == []
         assert self.offered(offered, handed_off=True) == []
-        staff = [*offered, {"role": "staff", "text": "Hi, Dana here"}]
+        staff: list[dict[str, object]] = [
+            *offered,
+            {"role": "staff", "text": "Hi, Dana here"},
+        ]
         assert self.offered(staff, handed_off=False) == []
