@@ -14,6 +14,7 @@ from app.contracts.live_events import (
     LiveEventSubscriberContract,
     LiveEventSubscriptionContract,
 )
+from app.schemas.constants.live_events import WIDGET_LIVE_EVENTS
 from app.schemas.dto.live_events import LiveEvent
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.live_events.constrained_strings import LiveEventId
@@ -80,7 +81,10 @@ class LiveEventFanout:
         """Keep the event for replay and hand it to its business's streams."""
 
         with self._lock:
-            self._recent.append(event)
+            # The widget's events are not replayed (a widget polls once
+            # when it reconnects); they would crowd the cabinets' history.
+            if event.event not in WIDGET_LIVE_EVENTS:
+                self._recent.append(event)
             receivers: list[_Subscription] = list(
                 self._subscriptions.get(event.business_id, ())
             )

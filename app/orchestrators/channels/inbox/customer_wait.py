@@ -3,17 +3,20 @@ from contextlib import contextmanager, nullcontext
 
 from typed_time_provider import Microseconds
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.typing_signals import TypingSignalFacilitatorContract
 from app.orchestrators.channels.inbox.turn_deadline_watch import TurnDeadlineWatch
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.dto.channels.typing_signals import TypingRequest
+from app.utilities.channels.widget_live_signals import announce_widget_typing
 
 
 class CustomerWait:
     """
     What a customer sees while their reply is written: "typing…" at once
     and until the reply is ready (Telegram, WhatsApp, Messenger, Instagram;
-    the website widget shows its own), and the "one moment" of a turn past
+    the website widget hears `widget.typing` on its live stream once and
+    keeps its dots until the answer), and the "one moment" of a turn past
     its deadline (`TurnDeadlineWatch`).
     """
 
@@ -21,15 +24,18 @@ class CustomerWait:
         self,
         typing_signals: TypingSignalFacilitatorContract,
         deadline_watch: TurnDeadlineWatch,
+        live_events: EventPublisherFacilitatorContract,
     ) -> None:
         self._typing_signals: TypingSignalFacilitatorContract = typing_signals
         self._deadline_watch: TurnDeadlineWatch = deadline_watch
+        self._live_events: EventPublisherFacilitatorContract = live_events
 
     def acknowledge(self, event: InboundEventDocument) -> None:
         """One "typing…" for a message whose answer comes a little later."""
 
         request: TypingRequest | None = typing_request(event)
         if request is not None:
+            self._signal_widget(request)
             self._typing_signals.signal_once(request)
 
     @contextmanager
@@ -42,6 +48,8 @@ class CustomerWait:
         """
 
         request: TypingRequest | None = typing_request(event)
+        if request is not None:
+            self._signal_widget(request)
         with (
             nullcontext()
             if request is None
@@ -49,6 +57,14 @@ class CustomerWait:
             self._deadline_watch.watch(event, waiting_since),
         ):
             yield
+
+    def _signal_widget(self, request: TypingRequest) -> None:
+        announce_widget_typing(
+            self._live_events,
+            request.business_id,
+            request.channel,
+            request.channel_user_id,
+        )
 
 
 def typing_request(event: InboundEventDocument) -> TypingRequest | None:

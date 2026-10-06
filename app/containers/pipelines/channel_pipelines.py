@@ -70,6 +70,7 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         WidgetMessageOrchestrator,
         accept_widget_message=channel_use_cases.accept_widget_message_use_case,
         queue_widget_message=delivery_use_cases.queue_widget_message_use_case,
+        issue_stream_ticket=channel_use_cases.issue_widget_stream_ticket_use_case,
     )
     process_inbound_message_orchestrator: Factory[
         OrchestratorContract[QueuedJobInput, JobReport]

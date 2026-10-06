@@ -30,6 +30,10 @@ from app.orchestrators.channels.inbox.turn_deadline_watch import TurnDeadlineWat
 from app.orchestrators.channels.outbox.deliver_outbound_message_orchestrator import (
     DeliverOutboundMessageOrchestrator,
 )
+from app.orchestrators.channels.widget_messages_orchestrator import (
+    WidgetMessagesOrchestrator,
+)
+from app.schemas.dto.channels.widget import WidgetMessagesQuery, WidgetMessagesView
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.media_requests import InboundMediaRequest
@@ -75,6 +79,7 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
         CustomerWait,
         typing_signals=facilitators.typing_signals,
         deadline_watch=turn_deadline_watch,
+        live_events=facilitators.event_publisher,
     )
 
     # --- Channels: webhooks, widget, cabinet settings, staff links.
@@ -88,8 +93,13 @@ class ChannelOrchestratorsContainer(containers.DeclarativeContainer):
     get_widget_config_orchestrator = use_case_orchestrator(
         channel_use_cases.get_widget_config_use_case
     )
-    get_widget_messages_orchestrator = use_case_orchestrator(
-        channel_use_cases.get_widget_messages_use_case
+    # A poll answers with a fresh ticket to the visitor's live stream.
+    get_widget_messages_orchestrator: Factory[
+        OrchestratorContract[WidgetMessagesQuery, WidgetMessagesView]
+    ] = Factory(
+        WidgetMessagesOrchestrator,
+        get_widget_messages=channel_use_cases.get_widget_messages_use_case,
+        issue_stream_ticket=channel_use_cases.issue_widget_stream_ticket_use_case,
     )
     list_channels_orchestrator = use_case_orchestrator(
         channel_use_cases.list_channels_use_case

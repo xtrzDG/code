@@ -20,6 +20,9 @@ from app.utilities.security.require_recent_authentication import (
     RequireRecentAuthentication,
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from app.utilities.security.widget_stream_ticket_signer import (
+    WidgetStreamTicketSigner,
+)
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 
 
@@ -52,6 +55,13 @@ class UtilitiesContainer(containers.DeclarativeContainer):
     # from ENCRYPTION_KEYS, one signer per process.
     booking_manage_token_signer: Singleton[BookingManageTokenSigner] = Singleton(
         BookingManageTokenSigner,
+        encryption_key=config.app_settings.provided.encryption_key,
+        previous_keys=config.app_settings.provided.previous_encryption_keys,
+    )
+    # Tickets of the website chat's live stream (the visitor key never goes
+    # into its address); the key derives from ENCRYPTION_KEYS as well.
+    widget_stream_ticket_signer: Singleton[WidgetStreamTicketSigner] = Singleton(
+        WidgetStreamTicketSigner,
         encryption_key=config.app_settings.provided.encryption_key,
         previous_keys=config.app_settings.provided.previous_encryption_keys,
     )

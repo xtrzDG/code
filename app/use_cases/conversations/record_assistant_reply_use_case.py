@@ -26,6 +26,7 @@ from app.use_cases.conversations.reply_usage import (
     record_reply_usage,
     total_verifier_cost,
 )
+from app.utilities.channels.widget_live_signals import announce_widget_reply
 from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
 )
@@ -92,11 +93,12 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 input_data.output_tokens,
             )
         )
+        # The id the inbox chose: the reply it sends is this one.
+        reply_id: MessageId = turn.reply_message_id or MessageId()
         if text is not None:
             self._message_repo.save(
                 MessageDocument(
-                    # The id the inbox chose: the reply it sends is this one.
-                    id=turn.reply_message_id or MessageId(),
+                    id=reply_id,
                     conversation_id=turn.conversation.id,
                     business_id=turn.business.id,
                     direction=MessageDirection.OUTBOUND,
@@ -146,6 +148,10 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
             (conversation.id,),
             is_sandbox=conversation.is_sandbox,
         )
+        if text is not None or is_handed_off:
+            announce_widget_reply(
+                self._live_events, conversation, None if text is None else reply_id
+            )
         return AssistantReply(
             conversation_id=conversation.id,
             text=text,

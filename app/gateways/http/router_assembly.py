@@ -84,7 +84,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         # widget polls (every open chat every 4 s) and webhook bursts are
         # most of the traffic; no other route answers these paths
         # (tests/platform/test_route_matching_order.py).
-        build_public_channel_router(operators),
+        build_public_channel_router(app_container),
         build_catalog_router(
             list_countries_operator=accounts.list_countries_operator(),
             get_country_profile_operator=accounts.get_country_profile_operator(),

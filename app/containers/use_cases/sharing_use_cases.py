@@ -15,6 +15,12 @@ from app.schemas.dto.channels.widget_handoff import (
     WidgetHandoffTarget,
     WidgetHandoffView,
 )
+from app.schemas.dto.channels.widget_streams import (
+    WidgetStreamGrant,
+    WidgetStreamMessageQuery,
+    WidgetStreamMessageView,
+    WidgetStreamRequest,
+)
 from app.schemas.dto.sharing import (
     HostedChatLookup,
     HostedChatView,
@@ -23,6 +29,12 @@ from app.schemas.dto.sharing import (
     ShareLinksView,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.channels.widget_stream.open_widget_stream_use_case import (
+    OpenWidgetStreamUseCase,
+)
+from app.use_cases.channels.widget_stream.read_widget_stream_message_use_case import (
+    ReadWidgetStreamMessageUseCase,
+)
 from app.use_cases.sharing.get_hosted_chat_use_case import GetHostedChatUseCase
 from app.use_cases.sharing.get_share_links_use_case import GetShareLinksUseCase
 from app.use_cases.sharing.resolve_hosted_chat_use_case import (
@@ -41,7 +53,7 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
     """
     Reaching customers without a website: the share links and the hosted
     chat page's address (cabinet), the page's public configuration, and
-    the website chat's "Talk to a person".
+    the website chat's "Talk to a person" and its visitors' live streams.
     """
 
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -121,4 +133,21 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
         language_registry=registries.language_registry,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The website chat's live stream: who may open it, what an answer says.
+    open_widget_stream_use_case: Factory[
+        UseCaseContract[WidgetStreamRequest, WidgetStreamGrant]
+    ] = Factory(
+        OpenWidgetStreamUseCase,
+        ticket_signer=utilities.widget_stream_ticket_signer,
+        channel_repo=repositories.channel_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    read_widget_stream_message_use_case: Factory[
+        UseCaseContract[WidgetStreamMessageQuery, WidgetStreamMessageView | None]
+    ] = Factory(
+        ReadWidgetStreamMessageUseCase,
+        message_repo=repositories.message_repo,
+        conversation_repo=repositories.conversation_repo,
+        language_registry=registries.language_registry,
     )

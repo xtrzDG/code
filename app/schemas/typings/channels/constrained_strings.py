@@ -276,4 +276,19 @@ class WidgetSourceInput(BaseConstrainedTypedString):
     max_length = 200
 
 
+class WidgetStreamTicket(BaseConstrainedTypedString):
+    """
+    Signed, expiring pass to one visitor's live widget stream (its business,
+    the visitor and the expiry under an HMAC, base64url): the visitor key
+    never travels in the stream's address, only this.
+
+    Example:
+        ticket = WidgetStreamTicket("AQ" + "A" * 64)
+    """
+
+    min_length = 40
+    max_length = 120
+    pattern = r"^[A-Za-z0-9_\-]{40,120}$"
+
+
 # Keep abc order for all non example types, if possible.

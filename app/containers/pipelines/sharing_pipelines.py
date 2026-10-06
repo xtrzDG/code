@@ -39,3 +39,9 @@ class SharingPipelinesContainer(containers.DeclarativeContainer):
         widget_handoff_orchestrator=sharing_orchestrators.widget_handoff_orchestrator,
         customer_locks=registries.customer_message_lock_registry,
     )
+    open_widget_stream_pipeline = orchestrator_pipeline(
+        sharing_orchestrators.open_widget_stream_orchestrator
+    )
+    read_widget_stream_message_pipeline = orchestrator_pipeline(
+        sharing_orchestrators.read_widget_stream_message_orchestrator
+    )

@@ -6,6 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.growth_facilitators import GrowthFacilitatorsContainer
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
+from app.containers.live_facilitators import LiveFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
 from app.containers.privacy_facilitators import PrivacyFacilitatorsContainer
 from app.containers.referral_facilitators import ReferralFacilitatorsContainer
@@ -21,12 +22,6 @@ from app.facilitators.calendar.google_calendar_sync_facilitator import (
 )
 from app.facilitators.channels.typing_signal_facilitator import TypingSignalFacilitator
 from app.facilitators.claim_check.claim_check_facilitator import ClaimCheckFacilitator
-from app.facilitators.events.event_publisher_facilitator import (
-    EventPublisherFacilitator,
-)
-from app.facilitators.events.live_event_stream_facilitator import (
-    LiveEventStreamFacilitator,
-)
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.facilitators.notifications.manager_notification_facilitator import (
     ManagerNotificationFacilitator,
@@ -61,7 +56,6 @@ from app.facilitators.product_events.record_product_event_facilitator import (
 from app.facilitators.setup.owner_nudge_facilitator import OwnerNudgeFacilitator
 from app.facilitators.users.sign_in_notice_facilitator import SignInNoticeFacilitator
 from app.facilitators.value.owner_digest_facilitator import OwnerDigestFacilitator
-from app.schemas.dto.live_events import LiveStreamLimits
 from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 
 
@@ -97,24 +91,19 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     otp_delivery_facilitator = sign_in.otp_delivery_facilitator
     bot_check_facilitator = sign_in.bot_check_facilitator
     login_code_cap_alerts = sign_in.login_code_cap_alerts
-    # The cabinet's live updates: use cases publish what changed (ids only);
-    # the SSE route opens streams, at most a few per person and process.
-    event_publisher: Singleton[EventPublisherFacilitator] = Singleton(
-        EventPublisherFacilitator,
-        bus=adapters.live_event_bus,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
+    # Live updates of cabinets and website chats (ids only).
+    live: LiveFacilitatorsContainer = Container(  # type: ignore[assignment]
+        LiveFacilitatorsContainer, adapters=adapters, time_provider=time_provider,
+    )  # fmt: skip
+    event_publisher = live.event_publisher
+    live_stream_limits = live.live_stream_limits
+    live_stream_facilitator = live.live_stream_facilitator
+    widget_stream_facilitator = live.widget_stream_facilitator
     # The founder's product analytics: use cases report each step.
     product_events: Singleton[RecordProductEventFacilitator] = Singleton(
         RecordProductEventFacilitator,
         product_event_repo=repositories.product_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
-    )
-    live_stream_limits: Singleton[LiveStreamLimits] = Singleton(LiveStreamLimits)
-    live_stream_facilitator: Singleton[LiveEventStreamFacilitator] = Singleton(
-        LiveEventStreamFacilitator,
-        bus=adapters.live_event_bus,
-        limits=live_stream_limits,
     )
     # The durable job queue of the background workers.
     job_queue_facilitator: Singleton[JobQueueFacilitator] = Singleton(
