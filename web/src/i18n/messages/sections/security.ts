@@ -26,6 +26,16 @@ import { securityRu } from "./security/security.ru";
 import { supportAccessEn } from "./security/supportAccess.en";
 import { supportAccessKa } from "./security/supportAccess.ka";
 import { supportAccessRu } from "./security/supportAccess.ru";
+import { devicesHe } from "./security/devices.he";
+import { devicesDe } from "./security/devices.de";
+import { legalConsentHe } from "./security/legalConsent.he";
+import { legalConsentDe } from "./security/legalConsent.de";
+import { mfaHe } from "./security/mfa.he";
+import { mfaDe } from "./security/mfa.de";
+import { securityHe } from "./security/security.he";
+import { securityDe } from "./security/security.de";
+import { supportAccessHe } from "./security/supportAccess.he";
+import { supportAccessDe } from "./security/supportAccess.de";
 
 export const securityFlowEn = {
   mfa: mfaEn,
@@ -49,4 +59,20 @@ export const securityFlowKa: Translation<typeof securityFlowEn> = {
   devices: devicesKa,
   supportAccess: supportAccessKa,
   legalConsent: legalConsentKa,
+};
+
+export const securityFlowHe: Translation<typeof securityFlowEn> = {
+  mfa: mfaHe,
+  security: securityHe,
+  devices: devicesHe,
+  supportAccess: supportAccessHe,
+  legalConsent: legalConsentHe,
+};
+
+export const securityFlowDe: Translation<typeof securityFlowEn> = {
+  mfa: mfaDe,
+  security: securityDe,
+  devices: devicesDe,
+  supportAccess: supportAccessDe,
+  legalConsent: legalConsentDe,
 };

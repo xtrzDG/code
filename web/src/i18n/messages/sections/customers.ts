@@ -22,6 +22,12 @@ import { paletteRu } from "./customers/palette.ru";
 import { segmentsEn } from "./customers/segments.en";
 import { segmentsKa } from "./customers/segments.ka";
 import { segmentsRu } from "./customers/segments.ru";
+import { customersHe } from "./customers/customers.he";
+import { customersDe } from "./customers/customers.de";
+import { paletteHe } from "./customers/palette.he";
+import { paletteDe } from "./customers/palette.de";
+import { segmentsHe } from "./customers/segments.he";
+import { segmentsDe } from "./customers/segments.de";
 
 export const customersSectionEn = {
   customers: customersEn,
@@ -39,4 +45,16 @@ export const customersSectionKa: Translation<typeof customersSectionEn> = {
   customers: customersKa,
   segments: segmentsKa,
   palette: paletteKa,
+};
+
+export const customersSectionHe: Translation<typeof customersSectionEn> = {
+  customers: customersHe,
+  segments: segmentsHe,
+  palette: paletteHe,
+};
+
+export const customersSectionDe: Translation<typeof customersSectionEn> = {
+  customers: customersDe,
+  segments: segmentsDe,
+  palette: paletteDe,
 };

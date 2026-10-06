@@ -26,6 +26,16 @@ import { tunnelOfferRu } from "./setup/tunnelOffer.ru";
 import { tunnelTeamEn } from "./setup/tunnelTeam.en";
 import { tunnelTeamKa } from "./setup/tunnelTeam.ka";
 import { tunnelTeamRu } from "./setup/tunnelTeam.ru";
+import { tunnelHe } from "./setup/tunnel.he";
+import { tunnelDe } from "./setup/tunnel.de";
+import { tunnelBusinessHe } from "./setup/tunnelBusiness.he";
+import { tunnelBusinessDe } from "./setup/tunnelBusiness.de";
+import { tunnelLaunchHe } from "./setup/tunnelLaunch.he";
+import { tunnelLaunchDe } from "./setup/tunnelLaunch.de";
+import { tunnelOfferHe } from "./setup/tunnelOffer.he";
+import { tunnelOfferDe } from "./setup/tunnelOffer.de";
+import { tunnelTeamHe } from "./setup/tunnelTeam.he";
+import { tunnelTeamDe } from "./setup/tunnelTeam.de";
 
 export const setupFlowEn = {
   tunnel: tunnelEn,
@@ -49,4 +59,20 @@ export const setupFlowKa: Translation<typeof setupFlowEn> = {
   tunnelOffer: tunnelOfferKa,
   tunnelTeam: tunnelTeamKa,
   tunnelLaunch: tunnelLaunchKa,
+};
+
+export const setupFlowHe: Translation<typeof setupFlowEn> = {
+  tunnel: tunnelHe,
+  tunnelBusiness: tunnelBusinessHe,
+  tunnelOffer: tunnelOfferHe,
+  tunnelTeam: tunnelTeamHe,
+  tunnelLaunch: tunnelLaunchHe,
+};
+
+export const setupFlowDe: Translation<typeof setupFlowEn> = {
+  tunnel: tunnelDe,
+  tunnelBusiness: tunnelBusinessDe,
+  tunnelOffer: tunnelOfferDe,
+  tunnelTeam: tunnelTeamDe,
+  tunnelLaunch: tunnelLaunchDe,
 };

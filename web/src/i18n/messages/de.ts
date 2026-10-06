@@ -3,6 +3,9 @@ import { shellDe } from "./sections/shell";
 import { growthSectionDe } from "./sections/growth";
 import { helpDe } from "./sections/help";
 import { referralsSectionDe } from "./sections/referrals";
+import { customersSectionDe } from "./sections/customers";
+import { securityFlowDe } from "./sections/security";
+import { setupFlowDe } from "./sections/setup";
 
 /**
  * German texts (Deutsch), drafted by the team and awaiting a native
@@ -13,4 +16,7 @@ export const de: PartialMessages = {
   ...growthSectionDe,
   ...helpDe,
   ...referralsSectionDe,
+  ...customersSectionDe,
+  ...securityFlowDe,
+  ...setupFlowDe,
 };
