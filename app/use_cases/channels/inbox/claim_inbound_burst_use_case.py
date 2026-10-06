@@ -28,7 +28,7 @@ from app.utilities.deliveries.inbound_bursts import (
 )
 from app.utilities.deliveries.inbound_claims import (
     is_inbound_event_finished,
-    is_inbound_event_held,
+    is_inbound_event_held_by_another,
     take_inbound_event,
 )
 
@@ -50,7 +50,8 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
 
     None when there is nothing to do: the job's message is finished or gone,
     or another processing still holds it (the job comes back when that
-    lease ends, so a crashed turn is processed again).
+    lease ends, so a crashed turn is processed again). Messages this very
+    job held on an attempt whose worker died are taken over at once.
     """
 
     def __init__(
@@ -78,11 +79,11 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
         if is_inbound_event_finished(trigger):
             return None
 
-        if is_inbound_event_held(trigger, now):
+        if is_inbound_event_held_by_another(trigger, now, input_data.job_id):
             self._come_back(input_data, trigger, trigger.lease_until)
             return None
 
-        burst: list[InboundEventDocument] = self._open_burst(trigger, now)
+        burst: list[InboundEventDocument] = self._open_burst(trigger, now, input_data)
         answer_at: Microseconds = burst_answer_at(burst, self._coalesce_seconds)
         if int(self._coalesce_seconds) > 0 and answer_at > now:
             self._come_back(input_data, trigger, answer_at)
@@ -93,7 +94,7 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
             claimed: InboundEventDocument | None = self._inbound_event_repo.update(
                 event.business_id,
                 event.id,
-                lambda current: take_inbound_event(current, now),
+                lambda current: take_inbound_event(current, now, input_data.job_id),
             )
             if claimed is not None:
                 claims.append(
@@ -112,7 +113,10 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
         return InboundBurst(trigger=trigger, claims=claims)
 
     def _open_burst(
-        self, trigger: InboundEventDocument, now: Microseconds
+        self,
+        trigger: InboundEventDocument,
+        now: Microseconds,
+        input_data: QueuedJobInput,
     ) -> list[InboundEventDocument]:
         """The trigger and its customer's other open messages, oldest first."""
 
@@ -131,6 +135,7 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
                 business_id, window_start, window_end
             ),
             now,
+            input_data.job_id,
         )
 
     def _come_back(

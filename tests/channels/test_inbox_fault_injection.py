@@ -14,8 +14,9 @@ from tests.channels.telegram_updates import build_update, connect_bot, post_upda
 from tests.channels.testbed import ChannelsTestbed
 
 ANSWER: str = "Reply: Do you have a table for 4 tonight?"
-# Longer than both the job's (120 s) and the inbox event's (180 s) lease.
-PAST_EVERY_LEASE_SECONDS: int = 181
+# Past the job's lease (120 s), well before the inbox event's (180 s) ends:
+# the job's next attempt takes the event over from its dead worker at once.
+PAST_THE_JOB_LEASE_SECONDS: int = 121
 
 
 class WorkerKilled(BaseException):
@@ -86,7 +87,7 @@ def test_a_crash_between_the_reply_and_the_send_gives_exactly_one_message() -> N
     assert message.source_message_id == answered.reply_message_id
 
 
-def test_a_worker_killed_mid_turn_is_answered_after_the_lease_expires() -> None:
+def test_a_worker_killed_mid_turn_is_answered_once_the_job_lease_ends() -> None:
     testbed = ChannelsTestbed()
     _, channel = connect_bot(testbed)
     testbed.pipeline.interruptions = [WorkerKilled()]
@@ -95,12 +96,12 @@ def test_a_worker_killed_mid_turn_is_answered_after_the_lease_expires() -> None:
     with pytest.raises(WorkerKilled):
         testbed.run_worker()
 
-    # A new worker starts; the turn is held until the leases run out.
+    # A new worker starts; the turn is held until the job's lease runs out.
     testbed.worker = testbed.build_worker()
     testbed.run_worker()
     assert delivered_texts(testbed) == []
 
-    testbed.clock.advance(PAST_EVERY_LEASE_SECONDS)
+    testbed.clock.advance(PAST_THE_JOB_LEASE_SECONDS)
     testbed.run_worker()
 
     assert delivered_texts(testbed) == [ANSWER]

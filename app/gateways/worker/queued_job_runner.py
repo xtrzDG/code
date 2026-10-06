@@ -139,8 +139,11 @@ class QueuedJobRunner:
             log_job_finished(job.name, finished_state(job), start)
             return outcome
 
-    def release_expired_leases(self) -> int:
-        """The reaper: jobs whose worker died run again (or die); their count."""
+    def release_expired_leases(self) -> list[JobLane]:
+        """
+        The reaper: jobs whose worker died run again (or die); the lanes of
+        those that run again.
+        """
 
         released: list[QueuedJobDocument] = self._job_repo.release_expired_leases(
             ExpiredLeaseRelease(
@@ -164,7 +167,11 @@ class QueuedJobRunner:
                 job.status.value,
             )
 
-        return len(released)
+        return list(
+            dict.fromkeys(
+                job.lane for job in released if job.status is QueuedJobStatus.PENDING
+            )
+        )
 
     def hand_back_running_jobs(self) -> list[QueuedJobId]:
         """

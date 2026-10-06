@@ -32,6 +32,7 @@ from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.platform.constrained_integers import (
     ProcessedItemCount,
     WorkerLaneConcurrency,
+    WorkerLanePollSeconds,
     WorkerPollSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import JobName
@@ -142,6 +143,7 @@ def build_worker(
     poll_seconds: int = 5,
     lanes: tuple[JobLane, ...] = tuple(JobLane),
     stop_grace_seconds: float = 25.0,
+    inbound_poll_seconds: int | None = None,
 ) -> WorkerKit:
     job_stores: JobStores = build_job_stores() if stores is None else stores
     reporter = RecordingErrorReporter()
@@ -158,6 +160,11 @@ def build_worker(
         lane_concurrency=TEST_LANE_CONCURRENCY,
         lanes=lanes,
         stop_grace_seconds=stop_grace_seconds,
+        inbound_poll_seconds=(
+            None
+            if inbound_poll_seconds is None
+            else WorkerLanePollSeconds(inbound_poll_seconds)
+        ),
     )
     queue = JobQueueFacilitator(
         job_repo=job_stores.job_repo,

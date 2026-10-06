@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-06 — worker resilience: why a dead job died
 
-Spec: `d122ca10bd77c436`
+Spec: `95672ccce196feb2`
 
 - **Changed** `GET /v1/admin/jobs` items (`QueuedJobView`, also in the
   answers of `…/retry` and `…/discard`) add `dead_reason`
@@ -21,6 +21,11 @@ Spec: `d122ca10bd77c436`
   that is not dead or died before reasons were recorded). A job whose
   attempts ended with their worker process twice in a row is now DEAD
   with `process_died` instead of being tried again.
+- **Changed** the inbox events of a customer's records (`ContactRecords`)
+  add `holder_job_id`: the queued job that last took the message (null
+  before this change). A later attempt of that job takes the message over
+  as soon as the job's lease ends, so a customer whose worker died is
+  answered within moments of the lease, not after the inbox's own lease.
 
 ## 2026-10-05 — wave 14 together: customers and search, booking confirmations, the spend guard, admin actions
 

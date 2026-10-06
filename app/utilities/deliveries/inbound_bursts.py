@@ -14,10 +14,11 @@ from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.typings.conversations.constrained_integers import (
     MessageCoalesceSeconds,
 )
+from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.utilities.deliveries.inbound_claims import (
     MICROSECONDS_PER_SECOND,
     is_inbound_event_finished,
-    is_inbound_event_held,
+    is_inbound_event_held_by_another,
 )
 
 BURST_MAX_WAIT_FACTOR: int = 3
@@ -48,12 +49,14 @@ def is_same_customer(event: InboundEventDocument, other: InboundEventDocument) -
     )
 
 
-def is_open_event(event: InboundEventDocument, now: Microseconds) -> bool:
-    """Not answered yet and not being answered by another worker."""
+def is_open_event(
+    event: InboundEventDocument, now: Microseconds, job_id: QueuedJobId
+) -> bool:
+    """Not answered yet and not being answered by another job than `job_id`."""
 
-    return not is_inbound_event_finished(event) and not is_inbound_event_held(
-        event, now
-    )
+    return not is_inbound_event_finished(
+        event
+    ) and not is_inbound_event_held_by_another(event, now, job_id)
 
 
 def burst_window(event: InboundEventDocument) -> tuple[Microseconds, Microseconds]:
@@ -70,15 +73,17 @@ def select_burst(
     trigger: InboundEventDocument,
     candidates: list[InboundEventDocument],
     now: Microseconds,
+    job_id: QueuedJobId,
 ) -> list[InboundEventDocument]:
     """
     The trigger and the same customer's other open messages, oldest first
     (by when the platform delivered them; the inbox order breaks ties).
+    Messages job `job_id` held on an attempt its worker died in are open.
     """
 
     burst: dict[str, InboundEventDocument] = {str(trigger.id): trigger}
     for event in candidates:
-        if is_same_customer(trigger, event) and is_open_event(event, now):
+        if is_same_customer(trigger, event) and is_open_event(event, now, job_id):
             burst.setdefault(str(event.id), event)
 
     return sorted(burst.values(), key=lambda event: int(event.created_at))

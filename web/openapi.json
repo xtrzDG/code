@@ -12770,7 +12770,7 @@
       },
       "InboundEventDocument": {
         "additionalProperties": false,
-        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.",
+        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.",
         "properties": {
           "attempts": {
             "default": 0,
@@ -12856,6 +12856,17 @@
             ],
             "title": "Handoff Requested At"
           },
+          "holder_job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holder Job Id"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -12927,7 +12938,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "5",
+            "default": "6",
             "title": "Schema Version",
             "type": "string"
           },

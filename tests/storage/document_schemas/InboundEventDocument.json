@@ -1,7 +1,7 @@
 {
   "collection": "inbound_events",
   "document_type": "InboundEventDocument",
-  "schema_version": 5,
+  "schema_version": 6,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -282,6 +282,18 @@
         ],
         "default": null
       },
+      "holder_job_id": {
+        "anyOf": [
+          {
+            "pattern": "^queued_job_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "id": {
         "pattern": "^inbound_event_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
@@ -358,7 +370,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "5",
+        "default": "6",
         "type": "string"
       },
       "status": {

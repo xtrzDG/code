@@ -20,7 +20,7 @@ from app.utilities.deliveries.delivery_jobs import decode_inbound_event_payload
 from app.utilities.deliveries.delivery_keys import inbound_serial_key
 from app.utilities.deliveries.inbound_claims import (
     is_inbound_event_finished,
-    is_inbound_event_held,
+    is_inbound_event_held_by_another,
     take_inbound_event,
 )
 from app.utilities.deliveries.inbox_messages import customer_written_text
@@ -37,6 +37,8 @@ class ClaimInboundEventUseCase(
     event is finished or gone, or another processing still holds it (a
     widget request, or a worker whose lease has not run out); the job then
     comes back when that lease ends, so a crashed turn is processed again.
+    An event this very job held on an attempt whose worker died is taken
+    over at once.
     """
 
     def __init__(
@@ -62,7 +64,7 @@ class ClaimInboundEventUseCase(
         if is_inbound_event_finished(stored):
             return None
 
-        if is_inbound_event_held(stored, now):
+        if is_inbound_event_held_by_another(stored, now, input_data.job_id):
             queue_inbound_job(
                 self._job_queue,
                 stored,
@@ -75,7 +77,7 @@ class ClaimInboundEventUseCase(
         claimed: InboundEventDocument | None = self._inbound_event_repo.update(
             input_data.business_id,
             event_id,
-            lambda current: take_inbound_event(current, now),
+            lambda current: take_inbound_event(current, now, input_data.job_id),
         )
         if claimed is None:
             return None

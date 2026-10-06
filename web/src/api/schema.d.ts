@@ -9008,6 +9008,11 @@ export interface components {
          *     Version 5: `customer_channel_user_id`, the sender of the customer
          *     message kept beside it (filled from it when missing, so older rows read
          *     the same), for erasure to find a customer's events by an index.
+         *
+         *     Version 6: `holder_job_id`, the queued job that last took the event
+         *     (optional). The queue runs a job in one place at a time, so a later
+         *     attempt of that same job (its worker died) takes the event over at
+         *     once instead of waiting out the processing lease.
          */
         InboundEventDocument: {
             /**
@@ -9034,6 +9039,8 @@ export interface components {
             customer_message_id?: string;
             /** Handoff Requested At */
             handoff_requested_at?: number | null;
+            /** Holder Job Id */
+            holder_job_id?: string | null;
             /** Id */
             id: string;
             kind: components["schemas"]["InboundEventKind"];
@@ -9053,7 +9060,7 @@ export interface components {
             reply_message_id?: string;
             /**
              * Schema Version
-             * @default 5
+             * @default 6
              */
             schema_version: string;
             /** @default received */

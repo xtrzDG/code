@@ -29,6 +29,7 @@ from app.gateways.worker.periodic_job_runner import PeriodicJobRunner
 from app.gateways.worker.periodic_job_spec import PeriodicJobSpec
 from app.gateways.worker.queued_job_rounds import JOB_QUEUE_JOB, run_due_queued_jobs
 from app.gateways.worker.queued_job_runner import QueuedJobRunner
+from app.gateways.worker.tick_pacing import tick_pause_seconds, wait_reaping
 from app.schemas.constants.jobs import JobLane
 from app.schemas.typings.platform.constrained_integers import (
     JobLeaseSeconds,
@@ -47,9 +48,6 @@ DEFAULT_LEASE_SECONDS: JobLeaseSeconds = JobLeaseSeconds(120)
 # On shutdown running jobs get this long to finish (Render stops a service
 # 30 s after SIGTERM); the rest go back to the queue for another worker.
 STOP_GRACE_SECONDS: float = 25.0
-# After a tick that failed as a whole (the database is down), wait longer
-# and longer between ticks, up to this many seconds.
-MAX_TICK_BACKOFF_SECONDS: int = 5 * 60
 WORKER_TICK_JOB: JobName = JobName("worker_tick")
 
 
@@ -70,8 +68,9 @@ class BackgroundWorker:
 
     - queued jobs are claimed with a lease (FOR UPDATE SKIP LOCKED on
       Postgres), so each runs once; a heartbeat keeps the leases of running
-      jobs alive, and the reaper on every tick releases the jobs of a worker
-      that died;
+      jobs alive, and the reaper releases the jobs of a worker that died
+      (every tick, and between ticks as often as the worker's quickest
+      lane polls), waking the lanes that can take them;
     - every lane has its own threads (WORKER_LANE_CONCURRENCY), so a long
       autotest run never delays a reminder or a customer reply, and jobs
       with the same serial key (the autotests of one business) run one at a
@@ -153,13 +152,16 @@ class BackgroundWorker:
             failure_reporter=self._failure_reporter,
             lease_seconds=lease_seconds,
         )
+        lane_poll_seconds = build_lane_poll_seconds(poll_seconds, inbound_poll_seconds)
+        self._reap_seconds: float = min(
+            (float(int(lane_poll_seconds[lane])) for lane in self._lanes),
+            default=float(int(poll_seconds)),
+        )
         self._lane_threads = LaneThreads(
             runner=self._queued_runner,
             lane_concurrency=self._lane_concurrency,
             job_wakeup=job_wakeup,
-            lane_poll_seconds=build_lane_poll_seconds(
-                poll_seconds, inbound_poll_seconds
-            ),
+            lane_poll_seconds=lane_poll_seconds,
             failure_reporter=self._failure_reporter,
             lanes=self._lanes,
         )
@@ -262,23 +264,26 @@ class BackgroundWorker:
                 consecutive_failures += 1
                 self._failure_reporter.report(WORKER_TICK_JOB, error)
 
-            stop_event.wait(timeout=self._pause_seconds(consecutive_failures))
-
-    def _pause_seconds(self, consecutive_failures: int) -> int:
-        poll_seconds: int = int(self._poll_seconds)
-        if consecutive_failures == 0:
-            return poll_seconds
-
-        backoff_seconds: int = poll_seconds * (1 << min(consecutive_failures, 16))
-        return min(backoff_seconds, max(poll_seconds, MAX_TICK_BACKOFF_SECONDS))
+            pause: int = tick_pause_seconds(
+                int(self._poll_seconds), consecutive_failures
+            )
+            if consecutive_failures:
+                stop_event.wait(timeout=pause)
+            else:
+                wait_reaping(
+                    stop_event, pause, self._reap_seconds, self._release_expired_leases
+                )
 
     def _beat(self) -> None:
         if self._heartbeat_recorder is not None:
             self._heartbeat_recorder.beat(self._periodic_runner.last_results())
 
     def _release_expired_leases(self) -> int:
+        """The reaper; the lanes of the jobs it put back are woken (any worker)."""
+
         try:
-            self._queued_runner.release_expired_leases()
+            for lane in self._queued_runner.release_expired_leases():
+                self._job_wakeup.notify(lane)
         except Exception as error:  # noqa: BLE001 - the queue may be unreachable
             self._failure_reporter.report(JOB_QUEUE_JOB, error)
             return 1
