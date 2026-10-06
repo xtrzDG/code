@@ -24,6 +24,7 @@ import { businessPath, inboxPath } from "@/lib/navigation";
 import { guideCard } from "@/lib/setupGuide/guide";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
+import { InviteCard } from "./_components/InviteCard";
 import { AttentionTile, BarList, NextStepCard } from "./_components/DashboardWidgets";
 import {
   canTakeStep,
@@ -234,6 +235,9 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
 
         {/* What customers asked about in the last 30 days (the period above does not change it). */}
         {isLaunched(business.status) ? <TopicsCard /> : null}
+
+        {/* "Invite a business — a month free", from the tenth booking (owners). */}
+        {isOwner ? <InviteCard /> : null}
       </div>
     </>
   );

@@ -189,6 +189,7 @@ export const adminMetricsEn = {
     wentLive: "Went live",
     paying: "Paying",
     payingShare: "Paying share",
+    referralCode: "Referral code",
     names: {
       direct: "Direct",
       unknown: "Unknown",

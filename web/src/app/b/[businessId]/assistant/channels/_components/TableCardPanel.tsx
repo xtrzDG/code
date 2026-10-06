@@ -1,13 +1,18 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 
+import { useBusiness } from "@/components/business/BusinessContext";
+import { Switch } from "@/components/content/Switch";
 import { IconFile } from "@/components/icons";
+import { useReferralProgram } from "@/components/referrals/useReferralProgram";
 import { Button, Field, Select, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { directionOf } from "@/lib/hostedChat/language";
 import { hostedChatTexts } from "@/lib/hostedChat/texts";
 import { languageName } from "@/lib/format";
+import { poweredByText } from "@/lib/referrals/poweredByTexts";
+import { linkWithSource, withPoweredByFooter } from "@/lib/referrals/referralLinks";
 
 import type { QrMatrix } from "../_lib/qrCode";
 import { buildTableCardHtml, printFrame } from "../_lib/tableCard";
@@ -18,10 +23,15 @@ const CARD_WIDTH_PX = 397;
 const CARD_HEIGHT_PX = 559;
 const PREVIEW_SCALE = 0.5;
 
+/** The `src` tag of sign-ups that came from the printed card's "Powered by" line. */
+const CARD_SOURCE = "table_card";
+
 /**
  * The printable A6 table card in one of the business's languages: a
  * preview (the card itself, scaled down in a frame) and "Print", which
- * prints that frame.
+ * prints that frame. Its foot carries "Powered by" with the business's
+ * referral code, which a Plus owner may switch off (for the chat and the
+ * chat page too).
  */
 export function TableCardPanel({
   matrix,
@@ -44,10 +54,15 @@ export function TableCardPanel({
   const markShared = useShareMark();
   const choices = languages.length > 0 ? languages : [defaultLanguage];
   const [language, setLanguage] = useState(choices.includes(defaultLanguage) ? defaultLanguage : (choices[0] ?? "en"));
+  const { business, isOwner } = useBusiness();
+  const { program, setPoweredByHidden, poweredByChange } = useReferralProgram(business.id, { enabled: isOwner });
+  const poweredBy = program.data?.powered_by ?? null;
+  const poweredByUrl = poweredBy?.url ? linkWithSource(poweredBy.url, CARD_SOURCE) : null;
+  const hintId = useId();
 
   const html = useMemo(() => {
     const texts = hostedChatTexts(language);
-    return buildTableCardHtml({
+    const card = buildTableCardHtml({
       businessName,
       linkText,
       matrix,
@@ -57,7 +72,8 @@ export function TableCardPanel({
       heading: texts.scanToChat,
       hint: texts.cardHint,
     });
-  }, [accent, businessName, language, linkText, matrix]);
+    return withPoweredByFooter(card, poweredByText(language), poweredByUrl);
+  }, [accent, businessName, language, linkText, matrix, poweredByUrl]);
 
   return (
     <div className="space-y-3 border-t border-line pt-5">
@@ -92,6 +108,33 @@ export function TableCardPanel({
           style={{ width: CARD_WIDTH_PX, height: CARD_HEIGHT_PX, transform: `scale(${PREVIEW_SCALE})` }}
         />
       </div>
+      {poweredBy ? (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-line p-3">
+          <div className="min-w-0 space-y-0.5">
+            <p className="text-sm font-medium text-ink">{t("referrals.poweredBy.title")}</p>
+            <p id={hintId} className="text-xs text-ink-muted">
+              {!poweredBy.is_removable
+                ? t("referrals.poweredBy.plusOnly")
+                : poweredBy.is_shown
+                  ? t("referrals.poweredBy.description")
+                  : t("referrals.poweredBy.hidden")}
+            </p>
+          </div>
+          <Switch
+            checked={poweredBy.is_shown}
+            label={t("referrals.poweredBy.toggle")}
+            describedBy={hintId}
+            disabled={!poweredBy.is_removable || poweredByChange.isPending}
+            onChange={(checked) => {
+              void setPoweredByHidden(!checked).then((ok) => {
+                if (ok) {
+                  toast.success(t("referrals.poweredBy.saved"));
+                }
+              });
+            }}
+          />
+        </div>
+      ) : null}
       <div className="flex justify-center">
         <Button
           variant="secondary"

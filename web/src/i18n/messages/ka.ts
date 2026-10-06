@@ -9,6 +9,7 @@ import { securityFlowKa } from "./sections/security";
 import { helpKa } from "./sections/help";
 import { siteKa } from "./sections/site";
 import { customersSectionKa } from "./sections/customers";
+import { referralsSectionKa } from "./sections/referrals";
 import { onboardingKa } from "./onboarding/ka";
 import { landingKa } from "./landing/ka";
 
@@ -140,6 +141,7 @@ export const ka: Messages = {
     role: {
       owner: "მფლობელი",
       staff: "თანამშრომელი",
+      agency: "სააგენტო",
     },
     status: {
       onboarding: "ანკეტა ივსება",
@@ -203,4 +205,5 @@ export const ka: Messages = {
   ...helpKa,
   ...siteKa,
   ...customersSectionKa,
+  ...referralsSectionKa,
 };

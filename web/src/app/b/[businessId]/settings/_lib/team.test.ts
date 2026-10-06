@@ -30,8 +30,8 @@ describe("team", () => {
     expect(canRemoveMember(owner, [owner, member({ user_id: "u4", role: "owner" })])).toBe(true);
     expect(canRemoveMember(staff, [owner, staff])).toBe(true);
     expect(allowedRoles(owner, [owner, staff])).toEqual(["owner"]);
-    expect(allowedRoles(owner, [owner, member({ user_id: "u4", role: "owner" })])).toEqual(["owner", "staff"]);
-    expect(allowedRoles(staff, [owner, staff])).toEqual(["owner", "staff"]);
+    expect(allowedRoles(owner, [owner, member({ user_id: "u4", role: "owner" })])).toEqual(["owner", "staff", "agency"]);
+    expect(allowedRoles(staff, [owner, staff])).toEqual(["owner", "staff", "agency"]);
   });
 
   it("builds invitations by phone or e-mail with a role", () => {

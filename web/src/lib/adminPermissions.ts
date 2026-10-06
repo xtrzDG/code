@@ -19,6 +19,7 @@ const ADMIN_PAGE_PERMISSIONS = {
   metrics: "view_metrics",
   security: "view_operations",
   team: "manage_admins",
+  partners: "view_clients",
 } as const satisfies Record<string, PlatformAdminPermission>;
 
 export type AdminPageKey = keyof typeof ADMIN_PAGE_PERMISSIONS;

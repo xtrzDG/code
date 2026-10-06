@@ -27,8 +27,22 @@ export function HostedChatShell({
   );
 }
 
-/** A message in place of the chat: the chat is off, not found or could not be loaded. */
-export function HostedChatNotice({ title, lead, hint }: { title?: string; lead: string; hint?: string }) {
+/**
+ * A message in place of the chat: the chat is off, not found or could not
+ * be loaded. `poweredBy` is the platform's link with the business's
+ * referral code (the live chat shows it in the widget's own footer).
+ */
+export function HostedChatNotice({
+  title,
+  lead,
+  hint,
+  poweredBy,
+}: {
+  title?: string;
+  lead: string;
+  hint?: string;
+  poweredBy?: { label: string; url: string } | null;
+}) {
   return (
     <div className="hc-frame">
       <div className="hc-notice">
@@ -40,6 +54,13 @@ export function HostedChatNotice({ title, lead, hint }: { title?: string; lead: 
         {title ? <h1 dir="auto">{title}</h1> : null}
         {title ? <p className="hc-notice-lead">{lead}</p> : <h1>{lead}</h1>}
         {hint ? <p>{hint}</p> : null}
+        {poweredBy ? (
+          <p className="hc-powered">
+            <a href={poweredBy.url} target="_blank" rel="noopener">
+              {poweredBy.label}
+            </a>
+          </p>
+        ) : null}
       </div>
     </div>
   );

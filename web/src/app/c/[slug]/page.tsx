@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { readPreviewLook } from "@/lib/hostedChat/preview";
 import { hostedChatTexts } from "@/lib/hostedChat/texts";
+import { poweredByText } from "@/lib/referrals/poweredByTexts";
 import { SCHEME_BACKGROUNDS } from "@/lib/theme";
 import { chatApiBase } from "@/server/hostedChat";
 
@@ -79,7 +80,12 @@ export default async function HostedChatPage({ searchParams }: PageProps<"/c/[sl
   if (!view.is_enabled) {
     return (
       <HostedChatShell page={page} accent={view.accent_color}>
-        <HostedChatNotice title={view.business_name} lead={texts.unavailable} hint={texts.tryLater} />
+        <HostedChatNotice
+          title={view.business_name}
+          lead={texts.unavailable}
+          hint={texts.tryLater}
+          poweredBy={view.powered_by_url ? { label: poweredByText(page.language), url: view.powered_by_url } : null}
+        />
       </HostedChatShell>
     );
   }

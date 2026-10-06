@@ -44,14 +44,15 @@ export function canRemoveMember(member: BusinessMember, members: readonly Busine
 export type MemberRole = BusinessMember["role"];
 
 /** The name of each member role. */
-export const ROLE_NAMES: Record<MemberRole, "settings.roles.owner" | "settings.roles.staff"> = {
+export const ROLE_NAMES: Record<MemberRole, "settings.roles.owner" | "settings.roles.staff" | "settings.roles.agency"> = {
   owner: "settings.roles.owner",
   staff: "settings.roles.staff",
+  agency: "settings.roles.agency",
 };
 
 /** The roles a member may get now: staff only while another owner remains. */
 export function allowedRoles(member: BusinessMember, members: readonly BusinessMember[]): MemberRole[] {
-  return canRemoveMember(member, members) ? ["owner", "staff"] : ["owner"];
+  return canRemoveMember(member, members) ? ["owner", "staff", "agency"] : ["owner"];
 }
 
 type InviteMethod = "phone" | "email";

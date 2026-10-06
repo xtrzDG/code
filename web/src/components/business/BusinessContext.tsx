@@ -68,6 +68,11 @@ export function useBusiness(): BusinessContextValue {
   return value;
 }
 
+/** The business of the page, or null outside app/b/[businessId] (the account menu on other pages). */
+export function useOptionalBusiness(): BusinessContextValue | null {
+  return useContext(BusinessContext);
+}
+
 export interface BusinessFormat {
   dateTime: (value: Timestamp) => string;
   date: (value: Timestamp) => string;

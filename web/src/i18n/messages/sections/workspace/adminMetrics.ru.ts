@@ -205,6 +205,7 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
     wentLive: "Запустились",
     paying: "Платят",
     payingShare: "Доля платящих",
+    referralCode: "Код приглашения",
     names: {
       direct: "Прямой заход",
       unknown: "Неизвестно",

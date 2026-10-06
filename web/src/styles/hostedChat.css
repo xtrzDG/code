@@ -246,3 +246,15 @@
     box-shadow: 0 0 0 1px var(--hc-line);
   }
 }
+
+/* "Powered by" under a notice (the live chat shows it in the widget's footer). */
+.hc-notice .hc-powered {
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.hc-notice .hc-powered a {
+  color: var(--hc-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

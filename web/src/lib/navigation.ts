@@ -54,6 +54,10 @@ export const ADMIN_METRICS_PATH = "/admin/metrics";
 export const ADMIN_SYSTEM_PATH = "/admin/system";
 /** The platform admin team: who may open the admin pages, with which role. */
 export const ADMIN_TEAM_PATH = "/admin/team";
+/** The partners who bring businesses, their codes and the monthly payouts. */
+export const ADMIN_PARTNERS_PATH = "/admin/partners";
+/** A partner's own portal: their links, businesses and commissions. */
+export const PARTNER_PATH = "/partner";
 
 /** A client's page in the admin area (where an admin opens their cabinet with a reason). */
 export function adminClientPath(businessId: string): string {
@@ -66,7 +70,7 @@ export const ACCOUNT_SECURITY_PATH = "/account/security";
 const NOTIFICATION_LINK_PREFIX = "/n/";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
-const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, "/account/", "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
+const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, PARTNER_PATH, "/account/", "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
