@@ -15,8 +15,9 @@ request, with the reason in the description.
 | `summary` | what the rule watches, the second line of every message |
 | `measure` | the figure the check computes |
 | `threshold` | the alert fires when the figure is **above** it (0: any at all) |
-| `unit` | `count`, `seconds`, `percent` or `ratio` |
+| `unit` | `count`, `seconds`, `percent` or `ratio` (a burn rate is in percent of the sustainable pace) |
 | `window_minutes` | how far back the check reads |
+| `short_window_minutes` | burn-rate rules only: the second, shorter window that must burn too |
 | `volume_floor` | the fewest events before a rate means anything |
 | `source` | the table and index the check reads (indexed counts only) |
 | `runbook` | what to do, linked from every message |

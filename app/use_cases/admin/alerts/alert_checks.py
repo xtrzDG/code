@@ -53,6 +53,7 @@ class PlatformAlertChecks:
         signal_counter: SignalCounterAdapterContract,
         quality_totals_repo: QualityTotalsRepoContract,
         spend_checks: SpendAlertChecks,
+        extra_checks: Mapping[PlatformAlertCode, AlertCheck],
     ) -> None:
         self._health: SystemHealthRepoContract = system_health_repo
         self._activity: PlatformActivityRepoContract = platform_activity_repo
@@ -70,6 +71,7 @@ class PlatformAlertChecks:
             PlatformAlertCode.QUALITY_DROP: self._quality_drop,
             PlatformAlertCode.SPEND_SPIKE: spend_checks.spend_spike,
             PlatformAlertCode.SPEND_BUDGET: spend_checks.spend_budget,
+            **extra_checks,  # The burn-rate checks (burn_rate_alert_checks.py).
         }
 
     def run(
@@ -83,7 +85,6 @@ class PlatformAlertChecks:
                 observations.append(self._checks[code](rule, now))
             except ApplicationError as error:
                 logger.warning("Platform alert check %s failed: %s", code, error)
-
         return observations
 
     def _dead_jobs(

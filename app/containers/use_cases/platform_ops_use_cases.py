@@ -7,6 +7,9 @@ from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.platform_alert_checks_factory import (
+    platform_alert_checks_factory,
+)
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -46,7 +49,6 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 from app.use_cases.admin.alerts.send_platform_alert_use_case import (
     SendPlatformAlertUseCase,
 )
-from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 from app.use_cases.admin.incidents.create_incident_use_case import (
     CreateIncidentUseCase,
 )
@@ -107,19 +109,8 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
     platform_use_cases: PlatformUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Platform alerts (the `platform_alerts` job and its messages).
-    platform_alert_checks: Factory[PlatformAlertChecks] = Factory(
-        PlatformAlertChecks,
-        system_health_repo=repositories.system_health_repo,
-        platform_activity_repo=repositories.platform_activity_repo,
-        signal_counter=adapters.signal_counter,
-        quality_totals_repo=repositories.quality_totals_repo,
-        spend_checks=Factory(
-            SpendAlertChecks,
-            usage_spend_repo=repositories.usage_spend_repo,
-            daily_budget_micro_usd=(
-                config.app_settings.provided.spend_guard.provided.platform_daily_budget_micro_usd
-            ),
-        ),
+    platform_alert_checks: Factory[PlatformAlertChecks] = platform_alert_checks_factory(
+        repositories, adapters, config
     )
     check_platform_alerts_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(

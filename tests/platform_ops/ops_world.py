@@ -26,6 +26,7 @@ from app.repositories.platform_alert_state_repository import (
     PlatformAlertStateRepository,
 )
 from app.repositories.quality_repositories import QualityTotalsRepository
+from app.repositories.service_level_repositories import ServiceLevelSlotRepository
 from app.repositories.spend_guard_repositories import UsageSpendRepository
 from app.repositories.system_health_repository import SystemHealthRepository
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
@@ -39,6 +40,7 @@ from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.service_levels import ServiceLevelSlotDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError
@@ -51,6 +53,7 @@ from app.schemas.typings.spend.constrained_integers import (
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
+from app.use_cases.admin.alerts.burn_rate_alert_checks import burn_rate_alert_checks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
 )
@@ -146,6 +149,10 @@ class OpsWorld:
             UsageEventDocument
         )
         self.spend_budget: PlatformDailySpendBudgetMicroUsd | None = None
+        self.slots = InMemoryDocumentCollectionAdapter[ServiceLevelSlotDocument](
+            ServiceLevelSlotDocument
+        )
+        self.slot_repo = ServiceLevelSlotRepository(self.slots)
 
     def checks(self) -> PlatformAlertChecks:
         return PlatformAlertChecks(
@@ -156,6 +163,7 @@ class OpsWorld:
             spend_checks=SpendAlertChecks(
                 UsageSpendRepository(self.usage_events), self.spend_budget
             ),
+            extra_checks=burn_rate_alert_checks(self.slot_repo),
         )
 
     def alerts_use_case(
