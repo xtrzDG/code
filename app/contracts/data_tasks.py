@@ -5,7 +5,7 @@ batch on the storage, the lock that keeps one runner at a time, and the
 worker pulses that tell whether the release overlap is over.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from contextlib import AbstractContextManager
 from typing import Protocol
 
@@ -50,6 +50,19 @@ class DataTaskStateRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def save(self, state: DataTaskStateDocument) -> None:
+        raise NotImplementedError
+
+    def modify(
+        self,
+        key: DataTaskKey,
+        change: Callable[[DataTaskStateDocument], DataTaskStateDocument | None],
+    ) -> DataTaskStateDocument | None:
+        """
+        Read a task's state, let `change` turn it into the state to store and
+        write that in one step (no other write can come in between). None,
+        and nothing written, when there is no state or `change` returns
+        None; an error raised by `change` leaves the state as it was.
+        """
         raise NotImplementedError
 
 

@@ -7,6 +7,7 @@ from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
@@ -92,9 +93,8 @@ from app.use_cases.quality.sample_conversation_quality_use_case import (
 
 class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
     """
-    The platform's own operations (docs/operations/slo.md, incident.md):
-    the platform alerts and their delivery, the admin system page, and the
-    incident log with its breach notices to owners.
+    The platform's own operations (docs/operations/slo.md, incident.md): the
+    alerts and their delivery, the admin system page, the incident log.
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -105,6 +105,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     platform_use_cases: PlatformUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    data_task_use_cases: DataTaskUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Platform alerts (the `platform_alerts` job and its messages).
     platform_alert_checks: Factory[PlatformAlertChecks] = Factory(
@@ -120,6 +121,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
                 config.app_settings.provided.spend_guard.provided.platform_daily_budget_micro_usd
             ),
         ),
+        data_task_checks=data_task_use_cases.data_task_alert_checks,
     )
     check_platform_alerts_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
         Factory(
@@ -139,9 +141,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         SendPlatformAlertUseCase,
         staff_sender=facilitators.staff_notification_sender,
     )
-
-    # --- Production quality: the nightly sample of real conversations the
-    # judge scores (cost-capped) and a client's trend for the admin.
+    # --- Production quality: the judge's nightly sample, a client's trend.
     sample_conversation_quality_use_case: Factory[
         UseCaseContract[JobTick, JobReport]
     ] = Factory(

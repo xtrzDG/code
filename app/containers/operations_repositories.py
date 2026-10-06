@@ -8,6 +8,7 @@ from app.containers.adapters.operations_collections_container import (
     OperationsCollectionsContainer,
 )
 from app.repositories.client_standing_repository import ClientStandingRepository
+from app.repositories.data_task_state_repository import DataTaskStateRepository
 from app.repositories.help_progress_repository import HelpProgressRepository
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.maintenance_run_repository import MaintenanceRunRepository
@@ -78,4 +79,9 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
     help_progress_repo: Singleton[HelpProgressRepository] = Singleton(
         HelpProgressRepository,
         collection=operations_collections.help_progress_collection,
+    )
+    # The post-deploy data tasks' progress (1164).
+    data_task_state_repo: Singleton[DataTaskStateRepository] = Singleton(
+        DataTaskStateRepository,
+        collection=operations_collections.data_task_state_collection,
     )

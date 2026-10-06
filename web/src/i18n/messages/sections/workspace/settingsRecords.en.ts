@@ -87,6 +87,7 @@ export const settingsRecordsEn = {
       business_cabinet: "Business cabinet",
       business: "Business",
       queued_job: "Background job",
+      data_task: "Data task after a deploy",
       inbox: "Inbox",
       conversation_assignment: "Assignment",
       conversation_note: "Team note",

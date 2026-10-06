@@ -22,6 +22,7 @@ from app.containers.pipelines.conversation_pipelines import (
     ConversationPipelinesContainer,
 )
 from app.containers.pipelines.customer_pipelines import CustomerPipelinesContainer
+from app.containers.pipelines.data_task_pipelines import DataTaskPipelinesContainer
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
 from app.containers.pipelines.growth_pipelines import GrowthPipelinesContainer
@@ -154,6 +155,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     platform_ops: PlatformOpsPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformOpsPipelinesContainer,
         platform_ops=orchestrators.platform_ops,
+    )
+    data_tasks: DataTaskPipelinesContainer = Container(  # type: ignore[assignment]
+        DataTaskPipelinesContainer, data_tasks=orchestrators.data_tasks
     )
     spend_guard: SpendGuardPipelinesContainer = Container(  # type: ignore[assignment]
         SpendGuardPipelinesContainer,

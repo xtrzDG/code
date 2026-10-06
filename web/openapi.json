@@ -8415,8 +8415,13 @@
       },
       "ContactPage": {
         "additionalProperties": false,
-        "description": "One page of customers; `next_cursor` is None on the last page.",
+        "description": "One page of customers; `next_cursor` is None on the last page.\n`is_indexing`: a post-deploy data task that fills what the list pages\nby is not done yet, so customers written before the release may be\nmissing for a while.",
         "properties": {
+          "is_indexing": {
+            "default": false,
+            "title": "Is Indexing",
+            "type": "boolean"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ContactSummaryView"
@@ -10917,6 +10922,258 @@
         ],
         "title": "DataRegion",
         "type": "string"
+      },
+      "DataTaskKind": {
+        "description": "What a post-deploy data task does to the rows written before a release.\n\nMIGRATE_DOCUMENTS rewrites a collection's documents of older schema\nversions in the current shape (`workshop migrate-documents`).\nBACKFILL_LOOKUP fills a trigger-kept lookup column of the rows written\nbefore the column existed (`workshop backfill-lookup`).",
+        "enum": [
+          "migrate_documents",
+          "backfill_lookup"
+        ],
+        "title": "DataTaskKind",
+        "type": "string"
+      },
+      "DataTaskStatus": {
+        "description": "Where a post-deploy data task stands.\n\nPENDING: not started for its current target (a new release, a new\ncolumn), or waiting for the release overlap to end. RUNNING: its keyset\nwalk is under way (it goes on from its stored position). DONE: every\nrow was looked at and nothing failed. FAILED: the walk ended, but some\nrows could not be changed; it is walked again once a new release runs\nor a platform admin asks for it.",
+        "enum": [
+          "pending",
+          "running",
+          "done",
+          "failed"
+        ],
+        "title": "DataTaskStatus",
+        "type": "string"
+      },
+      "DataTaskView": {
+        "additionalProperties": false,
+        "description": "One data task as the platform admin sees it: its state, the progress of\nthe current walk against the table's estimated rows, and its failures.\n`pending_since` is set while it is not done; `is_stalled` once that has\nlasted more than 24 hours (the BACKFILL_STALLED alert).",
+        "properties": {
+          "batch_count": {
+            "minimum": 0.0,
+            "title": "Batch Count",
+            "type": "integer"
+          },
+          "changed_count": {
+            "minimum": 0.0,
+            "title": "Changed Count",
+            "type": "integer"
+          },
+          "collection_name": {
+            "maxLength": 63,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]{1,62}\\Z",
+            "title": "Collection Name",
+            "type": "string"
+          },
+          "failed_document_keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failed Document Keys",
+            "type": "array"
+          },
+          "failed_row_count": {
+            "minimum": 0.0,
+            "title": "Failed Row Count",
+            "type": "integer"
+          },
+          "failure_count": {
+            "minimum": 0.0,
+            "title": "Failure Count",
+            "type": "integer"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "pattern": "^[a-z][a-z0-9_]{0,47}(\\[\\]\\.[a-z][a-z0-9_]{0,47})?\\Z",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "is_stalled": {
+            "title": "Is Stalled",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 140,
+            "minLength": 20,
+            "pattern": "^(migrate_documents:[a-z][a-z0-9_]{1,62}|backfill_lookup:[a-z][a-z0-9_]{1,62}\\.[a-z][a-z0-9_]{0,58})\\Z",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DataTaskKind"
+          },
+          "last_batch_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Batch At"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "lists": {
+            "items": {
+              "$ref": "#/components/schemas/IndexedList"
+            },
+            "title": "Lists",
+            "type": "array"
+          },
+          "pending_since": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pending Since"
+          },
+          "row_estimate": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row Estimate"
+          },
+          "scanned_count": {
+            "minimum": 0.0,
+            "title": "Scanned Count",
+            "type": "integer"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DataTaskStatus"
+          },
+          "target_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Version"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "collection_name",
+          "status",
+          "lists",
+          "scanned_count",
+          "changed_count",
+          "failed_row_count",
+          "failed_document_keys",
+          "batch_count",
+          "failure_count",
+          "is_stalled"
+        ],
+        "title": "DataTaskView",
+        "type": "object"
+      },
+      "DataTasksView": {
+        "additionalProperties": false,
+        "description": "The post-deploy data tasks at `checked_at`: in batches of how many rows\nthe batch worker runs them, whether the release overlap is over, the\ncounts the deploy guard and the alert read, and every task (open ones\nfirst).",
+        "properties": {
+          "batch_size": {
+            "maximum": 50000.0,
+            "minimum": 100.0,
+            "title": "Batch Size",
+            "type": "integer"
+          },
+          "checked_at": {
+            "title": "Checked At",
+            "type": "integer"
+          },
+          "failed_count": {
+            "minimum": 0.0,
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "open_count": {
+            "minimum": 0.0,
+            "title": "Open Count",
+            "type": "integer"
+          },
+          "rollout": {
+            "$ref": "#/components/schemas/RolloutView"
+          },
+          "stalled_count": {
+            "minimum": 0.0,
+            "title": "Stalled Count",
+            "type": "integer"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/DataTaskView"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "checked_at",
+          "batch_size",
+          "rollout",
+          "open_count",
+          "failed_count",
+          "stalled_count",
+          "tasks"
+        ],
+        "title": "DataTasksView",
+        "type": "object"
       },
       "DeadJobTally": {
         "additionalProperties": false,
@@ -14361,6 +14618,15 @@
         "title": "IncidentView",
         "type": "object"
       },
+      "IndexedList": {
+        "description": "A cabinet list that pages by lookup columns which post-deploy data\ntasks fill: while one of its tasks is not done, rows written before the\nrelease may be missing from it, and the list says it is still indexing.",
+        "enum": [
+          "customers",
+          "knowledge"
+        ],
+        "title": "IndexedList",
+        "type": "string"
+      },
       "InjectionSignal": {
         "description": "The kind of prompt-injection attempt a customer message looks like:\ntelling the assistant to drop its instructions, to become someone else,\nto reveal its instructions or other customers' data, or text faking the\nplatform's own lines (system tags, fence keys, platform headers).",
         "enum": [
@@ -14880,8 +15146,13 @@
       },
       "KnowledgeItemPage": {
         "additionalProperties": false,
-        "description": "One page of the knowledge base, the last changed first (by the time of\nthe latest change, ties in the order the items were written);\n`next_cursor` asks for the next page and is None on the last one.",
+        "description": "One page of the knowledge base, the last changed first (by the time of\nthe latest change, ties in the order the items were written);\n`next_cursor` asks for the next page and is None on the last one.\n`is_indexing`: a post-deploy data task that fills what the list pages\nby is not done yet, so items written before the release may be\nmissing for a while.",
         "properties": {
+          "is_indexing": {
+            "default": false,
+            "title": "Is Indexing",
+            "type": "boolean"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/KnowledgeItemDetails"
@@ -20192,7 +20463,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -20204,7 +20475,8 @@
           "otp_cap_trips",
           "quality_drop",
           "spend_spike",
-          "spend_budget"
+          "spend_budget",
+          "backfill_stalled"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -21818,6 +22090,25 @@
         "title": "RetentionPurgeView",
         "type": "object"
       },
+      "RetryDataTaskResult": {
+        "additionalProperties": false,
+        "description": "The task after the retry, and the audit entry that records it.",
+        "properties": {
+          "audit_log_entry_id": {
+            "title": "Audit Log Entry Id",
+            "type": "string"
+          },
+          "task": {
+            "$ref": "#/components/schemas/DataTaskView"
+          }
+        },
+        "required": [
+          "task",
+          "audit_log_entry_id"
+        ],
+        "title": "RetryDataTaskResult",
+        "type": "object"
+      },
       "RevenueSource": {
         "description": "What the money estimate of a period rests on: the bookings' own values\n(service prices, stays' nightly rates), those plus the average check\nfor the bookings without one, or the average check alone.",
         "enum": [
@@ -21993,6 +22284,56 @@
           "revoked_count"
         ],
         "title": "RevokedSessionsView",
+        "type": "object"
+      },
+      "RolloutView": {
+        "additionalProperties": false,
+        "description": "Whether the release overlap is over: no worker of another release beat\nwithin the settling window. `other_releases` are those still seen and\n`settles_at` is when the last of their pulses leaves the window.",
+        "properties": {
+          "is_settled": {
+            "title": "Is Settled",
+            "type": "boolean"
+          },
+          "other_releases": {
+            "items": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._+\\-]*$",
+              "type": "string"
+            },
+            "title": "Other Releases",
+            "type": "array"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._+\\-]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "settles_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settles At"
+          }
+        },
+        "required": [
+          "is_settled"
+        ],
+        "title": "RolloutView",
         "type": "object"
       },
       "ScheduleExceptionList": {
@@ -33191,6 +33532,233 @@
           }
         },
         "summary": "Get Admin System",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/system/data-tasks": {
+      "get": {
+        "operationId": "get_data_tasks_v1_admin_system_data_tasks_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataTasksView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Data Tasks",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/system/data-tasks/{task_key}/retry": {
+      "post": {
+        "operationId": "retry_data_task_v1_admin_system_data_tasks__task_key__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_key",
+            "required": true,
+            "schema": {
+              "title": "Task Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryDataTaskResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Retry Data Task",
         "tags": [
           "admin"
         ]

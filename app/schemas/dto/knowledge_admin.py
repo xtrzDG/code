@@ -33,6 +33,7 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
 )
 from app.schemas.typings.localization.strings import FormattedMoneyText
+from app.schemas.typings.maintenance.booleans import IsListIndexing
 from app.schemas.typings.platform.constrained_strings import PageCursor
 
 
@@ -221,12 +222,16 @@ class KnowledgeItemPage(ImmutableDTO):
     One page of the knowledge base, the last changed first (by the time of
     the latest change, ties in the order the items were written);
     `next_cursor` asks for the next page and is None on the last one.
+    `is_indexing`: a post-deploy data task that fills what the list pages
+    by is not done yet, so items written before the release may be
+    missing for a while.
     """
 
     items: list[KnowledgeItemDetails] = Field(
         default_factory=list[KnowledgeItemDetails]
     )
     next_cursor: PageCursor | None = None
+    is_indexing: IsListIndexing = False
 
 
 class KnowledgeItemDeletion(ImmutableDTO):

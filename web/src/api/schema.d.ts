@@ -553,6 +553,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/system/data-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Data Tasks */
+        get: operations["get_data_tasks_v1_admin_system_data_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/system/data-tasks/{task_key}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Data Task */
+        post: operations["retry_data_task_v1_admin_system_data_tasks__task_key__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/team": {
         parameters: {
             query?: never;
@@ -7486,8 +7520,16 @@ export interface components {
         /**
          * ContactPage
          * @description One page of customers; `next_cursor` is None on the last page.
+         *     `is_indexing`: a post-deploy data task that fills what the list pages
+         *     by is not done yet, so customers written before the release may be
+         *     missing for a while.
          */
         ContactPage: {
+            /**
+             * Is Indexing
+             * @default false
+             */
+            is_indexing: boolean;
             /** Items */
             items: components["schemas"]["ContactSummaryView"][];
             /** Next Cursor */
@@ -8496,6 +8538,99 @@ export interface components {
          * @enum {string}
          */
         DataRegion: "eu" | "us";
+        /**
+         * DataTaskKind
+         * @description What a post-deploy data task does to the rows written before a release.
+         *
+         *     MIGRATE_DOCUMENTS rewrites a collection's documents of older schema
+         *     versions in the current shape (`workshop migrate-documents`).
+         *     BACKFILL_LOOKUP fills a trigger-kept lookup column of the rows written
+         *     before the column existed (`workshop backfill-lookup`).
+         * @enum {string}
+         */
+        DataTaskKind: "migrate_documents" | "backfill_lookup";
+        /**
+         * DataTaskStatus
+         * @description Where a post-deploy data task stands.
+         *
+         *     PENDING: not started for its current target (a new release, a new
+         *     column), or waiting for the release overlap to end. RUNNING: its keyset
+         *     walk is under way (it goes on from its stored position). DONE: every
+         *     row was looked at and nothing failed. FAILED: the walk ended, but some
+         *     rows could not be changed; it is walked again once a new release runs
+         *     or a platform admin asks for it.
+         * @enum {string}
+         */
+        DataTaskStatus: "pending" | "running" | "done" | "failed";
+        /**
+         * DataTaskView
+         * @description One data task as the platform admin sees it: its state, the progress of
+         *     the current walk against the table's estimated rows, and its failures.
+         *     `pending_since` is set while it is not done; `is_stalled` once that has
+         *     lasted more than 24 hours (the BACKFILL_STALLED alert).
+         */
+        DataTaskView: {
+            /** Batch Count */
+            batch_count: number;
+            /** Changed Count */
+            changed_count: number;
+            /** Collection Name */
+            collection_name: string;
+            /** Failed Document Keys */
+            failed_document_keys: string[];
+            /** Failed Row Count */
+            failed_row_count: number;
+            /** Failure Count */
+            failure_count: number;
+            /** Field */
+            field?: string | null;
+            /** Finished At */
+            finished_at?: number | null;
+            /** Is Stalled */
+            is_stalled: boolean;
+            /** Key */
+            key: string;
+            kind: components["schemas"]["DataTaskKind"];
+            /** Last Batch At */
+            last_batch_at?: number | null;
+            /** Last Error */
+            last_error?: string | null;
+            /** Lists */
+            lists: components["schemas"]["IndexedList"][];
+            /** Pending Since */
+            pending_since?: number | null;
+            /** Row Estimate */
+            row_estimate?: number | null;
+            /** Scanned Count */
+            scanned_count: number;
+            /** Started At */
+            started_at?: number | null;
+            status: components["schemas"]["DataTaskStatus"];
+            /** Target Version */
+            target_version?: number | null;
+        };
+        /**
+         * DataTasksView
+         * @description The post-deploy data tasks at `checked_at`: in batches of how many rows
+         *     the batch worker runs them, whether the release overlap is over, the
+         *     counts the deploy guard and the alert read, and every task (open ones
+         *     first).
+         */
+        DataTasksView: {
+            /** Batch Size */
+            batch_size: number;
+            /** Checked At */
+            checked_at: number;
+            /** Failed Count */
+            failed_count: number;
+            /** Open Count */
+            open_count: number;
+            rollout: components["schemas"]["RolloutView"];
+            /** Stalled Count */
+            stalled_count: number;
+            /** Tasks */
+            tasks: components["schemas"]["DataTaskView"][];
+        };
         /**
          * DeadJobTally
          * @description How many dead letters one job name has.
@@ -9903,6 +10038,14 @@ export interface components {
             title: string;
         };
         /**
+         * IndexedList
+         * @description A cabinet list that pages by lookup columns which post-deploy data
+         *     tasks fill: while one of its tasks is not done, rows written before the
+         *     release may be missing from it, and the list says it is still indexing.
+         * @enum {string}
+         */
+        IndexedList: "customers" | "knowledge";
+        /**
          * InjectionSignal
          * @description The kind of prompt-injection attempt a customer message looks like:
          *     telling the assistant to drop its instructions, to become someone else,
@@ -10104,8 +10247,16 @@ export interface components {
          * @description One page of the knowledge base, the last changed first (by the time of
          *     the latest change, ties in the order the items were written);
          *     `next_cursor` asks for the next page and is None on the last one.
+         *     `is_indexing`: a post-deploy data task that fills what the list pages
+         *     by is not done yet, so items written before the release may be
+         *     missing for a while.
          */
         KnowledgeItemPage: {
+            /**
+             * Is Indexing
+             * @default false
+             */
+            is_indexing: boolean;
             /** Items */
             items?: components["schemas"]["KnowledgeItemDetails"][];
             /** Next Cursor */
@@ -12132,9 +12283,11 @@ export interface components {
          *     week before (production quality). SPEND_SPIKE: today's provider spend
          *     is far above the daily mean of the week before. SPEND_BUDGET: today's
          *     provider spend passed 80 % of the platform's daily budget.
+         *     BACKFILL_STALLED: a post-deploy data task has not finished within a
+         *     day of becoming due (docs/operations/deploys.md).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -12813,6 +12966,15 @@ export interface components {
             ran_at: number;
         };
         /**
+         * RetryDataTaskResult
+         * @description The task after the retry, and the audit entry that records it.
+         */
+        RetryDataTaskResult: {
+            /** Audit Log Entry Id */
+            audit_log_entry_id: string;
+            task: components["schemas"]["DataTaskView"];
+        };
+        /**
          * RevenueSource
          * @description What the money estimate of a period rests on: the bookings' own values
          *     (service prices, stays' nightly rates), those plus the average check
@@ -12881,6 +13043,22 @@ export interface components {
         RevokedSessionsView: {
             /** Revoked Count */
             revoked_count: number;
+        };
+        /**
+         * RolloutView
+         * @description Whether the release overlap is over: no worker of another release beat
+         *     within the settling window. `other_releases` are those still seen and
+         *     `settles_at` is when the last of their pulses leaves the window.
+         */
+        RolloutView: {
+            /** Is Settled */
+            is_settled: boolean;
+            /** Other Releases */
+            other_releases?: string[];
+            /** Release */
+            release?: string | null;
+            /** Settles At */
+            settles_at?: number | null;
         };
         /**
          * ScheduleExceptionList
@@ -18522,6 +18700,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminSystemView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_data_tasks_v1_admin_system_data_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataTasksView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    retry_data_task_v1_admin_system_data_tasks__task_key__retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                task_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryDataTaskResult"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

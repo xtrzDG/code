@@ -40,6 +40,7 @@ from app.use_cases.compliance.purge_expired_recordings_use_case import (
 )
 from app.use_cases.contacts.get_contact_use_case import GetContactUseCase
 from app.use_cases.contacts.list_contacts_use_case import ListContactsUseCase
+from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.media.media_fakes import InMemoryMediaStorage
 from tests.privacy.processor_erasure_doubles import ProcessorErasureBed
 from tests.privacy.suppression_doubles import build_suppression_list
@@ -122,6 +123,8 @@ class AccountsComplianceUseCases(AccountsUserUseCases):
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
             phone_number_parser=self.phone_parser,
+            data_task_registry=no_data_tasks(),
+            data_task_state_repo=data_task_states(),
         )
         self.get_contact = GetContactUseCase(
             authorize_business_access=self.authorize_business_access,

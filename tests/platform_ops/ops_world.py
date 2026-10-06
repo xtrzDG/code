@@ -20,6 +20,7 @@ from app.adapters.storage.in_memory_document_collection import (
 )
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.registries.maintenance.data_task_registry import DataTaskRegistry
 from app.repositories.maintenance_run_repository import MaintenanceRunRepository
 from app.repositories.platform_activity_repository import PlatformActivityRepository
 from app.repositories.platform_alert_state_repository import (
@@ -54,7 +55,9 @@ from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     CheckPlatformAlertsUseCase,
 )
+from app.use_cases.admin.alerts.data_task_alert_checks import DataTaskAlertChecks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
+from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.platform_ops.ops_documents import NOW
 
@@ -146,6 +149,8 @@ class OpsWorld:
             UsageEventDocument
         )
         self.spend_budget: PlatformDailySpendBudgetMicroUsd | None = None
+        self.data_task_registry: DataTaskRegistry = no_data_tasks()
+        self.data_task_states = data_task_states()
 
     def checks(self) -> PlatformAlertChecks:
         return PlatformAlertChecks(
@@ -155,6 +160,9 @@ class OpsWorld:
             quality_totals_repo=QualityTotalsRepository(self.quality_scores),
             spend_checks=SpendAlertChecks(
                 UsageSpendRepository(self.usage_events), self.spend_budget
+            ),
+            data_task_checks=DataTaskAlertChecks(
+                self.data_task_registry, self.data_task_states
             ),
         )
 

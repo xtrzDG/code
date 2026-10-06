@@ -8,6 +8,9 @@ from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.adapters.health.database_probe_factory import build_database_probe_adapter
 from app.adapters.jobs.job_wakeup_adapter_factory import build_job_wakeup_adapter
+from app.adapters.storage.data_task_batch_adapter_factory import (
+    build_data_task_batch_adapter,
+)
 from app.adapters.storage.postgres.sql_file_migration_source_adapter import (
     BUILD_MIGRATIONS_DIRECTORY,
     SqlFileMigrationSourceAdapter,
@@ -19,6 +22,7 @@ from app.adapters.storage.unit_of_work_factory import (
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.data_tasks import DataTaskBatchAdapterContract
 from app.contracts.health import DatabaseProbeAdapterContract
 from app.contracts.jobs import JobWakeupContract
 from app.contracts.storage import StorageReadSessionContract, StorageUnitOfWorkContract
@@ -58,4 +62,10 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
         connection_pool=clients.postgres_pool,
         database_url=config.app_settings.provided.database_url,
         listen_database_url=config.app_settings.provided.live_events_database_url,
+    )
+    # One keyset batch of a post-deploy data task (Postgres; nothing to do
+    # in memory).
+    data_task_batches: Singleton[DataTaskBatchAdapterContract] = Singleton(
+        build_data_task_batch_adapter,
+        connection_pool=clients.postgres_pool,
     )

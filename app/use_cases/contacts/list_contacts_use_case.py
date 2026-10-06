@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.data_tasks import DataTaskRegistryContract, DataTaskStateRepoContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.contact_activity_repositories import (
@@ -12,6 +13,7 @@ from app.contracts.repositories.customer_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.maintenance import IndexedList
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -42,6 +44,7 @@ from app.use_cases.shared.customer_phone_privacy import (
     protect_phone,
     sees_phone_numbers,
 )
+from app.use_cases.shared.list_indexing import read_list_indexing
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 
 
@@ -62,7 +65,9 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
     country's national format ("0599 12 34 56") is read with that country
     as a hint. Owners and staff may list; staff see phones masked unless
     the owner allowed them (`customer_phone_privacy`). Reading the list is
-    personal data, so it is audited (VIEW of "contact").
+    personal data, so it is audited (VIEW of "contact"). While a post-deploy
+    data task that fills the list's columns is open, the page says it is
+    still indexing (customers of before the release may be missing).
     """
 
     def __init__(
@@ -78,6 +83,8 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
         phone_number_parser: PhoneNumberParserContract,
+        data_task_registry: DataTaskRegistryContract,
+        data_task_state_repo: DataTaskStateRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -92,6 +99,8 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
+        self._data_tasks: DataTaskRegistryContract = data_task_registry
+        self._data_task_states: DataTaskStateRepoContract = data_task_state_repo
 
     def run(self, input_data: ContactListQuery) -> ContactPage:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -128,6 +137,9 @@ class ListContactsUseCase(UseCaseContract[ContactListQuery, ContactPage]):
                 for contact in contacts
             ],
             next_cursor=next_cursor,
+            is_indexing=read_list_indexing(
+                self._data_tasks, self._data_task_states, IndexedList.CUSTOMERS
+            ),
         )
 
     def _read_page(

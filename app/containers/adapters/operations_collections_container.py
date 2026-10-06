@@ -7,6 +7,7 @@ from app.containers.config import ConfigContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.schemas.domain.client_standings import ClientStandingDocument
+from app.schemas.domain.data_tasks import DataTaskStateDocument
 from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
@@ -84,6 +85,15 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     help_progress_collection = document_collection(
         HelpProgressDocument,
         "help_progress",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The post-deploy data tasks' progress, one row per task (1164).
+    data_task_state_collection = document_collection(
+        DataTaskStateDocument,
+        "data_task_states",
         config,
         clients,
         utilities,

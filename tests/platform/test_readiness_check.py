@@ -18,6 +18,7 @@ from app.use_cases.observability.check_readiness_use_case import (
 )
 from app.utilities.observability.readiness_memory import ReadinessMemory
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.platform.readiness_fakes import (
     MIGRATION_NAMES,
     SECOND,
@@ -63,6 +64,8 @@ def check(
             unix_nanosecond_factory=lambda: now * 1000,
         ),
         memory=ReadinessMemory() if memory is None else memory,
+        data_task_registry=no_data_tasks(),
+        data_task_state_repo=data_task_states(),
     )
     return use_case.run(ReadinessQuery())
 
@@ -83,6 +86,7 @@ def test_a_healthy_database_with_every_migration_is_ready() -> None:
             "heartbeat_age_seconds": 7,
             "release": "4718714",
         },
+        "data_tasks": {"status": "ok", "open": 0, "failed": 0, "stalled": 0},
     }
 
 

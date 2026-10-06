@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from app.contracts.data_tasks import DataTaskStateRepoContract
 from app.contracts.document_store import DocumentCollectionAdapterContract
@@ -26,3 +26,10 @@ class DataTaskStateRepository(DataTaskStateRepoContract):
 
     def save(self, state: DataTaskStateDocument) -> None:
         self._collection.upsert(str(state.key), state)
+
+    def modify(
+        self,
+        key: DataTaskKey,
+        change: Callable[[DataTaskStateDocument], DataTaskStateDocument | None],
+    ) -> DataTaskStateDocument | None:
+        return self._collection.modify(str(key), change)

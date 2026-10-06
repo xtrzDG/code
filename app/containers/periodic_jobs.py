@@ -50,6 +50,7 @@ from app.gateways.worker.periodic.request_visit_feedback import (
     request_visit_feedback_job,
 )
 from app.gateways.worker.periodic.retention import retention_purge_job
+from app.gateways.worker.periodic.run_data_tasks import run_data_tasks_job
 from app.gateways.worker.periodic.send_subprocessor_notices import (
     send_subprocessor_notices_job,
 )
@@ -241,5 +242,9 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         Factory(
             run_rebooking_campaigns_job,
             operator=operators.growth.run_rebooking_campaigns_operator,
+        ),
+        # Post-deploy data tasks: migrations and lookup backfills (1164).
+        Factory(
+            run_data_tasks_job, operator=operators.data_tasks.run_data_tasks_operator
         ),
     )

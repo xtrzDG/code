@@ -33,6 +33,7 @@ from app.use_cases.observability.check_readiness_use_case import (
 )
 from app.utilities.observability.readiness_memory import ReadinessMemory
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.platform.readiness_fakes import heartbeat_at
 from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.postgres_server import ThrowawayPostgresServer
@@ -72,6 +73,8 @@ def test_a_database_without_migrations_is_not_ready(
             storage_scope=StorageScopeContext(),
             wall_clock=build_fixed_wall_clock(),
             memory=ReadinessMemory(),
+            data_task_registry=no_data_tasks(),
+            data_task_state_repo=data_task_states(),
         )
         report = use_case.run(ReadinessQuery())
     finally:

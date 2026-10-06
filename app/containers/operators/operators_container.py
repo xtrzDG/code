@@ -19,6 +19,7 @@ from app.containers.operators.conversation_operators import (
     ConversationOperatorsContainer,
 )
 from app.containers.operators.customer_operators import CustomerOperatorsContainer
+from app.containers.operators.data_task_operators import DataTaskOperatorsContainer
 from app.containers.operators.demo_operators import DemoOperatorsContainer
 from app.containers.operators.feedback_operators import FeedbackOperatorsContainer
 from app.containers.operators.growth_operators import GrowthOperatorsContainer
@@ -150,6 +151,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     platform: PlatformOperatorsContainer = Container(  # type: ignore[assignment]
         PlatformOperatorsContainer,
         platform_pipelines=pipelines.platform,
+        utilities=utilities,
+    )
+    data_tasks: DataTaskOperatorsContainer = Container(  # type: ignore[assignment]
+        DataTaskOperatorsContainer,
+        data_task_pipelines=pipelines.data_tasks,
         utilities=utilities,
     )
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]
