@@ -30,3 +30,13 @@ likely failure has a scripted game day in `tests/chaos/` (worker killed,
 Meta black-holed, model 30 s slow, Postgres restarted) that asserts its
 alert, the status level and the recovery; run them before changing a
 runbook (`uv run pytest tests/chaos`).
+
+## Game days
+
+The scripted game days run with the backend tests on every pull request,
+against a real Postgres and two processes (the API and a worker). The
+guards CI cannot replace run on a schedule instead: the restore drill
+(`restore-drill.yml`), the latency budgets (`perf.yml`) and the nightly
+evals (`evals-nightly.yml`). A silent schedule is a failure too: every
+morning `schedule-watch.yml` opens an issue for each of them without a
+successful run in the last 8 days (once per workflow while it is open).

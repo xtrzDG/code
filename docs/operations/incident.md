@@ -36,9 +36,15 @@ One person can hold several roles in a small team; the roles still exist.
 2. **Declare**: post in the ops chat `INCIDENT <SEV> <one line>`, name the
    lead, start the timeline (UTC times).
 3. **Record**: Admin → System → Incidents → "Record incident" (or `POST
-   /v1/admin/incidents`) with the businesses affected. Each of them gets an
-   audit entry; a data breach also sends the DPA 12.1 notice to every owner
-   of those businesses (below).
+   /v1/admin/incidents`) with the businesses affected, or "All businesses"
+   (`scope: all_businesses`) when the whole platform was hit. Each of them
+   gets an audit entry; a data breach also sends the DPA 12.1 notice to
+   every owner of those businesses (below). For all businesses the worker
+   walks them in batches of 200 after the incident is stored (the log
+   shows "reaching businesses…" with the count so far). Tick "Publish a
+   status announcement" in the same dialog to put the banner and the
+   `/status` notice up at once (`announcement`; it is linked to the
+   incident; resolve it from the announcements card).
 4. **Mitigate** before you fix: roll back, pause a channel, switch the model
    provider, discard a poison job. Customers getting answers again comes
    first.
@@ -59,7 +65,12 @@ out through `POST /v1/admin/incidents` with `kind: data_breach`:
 
 - `title`, `severity` (SEV1), `started_at`, `detected_at` (the moment the
   platform became aware: the 48-hour clock starts here);
-- `affected_business_ids`: only businesses whose data was concerned;
+- `affected_business_ids`: only businesses whose data was concerned (at
+  most 1,000), or `scope: all_businesses` with none named when every
+  business's data was (the `expand_incident` job then reaches each one a
+  keyset batch at a time: the batch's notices, audit entries and progress
+  commit together, so a worker that dies mid-walk resumes without telling
+  anyone twice);
 - `approximate_subject_count`, `approximate_record_count`;
 - `notice_texts`: for each language (English is required; add Georgian and
   Russian), the five DPA 12.1 texts: what happened (`nature`), the

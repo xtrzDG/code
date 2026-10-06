@@ -19,8 +19,13 @@ how the team speaks to every owner during an incident
     (an outage from half the model calls failing or a 15-minute backlog);
     delivery failures degrade the messengers (an outage from half failing);
     tool errors degrade the chat channels and calls; login-code cap trips
-    degrade the cabinet. Dead jobs and handoff spikes are internal and not
-    shown;
+    degrade the cabinet; `worker_down` (no worker pulsed for five minutes,
+    raised by the API's pipeline watchdog) is an outage of every chat
+    channel. Dead jobs and handoff spikes are internal and not shown;
+  - the monitoring's own freshness: while the alert checks last ran more
+    than 15 minutes ago, the chat channels count as at least degraded and
+    the page says "last check N min ago"
+    ([status-page-stale](runbooks/status-page-stale.md));
   - the announcements in effect (below).
 - **90-day history**: the `record_platform_status` job (every five minutes)
   folds every component's level into the day's row of
@@ -31,8 +36,15 @@ how the team speaks to every owner during an incident
   cabinet, not by the API.
 
 An external uptime monitor (Better Stack, UptimeRobot) is not wired here:
-point one at `GET /readyz` and at the cabinet's `/status`, and link its
-public page from the status page footer when the account exists.
+point one at `GET /readyz`, `GET /healthz/pipeline` (the workers answer
+customers; `docs/operations/slo.md`) and the cabinet's `/status`, and link
+its public page from the status page footer when the account exists.
+
+**With an incident.** Recording an incident on the admin page **System**
+offers the matching announcement in the same dialog: its level, the
+components and the texts are published right after the incident is
+stored and the incident links to it (`POST /v1/admin/incidents` with
+`announcement`). Resolve it here when service is back.
 
 ## Announcements (the banner)
 
