@@ -11,8 +11,12 @@ export interface ChatBusiness {
   slug: string;
 }
 
-/** A business with English, Georgian and Hebrew customers and its website chat on. */
-export async function openChatBusiness(request: APIRequestContext, token: string): Promise<ChatBusiness> {
+/** A business with English, Georgian and Hebrew customers (or `languages`) and its website chat on. */
+export async function openChatBusiness(
+  request: APIRequestContext,
+  token: string,
+  languages: string[] = ["en", "ka", "he"],
+): Promise<ChatBusiness> {
   const name = `Café Shalom ${uniqueSuffix()}`;
   const headers = { authorization: `Bearer ${token}` };
   const id = await createBusiness(request, token, {
@@ -20,8 +24,8 @@ export async function openChatBusiness(request: APIRequestContext, token: string
     niche_key: "restaurant",
     country_code: "GE",
     city: "Tbilisi",
-    languages: ["en", "ka", "he"],
-    default_language: "en",
+    languages,
+    default_language: languages[0] ?? "en",
   });
   await createAssistant(request, token, id);
   const connected = await request.put(`${API_URL}/v1/businesses/${id}/channels/web`, { data: {}, headers });

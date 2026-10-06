@@ -22,6 +22,8 @@ export const SITE = "https://shop.example";
 export const API = "https://api.example";
 export const BUSINESS = "business_0b6c2f5e-1d1a-4c55-9a3e-2f1d5b7c9e01";
 export const STORAGE_PREFIX = `aw-chat:${BUSINESS}:`;
+/** A stream ticket of the API's shape (66 url-safe characters); the fake API checks nothing. */
+export const STREAM_TICKET = `AQ${"x".repeat(64)}`;
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -51,8 +53,15 @@ export class FakeWidgetApi {
   configExtras: Record<string, unknown> = {};
   /** The visitor keys of the messages sent, in order. */
   sessionKeys: string[] = [];
-  /** "Talk to a person" requests. */
-  handoffs: { session_key: string; language: string }[] = [];
+  /** "Talk to a person" requests (and the widget's own, reason no_answer). */
+  handoffs: { session_key: string; language: string; reason?: string }[] = [];
+  /** Answers with a stream ticket (202s and polls): the widget opens its live stream. */
+  streamTickets = false;
+  /** The live stream's requests and the events its next connection sends. */
+  streamRequests: string[] = [];
+  private streamEvents: string[] = [];
+  /** Stored messages polls do not show yet (an answer the stream announced first). */
+  hiddenIds = new Set<string>();
   private nextId = 1;
 
   async handle(route: Route): Promise<void> {
@@ -60,6 +69,14 @@ export class FakeWidgetApi {
     const url = new URL(request.url());
     if (request.method() === "OPTIONS") {
       await route.fulfill({ status: 204, headers: CORS_HEADERS });
+      return;
+    }
+    if (url.pathname.endsWith("/events")) {
+      // One short connection per call: what is queued, then the browser
+      // reconnects (retry) like after a dropped long-lived stream.
+      this.streamRequests.push(request.url());
+      const body = ["retry: 200\n\n", "event: stream.ready\ndata: {}\n\n", ...this.streamEvents.splice(0)].join("");
+      await route.fulfill({ status: 200, headers: { ...CORS_HEADERS, "content-type": "text/event-stream" }, body });
       return;
     }
     if (url.pathname.endsWith("/config")) {
@@ -73,7 +90,7 @@ export class FakeWidgetApi {
       return;
     }
     if (request.method() === "POST" && url.pathname.endsWith("/handoff")) {
-      this.handoffs.push(JSON.parse(request.postData() ?? "{}") as { session_key: string; language: string });
+      this.handoffs.push(JSON.parse(request.postData() ?? "{}") as FakeWidgetApi["handoffs"][number]);
       this.isHandedOff = true;
       const notice = this.add("assistant", "A person from our team will answer here.");
       await this.json(route, {
@@ -113,11 +130,20 @@ export class FakeWidgetApi {
         // never answered and the browser drops it on navigation.
         return;
       }
-      await this.json(route, { event_id: `inbound_event_${this.nextId}` }, 202);
+      await this.json(route, { event_id: `inbound_event_${this.nextId}`, ...this.ticket() }, 202);
       return;
     }
     this.polls.push({ url: request.url(), sessionKey: request.headers()["x-widget-session-key"] ?? null });
-    await this.json(route, this.page(url.searchParams.get("after")));
+    await this.json(route, { ...this.page(url.searchParams.get("after")), ...this.ticket() });
+  }
+
+  /** An event the stream sends on its next connection ("typing_started", "answer_ready"). */
+  pushEvent(name: string, data: Record<string, unknown>): void {
+    this.streamEvents.push(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
+  }
+
+  private ticket(): { stream_ticket?: string } {
+    return this.streamTickets ? { stream_ticket: STREAM_TICKET } : {};
   }
 
   /** The worker finishes the answers held so far; the next poll brings them. */
@@ -134,13 +160,15 @@ export class FakeWidgetApi {
   }
 
   private page(after: string | null) {
-    const index = after === null ? -1 : this.messages.findIndex((message) => message.id === after);
-    const latest = this.messages.at(-1)?.id ?? null;
+    // A hidden message is not stored yet as far as polls can tell.
+    const stored = this.messages.filter((message) => !this.hiddenIds.has(message.id));
+    const index = after === null ? -1 : stored.findIndex((message) => message.id === after);
+    const latest = stored.at(-1)?.id ?? null;
     if (index === -1) {
-      const ownLatest = this.messages.filter((message) => message.author === "customer").at(-1)?.id;
+      const ownLatest = stored.filter((message) => message.author === "customer").at(-1)?.id;
       return { items: [], cursor: ownLatest ?? latest, has_more: false, is_handed_off: this.isHandedOff };
     }
-    const items = this.messages.slice(index + 1).filter((message) => message.author !== "customer");
+    const items = stored.slice(index + 1).filter((message) => message.author !== "customer");
     return { items, cursor: latest, has_more: false, is_handed_off: this.isHandedOff };
   }
 
@@ -150,7 +178,14 @@ export class FakeWidgetApi {
 }
 
 /** A two-page host site with the widget snippet, and the fake API behind it. */
-export async function serveSite(context: BrowserContext, api: FakeWidgetApi, options: { dataOpen?: boolean } = {}) {
+export async function serveSite(
+  context: BrowserContext,
+  api: FakeWidgetApi,
+  options: { dataOpen?: boolean; attributes?: Record<string, string> } = {},
+) {
+  const extra = Object.entries(options.attributes ?? {})
+    .map(([name, value]) => ` ${name}="${value}"`)
+    .join("");
   await context.route(`${SITE}/**`, (route) => {
     const pathname = new URL(route.request().url()).pathname;
     if (pathname === "/favicon.ico") {
@@ -161,7 +196,7 @@ export async function serveSite(context: BrowserContext, api: FakeWidgetApi, opt
       body:
         `<!doctype html><html lang="en"><head><title>Shop ${pathname}</title></head><body>` +
         `<h1>Shop page ${pathname}</h1><a href="/next">Next page</a>` +
-        `<script src="${API}/widget.js" data-tenant="${BUSINESS}"${options.dataOpen ? ' data-open="true"' : ""} async></script>` +
+        `<script src="${API}/widget.js" data-tenant="${BUSINESS}"${options.dataOpen ? ' data-open="true"' : ""}${extra} async></script>` +
         `</body></html>`,
     });
   });
