@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CABINET_LANGUAGES, LOCALES, matchLocale, negotiateLocale, resolveLocale } from "./config";
+import { CABINET_LANGUAGES, LOCALE_DIRECTION, LOCALES, localeDirection, matchLocale, negotiateLocale, resolveLocale } from "./config";
 import { DICTIONARIES, getMessages } from "./messages";
 import { en } from "./messages/en";
 import { createTranslator, interpolate, lookupMessage, mergeMessages, type MessageTree } from "./translate";
@@ -29,6 +29,11 @@ describe("locale negotiation", () => {
     expect(negotiateLocale("fr, de;q=0.7")).toBe("de");
     expect(negotiateLocale("fr, it")).toBeNull();
     expect(negotiateLocale("*")).toBeNull();
+  });
+
+  it("reads Hebrew right to left and every other language left to right", () => {
+    expect(LOCALE_DIRECTION).toEqual({ ka: "ltr", ru: "ltr", en: "ltr", he: "rtl", de: "ltr" });
+    expect(LOCALES.map(localeDirection)).toEqual(["ltr", "ltr", "ltr", "rtl", "ltr"]);
   });
 
   it("prefers the cookie, then the browser, then English", () => {
