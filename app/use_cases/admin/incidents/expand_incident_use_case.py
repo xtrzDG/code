@@ -26,6 +26,7 @@ from app.use_cases.admin.incidents.incident_expansion import (
     expansion_serial_key,
 )
 from app.use_cases.admin.incidents.incident_reach import IncidentReach
+from app.use_cases.shared.storage_transaction import in_unit_of_work
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class ExpandIncidentUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         business_repo: BusinessRepoContract,
         reach: IncidentReach,
         job_queue: JobQueueFacilitatorContract,
-        unit_of_work: StorageUnitOfWorkContract,
+        unit_of_work: StorageUnitOfWorkContract | None,
         wall_clock: WallClock[Microseconds],
         batch_size: BusinessBatchSize = INCIDENT_BATCH_SIZE,
     ) -> None:
@@ -59,13 +60,13 @@ class ExpandIncidentUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         self._business_repo: BusinessRepoContract = business_repo
         self._reach: IncidentReach = reach
         self._job_queue: JobQueueFacilitatorContract = job_queue
-        self._unit_of_work: StorageUnitOfWorkContract = unit_of_work
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._batch_size: BusinessBatchSize = batch_size
 
     def run(self, input_data: QueuedJobInput) -> JobReport:
         payload = IncidentExpansionPayload.model_validate_json(str(input_data.payload))
-        with self._unit_of_work.unit_of_work():
+        with in_unit_of_work(self._unit_of_work):
             incident: IncidentDocument | None = self._incident_repo.get(
                 payload.incident_id
             )

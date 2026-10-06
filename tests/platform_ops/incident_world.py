@@ -86,7 +86,7 @@ class StepUp(StepUpGuardContract):
 
 
 class IncidentWorld:
-    def __init__(self, is_recent: bool = True) -> None:
+    def __init__(self, is_recent: bool = True, transactional: bool = True) -> None:
         self.clock = OpsClock()
         self.users = InMemoryDocumentCollectionAdapter[UserDocument](UserDocument)
         self.businesses = InMemoryDocumentCollectionAdapter[BusinessDocument](
@@ -113,6 +113,8 @@ class IncidentWorld:
         ](PlatformAnnouncementDocument)
         self.queue = RecordingJobQueue()
         self.transactions = RecordingUnitOfWork()
+        # In-memory storage has no unit of work: the blocks run as they are.
+        self.unit_of_work = self.transactions if transactional else None
         self.business_repo = BusinessRepository(self.businesses)
         self.incident_repo = IncidentRepository(self.incidents)
         self.audit_repo = AuditLogRepository(self.audit)
@@ -128,7 +130,7 @@ class IncidentWorld:
             incident_repo=self.incident_repo,
             reach=self.reach,
             job_queue=self.queue,
-            unit_of_work=self.transactions,
+            unit_of_work=self.unit_of_work,
             step_up=self.step_up,
             wall_clock=self.clock.wall_clock,
         )
@@ -139,7 +141,7 @@ class IncidentWorld:
             business_repo=self.business_repo,
             reach=self.reach,
             job_queue=self.queue,
-            unit_of_work=self.transactions,
+            unit_of_work=self.unit_of_work,
             wall_clock=self.clock.wall_clock,
             batch_size=BusinessBatchSize(batch_size),
         )

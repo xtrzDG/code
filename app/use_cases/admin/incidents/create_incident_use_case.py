@@ -26,6 +26,7 @@ from app.use_cases.admin.incidents.incident_expansion import (
 )
 from app.use_cases.admin.incidents.incident_reach import IncidentReach
 from app.use_cases.admin.incidents.incident_views import incident_view
+from app.use_cases.shared.storage_transaction import in_unit_of_work
 
 
 class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]):
@@ -63,7 +64,7 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
         incident_repo: IncidentRepoContract,
         reach: IncidentReach,
         job_queue: JobQueueFacilitatorContract,
-        unit_of_work: StorageUnitOfWorkContract,
+        unit_of_work: StorageUnitOfWorkContract | None,
         step_up: StepUpGuardContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -74,7 +75,7 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
         self._incident_repo: IncidentRepoContract = incident_repo
         self._reach: IncidentReach = reach
         self._job_queue: JobQueueFacilitatorContract = job_queue
-        self._unit_of_work: StorageUnitOfWorkContract = unit_of_work
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._step_up: StepUpGuardContract = step_up
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -127,7 +128,7 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
             updated_at=now,
         )
         if incident.scope is IncidentScope.ALL_BUSINESSES:
-            with self._unit_of_work.unit_of_work():
+            with in_unit_of_work(self._unit_of_work):
                 self._incident_repo.save(incident)
                 self._job_queue.enqueue(
                     EXPAND_INCIDENT_JOB,

@@ -103,6 +103,20 @@ def test_an_all_businesses_breach_notifies_in_batches() -> None:
     assert len({entry.business_id for entry in entries}) == 5
 
 
+def test_without_a_unit_of_work_it_is_recorded_and_walked_all_the_same() -> None:
+    # In-memory storage (the demo and the in-memory API) has no unit of work.
+    world = IncidentWorld(transactional=False)
+
+    world.use_case.run(every_business(kind="outage", notice_texts=[]))
+    while world.queue.jobs:
+        run_next_job(world)
+
+    [stored] = world.incidents.list_all()
+    assert stored.expanded_at is not None
+    assert int(stored.reached_business_count or 0) == 2
+    assert world.transactions.outcomes == []
+
+
 def test_a_repeated_run_resumes_at_the_cursor_and_ends_quietly() -> None:
     world = IncidentWorld()
     with_more_businesses(world, 1)
