@@ -20,6 +20,15 @@ export const dataTasksRu: Translation<typeof dataTasksEn> = {
   waiting: "Ждём, пока остановятся воркеры выпуска {releases} (примерно {time}).",
   waitingUnnamed: "Ждём, пока остановятся воркеры выпуска без имени (примерно {time}).",
   none: "В этом выпуске нет задач с данными.",
+  openCaption: "Незавершённые задачи с данными",
+  doneCaption: "Готовые задачи с данными",
+  showDone: {
+    one: "Показать {count} готовую задачу",
+    few: "Показать {count} готовые задачи",
+    many: "Показать {count} готовых задач",
+    other: "Показать {count} готовой задачи",
+  },
+  hideDone: "Скрыть готовые задачи",
   columns: {
     task: "Задача",
     status: "Состояние",

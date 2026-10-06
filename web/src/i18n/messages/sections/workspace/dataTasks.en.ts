@@ -19,6 +19,13 @@ export const dataTasksEn = {
   waiting: "Waiting for workers of {releases} to stop (about {time}).",
   waitingUnnamed: "Waiting for workers of an unnamed release to stop (about {time}).",
   none: "This release has no data tasks.",
+  openCaption: "Open data tasks",
+  doneCaption: "Done data tasks",
+  showDone: {
+    one: "Show {count} done task",
+    other: "Show {count} done tasks",
+  },
+  hideDone: "Hide done tasks",
   columns: {
     task: "Task",
     status: "Status",

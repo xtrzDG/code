@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { dataTaskPercent, dataTaskTarget, dataTaskTone } from "./dataTasks";
+import { dataTaskPercent, dataTaskTarget, dataTaskTone, splitDataTasks, type DataTask } from "./dataTasks";
+
+function task(key: string, status: DataTask["status"]): DataTask {
+  return { key, status } as DataTask;
+}
 
 describe("data tasks: what a task fills and how far it is", () => {
   it("names the column of a backfill and the collection of a migration", () => {
@@ -21,5 +25,22 @@ describe("data tasks: what a task fills and how far it is", () => {
     expect(dataTaskTone("pending")).toBe("warning");
     expect(dataTaskTone("running")).toBe("warning");
     expect(dataTaskTone("done")).toBe("success");
+  });
+
+  it("lists the failed tasks first, then the running and the waiting ones, and folds the done ones apart", () => {
+    const tasks = [
+      task("a", "pending"),
+      task("b", "done"),
+      task("c", "running"),
+      task("d", "failed"),
+      task("e", "pending"),
+      task("f", "done"),
+    ];
+
+    const { open, done } = splitDataTasks(tasks);
+
+    expect(open.map((item) => item.key)).toEqual(["d", "c", "a", "e"]);
+    expect(done.map((item) => item.key)).toEqual(["b", "f"]);
+    expect(tasks.map((item) => item.key)).toEqual(["a", "b", "c", "d", "e", "f"]);
   });
 });

@@ -82,8 +82,14 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
     answerGet(() => ok(view()));
     renderInLocale(<DataTasksCard />, { locale });
 
-    const table = await screen.findByRole("table", { name: t("dataTasks.title") });
+    const table = await screen.findByRole("table", { name: t("dataTasks.openCaption") });
     const rows = within(table).getAllByRole("row");
+    // Failed first, then the running one; the done task is folded away.
+    const [, firstRow, secondRow] = rows;
+    if (!firstRow || !secondRow) throw new Error("two open tasks are listed");
+    expect(within(firstRow).getByText("contacts")).toBeTruthy();
+    expect(within(secondRow).getByText("contacts.last_seen_at")).toBeTruthy();
+    expect(screen.queryByText("knowledge_items.updated_at")).toBeNull();
     const failedRow = rows.find((row) => within(row).queryByText("contacts") !== null);
     const runningRow = rows.find((row) => within(row).queryByText("contacts.last_seen_at") !== null);
     if (!failedRow || !runningRow) throw new Error("both open tasks are listed");
@@ -118,6 +124,33 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
     expect(vi.mocked(api.POST)).toHaveBeenCalledWith("/v1/admin/system/data-tasks/{task_key}/retry", {
       params: { path: { task_key: "migrate_documents:contacts" } },
     });
+  });
+
+  it("folds the done tasks behind a toggle that says how many there are", async () => {
+    const { t } = textsIn("ru");
+    answerGet(() => ok(view({ tasks: [done, running, { ...done, key: "backfill_lookup:knowledge_items.is_active", field: "is_active" }] })));
+    renderInLocale(<DataTasksCard />, { locale: "ru" });
+
+    const toggle = await screen.findByRole("button", { name: "Показать 2 готовые задачи" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("table", { name: t("dataTasks.doneCaption") })).toBeNull();
+
+    fireEvent.click(toggle);
+
+    const doneTable = await screen.findByRole("table", { name: t("dataTasks.doneCaption") });
+    expect(within(doneTable).getByText("knowledge_items.updated_at")).toBeTruthy();
+    expect(within(doneTable).getByText("knowledge_items.is_active")).toBeTruthy();
+    expect(screen.getByRole("button", { name: t("dataTasks.hideDone") }).getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("shows only the toggle once every task is done", async () => {
+    const { t } = textsIn("en");
+    answerGet(() => ok(view({ open_count: 0, failed_count: 0, stalled_count: 0, tasks: [done] })));
+    renderInLocale(<DataTasksCard />);
+
+    expect(await screen.findByText(t("dataTasks.allDone"))).toBeTruthy();
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByRole("button", { name: "Show 1 done task" })).toBeTruthy();
   });
 
   it("says when every task is done or the release has none", async () => {
