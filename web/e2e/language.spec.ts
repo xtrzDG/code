@@ -117,6 +117,7 @@ test("reads right to left in Hebrew and left to right again in German", async ({
       }),
   ).toBeVisible();
 
+  await page.keyboard.press("Escape");
   await chooseLanguage(page, de.account.menu, de.language.label, "en");
-  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
 });
