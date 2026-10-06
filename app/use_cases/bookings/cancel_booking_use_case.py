@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
@@ -27,6 +28,7 @@ from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingResult, BookingView, CancelBookingCommand
+from app.schemas.dto.growth.freed_places import FreedPlace
 from app.schemas.dto.notifications.staff_alerts import (
     StaffAlertBrief,
     StaffAlertBriefInput,
@@ -46,6 +48,7 @@ from app.use_cases.bookings.booking_support import (
     notify_staff_about_booking,
 )
 from app.use_cases.bookings.booking_versions import refuse_changed_booking
+from app.use_cases.bookings.freed_places import held_place_of, notice_if_freed
 from app.use_cases.bookings.status_undo import note_status_change
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_views import build_booking_view
@@ -66,7 +69,8 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
     (`actor_id`) may undo the cancellation for a short while
     (RevertBookingStatusUseCase). Cancelling twice is
     harmless; completed and no-show bookings cannot be cancelled. The
-    confirmation quotes the profile's cancellation policy.
+    confirmation quotes the profile's cancellation policy. The freed place
+    goes to the waitlist (a staff cancellation a little later, for Undo).
     """
 
     def __init__(
@@ -89,8 +93,10 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
         staff_alerts: StaffAlertFacilitatorContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -141,6 +147,7 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                 is_sandbox=input_data.is_sandbox,
             )
             refuse_changed_booking(booking, input_data.expected_starts_at)
+            before: FreedPlace | None = held_place_of(booking)
             is_newly_cancelled: bool = booking.status is not BookingStatus.CANCELLED
             if is_newly_cancelled:
                 if booking.status not in BLOCKING_BOOKING_STATUSES:
@@ -189,6 +196,9 @@ class CancelBookingUseCase(UseCaseContract[CancelBookingCommand, BookingResult])
                 )
 
             self._calendar_sync.sync(booking)
+            notice_if_freed(
+                self._growth, before, booking, now, input_data.actor_id is not None
+            )
 
         return BookingResult(
             booking=view,

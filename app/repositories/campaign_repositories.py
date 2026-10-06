@@ -11,6 +11,7 @@ from app.repositories.aggregate_reading import parse_choice
 from app.repositories.business_scoped_repository import BusinessScopedRepository
 from app.repositories.document_queries import (
     CREATED_AT_FIELD,
+    ascending,
     field_among,
     field_equals,
     time_range,
@@ -28,10 +29,12 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.campaigns.constrained_integers import CampaignMessageCount
 from app.schemas.typings.campaigns.constrained_strings import CampaignMonthKey
 from app.schemas.typings.campaigns.prefixed_id import CampaignMessageId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
 from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 from app.utilities.campaigns.campaign_keys import campaign_settings_id_of
 
+CONTACT_ID_FIELD: DocumentFieldPath = DocumentFieldPath("contact_id")
 IS_ENABLED_FIELD: DocumentFieldPath = DocumentFieldPath("is_enabled")
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
 MONTH_FIELD: DocumentFieldPath = DocumentFieldPath("month")
@@ -91,6 +94,15 @@ class CampaignMessageRepository(
         change: CampaignMessageChange,
     ) -> CampaignMessageDocument | None:
         return self._modify_in_business(business_id, str(message_id), change)
+
+    def list_of_contact(
+        self, business_id: BusinessId, contact_id: ContactId
+    ) -> list[CampaignMessageDocument]:
+        return self._list_in_business(
+            business_id,
+            [field_equals(CONTACT_ID_FIELD, contact_id)],
+            order=ascending(CREATED_AT_FIELD),
+        )
 
     def count_sent_in_month(
         self, business_id: BusinessId, month: CampaignMonthKey

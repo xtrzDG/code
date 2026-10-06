@@ -20,6 +20,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.campaigns.constrained_integers import CampaignMessageCount
 from app.schemas.typings.campaigns.constrained_strings import CampaignMonthKey
 from app.schemas.typings.campaigns.prefixed_id import CampaignMessageId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.storage.booleans import IsDocumentInserted
 
 type CampaignMessageChange = Callable[
@@ -58,6 +59,12 @@ class CampaignMessageRepoContract(RepoContract, Protocol):
         message_id: CampaignMessageId,
         change: CampaignMessageChange,
     ) -> CampaignMessageDocument | None:
+        raise NotImplementedError
+
+    def list_of_contact(
+        self, business_id: BusinessId, contact_id: ContactId
+    ) -> list[CampaignMessageDocument]:
+        """A customer's messages (a handful), oldest first."""
         raise NotImplementedError
 
     def count_sent_in_month(

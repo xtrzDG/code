@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
@@ -61,23 +62,20 @@ from app.use_cases.bookings.booking_support import (
     stay_night_count,
 )
 from app.use_cases.bookings.booking_versions import refuse_changed_booking
-from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
+from app.use_cases.bookings.freed_places import held_place_of, notice_if_freed
+from app.use_cases.bookings.moved_placements import place_moved_booking
 from app.use_cases.bookings.reschedule_candidates import (
-    booked_length,
     booked_offer,
     reprice_stay,
-    reschedule_candidates,
 )
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
-from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.placement import Placement
-from app.utilities.scheduling.placement_request import PlacementRequest
 from app.utilities.scheduling.resource_selection import min_notice_seconds
 from app.utilities.scheduling.zoned_time import (
     microseconds_to_seconds,
     parse_local_date,
-    parse_time_of_day,
 )
 
 
@@ -96,7 +94,8 @@ class RescheduleBookingUseCase(
     under the business lock without counting the booking itself. Customer
     requests follow the online-booking notice and notify staff; cabinet
     moves (booking id only) do not. The confirmation quotes the profile's
-    cancellation policy.
+    cancellation policy. Places held for other waiting customers count as
+    taken, and the place the booking leaves goes to the waitlist.
     """
 
     def __init__(
@@ -120,8 +119,10 @@ class RescheduleBookingUseCase(
         staff_alerts: StaffAlertFacilitatorContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -200,39 +201,28 @@ class RescheduleBookingUseCase(
             ):
                 raise ValidationFailedError("A new time is required to move a booking.")
 
+            before = held_place_of(booking)
             offer: KnowledgeItemDocument | None = booked_offer(booking, items)
             nights: int = stay_night_count(booking, inputs.zone)
-            placement: Placement = place_booking(
-                reschedule_candidates(inputs.resources, booking, current, offer, items),
-                PlacementRequest(
-                    local_date=new_date,
-                    minute_of_day=(
-                        None
-                        if input_data.new_time is None
-                        else parse_time_of_day(input_data.new_time)
-                    ),
-                    duration_minutes=booked_length(booking, current),
-                    nights=nights,
-                    zone=inputs.zone,
-                    business_hours=inputs.business_hours,
-                    exceptions=inputs.exceptions,
-                    bookings=bookings_not_over_on(
-                        self._booking_repo,
-                        input_data.business_id,
-                        new_date,
-                        inputs.zone,
-                    ),
-                    rules=inputs.rules,
-                    stay_times=inputs.stay_times,
-                    earliest_start=(
-                        now_seconds + min_notice_seconds(inputs.rules)
-                        if is_customer_request
-                        else now_seconds
-                    ),
-                    include_sandbox=booking.is_sandbox,
-                    excluded_booking_id=booking.id,
-                    sandbox_conversation_id=booking.conversation_id,
-                    buffer_minutes=booking.buffer_minutes,
+            placement: Placement = place_moved_booking(
+                inputs,
+                booking,
+                current,
+                offer,
+                items,
+                new_date,
+                input_data.new_time,
+                bookings_not_over_on(
+                    self._booking_repo,
+                    input_data.business_id,
+                    new_date,
+                    inputs.zone,
+                    HeldPlaces(self._growth, now, booking.contact_id),
+                ),
+                (
+                    now_seconds + min_notice_seconds(inputs.rules)
+                    if is_customer_request
+                    else now_seconds
                 ),
             )
             reprice_stay(
@@ -278,6 +268,7 @@ class RescheduleBookingUseCase(
                 )
 
             self._calendar_sync.sync(booking)
+            notice_if_freed(self._growth, before, booking, now, not is_customer_request)
 
         return BookingResult(
             booking=view,
