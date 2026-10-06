@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { isLocale } from "@/i18n/config";
+import { isCabinetLanguage } from "@/i18n/config";
 import { getI18n } from "@/i18n/server";
 
 import { LandingPage } from "../_landing/LandingPage";
@@ -10,7 +10,7 @@ import { publicPageMetadata, requestSiteOrigin } from "../_landing/publicMetadat
 
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     return {};
   }
   const { t } = await getI18n();
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
  */
 export default async function LocaleLandingPage({ params, searchParams }: PageProps<"/[locale]">) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     notFound();
   }
   const translator = await getI18n();

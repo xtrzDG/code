@@ -41,12 +41,12 @@ export function ClientFiltersBar({
       <Field label={t("admin.search")}>
         {(control) => (
           <div className="relative">
-            <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-subtle" aria-hidden />
+            <IconSearch className="pointer-events-none absolute top-1/2 start-3 size-4 -translate-y-1/2 text-ink-subtle" aria-hidden />
             <Input
               {...control}
               type="search"
               dir="auto"
-              className="pl-9"
+              className="ps-9"
               value={filters.query}
               placeholder={t("admin.searchPlaceholder")}
               onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))}

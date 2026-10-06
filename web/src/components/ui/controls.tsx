@@ -55,11 +55,11 @@ export type SelectProps = ComponentPropsWithRef<"select">;
 export function Select({ className, children, ...props }: SelectProps) {
   return (
     <div className={cn("relative", className)}>
-      <select className={cn(CONTROL, "h-9 w-full cursor-pointer appearance-none pr-9 pl-3 text-sm")} {...props}>
+      <select className={cn(CONTROL, "h-9 w-full cursor-pointer appearance-none pe-9 ps-3 text-sm")} {...props}>
         {children}
       </select>
       <IconChevronDown
-        className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-ink-subtle"
+        className="pointer-events-none absolute top-1/2 end-3 size-4 -translate-y-1/2 text-ink-subtle"
         aria-hidden
       />
     </div>

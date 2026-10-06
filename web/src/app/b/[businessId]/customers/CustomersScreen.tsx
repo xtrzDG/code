@@ -86,7 +86,7 @@ export function CustomersScreen({ initialFilters }: { initialFilters: CustomerFi
       <div className="space-y-5">
         <div className="flex flex-wrap items-end gap-3">
           <div className="relative w-full max-w-md min-w-0 sm:w-auto sm:flex-1">
-            <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-subtle" aria-hidden />
+            <IconSearch className="pointer-events-none absolute top-1/2 start-3 size-4 -translate-y-1/2 text-ink-subtle" aria-hidden />
             <Input
               type="search"
               value={typed}
@@ -94,7 +94,7 @@ export function CustomersScreen({ initialFilters }: { initialFilters: CustomerFi
               aria-label={t("customers.list.search")}
               placeholder={t("customers.list.searchPlaceholder")}
               title={t("settings.customers.searchHint")}
-              className="pl-9"
+              className="ps-9"
               onChange={(event) => setTyped(event.target.value)}
             />
           </div>

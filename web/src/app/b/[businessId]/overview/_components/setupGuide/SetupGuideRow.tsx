@@ -92,7 +92,7 @@ export function SetupGuideRow({
                   size="sm"
                   variant={variant}
                   href={row.href}
-                  trailingIcon={<IconArrowRight className="size-4" aria-hidden />}
+                  trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}
                 >
                   {step.action.label}
                 </ButtonLink>

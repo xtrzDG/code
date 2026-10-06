@@ -75,7 +75,7 @@ export function SetupGuideCard({ setup, isFinished }: { setup: SetupView; isFini
           </p>
         </div>
         {setup.is_live ? null : (
-          <ButtonLink href={setupPath(businessId)} trailingIcon={<IconArrowRight className="size-4" aria-hidden />} className="w-full sm:w-auto">
+          <ButtonLink href={setupPath(businessId)} trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />} className="w-full sm:w-auto">
             {t("setupGuide.continueSetup")}
           </ButtonLink>
         )}

@@ -51,7 +51,7 @@ export function Sidebar({
           className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-ink-subtle transition-colors hover:bg-surface-muted hover:text-ink"
         >
           <IconChevronRight
-            className={cn("size-4 transition-transform duration-(--motion-base) rtl:-scale-x-100", !collapsed && "rotate-180 rtl:rotate-0")}
+            className={cn("size-4 transition-transform duration-(--motion-base) rtl:-scale-x-100", !collapsed && "rotate-180")}
             aria-hidden
           />
         </button>

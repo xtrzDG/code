@@ -46,7 +46,7 @@ export function ShareLinkList({
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-ink">{name}</p>
                 {link.url ? (
-                  <p dir="ltr" className="truncate text-left font-mono text-xs text-ink-muted rtl:text-right">
+                  <p dir="ltr" className="truncate text-start font-mono text-xs text-ink-muted rtl:text-right">
                     {link.label && link.kind !== "hosted_chat" && link.label !== displayUrl(link.url)
                       ? `${link.label} · `
                       : ""}

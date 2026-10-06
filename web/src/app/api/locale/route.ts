@@ -1,5 +1,5 @@
 /**
- * POST /api/locale {"locale": "ka" | "ru" | "en"} — change the interface
+ * POST /api/locale {"locale": "ka" | "ru" | "en" | "he" | "de"} — change the interface
  * language: stored in a cookie and, for a signed-in user, in the account
  * (PATCH /v1/me) so it follows them to other devices. Answers 204.
  */
@@ -7,13 +7,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "@/lib/zod";
 
-import { LOCALES, LOCALE_COOKIE } from "@/i18n/config";
+import { LOCALE_COOKIE, isCabinetLanguage } from "@/i18n/config";
 import { callBackend, jsonError, localeCookieOptions } from "@/server/backend";
 import { prepareBackendCall } from "@/server/relay";
 
 export const dynamic = "force-dynamic";
 
-const LocaleChange = z.object({ locale: z.enum(LOCALES) });
+const LocaleChange = z.object({ locale: z.string() });
 
 export async function POST(request: NextRequest): Promise<Response> {
   const prepared = prepareBackendCall(request, { useSession: true });
@@ -25,7 +25,11 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!parsed.success) {
     return jsonError(422, "validation_failed", "Unsupported interface language.", prepared.requestId);
   }
-  const { locale } = parsed.data;
+  const locale = parsed.data.locale;
+  // Only a language owners can choose (CABINET_LANGUAGES): a draft still being translated is refused.
+  if (!isCabinetLanguage(locale)) {
+    return jsonError(422, "validation_failed", "Unsupported interface language.", prepared.requestId);
+  }
 
   if (prepared.token) {
     prepared.headers.set("content-type", "application/json");

@@ -56,7 +56,7 @@ export function Hero({
                 href={CREATE_PATH}
                 size="lg"
                 fullWidth
-                trailingIcon={<IconArrowRight className="size-4" aria-hidden />}
+                trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}
               >
                 {t("landing.hero.primary")}
               </ButtonLink>
@@ -71,7 +71,7 @@ export function Hero({
           </p>
         </div>
         <div className="relative mx-auto w-full max-w-md animate-rise [animation-delay:200ms] lg:max-w-none">
-          <div className="pointer-events-none absolute -top-20 -right-28 -z-10 hidden w-[30rem] opacity-80 lg:block">
+          <div className="pointer-events-none absolute -top-20 -end-28 -z-10 hidden w-[30rem] opacity-80 lg:block">
             <HeroVisual label={t("landing.hero.sceneLabel")} />
           </div>
           <div id="demo" className="scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-surface/95 shadow-2xl backdrop-blur">

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getI18n } from "@/i18n/server";
-import { isLocale } from "@/i18n/config";
+import { isCabinetLanguage } from "@/i18n/config";
 import type { Translator } from "@/i18n/translate";
 
 import { ContactDetails } from "./ContactDetails";
@@ -19,7 +19,7 @@ function Unavailable({ t }: { t: Translator["t"] }) {
 
 /** "/ru/terms", "/ka/privacy", "/en/security": the text in force, from GET /v1/legal/{kind}. */
 export async function LegalDocumentScreen({ locale, kind }: { locale: string; kind: LegalTextKind }) {
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     notFound();
   }
   const [translator, overview, document] = await Promise.all([getI18n(), loadLegalOverview(), loadLegalText(kind, locale)]);
@@ -43,7 +43,7 @@ export async function LegalDocumentScreen({ locale, kind }: { locale: string; ki
 
 /** "/ru/dpa": the data processing agreement in force (DPA_DOCUMENT_VERSION). */
 export async function DpaScreen({ locale }: { locale: string }) {
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     notFound();
   }
   const [translator, overview] = await Promise.all([getI18n(), loadLegalOverview()]);
@@ -67,7 +67,7 @@ export async function DpaScreen({ locale }: { locale: string }) {
 
 /** "/ru/contact": who provides the service and how to reach a person. */
 export async function ContactScreen({ locale }: { locale: string }) {
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     notFound();
   }
   const [translator, overview, contacts] = await Promise.all([getI18n(), loadLegalOverview(), loadSupportContacts()]);

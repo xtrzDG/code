@@ -119,7 +119,7 @@ export function FinaleScreen({ ctx }: { ctx: StepContext }) {
                 <Link href={href} className="group flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-ink transition-colors hover:bg-surface-muted">
                   <Icon className="size-4 shrink-0 text-accent" aria-hidden />
                   <span className="flex-1">{text}</span>
-                  <IconArrowRight className="size-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />
+                  <IconArrowRight className="size-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" aria-hidden />
                 </Link>
               </li>
             ))}

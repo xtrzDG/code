@@ -67,7 +67,7 @@ function Block({ block }: { block: MarkdownBlock }) {
     case "table":
       return (
         <div className="-mx-1 overflow-x-auto px-1">
-          <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
+          <table className="w-full min-w-[36rem] border-collapse text-start text-xs">
             <thead>
               <tr>
                 {block.header.map((cell, index) => (

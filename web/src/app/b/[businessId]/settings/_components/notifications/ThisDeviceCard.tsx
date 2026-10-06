@@ -49,7 +49,7 @@ export function ThisDeviceCard({ mine }: { mine: MyNotifications }) {
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-24 -right-16 -z-10 size-72 rounded-full opacity-60 blur-3xl"
+        className="pointer-events-none absolute -top-24 -end-16 -z-10 size-72 rounded-full opacity-60 blur-3xl"
         style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--accent-solid) 26%, transparent), transparent 70%)" }}
       />
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center">

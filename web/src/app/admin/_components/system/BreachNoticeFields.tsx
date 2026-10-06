@@ -105,7 +105,7 @@ export function BreachNoticeFields({
               {t(`adminIncident.breach.languages.${code}`)}
               {code === "en" ? <span aria-hidden> *</span> : null}
               {fill !== "empty" ? (
-                <span className="ml-1.5 text-xs opacity-80">
+                <span className="ms-1.5 text-xs opacity-80">
                   ({t(fill === "complete" ? "adminIncident.breach.complete" : "adminIncident.breach.partial")})
                 </span>
               ) : null}

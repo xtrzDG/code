@@ -87,7 +87,7 @@ export function SectionCard({
             )}
           </div>
         </div>
-        <IconChevronRight className="mt-2.5 size-4 shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />
+        <IconChevronRight className="mt-2.5 size-4 shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" aria-hidden />
       </div>
       <div className="mt-auto flex min-h-6 items-center">
         <GapBadge gaps={gaps} />

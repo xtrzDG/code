@@ -60,7 +60,7 @@ export function ActionButton({ onClick, children }: { onClick: () => void; child
 export function GapList({ kinds }: { kinds: readonly string[] }) {
   const { t } = useI18n();
   return (
-    <ul className="mt-1 list-disc pl-5">
+    <ul className="mt-1 list-disc ps-5">
       {kinds.map((kind) => (
         <li key={kind}>{isGapKind(kind) ? t(GAP_KIND_LABELS[kind]) : kind}</li>
       ))}

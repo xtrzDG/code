@@ -61,7 +61,7 @@ export function RunComparison({ comparison }: { comparison: AutotestRunCompariso
           </p>
         </div>
         {averageChange !== null && averageChange !== undefined && comparison.baseline_average_score !== null && comparison.baseline_average_score !== undefined ? (
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-xs text-ink-subtle">{t("assistant.comparison.averageScore")}</p>
             <p className="flex items-center justify-end gap-2">
               <Badge tone={changeTone(averageChange)}>{formatScoreChange(averageChange, locale)}</Badge>

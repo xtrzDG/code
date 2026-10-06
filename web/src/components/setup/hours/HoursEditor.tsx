@@ -175,7 +175,7 @@ export function HoursEditor({
                             {t("onboarding.week.overnight", { time: timeText(interval.closes, locale) })}
                           </span>
                         ) : null}
-                        <div className="ml-auto flex gap-1">
+                        <div className="ms-auto flex gap-1">
                           {index === day.rows.length - 1 ? (
                             <Button
                               variant="ghost"

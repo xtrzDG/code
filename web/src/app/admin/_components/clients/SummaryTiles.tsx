@@ -47,7 +47,7 @@ export function SummaryTiles({
                 aria-pressed={isActive}
                 onClick={() => setFilters((current) => ({ ...current, health: isActive ? "" : (tile.health ?? "") }))}
                 className={cn(
-                  "block w-full rounded-2xl border bg-surface px-4 py-3 text-left shadow-sm transition-colors hover:border-accent/40",
+                  "block w-full rounded-2xl border bg-surface px-4 py-3 text-start shadow-sm transition-colors hover:border-accent/40",
                   isActive ? "border-accent-solid ring-1 ring-accent-solid" : "border-line",
                 )}
               >

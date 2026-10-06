@@ -167,7 +167,7 @@ function SeasonRowFields({
         <div className="space-y-1.5">
           <label htmlFor={`${id}-name`} className="block text-sm font-medium text-ink">
             {t("knowledge.offer.seasonName")}
-            <span className="ml-1.5 font-normal text-ink-subtle">({t("common.optional")})</span>
+            <span className="ms-1.5 font-normal text-ink-subtle">({t("common.optional")})</span>
           </label>
           <Input
             id={`${id}-name`}
@@ -182,7 +182,7 @@ function SeasonRowFields({
         <div className="space-y-1.5">
           <label htmlFor={`${id}-rate`} className="block text-sm font-medium text-ink">
             {t("knowledge.offer.seasonRate", { currency })}
-            <span className="ml-0.5 text-danger" aria-hidden>
+            <span className="ms-0.5 text-danger" aria-hidden>
               *
             </span>
           </label>

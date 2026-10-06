@@ -20,9 +20,9 @@ export function Facts({ t }: { t: Translator["t"] }) {
             // Hairlines between the cells: two columns on phones, four in a row on large screens.
             className={cn(
               "space-y-1 border-line px-4 py-8 sm:px-6",
-              index % 2 === 1 && "border-l",
+              index % 2 === 1 && "border-s",
               index >= 2 && "border-t lg:border-t-0",
-              index === 2 && "lg:border-l",
+              index === 2 && "lg:border-s",
             )}
           >
             <dt className="text-base font-semibold tracking-tight text-ink sm:text-lg">{t(title)}</dt>

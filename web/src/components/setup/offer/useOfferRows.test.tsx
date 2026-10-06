@@ -31,6 +31,14 @@ const EXAMPLES: Record<Locale, Example[]> = {
     { key: "business_lunch", kind: "menu_item", title: "ბიზნეს-ლანჩი", duration_minutes: null },
     { key: "khachapuri", kind: "menu_item", title: "ხაჭაპური", duration_minutes: null },
   ],
+  he: [
+    { key: "business_lunch", kind: "menu_item", title: "ארוחה עסקית", duration_minutes: null },
+    { key: "khachapuri", kind: "menu_item", title: "חצ׳פורי", duration_minutes: null },
+  ],
+  de: [
+    { key: "business_lunch", kind: "menu_item", title: "Mittagsmenü", duration_minutes: null },
+    { key: "khachapuri", kind: "menu_item", title: "Chatschapuri", duration_minutes: null },
+  ],
 };
 
 function item(overrides: Partial<KnowledgeItemDetails>): KnowledgeItemDetails {

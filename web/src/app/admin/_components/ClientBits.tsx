@@ -58,7 +58,7 @@ export function Margin({ cost, className }: { cost: AdminClientSummary["cost"]; 
     <span className={cn(isLoss ? "text-danger" : "text-ink", className)}>
       {formatMoney(cost.margin.amount_minor, cost.margin.currency_code, locale)}
       {cost.margin_percent !== null && cost.margin_percent !== undefined ? (
-        <span className="ml-1 text-xs opacity-80">
+        <span className="ms-1 text-xs opacity-80">
           ({formatNumber(cost.margin_percent / 100, locale, { style: "percent", maximumFractionDigits: 1 })})
         </span>
       ) : null}

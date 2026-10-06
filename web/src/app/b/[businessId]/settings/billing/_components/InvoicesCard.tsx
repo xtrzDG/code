@@ -78,11 +78,11 @@ export function InvoicesCard({ invoices }: { invoices: readonly InvoiceView[] | 
                     ) : null}
                   </p>
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 max-sm:w-full sm:flex-col sm:items-end sm:gap-1.5 sm:text-right">
+                <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 max-sm:w-full sm:flex-col sm:items-end sm:gap-1.5 sm:text-end">
                   <p className="text-sm font-semibold text-ink">
                     {format.money(invoice.amount.money.amount_minor, invoice.amount.money.currency_code)}
                     {invoice.amount.is_estimated ? (
-                      <span className="ml-1 text-xs font-normal text-ink-subtle">({t("billing.invoices.estimated")})</span>
+                      <span className="ms-1 text-xs font-normal text-ink-subtle">({t("billing.invoices.estimated")})</span>
                     ) : null}
                   </p>
                   {invoice.tax && invoice.tax_rate_basis_points ? (

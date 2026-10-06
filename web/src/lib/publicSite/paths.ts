@@ -1,11 +1,11 @@
 /**
  * Addresses of the public site: every public page lives under its
- * language (`/ka`, `/ru/for/restaurant`, `/en/privacy`), so search engines
+ * language (one of CABINET_LANGUAGES) (`/ka`, `/ru/for/restaurant`, `/en/privacy`), so search engines
  * index each language on its own URL and link them with hreflang. The
  * cabinet's routes (/login, /b/…, /businesses, …) stay where they are.
  */
 
-import { LOCALES, isLocale, type Locale } from "@/i18n/config";
+import { CABINET_LANGUAGES, DEFAULT_LOCALE, isCabinetLanguage, type Locale } from "@/i18n/config";
 
 /** Request header the proxy sets from the path's language (never from the browser). */
 export const PATH_LOCALE_HEADER = "x-aw-path-locale";
@@ -37,7 +37,7 @@ export function legalPath(locale: Locale, page: LegalPage): string {
 /** The language a public path is in ("/ru/for/hotel" -> "ru"), or null. */
 export function pathLocale(pathname: string): Locale | null {
   const first = pathname.split("/")[1] ?? "";
-  return isLocale(first) ? first : null;
+  return isCabinetLanguage(first) ? first : null;
 }
 
 /**
@@ -68,10 +68,10 @@ export function localizedRedirectPath(pathname: string, locale: Locale): string 
  */
 export function languageAlternates(rest: string): Record<string, string> {
   const alternates: Record<string, string> = {};
-  for (const locale of LOCALES) {
+  for (const locale of CABINET_LANGUAGES) {
     alternates[locale] = `/${locale}${rest}`;
   }
-  alternates["x-default"] = rest === "" ? "/" : `/${LOCALES[LOCALES.length - 1]}${rest}`;
+  alternates["x-default"] = rest === "" ? "/" : `/${DEFAULT_LOCALE}${rest}`;
   return alternates;
 }
 

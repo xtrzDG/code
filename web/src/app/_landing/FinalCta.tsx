@@ -21,7 +21,7 @@ export function FinalCta({ t }: { t: Translator["t"] }) {
               </h2>
               <p className="text-pretty text-ink-muted">{t("landing.cta.text")}</p>
               <MagneticButton>
-                <ButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4" aria-hidden />}>
+                <ButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
                   {t("landing.cta.button")}
                 </ButtonLink>
               </MagneticButton>

@@ -106,7 +106,7 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
       <button
         type="button"
         onClick={onOpen}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-muted focus-visible:-outline-offset-2 sm:gap-4 sm:px-5"
+        className="flex w-full items-start gap-3 px-4 py-3 text-start transition-colors hover:bg-surface-muted focus-visible:-outline-offset-2 sm:gap-4 sm:px-5"
       >
         <span className="w-16 shrink-0 tabular-nums sm:w-20">
           <span className={isInactive ? "block font-semibold text-ink-subtle line-through" : "block font-semibold text-ink"}>
@@ -162,7 +162,7 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
             {value}
           </span>
         ) : null}
-        <IconChevronRight className="mt-1 size-4 shrink-0 text-ink-subtle" aria-hidden />
+        <IconChevronRight className="mt-1 size-4 shrink-0 text-ink-subtle rtl:-scale-x-100" aria-hidden />
       </button>
     </li>
   );

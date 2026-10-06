@@ -32,7 +32,7 @@ export function KnowledgePageSkeleton() {
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 sm:px-6">
           <Skeleton className="h-9 w-40 rounded-lg" />
           <Skeleton className="h-9 w-32 rounded-lg" />
-          <Skeleton className="ml-auto h-9 w-28 rounded-lg" />
+          <Skeleton className="ms-auto h-9 w-28 rounded-lg" />
         </div>
         <KnowledgeRowsSkeleton />
       </div>

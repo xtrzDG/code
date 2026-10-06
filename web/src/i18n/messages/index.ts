@@ -1,10 +1,12 @@
 import type { Locale } from "../config";
 import { mergeMessages, type MessageTree } from "../translate";
+import { de } from "./de";
 import { en } from "./en";
+import { he } from "./he";
 import { ka } from "./ka";
 import { ru } from "./ru";
 
-export const DICTIONARIES: Record<Locale, MessageTree> = { en, ru, ka };
+export const DICTIONARIES: Record<Locale, MessageTree> = { en, ru, ka, he, de };
 
 export const FALLBACK_MESSAGES: MessageTree = en;
 

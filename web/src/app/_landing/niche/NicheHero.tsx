@@ -38,7 +38,7 @@ export function NicheHero({
                 </Link>
               </li>
               <li aria-hidden>
-                <IconChevronRight className="size-3.5" />
+                <IconChevronRight className="size-3.5 rtl:-scale-x-100" />
               </li>
               <li aria-current="page" className="text-ink-muted">
                 {niche.name}
@@ -57,7 +57,7 @@ export function NicheHero({
             <p className="text-base">{t("nichePage.lead")}</p>
           </div>
           <div className="flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row">
-            <ButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4" aria-hidden />}>
+            <ButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
               {t("nichePage.primary")}
             </ButtonLink>
             {demo ? (

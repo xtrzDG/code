@@ -61,7 +61,7 @@ export function CallForwardingCard() {
             <h3 id="forwarding-steps" className="text-sm font-semibold text-ink">
               {t("channels.forwarding.stepsTitle")}
             </h3>
-            <ol className="list-decimal space-y-1.5 pl-5 text-sm text-ink-muted marker:font-medium marker:text-ink-subtle">
+            <ol className="list-decimal space-y-1.5 ps-5 text-sm text-ink-muted marker:font-medium marker:text-ink-subtle">
               {data.steps.map((step, index) => (
                 <li key={index}>{step}</li>
               ))}
@@ -103,7 +103,7 @@ export function CallForwardingCard() {
                 <IconInfo className="size-4" aria-hidden />
                 {t("channels.forwarding.notesTitle")}
               </h3>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-muted">
+              <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-ink-muted">
                 {data.notes.map((note, index) => (
                   <li key={index}>{note}</li>
                 ))}

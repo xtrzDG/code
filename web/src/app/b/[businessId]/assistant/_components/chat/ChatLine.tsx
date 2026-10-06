@@ -30,7 +30,7 @@ export function ChatLine({
         <p className="mb-0.5 text-xs font-medium text-ink-subtle">{t("assistant.authors.customer")}</p>
         <div
           className={cn(
-            "max-w-[85%] rounded-2xl rounded-br-md bg-accent-solid px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-on-accent",
+            "max-w-[85%] rounded-2xl rounded-ee-md bg-accent-solid px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-on-accent",
             entry.status === "sending" && "opacity-70",
             entry.status === "failed" && "bg-danger-soft text-ink ring-1 ring-danger/30",
           )}

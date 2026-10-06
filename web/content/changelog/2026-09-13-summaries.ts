@@ -24,5 +24,19 @@ export const summaries: ChangelogEntry = {
         "ანგარიშები აჩვენებს, საიდან მოვიდნენ კლიენტები და რას კითხულობდნენ ყველაზე ხშირად.",
       ],
     },
+    he: {
+      title: "סיכומים במקום שבו אתם קוראים אותם",
+      body: [
+        "הסיכומים היומיים והשבועיים יכולים להגיע עכשיו גם ב-Telegram או ב-WhatsApp, לא רק בדוא״ל: בחרו בסקירה → דוחות.",
+        "הדוחות מראים מאיפה הגיעו הלקוחות ועל מה שאלו הכי הרבה.",
+      ],
+    },
+    de: {
+      title: "Zusammenfassungen dort, wo Sie sie lesen",
+      body: [
+        "Ihre täglichen und wöchentlichen Zusammenfassungen kommen jetzt auch per Telegram oder WhatsApp, nicht nur per E-Mail: Wählen Sie unter Übersicht → Berichte.",
+        "Berichte zeigen, woher Kundinnen und Kunden kamen und wonach sie am häufigsten gefragt haben.",
+      ],
+    },
   },
 };

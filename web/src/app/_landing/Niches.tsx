@@ -33,7 +33,7 @@ export function Niches({ t, niches, locale }: { t: Translator["t"]; niches: Nich
                 <span className="flex items-center justify-between gap-2 text-sm font-semibold text-ink">
                   {niche.name}
                   <IconArrowRight
-                    className="size-4 shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                    className="size-4 shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
                     aria-hidden
                   />
                 </span>

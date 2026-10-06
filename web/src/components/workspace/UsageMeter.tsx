@@ -55,7 +55,7 @@ export function UsageMeter({
           {usedText}
           <span
             className={cn(
-              "ml-2 font-medium",
+              "ms-2 font-medium",
               level === "warning" && "text-warning",
               level === "exceeded" && "text-danger",
               (level === "ok" || level === "none") && "text-ink",

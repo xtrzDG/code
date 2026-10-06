@@ -76,7 +76,7 @@ export function AdminClientScreen({
 
   return (
     <>
-      <ButtonLink href={ADMIN_PATH} variant="ghost" size="sm" className="mb-4 -ml-3" leadingIcon={<IconArrowLeft className="size-4" aria-hidden />}>
+      <ButtonLink href={ADMIN_PATH} variant="ghost" size="sm" className="mb-4 -ms-3" leadingIcon={<IconArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />}>
         {t("admin.detail.back")}
       </ButtonLink>
 
