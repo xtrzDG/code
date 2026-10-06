@@ -26,14 +26,14 @@ TEST_SECRET = PlatformSecret("1x0000000000000000000000000000000AA")
 DUMMY_TOKEN = TurnstileResponseToken("XXXX.DUMMY.TOKEN.XXXX")
 
 
-@pytest.mark.parametrize(
-    ("fixture", "expected"),
-    [
-        ("siteverify_success.json", (True, "login", [])),
-        ("siteverify_invalid_token.json", (False, None, ["invalid-input-response"])),
-        ("siteverify_duplicate.json", (False, None, ["timeout-or-duplicate"])),
-    ],
-)
+ANSWERS: list[tuple[str, tuple[bool, str | None, list[str]]]] = [
+    ("siteverify_success.json", (True, "login", [])),
+    ("siteverify_invalid_token.json", (False, None, ["invalid-input-response"])),
+    ("siteverify_duplicate.json", (False, None, ["timeout-or-duplicate"])),
+]
+
+
+@pytest.mark.parametrize(("fixture", "expected"), ANSWERS)
 def test_documented_answers_match_and_are_read(
     fixture: str, expected: tuple[bool, str | None, list[str]]
 ) -> None:

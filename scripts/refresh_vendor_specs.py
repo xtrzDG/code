@@ -38,13 +38,14 @@ from scripts.vendor_specs.spec_registry import GENERATED_SPECS
 DEFAULT_SPECS_DIRECTORY: Path = (
     Path(__file__).resolve().parents[1] / "tests" / "contracts" / "specs"
 )
+DESCRIPTION: str = "Refresh the vendored provider specifications of the contract tests."
 EXIT_OK: int = 0
 EXIT_DRIFT: int = 1
 EXIT_FAILED: int = 2
 
 
 def parse_arguments(arguments: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
         "--only",
         action="append",
