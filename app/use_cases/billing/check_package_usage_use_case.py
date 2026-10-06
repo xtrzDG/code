@@ -94,6 +94,7 @@ class CheckPackageUsageUseCase(UseCaseContract[JobTick, JobReport]):
             if subscription is None or subscription.status in {
                 SubscriptionStatus.CANCELLED,
                 SubscriptionStatus.INCOMPLETE,
+                SubscriptionStatus.PAUSED,
             }:
                 continue
 

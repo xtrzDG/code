@@ -90,6 +90,9 @@ from app.containers.orchestrators.sharing_orchestrators import (
 from app.containers.orchestrators.spend_guard_orchestrators import (
     SpendGuardOrchestratorsContainer,
 )
+from app.containers.orchestrators.subscription_lifecycle_orchestrators import (
+    SubscriptionLifecycleOrchestratorsContainer,
+)
 from app.containers.orchestrators.value_orchestrators import (
     ValueOrchestratorsContainer,
 )
@@ -267,6 +270,11 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         GrowthOrchestratorsContainer,
         waitlist_use_cases=use_cases.waitlist,
         campaign_use_cases=use_cases.campaigns,
+    )
+    # Cancel reasons, offers, the seasonal pause and win-back (1161).
+    lifecycle: SubscriptionLifecycleOrchestratorsContainer = Container(  # type: ignore[assignment]
+        SubscriptionLifecycleOrchestratorsContainer,
+        lifecycle=use_cases.subscription_lifecycle,
     )
     analytics: AnalyticsOrchestratorsContainer = Container(  # type: ignore[assignment]
         AnalyticsOrchestratorsContainer,

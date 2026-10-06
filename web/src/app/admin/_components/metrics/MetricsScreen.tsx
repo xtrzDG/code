@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn";
 import { useAdminMetrics } from "../../_lib/useAdminMetrics";
 import { AdminsLine } from "./AdminsLine";
 import { BusinessFunnelCard, BusinessTunnelCard } from "./BusinessGrowthCards";
+import { ChurnCard } from "./ChurnCard";
 import { CohortGrid } from "./CohortGrid";
 import { FunnelCard, TunnelCard } from "./FunnelCard";
 import { KpiTiles } from "./KpiTiles";
@@ -71,6 +72,7 @@ export function MetricsScreen() {
               <MarginCard margin={view.revenue.margin} format={format} />
             </div>
             <CohortGrid rows={view.growth.cohorts} format={format} />
+            {view.churn ? <ChurnCard churn={view.churn} format={format} /> : null}
             {/* Web Vitals need the width of six columns: side by side only on wide screens. */}
             <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
               <SourcesCard rows={view.growth.sources} format={format} />

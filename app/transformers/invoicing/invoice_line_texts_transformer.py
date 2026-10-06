@@ -10,6 +10,7 @@ from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.billing.billing_texts import (
     BILLING_PERIOD_NAMES,
+    PAUSE_PERIOD_NAME,
     SERVICE_NAME,
     SETUP_FEE_LINE,
     fill_placeholders,
@@ -37,9 +38,10 @@ class InvoiceLineTextsTransformer(
     written in (English, Russian, Georgian), without its dates, which the
     PDF and the cabinet print beside it: the service (concept tax rule: a
     "call and message handling service", never a licence), then the plan
-    and its billing period, "setup", or the call minutes above the
-    package. Worded once, when the invoice is issued, so a PDF in any of
-    these languages never mixes in another one.
+    and its billing period (or, for a month of a seasonal pause, the
+    pause), "setup", or the call minutes above the package. Worded once,
+    when the invoice is issued, so a PDF in any of these languages never
+    mixes in another one.
     """
 
     def __init__(self, localized_text_resolver: LocalizedTextResolverContract) -> None:
@@ -76,7 +78,10 @@ class InvoiceLineTextsTransformer(
                 "service": service,
                 "plan": self._say(input_data.plan_names, language),
                 "billing_period": self._say(
-                    BILLING_PERIOD_NAMES[input_data.billing_period], language
+                    PAUSE_PERIOD_NAME
+                    if input_data.is_pause_period
+                    else BILLING_PERIOD_NAMES[input_data.billing_period],
+                    language,
                 ),
             },
         )

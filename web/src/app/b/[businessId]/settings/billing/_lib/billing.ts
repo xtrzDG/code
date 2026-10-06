@@ -34,6 +34,7 @@ export const SUBSCRIPTION_STATUS_TONES: Record<SubscriptionStatus, BadgeTone> = 
   active: "success",
   past_due: "danger",
   cancelled: "neutral",
+  paused: "info",
 };
 
 export const INVOICE_STATUS_TONES: Record<InvoiceStatus, BadgeTone> = {
@@ -69,6 +70,10 @@ export function canPay(overview: BillingOverview): boolean {
     return false;
   }
   const hasOpenInvoices = (overview.invoices ?? []).some(isInvoiceOpen);
+  // A pause covers what comes next: only its own bill is paid.
+  if (subscription.pause_until) {
+    return hasOpenInvoices;
+  }
   return hasOpenInvoices || !(subscription.status === "active" && subscription.has_auto_debit);
 }
 
@@ -112,7 +117,8 @@ export type BillingNotice =
 export function billingNotices(overview: BillingOverview, nowUs: number): BillingNotice[] {
   const notices: BillingNotice[] = [];
   const subscription = overview.subscription;
-  if (overview.service_mode === "leads_only") {
+  // A seasonal pause takes requests only by choice; its card says so.
+  if (overview.service_mode === "leads_only" && subscription?.status !== "paused") {
     notices.push({ kind: "leadsOnly" });
   }
   if (subscription?.status === "past_due") {
@@ -195,6 +201,10 @@ export interface PlanCardActions {
 export function planActions(quote: PlanQuote, period: BillingPeriod, overview: BillingOverview): PlanCardActions {
   const subscription = overview.subscription;
   const isCurrent = subscription?.plan_key === quote.plan_key && subscription?.billing_period === period;
+  if (subscription?.status === "paused") {
+    // A paused subscription keeps its plan until it is resumed.
+    return { isCurrent, actions: [] };
+  }
   if (subscription && !needsSubscription(overview)) {
     return { isCurrent, actions: isCurrent ? [] : ["switch"] };
   }

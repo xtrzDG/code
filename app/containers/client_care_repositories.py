@@ -10,11 +10,15 @@ from app.repositories.client_care_repositories import (
     ClientHealthChangeRepository,
     ClientNoteRepository,
 )
+from app.repositories.subscription_event_repositories import (
+    SubscriptionEventRepository,
+)
 
 
 class ClientCareRepositoriesContainer(ReferralRepositoriesContainer):
     """
-    The repositories of the admin's client care (migration 1143), on top
+    The repositories of the admin's client care (migration 1143) and of
+    the subscription lifecycle (1161), on top
     of the referral program's (1150).
     `RepositoriesContainer` extends it, so they are read as
     `repositories.billing_credit_repo` like every other repository.
@@ -37,4 +41,8 @@ class ClientCareRepositoriesContainer(ReferralRepositoriesContainer):
     admin_digest_state_repo: Singleton[AdminDigestStateRepository] = Singleton(
         AdminDigestStateRepository,
         collection=client_care_collections.admin_digest_state_collection,
+    )
+    subscription_event_repo: Singleton[SubscriptionEventRepository] = Singleton(
+        SubscriptionEventRepository,
+        collection=client_care_collections.subscription_event_collection,
     )

@@ -1,8 +1,10 @@
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.analytics import DeviceClass, WebVitalName, WebVitalRating
 from app.schemas.constants.niches import NicheKey
+from app.schemas.dto.analytics.churn_views import ChurnView
 from app.schemas.dto.analytics.growth_views import GrowthView
 from app.schemas.dto.analytics.revenue_views import RevenueView
 from app.schemas.typings.analytics.constrained_integers import (
@@ -43,7 +45,8 @@ class AdminMetricsView(ImmutableDTO):
     """
     The founder's growth metrics of a period (UTC days, both included): the
     owners' funnel and what explains it, recurring revenue in euros, gross
-    margin and the cabinet's Web Vitals. First-party data only.
+    margin, why owners cancelled and what kept or brought them back
+    (`churn`), and the cabinet's Web Vitals. First-party data only.
     """
 
     generated_at: Microseconds
@@ -53,3 +56,4 @@ class AdminMetricsView(ImmutableDTO):
     revenue: RevenueView
     web_vitals: list[WebVitalView]
     choices: MetricsFilterChoices
+    churn: ChurnView = Field(default_factory=ChurnView)

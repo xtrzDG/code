@@ -22,7 +22,11 @@ def find_health_issues(
     """Every reason the client needs a look, most important first."""
 
     issues: list[ClientHealthIssue] = []
-    if summary.service_mode is ServiceMode.LEADS_ONLY:
+    # A seasonal pause takes requests only by the owner's choice.
+    is_paused: bool = (
+        subscription is not None and subscription.status is SubscriptionStatus.PAUSED
+    )
+    if summary.service_mode is ServiceMode.LEADS_ONLY and not is_paused:
         issues.append(ClientHealthIssue.LEADS_ONLY_MODE)
 
     if is_losing_money(summary, subscription):

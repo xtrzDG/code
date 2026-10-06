@@ -25,10 +25,14 @@ from app.use_cases.billing.invoice_issuing_adjustments import (
     InvoiceIssuingAdjustments,
     settled_status,
 )
+from app.use_cases.billing.invoice_period_terms import (
+    describe_line,
+    period_end,
+    period_price,
+)
 from app.use_cases.shared.billing_records import OPEN_INVOICE_STATUSES
 from app.use_cases.shared.invoice_payments import record_invoice_payment
 from app.use_cases.shared.subscription_pricing import price_setup_fee
-from app.utilities.billing.billing_periods import add_billing_period
 
 
 class IssueDueInvoicesUseCase(
@@ -59,6 +63,10 @@ class IssueDueInvoicesUseCase(
     team waived is never invoiced. An invoice that leaves nothing to pay is
     paid at once. A period the provider has already charged totals exactly
     the charge, so neither applies to it.
+
+    A month of a seasonal pause (R14, `pause_price_percent`) is invoiced
+    like a period, at its share of the monthly price and worded as a
+    pause, and never brings the setup fee (`invoice_period_terms.py`).
     """
 
     def __init__(
@@ -115,6 +123,7 @@ class IssueDueInvoicesUseCase(
     ) -> bool:
         if (
             not input_data.is_setup_fee_included
+            or input_data.pause_price_percent is not None
             or input_data.subscription.billing_period is not BillingPeriod.MONTHLY
             or input_data.subscription.setup_option is not SetupOption.DONE_FOR_YOU
             or input_data.subscription.is_setup_fee_waived
@@ -146,7 +155,7 @@ class IssueDueInvoicesUseCase(
             subscription.currency_code,
             SetupOption.DONE_FOR_YOU,
         )
-        line: InvoiceDescriptionInput = self._line(
+        line: InvoiceDescriptionInput = describe_line(
             input_data, plan, InvoiceKind.SETUP_FEE, now, now
         )
         invoice = InvoiceDocument(
@@ -182,17 +191,9 @@ class IssueDueInvoicesUseCase(
             ):
                 return self._settle_existing(invoice, input_data, now)
 
-        period_end: Microseconds = add_billing_period(
-            input_data.period_start,
-            subscription.billing_period,
-            input_data.business.timezone,
-        )
-        line: InvoiceDescriptionInput = self._line(
-            input_data,
-            plan,
-            InvoiceKind.SERVICE_PERIOD,
-            input_data.period_start,
-            period_end,
+        end: Microseconds = period_end(input_data)
+        line: InvoiceDescriptionInput = describe_line(
+            input_data, plan, InvoiceKind.SERVICE_PERIOD, input_data.period_start, end
         )
         draft = InvoiceDocument(
             business_id=subscription.business_id,
@@ -200,10 +201,10 @@ class IssueDueInvoicesUseCase(
             kind=InvoiceKind.SERVICE_PERIOD,
             description=self._invoice_description_transformer.transform(line),
             line_texts=self._invoice_line_texts_transformer.transform(line),
-            amount_minor=subscription.price_minor,
+            amount_minor=period_price(input_data),
             currency_code=subscription.currency_code,
             period_start=input_data.period_start,
-            period_end=period_end,
+            period_end=end,
             provider_reference=input_data.payment_reference,
             created_at=now,
             updated_at=now,
@@ -267,24 +268,3 @@ class IssueDueInvoicesUseCase(
         invoice.updated_at = now
         self._invoice_repo.save(invoice)
         return invoice
-
-    def _line(
-        self,
-        input_data: DueInvoicesRequest,
-        plan: PlanDefinition,
-        kind: InvoiceKind,
-        period_start: Microseconds,
-        period_end: Microseconds,
-    ) -> InvoiceDescriptionInput:
-        """What the line is about: worded in the owner language and in each
-        language of the PDFs."""
-
-        return InvoiceDescriptionInput(
-            kind=kind,
-            language=input_data.business.owner_language,
-            timezone=input_data.business.timezone,
-            plan_names=plan.names,
-            billing_period=input_data.subscription.billing_period,
-            period_start=period_start,
-            period_end=period_end,
-        )

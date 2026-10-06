@@ -1,0 +1,27 @@
+{
+  "billing_period": "monthly",
+  "business_id": "business_fe08c316-7f55-4934-b060-9002f80c1af2",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "discount": {
+    "ends_at": 1790000000000000,
+    "granted_at": 1790000000000000,
+    "granted_by": "user_9be9f098-5cbd-4f67-b10a-06bda8977d1e",
+    "percent": 1
+  },
+  "grace_until": 1790000000000000,
+  "id": "subscription_db5e2938-edaa-40ea-baa2-23696301db13",
+  "is_setup_fee_waived": true,
+  "pause_starts_at": 1790000000000000,
+  "pause_until": 1790000000000000,
+  "period_end": 1790000000000000,
+  "period_start": 1790000000000000,
+  "plan_key": "chat",
+  "price_minor": 1500,
+  "provider_reference": "Sample PaymentProviderReference",
+  "schema_version": "4",
+  "setup_option": "self_serve",
+  "status": "incomplete",
+  "trial_ends_at": 1790000000000000,
+  "updated_at": 1790000000000000
+}

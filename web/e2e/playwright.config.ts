@@ -144,6 +144,8 @@ export default defineConfig({
         OTP_LOG_CODES: "true",
         // The demo restaurant is live with its website chat on (live.spec.ts).
         SEED_DEMO_DATA: "true",
+        // Owners may pause for the season (subscription-lifecycle.spec.ts).
+        SUBSCRIPTION_PAUSE_ENABLED: "true",
         // No model and no key: the rehearsal model plays the assistant, the
         // test customers and the judge, so "Apply changes" can pass its
         // checks (apply-changes.spec.ts) and a request for a person is

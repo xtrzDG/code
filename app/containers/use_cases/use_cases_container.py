@@ -15,6 +15,9 @@ from app.containers.use_cases.platform_use_cases import PlatformUseCasesContaine
 from app.containers.use_cases.referral_use_cases import ReferralUseCasesContainer
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
+from app.containers.use_cases.subscription_lifecycle_use_cases import (
+    SubscriptionLifecycleUseCasesContainer,
+)
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
 from app.use_cases.example_use_case import ExampleUseCase
 
@@ -134,6 +137,19 @@ class UseCasesContainer(BusinessUseCasesContainer):
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    subscription_lifecycle: SubscriptionLifecycleUseCasesContainer = Container(  # type: ignore[assignment]
+        SubscriptionLifecycleUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+        billing_use_cases=BusinessUseCasesContainer.billing,
     )
 
     # --- Template example (keeps its concrete type).

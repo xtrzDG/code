@@ -48,6 +48,9 @@ from app.containers.pipelines.sharing_pipelines import SharingPipelinesContainer
 from app.containers.pipelines.spend_guard_pipelines import (
     SpendGuardPipelinesContainer,
 )
+from app.containers.pipelines.subscription_lifecycle_pipelines import (
+    SubscriptionLifecyclePipelinesContainer,
+)
 from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
@@ -183,6 +186,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     growth: GrowthPipelinesContainer = Container(  # type: ignore[assignment]
         GrowthPipelinesContainer,
         growth=orchestrators.growth,
+    )
+    lifecycle: SubscriptionLifecyclePipelinesContainer = Container(  # type: ignore[assignment]
+        SubscriptionLifecyclePipelinesContainer,
+        lifecycle=orchestrators.lifecycle,
     )
     analytics: AnalyticsPipelinesContainer = Container(  # type: ignore[assignment]
         AnalyticsPipelinesContainer,

@@ -37,6 +37,12 @@ SERVICE_PERIOD_LINE: LocalizedText = build_localized_text(
     ru="{service} — {plan}, {billing_period}, {start} – {end}",
     ka="{service} — {plan}, {billing_period}, {start} – {end}",
 )
+# A month of a seasonal pause names this instead of its billing period.
+PAUSE_PERIOD_NAME: LocalizedText = build_localized_text(
+    en="seasonal pause, requests only",
+    ru="сезонная пауза, только заявки",
+    ka="სეზონური პაუზა, მხოლოდ მოთხოვნები",
+)
 BILLING_PERIOD_NAMES: dict[BillingPeriod, LocalizedText] = {
     BillingPeriod.MONTHLY: build_localized_text(
         en="monthly",
@@ -106,6 +112,26 @@ NOTICE_TEXTS: dict[BillingNoticeKind, LocalizedText] = {
         ka="{business}: გამოწერა დასრულდა, ამიტომ ასისტენტი ახლა მხოლოდ "
         "მოთხოვნებს იღებს და თქვენს გუნდს გადასცემს. სრული რეჟიმის "
         "აღსადგენად განაახლეთ გამოწერა განყოფილებაში „ბილინგი“.",
+    ),
+    BillingNoticeKind.PAUSE_STARTED: build_localized_text(
+        en="{business}: the seasonal pause has begun. Until {date} the "
+        "assistant only takes requests and passes them to your team; your "
+        "channels stay connected. A paused month costs {amount}; its bill is "
+        "in Billing.",
+        ru="{business}: сезонная пауза началась. До {date} ассистент только "
+        "принимает заявки и передаёт их команде, каналы остаются подключены. "
+        "Месяц паузы стоит {amount}; счёт — в разделе «Тариф и счета».",
+        ka="{business}: სეზონური პაუზა დაიწყო. {date}-მდე ასისტენტი მხოლოდ "
+        "მოთხოვნებს იღებს და თქვენს გუნდს გადასცემს; არხები ჩართული რჩება. "
+        "პაუზის ერთი თვე ღირს {amount}; ანგარიში განყოფილებაშია „ბილინგი“.",
+    ),
+    BillingNoticeKind.PAUSE_ENDED: build_localized_text(
+        en="{business}: the seasonal pause is over. The assistant is back at "
+        "full service, answering customers and taking bookings again.",
+        ru="{business}: сезонная пауза закончилась. Ассистент снова работает в "
+        "полном режиме: отвечает клиентам и принимает записи.",
+        ka="{business}: სეზონური პაუზა დასრულდა. ასისტენტი კვლავ სრულ "
+        "რეჟიმში მუშაობს: პასუხობს კლიენტებს და იღებს ჯავშნებს.",
     ),
 }
 FULL_SERVICE_DEADLINE: LocalizedText = build_localized_text(

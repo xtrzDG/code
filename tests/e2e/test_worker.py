@@ -66,6 +66,10 @@ from app.gateways.worker.periodic.send_subprocessor_notices import (
     SEND_SUBPROCESSOR_NOTICES_JOB,
 )
 from app.gateways.worker.periodic.send_value_reports import SEND_VALUE_REPORTS_JOB
+from app.gateways.worker.periodic.subscription_lifecycle_jobs import (
+    RUN_SUBSCRIPTION_PAUSES_JOB,
+    SEND_WIN_BACK_MESSAGES_JOB,
+)
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     SWEEP_RATE_LIMIT_BUCKETS_JOB,
 )
@@ -119,6 +123,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (PURGE_EXPIRED_RECORDINGS_JOB, 86_400),
         (END_TRIALS_JOB, 3_600),
         (INVOICE_USAGE_OVERAGE_JOB, 3_600),
+        (RUN_SUBSCRIPTION_PAUSES_JOB, 3_600),
         (ENFORCE_GRACE_PERIODS_JOB, 3_600),
         (CHECK_PACKAGE_USAGE_JOB, 86_400),
         (SEND_BOOKING_REMINDERS_JOB, 900),
@@ -147,6 +152,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
+        (SEND_WIN_BACK_MESSAGES_JOB, 3_600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -170,7 +176,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ERASE_PROCESSOR_COPIES_JOB,
         OFFER_FREED_PLACE_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (31, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (33, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush and the end of the waitlist's expired holds.
     assert a_minute_later.periodic_runs == 2
@@ -180,8 +186,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # requests, the milestones, the activation nudges, the platform alerts,
     # the Meta token check, the platform status record, the end of expired
     # support access, the purge of expired exports, the waitlist's expired
-    # holds and the rebooking campaigns.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (20, 0)
+    # holds, the rebooking campaigns, the seasonal pauses and the win-back
+    # messages.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (22, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

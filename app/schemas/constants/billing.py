@@ -40,6 +40,11 @@ class SubscriptionStatus(StrEnum):
 
     INCOMPLETE: chosen without a trial and waiting for its first payment;
     the business has no service from it until that payment arrives.
+    PAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;
+    the assistant only takes requests, the channels stay connected and
+    the pause costs a share of the price (R14). Written only with
+    SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
+    every reader the value (docs/operations/deploys.md).
     """
 
     INCOMPLETE = "incomplete"
@@ -47,6 +52,7 @@ class SubscriptionStatus(StrEnum):
     ACTIVE = "active"
     PAST_DUE = "past_due"
     CANCELLED = "cancelled"
+    PAUSED = "paused"
 
 
 class InvoiceStatus(StrEnum):
@@ -96,6 +102,8 @@ class BillingNoticeKind(StrEnum):
     SUBSCRIPTION_ENDED = "subscription_ended"
     PACKAGE_USAGE_WARNING = "package_usage_warning"
     OVERAGE_INVOICED = "overage_invoiced"
+    PAUSE_STARTED = "pause_started"
+    PAUSE_ENDED = "pause_ended"
 
 
 class ExchangeRateSource(StrEnum):

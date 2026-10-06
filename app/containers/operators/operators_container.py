@@ -45,6 +45,9 @@ from app.containers.operators.sharing_operators import SharingOperatorsContainer
 from app.containers.operators.spend_guard_operators import (
     SpendGuardOperatorsContainer,
 )
+from app.containers.operators.subscription_lifecycle_operators import (
+    SubscriptionLifecycleOperatorsContainer,
+)
 from app.containers.operators.value_operators import ValueOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -190,6 +193,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     growth: GrowthOperatorsContainer = Container(  # type: ignore[assignment]
         GrowthOperatorsContainer,
         growth_pipelines=pipelines.growth,
+        utilities=utilities,
+    )
+    lifecycle: SubscriptionLifecycleOperatorsContainer = Container(  # type: ignore[assignment]
+        SubscriptionLifecycleOperatorsContainer,
+        pipelines=pipelines.lifecycle,
         utilities=utilities,
     )
     analytics: AnalyticsOperatorsContainer = Container(  # type: ignore[assignment]

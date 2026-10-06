@@ -14,6 +14,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "AdminActionReason": "Slow onboarding: menu photos arrive next week",
     "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",
     "AutotestCaseQuestion": "Do you have a vegetarian menu?",
+    "CancellationDetails": "We close for the winter, back in May.",
     "AutotestExpectedText": "vegetarian",
     "AutotestScenarioKey": "booking-happy-path",
     "BackupObjectKey": "workshop/2026/09/workshop-20260921T122640Z.pgdump.age",

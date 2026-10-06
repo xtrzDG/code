@@ -31,9 +31,10 @@ class BillingNoticeTransformer(TransformerContract[BillingNotice, MessageText]):
     languages read English). Amounts, numbers and dates are formatted in the
     language the text is shown in; dates are local to the business.
 
-    Payment problems with a deadline add when full service ends; the usage
-    warning names the used share, the counts and, for minutes, the price of
-    a minute above the package.
+    Payment problems with a deadline add when full service ends; a pause
+    that begins names the day it ends (its `deadline`); the usage warning
+    names the used share, the counts and, for minutes, the price of a
+    minute above the package.
     """
 
     def __init__(self, localized_text_resolver: LocalizedTextResolverContract) -> None:
@@ -51,6 +52,13 @@ class BillingNoticeTransformer(TransformerContract[BillingNotice, MessageText]):
         if input_data.amount is not None:
             values["amount"] = str(format_money(input_data.amount, language))
 
+        if input_data.deadline is not None:
+            values["date"] = format_date(
+                to_local_datetime(input_data.deadline, input_data.timezone).date(),
+                format=DATE_FORMAT,
+                locale=require_babel_locale(language),
+            )
+
         text: str = fill_placeholders(self._resolve(template, language), values)
         if input_data.deadline is not None and input_data.kind in {
             BillingNoticeKind.PAYMENT_FAILED,
@@ -58,14 +66,8 @@ class BillingNoticeTransformer(TransformerContract[BillingNotice, MessageText]):
             BillingNoticeKind.RENEWAL_MISSED,
             BillingNoticeKind.OVERAGE_INVOICED,
         }:
-            deadline_day: str = format_date(
-                to_local_datetime(input_data.deadline, input_data.timezone).date(),
-                format=DATE_FORMAT,
-                locale=require_babel_locale(language),
-            )
             text += fill_placeholders(
-                self._resolve(FULL_SERVICE_DEADLINE, language),
-                {"date": deadline_day},
+                self._resolve(FULL_SERVICE_DEADLINE, language), values
             )
 
         return MessageText(text)

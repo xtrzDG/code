@@ -35,8 +35,12 @@ def activate_paid_period(
 ) -> None:
     """
     The paid period that has started becomes current and ends any grace; a
-    trial paid ahead stays in trial until it ends.
+    trial paid ahead stays in trial until it ends, and a seasonal pause
+    whose month was paid stays paused until the pause job resumes it.
     """
+
+    if subscription.status is SubscriptionStatus.PAUSED:
+        return
 
     is_trial_running: bool = (
         subscription.status is SubscriptionStatus.TRIALING

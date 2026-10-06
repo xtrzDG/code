@@ -144,7 +144,12 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
                 list_subscription_invoices(self._invoice_repo, subscription),
             ),
         )
-        paid_until = max(paid_until, self._wall_clock.now_unix())
+        # Automatic charges at the full price start when a pause ends.
+        paid_until = max(
+            paid_until,
+            self._wall_clock.now_unix(),
+            subscription.pause_until or Microseconds(0),
+        )
         recurring: Money = self._invoice_issuing.price_with_tax(
             business, subscription_price(subscription)
         ).total
@@ -225,10 +230,9 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
 
             return open_invoices
 
-        if subscription.provider_reference is not None:
-            raise ConflictError(
-                "Automatic payments are already on and nothing is due now."
-            )
+        if subscription.provider_reference is not None or subscription.pause_until:
+            # Automatic payments run, or a seasonal pause covers what is next.
+            raise ConflictError("Nothing is due now.")
 
         return self._issue_payable(
             business,

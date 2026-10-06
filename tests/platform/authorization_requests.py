@@ -31,6 +31,8 @@ B: str = BUSINESS_PREFIX
 REQUEST_BODIES: dict[str, JsonObject] = {
     f"POST {B}/billing/plan": {"plan_key": "chat", "billing_period": "monthly"},
     f"POST {B}/billing/subscribe": {"plan_key": "chat"},
+    f"POST {B}/billing/pause": {"months": 1},
+    f"POST {B}/billing/offers/accept": {"reason": "seasonal_break", "kind": "pause"},
     f"PUT {B}/setup/reminders": {"is_on": False},
     f"PUT {B}/support-access/write-access": {"is_allowed": False},
     f"POST {B}/bookings": {

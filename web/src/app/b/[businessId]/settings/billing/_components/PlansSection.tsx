@@ -105,6 +105,9 @@ export function PlansSection({
       {(overview.subscription?.status === "past_due" || overview.subscription?.status === "cancelled") && canManage ? (
         <p className="text-sm text-ink-muted">{t("billing.subscribe.resumeHint")}</p>
       ) : null}
+      {overview.subscription?.status === "paused" && canManage ? (
+        <p className="text-sm text-ink-muted">{t("billingLifecycle.pause.plansHint")}</p>
+      ) : null}
 
       {error && !quotes ? (
         <Card>
@@ -189,9 +192,11 @@ export function PlansSection({
                   </p>
                   <div className="mt-auto space-y-2 pt-5">
                     {actions.length === 0 ? (
-                      <Button variant="secondary" fullWidth disabled>
-                        {t("billing.plans.current")}
-                      </Button>
+                      isCurrent ? (
+                        <Button variant="secondary" fullWidth disabled>
+                          {t("billing.plans.current")}
+                        </Button>
+                      ) : null
                     ) : canManage ? (
                       actions.map((action, index) => (
                         <Button

@@ -11,6 +11,7 @@ from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.billing.billing_texts import (
     BILLING_PERIOD_NAMES,
+    PAUSE_PERIOD_NAME,
     SERVICE_NAME,
     SERVICE_PERIOD_LINE,
     SETUP_FEE_LINE,
@@ -33,7 +34,8 @@ class InvoiceDescriptionTransformer(
 
     Always the service wording of the concept's tax rule:
     "Call and message handling service — Voice + chat, monthly,
-    Oct 1, 2026 – Oct 31, 2026"; the setup fee reads "... — setup". The
+    Oct 1, 2026 – Oct 31, 2026"; the setup fee reads "... — setup", a
+    month of a seasonal pause names the pause instead of "monthly". The
     period shows the local calendar days it covers, the last one inclusive;
     an overage line names the minutes above the package of its month.
     """
@@ -113,7 +115,9 @@ class InvoiceDescriptionTransformer(
                     ),
                     "billing_period": str(
                         self._localized_text_resolver.resolve(
-                            BILLING_PERIOD_NAMES[input_data.billing_period],
+                            PAUSE_PERIOD_NAME
+                            if input_data.is_pause_period
+                            else BILLING_PERIOD_NAMES[input_data.billing_period],
                             language,
                         )
                     ),

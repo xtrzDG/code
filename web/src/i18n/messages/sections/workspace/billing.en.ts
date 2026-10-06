@@ -16,6 +16,7 @@ export const billingEn = {
     active: "Active",
     past_due: "Payment overdue",
     cancelled: "Cancelled",
+    paused: "Paused",
   },
   periodNames: {
     monthly: "Monthly",
