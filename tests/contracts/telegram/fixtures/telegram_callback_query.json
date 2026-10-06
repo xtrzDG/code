@@ -26,9 +26,27 @@
         "type": "private"
       },
       "date": 1750276300,
-      "text": "Choose a time"
+      "text": "We have a table for 2 on Saturday.\n\nWhich time suits you?",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "18:00",
+              "callback_data": "18:00"
+            },
+            {
+              "text": "19:30",
+              "callback_data": "19:30"
+            },
+            {
+              "text": "21:00",
+              "callback_data": "21:00"
+            }
+          ]
+        ]
+      }
     },
     "chat_instance": "-7392847569283746",
-    "data": "slot:2026-10-10T19:00"
+    "data": "19:30"
   }
 }

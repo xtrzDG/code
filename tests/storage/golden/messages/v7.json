@@ -22,6 +22,7 @@
   "business_id": "business_69d13362-d6b1-4bcd-b40f-ea6551183f36",
   "channel": "phone",
   "choices": {
+    "language": "ka",
     "options": [
       "Sat 19:30",
       "Sat 19:30"

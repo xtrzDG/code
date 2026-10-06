@@ -2,14 +2,14 @@ from typing import cast
 
 import httpx
 
+from app.clients.telegram.telegram_bot_calls import call_bot_api
 from app.contracts.channel_clients import ProviderToken, TelegramBotApiClientContract
-from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.provider_profiles import (
+    TelegramBotProfile,
+    TelegramWebhookInfo,
+)
 from app.schemas.exceptions.application_errors import (
-    ChannelCredentialRejectedError,
     ExternalServiceError,
-    ProviderRateLimitedError,
-    ProviderRejectedMessageError,
-    ValidationFailedError,
 )
 from app.schemas.typings.channels.constrained_strings import (
     ChannelWebhookUrl,
@@ -21,31 +21,24 @@ from app.schemas.typings.channels.strings import (
     OutboundMessagePart,
     ProviderMessageId,
     TelegramBotDisplayName,
+    TelegramCallbackQueryId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.media.strings import ProviderMediaId
 from app.utilities.channels.json_values import (
     JsonObject,
     as_object,
-    parse_json_object,
     read_identifier,
     read_integer,
-    read_object,
     read_text,
 )
-from app.utilities.channels.retry_after import read_retry_after_seconds
 
 TELEGRAM_API_BASE_URL: str = "https://api.telegram.org"
 REQUEST_TIMEOUT_SECONDS: float = 10.0
-# Telegram answers 401 or 404 when the token is wrong or revoked (getMe while
-# connecting; any later call means the bot stopped working). 403 is about
-# one chat (the customer blocked the bot), not the bot.
-REJECTED_TOKEN_ERROR_CODES: frozenset[int] = frozenset({401, 404})
-# "Too Many Requests: retry after N" (`parameters.retry_after`).
-RATE_LIMITED_ERROR_CODE: int = 429
-CLIENT_ERROR_CODES: range = range(400, 500)
-# Only customer messages are handled; edits, callbacks and the rest are not.
-ALLOWED_UPDATES: tuple[str, ...] = ("message",)
+CALLBACK_QUERY_UPDATE: str = "callback_query"
+# Customer messages and taps on the bot's inline buttons; edits and the
+# rest are not handled.
+ALLOWED_UPDATES: tuple[str, ...] = ("message", CALLBACK_QUERY_UPDATE)
 TYPING_ACTION: str = "typing"
 # Profile photos come in 160, 320 and 640 px squares; the smallest at least
 # this wide is enough for an avatar in the cabinet.
@@ -57,7 +50,8 @@ class TelegramBotClient(TelegramBotApiClientContract):
     Minimal Telegram Bot API client (https://core.telegram.org/bots/api).
 
     The bot token is part of every request path, so it never appears in
-    error messages and transport errors are not chained into them.
+    error messages and transport errors are not chained into them
+    (`telegram_bot_calls`).
     """
 
     def __init__(
@@ -126,17 +120,18 @@ class TelegramBotClient(TelegramBotApiClientContract):
         bot_token: ProviderToken,
         chat_id: ChannelUserId,
         text: OutboundMessagePart,
+        reply_markup: JsonObject | None = None,
     ) -> ProviderMessageId | None:
+        payload: JsonObject = {
+            "chat_id": str(chat_id),
+            "text": str(text),
+            "link_preview_options": {"is_disabled": True},
+        }
+        if reply_markup is not None:
+            payload["reply_markup"] = reply_markup
+
         sent: JsonObject | None = as_object(
-            self._call(
-                bot_token,
-                "sendMessage",
-                {
-                    "chat_id": str(chat_id),
-                    "text": str(text),
-                    "link_preview_options": {"is_disabled": True},
-                },
-            )
+            self._call(bot_token, "sendMessage", payload)
         )
         message_id: str | None = (
             None if sent is None else read_identifier(sent, "message_id")
@@ -154,67 +149,51 @@ class TelegramBotClient(TelegramBotApiClientContract):
             {"chat_id": str(chat_id), "action": TYPING_ACTION},
         )
 
+    def answer_callback_query(
+        self, bot_token: ProviderToken, callback_query_id: TelegramCallbackQueryId
+    ) -> None:
+        self._call(
+            bot_token,
+            "answerCallbackQuery",
+            {"callback_query_id": str(callback_query_id)},
+        )
+
+    def edit_message_text(
+        self,
+        bot_token: ProviderToken,
+        message_id: ProviderMessageId,
+        text: OutboundMessagePart,
+    ) -> None:
+        chat_id, _, number = str(message_id).rpartition(":")
+        self._call(
+            bot_token,
+            "editMessageText",
+            {
+                "chat_id": chat_id,
+                "message_id": int(number),
+                "text": str(text),
+                "link_preview_options": {"is_disabled": True},
+            },
+        )
+
+    def get_webhook_info(self, bot_token: ProviderToken) -> TelegramWebhookInfo:
+        result: JsonObject = (
+            as_object(self._call(bot_token, "getWebhookInfo", {})) or {}
+        )
+        updates: list[object] = read_list(result, "allowed_updates")
+        return TelegramWebhookInfo(
+            url=read_webhook_url(result),
+            # No list: Telegram's default, which includes button taps.
+            receives_taps=not updates or CALLBACK_QUERY_UPDATE in updates,
+        )
+
     def _call(
         self,
         bot_token: ProviderToken,
         method_name: str,
         payload: JsonObject,
     ) -> object:
-        try:
-            response: httpx.Response = self._http_client.post(
-                f"/bot{bot_token}/{method_name}",
-                json=payload,
-            )
-        except httpx.HTTPError as error:
-            # Chaining would carry the request URL, which contains the token.
-            raise ExternalServiceError(
-                f"Telegram {method_name} failed: {type(error).__name__}."
-            ) from None
-
-        body: JsonObject | None = parse_json_object(response.content)
-        if body is None:
-            raise ExternalServiceError(
-                f"Telegram {method_name} returned HTTP {response.status_code} "
-                "without a JSON body."
-            )
-
-        if body.get("ok") is True:
-            return body.get("result")
-
-        error_code: int = read_integer(body, "error_code") or response.status_code
-        description: str = read_text(body, "description") or "unknown error"
-        if method_name == "getMe" and error_code in REJECTED_TOKEN_ERROR_CODES:
-            raise ValidationFailedError(
-                "Telegram rejected the bot token; copy it again from @BotFather."
-            )
-
-        if error_code == RATE_LIMITED_ERROR_CODE:
-            parameters: JsonObject = read_object(body, "parameters") or {}
-            raise ProviderRateLimitedError(
-                f"Telegram {method_name} is rate limited: {description}",
-                retry_after_seconds=read_retry_after_seconds(
-                    read_integer(parameters, "retry_after"),
-                    response.headers.get("Retry-After"),
-                ),
-            )
-
-        if error_code in REJECTED_TOKEN_ERROR_CODES:
-            raise ChannelCredentialRejectedError(
-                f"Telegram {method_name} rejected the bot token ({error_code}: "
-                f"{description})."
-            )
-
-        if CLIENT_ERROR_CODES.start <= error_code < CLIENT_ERROR_CODES.stop:
-            # A refusal of this request (blocked bot, unknown chat, bad text):
-            # sending it again cannot help.
-            raise ProviderRejectedMessageError(
-                f"Telegram {method_name} refused the request ({error_code}): "
-                f"{description}"
-            )
-
-        raise ExternalServiceError(
-            f"Telegram {method_name} failed ({error_code}): {description}"
-        )
+        return call_bot_api(self._http_client, str(bot_token), method_name, payload)
 
 
 def read_bot_user_id(result: JsonObject) -> TelegramBotUserId | None:
@@ -270,3 +249,13 @@ def choose_avatar_size(sizes: list[JsonObject]) -> ProviderMediaId | None:
             return ProviderMediaId(file_id)
 
     return ProviderMediaId(usable[-1][1])
+
+
+def read_webhook_url(result: JsonObject) -> ChannelWebhookUrl | None:
+    """getWebhookInfo's `url` ("" when the bot has no webhook)."""
+
+    url: str | None = read_text(result, "url")
+    try:
+        return None if not url else ChannelWebhookUrl(url)
+    except ValueError:
+        return None

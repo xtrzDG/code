@@ -11,4 +11,5 @@ IsCallConfirmationSent = bool
 IsCallLinkMessageSent = bool
 IsChannelConnected = bool
 IsWebChatEnabled = bool
+ReceivesButtonTaps = bool
 # Keep abc order for all non example types, if possible.

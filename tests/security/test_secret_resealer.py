@@ -18,7 +18,10 @@ from app.repositories.calendar_repositories import CalendarConnectionRepository
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.domain.calendar import CalendarConnectionDocument
 from app.schemas.domain.channels import ChannelDocument
-from app.schemas.dto.channels.provider_profiles import TelegramBotProfile
+from app.schemas.dto.channels.provider_profiles import (
+    TelegramBotProfile,
+    TelegramWebhookInfo,
+)
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.bookings.strings import ExternalCalendarId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -33,11 +36,13 @@ from app.schemas.typings.channels.strings import (
     ChannelSecret,
     OutboundMessagePart,
     ProviderMessageId,
+    TelegramCallbackQueryId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.media.strings import ProviderMediaId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.security.secret_resealer import RotationTally, SecretResealer
+from app.utilities.channels.json_values import JsonObject
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
@@ -75,7 +80,24 @@ class RecordingTelegram(TelegramBotApiClientContract):
         bot_token: ProviderToken,
         chat_id: ChannelUserId,
         text: OutboundMessagePart,
+        reply_markup: JsonObject | None = None,
     ) -> ProviderMessageId | None:
+        raise NotImplementedError
+
+    def answer_callback_query(
+        self, bot_token: ProviderToken, callback_query_id: TelegramCallbackQueryId
+    ) -> None:
+        raise NotImplementedError
+
+    def edit_message_text(
+        self,
+        bot_token: ProviderToken,
+        message_id: ProviderMessageId,
+        text: OutboundMessagePart,
+    ) -> None:
+        raise NotImplementedError
+
+    def get_webhook_info(self, bot_token: ProviderToken) -> TelegramWebhookInfo:
         raise NotImplementedError
 
     def send_typing_action(

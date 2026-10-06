@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from typing import ClassVar
 
 from app.contracts.channel_clients import (
@@ -7,8 +8,9 @@ from app.contracts.channel_clients import (
 )
 from app.contracts.channels import ChannelAdapterContract
 from app.schemas.configurations.app_settings import AppSettings
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, InboundContextNote
 from app.schemas.domain.message_media import InboundAttachment
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
@@ -29,6 +31,8 @@ from app.schemas.typings.channels.strings import (
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.channels.attachment_reading import has_content
+from app.utilities.channels.choice_delivery import send_with_choices, split_reply
+from app.utilities.channels.choice_payloads import page_quick_replies
 from app.utilities.channels.json_values import (
     JsonObject,
     parse_json_object,
@@ -38,13 +42,13 @@ from app.utilities.channels.json_values import (
     read_objects,
     read_text,
 )
-from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.meta_page_attachments import read_meta_attachments
 from app.utilities.channels.meta_page_events import (
     ROUTINE_KINDS,
     other_entry_kinds,
     skipped_event_kind,
 )
+from app.utilities.channels.meta_story_context import read_story_note
 from app.utilities.channels.skipped_webhook_parts import log_skipped_parts
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
 from app.utilities.sharing.acquisition_sources import read_referral_source
@@ -61,8 +65,12 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
 
     Echoes of the business's own messages, delivery and read receipts and
     reactions are skipped; a tapped button (postback) counts as the customer
-    typing its title. Voice clips, photos, places and other files are
-    attachments (`meta_page_attachments`). The `referral` of a tagged link
+    typing its title, and a tapped quick reply arrives as its text. Voice
+    clips, photos, places and other files are attachments
+    (`meta_page_attachments`); a reply to the business's Instagram story or
+    a mention in the customer's story is the message's context note
+    (`meta_story_context`). Options of a reply go out as quick replies.
+    The `referral` of a tagged link
     or an ad that came with the message is where the customer came from; a
     referral to an open thread without a message has nothing to answer
     and is skipped.
@@ -128,31 +136,52 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
         log_skipped_parts(LOGGER, self.channel_kind.value, skipped, ROUTINE_KINDS)
         return messages
 
-    def split(self, text: MessageText) -> list[MessageText]:
+    def split(
+        self, text: MessageText, choices: ReplyChoices | None = None
+    ) -> list[MessageText]:
         return [
             MessageText(part)
-            for part in split_message_text(str(text), self.message_limit)
+            for part in split_reply(str(text), self.message_limit, choices)
         ]
 
     def send(
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
+        choices: ReplyChoices | None = None,
     ) -> ChannelSendReceipt:
-        if target.credential is None:
+        """Options go as quick replies under the last part."""
+
+        credential: ChannelSecret | None = target.credential
+        if credential is None:
             raise ExternalServiceError(
                 f"The {self.channel_kind.value} account of this business is not "
                 "connected."
             )
 
-        parts: list[MessageText] = self.split(text)
-        provider_message_id: ProviderMessageId | None = None
-        for part in parts:
-            provider_message_id = self._meta_client.send_page_message(
-                target.credential,
+        def send_part(
+            part: str, quick_replies: list[JsonObject] | None = None
+        ) -> ProviderMessageId | None:
+            return self._meta_client.send_page_message(
+                credential,
                 target.channel_user_id,
-                OutboundMessagePart(str(part)),
+                OutboundMessagePart(part),
+                quick_replies,
             )
+
+        parts: list[MessageText] = self.split(text, choices)
+        provider_message_id: ProviderMessageId | None = None
+        for index, part in enumerate(parts):
+            if choices is not None and index == len(parts) - 1:
+                provider_message_id = send_with_choices(
+                    self.channel_kind.value,
+                    str(part),
+                    choices,
+                    partial(send_part, quick_replies=page_quick_replies(choices)),
+                    send_part,
+                )
+            else:
+                provider_message_id = send_part(str(part))
 
         return ChannelSendReceipt(
             delivered=DeliveredMessageCount(len(parts)),
@@ -184,6 +213,7 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
 
         text: str = ""
         attachments: list[InboundAttachment] = []
+        context_note: InboundContextNote | None = None
         message_id: str | None = None
         message: JsonObject | None = read_object(event, "message")
         postback: JsonObject | None = read_object(event, "postback")
@@ -196,6 +226,7 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
 
             text = read_text(message, "text") or ""
             attachments = read_meta_attachments(message)
+            context_note = read_story_note(message)
             message_id = read_text(message, "mid")
             referral = referral or read_object(message, "referral")
         elif postback is not None:
@@ -203,7 +234,7 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             message_id = read_text(postback, "mid")
             referral = referral or read_object(postback, "referral")
 
-        if not has_content(text, attachments):
+        if not has_content(text, attachments) and context_note is None:
             return None
 
         return ChannelInboundMessage(
@@ -216,4 +247,5 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             ),
             attachments=attachments,
             acquisition_source=read_referral_source(referral),
+            context_note=context_note,
         )

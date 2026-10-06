@@ -3621,6 +3621,46 @@
    ],
    "type": "object"
   },
+  "WebhookInfo": {
+   "properties": {
+    "allowed_updates": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "has_custom_certificate": {
+     "type": "boolean"
+    },
+    "ip_address": {
+     "type": "string"
+    },
+    "last_error_date": {
+     "type": "integer"
+    },
+    "last_error_message": {
+     "type": "string"
+    },
+    "last_synchronization_error_date": {
+     "type": "integer"
+    },
+    "max_connections": {
+     "type": "integer"
+    },
+    "pending_update_count": {
+     "type": "integer"
+    },
+    "url": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "url",
+    "has_custom_certificate",
+    "pending_update_count"
+   ],
+   "type": "object"
+  },
   "WriteAccessAllowed": {
    "properties": {
     "from_attachment_menu": {
@@ -3635,12 +3675,86 @@
    },
    "type": "object"
   },
+  "request:answerCallbackQuery": {
+   "properties": {
+    "cache_time": {
+     "default": 0,
+     "type": "integer"
+    },
+    "callback_query_id": {
+     "type": "string"
+    },
+    "show_alert": {
+     "default": false,
+     "type": "boolean"
+    },
+    "text": {
+     "maxLength": 200,
+     "minLength": 0,
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "callback_query_id"
+   ],
+   "type": "object"
+  },
   "request:deleteWebhook": {
    "properties": {
     "drop_pending_updates": {
      "type": "boolean"
     }
    },
+   "type": "object"
+  },
+  "request:editMessageText": {
+   "properties": {
+    "business_connection_id": {
+     "type": "string"
+    },
+    "chat_id": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "string"
+      }
+     ]
+    },
+    "entities": {
+     "items": {
+      "$ref": "#/$defs/MessageEntity"
+     },
+     "type": "array"
+    },
+    "inline_message_id": {
+     "type": "string"
+    },
+    "link_preview_options": {
+     "$ref": "#/$defs/LinkPreviewOptions"
+    },
+    "message_id": {
+     "type": "integer"
+    },
+    "parse_mode": {
+     "type": "string"
+    },
+    "reply_markup": {
+     "$ref": "#/$defs/InlineKeyboardMarkup"
+    },
+    "text": {
+     "maxLength": 4096,
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "text"
+   ],
    "type": "object"
   },
   "request:getFile": {
@@ -3831,7 +3945,10 @@
   "Update": "schema:Update",
   "User": "schema:User",
   "UserProfilePhotos": "schema:UserProfilePhotos",
+  "WebhookInfo": "schema:WebhookInfo",
+  "request:answerCallbackQuery": "request:post /answerCallbackQuery",
   "request:deleteWebhook": "request:post /deleteWebhook",
+  "request:editMessageText": "request:post /editMessageText",
   "request:getFile": "request:post /getFile",
   "request:getUserProfilePhotos": "request:post /getUserProfilePhotos",
   "request:sendChatAction": "request:post /sendChatAction",

@@ -3,8 +3,9 @@ Telegram Bot API updates through the real channel adapter and the
 business bot's webhook route. Every fixture matches the Bot API
 specification (the community OpenAPI document generated from
 core.telegram.org/bots/api); only new private messages from people are
-answered, every other kind of update is skipped, logged by kind and
-acknowledged with 200.
+answered (a tap on the bot's buttons as the option's text, the tap then
+answered and the tapped message edited), every other kind of update is
+skipped, logged by kind and acknowledged with 200.
 """
 
 import logging
@@ -48,7 +49,13 @@ EXPECTED: dict[str, dict[str, Any] | str] = {
         "attachments": ["audio"],
     },
     "telegram_edited_message.json": "edited_message=1",
-    "telegram_callback_query.json": "callback_query=1",
+    # A tap on a button of the bot's keyboard: the option, under an id of
+    # its own.
+    "telegram_callback_query.json": {
+        **ANNA,
+        "text": "19:30",
+        "id": "555000111:tap-4382bfdwdsb323b2d9",
+    },
     "telegram_my_chat_member.json": "my_chat_member=1",
     "telegram_group_message.json": "message:not a private chat=1",
     "telegram_unknown_update.json": "other=1",
@@ -121,6 +128,10 @@ def test_webhook_acknowledges_every_kind_and_replies_match_the_spec(
         load_json_fixture("telegram", "telegram_send_message_response.json"),
     )
     testbed.telegram_transport.respond("POST", r"/sendChatAction$", telegram_ok())
+    testbed.telegram_transport.respond(
+        "POST", r"/answerCallbackQuery$", telegram_ok(True)
+    )
+    testbed.telegram_transport.respond("POST", r"/editMessageText$", telegram_ok({}))
 
     response = post_update(testbed, channel, load_json_fixture("telegram", fixture))
     testbed.run_worker()
@@ -132,6 +143,15 @@ def test_webhook_acknowledges_every_kind_and_replies_match_the_spec(
         assert_outbound(reply.json(), SPEC, "request:sendMessage")
     for action in testbed.telegram_transport.requests_to("/sendChatAction"):
         assert_outbound(action.json(), SPEC, "request:sendChatAction")
+    answers = testbed.telegram_transport.requests_to("/answerCallbackQuery")
+    edits = testbed.telegram_transport.requests_to("/editMessageText")
+    is_tap = fixture == "telegram_callback_query.json"
+    assert (len(answers), len(edits)) == ((1, 1) if is_tap else (0, 0))
+    for answer in answers:
+        assert_outbound(answer.json(), SPEC, "request:answerCallbackQuery")
+    for edit in edits:
+        assert_outbound(edit.json(), SPEC, "request:editMessageText")
+        assert edit.json()["text"].endswith("\n\n✓ 19:30")
 
 
 @pytest.mark.parametrize(

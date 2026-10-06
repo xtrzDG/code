@@ -17,6 +17,7 @@ from app.schemas.constants.conversations import (
 )
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
@@ -97,6 +98,11 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         now: Microseconds = self._wall_clock.now_unix()
         disclosure: MessageText | None = self._find_disclosure(turn, input_data.text)
         text: MessageText | None = compose_reply_text(input_data, disclosure)
+        choices: ReplyChoices | None = (
+            None
+            if input_data.choices is None
+            else input_data.choices.model_copy(update={"language": turn.reply_language})
+        )
         cost: LlmCallCost = (
             LlmCallCost(CostMicroUsd(0), CostMicroUsd(0))
             if input_data.model_id is None
@@ -137,7 +143,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                     guard_reasons=list(input_data.guard_reasons),
                     unverified_values=list(input_data.unverified_values),
                     claim_findings=list(input_data.claim_findings),
-                    choices=input_data.choices,
+                    choices=choices,
                     created_at=now,
                     updated_at=now,
                 )
@@ -190,7 +196,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 )
                 for record in input_data.tool_calls
             ],
-            choices=None if text is None else input_data.choices,
+            choices=None if text is None else choices,
         )
 
     def _observe_answer_latency(

@@ -6,7 +6,7 @@ are shaped like each platform's documented samples
 
 from typing import Any
 
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, InboundContextNote
 from app.schemas.constants.media import AttachmentKind
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
 from tests.channels.testbed import ChannelsTestbed
@@ -186,12 +186,16 @@ class TestMetaPages:
             [AttachmentKind.AUDIO],
             [AttachmentKind.IMAGE],
             [AttachmentKind.OTHER],
-            [AttachmentKind.OTHER],
+            [],
             [AttachmentKind.OTHER],
         ]
         assert str(messages[1].attachments[0].provider_media_id).startswith(
             "https://lookaside.fbsbx.com/ig_messaging_cdn/"
         )
+        # A story mention is not a file to read: the assistant is told about
+        # it in the message's context note.
+        assert messages[3].context_note is InboundContextNote.STORY_MENTION
+        assert [m.context_note for m in messages[:3]] == [None, None, None]
         assert all(m.channel is ChannelKind.INSTAGRAM for m in messages)
 
 

@@ -33,6 +33,7 @@ class ChannelAdaptersContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         app_settings=config.app_settings,
         typing_client=clients.meta_typing_client,
+        text_resolver=utilities.localized_text_resolver,
     )
     messenger_channel_adapter: Singleton[MessengerChannelAdapter] = Singleton(
         MessengerChannelAdapter,

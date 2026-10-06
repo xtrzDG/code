@@ -3,8 +3,9 @@ Attachments of a Messenger or Instagram message (`message.attachments[]`,
 by `type`): voice clips, photos (a Messenger sticker is a photo with a
 `sticker_id`, the thumbs-up included), a place (Messenger's older location
 attachment), and everything else (video, files, shared posts and reels,
-story mentions, an `is_unsupported` message) as one the assistant asks to
-write about instead. The file is at `payload.url` on Meta's CDN.
+an `is_unsupported` message) as one the assistant asks to write about
+instead. A story mention is not a file but what the message refers to.
+The file is at `payload.url` on Meta's CDN.
 """
 
 from app.schemas.constants.media import AttachmentKind
@@ -23,6 +24,7 @@ from app.utilities.channels.json_values import (
     read_objects,
     read_text,
 )
+from app.utilities.channels.meta_story_context import is_story_mention
 
 MEDIA_KINDS: dict[str, AttachmentKind] = {
     "audio": AttachmentKind.AUDIO,
@@ -31,8 +33,15 @@ MEDIA_KINDS: dict[str, AttachmentKind] = {
 
 
 def read_meta_attachments(message: JsonObject) -> list[InboundAttachment]:
+    """
+    The files of a message; a story mention is no file (the message's
+    context note says what it is, `meta_story_context`).
+    """
+
     attachments: list[InboundAttachment] = [
-        read_attachment(item) for item in read_objects(message, "attachments")
+        read_attachment(item)
+        for item in read_objects(message, "attachments")
+        if not is_story_mention(item)
     ]
     if not attachments and read_flag(message, "is_unsupported"):
         return [build_unreadable_attachment(AttachmentKind.OTHER)]

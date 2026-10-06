@@ -2,7 +2,9 @@
 
 from base_pydantic_schemas import ImmutableDTO
 
+from app.schemas.typings.channels.booleans import ReceivesButtonTaps
 from app.schemas.typings.channels.constrained_strings import (
+    ChannelWebhookUrl,
     MetaObjectId,
     TelegramBotUserId,
     TelegramBotUsername,
@@ -27,6 +29,16 @@ class TelegramBotProfile(ImmutableDTO):
     username: TelegramBotUsername
     bot_user_id: TelegramBotUserId | None = None
     display_name: TelegramBotDisplayName | None = None
+
+
+class TelegramWebhookInfo(ImmutableDTO):
+    """
+    Where a bot's webhook points (None: no webhook) and whether it is sent
+    the taps of inline buttons (`callback_query` among its allowed updates).
+    """
+
+    url: ChannelWebhookUrl | None = None
+    receives_taps: ReceivesButtonTaps = False
 
 
 class MetaPageProfile(ImmutableDTO):

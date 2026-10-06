@@ -85,7 +85,9 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
         build_channel_router(
             telegram_webhook_operator=wrap(
                 ChannelWebhookOrchestrator(
-                    testbed.receive_telegram_webhook, testbed.store_inbound_messages
+                    testbed.receive_telegram_webhook,
+                    testbed.store_inbound_messages,
+                    testbed.acknowledge_telegram_taps,
                 )
             ),
             meta_webhook_verification_operator=wrap_use_case(

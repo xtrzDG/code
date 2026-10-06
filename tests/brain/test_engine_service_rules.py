@@ -49,6 +49,7 @@ def test_leads_only_mode_offers_only_requests_and_handoff() -> None:
         AssistantToolName.HANDOFF_TO_HUMAN,
         AssistantToolName.SEARCH_KNOWLEDGE,
         AssistantToolName.LIST_MY_BOOKINGS,
+        AssistantToolName.OFFER_CHOICES,
     }
     assert "Bookings are paused" in user_turn_text(request.transcript[0])
     assert world.bookings.commands == []
