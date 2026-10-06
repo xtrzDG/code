@@ -110,6 +110,7 @@ def build_inbound_message(event: InboundEventDocument) -> InboundMessage | None:
         customer_message_id=event.customer_message_id,
         reply_message_id=event.reply_message_id,
         acquisition_source=customer.acquisition_source,
+        context_note=customer.context_note,
     )
 
 

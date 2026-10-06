@@ -8,12 +8,14 @@ another tenant's data by asking (prompt-injection safety).
 """
 
 from base_pydantic_schemas import ImmutableDTO
+from pydantic import Field
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.bookings import LeadType, ResourceKind
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
+from app.schemas.domain.reply_choices import MAX_CHOICES, MIN_CHOICES, ReplyChoices
 from app.schemas.dto.conversations import LlmToolCall, LlmToolResult
 from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
@@ -37,6 +39,10 @@ from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.booleans import (
     CanTextCaller,
     IsSandboxConversation,
+)
+from app.schemas.typings.conversations.constrained_strings import (
+    ChoiceLabel,
+    ChoicePromptText,
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId
@@ -185,6 +191,16 @@ class JoinWaitlistToolInput(ImmutableDTO):
     notes: BookingNote | None = None
 
 
+class OfferChoicesToolInput(ImmutableDTO):
+    """
+    offer_choices: the question shown with the options, and 2 to 10 short
+    options the customer can tap (the handler refuses repeated ones).
+    """
+
+    prompt_text: ChoicePromptText
+    options: list[ChoiceLabel] = Field(min_length=MIN_CHOICES, max_length=MAX_CHOICES)
+
+
 class AssistantToolContext(ImmutableDTO):
     """
     Server-side facts a tool call runs with.
@@ -228,7 +244,8 @@ class AssistantToolOutcome(ImmutableDTO):
 
     `booking_id` is set only for a new booking, `lead_id` for a new lead and
     `handoff_id` for a new handoff. `confirmed_booking_id` names the booking
-    a call made or moved: its guest gets a written confirmation.
+    a call made or moved: its guest gets a written confirmation. `choices`
+    are the options offer_choices put under the reply.
     """
 
     tool_name: AssistantToolName
@@ -237,3 +254,4 @@ class AssistantToolOutcome(ImmutableDTO):
     confirmed_booking_id: BookingId | None = None
     lead_id: LeadId | None = None
     handoff_id: HandoffId | None = None
+    choices: ReplyChoices | None = None

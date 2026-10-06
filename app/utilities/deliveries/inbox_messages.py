@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 
+from app.schemas.constants.channels import InboundContextNote
 from app.schemas.domain.inbound_events import InboundCustomerMessage
 from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.contacts.strings import ContactName
@@ -19,6 +20,7 @@ def build_inbound_customer_message(
     contact_phone_number: E164PhoneNumber | None,
     attachments: Sequence[InboundAttachment] = (),
     acquisition_source: AcquisitionSourceTag | None = None,
+    context_note: InboundContextNote | None = None,
 ) -> InboundCustomerMessage:
     """
     The message without NUL characters in its text and name: no customer
@@ -38,6 +40,7 @@ def build_inbound_customer_message(
         contact_phone_number=contact_phone_number,
         attachments=list(attachments),
         acquisition_source=acquisition_source,
+        context_note=context_note,
     )
 
 

@@ -38,6 +38,7 @@ from app.schemas.typings.localization.constrained_strings import (
 )
 from app.schemas.typings.profiles.constrained_strings import FactKey
 from app.schemas.typings.profiles.strings import FactLabel, FactValue
+from app.utilities.assembly.assistant_tools import CONVERSATION_TOOLS
 from tests.assembly.judge_helpers import scenario
 from tests.operations.operations_world import OperationsWorld
 
@@ -86,7 +87,9 @@ def scenario_run(
             niche_key=NicheKey.RESTAURANT,
             model_id=LlmModelId("gpt-5-mini"),
             prompt_text=SystemPromptText(INSTRUCTION),
-            tools=list(AssistantToolName),
+            tools=[
+                tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS
+            ],
             languages=[LanguageTag("en")],
             default_language=LanguageTag("en"),
             is_voice_enabled=IsVoiceEnabled(False),

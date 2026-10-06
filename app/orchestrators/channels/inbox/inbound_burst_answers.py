@@ -90,4 +90,5 @@ class InboundBurstAnswers:
             conversation_id=reply.conversation_id,
             text=reply.text,
             is_handed_off=reply.is_handed_off,
+            choices=reply.choices,
         )

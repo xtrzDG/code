@@ -11,6 +11,7 @@ from app.schemas.constants.deliveries import (
 from app.schemas.constants.invoicing import BillingDocumentKind
 from app.schemas.constants.notifications import WebPushUrgency
 from app.schemas.domain.businesses import ManagerContact
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.typings.billing.prefixed_id import InvoiceId
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -135,9 +136,15 @@ class OutboundMessageDocument(BaseDocument):
     Version 6: the kind `booking_confirmation` (a guest's written
     confirmation of a booking the assistant made or moved, with its manage
     link). Rows of the earlier kinds read unchanged.
+
+    Version 7: a reply to a customer may carry the options it offers
+    (`choices`, optional): the channel shows them as buttons, a list,
+    quick replies or an inline keyboard under the reply's last part. A
+    release that does not know them sends the text alone, which already
+    ends with their prompt.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("6")
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: OutboundMessageId
     business_id: BusinessId
     kind: OutboundMessageKind
@@ -148,6 +155,7 @@ class OutboundMessageDocument(BaseDocument):
     push: PushRecipient | None = None
     text: MessageText = Field(repr=False)
     template: OutboundTemplate | None = None
+    choices: ReplyChoices | None = None
     conversation_id: ConversationId | None = None
     source_message_id: MessageId | None = None
     handoff_id: HandoffId | None = None

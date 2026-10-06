@@ -10,8 +10,9 @@ class RecallInboundReplyUseCase(
 ):
     """
     The reply an earlier processing of the event already stored (it ended
-    between storing the reply and queuing it): that reply is sent, the
-    model is not asked again. None when no reply was stored.
+    between storing the reply and queuing it): that reply is sent with the
+    options it offers, the model is not asked again. None when no reply was
+    stored.
     """
 
     def __init__(self, message_repo: MessageRepoContract) -> None:
@@ -31,4 +32,5 @@ class RecallInboundReplyUseCase(
             event=input_data,
             conversation_id=stored.conversation_id,
             text=stored.text,
+            choices=stored.choices,
         )

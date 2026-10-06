@@ -235,6 +235,7 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 language=language,
                 attachments=attachments,
                 injection_flag=injection_flag,
+                context_note=input_data.context_note,
                 created_at=now,
                 updated_at=now,
             )
@@ -291,7 +292,8 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
                 conversation,
                 input_data,
                 language,
-                select_available_tools(version, business),
+                select_available_tools(version, business, conversation.channel),
             ),
             received_at=now,
+            context_note=input_data.context_note,
         )

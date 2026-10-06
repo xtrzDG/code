@@ -35,10 +35,14 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.profiles.constrained_strings import FactKey
 from app.schemas.typings.profiles.strings import FactLabel, FactValue
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.assembly.assistant_tools import CONVERSATION_TOOLS
 from tests.brain.brain_repositories import BrainRepositories
 from tests.brain.business_setups import BusinessSetup
 
-ALL_TOOLS: list[AssistantToolName] = list(AssistantToolName)
+# Every tool a version can hold (offer_choices is added by the conversation).
+ALL_TOOLS: list[AssistantToolName] = [
+    tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS
+]
 
 
 @dataclass(frozen=True)

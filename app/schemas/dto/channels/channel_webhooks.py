@@ -6,7 +6,7 @@ what a webhook call did.
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, InboundContextNote
 from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.channels.constrained_integers import (
     DeliveredMessageCount,
@@ -71,7 +71,9 @@ class ChannelInboundMessage(ImmutableDTO):
     the customer typed (empty for a photo or a voice note without words);
     `attachments` are the voice notes, photos, places and other files, with
     their captions. `acquisition_source` is where the customer came from
-    when the message carried it (`acquisition_sources.py`).
+    when the message carried it (`acquisition_sources.py`). `context_note`
+    is what the message refers to (a reply to the business's Instagram
+    story, a story mention); a tapped button arrives as its label in `text`.
     """
 
     channel: ChannelKind
@@ -85,6 +87,7 @@ class ChannelInboundMessage(ImmutableDTO):
         default_factory=list[InboundAttachment]
     )
     acquisition_source: AcquisitionSourceTag | None = None
+    context_note: InboundContextNote | None = None
 
 
 class ChannelDeliveryTarget(ImmutableDTO):

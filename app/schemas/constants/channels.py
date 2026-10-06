@@ -71,3 +71,14 @@ class WidgetHandoffReason(StrEnum):
 
     CUSTOMER_REQUEST = "customer_request"
     NO_ANSWER = "no_answer"
+
+
+class InboundContextNote(StrEnum):
+    """
+    What a customer message refers to that the assistant cannot see, as
+    the channel told it: a reply to the business's Instagram story, or a
+    mention of the business in the customer's own story.
+    """
+
+    STORY_REPLY = "story_reply"
+    STORY_MENTION = "story_mention"

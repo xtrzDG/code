@@ -18,6 +18,7 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.platform.constrained_strings import EnvironmentVariableName
 from app.use_cases.assistants.resume_assistant_use_case import ResumeAssistantUseCase
 from app.use_cases.voice.remove_voice_agent_use_case import RemoveVoiceAgentUseCase
+from app.utilities.assembly.assistant_tools import CONVERSATION_TOOLS
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.international_business_seeds import (
     seed_israeli_clinic,
@@ -65,7 +66,9 @@ def test_voice_agent_is_built_from_the_same_version() -> None:
     assert spec.default_language == LanguageTag("ka")
     assert [greeting.language for greeting in spec.greetings] == spec.languages
     assert str(spec.greetings[0].text).startswith("[ka] AI assistant here")
-    assert [tool.name for tool in spec.tools] == list(AssistantToolName)
+    assert [tool.name for tool in spec.tools] == [
+        tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS
+    ]
     assert spec.tool_webhook_base_url == "https://api.example.com"
     assert [str(request.language) for request in testbed.call_greeting.requests] == [
         "ka",

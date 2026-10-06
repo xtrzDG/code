@@ -15,6 +15,9 @@ import json
 from app.registries.tools.join_waitlist_specification import (
     JOIN_WAITLIST_SPECIFICATION,
 )
+from app.registries.tools.offer_choices_specification import (
+    OFFER_CHOICES_SPECIFICATION,
+)
 from app.registries.tools.tool_schema_parts import (
     DATE_HINT,
     PHONE_HINT,
@@ -225,6 +228,7 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
             {"question": string_property("The question in the customer's words.")}
         ),
     ),
+    AssistantToolName.OFFER_CHOICES: OFFER_CHOICES_SPECIFICATION,
 }
 
 

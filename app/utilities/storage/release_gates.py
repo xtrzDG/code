@@ -33,6 +33,7 @@ from app.schemas.typings.maintenance.constrained_strings import (
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 
 SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
+OFFER_CHOICES_GATE: ReleaseGateName = ReleaseGateName("offer_choices_tool")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
     # The seasonal pause (R14, migration 1161) stores a subscription as
@@ -43,6 +44,23 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("subscriptions"),
         path=StoredEnumPath("status"),
         values=[GatedEnumValue("paused")],
+        is_open=False,
+    ),
+    # The model tool offer_choices (R14): offered by every chat conversation
+    # but never written as a version's tool or a stored tool call until the
+    # next release opens these gates (the reply keeps the choices it made).
+    ReleaseGate(
+        name=OFFER_CHOICES_GATE,
+        collection_name=DocumentCollectionName("assistant_versions"),
+        path=StoredEnumPath("tools[]"),
+        values=[GatedEnumValue("offer_choices")],
+        is_open=False,
+    ),
+    ReleaseGate(
+        name=OFFER_CHOICES_GATE,
+        collection_name=DocumentCollectionName("messages"),
+        path=StoredEnumPath("tool_calls[].tool_name"),
+        values=[GatedEnumValue("offer_choices")],
         is_open=False,
     ),
 )

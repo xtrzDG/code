@@ -27,6 +27,8 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CabinetRoutePattern": "/b/[businessId]/inbox",
     "ChangelogEntryKey": "2026-10-04-help-center",
     "CoachMarkKey": "inbox",
+    "ChoiceLabel": "Sat 19:30",
+    "ChoicePromptText": "Which time suits you?",
     "BusinessPublicSlug": "cafe-batumi",
     "CabinetDeepLink": (
         "https://app.example.com/n/AQ3xL8nYtQ2bS0pK9mVwZcRj5uHfE1gDaB7iO4lN6eT"

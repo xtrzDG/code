@@ -10,6 +10,9 @@ from app.schemas.typings.conversations.strings import LlmProviderPayload, Messag
 from app.use_cases.conversations.replies.reply_evidence import (
     collect_unanswered_messages,
 )
+from app.utilities.conversations.message_context_notes import (
+    describe_context_note,
+)
 from app.utilities.conversations.turn_context import (
     build_text_with_unanswered_messages,
     build_user_turn_text,
@@ -25,14 +28,19 @@ def build_customer_turn(
     fence_key: str,
 ) -> LlmProviderPayload:
     """
-    The context line, the messages the assistant stayed silent on, then
-    this message as the model reads it (fenced, with a line per attachment)
-    and its photos as pictures.
+    The context line (and what the message refers to, such as a reply to
+    the business's Instagram story), the messages the assistant stayed
+    silent on, then this message as the model reads it (fenced, with a line
+    per attachment) and its photos as pictures.
     """
+
+    context: str = str(turn.context_line)
+    if turn.context_note is not None:
+        context = f"{context}\n{describe_context_note(turn.context_note)}"
 
     text = MessageText(
         build_user_turn_text(
-            str(turn.context_line),
+            context,
             build_text_with_unanswered_messages(
                 collect_unanswered_messages(message_repo, turn, stored_turns),
                 str(turn.model_text),
