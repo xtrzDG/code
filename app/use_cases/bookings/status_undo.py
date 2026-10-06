@@ -20,7 +20,7 @@ from app.utilities.scheduling.availability import (
     blocked_until,
     busy_ranges,
 )
-from app.utilities.scheduling.overlap import has_free_unit
+from app.utilities.scheduling.overlap import BlockedTime, has_free_unit
 
 # How long after a status change staff may undo it.
 UNDO_WINDOW_SECONDS: int = 10 * 60
@@ -102,10 +102,12 @@ def ensure_time_still_free(
     booking: BookingDocument,
     resource: ResourceDocument | None,
     bookings_in_play: Sequence[BookingDocument],
+    blocked_times: Sequence[BlockedTime] = (),
 ) -> None:
     """
     A unit of the booking's place is free again for its whole time and
-    buffer, as the full-day availability counts it (staff rules: no
+    buffer (no linked calendar made it busy meanwhile), as the full-day
+    availability counts it (staff rules: no
     notice; the booking itself not counted; a test booking sees real
     ones and its own conversation's).
 
@@ -126,6 +128,7 @@ def ensure_time_still_free(
         booking.is_sandbox,
         booking.id,
         booking.conversation_id if booking.is_sandbox else None,
+        blocked_times,
     )
     if not has_free_unit(
         busy,

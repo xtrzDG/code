@@ -34,6 +34,9 @@ from app.adapters.payments.flitt_payment_gateway_adapter import (
 from app.adapters.rate_limits.rate_limit_bucket_adapter_factory import (
     build_rate_limit_bucket_adapter,
 )
+from app.containers.adapters.calendar_sync_collections_container import (
+    CalendarSyncCollectionsContainer,
+)
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.channel_adapters_container import (
     ChannelAdaptersContainer,
@@ -123,6 +126,11 @@ class AdaptersContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
+    # Two-way availability: calendar settings, busy times, export feeds (1160).
+    calendar_sync_collections: CalendarSyncCollectionsContainer = Container(  # type: ignore[assignment]
+        CalendarSyncCollectionsContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
     calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
         CallAdaptersContainer,
         clients=clients,

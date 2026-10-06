@@ -4,6 +4,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.calendar_sync import CalendarBusyTimesRepoContract
 from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.operations import (
@@ -98,9 +99,11 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
         growth: GrowthBookingsFacilitatorContract,
+        busy_times_repo: CalendarBusyTimesRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._growth: GrowthBookingsFacilitatorContract = growth
+        self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -128,6 +131,7 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
             self._resource_repo,
             self._schedule_exception_repo,
             input_data.business_id,
+            self._busy_times_repo,
         )
         now: Microseconds = self._wall_clock.now_unix()
         with self._lock_registry.lock_for(input_data.business_id):

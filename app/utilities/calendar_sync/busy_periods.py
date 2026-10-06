@@ -2,11 +2,13 @@
 
 from collections.abc import Sequence
 
+from app.schemas.domain.calendar_sync import CalendarBusyTimesDocument
 from app.schemas.dto.calendar_sync.busy_reads import BusyPeriod, BusyWindow
 from app.schemas.typings.calendar_sync.constrained_integers import (
     BusyEndsAtUnixSeconds,
     BusyStartsAtUnixSeconds,
 )
+from app.utilities.scheduling.overlap import BlockedTime
 
 
 def new_period(starts_at: int, ends_at: int) -> BusyPeriod | None:
@@ -71,3 +73,15 @@ def subtract_periods(
         remaining = pieces
 
     return [period for start, end in remaining if (period := new_period(start, end))]
+
+
+def blocked_times_of(
+    busy_times: Sequence[CalendarBusyTimesDocument],
+) -> tuple[BlockedTime, ...]:
+    """The cached busy times of a business as the placements read them."""
+
+    return tuple(
+        BlockedTime(document.resource_id, int(block.starts_at), int(block.ends_at))
+        for document in busy_times
+        for block in document.blocks
+    )

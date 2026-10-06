@@ -3,10 +3,24 @@
 from collections.abc import Sequence
 from typing import NamedTuple
 
+from app.schemas.typings.bookings.prefixed_id import ResourceId
+
 
 class BusyRange(NamedTuple):
     """UTC seconds during which one unit of a resource is taken."""
 
+    starts_at: int
+    ends_at: int
+
+
+class BlockedTime(NamedTuple):
+    """
+    UTC seconds during which a calendar outside the platform made a
+    resource busy (a walk-in in its Google calendar, an Airbnb
+    reservation, a booking in its booking system): every unit is taken.
+    """
+
+    resource_id: ResourceId
     starts_at: int
     ends_at: int
 

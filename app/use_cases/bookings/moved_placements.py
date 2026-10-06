@@ -61,6 +61,7 @@ def place_moved_booking(
             excluded_booking_id=booking.id,
             sandbox_conversation_id=booking.conversation_id,
             buffer_minutes=booking.buffer_minutes,
+            blocked_times=inputs.blocked_times,
         ),
     )
 
@@ -100,5 +101,6 @@ def ensure_free_at_booked_time(
             excluded_booking_id=booking.id,
             sandbox_conversation_id=booking.conversation_id,
             buffer_minutes=booking.buffer_minutes,
+            blocked_times=inputs.blocked_times,
         ),
     )

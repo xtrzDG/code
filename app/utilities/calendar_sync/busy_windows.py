@@ -11,6 +11,7 @@ from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.calendar_sync import BusyTimeSource
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.calendar_sync.busy_reads import BusyWindow
+from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.calendar_sync.constrained_integers import (
     BusyEndsAtUnixSeconds,
     BusyStartsAtUnixSeconds,
@@ -23,6 +24,11 @@ SECONDS_PER_DAY: int = 24 * 60 * 60
 # two periods is stale, and availability reads it again on the spot.
 SYNC_INTERVAL_SECONDS: int = 5 * 60
 STALE_AFTER_SECONDS: int = 2 * SYNC_INTERVAL_SECONDS
+# When someone waits for a read (the cabinet's "Sync now", availability
+# shown while the sync job is behind), each source has 2 s; in the
+# background, 10 s.
+ON_DEMAND_READ_SECONDS: BusyTimeFetchSeconds = BusyTimeFetchSeconds(2.0)
+BACKGROUND_READ_SECONDS: BusyTimeFetchSeconds = BusyTimeFetchSeconds(10.0)
 # A booking that began yesterday may still run: the window starts a day back.
 LOOK_BACK_SECONDS: int = SECONDS_PER_DAY
 # How far ahead each source is read: Google's free/busy answers for a

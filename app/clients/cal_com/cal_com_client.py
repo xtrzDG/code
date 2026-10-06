@@ -19,6 +19,8 @@ from app.schemas.typings.calendar_sync.strings import (
     BookingSystemBookingId,
 )
 
+# Cal.com's cloud API (a self-hosted or EU instance has its own address).
+CAL_COM_API_URL: CalComApiBaseUrl = CalComApiBaseUrl("https://api.cal.com/v2")
 # Cal.com versions each endpoint family by a header.
 BOOKINGS_API_VERSION: str = "2024-08-13"
 EVENT_TYPES_API_VERSION: str = "2024-06-14"
@@ -37,7 +39,7 @@ class CalComClient:
 
     def __init__(
         self,
-        base_url: CalComApiBaseUrl,
+        base_url: CalComApiBaseUrl = CAL_COM_API_URL,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._base_url: str = str(base_url)
