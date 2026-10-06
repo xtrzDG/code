@@ -6,6 +6,8 @@ import { referralsSectionHe } from "./sections/referrals";
 import { customersSectionHe } from "./sections/customers";
 import { securityFlowHe } from "./sections/security";
 import { setupFlowHe } from "./sections/setup";
+import { siteHe } from "./sections/site";
+import { assistantFlowHe } from "./sections/assistant";
 
 /**
  * Hebrew texts (עברית), drafted by the team and awaiting a native
@@ -19,4 +21,6 @@ export const he: PartialMessages = {
   ...customersSectionHe,
   ...securityFlowHe,
   ...setupFlowHe,
+  ...siteHe,
+  ...assistantFlowHe,
 };

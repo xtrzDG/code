@@ -23,6 +23,16 @@ import { publicPricingRu } from "./site/publicPricing.ru";
 import { roiEn } from "./site/roi.en";
 import { roiKa } from "./site/roi.ka";
 import { roiRu } from "./site/roi.ru";
+import { legalPagesHe } from "./site/legalPages.he";
+import { legalPagesDe } from "./site/legalPages.de";
+import { nichePageHe } from "./site/nichePage.he";
+import { nichePageDe } from "./site/nichePage.de";
+import { publicDemoHe } from "./site/publicDemo.he";
+import { publicDemoDe } from "./site/publicDemo.de";
+import { publicPricingHe } from "./site/publicPricing.he";
+import { publicPricingDe } from "./site/publicPricing.de";
+import { roiHe } from "./site/roi.he";
+import { roiDe } from "./site/roi.de";
 
 export const siteEn = {
   publicDemo: publicDemoEn,
@@ -46,4 +56,20 @@ export const siteKa: Translation<typeof siteEn> = {
   nichePage: nichePageKa,
   legalPages: legalPagesKa,
   publicPricing: publicPricingKa,
+};
+
+export const siteHe: Translation<typeof siteEn> = {
+  publicDemo: publicDemoHe,
+  roi: roiHe,
+  nichePage: nichePageHe,
+  legalPages: legalPagesHe,
+  publicPricing: publicPricingHe,
+};
+
+export const siteDe: Translation<typeof siteEn> = {
+  publicDemo: publicDemoDe,
+  roi: roiDe,
+  nichePage: nichePageDe,
+  legalPages: legalPagesDe,
+  publicPricing: publicPricingDe,
 };

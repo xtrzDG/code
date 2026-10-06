@@ -19,6 +19,12 @@ import { teachingRu } from "./assistant/teaching.ru";
 import { updatesEn } from "./assistant/updates.en";
 import { updatesKa } from "./assistant/updates.ka";
 import { updatesRu } from "./assistant/updates.ru";
+import { applyChangesHe } from "./assistant/applyChanges.he";
+import { applyChangesDe } from "./assistant/applyChanges.de";
+import { teachingHe } from "./assistant/teaching.he";
+import { teachingDe } from "./assistant/teaching.de";
+import { updatesHe } from "./assistant/updates.he";
+import { updatesDe } from "./assistant/updates.de";
 
 export const assistantFlowEn = {
   applyChanges: applyChangesEn,
@@ -36,4 +42,16 @@ export const assistantFlowKa: Translation<typeof assistantFlowEn> = {
   applyChanges: applyChangesKa,
   teaching: teachingKa,
   updates: updatesKa,
+};
+
+export const assistantFlowHe: Translation<typeof assistantFlowEn> = {
+  applyChanges: applyChangesHe,
+  teaching: teachingHe,
+  updates: updatesHe,
+};
+
+export const assistantFlowDe: Translation<typeof assistantFlowEn> = {
+  applyChanges: applyChangesDe,
+  teaching: teachingDe,
+  updates: updatesDe,
 };
