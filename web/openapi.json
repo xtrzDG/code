@@ -4639,10 +4639,11 @@
         "type": "string"
       },
       "BusinessMemberRole": {
-        "description": "Role of a user inside one business.",
+        "description": "Role of a user inside one business. AGENCY is an outside helper (a\npartner's agency) the owner let in: staff's work plus building and\npublishing the assistant, never billing, the team, channels, security\nor copies of customers' data.",
         "enum": [
           "owner",
-          "staff"
+          "staff",
+          "agency"
         ],
         "title": "BusinessMemberRole",
         "type": "string"
@@ -7340,6 +7341,166 @@
         "title": "CohortRowView",
         "type": "object"
       },
+      "CommissionEntryPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CommissionEntryView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CommissionEntryPage",
+        "type": "object"
+      },
+      "CommissionEntryView": {
+        "additionalProperties": false,
+        "description": "A commission on one paid invoice: the business, the month it belongs\nto, what the invoice charged before tax, the rate and the share, and\nwhether it was paid out (when, with what reference).",
+        "properties": {
+          "accrued_at": {
+            "title": "Accrued At",
+            "type": "integer"
+          },
+          "amount_minor": {
+            "minimum": 0.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "base_minor": {
+            "minimum": 0.0,
+            "title": "Base Minor",
+            "type": "integer"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Name"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "month": {
+            "maxLength": 7,
+            "minLength": 7,
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Month",
+            "type": "string"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "rate_basis_points": {
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Rate Basis Points",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CommissionStatus"
+          }
+        },
+        "required": [
+          "id",
+          "business_id",
+          "month",
+          "base_minor",
+          "rate_basis_points",
+          "amount_minor",
+          "currency_code",
+          "status",
+          "accrued_at"
+        ],
+        "title": "CommissionEntryView",
+        "type": "object"
+      },
+      "CommissionStatus": {
+        "description": "A partner's commission on one paid invoice: ACCRUED when the invoice\nwas paid, PAID once the platform team paid it out (with the month's\nother commissions of that partner).",
+        "enum": [
+          "accrued",
+          "paid"
+        ],
+        "title": "CommissionStatus",
+        "type": "string"
+      },
+      "CommissionTotalView": {
+        "additionalProperties": false,
+        "description": "Commissions in one currency and status: how many invoices, how much.",
+        "properties": {
+          "amount_minor": {
+            "minimum": 0.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "invoice_count": {
+            "minimum": 0.0,
+            "title": "Invoice Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CommissionStatus"
+          }
+        },
+        "required": [
+          "currency_code",
+          "status",
+          "invoice_count",
+          "amount_minor"
+        ],
+        "title": "CommissionTotalView",
+        "type": "object"
+      },
       "ComponentStatusView": {
         "additionalProperties": false,
         "description": "A component's level now and its last 90 days, oldest first.",
@@ -9474,7 +9635,7 @@
       },
       "CurrentUserView": {
         "additionalProperties": false,
-        "description": "The signed-in user and every business they work in, how the current\nsession is signed in (None outside a signed-in request), and for a\nplatform admin their role and what it permits (which admin pages and\nactions the cabinet offers).",
+        "description": "The signed-in user and every business they work in, how the current\nsession is signed in (None outside a signed-in request), and for a\nplatform admin their role and what it permits (which admin pages and\nactions the cabinet offers), and whether they are a partner of the\nreferral program (the cabinet offers the partner portal).",
         "properties": {
           "auth_level": {
             "anyOf": [
@@ -9485,6 +9646,11 @@
                 "type": "null"
               }
             ]
+          },
+          "is_partner": {
+            "default": false,
+            "title": "Is Partner",
+            "type": "boolean"
           },
           "memberships": {
             "items": {
@@ -12355,7 +12521,7 @@
       },
       "HostedChatView": {
         "additionalProperties": false,
-        "description": "What the hosted chat page needs before the widget loads: the business,\nits current address (`slug`; a page opened under an older address or\nthe id moves there), its name, colour and customer languages, whether\nthe chat is on, where the widget script and API live (None while\nAPP_BASE_URL is not set), and the privacy notice with how long the\nbusiness keeps conversations and the records of model calls (its\nSettings → Privacy, the defaults until it chose).\n\nAs a \"link in bio\" page it also shows the business: its opening hours\n(local minutes of the day in `timezone`), its address with a map link\nand a booking button when it takes bookings (`booking_url`: the\nowner's own booking page, else the button starts a booking in the\nchat).",
+        "description": "What the hosted chat page needs before the widget loads: the business,\nits current address (`slug`; a page opened under an older address or\nthe id moves there), its name, colour and customer languages, whether\nthe chat is on, where the widget script and API live (None while\nAPP_BASE_URL is not set), and the privacy notice with how long the\nbusiness keeps conversations and the records of model calls (its\nSettings → Privacy, the defaults until it chose).\n\nAs a \"link in bio\" page it also shows the business: its opening hours\n(local minutes of the day in `timezone`), its address with a map link\nand a booking button when it takes bookings (`booking_url`: the\nowner's own booking page, else the button starts a booking in the\nchat). `powered_by_url` is the platform's \"Powered by\" link with the\nbusiness's referral code (None when a Plus owner switched it off).",
         "properties": {
           "accent_color": {
             "anyOf": [
@@ -12480,6 +12646,20 @@
                 "type": "null"
               }
             ]
+          },
+          "powered_by_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Powered By Url"
           },
           "privacy_url": {
             "anyOf": [
@@ -18186,6 +18366,336 @@
         "title": "ParsePhoneNumberRequest",
         "type": "object"
       },
+      "PartnerAdminView": {
+        "additionalProperties": false,
+        "description": "A partner as the platform team sees them: how they sign in, their rate\nand state, their codes, how many businesses they brought and paid, and\ntheir commissions per currency and status.",
+        "properties": {
+          "codes": {
+            "items": {
+              "$ref": "#/components/schemas/PartnerCodeView"
+            },
+            "title": "Codes",
+            "type": "array"
+          },
+          "commission_rate_basis_points": {
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Commission Rate Basis Points",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 6,
+                "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9\\-]+(\\.[a-z0-9\\-]+)*\\.([a-z]{2,}|xn--[a-z0-9\\-]+)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "login_method": {
+            "$ref": "#/components/schemas/LoginMethod"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f<>]*\\S[^\\x00-\\x1f\\x7f<>]*$",
+            "title": "Name",
+            "type": "string"
+          },
+          "paid_businesses": {
+            "minimum": 0.0,
+            "title": "Paid Businesses",
+            "type": "integer"
+          },
+          "partner_id": {
+            "title": "Partner Id",
+            "type": "string"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "referred_businesses": {
+            "minimum": 0.0,
+            "title": "Referred Businesses",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PartnerStatus"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/CommissionTotalView"
+            },
+            "title": "Totals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "partner_id",
+          "name",
+          "login_method",
+          "commission_rate_basis_points",
+          "status",
+          "referred_businesses",
+          "paid_businesses",
+          "created_at"
+        ],
+        "title": "PartnerAdminView",
+        "type": "object"
+      },
+      "PartnerCodeView": {
+        "additionalProperties": false,
+        "description": "One of the partner's codes and its link to the platform's site.",
+        "properties": {
+          "code": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "PartnerCodeView",
+        "type": "object"
+      },
+      "PartnerList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PartnerAdminView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PartnerList",
+        "type": "object"
+      },
+      "PartnerPortalView": {
+        "additionalProperties": false,
+        "description": "The partner's portal: who they are to the platform, their rate, their\ncodes with links (the cabinet adds the landing page and `src` the\npartner picks, and draws the QR code), how many businesses signed up by\nthem and how many paid, and their commissions to be paid and paid.",
+        "properties": {
+          "codes": {
+            "items": {
+              "$ref": "#/components/schemas/PartnerCodeView"
+            },
+            "title": "Codes",
+            "type": "array"
+          },
+          "commission_rate_basis_points": {
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Commission Rate Basis Points",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^[^\\x00-\\x1f\\x7f<>]*\\S[^\\x00-\\x1f\\x7f<>]*$",
+            "title": "Name",
+            "type": "string"
+          },
+          "paid_businesses": {
+            "minimum": 0.0,
+            "title": "Paid Businesses",
+            "type": "integer"
+          },
+          "partner_id": {
+            "title": "Partner Id",
+            "type": "string"
+          },
+          "referred_businesses": {
+            "minimum": 0.0,
+            "title": "Referred Businesses",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PartnerStatus"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/CommissionTotalView"
+            },
+            "title": "Totals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "partner_id",
+          "name",
+          "status",
+          "commission_rate_basis_points",
+          "referred_businesses",
+          "paid_businesses"
+        ],
+        "title": "PartnerPortalView",
+        "type": "object"
+      },
+      "PartnerReferralPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PartnerReferralView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PartnerReferralPage",
+        "type": "object"
+      },
+      "PartnerReferralView": {
+        "additionalProperties": false,
+        "description": "A business the partner brought: its name, country, plan and state, the\ncode it signed up by, and when it signed up and first paid. Nothing\nabout its owner or customers.",
+        "properties": {
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Name"
+          },
+          "business_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BusinessStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "code": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code"
+          },
+          "first_paid_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Paid At"
+          },
+          "plan_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "referred_at": {
+            "title": "Referred At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "code",
+          "referred_at"
+        ],
+        "title": "PartnerReferralView",
+        "type": "object"
+      },
+      "PartnerStatus": {
+        "description": "ACTIVE partners earn commission on every paid invoice of the businesses\nthey brought; a PAUSED partner keeps what was earned but earns nothing\nnew until resumed (their portal and links keep working).",
+        "enum": [
+          "active",
+          "paused"
+        ],
+        "title": "PartnerStatus",
+        "type": "string"
+      },
       "PaymentStatus": {
         "description": "Status of a payment as the provider reports it (Flitt `order_status`).\n\nAPPROVED pays the invoices; DECLINED fails them; EXPIRED means the owner\nleft the payment page unpaid; REVERSED is a refund of an approved payment.",
         "enum": [
@@ -18233,6 +18743,138 @@
           "outcome"
         ],
         "title": "PaymentWebhookReceipt",
+        "type": "object"
+      },
+      "PayoutReceipt": {
+        "additionalProperties": false,
+        "description": "What a payout marked paid: how many commissions and how much.",
+        "properties": {
+          "amounts": {
+            "items": {
+              "$ref": "#/components/schemas/Money"
+            },
+            "title": "Amounts",
+            "type": "array"
+          },
+          "month": {
+            "maxLength": 7,
+            "minLength": 7,
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Month",
+            "type": "string"
+          },
+          "paid_invoices": {
+            "minimum": 0.0,
+            "title": "Paid Invoices",
+            "type": "integer"
+          },
+          "partner_id": {
+            "title": "Partner Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "partner_id",
+          "month",
+          "paid_invoices"
+        ],
+        "title": "PayoutReceipt",
+        "type": "object"
+      },
+      "PayoutReportView": {
+        "additionalProperties": false,
+        "properties": {
+          "month": {
+            "maxLength": 7,
+            "minLength": 7,
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Month",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PayoutRowView"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "month",
+          "rows"
+        ],
+        "title": "PayoutReportView",
+        "type": "object"
+      },
+      "PayoutRowView": {
+        "additionalProperties": false,
+        "description": "One partner's commissions of the month in one currency: what is still\nto be paid out and what was paid, with how many invoices each.",
+        "properties": {
+          "accrued_invoices": {
+            "minimum": 0.0,
+            "title": "Accrued Invoices",
+            "type": "integer"
+          },
+          "accrued_minor": {
+            "minimum": 0.0,
+            "title": "Accrued Minor",
+            "type": "integer"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "paid_invoices": {
+            "minimum": 0.0,
+            "title": "Paid Invoices",
+            "type": "integer"
+          },
+          "paid_minor": {
+            "minimum": 0.0,
+            "title": "Paid Minor",
+            "type": "integer"
+          },
+          "partner_id": {
+            "title": "Partner Id",
+            "type": "string"
+          },
+          "partner_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "pattern": "^[^\\x00-\\x1f\\x7f<>]*\\S[^\\x00-\\x1f\\x7f<>]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partner Name"
+          },
+          "partner_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartnerStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "partner_id",
+          "currency_code",
+          "accrued_minor",
+          "accrued_invoices",
+          "paid_minor",
+          "paid_invoices"
+        ],
+        "title": "PayoutRowView",
         "type": "object"
       },
       "PbxCallWebhookOutcome": {
@@ -19270,6 +19912,45 @@
           "status"
         ],
         "title": "PostCallWebhookOutcome",
+        "type": "object"
+      },
+      "PoweredByView": {
+        "additionalProperties": false,
+        "description": "The \"Powered by\" link of the chat, the hosted page and the table card:\nwhether it is shown, whether the plan lets the owner remove it (Plus),\nthe owner's choice and the link itself (None while it is not shown).",
+        "properties": {
+          "is_hidden": {
+            "title": "Is Hidden",
+            "type": "boolean"
+          },
+          "is_removable": {
+            "title": "Is Removable",
+            "type": "boolean"
+          },
+          "is_shown": {
+            "title": "Is Shown",
+            "type": "boolean"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "is_shown",
+          "is_removable",
+          "is_hidden"
+        ],
+        "title": "PoweredByView",
         "type": "object"
       },
       "PrivacySettingsView": {
@@ -20314,6 +20995,83 @@
           "recovery_codes"
         ],
         "title": "RecoveryCodesView",
+        "type": "object"
+      },
+      "ReferralProgramView": {
+        "additionalProperties": false,
+        "description": "The business's invitation (\"Invite a business: a month free\"): its own\ncode and link, how many businesses signed up by it, paid and earned\nboth sides their month, how many bookings the business has had (the\ncard appears from the tenth: `is_invite_card_due`), and the \"Powered\nby\" link.",
+        "properties": {
+          "bookings_made": {
+            "minimum": 0.0,
+            "title": "Bookings Made",
+            "type": "integer"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9._-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "invite_card_min_bookings": {
+            "minimum": 0.0,
+            "title": "Invite Card Min Bookings",
+            "type": "integer"
+          },
+          "invite_link": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Link"
+          },
+          "invited": {
+            "minimum": 0.0,
+            "title": "Invited",
+            "type": "integer"
+          },
+          "is_invite_card_due": {
+            "title": "Is Invite Card Due",
+            "type": "boolean"
+          },
+          "paid": {
+            "minimum": 0.0,
+            "title": "Paid",
+            "type": "integer"
+          },
+          "powered_by": {
+            "$ref": "#/components/schemas/PoweredByView"
+          },
+          "rewarded": {
+            "minimum": 0.0,
+            "title": "Rewarded",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "invited",
+          "paid",
+          "rewarded",
+          "bookings_made",
+          "invite_card_min_bookings",
+          "is_invite_card_due",
+          "powered_by"
+        ],
+        "title": "ReferralProgramView",
         "type": "object"
       },
       "ReplyGuardReason": {
@@ -21536,7 +22294,7 @@
       },
       "ShareLinksView": {
         "additionalProperties": false,
-        "description": "Everything the owner shares: the hosted chat page's address (`slug`,\n`hosted_chat_url`: None until CABINET_BASE_URL is set) and a link per\nchannel that is switched on, hosted page first. `source` is the tag the\nlinks carry.",
+        "description": "Everything the owner shares: the hosted chat page's address (`slug`,\n`hosted_chat_url`: None until CABINET_BASE_URL is set) and a link per\nchannel that is switched on, hosted page first. `source` is the tag the\nlinks carry; `powered_by_url` is the \"Powered by\" link the printed table\ncard carries (None when a Plus owner switched it off).",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -21562,6 +22320,20 @@
             },
             "title": "Links",
             "type": "array"
+          },
+          "powered_by_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Powered By Url"
           },
           "slug": {
             "maxLength": 40,
@@ -21641,12 +22413,26 @@
       },
       "SourceRowView": {
         "additionalProperties": false,
-        "description": "Owners from one acquisition source: sign-ups, live and paying today.",
+        "description": "Owners from one acquisition source: sign-ups, live and paying today. A\nsource whose links carried referral codes has a row per code\n(`referral_code`: a partner's or an inviting business's), so the\nfounder sees which partner or invitation brought whom.",
         "properties": {
           "paying": {
             "minimum": 0.0,
             "title": "Paying",
             "type": "integer"
+          },
+          "referral_code": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9._-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referral Code"
           },
           "sign_ups": {
             "minimum": 0.0,
@@ -24890,7 +25676,7 @@
       },
       "WidgetConfigView": {
         "additionalProperties": false,
-        "description": "Public configuration the widget script loads before it shows itself.\n\n`business_name` is the name visitors see in the widget header.\n`greetings` holds the first message in the languages the live assistant\nanswers in (the business languages before anything is published) where\na text exists; the widget uses its own text for the others. `accent_color`\nand `position` are the owner's choices (None: the widget's defaults); the\nembed tag's data-color and data-position still win.\n\n`starter_questions` are up to three of the business's FAQ questions per\nlanguage, shown as one-tap chips before the visitor writes;\n`privacy_url` is the business's privacy notice (or the platform's\ndefault one for it; None without CABINET_BASE_URL), linked from the\nfooter; `contact_links` are the other channels, offered on the hosted\nchat page.",
+        "description": "Public configuration the widget script loads before it shows itself.\n\n`business_name` is the name visitors see in the widget header.\n`greetings` holds the first message in the languages the live assistant\nanswers in (the business languages before anything is published) where\na text exists; the widget uses its own text for the others. `accent_color`\nand `position` are the owner's choices (None: the widget's defaults); the\nembed tag's data-color and data-position still win.\n\n`starter_questions` are up to three of the business's FAQ questions per\nlanguage, shown as one-tap chips before the visitor writes;\n`privacy_url` is the business's privacy notice (or the platform's\ndefault one for it; None without CABINET_BASE_URL), linked from the\nfooter; `contact_links` are the other channels, offered on the hosted\nchat page. `powered_by_url` is the footer's \"Powered by\" link with the\nbusiness's referral code (None when a Plus owner switched it off).",
         "properties": {
           "accent_color": {
             "anyOf": [
@@ -24955,6 +25741,20 @@
                 "type": "null"
               }
             ]
+          },
+          "powered_by_url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "minLength": 10,
+                "pattern": "^https?://[^\\s/?#]+(/[^\\s]*)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Powered By Url"
           },
           "privacy_url": {
             "anyOf": [
@@ -29686,6 +30486,893 @@
         "summary": "Get Admin Metrics",
         "tags": [
           "analytics"
+        ]
+      }
+    },
+    "/v1/admin/partners": {
+      "get": {
+        "operationId": "get_partners_v1_admin_partners_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Partners",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "post_partner_v1_admin_partners_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a new partner: their name, the phone number (any country;\nnational formats read in `country_hint`) or e-mail they will sign in\nwith, their commission rate in basis points (2000 = 20 %) and their\nfirst code.\n\nExample: {\"name\": \"Tbilisi Digital\", \"email\": \"hello@tbd.example\",\n\"commission_rate_basis_points\": 2000, \"code\": \"tbilisi-digital\"}.",
+                "properties": {
+                  "code": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "title": "Code",
+                    "type": "string"
+                  },
+                  "commission_rate_basis_points": {
+                    "maximum": 5000,
+                    "minimum": 0,
+                    "title": "Commission Rate Basis Points",
+                    "type": "integer"
+                  },
+                  "country_hint": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2,
+                        "minLength": 2,
+                        "pattern": "^[A-Z]{2}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Country Hint"
+                  },
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Email"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]*\\S[^\\x00-\\x1f\\x7f<>]*$",
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "phone_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Phone Number"
+                  }
+                },
+                "required": [
+                  "name",
+                  "commission_rate_basis_points",
+                  "code"
+                ],
+                "title": "CreatePartnerRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Post Partner",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/partners/payouts": {
+      "get": {
+        "operationId": "get_payouts_v1_admin_partners_payouts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutReportView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Payouts",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/partners/{partner_id}": {
+      "patch": {
+        "operationId": "patch_partner_v1_admin_partners__partner_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "partner_id",
+            "required": true,
+            "schema": {
+              "title": "Partner Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a change of a partner; missing fields stay as they are.\nA new rate applies to invoices paid from now on.\n\nExample: {\"status\": \"paused\"}.",
+                "properties": {
+                  "commission_rate_basis_points": {
+                    "anyOf": [
+                      {
+                        "maximum": 5000,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Commission Rate Basis Points"
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "pattern": "^[^\\x00-\\x1f\\x7f<>]*\\S[^\\x00-\\x1f\\x7f<>]*$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Name"
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "description": "ACTIVE partners earn commission on every paid invoice of the businesses\nthey brought; a PAUSED partner keeps what was earned but earns nothing\nnew until resumed (their portal and links keep working).",
+                        "enum": [
+                          "active",
+                          "paused"
+                        ],
+                        "title": "PartnerStatus",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "title": "UpdatePartnerRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Patch Partner",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/partners/{partner_id}/codes": {
+      "post": {
+        "operationId": "post_partner_code_v1_admin_partners__partner_id__codes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "partner_id",
+            "required": true,
+            "schema": {
+              "title": "Partner Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of another code for a partner (a campaign of theirs).\n\nExample: {\"code\": \"tbd-autumn\"}.",
+                "properties": {
+                  "code": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "title": "Code",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "title": "AddPartnerCodeRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Post Partner Code",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/partners/{partner_id}/payouts": {
+      "post": {
+        "operationId": "post_payout_v1_admin_partners__partner_id__payouts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "partner_id",
+            "required": true,
+            "schema": {
+              "title": "Partner Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a payout: the month whose commissions the partner was paid\nand how (the transfer's reference).\n\nExample: {\"month\": \"2026-10\", \"reference\": \"TBC 2026-11-03 #88123\"}.",
+                "properties": {
+                  "month": {
+                    "maxLength": 7,
+                    "minLength": 7,
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+                    "title": "Month",
+                    "type": "string"
+                  },
+                  "reference": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[^\\x00-\\x1f\\x7f<>]*\\S[^\\x00-\\x1f\\x7f<>]*$",
+                    "title": "Reference",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "month",
+                  "reference"
+                ],
+                "title": "MarkPayoutPaidRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Post Payout",
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -51685,7 +53372,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of a team invitation by phone number (any country) or e-mail.\n\nExactly one of `phone_number` and `email` is set. National phone formats\nare read in `country_hint`, or in the business country when it is missing.\n`role` is staff unless an owner adds another owner.\n\nExample: {\"email\": \"chef@example.com\", \"role\": \"owner\"}.",
+                "description": "HTTP body of a team invitation by phone number (any country) or e-mail.\n\nExactly one of `phone_number` and `email` is set. National phone formats\nare read in `country_hint`, or in the business country when it is missing.\n`role` is staff unless an owner adds another owner, or an agency: an\noutside helper who does staff's work and builds the assistant, never\nbilling, the team or copies of customers' data.\n\nExample: {\"email\": \"chef@example.com\", \"role\": \"owner\"}.",
                 "properties": {
                   "country_hint": {
                     "anyOf": [
@@ -51736,10 +53423,11 @@
                   },
                   "role": {
                     "default": "staff",
-                    "description": "Role of a user inside one business.",
+                    "description": "Role of a user inside one business. AGENCY is an outside helper (a\npartner's agency) the owner let in: staff's work plus building and\npublishing the assistant, never billing, the team, channels, security\nor copies of customers' data.",
                     "enum": [
                       "owner",
-                      "staff"
+                      "staff",
+                      "agency"
                     ],
                     "title": "BusinessMemberRole",
                     "type": "string"
@@ -52005,10 +53693,11 @@
                 "description": "HTTP body of a role change of a team member.\n\nExample: {\"role\": \"owner\"}.",
                 "properties": {
                   "role": {
-                    "description": "Role of a user inside one business.",
+                    "description": "Role of a user inside one business. AGENCY is an outside helper (a\npartner's agency) the owner let in: staff's work plus building and\npublishing the assistant, never billing, the team, channels, security\nor copies of customers' data.",
                     "enum": [
                       "owner",
-                      "staff"
+                      "staff",
+                      "agency"
                     ],
                     "title": "BusinessMemberRole",
                     "type": "string"
@@ -56614,6 +58303,264 @@
         "summary": "Update Quick Reply",
         "tags": [
           "inbox"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/referrals": {
+      "get": {
+        "operationId": "get_referrals_v1_businesses__business_id__referrals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralProgramView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Referrals",
+        "tags": [
+          "referrals"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/referrals/powered-by": {
+      "put": {
+        "operationId": "put_powered_by_v1_businesses__business_id__referrals_powered_by_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "HTTP body of a Plus owner's choice to leave the \"Powered by\" link off.\n\nExample: {\"is_hidden\": true}.",
+                "properties": {
+                  "is_hidden": {
+                    "title": "Is Hidden",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "is_hidden"
+                ],
+                "title": "PoweredByRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoweredByView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Put Powered By",
+        "tags": [
+          "referrals"
         ]
       }
     },
@@ -66309,6 +68256,397 @@
         "summary": "Revoke Session",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/v1/partner": {
+      "get": {
+        "operationId": "get_partner_v1_partner_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerPortalView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Partner",
+        "tags": [
+          "referrals"
+        ]
+      }
+    },
+    "/v1/partner/commissions": {
+      "get": {
+        "operationId": "get_partner_commissions_v1_partner_commissions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionEntryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Partner Commissions",
+        "tags": [
+          "referrals"
+        ]
+      }
+    },
+    "/v1/partner/referrals": {
+      "get": {
+        "operationId": "get_partner_referrals_v1_partner_referrals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerReferralPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Partner Referrals",
+        "tags": [
+          "referrals"
         ]
       }
     },
