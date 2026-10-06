@@ -11,6 +11,33 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — subscription lifecycle: cancel reasons, save offers, seasonal pause, win-back
+
+Spec: `6f80abbadb075666`
+
+- **Changed** `POST /v1/businesses/{business_id}/billing/cancel` takes an
+  optional body `CancelSubscriptionRequest` (`reason` — one of
+  `CancellationReason`, `details` up to 1000 characters, `declined_offer`
+  — the offer the owner said no to). Without a body it cancels as before.
+- **Added** `GET …/billing/lifecycle` (owners): `offers` — the save offer
+  for every cancellation reason (`pause`, `downgrade` with the cheaper
+  plan, or a one-time `credit` on the next invoice, at most once per
+  business), and `pause` — whether a seasonal pause is possible now
+  (`unavailable_reason` otherwise), how many months, the month price and
+  the dates.
+- **Added** `POST …/billing/pause` (`months` 1–4, at most 4 months in any
+  12; 409 otherwise), `POST …/billing/resume` (calls a scheduled pause off
+  or ends a running one early) and `POST …/billing/offers/accept`
+  (`reason`, `kind`, `pause_months` for a pause). Owners only.
+- **Changed** (additive) `SubscriptionStatus` gains `paused`;
+  `SubscriptionView` gains `pause_starts_at` and `pause_until`;
+  `BillingNoticeKind` gains `pause_started` and `pause_ended`. `paused` is
+  only written with `SUBSCRIPTION_PAUSE_ENABLED`, so a client that does
+  not know it never meets it before it is turned on.
+- **Changed** (additive) `AdminMetricsView` gains `churn`: cancellations by
+  reason, offers made and accepted, pauses, win-back messages sent and
+  returns after them, the newest owner comments.
+
 ## 2026-10-06 — wave 15 together: worker resilience, referrals and partners, the waitlist and return visits
 
 Spec: `ce734ea095df4aa1`

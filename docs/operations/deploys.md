@@ -312,6 +312,26 @@ row names the business), and an old instance that saves a business drops
 who referred it and a Plus owner's hidden "Powered by" link (choose it
 again after the overlap).
 
+The release with the subscription lifecycle (R14-SUB-LIFECYCLE,
+migration 1161, `SubscriptionDocument` version 4, `BillingCreditDocument`
+version 3) follows the enum rule below by a flag instead of a second
+release: it knows the subscription status `paused` and the billing
+notices `pause_started` and `pause_ended`, but writes them only with
+`SUBSCRIPTION_PAUSE_ENABLED=true` (default `false`). Deploy it with the
+flag off; once no instance of the previous release serves, turn the flag
+on (an environment change, a restart). Before rolling back past that
+release, turn the flag off, let running pauses end or resume them in the
+cabinet (no subscription with status `paused`), or the previous release
+cannot read those subscriptions. The new fields (a subscription's
+`pause_starts_at` and `pause_until`, a credit line's `save_offer_for`) and
+the new collection `subscription_events` (cancellation reasons, offers,
+pauses, win-back messages) are unknown to the old release, which ignores
+them; but an old instance that saves a subscription during the overlap (a
+renewal, a webhook) drops a pause scheduled just before (schedule it
+again after the overlap), and an old instance that cancels records no
+reason. The new periodic jobs `run_subscription_pauses` and
+`send_win_back_messages` run only on new workers.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

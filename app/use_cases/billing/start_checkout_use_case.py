@@ -230,10 +230,9 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
 
             return open_invoices
 
-        if subscription.provider_reference is not None:
-            raise ConflictError(
-                "Automatic payments are already on and nothing is due now."
-            )
+        if subscription.provider_reference is not None or subscription.pause_until:
+            # Automatic payments run, or a seasonal pause covers what is next.
+            raise ConflictError("Nothing is due now.")
 
         return self._issue_payable(
             business,

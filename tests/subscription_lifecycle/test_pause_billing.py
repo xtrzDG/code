@@ -1,8 +1,12 @@
 """A seasonal pause: billed at its share of the price, leads only, back on time."""
 
+import pytest
+
 from app.schemas.constants.billing import InvoiceStatus, SubscriptionStatus
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.subscription_lifecycle import SubscriptionEventKind
+from app.schemas.dto.billing_cabinet import StartCheckoutCommand, StartCheckoutRequest
+from app.schemas.exceptions.application_errors import ConflictError
 from app.utilities.billing.billing_periods import (
     add_calendar_months,
     to_local_calendar_day,
@@ -153,3 +157,21 @@ def test_a_late_job_resumes_a_pause_that_ran_out_without_billing_its_months() ->
 
     assert world.current(business).status is SubscriptionStatus.ACTIVE
     assert len(pause_invoices(world, business)) == 1
+
+
+def test_a_scheduled_pause_leaves_nothing_to_pay_at_full_price() -> None:
+    world = LifecycleWorld()
+    owner, business = world.paying_business()
+    pause(world, owner, business, months=1)
+    issued = len(world.invoices(business.id))
+
+    with pytest.raises(ConflictError):
+        world.start_checkout.run(
+            StartCheckoutCommand(
+                user_id=owner.id,
+                business_id=business.id,
+                request=StartCheckoutRequest(),
+            )
+        )
+
+    assert len(world.invoices(business.id)) == issued
