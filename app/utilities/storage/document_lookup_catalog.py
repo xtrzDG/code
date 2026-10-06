@@ -17,6 +17,7 @@ from collections.abc import Mapping
 
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.calendar_sync_collections import CALENDAR_SYNC_LOOKUP_FIELDS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
 from app.utilities.storage.growth_collections import GROWTH_LOOKUP_FIELDS
 from app.utilities.storage.lookup_field_builders import (
@@ -276,6 +277,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **REFERRAL_LOOKUP_FIELDS,  # Partners, codes, referrals, commissions (1150).
     # The waitlist and the rebooking campaigns (1151).
     **GROWTH_LOOKUP_FIELDS,
+    **CALENDAR_SYNC_LOOKUP_FIELDS,  # Two-way availability (1160).
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

@@ -28,6 +28,8 @@ dependencies = [
     "sentry-sdk>=2.71.0",
     "pyotp>=2.9.0",
     "weasyprint>=66",
+    "icalendar>=6.3",
+    "recurring-ical-events>=3.8",
 ]
 
 [dependency-groups]

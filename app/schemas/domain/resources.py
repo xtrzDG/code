@@ -11,7 +11,11 @@ from app.schemas.typings.bookings.constrained_integers import (
 )
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import ResourceId, ScheduleExceptionId
-from app.schemas.typings.bookings.strings import ResourceName, ScheduleExceptionNote
+from app.schemas.typings.bookings.strings import (
+    ExternalCalendarId,
+    ResourceName,
+    ScheduleExceptionNote,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 
@@ -24,11 +28,14 @@ class ResourceDocument(BaseDocument):
     master, a doctor or a bay performs the services of `serves_item_ids`;
     a room is one of the room type `room_type_item_id` (an item of kind
     ROOM_TYPE with its nightly rates). Neither set: the resource takes any
-    booking of its kind.
+    booking of its kind. `external_calendar_id` is the Google calendar
+    (of the business's connected account) whose busy times block the
+    resource: walk-ins and bookings made elsewhere.
     """
 
     # 2: `serves_item_ids` and `room_type_item_id` (optional).
-    schema_version: SchemaVersion = SchemaVersion("2")
+    # 3: `external_calendar_id` (optional).
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: ResourceId = Field(default_factory=ResourceId)
     business_id: BusinessId
     kind: ResourceKind
@@ -43,6 +50,7 @@ class ResourceDocument(BaseDocument):
         default_factory=list[KnowledgeItemId]
     )
     room_type_item_id: KnowledgeItemId | None = None
+    external_calendar_id: ExternalCalendarId | None = None
 
 
 class ScheduleExceptionDocument(BaseDocument):

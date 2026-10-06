@@ -10,6 +10,9 @@ SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "CampaignMonthKey": "2026-10",
+    "BookingSystemResourceId": "1203845",
+    "CalendarFeedHost": "www.airbnb.com",
+    "IcalExportTokenHash": "ab" * 32,
     "AcquisitionSourceTag": "qr-tables",
     "AdminActionReason": "Slow onboarding: menu photos arrive next week",
     "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",
