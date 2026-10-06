@@ -60,6 +60,7 @@ export const adminSystemEn = {
       quality_drop: "Conversation quality dropped",
       spend_spike: "Spend spike",
       spend_budget: "Daily budget nearly used",
+      backfill_stalled: "A data task stalled",
     },
   },
   workers: {

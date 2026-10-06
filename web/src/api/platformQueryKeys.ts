@@ -47,6 +47,7 @@ export const platformQueryKeys = {
     spend: () => ["admin", "spend"] as const,
     /** The dead letters of the background queue. */
     deadJobs: () => ["admin", "jobs", "dead"] as const,
+    dataTasks: () => ["admin", "system", "data-tasks"] as const,
     /** The recorded incidents, newest first. */
     incidents: () => ["admin", "incidents"] as const,
     /** The platform admin team. */

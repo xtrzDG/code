@@ -603,3 +603,4 @@ _.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.LOOKUP_COLUMNS_WITHOUT_BACKFILL  # app/registries/maintenance/lookup_backfills.py
 _.is_indexing  # app/schemas/dto/contacts.py, knowledge_admin.py (list pages)
 _.settles_at  # app/schemas/dto/data_tasks.py (RolloutView)
+_.is_gate_open  # app/utilities/storage/release_gates.py (writers of a gated enum value)

@@ -41,6 +41,9 @@ import { adminSecurityRu } from "./workspace/adminSecurity.ru";
 import { adminSystemEn } from "./workspace/adminSystem.en";
 import { adminSystemKa } from "./workspace/adminSystem.ka";
 import { adminSystemRu } from "./workspace/adminSystem.ru";
+import { dataTasksEn } from "./workspace/dataTasks.en";
+import { dataTasksKa } from "./workspace/dataTasks.ka";
+import { dataTasksRu } from "./workspace/dataTasks.ru";
 import { adminTeamEn } from "./workspace/adminTeam.en";
 import { adminTeamKa } from "./workspace/adminTeam.ka";
 import { adminTeamRu } from "./workspace/adminTeam.ru";
@@ -135,6 +138,7 @@ export const workspaceEn = {
   privacyRetention: privacyRetentionEn,
   widgetSites: widgetSitesEn,
   adminSpend: adminSpendEn,
+  dataTasks: dataTasksEn,
   formFields: formFieldsEn,
 } as const;
 
@@ -168,6 +172,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   privacyRetention: privacyRetentionRu,
   widgetSites: widgetSitesRu,
   adminSpend: adminSpendRu,
+  dataTasks: dataTasksRu,
   formFields: formFieldsRu,
 };
 
@@ -201,5 +206,6 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   privacyRetention: privacyRetentionKa,
   widgetSites: widgetSitesKa,
   adminSpend: adminSpendKa,
+  dataTasks: dataTasksKa,
   formFields: formFieldsKa,
 };
