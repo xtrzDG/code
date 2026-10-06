@@ -74,6 +74,9 @@ test("an owner's business pages", async ({ page, owner }) => {
     `${business}/assistant/knowledge/import`,
     `${business}/assistant/profile`,
     `${business}/assistant/channels`,
+    `${business}/assistant/channels/website`,
+    `${business}/assistant/channels/calls`,
+    `${business}/assistant/channels/share`,
   ]) {
     await visitTwice(page, path);
   }

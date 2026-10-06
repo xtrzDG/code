@@ -24,6 +24,7 @@ export const tunnelOfferEn = {
     addRow: "Add a line",
     removeRow: "Remove {name}",
     removeEmpty: "Remove this line",
+    rowMenu: "More for {name}",
     rowSaving: "Saving…",
     rowSaved: "Saved",
     rowFailed: "Not saved",

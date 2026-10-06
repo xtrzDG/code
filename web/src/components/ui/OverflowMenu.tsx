@@ -6,6 +6,8 @@
  * the rest). A WAI-ARIA menu: the first item takes the focus, arrow keys,
  * Home and End move, Escape or a click outside closes and gives the focus
  * back to the button. It opens upwards by default (a dialog's footer).
+ * `iconOnly` shows just the "⋯" (the label names the button for screen
+ * readers and as its tooltip): a row's actions on a phone.
  */
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
@@ -27,12 +29,14 @@ export function OverflowMenu({
   label,
   actions,
   placement = "top",
+  iconOnly = false,
   className,
 }: {
   /** The button's text ("More"), also the menu's name. */
   label: string;
   actions: readonly MenuAction[];
   placement?: "top" | "bottom";
+  iconOnly?: boolean;
   className?: string;
 }) {
   const id = useId();
@@ -96,10 +100,16 @@ export function OverflowMenu({
         aria-expanded={isOpen}
         aria-controls={isOpen ? `${id}-menu` : undefined}
         onClick={() => setOpen((open) => !open)}
-        className={buttonClasses({ variant: "secondary", size: "sm", className: "whitespace-nowrap" })}
+        aria-label={iconOnly ? label : undefined}
+        title={iconOnly ? label : undefined}
+        className={buttonClasses({
+          variant: iconOnly ? "ghost" : "secondary",
+          size: "sm",
+          className: iconOnly ? "w-9 px-0" : "whitespace-nowrap",
+        })}
       >
         <IconMore className="size-4" aria-hidden />
-        {label}
+        {iconOnly ? null : label}
       </button>
       {isOpen ? (
         <div
@@ -113,7 +123,7 @@ export function OverflowMenu({
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2",
           )}
         >
-          {actions.map((action) => (
+          {actions.map((action, index) => (
             <button
               key={action.key}
               type="button"
@@ -125,7 +135,7 @@ export function OverflowMenu({
               }}
               className={cn(
                 "flex w-full cursor-pointer items-center px-4 py-2 text-start text-sm whitespace-nowrap outline-none hover:bg-surface-muted focus-visible:bg-surface-muted",
-                action.tone === "danger" ? "mt-1 border-t border-line pt-2.5 text-danger" : "text-ink",
+                action.tone === "danger" ? cn("text-danger", index > 0 && "mt-1 border-t border-line pt-2.5") : "text-ink",
               )}
             >
               {action.label}

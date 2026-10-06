@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { usePlans } from "@/api/catalog";
@@ -10,14 +11,16 @@ import { sectionQueries } from "@/api/sectionQueries";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { Alert, Button, Card, ConfirmDialog, ErrorState, LoadingRegion, PageHeader, useToast } from "@/components/ui";
+import { Alert, Card, ConfirmDialog, ErrorState, LoadingRegion, PageHeader, useToast } from "@/components/ui";
 import { OwnerOnlyNote } from "@/components/workspace/OwnerOnly";
 import { LiveStatus } from "@/components/shell/LiveStatus";
 import { useI18n } from "@/i18n/client";
-import type { MessageKey } from "@/i18n/translate";
+import { COMPACT_SCREEN_QUERY, useMediaQuery } from "@/lib/useMediaQuery";
 
+import { CalendarReturnAlert } from "./_components/CalendarReturnAlert";
 import { CallForwardingCard } from "./_components/CallForwardingCard";
 import { ChannelCard } from "./_components/ChannelCard";
+import { ChannelPagesNav } from "./_components/ChannelPagesNav";
 import { ChannelsSkeleton } from "./_components/ChannelsSkeleton";
 import { CHANNEL_NAMES } from "./_components/channelMeta";
 import { ConnectChannelModal } from "./_components/ConnectChannelModal";
@@ -37,17 +40,10 @@ import {
   type ConnectableChannel,
 } from "./_lib/channels";
 import type { ChannelFix } from "./_lib/channelHealth";
+import { channelSubpagePath, subpageOfAnchor } from "./_lib/channelPages";
 import type { ConnectChannelBody } from "./_lib/connectForm";
 import { staffTemplatesKey } from "./_lib/staffTemplates";
-import { withoutCalendarReturn, type CalendarFailureReason, type CalendarReturn } from "./_lib/calendarReturn";
-
-const CALENDAR_RETURN_REASONS: Record<CalendarFailureReason, MessageKey> = {
-  access_denied: "channels.calendar.returnReasons.access_denied",
-  link_expired: "channels.calendar.returnReasons.link_expired",
-  no_offline_access: "channels.calendar.returnReasons.no_offline_access",
-  provider_error: "channels.calendar.returnReasons.provider_error",
-  unknown: "channels.calendar.returnReasons.unknown",
-};
+import { withoutCalendarReturn, type CalendarReturn } from "./_lib/calendarReturn";
 
 const CONNECT_ERRORS: ErrorMessageOverrides = {
   conflict: "channels.errors.accountTaken",
@@ -58,6 +54,9 @@ const CONNECT_ERRORS: ErrorMessageOverrides = {
  * /channels: customer channels, the website chat's look and code, call
  * forwarding, calendar and staff notifications. `calendarReturn` is what
  * Google's consent page sent back (shown once, then removed from the URL).
+ * On a phone the website chat, call forwarding and sharing are pages of
+ * their own (_lib/channelPages.ts), linked under the channel cards; an
+ * address with one's anchor (#share) opens its page.
  */
 export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { calendarReturn: CalendarReturn | null }) {
   const { t } = useI18n();
@@ -72,7 +71,15 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
     window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
   }, [initialCalendarReturn]);
   const toast = useToast();
+  const router = useRouter();
   const { business, isOwner } = useBusiness();
+  const isCompact = useMediaQuery(COMPACT_SCREEN_QUERY);
+  useEffect(() => {
+    const subpage = isCompact ? subpageOfAnchor(window.location.hash) : null;
+    if (subpage) {
+      router.replace(channelSubpagePath(business.id, subpage));
+    }
+  }, [isCompact, router, business.id]);
   const [connecting, setConnecting] = useState<ConnectableChannel | null>(null);
   const [disconnecting, setDisconnecting] = useState<ConnectableChannel | null>(null);
   // Failures inside dialogs are shown in them (toasts sit under an open dialog).
@@ -174,23 +181,7 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
 
       {!isOwner ? <OwnerOnlyNote className="mb-6" /> : null}
 
-      {calendarReturn ? (
-        <div role={calendarReturn.kind === "connected" ? "status" : undefined} className="mb-6">
-          <Alert
-            tone={calendarReturn.kind === "connected" ? "success" : "danger"}
-            title={calendarReturn.kind === "connected" ? t("channels.calendar.title") : t("channels.calendar.returnErrorTitle")}
-          >
-            <p>
-              {calendarReturn.kind === "connected"
-                ? t("channels.calendar.returnConnected")
-                : t(CALENDAR_RETURN_REASONS[calendarReturn.reason])}
-            </p>
-            <Button variant="ghost" size="sm" className="mt-2 -ml-2" onClick={() => setCalendarReturn(null)}>
-              {t("channels.calendar.dismiss")}
-            </Button>
-          </Alert>
-        </div>
-      ) : null}
+      {calendarReturn ? <CalendarReturnAlert calendarReturn={calendarReturn} onDismiss={() => setCalendarReturn(null)} /> : null}
 
       {channels.error && !list ? (
         <Card>
@@ -246,15 +237,21 @@ export function ChannelsScreen({ calendarReturn: initialCalendarReturn }: { cale
             </div>
           </section>
 
-          {isWebChatOn && webChat ? (
-            <WebChatSection
-              channel={webChat}
-              canManage={isOwner}
-              onSaved={(updated) => channels.setData((current) => upsertChannel(current, updated))}
-            />
-          ) : null}
-          {isPhoneOn ? <CallForwardingCard /> : null}
-          <ShareSection isWebChatOn={isWebChatOn} accent={webChat?.widget_color ?? null} />
+          {isCompact ? (
+            <ChannelPagesNav isWebChatOn={isWebChatOn} isPhoneOn={isPhoneOn} />
+          ) : (
+            <>
+              {isWebChatOn && webChat ? (
+                <WebChatSection
+                  channel={webChat}
+                  canManage={isOwner}
+                  onSaved={(updated) => channels.setData((current) => upsertChannel(current, updated))}
+                />
+              ) : null}
+              {isPhoneOn ? <CallForwardingCard /> : null}
+              <ShareSection isWebChatOn={isWebChatOn} accent={webChat?.widget_color ?? null} />
+            </>
+          )}
 
           <section aria-labelledby="channels-tools" className="space-y-4">
             <h2 id="channels-tools" className="text-lg font-semibold text-ink">

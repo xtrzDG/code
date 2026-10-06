@@ -123,6 +123,8 @@ export interface InboxRow {
   lastMessageAt: number;
   /** Undefined when the source does not say (the feed has no assignments). */
   assigneeUserId?: string | null;
+  /** The assignment as the list saw it (assigning sends it back); undefined from the feed. */
+  assignmentRevision?: number;
   isAssignedAutomatically: boolean;
   noteCount: number;
   handoff: InboxHandoffSummary | null;
@@ -148,6 +150,7 @@ export function rowFromInboxItem(item: InboxItemView): InboxRow {
     lastMessageAuthor: item.last_message_author ?? null,
     lastMessageAt: item.last_message_at,
     assigneeUserId: item.assignee_user_id ?? null,
+    assignmentRevision: item.assignment_revision,
     isAssignedAutomatically: item.is_assigned_automatically,
     noteCount: item.note_count,
     handoff: item.handoff ?? null,

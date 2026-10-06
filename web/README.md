@@ -327,7 +327,9 @@ web/
                                (components/setup, mode="edit"), saving as the owner types
           channels/            chat channels (with the platform's last error; WhatsApp's template for
                                staff replies), website chat code and look, call forwarding, Google
-                               Calendar (state, last sync), staff Telegram link
+                               Calendar (state, last sync), staff Telegram link; website/, calls/, share/:
+                               the phone's pages of their own for the chat's look and code, forwarding
+                               codes and sharing (the same components)
           versions/            Advanced → History: every update, versions/[versionId]/ (go-live checklist,
                                autotests with live progress, the owner's failed checks named by their
                                question, publish, rollback; publishing without checks is a platform
@@ -495,7 +497,7 @@ section tabs, page titles and the e2e suite read it):
 | Inbox | `inbox[?view=needs_person\|requests\|mine\|unassigned\|all]` (one page, its views; `needs_person` without a query), `inbox/{conversationId}` | owners, staff |
 | Bookings | `bookings` | owners, staff |
 | Customers | `customers?q=…&tag=…&show=vip\|blocked` (the list), `customers/{contactId}` (one customer), `customers/segments` | owners, staff (phones masked unless an owner allows them); Segments: owners |
-| Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile[/business\|/place\|/offer\|/hours\|/people\|/rules]` ("Business profile"), `assistant/channels`; under Advanced `assistant/versions[/{versionId}]` and `assistant/checks` | staff: "Try it" only |
+| Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile[/business\|/place\|/offer\|/hours\|/people\|/rules]` ("Business profile"), `assistant/channels[/website\|/calls\|/share]` (the three are a phone's pages of their own); under Advanced `assistant/versions[/{versionId}]` and `assistant/checks` | staff: "Try it" only |
 | Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/quick-replies`, `settings/calls`, `settings/billing`, `settings/privacy`, `settings/audit` | owners; staff: Notifications only (their own devices, events and quiet hours) |
 
 - **Sidebar** (large screens): the mark, the business switcher (it keeps the
@@ -611,6 +613,42 @@ redirect):
   decides). Both lists are audited reads, so they reload on a live event
   only while shown. On phones the filters are a sheet; from `lg` the list
   stays beside the open conversation.
+- **Rows** (`_components/list/InboxRowItem.tsx`, `rowParts.tsx`): the
+  customer, then one line with why it waits (the reason chip) and the
+  beginning of the last message; the channel's icon and the age ("5 min",
+  "3 h", a date from a week) at the end; the urgency colours the edge. Who
+  handles it, where the customer came from, after hours, notes and the exact
+  time are the row's details: a card beside the list when the pointer rests
+  on a row (`RowHint`, a manual popover in the top layer; only with a real
+  hover) or the focus is on it, inside the link for screen readers, and in
+  the conversation's Details ("Came from"). **Comfortable** or **Compact**
+  (one line per conversation) in the bar above the rows, remembered per
+  person in this browser (`lib/useUserPreference.ts`,
+  `aw.pref.inbox-density:{userId}`); a laptop at 1440×900 shows nine whole
+  rows of All, Compact fifteen.
+- **The list's width** (`ListResizer`, from `lg`): drag the edge between the
+  list and the conversation, or focus it and use ←/→ (16 px), Home and End:
+  320–520 px, never leaving the conversation less than 460 px; a double
+  click goes back to the usual width. Remembered like the density
+  (`inbox-list-width`); `_lib/inboxLayout.ts` holds the rules.
+- **Keyboard** (`_lib/inboxShortcuts.ts`, `_lib/useInboxTriage.ts`), while
+  nobody types and no dialog is open: J/K move the cursor (and the focus)
+  through the rows, Enter opens, **E** marks resolved, **A** takes the
+  conversation (as the assign menu does, with its revision), **X** selects,
+  **/** goes to the search, **?** lists the keys (`ShortcutsSheet`, also the
+  keyboard button in the bar), Escape clears the selection. Resolved means:
+  an open handoff goes back to the assistant (`POST …/handoffs/{id}/resolve`)
+  and otherwise an open request is marked won (`PATCH …/leads/{id}`); a
+  conversation with neither has nothing to resolve. The toast's Undo reopens
+  the handoff (`…/reopen`) or gives the request its earlier status. After E
+  the cursor goes on to the next row.
+- **Several at once**: a row with something to resolve shows a checkbox in
+  its avatar's place (under the pointer, while anything is selected, or
+  with X); the bar's box selects all of them. With a selection the bar says
+  how many and offers **Mark resolved** (each through its own endpoint
+  above, one toast with one Undo for all; "2 of 3 resolved" when someone
+  changed the rest meanwhile) and clearing it. Resolved rows leave Needs a
+  person and Requests at once; the counts and the Overview refresh.
 - **A conversation** (`[conversationId]/`, `ConversationView`): a phone
   first layout. The header is folded (customer, channel, who handles it);
   the transcript fills the screen; the reply box with Resolve, Call and Book
@@ -679,9 +717,35 @@ them, answer a person, and take back a wrong tap.
   `POST …/handoffs/{id}/reopen` gives it back its earlier status and the
   conversation goes back to Needs a person (`handoff.reopened` live event).
   Both are audited.
+- **Channels** (`assistant/channels/`): a phone keeps the channel cards
+  with their health on the page and opens the rest as pages of their own,
+  listed under "Set up": `channels/website` (the website chat's look, code
+  and allowed sites), `channels/calls` (forwarding codes) and
+  `channels/share` (links, QR code, table card), each with "All channels"
+  to go back (`_lib/channelPages.ts`, `ChannelSubpageFrame`). An old
+  `channels#share` link opens `channels/share` on a phone; large screens
+  keep everything on the one page (the sub-pages work there too).
+- **Overview** (`overview/DashboardScreen.tsx`): a phone starts with
+  **Today** (`TodayBlock`: waiting for a person, today's bookings with how
+  many are still to come, questions without an answer; staff see their own
+  and the unassigned instead), then the value hero. Statistics, the chart by
+  day, the package, languages, channels, bookings by status, why
+  conversations went to a person, answers to improve and topics are folded
+  rows with their leading number (`PhoneFold`); which ones a person opened
+  is remembered for them in this browser (`overview-open`). From `lg` the
+  folds take no box and the page is as before.
+- **Offer lines** (`components/setup/offer/OfferLine.tsx`, the tunnel's
+  offer step and Profile → What you offer): the name and the price share one
+  row, an example's tag sits on the line's frame and removing is in the
+  line's "⋯" menu; the kind and the minutes (profile) go to a second row.
 - **Tests**: `e2e/phone-loop.spec.ts` at 390×844 (the first card's top above
-  35% of the screen, Undo after Arrived, Undo after Resolve) and the phone
-  pages in `e2e/a11y.spec.ts`.
+  35% of the screen, Undo after Arrived, Undo after Resolve),
+  `e2e/phone-layout.spec.ts` (Inbox, Bookings, Channels and the Overview:
+  the first conversation, booking, channel card or Today block in the top
+  half, no page taller than four screens; the Channels sub-pages; a fold
+  remembered across a reload), `e2e/inbox-triage.spec.ts` at 1440×900 (at
+  least eight rows, Compact and the width kept, J/E/Undo, ?, /, X and Mark
+  resolved with Undo) and the phone pages in `e2e/a11y.spec.ts`.
 
 #### Real-device runbook
 

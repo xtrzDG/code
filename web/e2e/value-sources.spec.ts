@@ -95,8 +95,11 @@ test("the overview weighs the value against the plan's trial, shows what custome
     await expect(page).toHaveURL(new RegExp(`/b/${owner.businessId}/assistant/knowledge/questions$`));
   }
 
+  // Where a customer came from is in the row's details: the card beside the row under the pointer.
   await page.goto(`/b/${owner.businessId}/inbox?view=all`);
-  await expect(page.getByText(/^From: /).first()).toBeVisible();
+  const fromSource = page.locator("[data-inbox-row]").filter({ hasText: en.inboxTriage.details.source }).first();
+  await fromSource.locator("a").first().hover();
+  await expect(page.locator("[data-row-hint]").getByText(en.inboxTriage.details.source, { exact: true })).toBeVisible();
 });
 
 test("a WhatsApp number is checked before it is saved, and a refusal reads in the owner's language", async ({ page, owner, consoleErrors }) => {
