@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-06 — two-way availability: calendars and booking systems per resource
 
-Spec: `7af92908785e28fd`
+Spec: `d5d9a886a9e8990e`
 
 - **Added** `GET /v1/businesses/{business_id}/resources/{resource_id}/calendar`
   (`ResourceCalendarView`): the linked Google calendar, the iCal feeds
@@ -36,7 +36,9 @@ Spec: `7af92908785e28fd`
 - **Added** `GET …/integrations` (owners, `IntegrationList`): Google
   Calendar, iCal import, iCal export and Cal.com with their
   `IntegrationState` (`off`, `on`, `attention`, `unavailable`) and how many
-  resources use each.
+  resources use each, plus `resources` (`ResourceSyncSummary`: per resource
+  with a calendar, its source and problem counts, last read and whether its
+  bookings are shared) for the resources list's one-line summaries.
 - **Added** `GET /v1/public/ical/{token}.ics` (no sign-in): the resource's
   busy times as an iCal feed (bookings and Google or Cal.com busy times,
   never imported iCal events, no guest data; `no-store`, `noindex`; rate
