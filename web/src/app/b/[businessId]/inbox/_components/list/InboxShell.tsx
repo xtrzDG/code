@@ -6,10 +6,14 @@
  * conversation. The view and the filters live in the URL, so they survive
  * opening a conversation, going back and reloading; the list stays
  * mounted (it is the layout) while conversations open beside it.
+ *
+ * From large screens the list column can be dragged wider or narrower
+ * (remembered for the person), and the keyboard works through the list
+ * (useInboxTriage).
  */
 
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 
 import { ExportCsvButton } from "@/components/exports/ExportCsvButton";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
@@ -18,6 +22,7 @@ import { usePageHelp } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { listColumns } from "../../_lib/inboxLayout";
 import {
   inboxApiQuery,
   inboxFiltersQuery,
@@ -27,9 +32,14 @@ import {
   withView,
   type InboxFilters,
 } from "../../_lib/inboxModel";
+import { useInboxLayout } from "../../_lib/useInboxLayout";
 import { useInboxList } from "../../_lib/useInboxList";
+import { useInboxTriage } from "../../_lib/useInboxTriage";
 import { useTeam } from "../../_lib/useTeam";
 import { InboxList } from "./InboxList";
+import { ListResizer } from "./ListResizer";
+import { RowSourceProvider } from "./RowSourceContext";
+import { ShortcutsSheet } from "./ShortcutsSheet";
 import { InboxToolbar } from "./InboxToolbar";
 import { InboxViewTabs } from "./InboxViewTabs";
 
@@ -43,6 +53,9 @@ export function InboxShell({ children }: { children: ReactNode }) {
   const help = usePageHelp();
   const isOpen = selectedId !== null;
   const linkQuery = inboxFiltersQuery(filters);
+  const layout = useInboxLayout();
+  const triage = useInboxTriage({ view: filters.view, list, openId: selectedId });
+  const column = useRef<HTMLElement>(null);
 
   const setFilters = (next: InboxFilters) => replaceUrlQuery(inboxFiltersQuery(next));
   // The view and channel as CSV, every message included (owners only).
@@ -59,10 +72,14 @@ export function InboxShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(19rem,23rem)_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[minmax(21rem,26.5rem)_minmax(0,1fr)]">
+    <div
+      className="lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(19rem,23rem)_minmax(0,1fr)] lg:gap-5 xl:grid-cols-[minmax(21rem,26.5rem)_minmax(0,1fr)]"
+      style={layout.listWidth === null ? undefined : { gridTemplateColumns: listColumns(layout.listWidth) }}
+    >
       <section
+        ref={column}
         aria-labelledby="inbox-title"
-        className={cn("flex min-h-0 min-w-0 flex-col gap-3", isOpen && "hidden lg:flex")}
+        className={cn("relative flex min-h-0 min-w-0 flex-col gap-3", isOpen && "hidden lg:flex")}
       >
         <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <div className="flex min-w-0 items-center gap-2">
@@ -95,13 +112,26 @@ export function InboxShell({ children }: { children: ReactNode }) {
           selectedId={selectedId}
           linkQuery={linkQuery}
           hasFilters={sheetFilterCount(filters) > 0 || list.isFeed}
+          density={layout.density}
+          onDensity={layout.setDensity}
+          triage={triage}
           onShowAll={() => setFilters(withView(filters, "all"))}
           onClearFilters={() => setFilters(viewOnly(filters))}
+        />
+        <ListResizer
+          width={layout.listWidth}
+          measure={() => column.current?.getBoundingClientRect().width ?? 0}
+          onPreview={layout.previewWidth}
+          onCommit={layout.commitWidth}
+          onReset={layout.resetWidth}
         />
       </section>
 
       {isOpen ? <h1 className="sr-only lg:hidden">{t("inbox.title")}</h1> : null}
-      <div className={cn("min-h-0 min-w-0", !isOpen && "hidden lg:block")}>{children}</div>
+      <div className={cn("min-h-0 min-w-0", !isOpen && "hidden lg:block")}>
+        <RowSourceProvider rows={list.rows}>{children}</RowSourceProvider>
+      </div>
+      <ShortcutsSheet open={triage.isSheetOpen} onClose={triage.closeSheet} />
     </div>
   );
 }

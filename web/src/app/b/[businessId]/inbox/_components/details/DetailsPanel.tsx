@@ -14,12 +14,14 @@ import { CustomerName, DetailRow, PhoneLink } from "@/components/insights/common
 import type { ConversationDetailView } from "@/components/insights/types";
 import { useI18n } from "@/i18n/client";
 import { RatingReasons } from "@/components/teaching/RatingReasons";
+import { sourceLabel } from "@/components/value/sourceLabel";
 import { languageName } from "@/lib/format";
 import { latestAnswerId } from "@/lib/teaching";
 
 import { fromUsage, usageTotals } from "../../_lib/conversationUsage";
 import { useConversationRating } from "../../_lib/useConversationRating";
 import { ConversationTechnicalDetails } from "../conversation/TechnicalDetails";
+import { useRowSource } from "../list/RowSourceContext";
 import { CallsCard } from "./CallsCard";
 import { LinkedItems } from "./LinkedItems";
 import { QualityScore } from "./QualityScore";
@@ -42,6 +44,7 @@ export function DetailsPanel({
   const format = useBusinessFormat();
   const { conversation } = detail;
   const rate = useConversationRating(conversation.id);
+  const source = useRowSource(conversation.id);
   const ratedAnswer = conversation.rated_message_id ?? latestAnswerId(detail.messages ?? []);
   const totals = detail.usage ? fromUsage(detail.usage) : usageTotals(detail.messages ?? []);
 
@@ -67,6 +70,7 @@ export function DetailsPanel({
           <DetailRow label={t("inboxCard.details.channel")}>
             <ChannelBadge channel={conversation.channel} />
           </DetailRow>
+          {source ? <DetailRow label={t("inboxTriage.details.source")}>{sourceLabel(source, t)}</DetailRow> : null}
           {conversation.language ? (
             <DetailRow label={t("inboxCard.details.language")}>{languageName(conversation.language, locale)}</DetailRow>
           ) : null}

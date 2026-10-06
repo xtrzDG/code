@@ -38,6 +38,9 @@ import { inboxRu } from "./insights/inbox.ru";
 import { inboxCardEn } from "./insights/inboxCard.en";
 import { inboxCardKa } from "./insights/inboxCard.ka";
 import { inboxCardRu } from "./insights/inboxCard.ru";
+import { inboxTriageEn } from "./insights/inboxTriage.en";
+import { inboxTriageKa } from "./insights/inboxTriage.ka";
+import { inboxTriageRu } from "./insights/inboxTriage.ru";
 import { leadsEn } from "./insights/leads.en";
 import { leadsKa } from "./insights/leads.ka";
 import { leadsRu } from "./insights/leads.ru";
@@ -73,6 +76,7 @@ export const insightsEn = {
   reports: reportsEn,
   inbox: inboxEn,
   inboxCard: inboxCardEn,
+  inboxTriage: inboxTriageEn,
   setupGuide: setupGuideEn,
   sources: sourcesEn,
   topics: topicsEn,
@@ -92,6 +96,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
   reports: reportsRu,
   inbox: inboxRu,
   inboxCard: inboxCardRu,
+  inboxTriage: inboxTriageRu,
   setupGuide: setupGuideRu,
   sources: sourcesRu,
   topics: topicsRu,
@@ -111,6 +116,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
   reports: reportsKa,
   inbox: inboxKa,
   inboxCard: inboxCardKa,
+  inboxTriage: inboxTriageKa,
   setupGuide: setupGuideKa,
   sources: sourcesKa,
   topics: topicsKa,

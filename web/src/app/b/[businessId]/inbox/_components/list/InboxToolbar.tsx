@@ -72,6 +72,8 @@ export function InboxToolbar({
           <IconSearch className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle" aria-hidden />
           <Input
             id={`${id}-search`}
+            data-inbox-search=""
+            aria-keyshortcuts="/"
             type="search"
             value={search}
             onChange={(event) => typeSearch(event.target.value)}
