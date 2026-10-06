@@ -5,10 +5,12 @@ import {
   changedCard,
   cleanTag,
   customerName,
+  customerNaming,
   erasureConfirmation,
   hasTag,
   markErased,
   MAX_TAGS_PER_CUSTOMER,
+  namingSentence,
   shownPhone,
   tagProblem,
   tagSuggestions,
@@ -63,6 +65,15 @@ describe("a customer's name and phone", () => {
     expect(customerName(contact({ name: "  Ana " }), "?")).toBe("Ana");
     expect(customerName(contact({ name: null, phone_number: null, masked_phone_number: "+995 ••• •33" }), "?")).toBe("+995 ••• •33");
     expect(customerName(contact({ name: null, phone_number: null }), "No name")).toBe("No name");
+  });
+
+  it("keeps their own name apart from a label of ours", () => {
+    const labels = { unnamed: "No name", erased: "Data erased" };
+    expect(customerNaming(contact({ name: "Тамар" }), labels)).toEqual({ name: "Тамар", isOwn: true });
+    expect(customerNaming(contact({ name: null, phone_number: null }), labels)).toEqual({ name: "No name", isOwn: false });
+    expect(customerNaming(contact({ name: "Тамар", erased_at: 7 }), labels)).toEqual({ name: "Data erased", isOwn: false });
+    expect(namingSentence("Block {name}?", { name: "Тамар", isOwn: true })).toEqual({ text: "Block {name}?", values: { name: "Тамар" } });
+    expect(namingSentence("Block {name}?", { name: "No name", isOwn: false })).toEqual({ text: "Block No name?", values: {} });
   });
 });
 

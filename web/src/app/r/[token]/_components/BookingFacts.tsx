@@ -60,14 +60,18 @@ export function BookingFacts({
       {view.service_title ? (
         <div className="bp-fact">
           <dt>{texts.service}</dt>
-          <dd dir="auto">{view.service_title}</dd>
+          <dd dir="auto" data-user-content>
+            {view.service_title}
+          </dd>
         </div>
       ) : null}
       {view.address ? (
         <div className="bp-fact bp-fact-wide">
           <dt>{texts.address}</dt>
           <dd>
-            <span dir="auto">{view.address}</span>
+            <span dir="auto" data-user-content>
+              {view.address}
+            </span>
             {mapsUrl ? (
               <a className="bp-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">
                 {texts.openMap}

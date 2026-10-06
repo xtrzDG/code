@@ -15,6 +15,8 @@ export interface PaletteEntry {
   id: string;
   group: PaletteGroup;
   label: string;
+  /** The label is a customer's own name or phone (user content), not a page of the cabinet or "No name". */
+  isUserLabel?: boolean;
   /** A second line (a page's section, a customer's phone, a booking's time). */
   detail?: string;
   href: string;

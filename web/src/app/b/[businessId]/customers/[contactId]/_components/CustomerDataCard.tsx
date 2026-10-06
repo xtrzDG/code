@@ -19,9 +19,9 @@ import { Button, Card, ConfirmDialog, UserSentence, useToast } from "@/component
 import { downloadJson, isoDay } from "@/components/workspace/helpers";
 import { useI18n } from "@/i18n/client";
 
-import { erasureConfirmation, markErased, type CustomerDetail } from "../../_lib/customerModel";
+import { erasureConfirmation, markErased, namingSentence, type CustomerDetail, type CustomerNaming } from "../../_lib/customerModel";
 
-export function CustomerDataCard({ detail, name }: { detail: Query<CustomerDetail>; name: string }) {
+export function CustomerDataCard({ detail, naming }: { detail: Query<CustomerDetail>; naming: CustomerNaming }) {
   const { t } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
@@ -80,7 +80,7 @@ export function CustomerDataCard({ detail, name }: { detail: Query<CustomerDetai
       current ? { ...current, blocked_at: null, contact: markErased(current.contact, erasedAt) } : current,
     );
     setErasing(false);
-    toast.success({ text: t("settings.requests.deletedSummary"), values: { name } });
+    toast.success(namingSentence(t("settings.requests.deletedSummary"), naming));
   };
 
   return (
@@ -90,12 +90,12 @@ export function CustomerDataCard({ detail, name }: { detail: Query<CustomerDetai
           variant="secondary"
           leadingIcon={<IconDownload className="size-4" aria-hidden />}
           isLoading={isExporting}
-          aria-label={t("settings.requests.exportLabel", { name })}
+          aria-label={t("settings.requests.exportLabel", { name: naming.name })}
           onClick={() => void onExport()}
         >
           {t("settings.requests.export")}
         </Button>
-        <Button variant="danger-ghost" aria-label={t("settings.requests.deleteLabel", { name })} onClick={() => setErasing(true)}>
+        <Button variant="danger-ghost" aria-label={t("settings.requests.deleteLabel", { name: naming.name })} onClick={() => setErasing(true)}>
           {t("settings.requests.delete")}
         </Button>
       </div>
@@ -105,7 +105,7 @@ export function CustomerDataCard({ detail, name }: { detail: Query<CustomerDetai
         onConfirm={onErase}
         isPending={erase.isPending}
         error={erase.error}
-        title={<UserSentence text={t("settings.requests.deleteTitle")} values={{ name }} />}
+        title={<UserSentence {...namingSentence(t("settings.requests.deleteTitle"), naming)} />}
         confirmLabel={t("settings.requests.deleteConfirm")}
         confirmationText={erasureConfirmation(data.contact)}
       >

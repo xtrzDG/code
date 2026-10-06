@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { RequestBody, Schema } from "@/api/types";
-import { Field, Input, Select } from "@/components/ui";
+import { Field, Input, Select, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { cleanReference, isReferenceValid, openInvoices, REFERENCE_MAX } from "../../../_lib/accountActions";
@@ -57,7 +57,7 @@ export function ManualPaymentDialog({
     <ActionDialog
       open={open}
       onClose={onClose}
-      title={t("adminActions.payment.title", { name })}
+      title={<UserSentence text={t("adminActions.payment.title")} values={{ name }} />}
       description={t("adminActions.payment.description")}
       confirmLabel={t("adminActions.payment.confirm")}
       fieldsValid={isValid}
@@ -140,7 +140,7 @@ export function OverridePlanDialog({
     <ActionDialog
       open={open}
       onClose={onClose}
-      title={t("adminActions.plan.title", { name })}
+      title={<UserSentence text={t("adminActions.plan.title")} values={{ name }} />}
       description={t("adminActions.plan.description")}
       confirmLabel={t("adminActions.plan.confirm")}
       fieldsValid={isChanged}

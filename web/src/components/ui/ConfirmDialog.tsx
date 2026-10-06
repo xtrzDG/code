@@ -11,6 +11,7 @@ import { Input } from "./controls";
 import { Field } from "./Field";
 import { InlineError } from "./InlineError";
 import { Modal } from "./Modal";
+import { UserSentence } from "./UserContent";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -29,8 +30,9 @@ export interface ConfirmDialogProps {
   /** Keeps the action disabled (a choice in the body is missing). */
   confirmDisabled?: boolean;
   /**
-   * A strong confirmation: the person must type this text (a name, a
-   * number, a word) before the action is enabled.
+   * A strong confirmation: the person must type this text (the business's
+   * or a customer's name, a number) before the action is enabled. It is
+   * shown as user content (`UserSentence`), never a word of the interface.
    */
   confirmationText?: string;
   /** The last failure of the action, shown in the dialog (toasts sit under it). */
@@ -111,7 +113,8 @@ export function ConfirmDialog({
         {description ? <p>{description}</p> : null}
         {children}
         {confirmationText !== undefined ? (
-          <Field label={t("common.typeToConfirm", { text: confirmationText })}>
+          // The text to type is the owner's own words (a name): shown apart, as user content.
+          <Field label={<UserSentence text={t("common.typeToConfirm")} values={{ text: confirmationText }} />}>
             {(control) => (
               <Input
                 {...control}

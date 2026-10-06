@@ -43,7 +43,8 @@ test("an English guest opens the link, saves the calendar file and moves the boo
   await expect(page.locator("main")).toHaveAttribute("dir", "ltr");
 
   await expect(page.getByRole("heading", { level: 1, name: "Your booking" })).toBeVisible();
-  await expect(page.getByText(DEMO_RESTAURANT, { exact: true })).toBeVisible();
+  // The closed cancel dialog names the business too, in a span of its own (user content).
+  await expect(page.getByText(DEMO_RESTAURANT, { exact: true }).filter({ visible: true })).toBeVisible();
   await expect(page.getByText("Confirmed", { exact: true })).toBeVisible();
   await expect(page.getByRole("definition").filter({ hasText: /\d{4}/ }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Open in maps" })).toHaveAttribute("href", "https://mtsvane-ezo.example/map");

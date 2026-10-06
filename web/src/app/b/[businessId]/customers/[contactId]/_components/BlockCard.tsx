@@ -14,12 +14,12 @@ import { useMutation } from "@/api/useMutation";
 import type { Query } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconShield } from "@/components/icons";
-import { Alert, Button, Card, ConfirmDialog, useToast } from "@/components/ui";
+import { Alert, Button, Card, ConfirmDialog, UserSentence, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
-import { withCard, type CustomerDetail } from "../../_lib/customerModel";
+import { namingSentence, withCard, type CustomerDetail, type CustomerNaming } from "../../_lib/customerModel";
 
-export function BlockCard({ detail, name }: { detail: Query<CustomerDetail>; name: string }) {
+export function BlockCard({ detail, naming }: { detail: Query<CustomerDetail>; naming: CustomerNaming }) {
   const { t } = useI18n();
   const toast = useToast();
   const format = useBusinessFormat();
@@ -52,7 +52,7 @@ export function BlockCard({ detail, name }: { detail: Query<CustomerDetail>; nam
     }
     detail.setData((current) => (current ? withCard(current, result.data) : current));
     setAsking(false);
-    toast.success(t(block ? "customers.block.blocked" : "customers.block.unblocked", { name }));
+    toast.success(namingSentence(t(block ? "customers.block.blocked" : "customers.block.unblocked"), naming));
   };
 
   return (
@@ -81,7 +81,7 @@ export function BlockCard({ detail, name }: { detail: Query<CustomerDetail>; nam
         onConfirm={() => change(true)}
         isPending={setBlocked.isPending}
         error={setBlocked.error}
-        title={t("customers.block.confirmTitle", { name })}
+        title={<UserSentence {...namingSentence(t("customers.block.confirmTitle"), naming)} />}
         confirmLabel={t("customers.block.confirm")}
       >
         <p>{t("customers.block.confirmBody")}</p>

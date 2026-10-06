@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 
 import { IconSearch } from "@/components/icons";
+import { UserSentence } from "@/components/ui/UserContent";
 import { useModalDialog } from "@/components/ui/useModalDialog";
 import { useI18n } from "@/i18n/client";
 import { matchNavigation, movedIndex, navigationEntries, orderedEntries, type PaletteEntry, type PaletteNavLink } from "@/lib/commandPalette";
@@ -84,11 +85,14 @@ export function CommandPalette({
     }
   };
 
-  const status = search.isSearching
-    ? t("palette.searching")
-    : entries.length === 0
-      ? t("palette.noResults", { text: text.trim() })
-      : tp("palette.resultCount", entries.length);
+  // The typed text is the viewer's own words: shown apart from the sentence around it.
+  const status = search.isSearching ? (
+    t("palette.searching")
+  ) : entries.length === 0 ? (
+    <UserSentence text={t("palette.noResults")} values={{ text: text.trim() }} />
+  ) : (
+    tp("palette.resultCount", entries.length)
+  );
 
   return (
     <dialog

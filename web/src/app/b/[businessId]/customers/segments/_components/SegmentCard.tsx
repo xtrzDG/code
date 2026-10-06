@@ -13,8 +13,9 @@ import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconChevronDown, IconDownload, IconPencil, IconTrash } from "@/components/icons";
 import { LoadMore } from "@/components/insights/common";
-import { Button, Card, ErrorState, LoadingRegion, SkeletonRows } from "@/components/ui";
+import { Button, Card, ErrorState, LoadingRegion, SkeletonRows, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { interfaceSentence, joinSentences } from "@/i18n/userValues";
 import { cn } from "@/lib/cn";
 
 import { CustomerRow } from "../../_components/CustomerRow";
@@ -77,19 +78,23 @@ export function SegmentCard({
   const { t, tp } = useI18n();
   const membersId = useId();
   const [isOpen, setOpen] = useState(false);
-  const summary = summaryParts(segment.rules)
-    .map((part) => ("plural" in part ? tp(part.plural, part.count) : t(part.key, part.values)))
-    .join(" · ");
+  // The rules as one line; a tag is the business's own word, shown apart as user content.
+  const summary = joinSentences(
+    summaryParts(segment.rules).map((part) =>
+      "plural" in part ? interfaceSentence(tp(part.plural, part.count)) : { text: t(part.key), values: part.values ?? {} },
+    ),
+    " · ",
+  );
 
   return (
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-60">
-          <h3 dir="auto" className="text-base font-semibold break-words text-ink">
+          <h3 dir="auto" data-user-content className="text-base font-semibold break-words text-ink">
             {segment.name}
           </h3>
           <p dir="auto" className="mt-1 text-sm text-ink-muted">
-            {summary}
+            <UserSentence {...summary} />
           </p>
         </div>
         <div className="flex flex-wrap gap-1">

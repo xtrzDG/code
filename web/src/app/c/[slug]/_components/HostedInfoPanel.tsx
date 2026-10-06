@@ -65,7 +65,7 @@ export function HostedInfoPanel({
   return (
     <aside className="hc-info" aria-labelledby="hc-info-name">
       <div className="hc-info-head">
-        <h2 id="hc-info-name" className="hc-info-name" dir="auto">
+        <h2 id="hc-info-name" className="hc-info-name" dir="auto" data-user-content>
           {view.business_name}
         </h2>
         {status ? (
@@ -104,7 +104,9 @@ export function HostedInfoPanel({
           {view.address ? (
             <section className="hc-info-section">
               <h3>{texts.address}</h3>
-              <p dir="auto">{view.address}</p>
+              <p dir="auto" data-user-content>
+                {view.address}
+              </p>
               {mapsUrl ? (
                 <a className="hc-info-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">
                   {texts.openMap}

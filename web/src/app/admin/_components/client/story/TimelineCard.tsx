@@ -4,7 +4,7 @@ import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
 import type { Schema } from "@/api/types";
 import { useCursorPage } from "@/api/useCursorPage";
-import { Badge, Button, Card, ErrorState, InlineError, SkeletonRows } from "@/components/ui";
+import { Badge, Button, Card, ErrorState, InlineError, SkeletonRows, UserSentence } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
@@ -73,8 +73,13 @@ export function TimelineCard({ businessId, timeZone }: { businessId: string; tim
     auditAction: (action) => tDynamic(`settings.audit.actions.${action}`, action),
     auditEntity: (entity) => tDynamic(`settings.audit.entities.${entity.replaceAll(".", "_")}`, entity),
   };
+  // Who did it: a person's name is user content ("System" is ours).
   const actor = (entry: TimelineEntry) =>
-    entry.actor_name ?? (entry.actor_user_id ? null : entry.event === "audit_entry" ? t("adminStory.timeline.system") : null);
+    entry.actor_name ? (
+      <UserSentence text={t("adminStory.timeline.by")} values={{ name: entry.actor_name }} />
+    ) : entry.actor_user_id || entry.event !== "audit_entry" ? null : (
+      t("adminStory.timeline.by", { name: t("adminStory.timeline.system") })
+    );
   const items = timeline.items;
 
   return (
@@ -90,7 +95,7 @@ export function TimelineCard({ businessId, timeZone }: { businessId: string; tim
           <ol className="relative space-y-4 border-s border-line ps-5">
             {items.map((entry) => {
               const details = timelineDetails(entry, words);
-              const name = actor(entry);
+              const by = actor(entry);
               return (
                 <li key={lineKey(entry)} className="relative">
                   <span aria-hidden className="absolute top-1.5 -start-[1.6rem] size-2.5 rounded-full border-2 border-surface bg-line-strong" />
@@ -104,12 +109,12 @@ export function TimelineCard({ businessId, timeZone }: { businessId: string; tim
                   {details.length > 0 ? <p className="text-xs text-ink-muted">{details.join(" · ")}</p> : null}
                   {entry.reason ? (
                     <p dir="auto" className="mt-1 text-xs break-words text-ink-muted">
-                      {t("adminStory.timeline.reason", { reason: entry.reason })}
+                      <UserSentence text={t("adminStory.timeline.reason")} values={{ reason: entry.reason }} />
                     </p>
                   ) : null}
-                  {name ? (
+                  {by ? (
                     <p dir="auto" className="mt-0.5 text-xs text-ink-subtle">
-                      {t("adminStory.timeline.by", { name })}
+                      {by}
                     </p>
                   ) : null}
                 </li>

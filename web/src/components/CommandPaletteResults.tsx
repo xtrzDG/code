@@ -84,7 +84,7 @@ export function CommandPaletteResults({
                 >
                   <Icon className={cn("size-4 shrink-0", isActive ? "text-accent-ink" : "text-ink-subtle")} aria-hidden />
                   <span className="min-w-0 flex-1">
-                    <span dir="auto" className="block truncate font-medium">
+                    <span dir="auto" data-user-content={entry.isUserLabel ? true : undefined} className="block truncate font-medium">
                       {entry.label}
                     </span>
                     {entry.detail ? (
