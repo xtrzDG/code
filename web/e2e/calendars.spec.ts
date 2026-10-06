@@ -59,7 +59,8 @@ test("a resource's calendars: a private address is refused, the shared address s
   expect(await feed.text()).toContain("BEGIN:VCALENDAR");
   await expect(sheet.getByText(en.calendarSync.export.neverRead)).toBeVisible();
 
-  await sheet.getByRole("button", { name: en.common.close }).click();
+  // The sheet's own close button (the toasts shown over it have one too).
+  await sheet.locator("header").getByRole("button", { name: en.common.close }).click();
   await expect(page.getByText(en.calendarSync.row.shared)).toBeVisible();
 
   // Settings → Integrations: the shared calendar is on, and the resource is listed.
