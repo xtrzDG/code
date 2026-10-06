@@ -58,7 +58,9 @@ def commission_entry_id(invoice_id: InvoiceId) -> CommissionEntryId:
     return CommissionEntryId(uuid5(COMMISSION_NAMESPACE, str(invoice_id)))
 
 
-def reward_credit_id(referred_business_id: BusinessId, side: RewardSide) -> BillingCreditId:
+def reward_credit_id(
+    referred_business_id: BusinessId, side: RewardSide
+) -> BillingCreditId:
     return BillingCreditId(
         uuid5(REWARD_NAMESPACE, f"{referred_business_id}|{side.value}")
     )

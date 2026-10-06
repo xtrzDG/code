@@ -3,6 +3,18 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class CommissionInvoiceCount(BaseConstrainedTypedInt):
+    """
+    How many paid invoices earned a partner commissions (in one currency
+    and status, or marked paid in one payout).
+
+    Example:
+        invoices = CommissionInvoiceCount(4)
+    """
+
+    ge = 0
+
+
 class CommissionRateBasisPoints(BaseConstrainedTypedInt):
     """
     A partner's share of what the businesses they brought pay, in

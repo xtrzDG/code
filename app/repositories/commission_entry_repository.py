@@ -18,7 +18,7 @@ from app.schemas.dto.storage_pages import DocumentPageQuery
 from app.schemas.dto.storage_queries import DocumentFieldMatch, DocumentFilter
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.schemas.typings.referrals.constrained_integers import ReferredBusinessCount
+from app.schemas.typings.referrals.constrained_integers import CommissionInvoiceCount
 from app.schemas.typings.referrals.constrained_strings import CommissionMonth
 from app.schemas.typings.referrals.prefixed_id import PartnerId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
@@ -68,7 +68,7 @@ class CommissionEntryRepository(CommissionEntryRepoContract):
                 partner_id=partner_id,
                 currency_code=CurrencyCode(str(group.values[0])),
                 status=CommissionStatus(str(group.values[1])),
-                invoice_count=ReferredBusinessCount(int(group.count)),
+                invoice_count=CommissionInvoiceCount(int(group.count)),
                 amount_minor=MoneyAmountMinor(int(group.totals[0])),
             )
             for group in self._sums(
@@ -83,7 +83,7 @@ class CommissionEntryRepository(CommissionEntryRepoContract):
                 partner_id=PartnerId(str(group.values[0])),
                 currency_code=CurrencyCode(str(group.values[1])),
                 status=CommissionStatus(str(group.values[2])),
-                invoice_count=ReferredBusinessCount(int(group.count)),
+                invoice_count=CommissionInvoiceCount(int(group.count)),
                 amount_minor=MoneyAmountMinor(int(group.totals[0])),
             )
             for group in self._sums(

@@ -5,5 +5,7 @@ Example:
 """
 
 IsInviteCardDue = bool
+IsPartner = bool
 IsPoweredByHidden = bool
 IsPoweredByRemovable = bool
+IsPoweredByShown = bool

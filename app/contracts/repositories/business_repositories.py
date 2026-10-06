@@ -58,6 +58,10 @@ class BusinessRepoContract(RepoContract, Protocol):
     def get(self, business_id: BusinessId) -> BusinessDocument | None:
         raise NotImplementedError
 
+    def get_many(self, business_ids: list[BusinessId]) -> list[BusinessDocument]:
+        """The businesses of a page's rows, in one read (unknown ids left out)."""
+        raise NotImplementedError
+
     def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
         """Businesses where the user is an owner or staff member."""
         raise NotImplementedError
