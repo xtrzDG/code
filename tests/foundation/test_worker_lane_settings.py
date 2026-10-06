@@ -51,3 +51,26 @@ def test_lanes_left_out_keep_their_default() -> None:
 def test_broken_values_stop_the_start(raw_value: str, message: str) -> None:
     with pytest.raises(ValidationFailedError, match=message):
         assemble_app_settings({"WORKER_LANE_CONCURRENCY": raw_value})
+
+
+def test_a_worker_serves_every_lane_unless_its_role_names_some() -> None:
+    every = assemble_app_settings({})
+    customer = assemble_app_settings({"WORKER_LANES": " Outbound , inbound,"})
+    batch = assemble_app_settings({"WORKER_LANES": "autotests,default"})
+
+    assert every.worker_lanes == tuple(JobLane)
+    assert customer.worker_lanes == (JobLane.INBOUND, JobLane.OUTBOUND)
+    assert batch.worker_lanes == (JobLane.DEFAULT, JobLane.AUTOTESTS)
+    assert assemble_app_settings({"WORKER_LANES": " , "}).worker_lanes == tuple(JobLane)
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "message"),
+    [
+        ("inbound,priority", "unknown lane 'priority'"),
+        ("inbound,INBOUND", "names lane 'inbound' twice"),
+    ],
+)
+def test_broken_roles_stop_the_start(raw_value: str, message: str) -> None:
+    with pytest.raises(ValidationFailedError, match=message):
+        assemble_app_settings({"WORKER_LANES": raw_value})

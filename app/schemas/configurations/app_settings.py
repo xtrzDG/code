@@ -40,9 +40,7 @@ from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateName,
 )
 from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
-from app.schemas.typings.conversations.constrained_integers import (
-    ContactMessageLimit,
-)
+from app.schemas.typings.conversations.constrained_integers import ContactMessageLimit
 from app.schemas.typings.localization.constrained_strings import (
     CountryCode,
     E164PhoneNumber,
@@ -248,6 +246,8 @@ class AppSettings(ImmutableDTO):
     worker_inbound_poll_seconds: WorkerLanePollSeconds = WorkerLanePollSeconds(2)
     # Threads per lane of each worker process (WORKER_LANE_CONCURRENCY).
     worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
+    # The lanes this worker process serves (WORKER_LANES; every lane by default).
+    worker_lanes: tuple[JobLane, ...] = tuple(JobLane)
     # The API runs the background worker in a thread of its own process
     # (EMBEDDED_WORKER; see `read_embedded_worker`).
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled = IsEmbeddedWorkerEnabled(False)

@@ -136,10 +136,12 @@ services:
         fromDatabase:
           name: workshop-staging-db
           property: connectionString
+      # One worker serves every lane (no WORKER_LANES): 16 lane threads, the
+      # periodic thread and the heartbeat, one connection each at most.
       - key: THREADPOOL_SIZE
         value: "20"
       - key: DB_POOL_SIZE
-        value: "16"
+        value: "18"
       - key: LLM_MAX_CONCURRENCY
         value: "12"
       - key: APP_BASE_URL

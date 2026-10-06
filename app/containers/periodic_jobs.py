@@ -56,6 +56,7 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 from app.gateways.worker.periodic.sweep_stale_inbound_events import (
     sweep_stale_inbound_events_job,
 )
+from app.schemas.constants.jobs import JobLane
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 
@@ -117,6 +118,8 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             name=SEND_BOOKING_REMINDERS_JOB,
             interval_seconds=JobIntervalSeconds(15 * MINUTE_SECONDS),
             operator=operators.operations.send_booking_reminders_operator,
+            # Customers' reminders go out with the workers that answer them.
+            lane=JobLane.OUTBOUND,
         ),
         Factory(
             PeriodicJobSpec,

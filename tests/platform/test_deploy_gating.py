@@ -46,6 +46,7 @@ def test_production_deploys_only_checked_commits_of_release() -> None:
     assert set(services) == {
         "workshop-api",
         "workshop-worker",
+        "workshop-batch-worker",
         "workshop-backup",
         "workshop-cabinet",
     }

@@ -32,6 +32,7 @@ from app.utilities.config_helpers.app_settings.environment_variable_readers impo
 )
 from app.utilities.config_helpers.app_settings.worker_lane_settings import (
     read_worker_lane_concurrency,
+    read_worker_lanes,
 )
 
 # Call recordings kept on this server (development or a single server);
@@ -51,6 +52,7 @@ class RuntimeSettingsSection(TypedDict):
     db_pool_size: DatabasePoolSize
     worker_poll_seconds: WorkerPollSeconds
     worker_lane_concurrency: dict[JobLane, WorkerLaneConcurrency]
+    worker_lanes: tuple[JobLane, ...]
     is_embedded_worker_enabled: IsEmbeddedWorkerEnabled
     is_demo_data_seeding_enabled: IsDemoDataSeedingEnabled
     recordings_directory: LocalDirectoryPath
@@ -85,6 +87,7 @@ def read_runtime_settings(
             read_integer(environment_variables, "WORKER_POLL_SECONDS", 15)
         ),
         worker_lane_concurrency=read_worker_lane_concurrency(environment_variables),
+        worker_lanes=read_worker_lanes(environment_variables),
         is_embedded_worker_enabled=IsEmbeddedWorkerEnabled(
             read_embedded_worker(
                 environment_variables,

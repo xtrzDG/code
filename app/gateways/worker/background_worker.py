@@ -27,10 +27,10 @@ from app.gateways.worker.lane_threads import LaneThreads, build_lane_poll_second
 from app.gateways.worker.lease_heartbeat import LeaseHeartbeat
 from app.gateways.worker.periodic_job_runner import PeriodicJobRunner
 from app.gateways.worker.periodic_job_spec import PeriodicJobSpec
-from app.gateways.worker.queued_job_runner import QueuedJobOutcome, QueuedJobRunner
+from app.gateways.worker.queued_job_rounds import JOB_QUEUE_JOB, run_due_queued_jobs
+from app.gateways.worker.queued_job_runner import QueuedJobRunner
 from app.schemas.constants.jobs import JobLane
 from app.schemas.typings.platform.constrained_integers import (
-    JobClaimLimit,
     JobLeaseSeconds,
     ProcessedItemCount,
     WorkerLaneConcurrency,
@@ -50,11 +50,7 @@ STOP_GRACE_SECONDS: float = 25.0
 # After a tick that failed as a whole (the database is down), wait longer
 # and longer between ticks, up to this many seconds.
 MAX_TICK_BACKOFF_SECONDS: int = 5 * 60
-# run_once claims at most this many rounds per lane, so a clock that keeps
-# moving cannot keep it busy forever.
-MAX_CLAIM_ROUNDS_PER_TICK: int = 100
 WORKER_TICK_JOB: JobName = JobName("worker_tick")
-JOB_QUEUE_JOB: JobName = JobName("job_queue")
 
 
 class WorkerTickReport(ImmutableDTO):
@@ -80,8 +76,13 @@ class BackgroundWorker:
       autotest run never delays a reminder or a customer reply, and jobs
       with the same serial key (the autotests of one business) run one at a
       time;
+    - a worker serves the lanes of its role (WORKER_LANES, every lane by
+      default): the workers that answer customers take `inbound` and
+      `outbound`, a batch worker `default` and `autotests`, so no batch job
+      can take down the process that answers customers;
     - periodic jobs run on their own thread, once per period (day, ISO
-      week or interval) across workers and restarts.
+      week or interval) across workers and restarts; a worker runs the
+      shared ones of its lanes, and every worker its process-local ones.
 
     A queued job of one business runs in that business's storage scope.
     Failures of one job never stop others, and a storage outage never stops
@@ -107,8 +108,10 @@ class BackgroundWorker:
         job_monitor: JobMonitorFacilitatorContract | None = None,
         heartbeat_recorder: WorkerHeartbeatRecorder | None = None,
         inbound_poll_seconds: WorkerLanePollSeconds | None = None,
+        lanes: Sequence[JobLane] = tuple(JobLane),
     ) -> None:
         self._poll_seconds: WorkerPollSeconds = poll_seconds
+        self._lanes: tuple[JobLane, ...] = tuple(lanes)
         self._job_wakeup: JobWakeupContract = job_wakeup
         self._heartbeat_recorder: WorkerHeartbeatRecorder | None = heartbeat_recorder
         self._lane_concurrency: dict[JobLane, WorkerLaneConcurrency] = dict(
@@ -126,7 +129,11 @@ class BackgroundWorker:
             lease_seconds=lease_seconds,
         )
         self._periodic_runner = PeriodicJobRunner(
-            periodic_jobs=periodic_jobs,
+            periodic_jobs=[
+                job
+                for job in periodic_jobs
+                if job.is_process_local or job.lane in self._lanes
+            ],
             periodic_run_repo=periodic_run_repo,
             wall_clock=wall_clock,
             held_leases=held_leases,
@@ -152,12 +159,13 @@ class BackgroundWorker:
                 poll_seconds, inbound_poll_seconds
             ),
             failure_reporter=self._failure_reporter,
+            lanes=self._lanes,
         )
 
     def run_once(self) -> WorkerTickReport:
         """
         One tick in the calling thread: release expired leases, run every
-        due periodic job, then every due queued job of every lane. For
+        due periodic job, then every due queued job of the worker's lanes. For
         tests and one-off runs: no heartbeat runs meanwhile, so a batch
         that takes longer than a lease may be taken over by another worker.
         """
@@ -177,7 +185,7 @@ class BackgroundWorker:
     def run_queued_jobs(self) -> WorkerTickReport:
         """
         The queue only, in the calling thread: release expired leases, then
-        run every due queued job of every lane (jobs they queue for now
+        run every due queued job of the worker's lanes (jobs they queue for now
         too). For tests and one-off runs, like `run_once`.
         """
 
@@ -269,26 +277,9 @@ class BackgroundWorker:
         return 0
 
     def _run_due_queued_jobs(self) -> tuple[int, int]:
-        runs: int = 0
-        failures: int = 0
-        for lane in JobLane:
-            limit = JobClaimLimit(int(self._lane_concurrency.get(lane, 1)))
-            for _ in range(MAX_CLAIM_ROUNDS_PER_TICK):
-                try:
-                    jobs, lease_token = self._queued_runner.claim(lane, limit)
-                except Exception as error:  # noqa: BLE001 - queue unreachable
-                    self._failure_reporter.report(JOB_QUEUE_JOB, error)
-                    failures += 1
-                    break
-
-                if not jobs:
-                    break
-
-                for job in jobs:
-                    outcome: QueuedJobOutcome = self._queued_runner.run(
-                        job, lease_token
-                    )
-                    runs += int(outcome.has_run)
-                    failures += int(outcome.has_failed)
-
-        return runs, failures
+        return run_due_queued_jobs(
+            self._queued_runner,
+            self._lanes,
+            self._lane_concurrency,
+            self._failure_reporter,
+        )

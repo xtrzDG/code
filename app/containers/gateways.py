@@ -58,4 +58,5 @@ class GatewaysContainer(containers.DeclarativeContainer):
         job_monitor=facilitators.job_monitor,
         heartbeat_recorder=worker_heartbeat_recorder,
         inbound_poll_seconds=config.app_settings.provided.worker_inbound_poll_seconds,
+        lanes=config.app_settings.provided.worker_lanes,
     )

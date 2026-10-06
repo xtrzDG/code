@@ -140,6 +140,7 @@ def build_worker(
     queued_operators: dict[JobName, QueuedJobOperator] | None = None,
     stores: JobStores | None = None,
     poll_seconds: int = 5,
+    lanes: tuple[JobLane, ...] = tuple(JobLane),
 ) -> WorkerKit:
     job_stores: JobStores = build_job_stores() if stores is None else stores
     reporter = RecordingErrorReporter()
@@ -154,6 +155,7 @@ def build_worker(
         storage_scope=StorageScopeContext(),
         job_wakeup=job_stores.job_wakeup,
         lane_concurrency=TEST_LANE_CONCURRENCY,
+        lanes=lanes,
     )
     queue = JobQueueFacilitator(
         job_repo=job_stores.job_repo,
