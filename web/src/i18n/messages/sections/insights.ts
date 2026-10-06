@@ -47,6 +47,9 @@ import { leadsRu } from "./insights/leads.ru";
 import { messageDeliveryEn } from "./insights/messageDelivery.en";
 import { messageDeliveryKa } from "./insights/messageDelivery.ka";
 import { messageDeliveryRu } from "./insights/messageDelivery.ru";
+import { overviewPhoneEn } from "./insights/overviewPhone.en";
+import { overviewPhoneKa } from "./insights/overviewPhone.ka";
+import { overviewPhoneRu } from "./insights/overviewPhone.ru";
 import { reportsEn } from "./insights/reports.en";
 import { reportsKa } from "./insights/reports.ka";
 import { reportsRu } from "./insights/reports.ru";
@@ -77,6 +80,7 @@ export const insightsEn = {
   inbox: inboxEn,
   inboxCard: inboxCardEn,
   inboxTriage: inboxTriageEn,
+  overviewPhone: overviewPhoneEn,
   setupGuide: setupGuideEn,
   sources: sourcesEn,
   topics: topicsEn,
@@ -97,6 +101,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
   inbox: inboxRu,
   inboxCard: inboxCardRu,
   inboxTriage: inboxTriageRu,
+  overviewPhone: overviewPhoneRu,
   setupGuide: setupGuideRu,
   sources: sourcesRu,
   topics: topicsRu,
@@ -117,6 +122,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
   inbox: inboxKa,
   inboxCard: inboxCardKa,
   inboxTriage: inboxTriageKa,
+  overviewPhone: overviewPhoneKa,
   setupGuide: setupGuideKa,
   sources: sourcesKa,
   topics: topicsKa,

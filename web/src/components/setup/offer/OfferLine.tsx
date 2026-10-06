@@ -5,15 +5,17 @@
  * suggestions, the price and a way to remove it; in the profile editor
  * also the kind (when the business sells more than one) and the minutes
  * (for kinds that last a while). Its save state sits at the end. On a
- * phone a line with those columns takes two rows: the name with its save
- * state and remove button, then the kind, the price and the minutes.
+ * phone the name and the price share one row, an example's tag sits on
+ * the frame, and removing is in the line's "⋯" menu; with the kind and
+ * minutes columns the line takes two rows: the name with its save state
+ * and menu, then the kind, the price and the minutes.
  */
 
 import type { FocusEvent } from "react";
 
 import type { KnowledgeItemKind } from "@/api/types";
 import { IconX } from "@/components/icons";
-import { Badge, Button, Input, Select } from "@/components/ui";
+import { Badge, Button, Input, OverflowMenu, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { kindHasDuration } from "@/lib/knowledge/kinds";
@@ -71,12 +73,12 @@ export function OfferLine({
       data-row-key={row.key}
       onBlur={leave}
       className={cn(
-        "rounded-2xl border bg-surface/85 p-3 backdrop-blur-sm transition-colors sm:p-2.5",
+        "relative rounded-2xl border bg-surface/85 p-2 backdrop-blur-sm transition-colors sm:p-2.5",
         row.isSuggestion ? "border-dashed border-line-strong" : "border-line",
       )}
     >
-      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-        <div className={cn("min-w-0 flex-1 sm:basis-auto", !twoRows && "basis-full")}>
+      <div className={cn("flex items-center gap-2 sm:flex-nowrap", twoRows ? "flex-wrap" : "max-sm:gap-1.5")}>
+        <div className="min-w-0 flex-1 sm:basis-auto">
           <Input
             data-offer-name
             autoFocus={row.key.startsWith("new-") && row.title === ""}
@@ -91,7 +93,8 @@ export function OfferLine({
         </div>
         {twoRows ? <span aria-hidden className="h-0 basis-full sm:hidden max-sm:order-1" /> : null}
         {row.isSuggestion ? (
-          <Badge tone="neutral" className={lower}>
+          // On a phone the tag sits on the line's dashed frame, so the name and the price keep one row.
+          <Badge tone="neutral" className={cn("max-sm:absolute max-sm:-top-2.5 max-sm:start-3 max-sm:py-0 max-sm:text-[0.6875rem]", lower)}>
             {t("tunnelOffer.offer.suggestion")}
           </Badge>
         ) : null}
@@ -109,7 +112,7 @@ export function OfferLine({
             ))}
           </Select>
         ) : null}
-        <div className={cn("relative w-32 shrink-0", twoRows && "max-sm:w-28", lower)}>
+        <div className={cn("relative w-32 shrink-0 max-sm:w-28", lower)}>
           <Input
             aria-label={`${t("tunnelOffer.offer.price", { currency })} ${index + 1}`}
             aria-invalid={errors.price ? true : undefined}
@@ -141,10 +144,17 @@ export function OfferLine({
           aria-label={t("tunnelOffer.offer.removeRow", { name })}
           title={t("tunnelOffer.offer.removeRow", { name })}
           onClick={onRemove}
-          className="shrink-0"
+          className="shrink-0 max-sm:hidden"
         >
           <IconX className="size-4" aria-hidden />
         </Button>
+        <OverflowMenu
+          iconOnly
+          label={t("tunnelOffer.offer.rowMenu", { name: label })}
+          placement="bottom"
+          className="shrink-0 sm:hidden"
+          actions={[{ key: "remove", label: t("tunnelOffer.offer.removeRow", { name }), onSelect: onRemove, tone: "danger" }]}
+        />
       </div>
       {problem ? (
         <p className="mt-1.5 px-1 text-sm text-danger" role="alert">

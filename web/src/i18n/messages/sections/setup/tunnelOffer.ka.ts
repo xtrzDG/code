@@ -23,6 +23,7 @@ export const tunnelOfferKa: Translation<typeof tunnelOfferEn> = {
     addRow: "სტრიქონის დამატება",
     removeRow: "„{name}“-ის წაშლა",
     removeEmpty: "ამ სტრიქონის წაშლა",
+    rowMenu: "მეტი სტრიქონისთვის „{name}“",
     rowSaving: "ინახება…",
     rowSaved: "შენახულია",
     rowFailed: "არ შეინახა",

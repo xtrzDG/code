@@ -8,23 +8,19 @@ import { useBusiness, useBusinessFormat } from "@/components/business/BusinessCo
 import { useAttentionCounts } from "@/components/shell/LiveEvents";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
-import { formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
 import { useToday } from "@/components/insights/useToday";
-import { BOOKING_STATUS, CHANNEL_LABELS, HANDOFF_REASONS } from "@/components/insights/labels";
-import { formatPercent } from "@/components/insights/numbers";
 import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
-import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useSetupProgress } from "@/components/setupGuide/useSetupProgress";
 import { AnswersToImproveCard } from "@/components/teaching/AnswersToImproveCard";
 import { useValueOfDates } from "@/components/value/useValueQueries";
 import { useI18n } from "@/i18n/client";
-import { languageName } from "@/lib/format";
 import { businessPath, inboxPath } from "@/lib/navigation";
 import { guideCard } from "@/lib/setupGuide/guide";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
-import { AttentionTile, BarList, NextStepCard } from "./_components/DashboardWidgets";
+import { AttentionTile, NextStepCard } from "./_components/DashboardWidgets";
 import {
   canTakeStep,
   DASHBOARD_PERIODS,
@@ -33,18 +29,15 @@ import {
   needsStatusCard,
   nextStep,
   periodRange,
-  toBars,
   type DashboardPeriod,
 } from "./_components/dashboardModel";
-import { PackageCard } from "./_components/PackageCard";
-import { PeriodTiles } from "./_components/PeriodTiles";
+import { OverviewStats } from "./_components/OverviewStats";
+import { PhoneFold, PhoneFolds } from "./_components/PhoneFold";
 import { SetupGuideCard } from "./_components/setupGuide/SetupGuideCard";
+import { TodayBlock } from "./_components/TodayBlock";
 import { TodayQueue } from "./_components/TodayQueue";
 import { TopicsCard } from "./_components/TopicsCard";
-import { TrendChart } from "./_components/TrendChart";
 import { ValueHero } from "./_components/ValueHero";
-
-const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
 
 /**
  * The dashboard (concept /dashboard): what to do next, what waits for a
@@ -52,9 +45,14 @@ const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" 
  * handoffs and the package usage, for a period in the business time zone
  * (never from before the launch: "since 5 Oct"). Until a period has any
  * activity its statistics are one empty card, not a wall of zeros.
+ *
+ * On a phone the Today block comes first (who waits for a person, today's
+ * bookings, questions without an answer), then the value hero; the
+ * statistics and the topics fold into rows that open on a tap (PhoneFold,
+ * remembered per person). Large screens keep the tiles and every block.
  */
 export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPeriod | null }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { business, isOwner } = useBusiness();
   const format = useBusinessFormat();
   const [period, setPeriod] = useState<DashboardPeriod>(initialPeriod ?? DEFAULT_DASHBOARD_PERIOD);
@@ -80,16 +78,12 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
   };
 
   const step = nextStep(business);
-  const openHandoffCount = inbox?.needsPerson;
   const data = stats.data;
-  const hasActivity =
-    data !== undefined &&
-    data.conversation_count + data.booking_count + data.lead_count + data.handoff_count > 0;
   // Value first once customers are served (tests in the sandbox count for nothing).
   const showsValue = isOwner && (business.status === "live" || business.status === "paused");
 
   return (
-    <>
+    <PhoneFolds>
       <PageHeader
         title={t("navigation.pages.overviewDashboard")}
         actions={
@@ -102,7 +96,10 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
         }
       />
 
-      <div className="space-y-6">
+      <div className="space-y-6 max-lg:space-y-4">
+        {/* Phones: today's work before anything else. */}
+        <TodayBlock unansweredQuestions={data?.open_unanswered_question_count} className="lg:hidden" />
+
         {showsValue && value.data ? <ValueHero model={value.data} isPlaceholder={value.isPlaceholder} /> : null}
 
         {needsStatusCard(business, isOwner) || setup.error ? (
@@ -115,8 +112,9 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
 
         {guide !== "hidden" && setup.data ? <SetupGuideCard setup={setup.data} isFinished={guide === "finished"} /> : null}
 
+        {/* Large screens: the attention tiles (phones have them in Today). */}
         {isOwner ? (
-          <section aria-labelledby="dashboard-attention" className="space-y-3">
+          <section aria-labelledby="dashboard-attention" className="space-y-3 max-lg:hidden">
             <h2 id="dashboard-attention" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
               {t("dashboard.attention.title")}
             </h2>
@@ -125,7 +123,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
                 href={inboxPath(businessId, "needs_person")}
                 label={t("dashboard.attention.openHandoffs")}
                 hint={t("dashboard.attention.openHandoffsHint")}
-                count={openHandoffCount}
+                count={inbox?.needsPerson}
                 formatCount={format.number}
                 actionLabel={t("dashboard.attention.open")}
                 icon={<IconHandoff className="size-5" />}
@@ -142,7 +140,9 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             </div>
           </section>
         ) : (
-          <TodayQueue />
+          <div className="max-lg:hidden">
+            <TodayQueue />
+          </div>
         )}
 
         {stats.error && !data ? (
@@ -154,91 +154,27 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
             <DashboardPeriodSkeleton />
           </LoadingRegion>
         ) : (
-          <section
-            aria-labelledby="dashboard-period"
-            className={stats.isPlaceholder ? "animate-settle space-y-4 opacity-60 transition-opacity" : "animate-settle space-y-4 transition-opacity"}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="dashboard-period" className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
-                {data.is_since_launch
-                  ? t("dashboard.periodSince", { date: formatLocalDate(data.date_from, locale, SHORT_DATE) })
-                  : t("dashboard.periodRange", { range: formatLocalDateRange(data.date_from, data.date_to, locale) })}
-              </h2>
-              {stats.error ? (
-                <Button variant="ghost" size="sm" onClick={stats.reload}>
-                  {t("common.retry")}
-                </Button>
-              ) : null}
-            </div>
-
-            {hasActivity ? (
-              <>
-                <PeriodTiles data={data} value={value.data} isBusy={stats.isPlaceholder} />
-
-                {(data.daily ?? []).length > 1 ? <TrendChart days={data.daily ?? []} /> : null}
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
-                  <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
-                    <BarList
-                      title={t("dashboard.breakdown.languages")}
-                      bars={toBars((data.languages ?? []).map((item) => ({ key: item.language, count: item.count })))}
-                      labelOf={(tag) => languageName(tag, locale)}
-                      valueOf={(bar) => barValue(bar.count, bar.percent)}
-                      emptyText={t("dashboard.breakdown.empty")}
-                    />
-                    <BarList
-                      title={t("dashboard.breakdown.channels")}
-                      bars={toBars((data.channels ?? []).map((item) => ({ key: item.channel, count: item.count })))}
-                      labelOf={(channel) => t(CHANNEL_LABELS[channel])}
-                      valueOf={(bar) => barValue(bar.count, bar.percent)}
-                      emptyText={t("dashboard.breakdown.empty")}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <BarList
-                    title={t("dashboard.breakdown.bookingsByStatus")}
-                    bars={toBars((data.bookings_by_status ?? []).map((item) => ({ key: item.status, count: item.count })))}
-                    labelOf={(status) => t(BOOKING_STATUS[status].label)}
-                    valueOf={(bar) => format.number(bar.count)}
-                    emptyText={t("dashboard.breakdown.empty")}
-                  />
-                  <BarList
-                    title={t("dashboard.breakdown.handoffsByReason")}
-                    bars={toBars((data.handoffs_by_reason ?? []).map((item) => ({ key: item.reason, count: item.count })))}
-                    labelOf={(reason) => t(HANDOFF_REASONS[reason])}
-                    valueOf={(bar) => format.number(bar.count)}
-                    emptyText={t("dashboard.breakdown.empty")}
-                  />
-                </div>
-              </>
-            ) : (
-              // Nothing yet in the period: one card instead of a wall of zeros.
-              <div className="grid gap-4 lg:grid-cols-3">
-                <PackageCard usage={data.package ?? null} periodVoiceMinutes={data.used_voice_minutes} />
-                <Card className="lg:col-span-2" data-stats-empty="">
-                  <EmptyState
-                    title={t(data.is_since_launch ? "dashboard.statsEmptyTitle" : "dashboard.emptyTitle")}
-                    description={t(data.is_since_launch ? "dashboard.statsEmptyDescription" : "dashboard.emptyDescription")}
-                  />
-                </Card>
-              </div>
-            )}
-          </section>
+          <OverviewStats
+            data={data}
+            value={value.data}
+            isPlaceholder={stats.isPlaceholder}
+            hasError={Boolean(stats.error)}
+            onRetry={stats.reload}
+          />
         )}
 
         {/* Bad ratings and questions without an answer, to fix while they are fresh. */}
         {isLaunched(business.status) ? <AnswersToImproveCard /> : null}
 
         {/* What customers asked about in the last 30 days (the period above does not change it). */}
-        {isLaunched(business.status) ? <TopicsCard /> : null}
-      </div>
-    </>
-  );
+        {isLaunched(business.status) ? (
+          <PhoneFold name="topics" title={t("topics.title")}>
+            <TopicsCard />
+          </PhoneFold>
+        ) : null}
 
-  function barValue(count: number, percent: number): string {
-    return t("dashboard.breakdown.value", { count: format.number(count), percent: formatPercent(percent, locale) });
-  }
+        {/* The slot for invitations (R15-REFERRALS' InviteCard): owners, after everything above, on every screen. */}
+      </div>
+    </PhoneFolds>
+  );
 }

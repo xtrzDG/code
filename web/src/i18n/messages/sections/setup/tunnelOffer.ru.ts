@@ -23,6 +23,7 @@ export const tunnelOfferRu: Translation<typeof tunnelOfferEn> = {
     addRow: "Добавить строку",
     removeRow: "Удалить «{name}»",
     removeEmpty: "Удалить эту строку",
+    rowMenu: "Ещё для строки «{name}»",
     rowSaving: "Сохраняем…",
     rowSaved: "Сохранено",
     rowFailed: "Не сохранено",
