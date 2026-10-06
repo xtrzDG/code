@@ -30,9 +30,6 @@ class PlatformOpsOrchestratorsContainer(containers.DeclarativeContainer):
     record_maintenance_run_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.record_maintenance_run_use_case
     )
-    create_incident_orchestrator = use_case_orchestrator(
-        platform_ops_use_cases.create_incident_use_case
-    )
     list_incidents_orchestrator = use_case_orchestrator(
         platform_ops_use_cases.list_incidents_use_case
     )

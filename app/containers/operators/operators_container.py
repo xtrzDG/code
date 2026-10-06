@@ -43,6 +43,9 @@ from app.containers.operators.public_demo_operators import (
     PublicDemoOperatorsContainer,
 )
 from app.containers.operators.referral_operators import ReferralOperatorsContainer
+from app.containers.operators.reliability_operators import (
+    ReliabilityOperatorsContainer,
+)
 from app.containers.operators.security_operators import SecurityOperatorsContainer
 from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.operators.sharing_operators import SharingOperatorsContainer
@@ -168,6 +171,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     telemetry: TelemetryOperatorsContainer = Container(  # type: ignore[assignment]
         TelemetryOperatorsContainer,
         telemetry_pipelines=pipelines.telemetry,
+        utilities=utilities,
+    )
+    reliability: ReliabilityOperatorsContainer = Container(  # type: ignore[assignment]
+        ReliabilityOperatorsContainer,
+        reliability_pipelines=pipelines.reliability,
         utilities=utilities,
     )
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]

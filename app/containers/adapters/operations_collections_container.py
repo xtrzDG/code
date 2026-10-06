@@ -12,6 +12,7 @@ from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
@@ -116,6 +117,15 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     service_level_hour_collection = document_collection(
         ServiceLevelHourDocument,
         "service_level_hours",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The marks of the platform's watchers and the watchdog's lease (1173).
+    platform_monitor_collection = document_collection(
+        PlatformMonitorDocument,
+        "platform_monitors",
         config,
         clients,
         utilities,

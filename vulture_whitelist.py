@@ -119,6 +119,10 @@ _.identity_digest  # app/schemas/domain/suppression.py (the id is derived from i
 # code fills them by keyword, so nothing in Python reads them.
 _.latency_ms  # app/schemas/dto/health.py (GET /readyz)
 _.heartbeat_age_seconds  # app/schemas/dto/health.py (GET /readyz)
+_.limit_seconds  # app/schemas/dto/pipeline_health.py (GET /healthz/pipeline)
+_.monitoring_delayed  # app/schemas/dto/platform_status.py (GET /v1/platform/status)
+_.affected_business_count  # app/schemas/dto/incidents.py (the incident log)
+_.is_expanding  # app/schemas/dto/incidents.py (the incident log)
 _.error_name  # app/schemas/dto/widget_errors.py (read as a tag by model_dump)
 _.attention_count  # app/schemas/dto/admin.py
 _.failed_tests  # app/schemas/dto/admin.py

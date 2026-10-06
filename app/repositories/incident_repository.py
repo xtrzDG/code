@@ -4,6 +4,7 @@ from app.repositories.document_queries import CREATED_AT_FIELD, document_positio
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.dto.storage_pages import DocumentPageQuery
+from app.schemas.typings.incidents.prefixed_id import IncidentId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
 
@@ -23,6 +24,9 @@ class IncidentRepository(IncidentRepoContract):
 
     def save(self, incident: IncidentDocument) -> None:
         self._collection.upsert(str(incident.id), incident)
+
+    def get(self, incident_id: IncidentId) -> IncidentDocument | None:
+        return self._collection.get(str(incident_id))
 
     def list_page(self, page: KeysetSlice) -> list[IncidentDocument]:
         return self._collection.page_by(

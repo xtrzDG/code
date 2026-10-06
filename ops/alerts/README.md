@@ -1,7 +1,12 @@
 # Platform alert rules
 
 One file per alert of the `platform_alerts` job (every five minutes, once
-per period across workers; `app/use_cases/admin/alerts/`). The files are
+per period across workers; `app/use_cases/admin/alerts/`). Two of them
+(`worker_down`, `inbound_backlog`) are also watched from outside the
+workers by the API's pipeline watchdog (every `PIPELINE_WATCHDOG_SECONDS`,
+one API process at a time), which shares their episodes and cooldown and
+sends straight through the platform bot and SMTP; `GET /healthz/pipeline`
+is the external monitor's view of the same two conditions. The files are
 the reviewed source of the thresholds: the code's copy
 (`app/use_cases/admin/alerts/alert_rules.py`) must match them, and
 `tests/platform_ops/test_alert_rules_as_code.py` fails when one changes

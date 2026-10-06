@@ -32,4 +32,18 @@ class AlertRunbookPath(BaseConstrainedTypedString):
     pattern = r"^docs/operations/[a-z0-9/-]+\.md\Z"
 
 
+class MonitorHolderName(BaseConstrainedTypedString):
+    """
+    The API process that holds the pipeline watchdog's lease: its host name
+    and process id (no personal data).
+
+    Example:
+        holder = MonitorHolderName("srv-d1f2g3h4-5b6c7:4211")
+    """
+
+    min_length = 1
+    max_length = 255
+    pattern = r"^[A-Za-z0-9][A-Za-z0-9._:\-]*\Z"
+
+
 # Keep abc order for all non example types, if possible.

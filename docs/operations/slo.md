@@ -82,6 +82,7 @@ figure is above its threshold:
 | `handoff_spike` | the last hour's handoffs are over 3 times the week before's hourly mean (at least 5) | SEV2 | [assistant-quality](runbooks/assistant-quality.md) |
 | `tool_errors` | over 5 replies of the last hour carry a failed tool call | SEV3 | [assistant-quality](runbooks/assistant-quality.md) |
 | `stale_worker` | a worker of the current release has not beaten for 10 minutes while others run | SEV2 | [stuck-worker](runbooks/stuck-worker.md) |
+| `worker_down` | no worker at all wrote its pulse for 5 minutes (raised by the API's pipeline watchdog) | SEV1 | [worker-down](runbooks/worker-down.md) |
 | `otp_cap_trips` | a platform cap refused a login code in the last 15-30 minutes | SEV2 | [sms-pumping](runbooks/sms-pumping.md) |
 | `quality_drop` | the judge's average score of the last day's sampled real conversations is over 10% below the 7 days before (at least 10 scored in each) | SEV3 | [assistant-quality](runbooks/assistant-quality.md) |
 | `answer_budget_fast_burn` | the answer budget burns over 14.4 times the sustainable pace in the last hour and the last 5 minutes (at least 20 messages) | SEV1 | [error-budget-burn](runbooks/error-budget-burn.md) |
@@ -126,11 +127,38 @@ Meta about each token once a day; it needs `META_APP_ID` and
 `META_APP_SECRET`), the database size per table, and the last backup and
 restore drill. Every figure is an indexed count or the system catalog.
 
-**What the job cannot see.** When no worker runs, no check runs. Two
-outside watchers cover that: Sentry Crons expects a check-in of
-`platform_alerts` every five minutes (with `SENTRY_DSN`; a missed one
-pages from Sentry), and the external uptime monitor on `GET /readyz`
-catches the API and the database. Configure both at launch.
+**What the job cannot see.** When no worker runs, no check runs. Three
+watchers outside the workers cover that:
+
+- **The API's pipeline watchdog.** Every `PIPELINE_WATCHDOG_SECONDS` (60)
+  each API process takes a look; the one that holds the watchdog's lease
+  (in `platform_monitors`, read and renewed under the same
+  `platform-alert-states` advisory lock as the job) reads the freshest
+  worker pulse and the oldest due customer message. A pulse older than
+  5 minutes (or none) fires `worker_down`; a customer message waiting over
+  120 s fires `inbound_backlog`. It steps the same episodes with the same
+  cooldown as the job, so whichever looks first tells the team once, and
+  it sends straight through the platform bot and SMTP: the job queue
+  needs the workers that are gone. Another API process takes the lease
+  once the leader stops renewing it (2.5 intervals).
+- **The external uptime monitor, two checks.** `GET /readyz` every minute
+  (this API instance and the database answer) and `GET /healthz/pipeline`
+  every minute (503 while no worker pulsed for 5 minutes or a customer
+  message waited over 120 s; the body names which). Both without a token,
+  EU probe, alert after two failures. Render routes traffic by `/readyz`
+  only: a dead worker must never take the API out of rotation.
+- **Sentry Crons** expects a check-in of `platform_alerts` every five
+  minutes (with `SENTRY_DSN`; a missed one pages from Sentry).
+
+Configure the monitor's two checks and Sentry Crons at launch.
+
+**Status page freshness.** The job marks every run (`platform_monitors`,
+`alert_checks`). `/status` trusts the alert levels only while that mark
+is at most 15 minutes old: past that the chat channels (website chat,
+Meta, Telegram) count as at least degraded, `GET /v1/platform/status`
+says `monitoring_delayed`, and the page shows when the last check ran
+([status-page-stale](runbooks/status-page-stale.md)). The hourly history
+records those hours the same way.
 
 **Changing a rule.** Edit its file in `ops/alerts/` and
 `app/use_cases/admin/alerts/alert_rules.py` in the same pull request

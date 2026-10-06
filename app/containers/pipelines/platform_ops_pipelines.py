@@ -24,9 +24,6 @@ class PlatformOpsPipelinesContainer(containers.DeclarativeContainer):
     record_maintenance_run_pipeline = orchestrator_pipeline(
         platform_ops.record_maintenance_run_orchestrator
     )
-    create_incident_pipeline = orchestrator_pipeline(
-        platform_ops.create_incident_orchestrator
-    )
     list_incidents_pipeline = orchestrator_pipeline(
         platform_ops.list_incidents_orchestrator
     )

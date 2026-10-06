@@ -38,6 +38,9 @@ from app.registries.locks.data_task_lock_registry import DataTaskLockRegistry
 from app.registries.locks.login_code_send_lock_registry import (
     LoginCodeSendLockRegistry,
 )
+from app.registries.locks.platform_alert_lock_registry import (
+    PlatformAlertLockRegistry,
+)
 from app.registries.maintenance.data_task_registry import DataTaskRegistry
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
@@ -187,4 +190,8 @@ class RegistriesContainer(containers.DeclarativeContainer):
     data_task_registry: Singleton[DataTaskRegistry] = Singleton(DataTaskRegistry)
     data_task_lock_registry: Singleton[DataTaskLockRegistry] = Singleton(
         DataTaskLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    # The platform alerts' episodes, stepped by workers and the API (1173).
+    platform_alert_lock_registry: Singleton[PlatformAlertLockRegistry] = Singleton(
+        PlatformAlertLockRegistry, advisory_locks=adapters.advisory_locks
     )

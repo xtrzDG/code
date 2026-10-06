@@ -1,10 +1,13 @@
+from app.schemas.constants.incidents import IncidentScope
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.dto.incidents import IncidentView
+from app.schemas.typings.incidents.constrained_integers import AffectedBusinessCount
 
 
 def incident_view(incident: IncidentDocument) -> IncidentView:
     """The incident as the admin pages show it (the notice texts by language only)."""
 
+    is_all: bool = incident.scope is IncidentScope.ALL_BUSINESSES
     return IncidentView(
         id=incident.id,
         kind=incident.kind,
@@ -21,4 +24,12 @@ def incident_view(incident: IncidentDocument) -> IncidentView:
         notified_at=incident.notified_at,
         reported_by=incident.reported_by,
         created_at=incident.created_at,
+        scope=incident.scope,
+        affected_business_count=(
+            incident.reached_business_count or AffectedBusinessCount(0)
+            if is_all
+            else AffectedBusinessCount(len(incident.affected_business_ids))
+        ),
+        is_expanding=is_all and incident.expanded_at is None,
+        announcement_id=incident.announcement_id,
     )

@@ -11,6 +11,28 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — the pipeline watchdog: incidents of every business, monitoring freshness
+
+Spec: `302207442e9d9f78`
+
+- **Added** `POST /v1/admin/incidents` takes `scope`: `listed` (the
+  default, the businesses named in `affected_business_ids`, at least one)
+  or `all_businesses` (none named; the worker reaches every business in
+  keyset batches after the incident is recorded). `affected_business_ids`
+  may now be left out for `all_businesses`.
+- **Added** `POST /v1/admin/incidents` takes an optional `announcement`
+  (the body of `POST /v1/admin/announcements`): it is published on the
+  status page right after the incident is recorded and linked to it. A
+  refused announcement answers 422 after the incident was recorded.
+- **Added** `IncidentView.scope`, `affected_business_count` (the named
+  businesses, or those the walk reached so far), `is_expanding` (the walk
+  of every business is still running) and `announcement_id`.
+- **Added** `PlatformStatusView.monitoring_delayed`: the platform alerts
+  last ran more than 15 minutes ago (`checked_at` says when); the chat
+  channels then count as degraded.
+- `GET /healthz/pipeline` (whether the workers answer customers, for the
+  external monitor) is not part of the API description.
+
 ## 2026-10-06 — wave 16 together: the live widget, the subscription lifecycle, data tasks, service levels, calendars
 
 Spec: `d055b5c7ca2f4a76`

@@ -123,3 +123,12 @@ export function parseDismissed(raw: string | null): string[] {
     return [];
   }
 }
+
+/**
+ * Whole minutes since the platform's last check (`checked_at`, UNIX
+ * microseconds) at `nowMs`; never negative (a clock a little behind the
+ * server's reads "0").
+ */
+export function minutesSinceCheck(checkedAt: number, nowMs: number): number {
+  return Math.max(0, Math.floor((nowMs - checkedAt / 1000) / 60_000));
+}

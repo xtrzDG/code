@@ -3,14 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   buildIncidentBody,
   emptyIncidentForm,
-  localInputToMicros,
-  microsToLocalInput,
   noticeFill,
   parseBusinessIds,
   withKind,
   type IncidentForm,
   type NoticeTexts,
 } from "./incidentForm";
+import { localInputToMicros, microsToLocalInput } from "./localTime";
 
 const BUSINESS_A = "business_0f8b8f0e-8d3a-4a49-9f39-3c4f2b0a9e11";
 const BUSINESS_B = "business_6a1d3c52-1f0e-4b7a-8c55-0d2e9f6b7a34";
@@ -83,10 +82,12 @@ describe("buildIncidentBody", () => {
         title: "WhatsApp replies delayed",
         started_at: localInputToMicros("2026-10-04T10:15"),
         detected_at: localInputToMicros("2026-10-04T10:20"),
+        scope: "listed",
         affected_business_ids: [BUSINESS_A],
         approximate_subject_count: null,
         approximate_record_count: null,
         notice_texts: [],
+        announcement: null,
       },
     });
   });

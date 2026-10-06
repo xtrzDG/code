@@ -34,7 +34,8 @@ class PlatformAlertStateDocument(BaseDocument):
     # one of the burn-rate alerts (`answer_budget_*_burn`,
     # `api_budget_*_burn`, migration 1163). States are stored and read under
     # their code, so a release that does not know a code never reads its row.
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 5: `code` may be `worker_down` (the API's pipeline watchdog, 1173).
+    schema_version: SchemaVersion = SchemaVersion("5")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

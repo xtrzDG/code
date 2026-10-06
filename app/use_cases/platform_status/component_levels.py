@@ -51,6 +51,8 @@ ALERT_IMPACTS: Mapping[PlatformAlertCode, AlertImpact] = {
     PlatformAlertCode.INBOUND_BACKLOG: AlertImpact(CHAT_CHANNELS, outage_from=900),
     # A worker stopped beating: answers slow down everywhere it served.
     PlatformAlertCode.STALE_WORKER: AlertImpact(CHAT_CHANNELS),
+    # No worker beats at all: nobody gets an answer in any chat channel.
+    PlatformAlertCode.WORKER_DOWN: AlertImpact(CHAT_CHANNELS, outage_from=0),
     # Replies to messengers fail for good (percent of the outbox).
     PlatformAlertCode.OUTBOUND_FAILURES: AlertImpact(QUEUED_CHANNELS, outage_from=50),
     # Bookings and prices fail inside answers and calls.

@@ -3,6 +3,15 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class AffectedBusinessCount(BaseConstrainedTypedInt):
+    """
+    How many businesses an incident reached: those it names, or for an
+    all-businesses incident those the worker's walk has reached so far.
+    """
+
+    ge = 0
+
+
 class AffectedRecordCount(BaseConstrainedTypedInt):
     """
     About how many records (messages, contacts, bookings, recordings) a

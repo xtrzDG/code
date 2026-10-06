@@ -19,6 +19,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
 from app.containers.app import AppContainer
 from app.contracts.live_events import LiveEventBusAdapterContract
 from app.contracts.observability import LlmTraceFacilitatorContract
+from app.gateways.http import pipeline_watchdog_thread as watchdog
 from app.gateways.http.access_log_redaction import install_access_log_redaction
 from app.gateways.http.application import build_http_application
 from app.gateways.http.background_threads import (
@@ -107,17 +108,14 @@ def build_application(app_container: AppContainer) -> FastAPI:
 
 def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     """
-    Startup: size the request thread pool (THREADPOOL_SIZE), warm the
-    country catalog (every country's profile is built once), check that the
-    configured DPA has its text in this build and that the sub-processor
-    list covers every configured flow of personal data, report the login code
-    channels, with SEED_DEMO_DATA fill the instance with the demo businesses
-    (once), point the platform Telegram bot at this API when it is
-    configured, start flushing model-call traces and, with EMBEDDED_WORKER,
-    start the background worker in a thread; open live streams end as
-    soon as the process is asked to stop. Shutdown: stop the worker
-    (running jobs may finish), flush the remaining traces and spans, close
-    the live event bus and the Postgres pool.
+    Startup: size the request threads (THREADPOOL_SIZE), warm the country
+    catalog, check the DPA text and the sub-processor list, report the login
+    code channels, seed the demo businesses (SEED_DEMO_DATA, once), point
+    the platform bot at this API, start the trace flush, the pipeline
+    watchdog and (EMBEDDED_WORKER) the worker; live streams end as soon as
+    the process is asked to stop. Shutdown: stop the worker (running jobs
+    may finish) and the watchdog, flush traces and spans, close the live
+    event bus and the Postgres pool.
     """
 
     @asynccontextmanager
@@ -139,6 +137,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
         end_streams_on_exit_signals(live_event_bus.close)
         stop_event = threading.Event()
         flush_thread = start_trace_flushing(trace_facilitator, stop_event)
+        watchdog_thread = watchdog.start_pipeline_watchdog(app_container, stop_event)
         worker_thread: threading.Thread | None = None
         try:
             worker_thread = start_embedded_worker(app_container, stop_event)
@@ -147,6 +146,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
             stop_event.set()
             if worker_thread is not None:
                 stop_embedded_worker(worker_thread)
+            watchdog.stop_pipeline_watchdog(watchdog_thread)
             flush_thread.join(timeout=TRACE_FLUSH_INTERVAL_SECONDS)
             trace_facilitator.flush()
             finish_telemetry(app_container)

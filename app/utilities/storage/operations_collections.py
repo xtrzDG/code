@@ -4,7 +4,8 @@ collections): the episodes of the platform alerts, the recorded backups
 and restore drills, the incident log; the status page's announcements
 and history and each person's guidance (1111); the service level
 indicators in five-minute slots and hourly rows (1163); the post-deploy
-data tasks' state (1164). Part of DOCUMENT_COLLECTIONS
+data tasks' state (1164); the marks of the platform's watchers
+(1173). Part of DOCUMENT_COLLECTIONS
 (document_collection_catalog.py).
 """
 
@@ -14,6 +15,7 @@ from app.schemas.domain.help_progress import HelpProgressDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
@@ -60,5 +62,9 @@ OPERATIONS_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     ),
     DocumentCollectionDefinition(
         DocumentCollectionName("service_level_hours"), ServiceLevelHourDocument
+    ),
+    # When each watcher of the platform last looked; the watchdog's lease.
+    DocumentCollectionDefinition(
+        DocumentCollectionName("platform_monitors"), PlatformMonitorDocument
     ),
 )

@@ -31,3 +31,16 @@ class IncidentStatus(StrEnum):
 
     OPEN = "open"
     RESOLVED = "resolved"
+
+
+class IncidentScope(StrEnum):
+    """
+    Which businesses an incident affected: LISTED names them (at most a
+    thousand, each checked); ALL_BUSINESSES is every business of the
+    platform, walked by the worker in keyset batches after the incident
+    is recorded (each business's audit entry, and for a breach its owners'
+    notices).
+    """
+
+    LISTED = "listed"
+    ALL_BUSINESSES = "all_businesses"

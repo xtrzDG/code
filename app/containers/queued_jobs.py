@@ -10,6 +10,7 @@ from app.containers.operators.operators_container import OperatorsContainer
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     SEND_PLATFORM_ALERT_JOB,
 )
+from app.use_cases.admin.incidents.incident_expansion import EXPAND_INCIDENT_JOB
 from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
@@ -72,5 +73,7 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             ERASE_PROCESSOR_COPIES_JOB: operators.privacy.erase_copies_operator,
             # A freed place offered to the next waiting customer (1151).
             OFFER_FREED_PLACE_JOB: operators.growth.offer_freed_place_operator,
+            # The next batch of businesses an all-businesses incident reaches.
+            EXPAND_INCIDENT_JOB: operators.reliability.expand_incident_operator,
         }
     )

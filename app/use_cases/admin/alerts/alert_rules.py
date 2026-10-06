@@ -166,6 +166,16 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
             DAY_MINUTES,
             "stalled-data-task.md",
         ),
+        _rule(
+            PlatformAlertCode.WORKER_DOWN,
+            IncidentSeverity.SEV1,
+            "No background worker wrote its pulse for five minutes; customers "
+            "get no answers.",
+            300,
+            AlertUnit.SECONDS,
+            CHECK_INTERVAL_MINUTES,
+            "worker-down.md",
+        ),
         *BURN_RATE_RULES,  # The SLOs' multi-window burn rates (1163).
     )
 }

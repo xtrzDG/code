@@ -10,7 +10,7 @@ import {
   type AdminAnnouncement,
   type AnnouncementForm,
 } from "./announcementForm";
-import { localInputToMicros } from "./incidentForm";
+import { localInputToMicros } from "./localTime";
 
 const NOW = localInputToMicros("2026-10-04T12:00") ?? 0;
 const HOUR = 3_600_000_000;

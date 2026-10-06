@@ -1,7 +1,7 @@
 {
   "collection": "platform_alert_states",
   "document_type": "PlatformAlertStateDocument",
-  "schema_version": 4,
+  "schema_version": 5,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -25,7 +25,8 @@
           "answer_budget_fast_burn",
           "answer_budget_slow_burn",
           "api_budget_fast_burn",
-          "api_budget_slow_burn"
+          "api_budget_slow_burn",
+          "worker_down"
         ],
         "type": "string"
       },
@@ -70,7 +71,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "4",
+        "default": "5",
         "type": "string"
       },
       "status": {

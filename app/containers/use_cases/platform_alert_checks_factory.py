@@ -7,7 +7,7 @@ from app.containers.config import ConfigContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.use_cases.admin.alerts.alert_checks import PlatformAlertChecks
-from app.use_cases.admin.alerts.burn_rate_alert_checks import burn_rate_alert_checks
+from app.use_cases.admin.alerts.extra_alert_checks import extra_alert_checks
 from app.use_cases.admin.alerts.spend_alert_checks import SpendAlertChecks
 
 
@@ -19,8 +19,9 @@ def platform_alert_checks_factory(
 ) -> Factory[PlatformAlertChecks]:
     """
     The indexed counts, signal counters, worker pulses and spend sums of the
-    `platform_alerts` job, the post-deploy data tasks (1164), and the SLOs'
-    burn rates over the service level slots (1163).
+    `platform_alerts` job, the post-deploy data tasks (1164), the SLOs'
+    burn rates over the service level slots (1163) and the freshest worker
+    pulse (WORKER_DOWN, 1173).
     """
 
     return Factory(
@@ -38,6 +39,8 @@ def platform_alert_checks_factory(
         ),
         data_task_checks=data_task_use_cases.data_task_alert_checks,
         extra_checks=Factory(
-            burn_rate_alert_checks, slot_repo=repositories.service_level_slot_repo
+            extra_alert_checks,
+            slot_repo=repositories.service_level_slot_repo,
+            heartbeat_repo=repositories.worker_heartbeat_repo,
         ),
     )

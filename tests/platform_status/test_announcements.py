@@ -44,8 +44,8 @@ from app.use_cases.platform_status.list_announcements_use_case import (
 from app.use_cases.platform_status.update_announcement_use_case import (
     UpdateAnnouncementUseCase,
 )
+from tests.platform_ops.incident_world import StepUp
 from tests.platform_ops.ops_world import ADMIN, AdminsOnly
-from tests.platform_ops.test_incidents import StepUp
 from tests.platform_status.status_world import DAY, HOUR, StatusWorld
 
 IP = ClientIpAddress("203.0.113.7")

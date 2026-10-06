@@ -10528,6 +10528,16 @@ export interface components {
             next_cursor?: string | null;
         };
         /**
+         * IncidentScope
+         * @description Which businesses an incident affected: LISTED names them (at most a
+         *     thousand, each checked); ALL_BUSINESSES is every business of the
+         *     platform, walked by the worker in keyset batches after the incident
+         *     is recorded (each business's audit entry, and for a breach its owners'
+         *     notices).
+         * @enum {string}
+         */
+        IncidentScope: "listed" | "all_businesses";
+        /**
          * IncidentSeverity
          * @description How bad an incident is (docs/operations/incident.md): SEV1 most or all
          *     customers get no answers, or personal data left the platform; SEV2 one
@@ -10545,10 +10555,20 @@ export interface components {
         /**
          * IncidentView
          * @description One incident of the log, as the platform admin sees it.
+         *     `affected_business_count` is the businesses it names, or for every
+         *     business those the worker's walk reached so far (`is_expanding` while
+         *     it walks).
          */
         IncidentView: {
+            /**
+             * Affected Business Count
+             * @default 0
+             */
+            affected_business_count: number;
             /** Affected Business Ids */
             affected_business_ids: string[];
+            /** Announcement Id */
+            announcement_id?: string | null;
             /** Approximate Record Count */
             approximate_record_count?: number | null;
             /** Approximate Subject Count */
@@ -10559,6 +10579,11 @@ export interface components {
             detected_at: number;
             /** Id */
             id: string;
+            /**
+             * Is Expanding
+             * @default false
+             */
+            is_expanding: boolean;
             kind: components["schemas"]["IncidentKind"];
             /** Notice Languages */
             notice_languages: string[];
@@ -10568,6 +10593,8 @@ export interface components {
             notified_owner_count: number;
             /** Reported By */
             reported_by: string;
+            /** @default listed */
+            scope: components["schemas"]["IncidentScope"];
             severity: components["schemas"]["IncidentSeverity"];
             /** Started At */
             started_at: number;
@@ -12936,9 +12963,12 @@ export interface components {
          *     "answered within 60 s" burns 14.4 times too fast over 1 h and 5 min, or
          *     6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN
          *     the same for API availability (docs/operations/slo.md).
+         *     WORKER_DOWN: no background worker wrote its pulse for five minutes,
+         *     seen from outside the workers too (the API's pipeline watchdog and
+         *     GET /healthz/pipeline): customers' messages are not answered.
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn" | "worker_down";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -12987,7 +13017,10 @@ export interface components {
          * @description The platform as owners and their customers see it: the overall level
          *     (the worst component), each component, the announcements shown now
          *     and the ones resolved in the last 90 days, newest first. `checked_at`
-         *     is the platform alerts' latest check (null before the first).
+         *     is when the platform alerts last finished a check (null before the
+         *     first). `monitoring_delayed` says that was more than 15 minutes ago:
+         *     the levels cannot be vouched for, so the chat components count as
+         *     degraded until the checks run again.
          */
         PlatformStatusView: {
             /** Announcements */
@@ -12997,6 +13030,11 @@ export interface components {
             /** Components */
             components: components["schemas"]["ComponentStatusView"][];
             level: components["schemas"]["StatusLevel"];
+            /**
+             * Monitoring Delayed
+             * @default false
+             */
+            monitoring_delayed: boolean;
             /** Past Announcements */
             past_announcements: components["schemas"]["AnnouncementView"][];
         };
@@ -18160,7 +18198,31 @@ export interface operations {
             content: {
                 "application/json": {
                     /** Affected Business Ids */
-                    affected_business_ids: string[];
+                    affected_business_ids?: string[];
+                    announcement?: {
+                        /** Components */
+                        components?: ("chat" | "meta" | "telegram" | "voice" | "cabinet")[];
+                        /** Expected End At */
+                        expected_end_at?: number | null;
+                        /**
+                         * AnnouncementLevel
+                         * @description What a platform announcement says about the components it names: a
+                         *     notice only (INFO), planned maintenance, degraded service or an
+                         *     outage. The status page and the cabinet's banner take their colour
+                         *     and wording from it.
+                         * @enum {string}
+                         */
+                        level: "info" | "maintenance" | "degraded" | "outage";
+                        /** Messages */
+                        messages: {
+                            /** Language */
+                            language: string;
+                            /** Text */
+                            text: string;
+                        }[];
+                        /** Starts At */
+                        starts_at?: number | null;
+                    } | null;
                     /** Approximate Record Count */
                     approximate_record_count?: number | null;
                     /** Approximate Subject Count */
@@ -18190,6 +18252,17 @@ export interface operations {
                         /** Subject Categories */
                         subject_categories: string;
                     }[];
+                    /**
+                     * IncidentScope
+                     * @description Which businesses an incident affected: LISTED names them (at most a
+                     *     thousand, each checked); ALL_BUSINESSES is every business of the
+                     *     platform, walked by the worker in keyset batches after the incident
+                     *     is recorded (each business's audit entry, and for a breach its owners'
+                     *     notices).
+                     * @default listed
+                     * @enum {string}
+                     */
+                    scope?: "listed" | "all_businesses";
                     /**
                      * IncidentSeverity
                      * @description How bad an incident is (docs/operations/incident.md): SEV1 most or all

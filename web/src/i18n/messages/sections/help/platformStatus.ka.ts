@@ -28,6 +28,15 @@ export const platformStatusKa: Translation<typeof platformStatusEn> = {
     cabinet: "კაბინეტი და შესვლა",
   },
   checkedAt: "შემოწმდა {time}",
+  monitoringDelayed: {
+    title: "პლატფორმის საკუთარი შემოწმებები იგვიანებს",
+    minutesAgo: {
+      one: "ბოლო შემოწმება {count} წუთის წინ იყო.",
+      other: "ბოლო შემოწმება {count} წუთის წინ იყო.",
+    },
+    at: "ბოლო შემოწმება: {time}",
+    body: "სანამ შემოწმებები არ დაეწევა, ქვემოთ მოცემულ დონეებს ვერავინ დაადასტურებს, ამიტომ ჩატები შენელებულად არის ნაჩვენები.",
+  },
   componentsTitle: "პლატფორმის ნაწილები",
   historyLabel: "{component}: ბოლო 90 დღე",
   historyStart: "90 დღის წინ",

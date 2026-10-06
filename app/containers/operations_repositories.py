@@ -19,6 +19,7 @@ from app.repositories.platform_alert_state_repository import (
 from app.repositories.platform_announcement_repository import (
     PlatformAnnouncementRepository,
 )
+from app.repositories.platform_monitor_repository import PlatformMonitorRepository
 from app.repositories.platform_status_day_repository import (
     PlatformStatusDayRepository,
 )
@@ -58,6 +59,11 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
     platform_alert_state_repo: Singleton[PlatformAlertStateRepository] = Singleton(
         PlatformAlertStateRepository,
         collection=operations_collections.platform_alert_state_collection,
+    )
+    # When each watcher of the platform last looked (1173).
+    platform_monitor_repo: Singleton[PlatformMonitorRepository] = Singleton(
+        PlatformMonitorRepository,
+        collection=operations_collections.platform_monitor_collection,
     )
     maintenance_run_repo: Singleton[MaintenanceRunRepository] = Singleton(
         MaintenanceRunRepository,

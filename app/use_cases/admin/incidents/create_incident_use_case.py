@@ -1,29 +1,32 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.incidents import IncidentRepoContract
+from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
-from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
+from app.contracts.storage import StorageUnitOfWorkContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
-from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.incidents import IncidentKind
+from app.schemas.constants.incidents import IncidentScope
+from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.incidents import IncidentDocument, IncidentNoticeText
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.incidents import CreateIncidentCommand, IncidentView
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import ValidationFailedError
-from app.schemas.typings.compliance.strings import (
-    AuditEntityName,
-    AuditEntityReference,
+from app.schemas.typings.incidents.constrained_integers import (
+    AffectedBusinessCount,
+    NotifiedOwnerCount,
 )
-from app.schemas.typings.incidents.constrained_integers import NotifiedOwnerCount
+from app.use_cases.admin.incidents.incident_expansion import (
+    EXPAND_INCIDENT_JOB,
+    expansion_payload,
+    expansion_serial_key,
+)
+from app.use_cases.admin.incidents.incident_reach import IncidentReach
 from app.use_cases.admin.incidents.incident_views import incident_view
-from app.use_cases.admin.incidents.owner_breach_notices import OwnerBreachNotices
-
-INCIDENT_ENTITY: AuditEntityName = AuditEntityName("incident")
+from app.use_cases.shared.storage_transaction import in_unit_of_work
 
 
 class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]):
@@ -32,11 +35,15 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
     (docs/operations/incident.md) for the businesses it affected.
 
     The incident is stored first, so the log holds it whatever follows.
-    For a data breach every owner of every affected business then gets
-    the DPA 12.1 notice through the outbox (`OwnerBreachNotices`); other
-    kinds are recorded for the postmortem only (outages are told on the
-    status page). Each affected business's audit log gets an entry naming
-    the incident and the admin, so an owner can see it was told.
+    Its businesses are then told (`IncidentReach`): for a data breach
+    every owner gets the DPA 12.1 notice through the outbox, and each
+    business's audit log names the incident and the admin; other kinds
+    are recorded for the postmortem only (outages are told on the status
+    page). An incident of every business (ALL_BUSINESSES) names none:
+    the incident and its `expand_incident` job are stored in one
+    transaction, and the worker walks the businesses a keyset batch at a
+    time (`ExpandIncidentUseCase`), so recording it costs the same however
+    many businesses there are.
 
     Needs a recent sign-in (step-up), like every admin action that reaches
     owners' data or inboxes.
@@ -55,8 +62,9 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
         ],
         business_repo: BusinessRepoContract,
         incident_repo: IncidentRepoContract,
-        audit_log_repo: AuditLogRepoContract,
-        breach_notices: OwnerBreachNotices,
+        reach: IncidentReach,
+        job_queue: JobQueueFacilitatorContract,
+        unit_of_work: StorageUnitOfWorkContract | None,
         step_up: StepUpGuardContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -65,8 +73,9 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
         ] = authorize_platform_admin
         self._business_repo: BusinessRepoContract = business_repo
         self._incident_repo: IncidentRepoContract = incident_repo
-        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
-        self._breach_notices: OwnerBreachNotices = breach_notices
+        self._reach: IncidentReach = reach
+        self._job_queue: JobQueueFacilitatorContract = job_queue
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._step_up: StepUpGuardContract = step_up
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -109,28 +118,31 @@ class CreateIncidentUseCase(UseCaseContract[CreateIncidentCommand, IncidentView]
                 for text in body.notice_texts
             ],
             reported_by=admin.id,
+            scope=body.scope,
+            reached_business_count=(
+                AffectedBusinessCount(0)
+                if body.scope is IncidentScope.ALL_BUSINESSES
+                else None
+            ),
             created_at=now,
             updated_at=now,
         )
-        self._incident_repo.save(incident)
-        notified: int = 0
-        for business in businesses:
-            if incident.kind is IncidentKind.DATA_BREACH:
-                notified += self._breach_notices.send(incident, business)
-
-            self._audit_log_repo.append(
-                AuditLogEntryDocument(
-                    business_id=business.id,
-                    actor_id=admin.id,
-                    action=AuditAction.CREATE,
-                    entity=INCIDENT_ENTITY,
-                    entity_id=AuditEntityReference(str(incident.id)),
-                    ip_address=input_data.client_ip_address,
-                    created_at=now,
-                    updated_at=now,
+        if incident.scope is IncidentScope.ALL_BUSINESSES:
+            with in_unit_of_work(self._unit_of_work):
+                self._incident_repo.save(incident)
+                self._job_queue.enqueue(
+                    EXPAND_INCIDENT_JOB,
+                    expansion_payload(incident.id),
+                    None,
+                    lane=JobLane.DEFAULT,
+                    serial_key=expansion_serial_key(incident.id),
                 )
-            )
+            return incident_view(incident)
 
+        self._incident_repo.save(incident)
+        notified: int = self._reach.reach(
+            incident, businesses, input_data.client_ip_address, now
+        )
         if notified:
             incident.notified_owner_count = NotifiedOwnerCount(notified)
             incident.notified_at = now

@@ -14,6 +14,9 @@ from app.containers.use_cases.platform_ops_use_cases import (
 )
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.use_cases.referral_use_cases import ReferralUseCasesContainer
+from app.containers.use_cases.reliability_use_cases import (
+    ReliabilityUseCasesContainer,
+)
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
 from app.containers.use_cases.subscription_lifecycle_use_cases import (
@@ -72,6 +75,7 @@ class UseCasesContainer(BusinessUseCasesContainer):
     platform_ops: PlatformOpsUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformOpsUseCasesContainer,
         data_task_use_cases=data_tasks,
+        registries=CoreUseCasesContainer.registries,
         adapters=CoreUseCasesContainer.adapters,
         clients=CoreUseCasesContainer.clients,
         config=CoreUseCasesContainer.config,
@@ -163,6 +167,18 @@ class UseCasesContainer(BusinessUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
         billing_use_cases=BusinessUseCasesContainer.billing,
+    )
+    # The pipeline seen from the API (health check, watchdog) and incidents.
+    reliability: ReliabilityUseCasesContainer = Container(  # type: ignore[assignment]
+        ReliabilityUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        platform_use_cases=platform,
     )
     telemetry: TelemetryUseCasesContainer = Container(  # type: ignore[assignment]
         TelemetryUseCasesContainer,

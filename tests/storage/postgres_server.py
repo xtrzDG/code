@@ -93,6 +93,45 @@ class ThrowawayPostgresServer:
             "--no-instructions",
         )
         self._port = find_free_port()
+        self._start_server()
+        with self.admin_connection() as connection:
+            connection.execute(
+                sql.SQL("create role {} login nosuperuser nobypassrls").format(
+                    sql.Identifier(APP_ROLE_NAME)
+                )
+            )
+
+    def stop(self) -> None:
+        root_directory: Path | None = self._root_directory
+        if root_directory is None:
+            return
+
+        try:
+            self.pause()
+        finally:
+            shutil.rmtree(root_directory, ignore_errors=True)
+            self._root_directory = None
+
+    def pause(self) -> None:
+        """Stop the server as a crash does (immediate), keeping its data."""
+
+        self._run(
+            "pg_ctl",
+            "--pgdata",
+            str(self.socket_directory / "data"),
+            "--mode",
+            "immediate",
+            "--wait",
+            "stop",
+        )
+
+    def resume(self) -> None:
+        """Start a paused server again: same data, socket and port."""
+
+        self._start_server()
+
+    def _start_server(self) -> None:
+        root_directory: Path = self.socket_directory
         server_options: str = " ".join(
             (
                 "-c listen_addresses=''",
@@ -107,7 +146,7 @@ class ThrowawayPostgresServer:
         self._run(
             "pg_ctl",
             "--pgdata",
-            str(data_directory),
+            str(root_directory / "data"),
             "--log",
             str(root_directory / "server.log"),
             "--wait",
@@ -117,31 +156,6 @@ class ThrowawayPostgresServer:
             server_options,
             "start",
         )
-        with self.admin_connection() as connection:
-            connection.execute(
-                sql.SQL("create role {} login nosuperuser nobypassrls").format(
-                    sql.Identifier(APP_ROLE_NAME)
-                )
-            )
-
-    def stop(self) -> None:
-        root_directory: Path | None = self._root_directory
-        if root_directory is None:
-            return
-
-        try:
-            self._run(
-                "pg_ctl",
-                "--pgdata",
-                str(root_directory / "data"),
-                "--mode",
-                "immediate",
-                "--wait",
-                "stop",
-            )
-        finally:
-            shutil.rmtree(root_directory, ignore_errors=True)
-            self._root_directory = None
 
     def conninfo(self, database_name: str, role_name: str) -> str:
         return make_conninfo(

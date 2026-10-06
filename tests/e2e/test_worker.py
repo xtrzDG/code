@@ -83,6 +83,7 @@ from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     SEND_PLATFORM_ALERT_JOB,
 )
+from app.use_cases.admin.incidents.incident_expansion import EXPAND_INCIDENT_JOB
 from app.use_cases.admin.security.key_rotation_views import (
     ROTATE_ENCRYPTED_SECRETS_JOB,
 )
@@ -181,6 +182,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         SUMMARIZE_CONVERSATION_JOB,
         ERASE_PROCESSOR_COPIES_JOB,
         OFFER_FREED_PLACE_JOB,
+        EXPAND_INCIDENT_JOB,
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (36, 0, 0)
     assert right_after.periodic_runs == 0

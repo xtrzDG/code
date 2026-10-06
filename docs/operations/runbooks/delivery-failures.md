@@ -41,3 +41,9 @@ queued in the last hour that settled died, with at least 20 settled.
 
 - If a template or a provider setting was the cause, add it to
   `docs/LAUNCH.md` so the next setup avoids it.
+- Game day: `tests/chaos/test_meta_blackhole_game_day.py` black-holes
+  Meta's Graph API host under twenty WhatsApp customers: every reply is
+  tried eight times with backoff and fails for good, `outbound_failures`
+  fires at the next five-minute check and /status shows the messengers
+  degraded; once Meta answers new replies go out and the alert resolves
+  after the hour. (The dead replies stay dead letters: retry them here.)
