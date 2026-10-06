@@ -567,3 +567,19 @@ _.invoice_number  # app/schemas/dto/client_story.py (ClientTimelineEntry)
 _.payment_method  # app/schemas/dto/client_story.py (ClientTimelineEntry)
 _.health_from  # app/schemas/dto/client_story.py (ClientTimelineEntry)
 _.health_to  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+
+# The waitlist and return visits (W17): the value model's and the stored
+# reports' growth lines, the erasure result's count and the return-visit
+# settings view are response fields the cabinet reads (Bookings → Return
+# visits, the value hero, the reports).
+_.waitlist_booking_count  # app/schemas/dto/value/value_model.py (ValueTotals)
+_.waitlist_value_minor  # app/schemas/dto/value/value_model.py (ValueTotals)
+_.campaign_booking_count  # app/schemas/dto/value/value_model.py (ValueTotals)
+_.campaign_value_minor  # app/schemas/dto/value/value_model.py (ValueTotals)
+_.anonymized_waitlist_entries  # app/schemas/dto/compliance.py (ContactErasureResult)
+_.segment_name  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+_.niche_rule_kind  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+_.niche_delay_days  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+_.month_sent_count  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+_.recent_counts  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+_.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)

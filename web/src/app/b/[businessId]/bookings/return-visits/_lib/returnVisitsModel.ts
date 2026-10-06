@@ -30,8 +30,8 @@ export interface CampaignSettingsBody {
 export const RULE_KINDS = ["rebook", "recall", "pre_arrival"] as const satisfies readonly RebookingRuleKind[];
 export const AUDIENCES = ["all_customers", "segment"] as const satisfies readonly CampaignAudience[];
 
-export const DELAY_DAYS = { min: 1, max: 730 } as const;
-export const MONTHLY_CAP = { min: 1, max: 2000 } as const;
+const DELAY_DAYS = { min: 1, max: 730 } as const;
+const MONTHLY_CAP = { min: 1, max: 2000 } as const;
 
 export const RULE_LABELS: Record<RebookingRuleKind, MessageKey> = {
   rebook: "returnVisits.rules.rebook",
@@ -76,7 +76,7 @@ export const SKIP_REASON_LABELS: Record<CampaignSkipReason, MessageKey> = {
 };
 
 /** A note before arrival counts days before a booking; the others after the last visit. */
-export function isBeforeArrival(rule: RebookingRuleKind): boolean {
+function isBeforeArrival(rule: RebookingRuleKind): boolean {
   return rule === "pre_arrival";
 }
 

@@ -102,7 +102,7 @@ export function minutesLeft(expiresAtMicros: number | null | undefined, nowMs: n
 }
 
 /** How long a freed place may be held (the API takes 15 to 120 minutes). */
-export const HOLD_MINUTES = [15, 20, 30, 45, 60, 90, 120] as const;
+const HOLD_MINUTES = [15, 20, 30, 45, 60, 90, 120] as const;
 
 /** The hold choices, the stored one among them even if it is not a usual step. */
 export function holdOptions(current: number): readonly number[] {

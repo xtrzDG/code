@@ -38,7 +38,6 @@ CONTACT_ID_FIELD: DocumentFieldPath = DocumentFieldPath("contact_id")
 IS_ENABLED_FIELD: DocumentFieldPath = DocumentFieldPath("is_enabled")
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
 MONTH_FIELD: DocumentFieldPath = DocumentFieldPath("month")
-SENT_AT_FIELD: DocumentFieldPath = DocumentFieldPath("sent_at")
 # What went out: the cap counts these, BOOKED ones included.
 OUT_STATUSES: tuple[CampaignMessageStatus, ...] = (
     CampaignMessageStatus.SENT,

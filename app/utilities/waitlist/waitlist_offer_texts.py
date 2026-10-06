@@ -10,8 +10,6 @@ the place is held (`template_body` shows it that way).
 from app.schemas.dto.localization import LocalizedText
 from app.utilities.localization.localized_texts import build_localized_text
 
-TEMPLATE_FIELDS: tuple[str, ...] = ("{business}", "{date}", "{time}", "{minutes}")
-
 WAITLIST_OFFER_TEXT: LocalizedText = build_localized_text(
     en=(
         "{business}: good news, a place has opened up for you on {date} at "

@@ -19,7 +19,7 @@ export interface GrowthLine {
   valueMinor: number | null;
 }
 
-export const GROWTH_ORIGINS: readonly GrowthOrigin[] = ["waitlist", "campaign"];
+const GROWTH_ORIGINS: readonly GrowthOrigin[] = ["waitlist", "campaign"];
 
 /** The growth fields of a period (a report stored before the lines existed has none). */
 type GrowthTotals = Partial<

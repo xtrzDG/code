@@ -10,7 +10,7 @@ import { businessPath } from "@/lib/navigation";
 export type RowKind = "count" | "minutes" | "money";
 
 /** A report's numbers: the counts and estimate, and the worth of the waitlist's and return visits' bookings. */
-export type ReportField = ValueTotalsNumber | "waitlist_value_minor" | "campaign_value_minor";
+type ReportField = ValueTotalsNumber | "waitlist_value_minor" | "campaign_value_minor";
 
 export interface ReportRow {
   field: ReportField;
