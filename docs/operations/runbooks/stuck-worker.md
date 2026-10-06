@@ -44,8 +44,9 @@ second.
 5. `process_died` dead letters: an attempt of that job ended with its
    worker process twice in a row (killed for memory, crashed). Find the
    job id in the logs: `Picked up job` lines carry `lost_leases`, and the
-   job's earlier `Finished job` lines `rss_before_mb` / `rss_after_mb`
-   (how much memory it took); Render's Events show the OOM kills.
+   job's earlier `Job <name> ... in <n> ms; RSS ...` lines
+   `rss_before_mb` / `rss_after_mb` (how much memory it took); Render's
+   Events show the OOM kills.
 
 ## Mitigate
 

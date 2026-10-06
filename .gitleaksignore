@@ -1816,3 +1816,10 @@ c1b77653af7791923b42874f8ef115d4558583cd:tests/storage/test_two_processes.py:gen
 # Reviewed: a sample SHA-256 hex digest of a test export download token (no secret), replaced by a low-entropy sample.
 a01d142ba209ed5982812e0d694a4a1ab3d36181:tests/storage/document_evolution/sample_values.py:generic-api-key:78
 a01d142ba209ed5982812e0d694a4a1ab3d36181:tests/storage/golden/export_download_links/v1.json:generic-api-key:8
+# Reviewed 2026-10-06 (W15-WORKER-RESILIENCE): environment variable names
+# (RECORDINGS_S3_BUCKET) of the batch worker in render.yaml and the sample
+# job lease token (0123456789abcdef...) of the queued_jobs v2 golden
+# fixture; not secrets.
+5c48b2854429c88d38e6b82825e71190415be30b:render.yaml:generic-api-key:495
+5c48b2854429c88d38e6b82825e71190415be30b:render.yaml:generic-api-key:499
+f702f7ca2e4c78b68d8fbfbac9cb147e2adc77cb:tests/storage/golden/queued_jobs/v2.json:generic-api-key:9

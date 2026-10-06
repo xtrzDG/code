@@ -449,10 +449,11 @@ customers:
   instead of a third attempt: an error report names it and the
   `dead_jobs` alert pages (`runbooks/stuck-worker.md`). The system page
   shows the reason of every dead letter; Retry resets the count.
-- **Memory per job.** Every finished job logs `Finished job <name>` with
-  `duration_ms`, `outcome` and the process's resident memory before and
-  after (`rss_before_mb`, `rss_after_mb`, from `/proc/self/statm`; absent
-  where there is none). Search the batch worker's logs for the largest
+- **Memory per job.** Every finished job logs
+  `Job <name> <outcome> in <n> ms; RSS <a> MB before, <b> MB after` with
+  the fields `duration_ms`, `outcome`, `rss_before_mb` and `rss_after_mb`
+  (the process's resident memory from `/proc/self/statm`; absent where
+  there is none). Search the batch worker's logs for the largest
   `rss_after_mb` minus `rss_before_mb` to find a job that reads too much.
 
 ## Memory of batch jobs
