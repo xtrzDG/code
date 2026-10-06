@@ -8,8 +8,8 @@
 .hc-preview {
   color-scheme: light dark;
   --hc-accent: #ad5732;
-  --hc-canvas: light-dark(#f3f2ee, #121110);
-  --hc-surface: light-dark(#ffffff, #1b1a18);
+  --hc-canvas: light-dark(#f1ece4, #121110);
+  --hc-surface: light-dark(#faf7f2, #1a1816);
   --hc-ink: light-dark(#1d1c1a, #ecebe6);
   --hc-shape: light-dark(rgb(0 0 0 / 0.07), rgb(255 255 255 / 0.08));
 
