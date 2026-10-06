@@ -31,6 +31,8 @@ const TOTALS: ValueTotals = {
   staff_minutes_saved: 540,
   estimated_revenue_minor: 264_000,
   valued_booking_count: 0,
+  waitlist_booking_count: 0,
+  campaign_booking_count: 0,
 };
 
 const plain = (value: number) => String(value);

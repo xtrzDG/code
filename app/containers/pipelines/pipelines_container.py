@@ -24,6 +24,7 @@ from app.containers.pipelines.conversation_pipelines import (
 from app.containers.pipelines.customer_pipelines import CustomerPipelinesContainer
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
+from app.containers.pipelines.growth_pipelines import GrowthPipelinesContainer
 from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.legal_pipelines import LegalPipelinesContainer
@@ -178,6 +179,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     feedback: FeedbackPipelinesContainer = Container(  # type: ignore[assignment]
         FeedbackPipelinesContainer,
         feedback=orchestrators.feedback,
+    )
+    growth: GrowthPipelinesContainer = Container(  # type: ignore[assignment]
+        GrowthPipelinesContainer,
+        growth=orchestrators.growth,
     )
     analytics: AnalyticsPipelinesContainer = Container(  # type: ignore[assignment]
         AnalyticsPipelinesContainer,

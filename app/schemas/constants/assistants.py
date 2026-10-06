@@ -23,6 +23,8 @@ class AssistantToolName(StrEnum):
     RESCHEDULE_BOOKING = "reschedule_booking"
     # The customer's own bookings still to come ("what time is my booking?").
     LIST_MY_BOOKINGS = "list_my_bookings"
+    # A place on the waitlist when nothing is free on the wanted day.
+    JOIN_WAITLIST = "join_waitlist"
     CREATE_LEAD = "create_lead"
     HANDOFF_TO_HUMAN = "handoff_to_human"
     SEND_LINK = "send_link"

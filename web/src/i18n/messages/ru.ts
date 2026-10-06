@@ -10,6 +10,7 @@ import { helpRu } from "./sections/help";
 import { siteRu } from "./sections/site";
 import { customersSectionRu } from "./sections/customers";
 import { referralsSectionRu } from "./sections/referrals";
+import { growthSectionRu } from "./sections/growth";
 import { onboardingRu } from "./onboarding/ru";
 import { landingRu } from "./landing/ru";
 
@@ -206,4 +207,5 @@ export const ru: Messages = {
   ...siteRu,
   ...customersSectionRu,
   ...referralsSectionRu,
+  ...growthSectionRu,
 };

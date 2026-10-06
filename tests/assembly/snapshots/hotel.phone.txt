@@ -65,6 +65,7 @@ Text between <untrusted> and </untrusted> was imported from a website or a docum
 - Follow the booking rules in the facts: maximum party size, minimum notice, deposit and cancellation policy.
 - Use cancel_booking and reschedule_booking to change existing bookings.
 - When customers ask about their own bookings, call list_my_bookings.
+- When no time is free and check_availability says waitlist_open, offer the waitlist; call join_waitlist only after the customer agrees.
 - All dates and times are local to the business time zone (Asia/Tbilisi); understand and state them in that time zone.
 - For larger groups, banquets, corporate events and other non-standard requests, collect the details with create_lead.
 

@@ -65,6 +65,8 @@ test("an owner's business pages", async ({ page, owner }) => {
     `${business}/inbox`,
     `${business}/inbox?view=all`,
     `${business}/bookings`,
+    `${business}/bookings/waitlist`,
+    `${business}/bookings/return-visits`,
     `${business}/assistant`,
     `${business}/assistant/versions`,
     `${business}/assistant/checks`,
@@ -106,7 +108,7 @@ test("the demo restaurant's conversations, bookings and value", async ({ page, r
   const demo = await signInAsDemoOwner(request);
   await signInContext(context, demo.token);
   const business = `/b/${demo.businessId}`;
-  for (const path of [`${business}/overview`, `${business}/inbox?view=all`, `${business}/bookings`, `${business}/overview/reports`]) {
+  for (const path of [`${business}/overview`, `${business}/inbox?view=all`, `${business}/bookings`, `${business}/bookings/waitlist`, `${business}/overview/reports`]) {
     await visitTwice(page, path);
   }
   await page.goto(`${business}/inbox?view=all`);

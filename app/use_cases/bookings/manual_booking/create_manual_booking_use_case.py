@@ -4,6 +4,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.operations import (
@@ -52,7 +53,7 @@ from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     load_scheduling_inputs,
 )
-from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
 from app.use_cases.bookings.manual_booking.manual_booking_customer import (
     customer_language,
     find_booking_conversation,
@@ -113,8 +114,10 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
         confirmation_transformer: TransformerContract[BookingMessageInput, MessageText],
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -196,6 +199,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                         input_data.business_id,
                         local_date,
                         inputs.zone,
+                        HeldPlaces(self._growth, now, contact.id),
                     ),
                     rules=inputs.rules,
                     stay_times=inputs.stay_times,
@@ -251,6 +255,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                 created_at=now,
                 updated_at=now,
             )
+            booking.origin = self._growth.attribute(booking, now)
             self._booking_repo.save(booking)
 
         self._audit_log_repo.append(

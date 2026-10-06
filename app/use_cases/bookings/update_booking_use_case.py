@@ -1,9 +1,10 @@
 """Staff change a booking in the cabinet."""
 
-from datetime import datetime
+from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
@@ -21,7 +22,6 @@ from app.contracts.repositories.knowledge_repositories import (
     ScheduleExceptionRepoContract,
 )
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
@@ -35,7 +35,6 @@ from app.schemas.exceptions.application_errors import (
     ValidationFailedError,
 )
 from app.schemas.typings.bookings.constrained_integers import (
-    BookingDurationMinutes,
     PartySize,
 )
 from app.schemas.typings.compliance.strings import AuditEntityName
@@ -48,24 +47,19 @@ from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     find_resource,
     load_scheduling_inputs,
-    stay_night_count,
 )
-from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
+from app.use_cases.bookings.freed_places import held_place_of, notice_if_freed
+from app.use_cases.bookings.moved_placements import ensure_free_at_booked_time
 from app.use_cases.shared.operations_support import (
     ContactDetails,
     build_audit_entry,
     update_contact_details,
 )
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
-from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.booking_views import build_booking_view
-from app.utilities.scheduling.placement_request import PlacementRequest
 from app.utilities.scheduling.resource_selection import select_resources
-from app.utilities.scheduling.zoned_time import (
-    SECONDS_PER_MINUTE,
-    minute_of_day,
-    to_local_moment,
-)
+from app.utilities.scheduling.zoned_time import to_local_moment
 
 BOOKING_ENTITY: AuditEntityName = AuditEntityName("booking")
 
@@ -103,8 +97,10 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         lock_registry: BusinessLockRegistryContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -141,7 +137,8 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
             if booking is None:
                 raise NotFoundError(f"Booking {input_data.booking_id} was not found.")
 
-            is_changed: bool = self._apply_placement(booking, input_data, inputs)
+            before = held_place_of(booking)
+            is_changed: bool = self._apply_placement(booking, input_data, inputs, now)
             is_changed = apply_notes_change(booking, input_data.notes) or is_changed
             is_changed = (
                 apply_status_change(
@@ -186,6 +183,7 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
 
         if is_changed and not booking.is_sandbox:
             self._calendar_sync.sync(booking)
+            notice_if_freed(self._growth, before, booking, now, True)
 
         return build_booking_view(
             booking,
@@ -200,6 +198,7 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
         booking: BookingDocument,
         command: UpdateBookingCommand,
         inputs: SchedulingInputs,
+        now: Microseconds,
     ) -> bool:
         """New party size and resource, checked against the booked time."""
 
@@ -243,48 +242,22 @@ class UpdateBookingUseCase(UseCaseContract[UpdateBookingCommand, BookingView]):
             )
 
         if is_resource_changed:
-            self._ensure_free(booking, target, inputs)
+            starts_on: date = to_local_moment(
+                int(booking.starts_at), inputs.zone
+            ).date()
+            ensure_free_at_booked_time(
+                booking,
+                target,
+                inputs,
+                bookings_not_over_on(
+                    self._booking_repo,
+                    booking.business_id,
+                    starts_on,
+                    inputs.zone,
+                    HeldPlaces(self._growth, now, booking.contact_id),
+                ),
+            )
             booking.resource_id = target.id
 
         booking.party_size = party_size
         return True
-
-    def _ensure_free(
-        self,
-        booking: BookingDocument,
-        target: ResourceDocument,
-        inputs: SchedulingInputs,
-    ) -> None:
-        """The target is open and has a free unit for the booked time."""
-
-        starts: datetime = to_local_moment(int(booking.starts_at), inputs.zone)
-        is_stay: bool = target.booking_unit is BookingUnit.NIGHT
-        place_booking(
-            [target],
-            PlacementRequest(
-                local_date=starts.date(),
-                minute_of_day=None if is_stay else minute_of_day(starts),
-                duration_minutes=(
-                    None
-                    if is_stay
-                    else BookingDurationMinutes(
-                        (int(booking.ends_at) - int(booking.starts_at))
-                        // SECONDS_PER_MINUTE
-                    )
-                ),
-                nights=stay_night_count(booking, inputs.zone) if is_stay else None,
-                zone=inputs.zone,
-                business_hours=inputs.business_hours,
-                exceptions=inputs.exceptions,
-                bookings=bookings_not_over_on(
-                    self._booking_repo, booking.business_id, starts.date(), inputs.zone
-                ),
-                rules=inputs.rules,
-                stay_times=inputs.stay_times,
-                earliest_start=0,
-                include_sandbox=booking.is_sandbox,
-                excluded_booking_id=booking.id,
-                sandbox_conversation_id=booking.conversation_id,
-                buffer_minutes=booking.buffer_minutes,
-            ),
-        )

@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
@@ -32,7 +33,7 @@ from app.use_cases.bookings.booking_support import (
     SchedulingInputs,
     load_scheduling_inputs,
 )
-from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
 from app.use_cases.bookings.offer_selection import (
     OfferChoice,
     OfferRequest,
@@ -78,6 +79,10 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
     party, by time, then best fit, and every free stay, with the cabinet's
     rules: from now on (no minimum notice), no online party-size limit, and
     a length staff may change.
+
+    Places held for waiting customers count as taken (except for the
+    customer a place is held for); a query that finds nothing says whether
+    the business keeps a waitlist the customer could join.
     """
 
     def __init__(
@@ -88,8 +93,10 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
         schedule_exception_repo: ScheduleExceptionRepoContract,
         booking_repo: BookingRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -128,7 +135,8 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
                 is_duration_override_allowed=input_data.full_day,
             ),
         )
-        now_seconds: int = microseconds_to_seconds(int(self._wall_clock.now_unix()))
+        now: Microseconds = self._wall_clock.now_unix()
+        now_seconds: int = microseconds_to_seconds(int(now))
         request = PlacementRequest(
             local_date=local_date,
             minute_of_day=None,
@@ -138,7 +146,11 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             business_hours=inputs.business_hours,
             exceptions=inputs.exceptions,
             bookings=bookings_not_over_on(
-                self._booking_repo, input_data.business_id, local_date, inputs.zone
+                self._booking_repo,
+                input_data.business_id,
+                local_date,
+                inputs.zone,
+                HeldPlaces(self._growth, now, input_data.contact_id),
             ),
             rules=inputs.rules,
             stay_times=inputs.stay_times,
@@ -166,9 +178,10 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             input_data,
             StayPricing(offer=choice.offer, items=items, currency_code=currency),
         )
+        is_open: bool = is_open_for(local_date, choice.candidates, inputs)
         return AvailabilityResult(
             timezone=inputs.business.timezone,
-            is_open_on_date=is_open_for(local_date, choice.candidates, inputs),
+            is_open_on_date=is_open,
             slots=slots,
             service=(
                 None
@@ -179,5 +192,11 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
                 list_offer_views(inputs.resources, items, currency)
                 if choice.offer is None
                 else []
+            ),
+            is_waitlist_open=(
+                not slots
+                and is_open
+                and not input_data.full_day
+                and self._growth.is_waitlist_open(input_data.business_id)
             ),
         )

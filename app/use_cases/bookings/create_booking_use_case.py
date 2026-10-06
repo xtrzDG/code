@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
@@ -49,7 +50,7 @@ from app.use_cases.bookings.booking_support import (
     load_scheduling_inputs,
     notify_staff_about_booking,
 )
-from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
 from app.use_cases.bookings.offer_selection import (
     BookedOffer,
     OfferChoice,
@@ -93,7 +94,9 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
     customer's language repeating the date, time, name and party size in
     the business time zone. Real (non-sandbox) bookings notify every staff
     contact and are pushed to the connected calendar; neither can break the
-    booking.
+    booking. Places held for other waiting customers count as taken; a
+    booking of the customer's own held place, or one after a rebooking
+    invitation, is marked as the waitlist's or the campaign's (`origin`).
     """
 
     def __init__(
@@ -118,8 +121,10 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
         staff_alerts: StaffAlertFacilitatorContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -201,6 +206,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                         input_data.business_id,
                         local_date,
                         inputs.zone,
+                        HeldPlaces(self._growth, now, contact.id),
                     ),
                     rules=inputs.rules,
                     stay_times=inputs.stay_times,
@@ -239,6 +245,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                 created_at=now,
                 updated_at=now,
             )
+            booking.origin = self._growth.attribute(booking, now)
             self._booking_repo.save(booking)
 
         contact = update_contact_details(

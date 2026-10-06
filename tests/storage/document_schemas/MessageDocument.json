@@ -1,7 +1,7 @@
 {
   "collection": "messages",
   "document_type": "MessageDocument",
-  "schema_version": 5,
+  "schema_version": 6,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -374,7 +374,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "5",
+        "default": "6",
         "type": "string"
       },
       "sent_by": {
@@ -415,6 +415,7 @@
                 "cancel_booking",
                 "reschedule_booking",
                 "list_my_bookings",
+                "join_waitlist",
                 "create_lead",
                 "handoff_to_human",
                 "send_link",

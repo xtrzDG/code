@@ -22,6 +22,7 @@ from app.schemas.dto.load_data import (
     SeedLoadCommand,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.demo.demo_growth_store import DemoGrowthStore
 from app.use_cases.demo.load.prepare_load_businesses_use_case import (
     PrepareLoadBusinessesUseCase,
 )
@@ -104,6 +105,12 @@ class DemoUseCasesContainer(containers.DeclarativeContainer):
         conversation_quality_repo=repositories.conversation_quality_repo,
         app_settings=config.app_settings,
         channel_repo=repositories.channel_repo,
+        growth_store=Factory(
+            DemoGrowthStore,
+            waitlist_entry_repo=repositories.waitlist_entry_repo,
+            campaign_settings_repo=repositories.campaign_settings_repo,
+            campaign_message_repo=repositories.campaign_message_repo,
+        ),
     )
     # `workshop seed-load`: owners and plans, then each business's bulk history.
     prepare_load_businesses_use_case: Factory[

@@ -20,6 +20,9 @@ from app.containers.adapters.document_collections_container import (
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
+from app.containers.adapters.growth_collections_container import (
+    GrowthCollectionsContainer,
+)
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
@@ -116,6 +119,7 @@ COLLECTION_CONTAINERS = (
     SpendGuardCollectionsContainer,
     # The client care collections and the referral program's on top (1150).
     ReferralCollectionsContainer,
+    GrowthCollectionsContainer,
 )
 
 

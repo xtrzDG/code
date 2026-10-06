@@ -34,6 +34,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
 from app.schemas.typings.platform.constrained_strings import PageCursor
+from app.utilities.customers.customer_card import tag_key
 from app.utilities.paging.cursor_paging import encode_page_cursor
 from app.utilities.paging.keyset_paging import read_slice, single_value_position
 
@@ -150,6 +151,28 @@ def matching_ids(
         for contact in candidates
         if holds(rules, totals.get(contact.id), visits.get(contact.id), now)
     }
+
+
+def members_among(
+    readers: SegmentReaders,
+    business_id: BusinessId,
+    rules: SegmentRules,
+    now: Microseconds,
+    contacts: list[ContactDocument],
+) -> set[ContactId]:
+    """
+    The given customers the segment holds for, its tag and VIP rules
+    included (a campaign asks about the few customers its rule found).
+    """
+
+    wanted_tag = None if rules.tag is None else tag_key(rules.tag)
+    marked: list[ContactDocument] = [
+        contact
+        for contact in contacts
+        if (not rules.vip_only or contact.is_vip)
+        and (wanted_tag is None or any(mark.key == wanted_tag for mark in contact.tags))
+    ]
+    return matching_ids(readers, business_id, rules, now, marked) if marked else set()
 
 
 def holds(

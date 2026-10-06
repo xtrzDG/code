@@ -26,6 +26,8 @@ class LiveEventKind(StrEnum):
     KNOWLEDGE_IMPORT_PROGRESS = "knowledge_import.progress"
     LEAD_CHANGED = "lead.changed"
     LEAD_CREATED = "lead.created"
+    # A waitlist entry joined, was offered a freed place, booked or ended.
+    WAITLIST_CHANGED = "waitlist.changed"
 
 
 class LiveStreamSignal(StrEnum):

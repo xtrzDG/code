@@ -54,6 +54,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.utilities.money.money_math import build_money_from_major_units
+from scripts.eval_harness.booked_up_days import book_up
 from scripts.eval_harness.dataset_models import BusinessSpec
 
 STARTER_SEED: str = "starter"
@@ -102,6 +103,7 @@ class EvalBusinessSeeder:
             self._container.use_cases.assistants.assemble_assistant_version_use_case
         )
         with self._scope.scoped_to_business(business.id):
+            book_up(self._container, business, spec.booked_up, now)
             details = assemble().run(
                 AssembleAssistantVersionCommand(
                     user_id=self._owner.id, business_id=business.id

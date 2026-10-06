@@ -39,6 +39,10 @@ from app.gateways.worker.periodic.growth_analytics import (
     PURGE_WEB_VITALS_JOB,
     RECONCILE_PRODUCT_EVENTS_JOB,
 )
+from app.gateways.worker.periodic.growth_jobs import (
+    EXPIRE_WAITLIST_OFFERS_JOB,
+    RUN_REBOOKING_CAMPAIGNS_JOB,
+)
 from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
 from app.gateways.worker.periodic.purge_business_exports import (
     PURGE_BUSINESS_EXPORTS_JOB,
@@ -92,6 +96,7 @@ from app.utilities.deliveries.delivery_jobs import (
 )
 from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
+from app.utilities.waitlist.offer_jobs import OFFER_FREED_PLACE_JOB
 from app.worker_main import STOP_SIGNALS, install_stop_signal_handlers, main
 from tests.e2e.harness import start_workshop
 
@@ -140,6 +145,8 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (PURGE_BUSINESS_EXPORTS_JOB, 3600),
         (PURGE_EXPIRED_PERSONAL_DATA_JOB, 86_400),
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
+        (EXPIRE_WAITLIST_OFFERS_JOB, 60),
+        (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -161,17 +168,20 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         SEND_PLATFORM_ALERT_JOB,
         SUMMARIZE_CONVERSATION_JOB,
         ERASE_PROCESSOR_COPIES_JOB,
+        OFFER_FREED_PLACE_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (29, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (31, 0, 0)
     assert right_after.periodic_runs == 0
-    assert a_minute_later.periodic_runs == 1  # the trace flush
+    # The trace flush and the end of the waitlist's expired holds.
+    assert a_minute_later.periodic_runs == 2
     # Trials, overage, grace periods, reminders, the trace flush, the admin
     # client list standings, the sweep of rate-limit counters, the inbox
     # sweep, the owners' value reports, the customers' topics, the feedback
     # requests, the milestones, the activation nudges, the platform alerts,
     # the Meta token check, the platform status record, the end of expired
-    # support access and the purge of expired exports.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (18, 0)
+    # support access, the purge of expired exports, the waitlist's expired
+    # holds and the rebooking campaigns.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (20, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

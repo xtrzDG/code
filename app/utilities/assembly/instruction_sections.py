@@ -1,9 +1,7 @@
 """
-Sections of the assistant instruction (concept section 4), composed by code.
-
-Every function returns English lines that depend only on its arguments: no
-current date, no random values. The instruction of a version is therefore
-byte-stable, which keeps the provider's prompt cache warm.
+Sections of the assistant instruction (concept section 4), composed by code:
+English lines that depend only on their arguments (no date, no random value),
+so a version's instruction is byte-stable and the provider's prompt cache warm.
 """
 
 from collections.abc import Sequence
@@ -129,15 +127,26 @@ def build_fact_section_from_rows(
     ]
 
 
+# Rules of booking tools a version assembled before them lacks.
+OPTIONAL_BOOKING_RULES: tuple[tuple[AssistantToolName, str], ...] = (
+    (
+        AssistantToolName.LIST_MY_BOOKINGS,
+        "- When customers ask about their own bookings, call list_my_bookings.",
+    ),
+    (
+        AssistantToolName.JOIN_WAITLIST,
+        "- When no time is free and check_availability says waitlist_open, offer "
+        "the waitlist; call join_waitlist only after the customer agrees.",
+    ),
+)
+
+
 def build_booking_section(
     tools: Sequence[AssistantToolName],
     country_name: str,
     timezone_name: str,
 ) -> list[str]:
-    """
-    Booking procedure when the version books directly, otherwise how to take
-    a request for a colleague.
-    """
+    """Booking procedure, or how a request is taken when the version cannot book."""
 
     phone_rule: str = (
         "- Accept phone numbers of any country; a number without a country "
@@ -168,11 +177,7 @@ def build_booking_section(
         "- Follow the booking rules in the facts: maximum party size, minimum "
         "notice, deposit and cancellation policy.",
         "- Use cancel_booking and reschedule_booking to change existing bookings.",
-        *(
-            ["- When customers ask about their own bookings, call list_my_bookings."]
-            if AssistantToolName.LIST_MY_BOOKINGS in tools
-            else []
-        ),
+        *(rule for tool, rule in OPTIONAL_BOOKING_RULES if tool in tools),
         time_rule,
         "- For larger groups, banquets, corporate events and other non-standard "
         "requests, collect the details with create_lead.",

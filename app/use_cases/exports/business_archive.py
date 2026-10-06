@@ -30,6 +30,9 @@ from app.contracts.repositories.booking_repositories import (
 from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
+from app.contracts.repositories.campaign_repositories import (
+    CampaignMessageRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
@@ -46,6 +49,7 @@ from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
 )
+from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.schemas.constants.privacy import CsvExportKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -61,6 +65,7 @@ from app.use_cases.exports.archive_pages import (
 from app.use_cases.exports.archive_tables import ArchiveTables
 from app.use_cases.exports.archive_writers import write_csv_table, write_json_array
 from app.use_cases.exports.business_rows import BookingRows, LeadRows
+from app.use_cases.exports.growth_archive import growth_pages
 from app.use_cases.exports.people_rows import AuditRows, ContactRows, ConversationRows
 from app.utilities.privacy.csv_cells import moment_cell
 from app.utilities.privacy.csv_columns import CSV_COLUMNS
@@ -92,6 +97,8 @@ class BusinessArchiveBuilder:
     audit_log_repo: AuditLogRepoContract
     text_resolver: LocalizedTextResolverContract
     phone_number_parser: PhoneNumberParserContract
+    waitlist_entry_repo: WaitlistEntryRepoContract | None = None
+    campaign_message_repo: CampaignMessageRepoContract | None = None
 
     def write(
         self,
@@ -170,6 +177,9 @@ class BusinessArchiveBuilder:
             ),
             "feedback_requests": pages_in_write_order(
                 self.feedback_request_repo, business_id, lambda item: str(item.id)
+            ),
+            **growth_pages(
+                business_id, self.waitlist_entry_repo, self.campaign_message_repo
             ),
             "audit_log": pages_in_write_order(
                 self.audit_log_repo, business_id, lambda item: str(item.id)

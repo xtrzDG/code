@@ -18,6 +18,7 @@ from collections.abc import Mapping
 from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
+from app.utilities.storage.growth_collections import GROWTH_LOOKUP_FIELDS
 from app.utilities.storage.lookup_field_builders import (
     element_field,
     filter_field,
@@ -150,6 +151,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         # A page of customers' bookings, counted per channel (1122).
         text_field("contact_id"),
         filter_field("source_channel"),
+        # The waitlist's and the campaigns' bookings of a period (1151).
+        filter_field("origin"),
     ),
     DocumentCollectionName("leads"): (
         text_field("conversation_id"),
@@ -271,6 +274,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **SPEND_GUARD_LOOKUP_FIELDS,
     **CLIENT_CARE_LOOKUP_FIELDS,
     **REFERRAL_LOOKUP_FIELDS,  # Partners, codes, referrals, commissions (1150).
+    # The waitlist and the rebooking campaigns (1151).
+    **GROWTH_LOOKUP_FIELDS,
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

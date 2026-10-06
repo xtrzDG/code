@@ -232,6 +232,11 @@ services:
       # guests' booking confirmations after the 24-hour WhatsApp window
       - key: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
         sync: false
+      # a freed waitlist place and a rebooking invitation after the window
+      - key: WHATSAPP_WAITLIST_TEMPLATE
+        sync: false
+      - key: WHATSAPP_REBOOKING_TEMPLATE
+        sync: false
       # owners' summaries in WhatsApp from the platform number
       - key: WHATSAPP_OWNER_REPORT_TEMPLATE
         sync: false
@@ -547,6 +552,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+      - key: WHATSAPP_WAITLIST_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_WAITLIST_TEMPLATE
+      - key: WHATSAPP_REBOOKING_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REBOOKING_TEMPLATE
       - key: WHATSAPP_OWNER_REPORT_TEMPLATE
         fromService:
           type: web
@@ -897,6 +912,16 @@ services:
           type: web
           name: workshop-api
           envVarKey: WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE
+      - key: WHATSAPP_WAITLIST_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_WAITLIST_TEMPLATE
+      - key: WHATSAPP_REBOOKING_TEMPLATE
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WHATSAPP_REBOOKING_TEMPLATE
       - key: WHATSAPP_OWNER_REPORT_TEMPLATE
         fromService:
           type: web

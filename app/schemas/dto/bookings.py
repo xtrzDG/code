@@ -50,6 +50,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.users.prefixed_id import UserId
+from app.schemas.typings.waitlist.booleans import IsWaitlistEnabled
 
 
 class AvailabilityQuery(ImmutableDTO):
@@ -91,6 +92,8 @@ class AvailabilityQuery(ImmutableDTO):
     # customer rules, and the booking itself does not block its own time.
     lists_every_time: ListsEveryFreeTime = False
     excluded_booking_id: BookingId | None = None
+    # The customer asking: a place held for them on the waitlist is free.
+    contact_id: ContactId | None = None
 
 
 class AvailableSlot(ImmutableDTO):
@@ -121,6 +124,8 @@ class AvailabilityResult(ImmutableDTO):
     slots: list[AvailableSlot] = Field(default_factory=list[AvailableSlot])
     service: BookableOfferView | None = None
     services: list[BookableOfferView] = Field(default_factory=list[BookableOfferView])
+    # Nothing free, and the business keeps a waitlist (join_waitlist).
+    is_waitlist_open: IsWaitlistEnabled = False
 
 
 class CreateBookingCommand(ImmutableDTO):

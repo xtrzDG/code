@@ -8,6 +8,7 @@ import { AnimatedNumber, TiltCard, TiltLayer } from "@/components/motion";
 import { AverageCheckEditor } from "@/components/value/AverageCheckEditor";
 import { DeltaChip } from "@/components/value/DeltaChip";
 import { FirstPeriodNote } from "@/components/value/FirstPeriodNote";
+import { GrowthLines } from "@/components/value/GrowthLines";
 import {
   earningCount,
   formatWholeMoney,
@@ -192,6 +193,8 @@ function WorkingHero({ model, isPlaceholder }: { model: ValueModel; isPlaceholde
           />
         </ul>
       </div>
+
+      <GrowthLines current={current} previous={previous} currency={model.currency_code} days={days} isFirstPeriod={first} className="mt-4" />
 
       {first ? <FirstPeriodNote className="mt-3" /> : null}
 

@@ -1,6 +1,7 @@
 """
 Erasing a visitor's traces outside their conversations (missed calls,
-queued messages, webhook events, requests for feedback). The records stay
+queued messages, webhook events, requests for feedback, places on the
+waitlist). The records stay
 for the business's counts; what identifies the person or repeats their
 words goes. Each change is one atomic update of the stored row, so a
 worker handling the row at the same time cannot write the old text back.
@@ -20,7 +21,9 @@ from app.contracts.repositories.delivery_repositories import (
 from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
 )
+from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.schemas.constants.deliveries import InboundEventStatus, OutboundMessageStatus
+from app.schemas.constants.waitlist import WaitlistEndReason, WaitlistStatus
 from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.inbound_events import (
     InboundCustomerMessage,
@@ -28,6 +31,7 @@ from app.schemas.domain.inbound_events import (
 )
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.waitlist import WaitlistEntryDocument
 from app.schemas.dto.compliance import ContactRecords
 from app.schemas.typings.compliance.constrained_integers import ErasedRecordCount
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
@@ -36,6 +40,9 @@ from app.schemas.typings.deliveries.strings import DeliveryErrorText, InboundErr
 
 ERASED_TEXT: str = "[erased at the visitor's request]"
 ERASED_ACCOUNT_PREFIX: str = "erased-"
+OPEN_WAITLIST_STATUSES: frozenset[WaitlistStatus] = frozenset(
+    {WaitlistStatus.WAITING, WaitlistStatus.OFFERED}
+)
 UNPROCESSED_EVENTS: frozenset[InboundEventStatus] = frozenset(
     {InboundEventStatus.RECEIVED, InboundEventStatus.PROCESSING}
 )
@@ -47,6 +54,7 @@ class TraceErasure:
     outbound_messages: ErasedRecordCount
     inbound_events: ErasedRecordCount
     feedback_requests: ErasedRecordCount
+    waitlist_entries: ErasedRecordCount = ErasedRecordCount(0)
 
 
 @dataclass(frozen=True)
@@ -55,6 +63,7 @@ class ContactTraceEraser:
     outbound_message_repo: OutboundMessageRepoContract
     inbound_event_repo: InboundEventRepoContract
     feedback_request_repo: FeedbackRequestRepoContract
+    waitlist_entry_repo: WaitlistEntryRepoContract | None = None
 
     def erase(self, records: ContactRecords, now: Microseconds) -> TraceErasure:
         business_id = records.contact.business_id
@@ -80,11 +89,18 @@ class ContactTraceEraser:
                 business_id, request.id, lambda stored: erase_feedback(stored, now)
             )
 
+        if self.waitlist_entry_repo is not None:
+            for entry in records.waitlist_entries:
+                self.waitlist_entry_repo.update(
+                    business_id, entry.id, lambda stored: erase_waitlist(stored, now)
+                )
+
         return TraceErasure(
             missed_calls=ErasedRecordCount(len(records.missed_calls)),
             outbound_messages=ErasedRecordCount(len(records.outbound_messages)),
             inbound_events=ErasedRecordCount(len(records.inbound_events)),
             feedback_requests=ErasedRecordCount(len(records.feedback_requests)),
+            waitlist_entries=ErasedRecordCount(len(records.waitlist_entries)),
         )
 
 
@@ -161,3 +177,23 @@ def erase_feedback(
     request.last_error = None
     request.updated_at = now
     return request
+
+
+def erase_waitlist(
+    entry: WaitlistEntryDocument, now: Microseconds
+) -> WaitlistEntryDocument:
+    """
+    The name and wishes go; a place still awaited or held ends (removed),
+    so no offer reaches the erased visitor and a held place is free again.
+    """
+
+    entry.contact_name = None
+    entry.notes = None
+    if entry.status in OPEN_WAITLIST_STATUSES:
+        entry.status = WaitlistStatus.EXPIRED
+        entry.end_reason = WaitlistEndReason.REMOVED
+        entry.ended_at = now
+        entry.offer_expires_at = None
+
+    entry.updated_at = now
+    return entry

@@ -1,5 +1,5 @@
 """
-Inputs of the ten model tools (concept section 5) and their execution.
+Inputs of the model tools (concept section 5) and their execution.
 
 Tool inputs hold only what the language model may decide. The business,
 contact, conversation and channel always come from the server-side
@@ -164,6 +164,25 @@ class RecordUnansweredQuestionToolInput(ImmutableDTO):
     """record_unanswered_question: the customer's question in their words."""
 
     question: UnansweredQuestionText
+
+
+class JoinWaitlistToolInput(ImmutableDTO):
+    """
+    join_waitlist: the date the customer wants and, as far as they said, a
+    time window, the party, a stay's nights, the service and the resource
+    (by id or by name in any script) and a note.
+    """
+
+    name: ContactName | None = None
+    service_id: ServiceReference | None = None
+    resource_id: ResourceReference | None = None
+    resource_type: ResourceKind | None = None
+    date: LocalDate
+    time_from: LocalTimeOfDay | None = None
+    time_to: LocalTimeOfDay | None = None
+    party_size: PartySize | None = None
+    nights: NightCount | None = None
+    notes: BookingNote | None = None
 
 
 class AssistantToolContext(ImmutableDTO):

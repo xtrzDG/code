@@ -9,6 +9,7 @@ document (the generator names the missing one).
 SAMPLE_MICROSECONDS: int = 1_790_000_000_000_000
 
 CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
+    "CampaignMonthKey": "2026-10",
     "AcquisitionSourceTag": "qr-tables",
     "AdminActionReason": "Slow onboarding: menu photos arrive next week",
     "AnnouncementText": "WhatsApp replies are delayed by a few minutes.",

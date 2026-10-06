@@ -13,9 +13,13 @@ export type ValueModel = Schema<"ValueModel">;
 export type ValueTotals = Schema<"ValueTotals">;
 /**
  * The numbers of a period the views compare with the period before: the
- * counts and the money estimate (not how the estimate was made).
+ * counts and the money estimate (not how the estimate was made, nor the
+ * worth of the waitlist's and return visits' bookings: see growthLines.ts).
  */
-export type ValueTotalsNumber = Exclude<keyof ValueTotals, "booked_value_minor" | "revenue_source" | "valued_booking_count">;
+export type ValueTotalsNumber = Exclude<
+  keyof ValueTotals,
+  "booked_value_minor" | "revenue_source" | "valued_booking_count" | "waitlist_value_minor" | "campaign_value_minor"
+>;
 export type ValueReport = Schema<"ValueReportView">;
 export type ValueReportKind = Schema<"ValueReportKind">;
 export type DigestPreferences = Schema<"DigestPreferencesView">;

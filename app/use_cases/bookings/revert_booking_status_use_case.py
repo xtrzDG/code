@@ -4,6 +4,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.operations import (
     BookingCalendarSyncFacilitatorContract,
@@ -34,7 +35,8 @@ from app.use_cases.bookings.booking_support import (
     find_resource,
     load_scheduling_inputs,
 )
-from app.use_cases.bookings.bookings_in_play import bookings_not_over_on
+from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
+from app.use_cases.bookings.freed_places import held_place_of, notice_if_freed
 from app.use_cases.bookings.status_undo import (
     ensure_time_still_free,
     require_undoable,
@@ -84,8 +86,10 @@ class RevertBookingStatusUseCase(
         lock_registry: BusinessLockRegistryContract,
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
+        growth: GrowthBookingsFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
+        self._growth: GrowthBookingsFacilitatorContract = growth
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -130,10 +134,15 @@ class RevertBookingStatusUseCase(
                     booking,
                     resource,
                     bookings_not_over_on(
-                        self._booking_repo, booking.business_id, starts_on, inputs.zone
+                        self._booking_repo,
+                        booking.business_id,
+                        starts_on,
+                        inputs.zone,
+                        HeldPlaces(self._growth, now, booking.contact_id),
                     ),
                 )
 
+            before = held_place_of(booking)
             booking.status = change.previous_status
             booking.last_status_change = None
             booking.updated_at = now
@@ -157,6 +166,7 @@ class RevertBookingStatusUseCase(
         )
         if not booking.is_sandbox:
             self._calendar_sync.sync(booking)
+            notice_if_freed(self._growth, before, booking, now, True)
 
         return build_booking_view(
             booking,

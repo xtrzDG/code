@@ -11,6 +11,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.knowledge_use_cases import KnowledgeUseCasesContainer
+from app.containers.use_cases.waitlist_use_cases import WaitlistUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.assistant_tools import (
@@ -85,6 +86,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
     knowledge_use_cases: KnowledgeUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     booking_use_cases: BookingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    waitlist_use_cases: WaitlistUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     run_assistant_tool_use_case: Factory[
         UseCaseContract[AssistantToolInvocation, AssistantToolOutcome]
@@ -101,6 +103,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         create_lead=follow_up_use_cases.create_lead_use_case,
         handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
         record_unanswered_question=follow_up_use_cases.record_unanswered_question_use_case,
+        join_waitlist=waitlist_use_cases.join_waitlist_use_case,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
         send_booking_confirmation=booking_use_cases.send_booking_confirmation_use_case,

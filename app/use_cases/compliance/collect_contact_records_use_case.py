@@ -7,6 +7,9 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
+from app.contracts.repositories.campaign_repositories import (
+    CampaignMessageRepoContract,
+)
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
     ContactRepoContract,
@@ -23,6 +26,7 @@ from app.contracts.repositories.feedback_repositories import (
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
+from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import (
@@ -66,6 +70,8 @@ class CollectContactRecordsUseCase(
         outbound_message_repo: OutboundMessageRepoContract,
         inbound_event_repo: InboundEventRepoContract,
         feedback_request_repo: FeedbackRequestRepoContract,
+        waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
+        campaign_message_repo: CampaignMessageRepoContract | None = None,
     ) -> None:
         self._contact_repo: ContactRepoContract = contact_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
@@ -81,6 +87,8 @@ class CollectContactRecordsUseCase(
             outbound_message_repo=outbound_message_repo,
             inbound_event_repo=inbound_event_repo,
             feedback_request_repo=feedback_request_repo,
+            waitlist_entry_repo=waitlist_entry_repo,
+            campaign_message_repo=campaign_message_repo,
         )
 
     def run(self, input_data: ContactRecordsQuery) -> ContactRecords:
@@ -156,4 +164,6 @@ class CollectContactRecordsUseCase(
             outbound_messages=traces.outbound_messages,
             inbound_events=traces.inbound_events,
             feedback_requests=traces.feedback_requests,
+            waitlist_entries=traces.waitlist_entries,
+            campaign_messages=traces.campaign_messages,
         )

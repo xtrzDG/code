@@ -1,7 +1,8 @@
 """
 The traces of a visitor outside their conversations: missed calls from
 their numbers, messages queued to their accounts, webhook events they sent
-and requests for feedback after their visits. Every read is an indexed
+requests for feedback after their visits, their places on the waitlist
+and the rebooking campaign's messages to them. Every read is an indexed
 lookup of the visitor's own numbers, accounts, conversations or contact.
 """
 
@@ -11,6 +12,9 @@ from app.contracts.repositories.business_repositories import ChannelRepoContract
 from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
+from app.contracts.repositories.campaign_repositories import (
+    CampaignMessageRepoContract,
+)
 from app.contracts.repositories.delivery_repositories import (
     InboundEventRepoContract,
     OutboundMessageRepoContract,
@@ -18,7 +22,9 @@ from app.contracts.repositories.delivery_repositories import (
 from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
 )
+from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.campaigns import CampaignMessageDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
@@ -26,6 +32,7 @@ from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.waitlist import WaitlistEntryDocument
 from app.schemas.typings.conversations.strings import ChannelUserId
 from app.schemas.typings.deliveries.constrained_strings import OutboundRecipientKey
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
@@ -38,6 +45,8 @@ class ContactTraces:
     outbound_messages: list[OutboundMessageDocument]
     inbound_events: list[InboundEventDocument]
     feedback_requests: list[FeedbackRequestDocument]
+    waitlist_entries: list[WaitlistEntryDocument]
+    campaign_messages: list[CampaignMessageDocument]
 
 
 @dataclass(frozen=True)
@@ -47,6 +56,8 @@ class ContactTraceReader:
     outbound_message_repo: OutboundMessageRepoContract
     inbound_event_repo: InboundEventRepoContract
     feedback_request_repo: FeedbackRequestRepoContract
+    waitlist_entry_repo: WaitlistEntryRepoContract | None = None
+    campaign_message_repo: CampaignMessageRepoContract | None = None
 
     def read(
         self,
@@ -82,6 +93,20 @@ class ContactTraceReader:
             ),
             feedback_requests=self.feedback_request_repo.list_by_contact(
                 contact.business_id, contact.id
+            ),
+            waitlist_entries=(
+                []
+                if self.waitlist_entry_repo is None
+                else self.waitlist_entry_repo.list_of_contact(
+                    contact.business_id, contact.id
+                )
+            ),
+            campaign_messages=(
+                []
+                if self.campaign_message_repo is None
+                else self.campaign_message_repo.list_of_contact(
+                    contact.business_id, contact.id
+                )
             ),
         )
 

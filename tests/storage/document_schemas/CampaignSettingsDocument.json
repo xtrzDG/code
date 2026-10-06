@@ -1,0 +1,90 @@
+{
+  "collection": "campaign_settings",
+  "document_type": "CampaignSettingsDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "audience": {
+        "default": "all_customers",
+        "enum": [
+          "all_customers",
+          "segment"
+        ],
+        "type": "string"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "delay_days": {
+        "maximum": 730,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^campaign_settings_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_enabled": {
+        "default": false,
+        "type": "boolean"
+      },
+      "monthly_cap": {
+        "default": 100,
+        "maximum": 2000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "rule_kind": {
+        "enum": [
+          "rebook",
+          "recall",
+          "pre_arrival"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "segment_id": {
+        "anyOf": [
+          {
+            "pattern": "^segment_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "updated_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "rule_kind",
+      "delay_days"
+    ],
+    "type": "object"
+  }
+}

@@ -44,6 +44,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"POST {B}/billing/checkout",
         f"POST {B}/billing/plan",
         f"PUT {B}/assistant-settings",
+        f"PUT {B}/campaign-settings",
+        f"GET {B}/campaign-messages",
         f"POST {B}/billing/subscribe",
         f"POST {B}/billing/trial",
         f"GET {B}/call-settings",
@@ -100,6 +102,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"GET {B}/value/settings",
         f"GET {B}/value/sources",
         f"PUT {B}/value/settings",
+        f"PUT {B}/waitlist-settings",
         *OWNER_ONLY_CUSTOMER_OPERATIONS,
     }
 )

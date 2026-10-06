@@ -61,6 +61,7 @@ modules =
     app.use_cases.bookings
     app.use_cases.businesses
     app.use_cases.calendar
+    app.use_cases.campaigns
     app.use_cases.catalog
     app.use_cases.channels
     app.use_cases.compliance
@@ -94,4 +95,5 @@ modules =
     app.use_cases.telemetry
     app.use_cases.users
     app.use_cases.voice
+    app.use_cases.waitlist
     app.use_cases.widget

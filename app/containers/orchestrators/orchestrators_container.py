@@ -42,6 +42,9 @@ from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsCon
 from app.containers.orchestrators.feedback_orchestrators import (
     FeedbackOrchestratorsContainer,
 )
+from app.containers.orchestrators.growth_orchestrators import (
+    GrowthOrchestratorsContainer,
+)
 from app.containers.orchestrators.inbox_orchestrators import (
     InboxOrchestratorsContainer,
 )
@@ -180,6 +183,7 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         call_orchestrators=calls,
         feedback_use_cases=use_cases.feedback,
         spend_guard_use_cases=use_cases.spend_guard,
+        waitlist_use_cases=use_cases.waitlist,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,
@@ -257,6 +261,12 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     feedback: FeedbackOrchestratorsContainer = Container(  # type: ignore[assignment]
         FeedbackOrchestratorsContainer,
         feedback_use_cases=use_cases.feedback,
+    )
+    # The waitlist and the rebooking campaigns (1151).
+    growth: GrowthOrchestratorsContainer = Container(  # type: ignore[assignment]
+        GrowthOrchestratorsContainer,
+        waitlist_use_cases=use_cases.waitlist,
+        campaign_use_cases=use_cases.campaigns,
     )
     analytics: AnalyticsOrchestratorsContainer = Container(  # type: ignore[assignment]
         AnalyticsOrchestratorsContainer,

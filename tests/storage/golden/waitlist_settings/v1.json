@@ -1,0 +1,10 @@
+{
+  "business_id": "business_1ef06553-00c3-4b65-ba0d-41b325bbb3fb",
+  "created_at": 1790000000000000,
+  "hold_minutes": 15,
+  "id": "waitlist_settings_b57a3f68-5e67-5cf2-ab1f-4bc2aa68a7dd",
+  "is_enabled": true,
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "updated_by": "user_e378098e-8058-4c16-bc02-1822fc1b7adb"
+}

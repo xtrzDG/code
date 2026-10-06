@@ -30,6 +30,7 @@ from app.utilities.deliveries.delivery_jobs import (
 )
 from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
+from app.utilities.waitlist.offer_jobs import OFFER_FREED_PLACE_JOB
 
 
 def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
@@ -69,5 +70,7 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             # A quiet conversation summarized for the customer memory.
             SUMMARIZE_CONVERSATION_JOB: operators.memory.summarize_conversation_operator,  # noqa: E501
             ERASE_PROCESSOR_COPIES_JOB: operators.privacy.erase_copies_operator,
+            # A freed place offered to the next waiting customer (1151).
+            OFFER_FREED_PLACE_JOB: operators.growth.offer_freed_place_operator,
         }
     )

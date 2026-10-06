@@ -2,213 +2,34 @@ from dependency_injector.providers import Container, Factory
 
 from app.containers.use_cases.admin_action_use_cases import AdminActionUseCasesContainer
 from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
-from app.containers.use_cases.apply_use_cases import ApplyUseCasesContainer
-from app.containers.use_cases.assistant_use_cases import AssistantUseCasesContainer
-from app.containers.use_cases.autotest_use_cases import AutotestUseCasesContainer
-from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
-from app.containers.use_cases.call_use_cases import CallUseCasesContainer
-from app.containers.use_cases.channel_use_cases import ChannelUseCasesContainer
-from app.containers.use_cases.conversation_feed_use_cases import (
-    ConversationFeedUseCasesContainer,
-)
-from app.containers.use_cases.conversation_use_cases import (
-    ConversationUseCasesContainer,
+from app.containers.use_cases.business_use_cases_container import (
+    BusinessUseCasesContainer,
 )
 from app.containers.use_cases.core_use_cases_container import CoreUseCasesContainer
-from app.containers.use_cases.delivery_use_cases import DeliveryUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
 from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
-from app.containers.use_cases.guide_use_cases import GuideUseCasesContainer
-from app.containers.use_cases.launch_use_cases import LaunchUseCasesContainer
-from app.containers.use_cases.notification_use_cases import (
-    NotificationUseCasesContainer,
-)
-from app.containers.use_cases.pending_change_use_cases import (
-    PendingChangeUseCasesContainer,
-)
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
 from app.containers.use_cases.referral_use_cases import ReferralUseCasesContainer
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
-from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
-from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
 from app.use_cases.example_use_case import ExampleUseCase
 
 
-class UseCasesContainer(CoreUseCasesContainer):
+class UseCasesContainer(BusinessUseCasesContainer):
     """
     Every use case, one child container per bounded context, typed by its
     contract, so the orchestrator, pipeline and operator chains built on them
     are checked; the edges and the contexts the others build on come from
-    `CoreUseCasesContainer`. Use cases are stateless Factories, except ones
-    holding a cache; a context running another's use cases gets that
+    `CoreUseCasesContainer`, a business's own work from
+    `BusinessUseCasesContainer`. Use cases are stateless Factories, except
+    ones holding a cache; a context running another's use cases gets that
     (earlier) child container as edge.
     """
 
-    conversations: ConversationUseCasesContainer = Container(  # type: ignore[assignment]
-        ConversationUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities,
-        knowledge_use_cases=CoreUseCasesContainer.knowledge,
-        booking_use_cases=CoreUseCasesContainer.bookings,
-        follow_up_use_cases=CoreUseCasesContainer.follow_ups,
-    )
-    conversation_feed: ConversationFeedUseCasesContainer = Container(  # type: ignore[assignment]
-        ConversationFeedUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        account_use_cases=CoreUseCasesContainer.accounts,
-    )
-    voice: VoiceUseCasesContainer = Container(  # type: ignore[assignment]
-        VoiceUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities,
-        conversation_use_cases=conversations,
-        follow_up_use_cases=CoreUseCasesContainer.follow_ups,
-        spend_guard_use_cases=CoreUseCasesContainer.spend_guard,
-    )
-    calls: CallUseCasesContainer = Container(  # type: ignore[assignment]
-        CallUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        clients=CoreUseCasesContainer.clients,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-    )
-    launch: LaunchUseCasesContainer = Container(  # type: ignore[assignment]
-        LaunchUseCasesContainer, facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-    )  # fmt: skip
-    pending_changes: PendingChangeUseCasesContainer = Container(  # type: ignore[assignment]
-        PendingChangeUseCasesContainer, registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-    )  # fmt: skip
-    assistants: AssistantUseCasesContainer = Container(  # type: ignore[assignment]
-        AssistantUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        conversation_use_cases=conversations,
-        voice_use_cases=voice,
-        launch_use_cases=launch,
-        pending_change_use_cases=pending_changes,
-    )
-    apply: ApplyUseCasesContainer = Container(  # type: ignore[assignment]
-        ApplyUseCasesContainer, facilitators=CoreUseCasesContainer.facilitators,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        assistant_use_cases=assistants, pending_change_use_cases=pending_changes,
-    )  # fmt: skip
-    setup: SetupUseCasesContainer = Container(  # type: ignore[assignment]
-        SetupUseCasesContainer,
-        facilitators=CoreUseCasesContainer.facilitators,
-        config=CoreUseCasesContainer.config,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        assistant_use_cases=assistants,
-        apply_use_cases=apply,
-        launch_use_cases=launch,
-    )
-    guide: GuideUseCasesContainer = Container(  # type: ignore[assignment]
-        GuideUseCasesContainer, facilitators=CoreUseCasesContainer.facilitators,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        account_use_cases=CoreUseCasesContainer.accounts, setup_use_cases=setup,
-    )  # fmt: skip
-    autotests: AutotestUseCasesContainer = Container(  # type: ignore[assignment]
-        AutotestUseCasesContainer, config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-    )  # fmt: skip
-    channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]
-        ChannelUseCasesContainer,
-        facilitators=CoreUseCasesContainer.facilitators,
-        adapters=CoreUseCasesContainer.adapters,
-        clients=CoreUseCasesContainer.clients,
-        config=CoreUseCasesContainer.config,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        voice_use_cases=voice,
-    )
-    deliveries: DeliveryUseCasesContainer = Container(  # type: ignore[assignment]
-        DeliveryUseCasesContainer, adapters=CoreUseCasesContainer.adapters,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-    )  # fmt: skip
-    notifications: NotificationUseCasesContainer = Container(  # type: ignore[assignment]
-        NotificationUseCasesContainer,
-        clients=CoreUseCasesContainer.clients,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        account_use_cases=CoreUseCasesContainer.accounts,
-    )
-    billing: BillingUseCasesContainer = Container(  # type: ignore[assignment]
-        BillingUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
-        clients=CoreUseCasesContainer.clients,
-        config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators,
-        registries=CoreUseCasesContainer.registries,
-        repositories=CoreUseCasesContainer.repositories,
-        time_provider=CoreUseCasesContainer.time_provider,
-        transformers=CoreUseCasesContainer.transformers,
-        utilities=CoreUseCasesContainer.utilities,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        voice_use_cases=voice,
-    )
     platform: PlatformUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
@@ -218,7 +39,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
-        billing_use_cases=billing,
+        billing_use_cases=BusinessUseCasesContainer.billing,
     )
     security: SecurityUseCasesContainer = Container(  # type: ignore[assignment]
         SecurityUseCasesContainer,
@@ -234,67 +55,86 @@ class UseCasesContainer(CoreUseCasesContainer):
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     platform_ops: PlatformOpsUseCasesContainer = Container(  # type: ignore[assignment]
-        PlatformOpsUseCasesContainer, adapters=CoreUseCasesContainer.adapters,
-        clients=CoreUseCasesContainer.clients, config=CoreUseCasesContainer.config,
+        PlatformOpsUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
-        utilities=CoreUseCasesContainer.utilities, platform_use_cases=platform,
-    )  # fmt: skip
+        utilities=CoreUseCasesContainer.utilities,
+        platform_use_cases=platform,
+    )
     sharing: SharingUseCasesContainer = Container(  # type: ignore[assignment]
-        SharingUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        SharingUseCasesContainer,
+        time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         registries=CoreUseCasesContainer.registries,
-        utilities=CoreUseCasesContainer.utilities, config=CoreUseCasesContainer.config,
-    )  # fmt: skip
+        utilities=CoreUseCasesContainer.utilities,
+        config=CoreUseCasesContainer.config,
+    )
     value: ValueUseCasesContainer = Container(  # type: ignore[assignment]
-        ValueUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        ValueUseCasesContainer,
+        time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         registries=CoreUseCasesContainer.registries,
-        adapters=CoreUseCasesContainer.adapters, config=CoreUseCasesContainer.config,
-    )  # fmt: skip
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+    )
     feedback: FeedbackUseCasesContainer = Container(  # type: ignore[assignment]
-        FeedbackUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        FeedbackUseCasesContainer,
+        time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         registries=CoreUseCasesContainer.registries,
-        utilities=CoreUseCasesContainer.utilities, config=CoreUseCasesContainer.config,
-    )  # fmt: skip
+        utilities=CoreUseCasesContainer.utilities,
+        config=CoreUseCasesContainer.config,
+    )
     analytics: AnalyticsUseCasesContainer = Container(  # type: ignore[assignment]
-        AnalyticsUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
-        facilitators=CoreUseCasesContainer.facilitators, platform_use_cases=platform,
-        repositories=CoreUseCasesContainer.repositories, billing_use_cases=billing,
+        AnalyticsUseCasesContainer,
+        time_provider=CoreUseCasesContainer.time_provider,
+        facilitators=CoreUseCasesContainer.facilitators,
+        platform_use_cases=platform,
+        repositories=CoreUseCasesContainer.repositories,
+        billing_use_cases=BusinessUseCasesContainer.billing,
         registries=CoreUseCasesContainer.registries,
-    )  # fmt: skip
+    )
     demo: DemoUseCasesContainer = Container(  # type: ignore[assignment]
-        DemoUseCasesContainer, time_provider=CoreUseCasesContainer.time_provider,
+        DemoUseCasesContainer,
+        time_provider=CoreUseCasesContainer.time_provider,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         registries=CoreUseCasesContainer.registries,
-        adapters=CoreUseCasesContainer.adapters, config=CoreUseCasesContainer.config,
-    )  # fmt: skip
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+    )
     admin_actions: AdminActionUseCasesContainer = Container(  # type: ignore[assignment]
-        AdminActionUseCasesContainer, platform_use_cases=platform,
-        adapters=CoreUseCasesContainer.adapters, config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators, voice_use_cases=voice,
+        AdminActionUseCasesContainer,
+        platform_use_cases=platform,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        voice_use_cases=BusinessUseCasesContainer.voice,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
-    )  # fmt: skip
+    )
     referrals: ReferralUseCasesContainer = Container(  # type: ignore[assignment]
-        ReferralUseCasesContainer, config=CoreUseCasesContainer.config,
-        facilitators=CoreUseCasesContainer.facilitators, platform_use_cases=platform,
+        ReferralUseCasesContainer,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        platform_use_cases=platform,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
-    )  # fmt: skip
+    )
 
     # --- Template example (keeps its concrete type).
     example_use_case: Factory[ExampleUseCase] = Factory(ExampleUseCase)
