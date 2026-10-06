@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 import { legacyRedirects } from "./src/lib/legacyRoutes";
+import { sourceMapUploadOptions } from "./src/lib/monitoring/sourceMaps";
 
 /**
  * Browsers take HSTS only over HTTPS, so a production build always sends it
@@ -51,4 +53,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// With SENTRY_AUTH_TOKEN (CI on main) the build uploads its source maps to
+// Sentry and deletes them; otherwise the config is used as it is
+// (src/lib/monitoring/sourceMaps.ts).
+const sourceMapUpload = sourceMapUploadOptions(process.env);
+
+export default sourceMapUpload === null ? nextConfig : withSentryConfig(nextConfig, sourceMapUpload);

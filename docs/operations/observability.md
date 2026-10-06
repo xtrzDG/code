@@ -100,6 +100,29 @@ Sentry keeps its own sampled performance traces (`SENTRY_TRACES_SAMPLE_RATE`)
 and now records the database statements and outgoing HTTP calls inside
 them the same way. Trace headers are never sent to providers.
 
+### Cabinet source maps
+
+The cabinet's errors reach Sentry minified unless Sentry has the build's
+source maps. On every push to `main`, CI uploads them when the repository
+has the `SENTRY_AUTH_TOKEN` secret (an organization token that may upload
+releases) and the `SENTRY_ORG` and `SENTRY_PROJECT` variables: the web job
+builds the cabinet again with them, and `web/next.config.ts` then wraps the
+config with Sentry's build plugin (`web/src/lib/monitoring/sourceMaps.ts`).
+The plugin uploads the browser and server maps for the release named after
+the commit (`APP_RELEASE`, the release the cabinet reports) and deletes them
+from the build, so they are never served. A failed upload leaves a warning,
+not a failed build. Without the token the step does nothing and every build
+is unchanged: no plugin, no added instrumentation, no route list in the
+bundle.
+
+Sentry finds the maps through the debug id the plugin writes into each
+built file, so they apply to the bundles of that CI build. Render builds
+the cabinet's image itself (`web/Dockerfile`) without the token, so its
+files carry no debug ids and their stack traces stay minified. To get
+readable production stack traces, give that image build the same three
+values (Docker build arguments of `web/Dockerfile`) so it uploads its own
+maps, or deploy the image CI builds.
+
 ## One id from the webhook to the reply
 
 The request id (`X-Request-ID`) and the trace id travel together:

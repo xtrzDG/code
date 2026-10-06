@@ -194,7 +194,10 @@ API запускается с `--proxy-headers`; адреса доверенны
   периодической задачи (пропущенный или упавший запуск видно в Sentry),
   ошибки виджета сайтов (`POST /v1/widget/errors`) и кабинета
   (`SENTRY_DSN` сервиса `workshop-cabinet`, `web/README.md`). Без тел
-  запросов, пользователей и breadcrumbs.
+  запросов, пользователей и breadcrumbs. Карты исходников кабинета CI
+  загружает в Sentry на коммитах в `main`, когда в GitHub заданы секрет
+  `SENTRY_AUTH_TOKEN` и переменные `SENTRY_ORG`, `SENTRY_PROJECT`
+  (`docs/operations/observability.md`).
 
 ### Деплой на Render (ЕС)
 

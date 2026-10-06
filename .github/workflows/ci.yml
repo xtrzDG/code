@@ -236,6 +236,25 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      # Readable cabinet stack traces in Sentry: on main, with the
+      # SENTRY_AUTH_TOKEN secret (and the SENTRY_ORG / SENTRY_PROJECT
+      # variables), build again with the source maps, upload them for the
+      # commit's release and delete them (src/lib/monitoring/sourceMaps.ts).
+      # The token reaches this step only, after the shards' build is kept.
+      - name: Upload the cabinet's source maps to Sentry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          APP_RELEASE: ${{ github.sha }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "No SENTRY_AUTH_TOKEN secret: the source maps are not uploaded."
+            exit 0
+          fi
+          npm run build
+
   security:
     name: Security (dependencies, secrets, static analysis)
     runs-on: ubuntu-latest
