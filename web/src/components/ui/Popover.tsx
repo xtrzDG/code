@@ -27,7 +27,7 @@ interface Placement {
 }
 
 /** Where a panel of `size` goes next to `anchor` in a viewport of `viewport` (both in CSS pixels). */
-export function placePopover(
+function placePopover(
   anchor: Pick<DOMRect, "top" | "bottom" | "left" | "right">,
   size: { width: number; height: number },
   viewport: { width: number; height: number },

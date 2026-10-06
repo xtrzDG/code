@@ -8,7 +8,7 @@
  */
 
 import { dateTimeFormat } from "./intl/formatters";
-import { dayPeriods, hourCycle, type HourCycle } from "./intl/localeCalendar";
+import { dayPeriods, hourCycle } from "./intl/localeCalendar";
 
 export const MINUTES_PER_DAY = 24 * 60;
 
@@ -105,4 +105,3 @@ export function isTwelveHour(locale: string): boolean {
   return hourCycle(locale) === "h12";
 }
 
-export type { HourCycle };

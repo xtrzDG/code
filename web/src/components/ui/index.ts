@@ -12,7 +12,7 @@ export { Drawer } from "./Drawer";
 export { EmptyState } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
 export { Fab } from "./Fab";
-export { Field, Fieldset, fieldLabelId } from "./Field";
+export { Field, Fieldset } from "./Field";
 export { FilterSheet } from "./FilterSheet";
 export { Modal, ModalFooter } from "./Modal";
 export { OverflowMenu, type MenuAction } from "./OverflowMenu";

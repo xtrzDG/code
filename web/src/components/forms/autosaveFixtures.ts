@@ -11,7 +11,7 @@ import { AutosaveEngine } from "./autosaveEngine";
 import type { AutosaveClock } from "./autosaveParts";
 import type { AutosaveConfig } from "./autosaveTypes";
 
-export function manualClock(): AutosaveClock & { advance: (ms: number) => void; pending: () => number } {
+function manualClock(): AutosaveClock & { advance: (ms: number) => void; pending: () => number } {
   let now = 1_000;
   let nextId = 1;
   const timers = new Map<number, { at: number; callback: () => void }>();
@@ -84,9 +84,9 @@ export interface Stored {
 
 export type Values = Omit<Stored, "revision">;
 
-export const toForm = ({ name, days, isOn }: Stored): Values => ({ name, days, isOn });
+const toForm = ({ name, days, isOn }: Stored): Values => ({ name, days, isOn });
 
-export function changesOf(form: Values, base: Stored): Partial<Values> | null {
+function changesOf(form: Values, base: Stored): Partial<Values> | null {
   const changes = Object.fromEntries(
     (Object.keys(form) as (keyof Values)[]).filter((key) => form[key] !== base[key]).map((key) => [key, form[key]]),
   ) as Partial<Values>;
