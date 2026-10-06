@@ -5,7 +5,10 @@ a batch job; every worker still runs its process-local jobs, and jobs of
 other lanes wait for the worker of their role.
 """
 
+import logging
 import threading
+
+import pytest
 
 from app.contracts.jobs import QueuedJobOperator
 from app.gateways.worker.background_worker import PeriodicJobSpec
@@ -122,7 +125,10 @@ def test_shared_periodic_jobs_run_with_the_role_of_their_lane() -> None:
     assert len(batch_flush.ticks) == 1
 
 
-def test_a_worker_starts_threads_only_for_its_lanes() -> None:
+def test_a_worker_starts_threads_only_for_its_lanes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="app.gateways.worker.lane_threads")
     clock = ControlledClock()
     operator = GatedQueuedOperator(is_gated=False)
     kit = build_worker(
@@ -141,6 +147,9 @@ def test_a_worker_starts_threads_only_for_its_lanes() -> None:
     before: set[threading.Thread] = set(threading.enumerate())
     with running_worker(kit.worker):
         assert wait_until(lambda: status_of(kit, inbound) is QueuedJobStatus.DONE)
+        # The lanes start one after another, so the inbound job can be done
+        # before the next lane's thread exists; the log line follows them all.
+        assert wait_until(lambda: "Worker lanes started" in caplog.text)
         lane_threads: set[str] = {
             thread.name.rsplit("-", 1)[0]
             for thread in set(threading.enumerate()) - before
