@@ -337,7 +337,7 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   лежит) и срок на час. Ключ посетителя никогда не попадает в адрес;
   билет в адресе вымарывается из журнала доступа;
 - маршрут `GET /v1/widget/{id}/events?ticket=…`
-  (`widget_event_routes.py`, вне схемы OpenAPI, как и поток кабинета):
+  (`widget_event_routes.py`, в схеме OpenAPI как `text/event-stream`, как и поток кабинета):
   `OpenWidgetStreamOperator` → `OpenWidgetStreamUseCase` проверяет билет
   (401 — чужой, просроченный, испорченный) и что чат сайта подключён (404),
   затем `WidgetEventStreamFacilitator` подписывает на шину живых событий
