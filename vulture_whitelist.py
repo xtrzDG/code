@@ -600,7 +600,7 @@ _.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 # The subscription lifecycle (R14): the win-back stage is stored for the
 # record; the rest are response fields the cabinet reads (the pause card,
 # the cancel dialog's offers, the admin Metrics churn section).
-_.win_back_stage  # app/schemas/domain/subscription_events.py (SubscriptionEventDocument)
+_.win_back_stage  # app/schemas/domain/subscription_events.py
 _.churn  # app/schemas/dto/analytics/admin_metrics_view.py (AdminMetricsView)
 _.pauses_scheduled  # app/schemas/dto/analytics/churn_views.py (ChurnView)
 _.pauses_ended  # app/schemas/dto/analytics/churn_views.py (ChurnView)

@@ -155,7 +155,7 @@ def test_an_owner_who_came_back_hears_nothing() -> None:
 
 def test_messages_wait_for_the_businesss_daytime() -> None:
     world = LifecycleWorld()
-    _, business, cancelled_at = cancelled_business(world)
+    _, _, cancelled_at = cancelled_business(world)
     # The cancellation was at 13:00 in Tbilisi; ten hours later it is night.
     at_day(world, cancelled_at, 14 + 10 / 24)
     assert world.run_win_back_job() == 0
