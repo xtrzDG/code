@@ -161,6 +161,15 @@ a stored shape changes only by expand and contract
   `parse_json_body`. Path ids go through `parse_path_identifier`, optional
   query values through `parse_optional` (`query_parsing.py`), `?language=`
   and Accept-Language through `language_negotiation.py`.
+- Every operation has a tag (its router's) and the operationId
+  `<tag>_<route function name>` (`app/gateways/http/operation_ids.py`): a
+  route function's name is a public SDK method name, so renaming it is a
+  breaking change (docs/api-versioning.md).
+- A route that creates something a retry must not create twice (a booking,
+  a staff message, a checkout, an assistant) takes the Idempotency-Key with
+  one line, `dependencies=[Depends(idempotent)]`, from the dependency its
+  router builder receives (`app/gateways/http/idempotency/`); the response
+  recorder installed by `build_http_application` keeps its answer.
 - Router tests build a small `FastAPI()` with `install_error_handlers` and the
   module router, and call it with `fastapi.testclient.TestClient`.
 
