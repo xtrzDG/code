@@ -1,0 +1,138 @@
+name: Contracts live
+
+# Nightly and on demand: do the providers still speak the shapes the
+# contract tests hold them to (tests/contracts/README.md)?
+#
+# - drift: the vendors' published specifications (OpenAPI, Google's
+#   discovery document, the SDKs' types) are read again and compared with
+#   tests/contracts/specs (`scripts.refresh_vendor_specs --check`); a
+#   renamed field or a new shape fails the run. The downloads are kept as
+#   an artifact.
+# - smoke: one small call per provider against its sandbox, the real
+#   answer validated against the same specs (tests/contracts/live). A
+#   provider whose sandbox secrets are not set is skipped; Flitt's test
+#   merchant needs none. Only sandbox credentials belong in these secrets.
+#
+# A failure opens one "Provider drift" issue, or comments on the open one.
+on:
+  schedule:
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contracts-live
+  cancel-in-progress: false
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release).
+jobs:
+  drift:
+    name: Vendor specifications against tests/contracts/specs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # Exit code 1: a vendor's schemas changed; 2: a document could not be read.
+      - name: Compare the published specifications
+        shell: bash
+        run: |
+          set +e
+          uv run python -m scripts.refresh_vendor_specs --check \
+            --cache "$RUNNER_TEMP/vendor-documents" | tee "$RUNNER_TEMP/drift.txt"
+          status=${PIPESTATUS[0]}
+          { echo '### Vendor specifications'; echo '```'; cat "$RUNNER_TEMP/drift.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Keep the vendor documents
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vendor-documents
+          path: ${{ runner.temp }}/vendor-documents
+          if-no-files-found: ignore
+          retention-days: 14
+
+  smoke:
+    name: Sandbox calls against the vendored specifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UV_FROZEN: "1"
+      CONTRACTS_LIVE: "1"
+      CONTRACTS_TELEGRAM_BOT_TOKEN: ${{ secrets.CONTRACTS_TELEGRAM_BOT_TOKEN }}
+      CONTRACTS_META_ACCESS_TOKEN: ${{ secrets.CONTRACTS_META_ACCESS_TOKEN }}
+      CONTRACTS_META_PHONE_NUMBER_ID: ${{ secrets.CONTRACTS_META_PHONE_NUMBER_ID }}
+      CONTRACTS_META_TEST_RECIPIENT: ${{ secrets.CONTRACTS_META_TEST_RECIPIENT }}
+      CONTRACTS_TWILIO_TEST_ACCOUNT_SID: ${{ secrets.CONTRACTS_TWILIO_TEST_ACCOUNT_SID }}
+      CONTRACTS_TWILIO_TEST_AUTH_TOKEN: ${{ secrets.CONTRACTS_TWILIO_TEST_AUTH_TOKEN }}
+      CONTRACTS_GOOGLE_CLIENT_ID: ${{ secrets.CONTRACTS_GOOGLE_CLIENT_ID }}
+      CONTRACTS_GOOGLE_CLIENT_SECRET: ${{ secrets.CONTRACTS_GOOGLE_CLIENT_SECRET }}
+      CONTRACTS_GOOGLE_REFRESH_TOKEN: ${{ secrets.CONTRACTS_GOOGLE_REFRESH_TOKEN }}
+      CONTRACTS_OPENAI_API_KEY: ${{ secrets.CONTRACTS_OPENAI_API_KEY }}
+      CONTRACTS_ANTHROPIC_API_KEY: ${{ secrets.CONTRACTS_ANTHROPIC_API_KEY }}
+      CONTRACTS_ELEVENLABS_API_KEY: ${{ secrets.CONTRACTS_ELEVENLABS_API_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # -rs lists the providers skipped for want of sandbox secrets.
+      - name: Call the sandboxes
+        run: uv run pytest tests/contracts/live -rs -q
+
+  report:
+    name: Open or update the provider drift issue
+    needs: [drift, smoke]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: One open issue per drift
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Provider drift: the nightly contract check failed"
+          cat > "$RUNNER_TEMP/body.md" <<BODY
+          The nightly contract check failed: ${RUN_URL}
+
+          - [ ] Drift job: read the changed definitions in the run summary, then run \`uv run python -m scripts.refresh_vendor_specs --only <provider>\` and let the contract tests show what the platform must change (tests/contracts/README.md).
+          - [ ] Smoke job: a sandbox answer no longer matches the vendored spec; compare it with the provider's changelog before refreshing.
+          - [ ] Close this issue with the pull request that adapts the platform or the spec.
+          BODY
+          number="$(gh issue list --state open --search "in:title \"${title}\"" --json number --jq '.[0].number')"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "Failed again: ${RUN_URL}"
+          else
+            gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          fi
