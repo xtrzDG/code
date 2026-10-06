@@ -51,6 +51,7 @@ class AnalyticsUseCasesContainer(containers.DeclarativeContainer):
         compute_client_cost=billing_use_cases.compute_client_cost_use_case,
         exchange_rate_registry=registries.exchange_rate_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        subscription_event_repo=repositories.subscription_event_repo,
     )
     record_telemetry_use_case: Factory[
         UseCaseContract[TelemetryBatchCommand, TelemetryBatchReceipt]

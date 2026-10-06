@@ -54,6 +54,10 @@ from app.gateways.worker.periodic.send_subprocessor_notices import (
     send_subprocessor_notices_job,
 )
 from app.gateways.worker.periodic.send_value_reports import send_value_reports_job
+from app.gateways.worker.periodic.subscription_lifecycle_jobs import (
+    run_subscription_pauses_job,
+    send_win_back_messages_job,
+)
 from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
     sweep_rate_limit_buckets_job,
 )
@@ -85,7 +89,8 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
     # period (day or interval) across workers: trials end before grace
     # periods are enforced, so an expired trial and its grace period are
     # handled in the same hour; minutes above the package are billed before
-    # the grace job looks for unpaid bills.
+    # the grace job looks for unpaid bills, and seasonal pauses start or end
+    # before it looks at their subscriptions.
     return List(
         Factory(
             PeriodicJobSpec,
@@ -104,6 +109,11 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             name=INVOICE_USAGE_OVERAGE_JOB,
             interval_seconds=JobIntervalSeconds(HOUR_SECONDS),
             operator=operators.billing.invoice_usage_overage_operator,
+        ),
+        # Seasonal pauses start and end before the grace job (1161).
+        Factory(
+            run_subscription_pauses_job,
+            operator=operators.lifecycle.run_subscription_pauses_operator,
         ),
         Factory(
             PeriodicJobSpec,
@@ -241,5 +251,10 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         Factory(
             run_rebooking_campaigns_job,
             operator=operators.growth.run_rebooking_campaigns_operator,
+        ),
+        # Owners who cancelled hear from us on days 14 and 30 (1161).
+        Factory(
+            send_win_back_messages_job,
+            operator=operators.lifecycle.send_win_back_messages_operator,
         ),
     )

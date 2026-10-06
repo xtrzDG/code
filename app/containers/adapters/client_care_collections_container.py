@@ -12,13 +12,15 @@ from app.schemas.domain.client_health_changes import (
     ClientHealthChangeDocument,
 )
 from app.schemas.domain.client_notes import ClientNoteDocument
+from app.schemas.domain.subscription_events import SubscriptionEventDocument
 
 
 class ClientCareCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of the admin's client care (migration 1143):
     the credit ledger, the platform team's notes, health changes and how far
-    each digest has looked. A sibling of DocumentCollectionsContainer with
+    each digest has looked, and the steps of a subscription's life (1161).
+    A sibling of DocumentCollectionsContainer with
     the same storage factory (Postgres with DATABASE_URL, else in memory).
     """
 
@@ -54,6 +56,14 @@ class ClientCareCollectionsContainer(containers.DeclarativeContainer):
     admin_digest_state_collection = document_collection(
         AdminDigestStateDocument,
         "admin_digest_states",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    subscription_event_collection = document_collection(
+        SubscriptionEventDocument,
+        "subscription_events",
         config,
         clients,
         utilities,

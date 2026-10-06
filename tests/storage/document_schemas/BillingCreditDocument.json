@@ -1,7 +1,7 @@
 {
   "collection": "billing_credits",
   "document_type": "BillingCreditDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -84,8 +84,20 @@
         ],
         "default": null
       },
+      "save_offer_for": {
+        "anyOf": [
+          {
+            "pattern": "^subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "updated_at": {

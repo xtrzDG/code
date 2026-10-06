@@ -6,10 +6,14 @@ from app.contracts.repositories.analytics_repositories import (
     WebVitalSampleRepoContract,
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.subscription_event_repositories import (
+    SubscriptionEventRepoContract,
+)
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.analytics import ProductEventName, WebVitalName
+from app.schemas.constants.subscription_lifecycle import SubscriptionEventKind
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.analytics.admin_metrics_query import AdminMetricsQuery
@@ -41,6 +45,7 @@ from app.utilities.analytics.activation_math import (
     build_activation,
     build_trial_conversion,
 )
+from app.utilities.analytics.churn_math import build_churn
 from app.utilities.analytics.cohort_math import build_cohorts, build_sources
 from app.utilities.analytics.euro_conversion import euro_converter, rates_to_euro
 from app.utilities.analytics.funnel_math import (
@@ -80,7 +85,9 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
     trial-to-paid conversion, where the tunnel lost owners, monthly
     cohorts and acquisition sources; MRR at the start and end of the period
     with its movements, ARPA and gross margin in euros (official rates);
-    and the cabinet's Web Vitals. Filters by country, niche and source.
+    why owners cancelled, the offers and pauses that kept them and the
+    win-back messages (`churn_math.py`); and the cabinet's Web Vitals.
+    Filters by country, niche and source.
     """
 
     def __init__(
@@ -95,6 +102,7 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
         compute_client_cost: UseCaseContract[ClientCostQuery, ClientCostReport],
         exchange_rate_registry: ExchangeRateRegistryContract,
         wall_clock: WallClock[Microseconds],
+        subscription_event_repo: SubscriptionEventRepoContract,
     ) -> None:
         self._authorize_platform_admin: UseCaseContract[
             PlatformAdminAccessRequest, UserDocument
@@ -110,6 +118,9 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
             exchange_rate_registry
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._subscription_event_repo: SubscriptionEventRepoContract = (
+            subscription_event_repo
+        )
 
     def run(self, input_data: AdminMetricsQuery) -> AdminMetricsView:
         self._authorize_platform_admin.run(
@@ -199,6 +210,17 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
             ),
             web_vitals=self._web_vitals(period),
             choices=filter_choices(business_journeys, owners, sources),
+            churn=build_churn(
+                [
+                    step
+                    for kind in SubscriptionEventKind
+                    for step in self._subscription_event_repo.list_of_kind(
+                        kind, period.start, min(period.end, after_now, key=int)
+                    )
+                ],
+                billing,
+                business_ids(in_scope),
+            ),
         )
 
     def _rates(

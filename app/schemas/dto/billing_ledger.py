@@ -39,6 +39,10 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.subscription_lifecycle.booleans import IsPausePeriod
+from app.schemas.typings.subscription_lifecycle.constrained_integers import (
+    PausePricePercent,
+)
 
 
 class DueInvoicesRequest(ImmutableDTO):
@@ -50,6 +54,8 @@ class DueInvoicesRequest(ImmutableDTO):
     already succeeded (paid with `payment_card` when the provider named
     it), FAILED for one that was declined. `charged_amount` is what an
     automatic charge took (or tried to): its invoice totals exactly that.
+    With `pause_price_percent` the period is one month of a seasonal pause
+    at that share of the monthly price, never with a setup fee.
     """
 
     business: BusinessDocument
@@ -60,12 +66,14 @@ class DueInvoicesRequest(ImmutableDTO):
     payment_card: PaymentCardSnapshot | None = None
     charged_amount: Money | None = None
     is_setup_fee_included: IsSetupFeeIncluded = False
+    pause_price_percent: PausePricePercent | None = None
 
 
 class InvoiceDescriptionInput(ImmutableDTO):
     """
     What an invoice line says, in the reader's language. An overage line
-    names the minutes above the package of its window.
+    names the minutes above the package of its window; a pause month says
+    the assistant was on pause, taking requests.
     """
 
     kind: InvoiceKind
@@ -76,6 +84,7 @@ class InvoiceDescriptionInput(ImmutableDTO):
     period_start: Microseconds
     period_end: Microseconds
     overage_voice_minutes: OverageVoiceMinutes | None = None
+    is_pause_period: IsPausePeriod = False
 
 
 class PackageUsageTotals(ImmutableDTO):

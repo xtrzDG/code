@@ -4,7 +4,11 @@ from pydantic import Field
 from app.schemas.constants.billing import BillingCreditKind
 from app.schemas.typings.access.constrained_strings import AdminActionReason
 from app.schemas.typings.billing.constrained_integers import BillingCreditAmountMinor
-from app.schemas.typings.billing.prefixed_id import BillingCreditId, InvoiceId
+from app.schemas.typings.billing.prefixed_id import (
+    BillingCreditId,
+    InvoiceId,
+    SubscriptionId,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.schemas.typings.users.prefixed_id import UserId
@@ -27,9 +31,13 @@ class BillingCreditDocument(BaseDocument):
     invited paid its first invoice, or the month the invited business got
     for it. Its id derives from the referred business and the side, so it
     is granted once. None on every other line, so version 1 reads as is.
+
+    Version 3: `save_offer_for`, on credit an owner accepted in the cancel
+    dialog instead of cancelling (no admin, no reason): the subscription it
+    kept. Its id derives from the business, so a business gets it once.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
     id: BillingCreditId = Field(default_factory=BillingCreditId)
     business_id: BusinessId
     kind: BillingCreditKind
@@ -39,3 +47,4 @@ class BillingCreditDocument(BaseDocument):
     granted_by: UserId | None = None
     reason: AdminActionReason | None = None
     referral_of: BusinessId | None = None
+    save_offer_for: SubscriptionId | None = None

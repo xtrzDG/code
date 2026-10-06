@@ -40,6 +40,9 @@ from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
     PaymentOrderRepository,
 )
+from app.repositories.subscription_event_repositories import (
+    SubscriptionEventRepository,
+)
 from app.repositories.user_repositories import UserRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.assistants import AssistantVersionDocument, AutotestRunDocument
@@ -56,6 +59,7 @@ from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.payments import PaymentOrderDocument
+from app.schemas.domain.subscription_events import SubscriptionEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
@@ -139,6 +143,11 @@ class BillingInfrastructure:
             )
         )
         self.credit_lock = BillingCreditLockRegistry(InMemoryAdvisoryLockAdapter())
+        self.subscription_event_repo = SubscriptionEventRepository(
+            InMemoryDocumentCollectionAdapter[SubscriptionEventDocument](
+                SubscriptionEventDocument
+            )
+        )
         self.audit_log_repo = AuditLogRepository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument

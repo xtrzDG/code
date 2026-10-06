@@ -1,0 +1,15 @@
+{
+  "amount_minor": 1,
+  "business_id": "business_323f7181-7647-4369-9a5c-9b11e218a449",
+  "created_at": 1790000000000000,
+  "currency_code": "GEL",
+  "granted_by": "user_a3431222-1b31-460d-af57-df74a6225a77",
+  "id": "billing_credit_f65ab6ec-163b-4401-b4e0-05e2a651afdc",
+  "invoice_id": "invoice_ad63e249-4b44-49f9-ae2c-0637af73794c",
+  "kind": "granted",
+  "reason": "Slow onboarding: menu photos arrive next week",
+  "referral_of": "business_a1cf53b3-5478-4e04-8f55-8a3816cc80f5",
+  "save_offer_for": "subscription_9ae57d62-dc3f-4d35-9526-cd3f7496e925",
+  "schema_version": "3",
+  "updated_at": 1790000000000000
+}

@@ -158,6 +158,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         assemble_billing_overview=assemble_billing_overview_use_case,
         wall_clock=time_provider.microsecond_wall_clock,
         product_events=facilitators.product_events,
+        subscription_event_repo=repositories.subscription_event_repo,
     )
     start_checkout_use_case: Factory[
         UseCaseContract[StartCheckoutCommand, CheckoutSessionView]

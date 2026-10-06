@@ -58,6 +58,7 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
       with grace counted from the day the bill was issued.
     - ACTIVE, or TRIALING within its trial, but still LEADS_ONLY (paid):
       back to FULL.
+    - PAUSED: LEADS_ONLY; a pause scheduled replaces the renewal.
     - A live business without any subscription (never started the trial),
       or whose subscription waits for its first payment (INCOMPLETE), is
       not entitled to service: LEADS_ONLY.
@@ -149,6 +150,10 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
                 return self._enforce_past_due(business, subscription, now)
             case SubscriptionStatus.CANCELLED:
                 return self._enforce_cancelled(business, subscription, now)
+            case SubscriptionStatus.PAUSED:
+                return switch_service_mode(
+                    self._business_repo, business, ServiceMode.LEADS_ONLY, now
+                )
 
     def _enforce_cancelled(
         self,
@@ -204,6 +209,13 @@ class EnforceGracePeriodsUseCase(UseCaseContract[JobTick, JobReport]):
                 )
                 or has_moved
             )
+
+        if subscription.pause_starts_at is not None:
+            # The pause job starts the scheduled pause instead of a renewal.
+            if has_moved:
+                self._subscription_repo.save(subscription)
+
+            return has_moved
 
         issued: list[InvoiceDocument] = self._issue_due_invoices.run(
             DueInvoicesRequest(

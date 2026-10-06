@@ -98,7 +98,9 @@ def is_service_paid_for(
     """
     True while the business is entitled to the assistant (concept section 9):
     a running trial, an active subscription, a missed payment still within
-    its grace, or a cancelled subscription inside the period already paid.
+    its grace, a cancelled subscription inside the period already paid, or
+    a seasonal pause (the assistant takes requests; changes may be
+    published for the season ahead).
     """
 
     if subscription is None:
@@ -117,6 +119,8 @@ def is_service_paid_for(
             return subscription.grace_until is None or now < subscription.grace_until
         case SubscriptionStatus.CANCELLED:
             return now < subscription.period_end
+        case SubscriptionStatus.PAUSED:
+            return True
 
 
 def is_trial_available(subscriptions: list[SubscriptionDocument]) -> bool:

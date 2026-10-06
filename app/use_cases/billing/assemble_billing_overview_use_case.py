@@ -188,6 +188,8 @@ class AssembleBillingOverviewUseCase(
             has_auto_debit=subscription.provider_reference is not None,
             setup_option=subscription.setup_option,
             onboarding_requested_at=self._onboarding_requested_at(subscription),
+            pause_starts_at=subscription.pause_starts_at,
+            pause_until=subscription.pause_until,
         )
 
     def _onboarding_requested_at(

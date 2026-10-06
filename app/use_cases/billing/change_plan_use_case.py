@@ -15,6 +15,7 @@ from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
     PlanKey,
+    SubscriptionStatus,
 )
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
@@ -26,6 +27,7 @@ from app.schemas.dto.billing_cabinet import (
     BillingOverviewSource,
     ChangePlanCommand,
 )
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.shared.billing_records import (
     list_open_invoices,
@@ -47,7 +49,8 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
     stopped at the provider and unpaid invoices at the old price are voided,
     so the owner pays the new price at the next checkout. Moving to annual
     voids an unpaid setup fee: an annual payment includes it. Moving to a
-    plan without voice removes the voice agent at once.
+    plan without voice removes the voice agent at once. A paused
+    subscription keeps its plan until it is resumed.
     """
 
     def __init__(
@@ -98,6 +101,9 @@ class ChangePlanUseCase(UseCaseContract[ChangePlanCommand, BillingOverview]):
             self._subscription_repo,
             business.id,
         )
+        if subscription.status is SubscriptionStatus.PAUSED:
+            raise ConflictError("Resume the paused subscription to change its plan.")
+
         new_price: Money = price_subscription(
             self._plan_registry,
             input_data.request.plan_key,

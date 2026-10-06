@@ -6,17 +6,27 @@ from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
 )
+from app.contracts.repositories.subscription_event_repositories import (
+    SubscriptionEventRepoContract,
+)
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.analytics import ProductEventName
 from app.schemas.constants.billing import InvoiceStatus, SubscriptionStatus
+from app.schemas.constants.subscription_lifecycle import SubscriptionEventKind
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.subscription_events import SubscriptionEventDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.billing_cabinet import (
     BillingOverview,
     BillingOverviewSource,
     CancelSubscriptionCommand,
+)
+from app.use_cases.billing.lifecycle.lifecycle_events import (
+    clear_pause,
+    lifecycle_event,
+    pause_ended_event,
 )
 from app.use_cases.shared.billing_records import (
     list_open_invoices,
@@ -35,6 +45,10 @@ class CancelSubscriptionUseCase(
     Automatic charges stop at the provider and unpaid invoices are voided.
     The assistant keeps full service until the end of the paid period (or
     the trial); then the grace job switches it to taking requests only.
+    A pause scheduled is called off, a running one ends. The reason the
+    owner chose, their own words and the offer they turned down are
+    recorded (CANCELLED in `subscription_events`): the founder reads them
+    on the Metrics page and the win-back messages start from it.
     Cancelling twice changes nothing; a later checkout resumes the service.
     """
 
@@ -53,6 +67,7 @@ class CancelSubscriptionUseCase(
         ],
         wall_clock: WallClock[Microseconds],
         product_events: RecordProductEventFacilitatorContract,
+        subscription_event_repo: SubscriptionEventRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
@@ -67,6 +82,9 @@ class CancelSubscriptionUseCase(
         ] = assemble_billing_overview
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._product_events: RecordProductEventFacilitatorContract = product_events
+        self._subscription_event_repo: SubscriptionEventRepoContract = (
+            subscription_event_repo
+        )
 
     def run(self, input_data: CancelSubscriptionCommand) -> BillingOverview:
         business: BusinessDocument = self._authorize_business_access.run(
@@ -81,7 +99,7 @@ class CancelSubscriptionUseCase(
             business.id,
         )
         if subscription.status is not SubscriptionStatus.CANCELLED:
-            self._cancel(subscription)
+            self._cancel(subscription, input_data)
             self._product_events.record(
                 billing_event(
                     ProductEventName.CANCELLED, subscription, input_data.user_id
@@ -95,8 +113,13 @@ class CancelSubscriptionUseCase(
             )
         )
 
-    def _cancel(self, subscription: SubscriptionDocument) -> None:
+    def _cancel(
+        self, subscription: SubscriptionDocument, input_data: CancelSubscriptionCommand
+    ) -> None:
         now: Microseconds = self._wall_clock.now_unix()
+        pause_end: SubscriptionEventDocument | None = pause_ended_event(
+            subscription, now, input_data.user_id
+        )
         if subscription.provider_reference is not None:
             self._payment_gateway.stop_recurring(subscription.provider_reference)
             subscription.provider_reference = None
@@ -110,5 +133,21 @@ class CancelSubscriptionUseCase(
 
         subscription.status = SubscriptionStatus.CANCELLED
         subscription.grace_until = None
+        clear_pause(subscription)
         subscription.updated_at = now
         self._subscription_repo.save(subscription)
+        if pause_end is not None:
+            self._subscription_event_repo.record(pause_end)
+
+        cancelled: SubscriptionEventDocument = lifecycle_event(
+            subscription, SubscriptionEventKind.CANCELLED, now, input_data.user_id
+        )
+        self._subscription_event_repo.record(
+            cancelled.model_copy(
+                update={
+                    "cancellation_reason": input_data.request.reason,
+                    "details": input_data.request.details,
+                    "offer_kind": input_data.request.declined_offer,
+                }
+            )
+        )

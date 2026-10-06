@@ -28,6 +28,7 @@ from app.schemas.dto.billing_cabinet import (
     SubscribeRequest,
 )
 from app.schemas.dto.payments import PaymentWebhookDelivery, PaymentWebhookReceipt
+from app.schemas.dto.subscription_lifecycle import CancelSubscriptionRequest
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.billing.strings import (
     PaymentWebhookBody,
@@ -60,6 +61,7 @@ read_start_checkout_body = build_json_body_dependency(
     optional=True,
 )
 read_subscribe_body = build_json_body_dependency(SubscribeRequest)
+read_cancel_body = build_json_body_dependency(CancelSubscriptionRequest, optional=True)
 
 
 def build_billing_router(
@@ -77,7 +79,7 @@ def build_billing_router(
         GET  /v1/businesses/{business_id}/billing?language=   billing page
         POST /v1/businesses/{business_id}/billing/trial      start trial (201)
         POST /v1/businesses/{business_id}/billing/plan       change plan
-        POST /v1/businesses/{business_id}/billing/cancel     cancel
+        POST /v1/businesses/{business_id}/billing/cancel     cancel (why: body)
         POST /v1/businesses/{business_id}/billing/checkout   payment page (201)
         POST /v1/businesses/{business_id}/billing/subscribe  plan + payment page
                                                              (201)
@@ -147,16 +149,21 @@ def build_billing_router(
             )
         )
 
-    @router.post("/v1/businesses/{business_id}/billing/cancel")
+    @router.post(
+        "/v1/businesses/{business_id}/billing/cancel",
+        openapi_extra=describe_json_body(CancelSubscriptionRequest, optional=True),
+    )
     def cancel_subscription(
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
+        body: Annotated[CancelSubscriptionRequest, Depends(read_cancel_body)],
         language: str | None = None,
     ) -> BillingOverview:
         return cancel_subscription_operator.operate(
             CancelSubscriptionCommand(
                 user_id=user_id,
                 business_id=parse_business_id(business_id),
+                request=body,
                 display_language=parse_optional_language(language),
             )
         )

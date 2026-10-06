@@ -14,6 +14,9 @@ from app.adapters.storage.in_memory_document_collection import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.repositories.business_repositories import BusinessRepository
+from app.repositories.subscription_event_repositories import (
+    SubscriptionEventRepository,
+)
 from app.repositories.user_repositories import UserRepository
 from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.localization import DataRegion
@@ -22,6 +25,7 @@ from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.signup_attribution import SignupAttribution
+from app.schemas.domain.subscription_events import SubscriptionEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.analytics.admin_metrics_query import AdminMetricsQuery
 from app.schemas.dto.analytics.admin_metrics_view import AdminMetricsView
@@ -100,6 +104,9 @@ class MetricsWorld:
         self.events = product_event_repo()
         self.vitals = web_vital_sample_repo()
         self.costs = FixedClientCosts()
+        self.lifecycle_steps = SubscriptionEventRepository(
+            InMemoryDocumentCollectionAdapter(SubscriptionEventDocument)
+        )
         self.admin = self.add_user(0, is_platform_admin=True)
         self.use_case = GetAdminMetricsUseCase(
             authorize_platform_admin=AuthorizeFlaggedAdmin(self.users),
@@ -110,6 +117,7 @@ class MetricsWorld:
             compute_client_cost=self.costs,
             exchange_rate_registry=rate_registry(TEST_RATES, fallback=()),
             wall_clock=self.clock.wall_clock(),
+            subscription_event_repo=self.lifecycle_steps,
         )
 
     def add_user(

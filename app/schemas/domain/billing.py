@@ -71,9 +71,12 @@ class SubscriptionDocument(BaseDocument):
     Version 3: what the platform team granted (R13, optional): a
     `discount` on the service periods and `is_setup_fee_waived`, the
     setup fee no longer charged.
+    Version 4: a seasonal pause (R14, optional): `pause_starts_at` (the end
+    of the paid period, when the pause job makes it PAUSED) and
+    `pause_until` (when the job resumes it); both None without a pause.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("3")
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: SubscriptionId = Field(default_factory=SubscriptionId)
     business_id: BusinessId
     plan_key: PlanKey
@@ -89,6 +92,8 @@ class SubscriptionDocument(BaseDocument):
     setup_option: SetupOption | None = None
     discount: SubscriptionDiscount | None = None
     is_setup_fee_waived: IsSetupFeeWaived = False
+    pause_starts_at: Microseconds | None = None
+    pause_until: Microseconds | None = None
 
 
 class OnboardingRequestDocument(BaseDocument):

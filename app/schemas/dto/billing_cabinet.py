@@ -15,6 +15,7 @@ from app.schemas.constants.billing import (
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.catalog.plan_quotes import QuotedMoney
+from app.schemas.dto.subscription_lifecycle import CancelSubscriptionRequest
 from app.schemas.typings.billing.booleans import (
     IsAutoDebitActive,
     IsSubscriptionCreated,
@@ -92,10 +93,16 @@ class ChangePlanCommand(ImmutableDTO):
 
 
 class CancelSubscriptionCommand(ImmutableDTO):
-    """Owner cancels the subscription at the end of the paid period."""
+    """
+    Owner cancels the subscription at the end of the paid period, saying
+    why when the cabinet asked (`CancelSubscriptionRequest`).
+    """
 
     user_id: UserId
     business_id: BusinessId
+    request: CancelSubscriptionRequest = Field(
+        default_factory=CancelSubscriptionRequest
+    )
     display_language: LanguageTag | None = None
 
 
@@ -185,7 +192,8 @@ class SubscriptionView(ImmutableDTO):
     The subscription as the billing page shows it; `setup_option` is how
     the business is set up (None: chosen before the choice existed, free),
     `onboarding_requested_at` when the owner asked the platform team to set
-    it up.
+    it up; `pause_starts_at` and `pause_until` a seasonal pause scheduled or
+    running.
     """
 
     id: SubscriptionId
@@ -201,6 +209,8 @@ class SubscriptionView(ImmutableDTO):
     has_auto_debit: IsAutoDebitActive
     setup_option: SetupOption | None = None
     onboarding_requested_at: Microseconds | None = None
+    pause_starts_at: Microseconds | None = None
+    pause_until: Microseconds | None = None
 
 
 class PackageUsageView(ImmutableDTO):

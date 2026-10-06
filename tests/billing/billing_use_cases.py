@@ -136,6 +136,7 @@ class BillingUseCases(BillingInfrastructure):
             assemble_billing_overview=self.assemble_overview,
             wall_clock=wall_clock,
             product_events=self.product_events,
+            subscription_event_repo=self.subscription_event_repo,
         )
         self.start_checkout = StartCheckoutUseCase(
             authorize_business_access=authorize,

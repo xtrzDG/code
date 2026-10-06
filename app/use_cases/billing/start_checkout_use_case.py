@@ -144,7 +144,12 @@ class StartCheckoutUseCase(UseCaseContract[StartCheckoutCommand, CheckoutSession
                 list_subscription_invoices(self._invoice_repo, subscription),
             ),
         )
-        paid_until = max(paid_until, self._wall_clock.now_unix())
+        # Automatic charges at the full price start when a pause ends.
+        paid_until = max(
+            paid_until,
+            self._wall_clock.now_unix(),
+            subscription.pause_until or Microseconds(0),
+        )
         recurring: Money = self._invoice_issuing.price_with_tax(
             business, subscription_price(subscription)
         ).total
