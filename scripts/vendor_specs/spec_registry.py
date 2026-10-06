@@ -26,8 +26,10 @@ TELEGRAM_SPEC = VendorSpec(
     document_format=DocumentFormat.OPENAPI,
     roots=(
         SchemaRoot("Update", "schema:Update"),
+        SchemaRoot("Message", "schema:Message"),
         SchemaRoot("User", "schema:User"),
         SchemaRoot("File", "schema:File"),
+        SchemaRoot("UserProfilePhotos", "schema:UserProfilePhotos"),
         SchemaRoot("request:sendMessage", "request:post /sendMessage"),
         SchemaRoot("request:sendChatAction", "request:post /sendChatAction"),
         SchemaRoot("request:setWebhook", "request:post /setWebhook"),

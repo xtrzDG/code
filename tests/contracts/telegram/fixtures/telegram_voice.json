@@ -1,0 +1,29 @@
+{
+  "update_id": 900103,
+  "message": {
+    "message_id": 203,
+    "from": {
+      "id": 555000111,
+      "is_bot": false,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 555000111,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "type": "private"
+    },
+    "date": 1750276220,
+    "voice": {
+      "duration": 4,
+      "mime_type": "audio/ogg",
+      "file_id": "AwACAgIAAxkBAAIBY2Zx-voice-file-0000",
+      "file_unique_id": "AgADvoice0000",
+      "file_size": 15360
+    }
+  }
+}

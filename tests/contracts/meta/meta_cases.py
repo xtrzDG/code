@@ -95,7 +95,7 @@ PAGE_CASES: tuple[MetaCase, ...] = (
     ),
     MetaCase(
         "messenger_postback.json",
-        ({**MESSENGER, "text": "Get Started", "source": "src_flyer"},),
+        ({**MESSENGER, "text": "Get Started", "source": "flyer"},),
     ),
     MetaCase("messenger_echo.json", skipped="echo=1"),
     MetaCase("messenger_read.json", skipped="read=1"),

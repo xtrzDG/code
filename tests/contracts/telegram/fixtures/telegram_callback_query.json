@@ -1,0 +1,34 @@
+{
+  "update_id": 900105,
+  "callback_query": {
+    "id": "4382bfdwdsb323b2d9",
+    "from": {
+      "id": 555000111,
+      "is_bot": false,
+      "first_name": "Anna",
+      "last_name": "Kapanadze",
+      "username": "anna_k",
+      "language_code": "ru"
+    },
+    "message": {
+      "message_id": 204,
+      "from": {
+        "id": 7012345678,
+        "is_bot": true,
+        "first_name": "Funicular VR",
+        "username": "funicular_vr_bot"
+      },
+      "chat": {
+        "id": 555000111,
+        "first_name": "Anna",
+        "last_name": "Kapanadze",
+        "username": "anna_k",
+        "type": "private"
+      },
+      "date": 1750276300,
+      "text": "Choose a time"
+    },
+    "chat_instance": "-7392847569283746",
+    "data": "slot:2026-10-10T19:00"
+  }
+}

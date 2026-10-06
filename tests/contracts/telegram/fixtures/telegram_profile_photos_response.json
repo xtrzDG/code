@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "result": {
+    "total_count": 1,
+    "photos": [
+      [
+        {"file_id": "AgACAgIAAxUAAWZx-photo-small-0000", "file_unique_id": "AQADsmall0000", "file_size": 7210, "width": 160, "height": 160},
+        {"file_id": "AgACAgIAAxUAAWZx-photo-medium-0000", "file_unique_id": "AQADmedium0000", "file_size": 21840, "width": 320, "height": 320},
+        {"file_id": "AgACAgIAAxUAAWZx-photo-large-0000", "file_unique_id": "AQADlarge0000", "file_size": 63110, "width": 640, "height": 640}
+      ]
+    ]
+  }
+}
