@@ -1,8 +1,9 @@
 """
 The return visits of a demo business: the campaign on with its niche's
-rule, and the messages of the last weeks. A guest who came back after an
-invitation booked again (that booking counts as the campaign's); others
-were invited and have not answered yet; a guest who said STOP was skipped.
+rule, and the messages of the last weeks, each following a visit 30 days
+before it. Two guests came back after their invitation (their booking of
+the last days counts as the campaign's); others were invited and have not
+answered yet; a guest who said STOP is skipped.
 """
 
 from collections.abc import Sequence
@@ -25,6 +26,10 @@ from app.schemas.domain.campaigns import (
     CampaignSettingsDocument,
 )
 from app.schemas.domain.contacts import ContactDocument
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingEndsAtUnixSeconds,
+    BookingStartsAtUnixSeconds,
+)
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.utilities.campaigns.campaign_keys import (
     campaign_message_id_of,
@@ -35,9 +40,16 @@ from app.utilities.scheduling.zoned_time import load_time_zone
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 DAY: int = 24 * 60 * 60 * MICROSECONDS_PER_SECOND
-# Invitations without an answer yet, and returns, at most.
+DAY_SECONDS: int = 24 * 60 * 60
+# Invitations without an answer yet, and returns, at most (a quiet guest
+# who said STOP is skipped).
 INVITED_LIMIT: int = 3
 RETURNED_LIMIT: int = 2
+# A return answers an invitation after a visit this long before it; a
+# booking of the last days is one.
+EARLIER_VISIT_DAYS: int = 37
+RECENT_DAYS: int = 10
+REBOOK_AFTER_DAYS: int = 30
 KEPT_STATUSES: frozenset[BookingStatus] = frozenset(
     {BookingStatus.CONFIRMED, BookingStatus.COMPLETED}
 )
@@ -64,41 +76,104 @@ def build_demo_campaign_settings(
 
 def build_demo_campaign_messages(
     business: BusinessDocument,
-    bookings: Sequence[BookingDocument],
+    bookings: list[BookingDocument],
     contacts: Sequence[ContactDocument],
     now: Microseconds,
 ) -> list[CampaignMessageDocument]:
-    """The messages; a return is marked on the booking it brought."""
+    """
+    The messages; the earlier visits they follow are added to `bookings`
+    (the demo month holds one visit a guest), and a return is marked on the
+    booking it brought.
+    """
 
     zone: ZoneInfo = load_time_zone(business.timezone)
     by_id: dict[ContactId, ContactDocument] = {item.id: item for item in contacts}
-    visits: dict[ContactId, list[BookingDocument]] = {}
-    for booking in sorted(bookings, key=lambda item: int(item.starts_at)):
-        if (
-            booking.status in KEPT_STATUSES
+    kept: list[BookingDocument] = sorted(
+        (
+            booking
+            for booking in bookings
+            if booking.status in KEPT_STATUSES
             and not booking.is_sandbox
             and booking.contact_id in by_id
             and int(booking.created_at) < int(now)
-        ):
-            visits.setdefault(booking.contact_id, []).append(booking)
+        ),
+        key=lambda booking: int(booking.created_at),
+        reverse=True,
+    )
+    if not kept:
+        return []
 
     messages: list[CampaignMessageDocument] = []
-    returned: int = 0
-    invited: int = 0
-    for contact_id, kept in visits.items():
-        contact: ContactDocument = by_id[contact_id]
-        later = [item for item in kept[1:] if item.origin is None]
+    returning: list[BookingDocument] = [
+        booking
+        for booking in kept
+        if booking.origin is None
+        and int(now) - int(booking.created_at) <= RECENT_DAYS * DAY
+        and not by_id[booking.contact_id].opted_out_channels
+    ][:RETURNED_LIMIT]
+    for booking in returning:
+        earlier = earlier_visit(booking, booking.contact_id, booking.starts_at)
+        bookings.append(earlier)
+        messages.append(
+            came_back(business, earlier, booking, by_id[booking.contact_id], zone)
+        )
+
+    visited = {booking.contact_id for booking in kept}
+    quiet = [
+        contact
+        for contact in contacts
+        if contact.id not in visited
+        and contact.name is not None
+        and contact.erased_at is None
+        and not contact.is_test_only
+    ][: INVITED_LIMIT + 1]
+    for index, contact in enumerate(quiet):
+        visit_start = BookingStartsAtUnixSeconds(
+            int(now) // MICROSECONDS_PER_SECOND - (33 + 2 * index) * DAY_SECONDS
+        )
+        earlier = earlier_visit(kept[0], contact.id, visit_start, days_before=0)
+        bookings.append(earlier)
+        sent_at = Microseconds(
+            int(earlier.ends_at) * MICROSECONDS_PER_SECOND + REBOOK_AFTER_DAYS * DAY
+        )
         if contact.opted_out_channels:
-            messages.append(skipped(business, kept[0], contact, zone, now))
-        elif later and returned < RETURNED_LIMIT:
-            messages.append(came_back(business, kept[0], later[0], contact, zone))
-            returned += 1
-        elif not later and invited < INVITED_LIMIT:
-            sent_at = Microseconds(int(now) - (invited + 1) * 2 * DAY)
-            messages.append(message_of(business, kept[0], contact, zone, sent_at, now))
-            invited += 1
+            messages.append(skipped(business, earlier, contact, zone, sent_at))
+        elif index < INVITED_LIMIT:
+            messages.append(
+                message_of(business, earlier, contact, zone, sent_at, sent_at)
+            )
 
     return messages
+
+
+def earlier_visit(
+    model: BookingDocument,
+    contact_id: ContactId,
+    starts_at: BookingStartsAtUnixSeconds,
+    days_before: int = EARLIER_VISIT_DAYS,
+) -> BookingDocument:
+    """A visit like `model` (table, party, value) some days before `starts_at`."""
+
+    length: int = int(model.ends_at) - int(model.starts_at)
+    starts: int = int(starts_at) - days_before * DAY_SECONDS
+    made = Microseconds((starts - 2 * DAY_SECONDS) * MICROSECONDS_PER_SECOND)
+    return BookingDocument(
+        business_id=model.business_id,
+        resource_id=model.resource_id,
+        contact_id=contact_id,
+        starts_at=BookingStartsAtUnixSeconds(starts),
+        ends_at=BookingEndsAtUnixSeconds(starts + length),
+        party_size=model.party_size,
+        status=BookingStatus.COMPLETED,
+        source_channel=model.source_channel,
+        language=model.language,
+        service_item_id=model.service_item_id,
+        buffer_minutes=model.buffer_minutes,
+        value_minor=model.value_minor,
+        currency_code=model.currency_code,
+        created_at=made,
+        updated_at=made,
+    )
 
 
 def came_back(
