@@ -11,7 +11,7 @@ import type { Schema } from "@/api/types";
 
 export type ErrorBudget = Schema<"ErrorBudgetView">;
 export type ObjectiveBudget = Schema<"ObjectiveBudgetView">;
-export type ServiceLevelSeries = ObjectiveBudget["series"];
+type ServiceLevelSeries = ObjectiveBudget["series"];
 
 const PERMILLE = 1000;
 const PERCENT = 100;
