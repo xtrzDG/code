@@ -11525,7 +11525,6 @@ export interface components {
             partner_id: string;
             /** Partner Name */
             partner_name?: string | null;
-            partner_status?: components["schemas"]["PartnerStatus"] | null;
         };
         /**
          * PbxCallWebhookOutcome
@@ -12374,8 +12373,6 @@ export interface components {
             bookings_made: number;
             /** Code */
             code?: string | null;
-            /** Invite Card Min Bookings */
-            invite_card_min_bookings: number;
             /** Invite Link */
             invite_link?: string | null;
             /** Invited */

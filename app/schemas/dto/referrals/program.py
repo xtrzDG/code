@@ -51,7 +51,6 @@ class ReferralProgramView(ImmutableDTO):
     paid: ReferredBusinessCount
     rewarded: ReferredBusinessCount
     bookings_made: PeriodItemCount
-    invite_card_min_bookings: PeriodItemCount
     is_invite_card_due: IsInviteCardDue
     powered_by: PoweredByView
 

@@ -144,7 +144,6 @@ class PayoutRowView(ImmutableDTO):
 
     partner_id: PartnerId
     partner_name: PartnerName | None = None
-    partner_status: PartnerStatus | None = None
     currency_code: CurrencyCode
     accrued_minor: MoneyAmountMinor
     accrued_invoices: CommissionInvoiceCount

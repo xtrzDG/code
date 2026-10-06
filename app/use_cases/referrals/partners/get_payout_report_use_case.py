@@ -83,7 +83,6 @@ def payout_row(
     return PayoutRowView(
         partner_id=partner_id,
         partner_name=None if partner is None else partner.name,
-        partner_status=None if partner is None else partner.status,
         currency_code=currency,
         accrued_minor=MoneyAmountMinor(accrued_minor),
         accrued_invoices=CommissionInvoiceCount(accrued_invoices),

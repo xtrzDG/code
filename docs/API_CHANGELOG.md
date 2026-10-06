@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-06 — referrals and partners: invitations, the partner portal, payouts, "Powered by"
 
-Spec: `cdac386042894f38`
+Spec: `03dea2c61e45c3e9`
 
 - **Added** `GET /v1/businesses/{business_id}/referrals` (owners): the
   business's own invitation code and link (`?ref=…&src=invite`), how many

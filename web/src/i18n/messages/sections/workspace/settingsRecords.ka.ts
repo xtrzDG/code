@@ -144,6 +144,9 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       invoice: "ინვოისი",
       billing_credit: "ანგარიშის კრედიტი",
       onboarding_request: "დაყენებაში დახმარების მოთხოვნა",
+      partner: "პარტნიორი",
+      partner_code: "პარტნიორის კოდი",
+      partner_payout: "პარტნიორის ანაზღაურება",
     },
   },
   roles: {

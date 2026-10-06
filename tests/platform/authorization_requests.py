@@ -66,6 +66,7 @@ REQUEST_BODIES: dict[str, JsonObject] = {
         "llm_turn_retention_days": 30,
     },
     f"PUT {B}/public-slug": {"slug": "matrix-cafe"},
+    f"PUT {B}/referrals/powered-by": {"is_hidden": False},
     f"PUT {B}/security": {"require_mfa_for_members": False},
     f"POST {B}/resources": {"name": "Terrace", "capacity": 4},
     f"POST {B}/schedule-exceptions": {"date": "2026-12-31", "is_closed_all_day": True},

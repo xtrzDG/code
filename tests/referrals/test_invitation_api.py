@@ -27,7 +27,6 @@ def test_an_owner_gets_an_invitation_link_with_their_code(workshop: Workshop) ->
     assert view["invite_link"] == f"{CABINET_BASE_URL}/?ref={code}&src=invite"
     assert (view["invited"], view["paid"], view["rewarded"]) == (0, 0, 0)
     assert view["bookings_made"] == 0
-    assert view["invite_card_min_bookings"] == 10
     assert view["is_invite_card_due"] is False
     assert program(workshop, owner)["code"] == code
 

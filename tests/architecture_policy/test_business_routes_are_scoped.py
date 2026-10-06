@@ -67,6 +67,15 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "platform_ops.list_incidents_operator": "platform admin's incident log",
     "platform_ops.record_maintenance_run_operator": "backup CLIs' run log",
     "platform_ops.check_channel_credentials_operator": "Meta token check job",
+    "referrals.get_partner_portal_operator": "partner: commissions of many businesses",
+    "referrals.list_partner_referrals_operator": "partner: businesses they brought",
+    "referrals.list_partner_commissions_operator": "partner: commission per invoice",
+    "referrals.list_partners_operator": "platform admin: partners and their totals",
+    "referrals.create_partner_operator": "platform admin: a partner and its totals",
+    "referrals.update_partner_operator": "platform admin: a partner and its totals",
+    "referrals.add_partner_code_operator": "platform admin: a partner and its totals",
+    "referrals.get_payout_report_operator": "platform admin: a month's commissions",
+    "referrals.mark_payout_paid_operator": "platform admin: pays a month's commissions",
     "spend_guard.get_platform_spend_operator": "platform admin's spend tile",
     "platform_ops.sample_conversation_quality_operator": (
         "nightly quality sample over every business"

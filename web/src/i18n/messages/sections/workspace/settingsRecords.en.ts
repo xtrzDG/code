@@ -142,6 +142,9 @@ export const settingsRecordsEn = {
       invoice: "Invoice",
       billing_credit: "Billing credit",
       onboarding_request: "Setup help request",
+      partner: "Partner",
+      partner_code: "Partner code",
+      partner_payout: "Partner payout",
     },
   },
   roles: {

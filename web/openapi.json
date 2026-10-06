@@ -18854,16 +18854,6 @@
               }
             ],
             "title": "Partner Name"
-          },
-          "partner_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PartnerStatus"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "required": [
@@ -21020,11 +21010,6 @@
             ],
             "title": "Code"
           },
-          "invite_card_min_bookings": {
-            "minimum": 0.0,
-            "title": "Invite Card Min Bookings",
-            "type": "integer"
-          },
           "invite_link": {
             "anyOf": [
               {
@@ -21067,7 +21052,6 @@
           "paid",
           "rewarded",
           "bookings_made",
-          "invite_card_min_bookings",
           "is_invite_card_due",
           "powered_by"
         ],

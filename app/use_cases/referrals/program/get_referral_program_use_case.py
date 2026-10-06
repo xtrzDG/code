@@ -15,10 +15,7 @@ from app.schemas.typings.insights.constrained_integers import PeriodItemCount
 from app.schemas.typings.referrals.constrained_integers import ReferredBusinessCount
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.referrals.program.program_views import build_powered_by_view
-from app.utilities.referrals.invite_card import (
-    INVITE_CARD_MIN_BOOKINGS,
-    is_invite_card_due,
-)
+from app.utilities.referrals.invite_card import is_invite_card_due
 
 # The invitations an owner's card counts (far more than anyone sends).
 MAX_INVITATIONS_COUNTED: DocumentQueryLimit = DocumentQueryLimit(500)
@@ -77,7 +74,6 @@ class GetReferralProgramUseCase(
                 sum(1 for referral in invited if referral.rewarded_at is not None)
             ),
             bookings_made=bookings_made,
-            invite_card_min_bookings=INVITE_CARD_MIN_BOOKINGS,
             is_invite_card_due=is_invite_card_due(bookings_made),
             powered_by=build_powered_by_view(
                 business, self._links.powered_by_link(business, POWERED_BY_SOURCE_TAG)

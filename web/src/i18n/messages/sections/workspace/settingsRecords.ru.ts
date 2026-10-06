@@ -159,6 +159,9 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       invoice: "Счёт",
       billing_credit: "Кредит на счёт",
       onboarding_request: "Заявка на помощь с настройкой",
+      partner: "Партнёр",
+      partner_code: "Код партнёра",
+      partner_payout: "Выплата партнёру",
     },
   },
   roles: {
