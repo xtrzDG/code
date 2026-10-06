@@ -100,3 +100,15 @@ def test_staff_cannot_take_the_link_off(workshop: Workshop) -> None:
     )
 
     assert response.status_code == 403
+
+
+def test_the_widget_footer_gets_the_link(workshop: Workshop) -> None:
+    owner = open_business(workshop, OWNER_PHONE)
+    code = program(workshop, owner)["code"]
+
+    config = workshop.client.get(f"/v1/widget/{owner.business_id}/config")
+
+    assert config.status_code == 200, config.text
+    assert config.json()["powered_by_url"] == (
+        f"{CABINET_BASE_URL}/?ref={code}&src=powered_by"
+    )

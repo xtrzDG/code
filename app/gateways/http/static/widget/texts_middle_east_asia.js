@@ -25,6 +25,7 @@
       suggestions: "שאלות מוצעות",
       footer: "עוזר AI · עלול לטעות",
       privacy: "פרטיות",
+      poweredBy: "מופעל על ידי Assistant Workshop",
       call: "התקשרות",
       otherWays: "דרכים נוספות ליצור קשר"
     },
@@ -55,6 +56,7 @@
       suggestions: "أسئلة مقترحة",
       footer: "مساعد ذكاء اصطناعي · قد يخطئ",
       privacy: "الخصوصية",
+      poweredBy: "مدعوم من Assistant Workshop",
       call: "اتصال",
       otherWays: "طرق أخرى للتواصل معنا"
     },
@@ -85,6 +87,7 @@
       suggestions: "پرسش‌های پیشنهادی",
       footer: "دستیار هوش مصنوعی · ممکن است اشتباه کند",
       privacy: "حریم خصوصی",
+      poweredBy: "با پشتیبانی Assistant Workshop",
       call: "تماس",
       otherWays: "راه‌های دیگر ارتباط با ما"
     },
@@ -115,6 +118,7 @@
       suggestions: "تجویز کردہ سوالات",
       footer: "AI معاون · غلطی کر سکتا ہے",
       privacy: "رازداری",
+      poweredBy: "Assistant Workshop کی مدد سے",
       call: "کال کریں",
       otherWays: "ہم سے رابطے کے دیگر طریقے"
     },
@@ -145,6 +149,7 @@
       suggestions: "सुझाए गए सवाल",
       footer: "AI सहायक · गलती कर सकता है",
       privacy: "गोपनीयता",
+      poweredBy: "Assistant Workshop द्वारा संचालित",
       call: "कॉल करें",
       otherWays: "हमसे संपर्क के अन्य तरीके"
     },
@@ -175,6 +180,7 @@
       suggestions: "推荐问题",
       footer: "AI 助手 · 可能会出错",
       privacy: "隐私",
+      poweredBy: "由 Assistant Workshop 提供支持",
       call: "拨打电话",
       otherWays: "其他联系方式"
     },
@@ -205,6 +211,7 @@
       suggestions: "よくある質問",
       footer: "AIアシスタント・間違えることがあります",
       privacy: "プライバシー",
+      poweredBy: "Assistant Workshop で作成",
       call: "電話する",
       otherWays: "その他の連絡方法"
     },
@@ -235,6 +242,7 @@
       suggestions: "추천 질문",
       footer: "AI 어시스턴트 · 실수할 수 있습니다",
       privacy: "개인정보 보호",
+      poweredBy: "Assistant Workshop 제공",
       call: "전화하기",
       otherWays: "다른 연락 방법"
     },
@@ -265,6 +273,7 @@
       suggestions: "Câu hỏi gợi ý",
       footer: "Trợ lý AI · có thể mắc lỗi",
       privacy: "Quyền riêng tư",
+      poweredBy: "Được hỗ trợ bởi Assistant Workshop",
       call: "Gọi điện",
       otherWays: "Các cách liên hệ khác"
     }

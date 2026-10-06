@@ -81,7 +81,18 @@
         privacy.rel = "noopener noreferrer";
         row.appendChild(privacy);
       }
-      return { row: row, note: note, privacy: privacy };
+      // "Powered by" with the business's referral code (gone on Plus when
+      // the owner turned it off: the config then has no link).
+      var powered = null;
+      if (typeof config.powered_by_url === "string" && WEB_LINK_PATTERN.test(config.powered_by_url)) {
+        row.appendChild(document.createTextNode(" · "));
+        powered = el("a", "aw-powered");
+        powered.href = config.powered_by_url;
+        powered.target = "_blank";
+        powered.rel = "noopener";
+        row.appendChild(powered);
+      }
+      return { row: row, note: note, privacy: privacy, powered: powered };
     }
 
     // The texts of the parts above in the interface language.
@@ -102,6 +113,9 @@
       footer.note.textContent = text("footer");
       if (footer.privacy) {
         footer.privacy.textContent = text("privacy");
+      }
+      if (footer.powered) {
+        footer.powered.textContent = text("poweredBy");
       }
     }
 
