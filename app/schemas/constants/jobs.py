@@ -17,6 +17,19 @@ class QueuedJobStatus(StrEnum):
     DISCARDED = "discarded"
 
 
+class JobDeathReason(StrEnum):
+    """
+    Why a queued job is DEAD: it failed on its last attempt, two attempts
+    in a row ended with their worker process (killed, out of memory: the
+    job is not tried a third time, so it cannot take down worker after
+    worker), or no handler knows its name.
+    """
+
+    ATTEMPTS_EXHAUSTED = "attempts_exhausted"
+    PROCESS_DIED = "process_died"
+    NO_HANDLER = "no_handler"
+
+
 class JobLane(StrEnum):
     """
     Worker lane of a queued job. Each lane has its own threads in every

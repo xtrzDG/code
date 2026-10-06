@@ -1,7 +1,7 @@
 import logging
 import threading
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from app.contracts.jobs import JobWakeupContract
 from app.gateways.worker.job_failure_reporter import JobFailureReporter
@@ -26,7 +26,9 @@ MAX_CLAIM_BACKOFF_SECONDS: int = 5 * 60
 class LaneThreads:
     """
     The executors of the queued jobs: WORKER_LANE_CONCURRENCY threads per
-    lane, each claiming and running one job at a time. A lane's threads
+    lane this worker serves (WORKER_LANES: every lane by default, so one
+    worker can answer customers while another runs the batch jobs), each
+    claiming and running one job at a time. A lane's threads
     only take jobs of their lane, so a long autotest run never holds up a
     customer message or a notification, and a busy lane never starves
     another. A thread with nothing to do waits for a wake-up (a job queued
@@ -48,8 +50,10 @@ class LaneThreads:
         job_wakeup: JobWakeupContract,
         lane_poll_seconds: Mapping[JobLane, WorkerLanePollSeconds],
         failure_reporter: JobFailureReporter,
+        lanes: Sequence[JobLane] = tuple(JobLane),
     ) -> None:
         self._runner: QueuedJobRunner = runner
+        self._lanes: tuple[JobLane, ...] = tuple(lanes)
         self._lane_concurrency: dict[JobLane, WorkerLaneConcurrency] = dict(
             lane_concurrency
         )
@@ -61,7 +65,7 @@ class LaneThreads:
         self._threads: list[threading.Thread] = []
 
     def start(self, stop_event: threading.Event) -> None:
-        for lane in JobLane:
+        for lane in self._lanes:
             concurrency: int = int(self._lane_concurrency.get(lane, 1))
             for index in range(concurrency):
                 thread = threading.Thread(
@@ -77,14 +81,14 @@ class LaneThreads:
             "Worker lanes started: %s",
             ", ".join(
                 f"{lane.value}={int(self._lane_concurrency.get(lane, 1))}"
-                for lane in JobLane
+                for lane in self._lanes
             ),
         )
 
     def wake_all(self) -> None:
         """Wake every idle thread (on shutdown, so they notice the stop)."""
 
-        for lane in JobLane:
+        for lane in self._lanes:
             self._job_wakeup.notify(lane)
 
     def join(self, timeout_seconds: float) -> bool:

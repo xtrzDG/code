@@ -4,59 +4,23 @@ import logging
 
 import pytest
 
-from app.gateways.worker.held_leases import HeldLeases
-from app.gateways.worker.job_failure_reporter import JobFailureReporter
-from app.gateways.worker.lease_heartbeat import LeaseHeartbeat
-from app.gateways.worker.queued_job_runner import QueuedJobRunner
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.dto.job_queue import JobLeaseExtension
 from app.schemas.typings.platform.constrained_integers import (
     JobClaimLimit,
-    JobLeaseSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import JobLeaseToken
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import JobPayloadJson
-from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.platform.job_runner_fakes import build_runner
 from tests.platform.worker_fakes import (
     RUN_AUTOTESTS,
     ControlledClock,
     FlakyQueuedOperator,
-    JobStores,
-    RecordingErrorReporter,
     build_job_stores,
     build_worker,
 )
-
-LEASE: JobLeaseSeconds = JobLeaseSeconds(120)
-
-
-def build_runner(
-    clock: ControlledClock,
-    stores: JobStores,
-    operator: FlakyQueuedOperator,
-) -> tuple[QueuedJobRunner, HeldLeases, LeaseHeartbeat]:
-    held_leases = HeldLeases()
-    reporter = JobFailureReporter(RecordingErrorReporter())
-    runner = QueuedJobRunner(
-        queued_job_operators={RUN_AUTOTESTS: operator},
-        job_repo=stores.job_repo,
-        wall_clock=clock.wall_clock(),
-        storage_scope=StorageScopeContext(),
-        held_leases=held_leases,
-        failure_reporter=reporter,
-        lease_seconds=LEASE,
-    )
-    heartbeat = LeaseHeartbeat(
-        job_repo=stores.job_repo,
-        periodic_run_repo=stores.periodic_run_repo,
-        held_leases=held_leases,
-        wall_clock=clock.wall_clock(),
-        failure_reporter=reporter,
-        lease_seconds=LEASE,
-    )
-    return runner, held_leases, heartbeat
 
 
 def test_a_job_whose_worker_died_runs_again_on_another_worker() -> None:
@@ -191,26 +155,3 @@ def test_a_job_that_outlived_its_lease_leaves_the_result_to_the_new_holder(
     assert job.status is QueuedJobStatus.DONE
     assert job.attempts == 2
     assert len(operator.calls) == 2
-
-
-def test_jobs_whose_last_attempt_lost_its_worker_die() -> None:
-    clock = ControlledClock()
-    stores = build_job_stores()
-    operator = FlakyQueuedOperator(failures_before_success=0)
-    runner, _, _ = build_runner(clock, stores, operator)
-    job_id = build_worker(clock, [], stores=stores).queue.enqueue(
-        RUN_AUTOTESTS, JobPayloadJson("{}"), None
-    )
-
-    for _ in range(5):
-        claimed, _ = runner.claim(JobLane.DEFAULT, JobClaimLimit(1))
-        assert len(claimed) == 1
-        clock.advance(121)
-        runner.release_expired_leases()
-
-    dead = stores.job_repo.get(job_id)
-    assert dead is not None
-    assert dead.status is QueuedJobStatus.DEAD
-    assert dead.attempts == 5
-    assert dead.last_error is not None and "Lease expired" in str(dead.last_error)
-    assert operator.calls == []

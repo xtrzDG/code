@@ -11,6 +11,11 @@ from app.gateways.worker.held_leases import (
     new_lease_token,
 )
 from app.gateways.worker.job_failure_reporter import JobFailureReporter, describe_error
+from app.gateways.worker.job_run_logs import (
+    JobRunStart,
+    log_job_finished,
+    start_job_run,
+)
 from app.gateways.worker.periodic_job_spec import PeriodicJobSpec
 from app.schemas.constants.jobs import PeriodicJobRunStatus
 from app.schemas.constants.observability import PeriodicJobOutcome
@@ -84,6 +89,7 @@ class PeriodicJobRunner:
         failures: int = 0
         for job in self._periodic_jobs:
             with bound_log_context(job_name=job.name):
+                start: JobRunStart = start_job_run()
                 try:
                     has_run, has_failed = (
                         self._run_local_job(job)
@@ -93,6 +99,10 @@ class PeriodicJobRunner:
                 except Exception as error:  # noqa: BLE001 - e.g. the database is down
                     has_run, has_failed = False, True
                     self._failure_reporter.report(job.name, error)
+                if has_run and not job.is_process_local:
+                    log_job_finished(
+                        job.name, "failed" if has_failed else "succeeded", start
+                    )
 
             runs += int(has_run)
             failures += int(has_failed)

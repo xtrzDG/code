@@ -1,4 +1,7 @@
-"""WORKER_LANE_CONCURRENCY: how many jobs of each lane one worker runs at once."""
+"""
+WORKER_LANES and WORKER_LANE_CONCURRENCY: which lanes one worker process
+serves, and how many jobs of each lane it runs at once.
+"""
 
 from collections.abc import Mapping
 
@@ -86,3 +89,40 @@ def parse_lane_item(item: str) -> tuple[JobLane, int]:
             f"WORKER_LANE_CONCURRENCY for {lane.value} must be a whole number, "
             f"got {raw_threads.strip()!r}."
         ) from error
+
+
+def read_worker_lanes(environment_variables: Mapping[str, str]) -> tuple[JobLane, ...]:
+    """
+    WORKER_LANES, e.g. "inbound,outbound" (a worker that answers customers)
+    or "default,autotests" (a batch worker): the lanes whose queued and
+    periodic jobs this worker process runs, in lane order. Empty or unset:
+    every lane (one worker does everything).
+
+    Raises:
+        ValidationFailedError: an unknown or repeated lane.
+    """
+
+    raw_value: str = environment_variables.get("WORKER_LANES", "")
+    lanes: set[JobLane] = set()
+    for raw_item in raw_value.split(LANE_SEPARATOR):
+        item: str = raw_item.strip().lower()
+        if item == "":
+            continue
+
+        try:
+            lane = JobLane(item)
+        except ValueError as error:
+            names: str = ", ".join(lane.value for lane in JobLane)
+            raise ValidationFailedError(
+                f"WORKER_LANES names an unknown lane {item!r}; the lanes are {names}."
+            ) from error
+
+        if lane in lanes:
+            raise ValidationFailedError(f"WORKER_LANES names lane {item!r} twice.")
+
+        lanes.add(lane)
+
+    if not lanes:
+        return tuple(JobLane)
+
+    return tuple(lane for lane in JobLane if lane in lanes)

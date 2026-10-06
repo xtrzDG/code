@@ -12,7 +12,7 @@ Writing exported tables as CSV a spreadsheet opens safely and correctly.
 
 import csv
 import io
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 
 UTF8_BOM: str = "﻿"
 FORMULA_PREFIXES: tuple[str, ...] = ("=", "+", "-", "@", "\t", "\r")
@@ -37,9 +37,3 @@ def csv_line(cells: Sequence[str]) -> str:
     )
     writer.writerow([escape_cell(cell) for cell in cells])
     return buffer.getvalue()
-
-
-def csv_text(header: Sequence[str], rows: Iterable[Sequence[str]]) -> str:
-    """A whole small table (the full export's CSV files): BOM, header, rows."""
-
-    return UTF8_BOM + csv_line(header) + "".join(csv_line(row) for row in rows)

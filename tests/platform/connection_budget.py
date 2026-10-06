@@ -19,12 +19,16 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 from tests.platform.environment_sources import read
 
 # Render, "Postgres connection limits": instances with less than 8 GB of
-# memory accept 100 connections. A plan missing here fails the test until
-# its limit is added.
+# memory accept 100 connections, from 8 GB 200, from 16 GB 400, from 32 GB
+# 500. A plan missing here fails the test until its limit is added.
 PLAN_CONNECTION_LIMITS: dict[str, int] = {
     "basic-256mb": 100,
     "basic-1gb": 100,
     "basic-4gb": 100,
+    "pro-4gb": 100,
+    "pro-8gb": 200,
+    "pro-16gb": 400,
+    "pro-32gb": 500,
 }
 # Old and new instances run side by side until the new ones are healthy.
 DEPLOY_OVERLAP: int = 2

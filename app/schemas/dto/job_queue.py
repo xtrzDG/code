@@ -13,6 +13,7 @@ from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.typings.platform.constrained_integers import (
     JobAttemptCount,
     JobClaimLimit,
+    LostJobLeaseCount,
     PageSize,
 )
 from app.schemas.typings.platform.constrained_strings import (
@@ -54,14 +55,19 @@ class JobLeaseExtension(ImmutableDTO):
 
 class ExpiredLeaseRelease(ImmutableDTO):
     """
-    Reaper: RUNNING jobs whose lease ended before `now` go back to PENDING
-    (due at once), or to DEAD when they used `max_attempts`, with
-    `error_text` as their last error.
+    Reaper: RUNNING jobs whose lease ended before `now` count one more lost
+    lease and go back to PENDING (due at once), with `error_text` as their
+    last error. A job whose lost leases in a row reach `max_lost_leases`
+    (its attempts keep taking their worker process down) goes to DEAD with
+    the reason `process_died` and `process_died_text` instead; one that
+    used `max_attempts` to DEAD with the reason `attempts_exhausted`.
     """
 
     now: Microseconds
     max_attempts: JobAttemptCount
     error_text: JobErrorText
+    max_lost_leases: LostJobLeaseCount
+    process_died_text: JobErrorText
 
 
 class QueuedJobPosition(ImmutableDTO):

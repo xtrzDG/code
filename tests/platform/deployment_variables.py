@@ -71,6 +71,8 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # Render's database is a direct connection, so LISTEN works on
         # DATABASE_URL; only a transaction pooler needs a second address.
         "LIVE_EVENTS_DATABASE_URL",
+        # Each worker's role (its lanes); the API runs no lane.
+        "WORKER_LANES",
         # Empty until a key rotation; then set in the env group
         # workshop-backend (docs/operations/backup-restore.md).
         "ENCRYPTION_KEYS",

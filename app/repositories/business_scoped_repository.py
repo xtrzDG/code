@@ -153,6 +153,17 @@ class BusinessScopedRepository[StoredDocument: PersistentDocument]:
             page_query(business_id, sort_fields, window, where, is_descending)
         )
 
+    def page_in_write_order(
+        self, business_id: BusinessId, window: KeysetSlice
+    ) -> list[StoredDocument]:
+        """
+        Every document of the business, one keyset page at a time in the
+        order they were first written (`BusinessDocumentPagesContract`):
+        an index range scan on (business_id, created_at, row_sequence).
+        """
+
+        return self._page_in_business(business_id, (), window, is_descending=False)
+
     def _latest_in_business(
         self,
         business_id: BusinessId,

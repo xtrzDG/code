@@ -5,9 +5,14 @@ from typing import cast
 from app.containers.app import AppContainer
 from app.contracts.jobs import QueuedJobOperator
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.jobs import QueuedJobStatus
+from app.schemas.constants.jobs import JobDeathReason, QueuedJobStatus
 from app.schemas.domain.compliance import AuditLogEntryDocument
+from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.platform.constrained_integers import (
+    JobAttemptCount,
+    LostJobLeaseCount,
+)
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobPayloadJson
 from tests.e2e.harness import Workshop, bearer, start_workshop
@@ -72,12 +77,14 @@ def test_a_dead_job_is_retried_through_the_api() -> None:
     assert dead_job["lane"] == "default"
     assert dead_job["business_id"] == str(business_id)
     assert dead_job["last_error"] == "ExternalServiceError: provider down"
+    assert dead_job["dead_reason"] == "attempts_exhausted"
     assert "payload" not in dead_job and "+995" not in dead.text
     assert dead.json()["next_cursor"] is None
 
     assert retried.status_code == 200, retried.text
     assert retried.json()["job"]["status"] == "pending"
     assert retried.json()["job"]["attempts"] == 0
+    assert retried.json()["job"]["dead_reason"] is None
     assert retried_again.status_code == 409
     assert report.queued_runs == 1
     assert [item["id"] for item in done.json()["items"]] == [str(job_id)]
@@ -85,6 +92,41 @@ def test_a_dead_job_is_retried_through_the_api() -> None:
     assert [entry.action for entry in audit_entries(workshop, business_id)] == [
         AuditAction.UPDATE
     ]
+
+
+def test_a_job_that_killed_its_workers_starts_afresh_when_retried() -> None:
+    workshop, operator = start_with_flaky_job(failures=0)
+    job_id = workshop.container.facilitators.job_queue_facilitator().enqueue(
+        SEND_DIGEST, SECRET_PAYLOAD, None
+    )
+
+    def died_twice(job: QueuedJobDocument) -> None:
+        job.status = QueuedJobStatus.DEAD
+        job.attempts = JobAttemptCount(2)
+        job.lost_leases = LostJobLeaseCount(2)
+        job.dead_reason = JobDeathReason.PROCESS_DIED
+
+    workshop.container.repositories.queued_job_repo().update(job_id, died_twice)
+    admin_token, _ = workshop.sign_in_with_email(ADMIN_EMAIL)
+
+    listed = workshop.client.get(
+        "/v1/admin/jobs", params={"status": "dead"}, headers=bearer(admin_token)
+    )
+    retried = workshop.client.post(
+        f"/v1/admin/jobs/{job_id}/retry", headers=bearer(admin_token)
+    )
+    stored = workshop.container.repositories.queued_job_repo().get(job_id)
+
+    assert [item["dead_reason"] for item in listed.json()["items"]] == ["process_died"]
+    assert retried.status_code == 200, retried.text
+    assert stored is not None
+    assert (stored.status, int(stored.lost_leases), stored.dead_reason) == (
+        QueuedJobStatus.PENDING,
+        0,
+        None,
+    )
+    assert workshop.container.gateways.background_worker().run_once().queued_runs == 1
+    assert len(operator.calls) == 1
 
 
 def test_jobs_are_discarded_and_only_admins_may_touch_the_queue() -> None:

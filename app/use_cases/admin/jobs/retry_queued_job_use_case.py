@@ -12,7 +12,10 @@ from app.schemas.domain.users import UserDocument
 from app.schemas.dto.admin_jobs import AdminJobActionResult, AdminJobCommand
 from app.schemas.dto.platform_admins import PlatformAdminAccessRequest
 from app.schemas.exceptions.application_errors import ConflictError
-from app.schemas.typings.platform.constrained_integers import JobAttemptCount
+from app.schemas.typings.platform.constrained_integers import (
+    JobAttemptCount,
+    LostJobLeaseCount,
+)
 from app.utilities.jobs.queued_job_views import (
     build_job_audit_entry,
     build_queued_job_view,
@@ -72,6 +75,9 @@ class RetryQueuedJobUseCase(UseCaseContract[AdminJobCommand, AdminJobActionResul
 
             job.status = QueuedJobStatus.PENDING
             job.attempts = JobAttemptCount(0)
+            # A fresh start: the next two lost workers in a row count anew.
+            job.lost_leases = LostJobLeaseCount(0)
+            job.dead_reason = None
             job.run_at = now
             job.lease_until = None
             job.lease_token = None

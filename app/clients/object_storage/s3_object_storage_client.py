@@ -1,8 +1,16 @@
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import suppress
 from datetime import UTC, datetime
+from typing import NoReturn
 
 import httpx
 from typed_time_provider import Microseconds, WallClock
 
+from app.clients.object_storage.s3_xml_replies import (
+    build_completion,
+    element_text,
+    read_error_code,
+)
 from app.contracts.object_storage import ObjectStorageClientContract
 from app.schemas.dto.object_storage import ObjectStorageConnection
 from app.schemas.exceptions.application_errors import ExternalServiceError
@@ -31,6 +39,9 @@ class S3ObjectStorageClient(ObjectStorageClientContract):
     presigned URL with a `Range` header, so only the bytes a player asks for
     leave the bucket. The URLs carry credentials for one request and are
     never logged or shown; errors name the method and the status only.
+
+    A big object (a full business export) goes up in parts held one at a
+    time (`put_object_parts`, a multipart upload aborted on failure).
     """
 
     def __init__(
@@ -50,6 +61,54 @@ class S3ObjectStorageClient(ObjectStorageClientContract):
             "PUT", key, content=body, headers={"Content-Type": STORED_CONTENT_TYPE}
         )
         self._require(response, OK_STATUSES, "PUT")
+
+    def put_object_parts(
+        self, key: RecordingStoragePath, parts: Iterable[bytes]
+    ) -> None:
+        remaining: Iterator[bytes] = iter(parts)
+        first: bytes = next(remaining, b"")
+        second: bytes | None = next(remaining, None)
+        if second is None:
+            self.put_object(key, first)
+            return
+
+        started = self._request("POST", key, parameters={"uploads": ""})
+        self._require(started, OK_STATUSES, "POST uploads")
+        upload_id: str | None = element_text(started.text, "UploadId")
+        if upload_id is None:
+            raise ExternalServiceError(
+                "The recordings object storage gave no multipart upload id."
+            )
+
+        try:
+            etags: list[str] = []
+            for part in (first, second, *remaining):
+                uploaded = self._request(
+                    "PUT",
+                    key,
+                    content=part,
+                    parameters={
+                        "partNumber": str(len(etags) + 1),
+                        "uploadId": upload_id,
+                    },
+                )
+                self._require(uploaded, OK_STATUSES, "PUT part")
+                etags.append(uploaded.headers.get("ETag", ""))
+
+            completed = self._request(
+                "POST",
+                key,
+                content=build_completion(etags),
+                parameters={"uploadId": upload_id},
+            )
+            # S3 may answer 200 and still report an error in the body.
+            if read_error_code(completed.text) is not None:
+                self._refuse(completed, "POST complete")
+            self._require(completed, OK_STATUSES, "POST complete")
+        except Exception:
+            with suppress(ExternalServiceError):
+                self._request("DELETE", key, parameters={"uploadId": upload_id})
+            raise
 
     def get_object_range(
         self,
@@ -84,6 +143,7 @@ class S3ObjectStorageClient(ObjectStorageClientContract):
         key: RecordingStoragePath,
         content: bytes | None = None,
         headers: dict[str, str] | None = None,
+        parameters: Mapping[str, str] | None = None,
     ) -> httpx.Response:
         url: str = presign_url(
             self._connection,
@@ -93,6 +153,7 @@ class S3ObjectStorageClient(ObjectStorageClientContract):
                 int(self._wall_clock.now_unix()) / MICROSECONDS_PER_SECOND, UTC
             ),
             URL_LIFETIME_SECONDS,
+            parameters,
         )
         try:
             return self._http_client.request(
@@ -111,7 +172,10 @@ class S3ObjectStorageClient(ObjectStorageClientContract):
         method: str,
     ) -> None:
         if response.status_code not in expected:
-            raise ExternalServiceError(
-                f"The recordings object storage refused a {method} "
-                f"(HTTP {response.status_code})."
-            )
+            self._refuse(response, method)
+
+    def _refuse(self, response: httpx.Response, method: str) -> NoReturn:
+        raise ExternalServiceError(
+            f"The recordings object storage refused a {method} "
+            f"(HTTP {response.status_code})."
+        )

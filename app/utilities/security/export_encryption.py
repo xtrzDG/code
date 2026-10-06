@@ -5,8 +5,12 @@ business, like customer files (`media_encryption`).
 Keys (HKDF-SHA256): the business key is derived from the platform's master
 secret (ENCRYPTION_KEY) and the business id; each archive gets its own key
 from the business key, a random salt and its path, so an archive copied to
-another business or path does not open there. The archive is sealed whole
-with AES-256-GCM, the header authenticated with it.
+another business or path does not open there.
+
+Archives are written in segments (AWX2, `export_stream_encryption`), so no
+archive is ever sealed whole in memory. Archives written before that were
+sealed whole with AES-256-GCM, the header authenticated with it, and still
+open here (`open_archive`) while they are kept (a day):
 
     header = magic(4) key id(8) salt(16) nonce(12)
     body   = AES-GCM(archive key, nonce, aad=header) of the ZIP
@@ -24,7 +28,6 @@ from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.privacy.strings import ExportArchivePath
-from app.utilities.security.recording_encryption import master_key_id
 
 MAGIC: bytes = b"AWX1"
 KEY_ID_SIZE: int = 8
@@ -55,23 +58,6 @@ def derive_archive_key(
         salt=salt,
         info=f"export:{path}".encode(),
     ).derive(business_key)
-
-
-def seal_archive(
-    master_secret: PlatformSecret,
-    business_id: BusinessId,
-    path: ExportArchivePath,
-    archive: bytes,
-    salt: bytes,
-    nonce: bytes,
-) -> bytes:
-    """The sealed archive: the header, then the encrypted ZIP."""
-
-    header: bytes = struct.pack(
-        HEADER_FORMAT, MAGIC, master_key_id(master_secret), salt, nonce
-    )
-    cipher = AESGCM(derive_archive_key(master_secret, business_id, path, salt))
-    return header + cipher.encrypt(nonce, archive, header)
 
 
 def open_archive(

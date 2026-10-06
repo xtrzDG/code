@@ -10,7 +10,7 @@ import logging
 import pytest
 from typed_time_provider import Microseconds
 
-from app.gateways.worker.queued_job_runner import log_pickup
+from app.gateways.worker.job_run_logs import log_pickup
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.typings.platform.constrained_integers import JobAttemptCount
@@ -87,7 +87,7 @@ def test_the_pickup_line_names_the_job_and_its_wait(
     )
     claimed_at = Microseconds(int(job.run_at) + 340 * MICROSECONDS_PER_MILLISECOND)
 
-    with caplog.at_level(logging.INFO, logger="app.gateways.worker.queued_job_runner"):
+    with caplog.at_level(logging.INFO, logger="app.gateways.worker.job_run_logs"):
         log_pickup(job, claimed_at)
 
     record = caplog.records[-1]
@@ -99,6 +99,7 @@ def test_the_pickup_line_names_the_job_and_its_wait(
         "pickup_delay_ms": 340,
         "lane": "inbound",
         "attempt": 1,
+        "lost_leases": 0,
     }
 
 
@@ -114,7 +115,7 @@ def test_a_claim_by_the_worker_logs_the_pickup(
         lane=JobLane.INBOUND,
     )
 
-    with caplog.at_level(logging.INFO, logger="app.gateways.worker.queued_job_runner"):
+    with caplog.at_level(logging.INFO, logger="app.gateways.worker.job_run_logs"):
         kit.worker.run_queued_jobs()
 
     pickups = [
@@ -122,4 +123,16 @@ def test_a_claim_by_the_worker_logs_the_pickup(
         for record in caplog.records
         if "pickup_delay_ms" in read_line_fields(record)
     ]
-    assert pickups == [{"pickup_delay_ms": 0, "lane": "inbound", "attempt": 1}]
+    assert pickups == [
+        {"pickup_delay_ms": 0, "lane": "inbound", "attempt": 1, "lost_leases": 0}
+    ]
+    [finished] = [
+        read_line_fields(record)
+        for record in caplog.records
+        if "duration_ms" in read_line_fields(record)
+    ]
+    # Each job's line says how it ended and the worker's memory around it.
+    assert finished["outcome"] == "done"
+    assert isinstance(finished["duration_ms"], int)
+    assert isinstance(finished["rss_before_mb"], int)
+    assert isinstance(finished["rss_after_mb"], int)

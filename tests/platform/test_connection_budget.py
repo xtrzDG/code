@@ -17,6 +17,7 @@ from tests.platform.connection_budget import (
     LISTEN_CONNECTIONS,
     MIGRATE_CONNECTIONS,
     RESERVED_CONNECTIONS,
+    WORKER_COMMAND,
     BlueprintService,
     blueprint_services,
     connection_budget,
@@ -39,17 +40,29 @@ def test_the_worst_case_fits_the_database_plan(blueprint_path: str) -> None:
     )
 
 
-def test_production_counts_two_api_instances_the_worker_and_the_backup() -> None:
+def test_production_counts_every_api_and_worker_instance_and_the_backup() -> None:
     budget = connection_budget("render.yaml")
 
+    # Two API instances, two customer workers and one batch worker, each
+    # with the pool of its role: 150 of the 200 of pro-8gb.
     assert budget.parts == {
         "reserved": RESERVED_CONNECTIONS,
         "workshop-api (migrate)": MIGRATE_CONNECTIONS,
         "workshop-api": DEPLOY_OVERLAP * 2 * (12 + LISTEN_CONNECTIONS),
-        "workshop-worker": DEPLOY_OVERLAP * (16 + LISTEN_CONNECTIONS),
+        "workshop-worker": DEPLOY_OVERLAP * 2 * (16 + LISTEN_CONNECTIONS),
+        "workshop-batch-worker": DEPLOY_OVERLAP * (10 + LISTEN_CONNECTIONS),
         "workshop-backup": BACKUP_CONNECTIONS,
     }
-    assert budget.worst_case == 94
+    assert (budget.plan, budget.limit, budget.worst_case) == ("pro-8gb", 200, 150)
+
+
+@pytest.mark.parametrize("blueprint_path", BLUEPRINTS)
+def test_every_worker_sets_the_pool_of_its_role(blueprint_path: str) -> None:
+    """The default pool (half of 64 threads) is no role's size."""
+
+    for service in blueprint_services(blueprint_path):
+        if service.command == WORKER_COMMAND:
+            assert "DB_POOL_SIZE" in service.values, service.name
 
 
 @pytest.mark.parametrize("blueprint_path", BLUEPRINTS)

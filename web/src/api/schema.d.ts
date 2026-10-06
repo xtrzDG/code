@@ -9008,6 +9008,11 @@ export interface components {
          *     Version 5: `customer_channel_user_id`, the sender of the customer
          *     message kept beside it (filled from it when missing, so older rows read
          *     the same), for erasure to find a customer's events by an index.
+         *
+         *     Version 6: `holder_job_id`, the queued job that last took the event
+         *     (optional). The queue runs a job in one place at a time, so a later
+         *     attempt of that same job (its worker died) takes the event over at
+         *     once instead of waiting out the processing lease.
          */
         InboundEventDocument: {
             /**
@@ -9034,6 +9039,8 @@ export interface components {
             customer_message_id?: string;
             /** Handoff Requested At */
             handoff_requested_at?: number | null;
+            /** Holder Job Id */
+            holder_job_id?: string | null;
             /** Id */
             id: string;
             kind: components["schemas"]["InboundEventKind"];
@@ -9053,7 +9060,7 @@ export interface components {
             reply_message_id?: string;
             /**
              * Schema Version
-             * @default 5
+             * @default 6
              */
             schema_version: string;
             /** @default received */
@@ -9439,6 +9446,15 @@ export interface components {
             /** Tax Rate Basis Points */
             tax_rate_basis_points?: number | null;
         };
+        /**
+         * JobDeathReason
+         * @description Why a queued job is DEAD: it failed on its last attempt, two attempts
+         *     in a row ended with their worker process (killed, out of memory: the
+         *     job is not tried a third time, so it cannot take down worker after
+         *     worker), or no handler knows its name.
+         * @enum {string}
+         */
+        JobDeathReason: "attempts_exhausted" | "process_died" | "no_handler";
         /**
          * JobLane
          * @description Worker lane of a queued job. Each lane has its own threads in every
@@ -11843,7 +11859,9 @@ export interface components {
          * @description One queued job as the platform admin sees it (no payload).
          *
          *     `lease_until` is set while a worker runs the job; `last_error` is the
-         *     error of the latest failed attempt.
+         *     error of the latest failed attempt; `dead_reason` says why a DEAD job
+         *     died (its attempts failed, it took its worker process down twice in a
+         *     row, or no handler knows it).
          */
         QueuedJobView: {
             /** Attempts */
@@ -11852,6 +11870,7 @@ export interface components {
             business_id?: string | null;
             /** Created At */
             created_at: number;
+            dead_reason?: components["schemas"]["JobDeathReason"] | null;
             /** Id */
             id: string;
             lane: components["schemas"]["JobLane"];

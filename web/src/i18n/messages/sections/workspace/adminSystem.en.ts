@@ -94,7 +94,7 @@ export const adminSystemEn = {
   },
   deadLetters: {
     title: "Dead letters",
-    description: "Jobs that ran out of attempts. Retry once the cause is fixed; discard one that can never succeed.",
+    description: "Jobs that ran out of attempts or took their worker down twice in a row. Retry once the cause is fixed; discard one that can never succeed.",
     none: "No dead letters",
     noneDescription: "Every job finished or is still being tried.",
     tally: "{name}: {count}",
@@ -115,6 +115,11 @@ export const adminSystemEn = {
     confirm: "Discard job",
     discarding: "Discarding…",
     changed: "This job changed meanwhile; the list shows it as it is now.",
+    reasons: {
+      attempts_exhausted: "Every attempt failed",
+      process_died: "Took its worker down twice",
+      no_handler: "No handler",
+    },
   },
   channels: {
     title: "Channels",

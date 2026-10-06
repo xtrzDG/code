@@ -1,12 +1,18 @@
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.jobs import JobLane, PeriodicJobRunStatus, QueuedJobStatus
+from app.schemas.constants.jobs import (
+    JobDeathReason,
+    JobLane,
+    PeriodicJobRunStatus,
+    QueuedJobStatus,
+)
 from app.schemas.constants.observability import PeriodicJobOutcome
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_integers import (
     JobAttemptCount,
+    LostJobLeaseCount,
     ProcessedItemCount,
 )
 from app.schemas.typings.platform.constrained_strings import (
@@ -36,7 +42,15 @@ class QueuedJobDocument(BaseDocument):
     extends the lease while it runs, and only the holder of the token may
     settle it. A job whose lease expired (its worker died) is released for
     another attempt. Jobs with the same `serial_key` run one at a time.
+
+    Version 2: `lost_leases` counts the attempts in a row that ended
+    without a recorded result (the reaper found the lease run out); the
+    second one in a row makes the job DEAD instead of a third attempt, and
+    `dead_reason` says why a job is DEAD. Both optional; a recorded result
+    (done, retry or dead) sets `lost_leases` back to 0.
     """
+
+    schema_version: SchemaVersion = SchemaVersion("2")
 
     id: QueuedJobId = Field(default_factory=QueuedJobId)
     name: JobName
@@ -50,6 +64,8 @@ class QueuedJobDocument(BaseDocument):
     lease_until: Microseconds | None = None
     lease_token: JobLeaseToken | None = None
     last_error: JobErrorText | None = None
+    lost_leases: LostJobLeaseCount = LostJobLeaseCount(0)
+    dead_reason: JobDeathReason | None = None
 
 
 class PeriodicJobRunDocument(BaseDocument):

@@ -13,7 +13,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.analytics import ProductEventName, TunnelStepKey
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.analytics.constrained_strings import AcquisitionSourceKey
@@ -29,6 +29,32 @@ TUNNEL_EVENTS: frozenset[ProductEventName] = frozenset(
         ProductEventName.TUNNEL_STEP_SKIPPED,
     }
 )
+
+
+@dataclass(frozen=True)
+class BusinessRoster:
+    """
+    What the metrics read of a business: who is on its team and where and
+    when it started. The admin metrics walk every business and keep only
+    this of each (a few hundred bytes, never the whole profile), so the
+    walk's memory stays small however many businesses there are.
+    """
+
+    id: BusinessId
+    country_code: CountryCode
+    niche_key: NicheKey
+    created_at: Microseconds
+    members: tuple[BusinessMember, ...]
+
+
+def roster_of(business: BusinessDocument) -> BusinessRoster:
+    return BusinessRoster(
+        id=business.id,
+        country_code=business.country_code,
+        niche_key=business.niche_key,
+        created_at=business.created_at,
+        members=tuple(business.members),
+    )
 
 
 @dataclass(frozen=True)
@@ -74,7 +100,7 @@ class OwnerJourney:
 
 
 def build_business_journeys(
-    businesses: Sequence[BusinessDocument],
+    businesses: Sequence[BusinessRoster],
     events: Sequence[ProductEventDocument],
 ) -> list[BusinessJourney]:
     """Every business with its owner (who created it) and first steps."""
@@ -184,7 +210,7 @@ def owner_journey(
     )
 
 
-def first_owner(business: BusinessDocument) -> UserId | None:
+def first_owner(business: BusinessRoster | BusinessDocument) -> UserId | None:
     """The first owner among the members (who created a business made
     before product events were recorded)."""
 
@@ -198,7 +224,7 @@ def first_owner(business: BusinessDocument) -> UserId | None:
     )
 
 
-def invited_member_ids(businesses: Sequence[BusinessDocument]) -> set[UserId]:
+def invited_member_ids(businesses: Sequence[BusinessRoster]) -> set[UserId]:
     """Everyone on a team who is not its first owner."""
 
     owners: dict[BusinessId, UserId | None] = {

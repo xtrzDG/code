@@ -366,13 +366,12 @@ previous commit on a busier machine).
   than one worker answers: in the k6 scenario with production's one
   worker the pickup delay grew all along (p50 16 s, p95 20 s after five
   minutes; the weekly run's 12 s and later 70 s), with two workers it
-  stayed at p50 87 ms, p95 1.4 s. Production runs one worker
-  (render.yaml), and a second instance does not fit its connection
-  budget at 16 connections (2 x 2 x 17 more); raise its `inbound`
-  concurrency within `LLM_MAX_CONCURRENCY` and `DB_POOL_SIZE` (a turn
-  holds a connection while it runs) or shrink the pools first. Raise the `inbound` concurrency
-  (keep `DB_POOL_SIZE` and the provider's rate limits in mind) or add
-  workers when the queue's wait grows (the admin system page,
+  stayed at p50 87 ms, p95 1.4 s. Production runs two customer workers
+  ("Worker roles" below). Raise the `inbound` concurrency (within
+  `LLM_MAX_CONCURRENCY` and `DB_POOL_SIZE`: a turn holds a connection
+  while it runs; mind the provider's rate limits) or add customer
+  workers (mind the connection budget) when the queue's wait grows (the
+  admin system page,
   `/admin/system`: the `inbound` lane's oldest wait; the
   `inbound_backlog` alert pages above 120 s, `docs/operations/slo.md`).
 - **Database connections.** Every process keeps up to `DB_POOL_SIZE`
@@ -387,6 +386,93 @@ previous commit on a busier machine).
   customer's lock, a session advisory lock that pins a connection for the
   whole turn. A turn waiting for a place (a slow model, a burst) holds no
   connection, so waiting turns cannot drain the pool.
+
+## Worker roles
+
+Workers serve lanes (`WORKER_LANES`, a comma list; empty means every
+lane, as in development and docker compose). `render.yaml` runs two
+roles, so no batch job can take down or starve the process that answers
+customers:
+
+| Service | Instances, plan | Lanes | Shared periodic jobs | Sizing |
+| --- | --- | --- | --- | --- |
+| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults), `DB_POOL_SIZE` 16, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
+| `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | `default=4,autotests=2`, `DB_POOL_SIZE` 10, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
+
+- A periodic job belongs to a lane (`PeriodicJobSpec.lane`, `default`
+  unless set); a worker runs the shared ones of its lanes, still once
+  per period across all workers (`periodic_job_runs`), and every worker
+  runs the process-local ones (the model-call trace flush). The reaper
+  and the lease heartbeat run on every worker.
+- Two customer workers: one can die or deploy while the other answers
+  ("When a worker dies" below). A third adds 2 x 17 connections at a
+  deploy.
+- `tests/platform/test_worker_roles.py` keeps it so: every lane is
+  served by exactly one role in both Blueprints (a lane nobody serves
+  would never run), customer replies run on at least two instances, each
+  worker's pool holds its lane threads plus the periodic thread and the
+  heartbeat, and its `LLM_MAX_CONCURRENCY` covers its `inbound` threads.
+- Sizing a role: `DB_POOL_SIZE` >= its lane threads + 2;
+  `LLM_MAX_CONCURRENCY` >= its `inbound` threads (a turn waits for a
+  place before it takes a connection); `THREADPOOL_SIZE` above the pool.
+  Then check the connection budget below.
+
+## When a worker dies
+
+- **Leases.** A claimed job is leased for 120 s; the heartbeat renews
+  the leases of running jobs every 30 s. The reaper releases the jobs of
+  a worker that stopped beating: on every tick, and between ticks as
+  often as the worker's quickest lane polls (every
+  `WORKER_INBOUND_POLL_SECONDS`, 2 s, on the customer workers); it wakes
+  the lanes of the jobs it put back, so another worker claims them at
+  once.
+- **The customer's message.** The inbox event remembers the job that
+  took it (`holder_job_id`). The queue hands a job out again only after
+  its earlier attempt is over, so that job's next attempt takes the
+  message over at once instead of waiting out the 180 s processing
+  lease; any other job still waits for it. The ids of the customer's
+  message and of the reply are fixed in the inbox, a reply already
+  stored is sent instead of asked again, and the outbox keeps one row
+  per reply: the customer gets one answer.
+  `tests/storage/test_worker_kill.py` runs two customer workers and an
+  API on Postgres, `kill -9`s the worker in the middle of a Telegram
+  customer's turn and checks the other answers within the lease plus
+  5 s with exactly one outbound row, sent once (with a 6 s lease it
+  answered 7.7 s after the kill); in production expect about 2 minutes.
+- **Deploys.** On SIGTERM running jobs get 25 s to finish; the rest are
+  handed back (due at once, not counted as an attempt or a lost lease),
+  so a deploy neither delays a customer by a lease nor looks like a
+  crash.
+- **Poison jobs.** Every lost lease is counted on the job
+  (`lost_leases`, reset when an attempt settles). A job whose worker
+  died with it twice in a row is DEAD with the reason `process_died`
+  instead of a third attempt: an error report names it and the
+  `dead_jobs` alert pages (`runbooks/stuck-worker.md`). The system page
+  shows the reason of every dead letter; Retry resets the count.
+- **Memory per job.** Every finished job logs
+  `Job <name> <outcome> in <n> ms; RSS <a> MB before, <b> MB after` with
+  the fields `duration_ms`, `outcome`, `rss_before_mb` and `rss_after_mb`
+  (the process's resident memory from `/proc/self/statm`; absent where
+  there is none). Search the batch worker's logs for the largest
+  `rss_after_mb` minus `rss_before_mb` to find a job that reads too much.
+
+## Memory of batch jobs
+
+- **Full business exports** never hold a collection: the ZIP is written
+  into a temporary file, every collection streamed in keyset pages of
+  1,000 (first-write order on the `(business_id, created_at,
+  row_sequence)` index) through incremental JSON and CSV writers, then
+  sealed in 1 MiB segments (AES-256-GCM, format AWX2) and uploaded in
+  8 MiB parts (S3 multipart). Exporting 50,000 messages peaks at about
+  14 MB of Python allocations (`tests/exports/test_bounded_export.py`
+  fails above 64 MB).
+- **Admin metrics** walk every business in batches of 200 and keep only
+  each one's roster (members, country, niche, start), not its profile.
+- **Topic grouping** reads at most 200 conversations and 100 unanswered
+  questions per business, walking businesses in batches.
+- **Invoice PDFs** render one invoice per job (WeasyPrint, bounded by the
+  invoice), but on the `outbound` lane, so on the customer workers
+  ("Known limits").
 
 ## Pickup: from a customer message to a worker
 
@@ -444,34 +530,43 @@ touches the database.
 
 ## Connection budget
 
-Render's `basic-256mb` Postgres accepts 100 connections. The worst moment
-is a deploy: Render starts the new instances of the API and the worker
-before it stops the old ones, while the backup may run and the migration
-runs before. `tests/platform/test_connection_budget.py` reads every
-Blueprint and checks
+Production's database is Render's `pro-8gb` Postgres: 200 connections
+(plans below 8 GB accept 100, 16 GB 400, 32 GB 500). The worst moment is
+a deploy: Render starts the new instances of every service before it
+stops the old ones, while the backup may run and the migration runs
+before. `tests/platform/test_connection_budget.py` reads every Blueprint
+and checks, per role,
 
 ```
-2 x API instances x (DB_POOL_SIZE + 1 LISTEN)
-+ 2 x workers x (DB_POOL_SIZE + 1 LISTEN)
-+ backup 2 + migrate 1 + reserved 5   <=   the plan's limit
+  2 x API instances            x (DB_POOL_SIZE + 1 LISTEN)
++ 2 x customer worker instances x (DB_POOL_SIZE + 1 LISTEN)
++ 2 x batch worker instances    x (DB_POOL_SIZE + 1 LISTEN)
++ backup 2 + migrate 1 + reserved 5        <=   the plan's limit
 ```
 
 (reserved: Postgres's three superuser connections, an operator's psql and
 Render's own checks). Production (`render.yaml`): 2 x 2 x (12 + 1) = 52
-for the API, 2 x (16 + 1) = 34 for the worker, 2 + 1 + 5: 94 of 100.
-Staging (one API instance) sets the same pools. The defaults (64 threads,
-32 connections) would not fit: a Blueprint without `DB_POOL_SIZE` fails
-the test.
+for the API, 2 x 2 x (16 + 1) = 68 for the customer workers,
+2 x 1 x (10 + 1) = 22 for the batch worker, 2 + 1 + 5: 150 of 200, room
+for a third customer worker or larger pools. Staging (one API, one
+worker serving every lane, `basic-256mb`): 2 x 13 + 2 x 19 + 8 = 72 of
+100. The defaults (64 threads, 32 connections) would not fit: a
+Blueprint without `DB_POOL_SIZE` on any service fails the test.
 
-When more is needed (a third API instance, a second worker, larger
-pools), pick one route and update the Blueprint and the test together:
+The worker roles need 150 connections at a deploy, more than the 100 of
+the plan before (`basic-256mb`); of the routes below the larger plan won: PgBouncer in session mode multiplexes
+nothing a busy pool holds (every customer turn keeps its connection for
+the turn's advisory lock), adds a service to run and monitor, and the
+Blueprint cannot hand its address to the others the way it hands the
+database's. When more is needed again, pick one route and update the
+Blueprint and the test together:
 
 - **A larger database plan.** Add its connection limit (Render, "Postgres
   connection limits") to `PLAN_CONNECTION_LIMITS` in
   `tests/platform/connection_budget.py`.
 - **PgBouncer in front.** Run PgBouncer as a private service in session
   mode with `max_db_connections` below the plan's limit minus the
-  reserve, and point `DATABASE_URL` of the API and the worker at it: a
+  reserve, and point `DATABASE_URL` of the API and the workers at it: a
   deploy's peak then waits in PgBouncer instead of failing with "too many
   clients", and idle pools (closed after 300 s) free their server
   connections. Transaction mode is not enough: a customer turn holds a
@@ -509,8 +604,18 @@ pools), pick one route and update the Blueprint and the test together:
   and ranks them with only their sort keys in memory: fine for thousands
   of businesses, a run of minutes at tens of thousands. A search by part
   of a name walks at most 2,000 standings per request.
-- The admin metrics page still reads every business (walked in batches
-  of 200, but all held for the funnel): fine for thousands.
+- The admin metrics page walks every business in batches of 200 and
+  keeps each one's roster for the funnel (a few hundred bytes each), but
+  still holds every product event of the period: fine for thousands.
+- Invoice and receipt PDFs render on the `outbound` lane (their e-mails
+  go through the outbox), so on the customer workers: bounded by one
+  invoice, but a slow WeasyPrint run holds an outbound thread. Moving
+  billing documents to a batch lane is the next step.
+- The download of a full export still reads the whole archive into the
+  API process to decrypt it (streamed to the owner, but held once);
+  fine for archives of tens of megabytes.
+- Periodic job runs are not counted like queued jobs: a periodic job
+  that kills its worker runs again in its next period.
 - The customer list and the knowledge list page in the database
   (migration 1122); the customer search finds exact names, phones and ids
   through indexes and walks at most 500 customers for a part of a name.

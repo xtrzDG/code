@@ -2,6 +2,8 @@
 
 import re
 
+import pytest
+
 from app.adapters.security.secret_cipher_adapter import (
     MIN_DERIVED_KEY_TEXT_LENGTH,
     PUBLIC_ENCRYPTION_KEYS,
@@ -54,15 +56,21 @@ def test_render_sets_what_a_deployment_needs() -> None:
     )
     assert services["workshop-backup"] >= BACKUP_JOB_VARIABLES | {"DATABASE_URL"}
     assert not BACKUP_JOB_VARIABLES & api
-    # The worker runs the same code with the same settings.
-    assert services["workshop-worker"] == api - {"PORT"}
+    # The workers run the same code with the same settings, each with the
+    # lanes of its role (and the batch worker its own lane threads).
+    assert services["workshop-worker"] == api - {"PORT"} | {"WORKER_LANES"}
+    assert services["workshop-batch-worker"] == api - {"PORT"} | {
+        "WORKER_LANES",
+        "WORKER_LANE_CONCURRENCY",
+    }
     assert services["workshop-cabinet"] >= REQUIRED_CABINET_VARIABLES | {
         "TRUSTED_PROXY_HOPS"
     }
 
 
-def test_the_render_worker_copies_the_api_values() -> None:
-    worker: str = read("render.yaml").split("    name: workshop-worker\n", 1)[1]
+@pytest.mark.parametrize("worker_name", ["workshop-worker", "workshop-batch-worker"])
+def test_the_render_workers_copy_the_api_values(worker_name: str) -> None:
+    worker: str = read("render.yaml").split(f"    name: {worker_name}\n", 1)[1]
     worker = worker.split("\n  - type: ", 1)[0]
 
     copies: list[tuple[str, str, str]] = re.findall(

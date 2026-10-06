@@ -15,6 +15,9 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.schemas.domain.bookings import LeadDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import ConversationDocument
@@ -35,7 +38,9 @@ from app.schemas.typings.inbox.prefixed_id import ConversationNoteId
 from app.schemas.typings.users.prefixed_id import UserId
 
 
-class ConversationTeamRepoContract(RepoContract, Protocol):
+class ConversationTeamRepoContract(
+    BusinessDocumentPagesContract[ConversationDocument], RepoContract, Protocol
+):
     """The team side of conversations (the same collection as the feed's)."""
 
     def get(

@@ -19,6 +19,7 @@ from app.schemas.typings.deliveries.constrained_integers import (
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.deliveries.strings import InboundErrorText, InboundPayloadText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 
 
@@ -70,9 +71,14 @@ class InboundEventDocument(BaseDocument):
     Version 5: `customer_channel_user_id`, the sender of the customer
     message kept beside it (filled from it when missing, so older rows read
     the same), for erasure to find a customer's events by an index.
+
+    Version 6: `holder_job_id`, the queued job that last took the event
+    (optional). The queue runs a job in one place at a time, so a later
+    attempt of that same job (its worker died) takes the event over at
+    once instead of waiting out the processing lease.
     """
 
-    schema_version: SchemaVersion = SchemaVersion("5")
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind
@@ -92,6 +98,7 @@ class InboundEventDocument(BaseDocument):
     processed_at: Microseconds | None = None
     handoff_requested_at: Microseconds | None = None
     customer_channel_user_id: ChannelUserId | None = None
+    holder_job_id: QueuedJobId | None = None
 
     @model_validator(mode="after")
     def copy_customer_sender(self) -> Self:

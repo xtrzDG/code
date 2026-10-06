@@ -8,6 +8,9 @@ not change stored state until it is saved.
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.contracts.repositories.conversation_listing_contracts import (
     AuditLogListingContract,
 )
@@ -15,7 +18,12 @@ from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDo
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 
 
-class AuditLogRepoContract(AuditLogListingContract, RepoContract, Protocol):
+class AuditLogRepoContract(
+    AuditLogListingContract,
+    BusinessDocumentPagesContract[AuditLogEntryDocument],
+    RepoContract,
+    Protocol,
+):
     def append(self, entry: AuditLogEntryDocument) -> None:
         """
         Store a new entry. Entries are never deleted; the one change ever

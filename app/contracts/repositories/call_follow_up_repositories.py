@@ -10,6 +10,9 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.dto.paging import KeysetSlice
@@ -22,7 +25,9 @@ from app.schemas.typings.storage.constrained_integers import DocumentCount
 type MissedCallChange = Callable[[MissedCallDocument], MissedCallDocument | None]
 
 
-class MissedCallRepoContract(RepoContract, Protocol):
+class MissedCallRepoContract(
+    BusinessDocumentPagesContract[MissedCallDocument], RepoContract, Protocol
+):
     def insert_if_new(self, missed_call: MissedCallDocument) -> IsDocumentInserted:
         """
         Store a missed call unless one with its id exists (atomic, also

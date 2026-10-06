@@ -9,7 +9,7 @@ job is written to the audit log.
 from base_pydantic_schemas import ImmutableDTO
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.jobs import JobLane, QueuedJobStatus
+from app.schemas.constants.jobs import JobDeathReason, JobLane, QueuedJobStatus
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.prefixed_id import AuditLogEntryId
@@ -35,7 +35,9 @@ class QueuedJobView(ImmutableDTO):
     One queued job as the platform admin sees it (no payload).
 
     `lease_until` is set while a worker runs the job; `last_error` is the
-    error of the latest failed attempt.
+    error of the latest failed attempt; `dead_reason` says why a DEAD job
+    died (its attempts failed, it took its worker process down twice in a
+    row, or no handler knows it).
     """
 
     id: QueuedJobId
@@ -47,6 +49,7 @@ class QueuedJobView(ImmutableDTO):
     run_at: Microseconds
     lease_until: Microseconds | None = None
     last_error: JobErrorText | None = None
+    dead_reason: JobDeathReason | None = None
     created_at: Microseconds
     updated_at: Microseconds
 

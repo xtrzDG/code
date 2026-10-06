@@ -1,5 +1,6 @@
 """S3-compatible object storage (the EU bucket of call recordings)."""
 
+from collections.abc import Iterable
 from typing import Protocol
 
 from app.contracts.client_contract import ClientContract
@@ -14,6 +15,17 @@ class ObjectStorageClientContract(ClientContract, Protocol):
 
     def put_object(self, key: RecordingStoragePath, body: bytes) -> None:
         """Store the object (replacing one with the same key)."""
+        raise NotImplementedError
+
+    def put_object_parts(
+        self, key: RecordingStoragePath, parts: Iterable[bytes]
+    ) -> None:
+        """
+        Store an object given as consecutive parts (each but the last at
+        least 5 MiB), held one at a time: one PUT when there is a single
+        part, a multipart upload otherwise (aborted when a part fails, so no
+        half object stays).
+        """
         raise NotImplementedError
 
     def get_object_range(

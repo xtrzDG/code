@@ -98,27 +98,56 @@ EXTEND_LEASES: sql.Composed = sql.SQL(
     """
 ).format(table=QUEUED_JOBS_TABLE)
 
-# Reaper: running jobs whose lease ended go back to pending (due now), or
-# die after their last attempt.
+# Reaper: running jobs whose lease ended count one more lost lease and go
+# back to pending (due now); they die when their worker died with them
+# `max_lost_leases` times in a row (process_died), or after their last
+# attempt (attempts_exhausted). Rows written before `lost_leases` existed
+# count from 0.
 RELEASE_EXPIRED_LEASES: sql.Composed = sql.SQL(
     """
+    with expired as (
+        select
+            jobs.document_key,
+            coalesce((jobs.document ->> 'lost_leases')::integer, 0) + 1
+                as lost_leases,
+            (jobs.document ->> 'attempts')::integer as attempts
+        from {table} as jobs
+        where jobs.document ->> 'status' = 'running'
+          and (jobs.document ->> 'lease_until')::bigint < %(now)s
+        for update of jobs
+    ),
+    decided as (
+        select
+            expired.document_key,
+            expired.lost_leases,
+            case
+                when expired.lost_leases >= %(max_lost_leases)s
+                then 'process_died'
+                when expired.attempts >= %(max_attempts)s
+                then 'attempts_exhausted'
+            end as dead_reason
+        from expired
+    )
     update {table} as jobs
     set document = jobs.document || jsonb_build_object(
             'status',
-            case
-                when (jobs.document ->> 'attempts')::integer >= %(max_attempts)s
-                then 'dead'
-                else 'pending'
-            end,
+            case when decided.dead_reason is null then 'pending' else 'dead' end,
+            'dead_reason', decided.dead_reason,
+            'lost_leases', decided.lost_leases,
             'run_at', %(now)s::bigint,
             'lease_until', null,
             'lease_token', null,
-            'last_error', %(error_text)s::text,
+            'last_error',
+            case
+                when decided.dead_reason = 'process_died'
+                then %(process_died_text)s::text
+                else %(error_text)s::text
+            end,
             'updated_at', %(now)s::bigint
         ),
         updated_at = %(now)s
-    where jobs.document ->> 'status' = 'running'
-      and (jobs.document ->> 'lease_until')::bigint < %(now)s
+    from decided
+    where jobs.document_key = decided.document_key
     returning jobs.document::text
     """
 ).format(table=QUEUED_JOBS_TABLE)
