@@ -4,9 +4,11 @@ text catalog (`app/registries/localization/texts/<language>.json`).
 
 The cabinet shows Georgian, Russian, English, Hebrew and German
 (CABINET_LANGUAGES); a plan, a niche question, a staff alert, a forwarding
-step or an invoice line in English inside a Hebrew cabinet is the defect
+step or a billing notice in English inside a Hebrew cabinet is the defect
 this policy prevents. English stays the only fallback, for a language
-added to the cabinet before its catalog file.
+added to the cabinet before its catalog file. Issued invoices and receipts
+are the exception the other way round: they are kept as printed, so they
+carry reviewed languages only and a language of drafts reads English.
 
 Owner texts are not written as literals in code: the modules that hold
 them (owner_text_sources.OWNER_TEXT_MODULES and the niche templates) read
@@ -16,13 +18,16 @@ the catalog, so a translator edits one file per language.
 import ast
 from pathlib import Path
 
-from app.schemas.constants.localization import CABINET_LANGUAGES
+from app.schemas.constants.localization import CABINET_LANGUAGES, TextReviewStatus
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.utilities.localization.owner_texts import OWNER_TEXT_CATALOG
 from tests.architecture_policy.owner_text_sources import (
     CUSTOMER_TEXT_NAMES,
+    ISSUED_DOCUMENT_MODULES,
     OWNER_TEXT_MODULES,
-    owner_facing_texts,
+    cabinet_language_texts,
+    issued_document_texts,
 )
 
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
@@ -49,7 +54,7 @@ def missing_languages(text: LocalizedText) -> list[str]:
 
 
 def test_every_owner_facing_text_covers_the_cabinet_languages() -> None:
-    texts: list[LocalizedText] = owner_facing_texts()
+    texts: list[LocalizedText] = cabinet_language_texts()
     gaps: list[str] = [
         f"{text.values[LanguageTag('en')][:60]!r}: {missing_languages(text)}"
         for text in texts
@@ -58,6 +63,21 @@ def test_every_owner_facing_text_covers_the_cabinet_languages() -> None:
 
     assert len(texts) > 500
     assert gaps == [], "Owner texts without every cabinet language:\n" + "\n".join(gaps)
+
+
+def test_issued_documents_carry_reviewed_languages_only() -> None:
+    reviewed: set[LanguageTag] = {
+        LanguageTag(language.value)
+        for language, catalog_file in OWNER_TEXT_CATALOG.files.items()
+        if catalog_file.review_status is TextReviewStatus.REVIEWED
+    }
+    texts: list[LocalizedText] = issued_document_texts()
+
+    assert len(texts) > 40
+    for text in texts:
+        assert LanguageTag("en") in text.values
+        assert set(text.values) <= reviewed, text.values[LanguageTag("en")]
+    assert {language for text in texts for language in text.values} == reviewed
 
 
 def literal_text_lines(path: Path) -> list[int]:
@@ -95,7 +115,7 @@ def is_string_literal(value: ast.expr) -> bool:
 def owner_text_paths() -> list[Path]:
     paths: list[Path] = [
         PROJECT_ROOT / (module.replace(".", "/") + ".py")
-        for module in OWNER_TEXT_MODULES
+        for module in (*OWNER_TEXT_MODULES, *ISSUED_DOCUMENT_MODULES)
     ]
     paths.extend(
         path

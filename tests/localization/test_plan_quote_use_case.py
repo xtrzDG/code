@@ -87,7 +87,9 @@ def test_georgian_quotes_come_from_the_lari_price_book() -> None:
     [
         ("ru", "Голос + чат", "175,00\xa0€"),
         ("en", "Voice + chat", "€175.00"),
-        ("de", "Voice + chat", "175,00\xa0€"),
+        ("de", "Sprache + Chat", "175,00\xa0€"),
+        ("he", "קול + צ'אט", "\u200f175.00\xa0\u200f€"),
+        ("fr", "Voice + chat", "175,00\xa0€"),
     ],
 )
 def test_quotes_are_rendered_in_the_display_language(
@@ -104,6 +106,23 @@ def test_quotes_are_rendered_in_the_display_language(
 
     assert voice.name == expected_name
     assert voice.monthly_price.text == expected_monthly_text
+
+
+def test_the_plan_catalog_renders_in_hebrew() -> None:
+    quote_list = build_quote_plans_use_case().run(
+        PlanQuoteRequest(
+            country_code=CountryCode("IL"), display_language=LanguageTag("he")
+        )
+    )
+
+    assert [str(quote.name) for quote in quote_list.quotes] == [
+        "צ'אט",
+        "קול + צ'אט",
+        "פלוס",
+    ]
+    for quote in quote_list.quotes:
+        assert any("\u0590" <= letter <= "\u05ff" for letter in str(quote.description))
+        assert "Voice" not in str(quote.description)
 
 
 def test_without_a_dollar_rate_usa_quotes_never_invent_a_dollar_price() -> None:

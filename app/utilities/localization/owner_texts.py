@@ -13,7 +13,7 @@ cabinet languages) so a LocalizedText reads the same in every process.
 
 from pathlib import Path
 
-from app.schemas.constants.localization import CabinetLanguage
+from app.schemas.constants.localization import CabinetLanguage, TextReviewStatus
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.text_catalog import TextCatalog, TextCatalogFile
 from app.schemas.typings.localization.constrained_strings import (
@@ -59,6 +59,33 @@ def owner_text(key: str, catalog: TextCatalog = OWNER_TEXT_CATALOG) -> Localized
             if text_key in catalog.files[language].texts
         }
     )
+
+
+def reviewed_owner_text(
+    key: str, catalog: TextCatalog = OWNER_TEXT_CATALOG
+) -> LocalizedText:
+    """
+    The catalog text of a key in the languages whose text a native speaker
+    reviewed (no file of drafts, no draft key): the wording of issued
+    invoices and receipts, which are kept as printed, so a draft never
+    reaches one and those languages read English until it is reviewed.
+
+    Raises:
+        TextCatalogError: en.json has no such key.
+    """
+
+    text_key: OwnerTextKey = require_key(OwnerTextKey(key), catalog)
+    values: dict[LanguageTag, LocalizedTextValue] = {}
+    for language in VALUE_ORDER:
+        catalog_file: TextCatalogFile = catalog.files[language]
+        if (
+            text_key in catalog_file.texts
+            and catalog_file.review_status is TextReviewStatus.REVIEWED
+            and text_key not in catalog_file.draft_keys
+        ):
+            values[LanguageTag(language.value)] = catalog_file.texts[text_key]
+
+    return LocalizedText(values=values)
 
 
 def has_owner_text(key: str, catalog: TextCatalog = OWNER_TEXT_CATALOG) -> bool:

@@ -50,7 +50,16 @@ def test_staff_booking_notifications_in_staff_languages() -> None:
         "არხი: Instagram\n"
         "შენიშვნა: Birthday cake"
     )
-    assert str(new_booking.transform(staff_input("de"))).startswith(
+    assert str(new_booking.transform(staff_input("de"))) == (
+        "Neue Buchung · Salobie Bia\n"
+        "Dienstag, 6. Oktober 2026, 19:30–21:30 · Table 4\n"
+        "Name: Nino Kapanadze\n"
+        "Telefon: +995 555 12 34 56\n"
+        "Gäste: 5\n"
+        "Kanal: Instagram"
+    )
+    # A language outside the cabinet reads English.
+    assert str(new_booking.transform(staff_input("fr"))).startswith(
         "New booking · Salobie Bia\nTuesday, October 6, 2026, 19:30–21:30"
     )
     assert str(

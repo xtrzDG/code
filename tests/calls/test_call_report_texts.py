@@ -84,7 +84,17 @@ class TestSummaryText:
         [
             ("ru", "Итог звонка · Funicular VR", "Итог: принята заявка"),
             ("ka", "ზარის შეჯამება · Funicular VR", "შედეგი: მოთხოვნა მიღებულია"),
-            ("de", "Call summary · Funicular VR", "Result: request taken"),
+            (
+                "de",
+                "Anrufzusammenfassung · Funicular VR",
+                "Ergebnis: Anfrage aufgenommen",
+            ),
+            (
+                "he",
+                "סיכום שיחה · \u2068Funicular VR\u2069",
+                "תוצאה: \u2068התקבלה פנייה\u2069",
+            ),
+            ("fr", "Call summary · Funicular VR", "Result: request taken"),
         ],
     )
     def test_in_the_recipients_language(

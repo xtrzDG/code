@@ -1,14 +1,12 @@
 """
-Owner-facing billing texts in English, Russian and Georgian.
-
-Tax rule of the concept: invoices name a service ("call and message
-handling service"), never a "license" or a "consultation". Placeholders in
-braces are filled by the billing transformers.
+Owner-facing billing notices in every cabinet language (the owner text
+catalog), and how a billing text picks its language and fills its
+placeholders. The wording of invoice lines is in invoice_wording_texts.
 """
 
 import re
 
-from app.schemas.constants.billing import BillingNoticeKind, BillingPeriod
+from app.schemas.constants.billing import BillingNoticeKind
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.localization.language_tags import split_language_tag_text
@@ -16,17 +14,6 @@ from app.utilities.localization.owner_texts import owner_text
 
 FALLBACK_LANGUAGE_TAG: LanguageTag = LanguageTag("en")
 PLACEHOLDER_PATTERN: re.Pattern[str] = re.compile(r"\{([a-z_]+)\}")
-
-SERVICE_NAME: LocalizedText = owner_text("billing.texts.service_name")
-SETUP_FEE_LINE: LocalizedText = owner_text("billing.texts.setup_fee_line")
-USAGE_OVERAGE_LINE: LocalizedText = owner_text("billing.texts.usage_overage_line")
-SERVICE_PERIOD_LINE: LocalizedText = owner_text("billing.texts.service_period_line")
-# A month of a seasonal pause names this instead of its billing period.
-PAUSE_PERIOD_NAME: LocalizedText = owner_text("billing.texts.pause_period_name")
-BILLING_PERIOD_NAMES: dict[BillingPeriod, LocalizedText] = {
-    BillingPeriod.MONTHLY: owner_text("billing.texts.billing_period_names.monthly"),
-    BillingPeriod.ANNUAL: owner_text("billing.texts.billing_period_names.annual"),
-}
 
 NOTICE_TEXTS: dict[BillingNoticeKind, LocalizedText] = {
     BillingNoticeKind.PAYMENT_FAILED: owner_text(

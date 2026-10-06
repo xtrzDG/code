@@ -22,12 +22,16 @@ def test_catalog_lists_all_niches_in_the_requested_language() -> None:
     hebrew = harness.list_niche_templates.run(
         NicheCatalogQuery(language=LanguageTag("he"))
     )
+    french = harness.list_niche_templates.run(
+        NicheCatalogQuery(language=LanguageTag("fr"))
+    )
 
     assert len(russian.niches) == 16
     assert russian.niches[0].name == "Рестораны и кафе"
     assert fallback.language == "en"
     assert fallback.niches[0].name == "Restaurants and cafes"
-    assert hebrew.niches[0].name == "Restaurants and cafes"
+    assert hebrew.niches[0].name == "מסעדות ובתי קפה"
+    assert french.niches[0].name == "Restaurants and cafes"
 
 
 def test_catalog_carries_each_niches_typical_check_in_euro() -> None:

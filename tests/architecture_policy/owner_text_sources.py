@@ -1,7 +1,8 @@
 """
 Where owner-facing catalog texts live, for the policy test and the catalog
 tests: the plan catalog, the niche templates, the call forwarding guides,
-the staff notification texts and the billing texts.
+the staff notification texts and the billing texts, and apart from them
+the wording of issued invoices and receipts (reviewed languages only).
 
 Customer-facing texts (the confirmations, reminders and replies customers
 read, in any of the widget's languages) are not owner texts: they live
@@ -41,9 +42,14 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.transformers.notifications.staff_alert_texts",
     "app.transformers.notifications.value_digest_texts",
     "app.transformers.billing.billing_texts",
+    "app.utilities.billing.win_back_texts",
+)
+# Modules whose texts are printed on issued invoices and receipts: they
+# carry reviewed languages only (a draft would stay on a kept document).
+ISSUED_DOCUMENT_MODULES: tuple[str, ...] = (
+    "app.transformers.billing.invoice_wording_texts",
     "app.transformers.invoicing.billing_document_texts",
     "app.transformers.invoicing.invoice_line_texts_transformer",
-    "app.utilities.billing.win_back_texts",
 )
 # Texts in owner modules that customers read (in their own language).
 CUSTOMER_TEXT_NAMES: dict[str, str] = {
@@ -83,8 +89,8 @@ def module_texts(module_name: str) -> list[LocalizedText]:
     return found
 
 
-def owner_facing_texts() -> list[LocalizedText]:
-    """Every owner-facing catalog text, as the running service builds it."""
+def cabinet_language_texts() -> list[LocalizedText]:
+    """Owner texts shown in every cabinet language, as the service builds them."""
 
     found: list[LocalizedText] = []
     for module_name in OWNER_TEXT_MODULES:
@@ -96,3 +102,19 @@ def owner_facing_texts() -> list[LocalizedText]:
         collect_texts(guides.get(country_code), found)
 
     return found
+
+
+def issued_document_texts() -> list[LocalizedText]:
+    """The wording of issued invoices and receipts."""
+
+    found: list[LocalizedText] = []
+    for module_name in ISSUED_DOCUMENT_MODULES:
+        found.extend(module_texts(module_name))
+
+    return found
+
+
+def owner_facing_texts() -> list[LocalizedText]:
+    """Every owner-facing catalog text, as the running service builds it."""
+
+    return cabinet_language_texts() + issued_document_texts()

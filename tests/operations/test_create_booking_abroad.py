@@ -146,5 +146,7 @@ def test_hebrew_confirmation_isolates_latin_values() -> None:
     assert "אושרה" in text
     assert f"{FIRST_STRONG_ISOLATE}Noa Levi{POP_DIRECTIONAL_ISOLATE}" in text
     assert f"{FIRST_STRONG_ISOLATE}10:30{POP_DIRECTIONAL_ISOLATE}" in text
-    # The manager reads Hebrew, which staff texts do not have yet: English.
-    assert str(world.notifier.sent[0][1]).startswith("New booking")
+    # The manager reads Hebrew too, with the Latin name isolated.
+    assert str(world.notifier.sent[0][1]).startswith(
+        f"הזמנה חדשה · {FIRST_STRONG_ISOLATE}Tel Aviv Smile{POP_DIRECTIONAL_ISOLATE}"
+    )

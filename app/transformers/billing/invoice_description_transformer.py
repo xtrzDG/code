@@ -10,14 +10,16 @@ from app.schemas.dto.billing_ledger import InvoiceDescriptionInput
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.billing.billing_texts import (
+    fill_placeholders,
+    select_text_language,
+)
+from app.transformers.billing.invoice_wording_texts import (
     BILLING_PERIOD_NAMES,
     PAUSE_PERIOD_NAME,
     SERVICE_NAME,
     SERVICE_PERIOD_LINE,
     SETUP_FEE_LINE,
     USAGE_OVERAGE_LINE,
-    fill_placeholders,
-    select_text_language,
 )
 from app.utilities.billing.billing_periods import to_local_datetime
 from app.utilities.localization.babel_locales import require_babel_locale
