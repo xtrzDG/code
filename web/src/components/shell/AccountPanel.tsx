@@ -99,11 +99,11 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
         <div className="min-w-0">
           <p className="text-xs text-ink-subtle">{t("account.signedInAs")}</p>
           <p className="truncate text-sm font-semibold text-ink" title={name} data-user-content>
-            {name}
+            <bdi>{name}</bdi>
           </p>
           {contact && contact !== name ? (
             <p className="truncate text-xs text-ink-muted" data-user-content>
-              {contact}
+              <bdi dir="ltr">{contact}</bdi>
             </p>
           ) : null}
         </div>

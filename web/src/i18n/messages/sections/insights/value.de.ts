@@ -19,7 +19,7 @@ export const valueDe: Translation<typeof valueEn> = {
     afterHoursHint: "Gespräche, während Sie geschlossen hatten",
     hoursSaved: { one: "~{count} Arbeitsstunde gespart", other: "~{count} Arbeitsstunden gespart" },
     minutesSaved: { one: "~{count} Arbeitsminute gespart", other: "~{count} Arbeitsminuten gespart" },
-    savedHint: "{replies} Antworten geschrieben und {calls} Anrufe angenommen, für Sie",
+    savedHint: "Für Sie geschriebene Antworten: {replies}, angenommene Anrufe: {calls}",
     conversations: { one: "{count} Gespräch", other: "{count} Gespräche" },
     conversationsHint: "Kunden, die geschrieben oder angerufen haben",
     returnMultiple: "≈ das {multiple}-Fache Ihres Tarifpreises",

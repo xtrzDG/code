@@ -19,7 +19,7 @@ export const valueHe: Translation<typeof valueEn> = {
     afterHoursHint: "שיחות כשהייתם סגורים",
     hoursSaved: { one: "~שעת צוות אחת נחסכה", other: "~{count} שעות צוות נחסכו" },
     minutesSaved: { one: "~דקת צוות אחת נחסכה", other: "~{count} דקות צוות נחסכו" },
-    savedHint: "{replies} תשובות נכתבו ו-{calls} שיחות טלפון נענו בשבילכם",
+    savedHint: "תשובות שנכתבו בשבילכם: {replies}, שיחות טלפון שנענו: {calls}",
     conversations: { one: "שיחה אחת", other: "{count} שיחות" },
     conversationsHint: "לקוחות שכתבו או התקשרו",
     returnMultiple: "≈ פי {multiple} ממחיר המסלול שלכם",
