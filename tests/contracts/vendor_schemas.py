@@ -12,7 +12,8 @@ import json
 from typing import Any, cast
 
 from jsonschema import Draft202012Validator
-from jsonschema.exceptions import ValidationError, best_match
+from jsonschema.exceptions import ValidationError
+from jsonschema.protocols import Validator
 
 from tests.contracts.contract_files import SPECS_DIRECTORY
 from tests.contracts.schema_closure import JsonObject, closed_definitions
@@ -27,7 +28,7 @@ def load_spec(file_name: str) -> JsonObject:
 
 
 @functools.cache
-def spec_validator(file_name: str, root: str, closed: bool) -> Draft202012Validator:
+def spec_validator(file_name: str, root: str, closed: bool) -> Validator:
     spec: JsonObject = load_spec(file_name)
     roots: JsonObject = cast(JsonObject, spec["x-roots"])
     if root not in roots:
@@ -48,21 +49,29 @@ def validation_problems(
 ) -> list[str]:
     """Readable problems of the instance (empty when it matches)."""
 
-    validator: Draft202012Validator = spec_validator(file_name, root, closed)
+    validator: Validator = spec_validator(file_name, root, closed)
     errors: list[ValidationError] = list(validator.iter_errors(instance))
     if not errors:
         return []
 
-    best: ValidationError | None = best_match(errors)
+    # Inside an anyOf the branches' own errors say what is wrong; the
+    # deepest first.
     ranked: list[ValidationError] = sorted(
-        errors, key=lambda error: -len(list(error.absolute_path))
+        (leaf for error in errors for leaf in innermost(error)),
+        key=lambda error: -len(error.absolute_path),
     )
-    chosen: list[ValidationError] = ([best] if best is not None else []) + ranked
     return [
         f"at /{'/'.join(str(part) for part in error.absolute_path)}: "
         f"{error.message[:300]}"
-        for error in chosen[:MAX_REPORTED_ERRORS]
+        for error in ranked[:MAX_REPORTED_ERRORS]
     ]
+
+
+def innermost(error: ValidationError) -> list[ValidationError]:
+    if not error.context:
+        return [error]
+
+    return [leaf for child in error.context for leaf in innermost(child)]
 
 
 def assert_inbound(instance: Any, file_name: str, root: str) -> None:

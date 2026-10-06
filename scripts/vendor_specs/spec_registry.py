@@ -142,6 +142,60 @@ ANTHROPIC_SPEC = VendorSpec(
     ),
 )
 
+ELEVENLABS_TYPES: str = "python:elevenlabs.types"
+ELEVENLABS_AGENTS: str = "python-body:elevenlabs.conversational_ai.agents.raw_client"
+ELEVENLABS_SPEC = VendorSpec(
+    file_name="elevenlabs_agents_api.json",
+    provider="elevenlabs",
+    title="ElevenLabs Agents Platform (types of the Fern-generated Python SDK)",
+    source_url="https://github.com/elevenlabs/elevenlabs-python",
+    document_format=DocumentFormat.PYTHON_SDK,
+    roots=(
+        SchemaRoot(
+            "request:agents.create", f"{ELEVENLABS_AGENTS}:RawAgentsClient.create"
+        ),
+        SchemaRoot(
+            "request:agents.update", f"{ELEVENLABS_AGENTS}:RawAgentsClient.update"
+        ),
+        SchemaRoot(
+            "response:agents.create",
+            f"{ELEVENLABS_TYPES}.create_agent_response_model:CreateAgentResponseModel",
+        ),
+        SchemaRoot(
+            "request:tools.create",
+            f"{ELEVENLABS_TYPES}.tool_request_model:ToolRequestModel",
+        ),
+        SchemaRoot(
+            "response:tools.create",
+            f"{ELEVENLABS_TYPES}.tool_response_model:ToolResponseModel",
+        ),
+        # The answer of the conversation-initiation webhook.
+        SchemaRoot(
+            "ConversationInitiationClientData",
+            f"{ELEVENLABS_TYPES}.conversation_initiation_client_data_request_input:"
+            "ConversationInitiationClientDataRequestInput",
+        ),
+        # `data` of a post-call transcription webhook: the conversation as
+        # GET /v1/convai/conversations/{id} answers it.
+        SchemaRoot(
+            "Conversation",
+            f"{ELEVENLABS_TYPES}.get_conversation_response_model:"
+            "GetConversationResponseModel",
+        ),
+    ),
+    patches=(
+        AddProperty(
+            definition="ConversationInitiationClientData",
+            property_name="type",
+            schema={"const": "conversation_initiation_client_data"},
+            reason=(
+                "the webhook's answer names its type (ElevenLabs' example); the "
+                "SDK type is the WebSocket message, which carries it elsewhere"
+            ),
+        ),
+    ),
+)
+
 GOOGLE_SPEC = VendorSpec(
     file_name="google_calendar_api.json",
     provider="google",
@@ -221,6 +275,7 @@ GENERATED_SPECS: tuple[VendorSpec, ...] = (
     META_SPEC,
     OPENAI_SPEC,
     ANTHROPIC_SPEC,
+    ELEVENLABS_SPEC,
     GOOGLE_SPEC,
     TWILIO_SPEC,
     LANGFUSE_SPEC,

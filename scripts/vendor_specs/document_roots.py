@@ -3,12 +3,9 @@ Finding the roots of a vendored file in its vendor document, and the
 named schemas their references reach (`SchemaRoot.selector`).
 """
 
-import importlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
-
-from pydantic import TypeAdapter
 
 from scripts.vendor_specs.schema_conversion import (
     ReferenceResolver,
@@ -16,6 +13,7 @@ from scripts.vendor_specs.schema_conversion import (
     discovery_reference,
     openapi_reference,
 )
+from scripts.vendor_specs.sdk_types import sdk_roots
 from scripts.vendor_specs.spec_model import (
     DocumentFormat,
     JsonObject,
@@ -110,23 +108,7 @@ def discovery_schemas(
 def sdk_schemas(roots: tuple[SchemaRoot, ...]) -> DocumentSchemas:
     """Roots from the SDK's types; pydantic names their shared parts."""
 
-    raw_roots: dict[str, JsonValue] = {}
-    components: dict[str, JsonValue] = {}
-    for root in roots:
-        _, module_name, type_name = root.selector.split(":")
-        sdk_type: object = getattr(importlib.import_module(module_name), type_name)
-        schema: JsonObject = TypeAdapter(sdk_type).json_schema(
-            ref_template="#/$defs/{model}"
-        )
-        for name, definition in child(schema, "$defs").items():
-            if components.get(name, definition) != definition:
-                raise SelectorError(f"{name} differs between the SDK's types.")
-            components[name] = definition
-
-        raw_roots[root.name] = {
-            key: value for key, value in schema.items() if key != "$defs"
-        }
-
+    raw_roots, components = sdk_roots(roots)
     return DocumentSchemas(
         roots=raw_roots,
         components=components,

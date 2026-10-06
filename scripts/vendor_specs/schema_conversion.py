@@ -158,8 +158,12 @@ def normalize_keywords(schema: JsonObject, is_nullable: bool) -> JsonObject:
     members: object = schema.get("allOf")
     if isinstance(members, list):
         for member in cast(list[object], members):
-            if isinstance(member, dict) and member.get("additionalProperties") is False:
-                del cast(JsonObject, member)["additionalProperties"]
+            if not isinstance(member, dict):
+                continue
+
+            closed_member: JsonObject = cast(JsonObject, member)
+            if closed_member.get("additionalProperties") is False:
+                del closed_member["additionalProperties"]
                 schema["unevaluatedProperties"] = False
 
     if not is_nullable:

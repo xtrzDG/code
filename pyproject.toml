@@ -39,6 +39,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "bandit>=1.9.4",
+    "elevenlabs>=2.71",
     "flask>=3.1",
     "flask-cors>=6.0",
     "hypothesis>=6.140",

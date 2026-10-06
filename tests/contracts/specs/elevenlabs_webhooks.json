@@ -1,0 +1,205 @@
+{
+ "$comment": "Written from the ElevenLabs Agents Platform webhook pages; the SDK has no types for the webhook envelopes. The data of a post_call_transcription event is the conversation as GET /v1/convai/conversations/{id} answers it: elevenlabs_agents_api.json, root Conversation. Review against the pages in x-vendor.docs when ElevenLabs announces webhook changes.",
+ "$defs": {
+  "CallInitiationFailure": {
+   "properties": {
+    "agent_id": {
+     "type": "string"
+    },
+    "conversation_id": {
+     "type": "string"
+    },
+    "failure_reason": {
+     "enum": [
+      "busy",
+      "no-answer",
+      "unknown"
+     ],
+     "type": "string"
+    },
+    "metadata": {
+     "anyOf": [
+      {
+       "properties": {
+        "body": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "type": "object"
+        },
+        "type": {
+         "const": "twilio"
+        }
+       },
+       "required": [
+        "type",
+        "body"
+       ],
+       "type": "object"
+      },
+      {
+       "properties": {
+        "body": {
+         "type": "object"
+        },
+        "type": {
+         "const": "sip"
+        }
+       },
+       "required": [
+        "type",
+        "body"
+       ],
+       "type": "object"
+      }
+     ]
+    }
+   },
+   "required": [
+    "agent_id",
+    "conversation_id",
+    "failure_reason"
+   ],
+   "type": "object"
+  },
+  "ConversationInitiationRequest": {
+   "properties": {
+    "agent_id": {
+     "type": "string"
+    },
+    "call_sid": {
+     "type": "string"
+    },
+    "called_number": {
+     "type": "string"
+    },
+    "caller_id": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "caller_id",
+    "agent_id",
+    "called_number",
+    "call_sid"
+   ],
+   "type": "object"
+  },
+  "PostCallAudio": {
+   "properties": {
+    "agent_id": {
+     "type": "string"
+    },
+    "conversation_id": {
+     "type": "string"
+    },
+    "full_audio": {
+     "contentEncoding": "base64",
+     "type": "string"
+    }
+   },
+   "required": [
+    "agent_id",
+    "conversation_id",
+    "full_audio"
+   ],
+   "type": "object"
+  },
+  "PostCallWebhook": {
+   "anyOf": [
+    {
+     "properties": {
+      "data": {
+       "properties": {
+        "agent_id": {
+         "type": "string"
+        },
+        "conversation_id": {
+         "type": "string"
+        },
+        "metadata": {
+         "type": "object"
+        },
+        "transcript": {
+         "type": "array"
+        }
+       },
+       "required": [
+        "agent_id",
+        "conversation_id",
+        "transcript",
+        "metadata"
+       ],
+       "type": "object"
+      },
+      "event_timestamp": {
+       "type": "integer"
+      },
+      "type": {
+       "const": "post_call_transcription"
+      }
+     },
+     "required": [
+      "type",
+      "event_timestamp",
+      "data"
+     ],
+     "type": "object"
+    },
+    {
+     "properties": {
+      "data": {
+       "$ref": "#/$defs/PostCallAudio"
+      },
+      "event_timestamp": {
+       "type": "integer"
+      },
+      "type": {
+       "const": "post_call_audio"
+      }
+     },
+     "required": [
+      "type",
+      "event_timestamp",
+      "data"
+     ],
+     "type": "object"
+    },
+    {
+     "properties": {
+      "data": {
+       "$ref": "#/$defs/CallInitiationFailure"
+      },
+      "event_timestamp": {
+       "type": "integer"
+      },
+      "type": {
+       "const": "call_initiation_failure"
+      }
+     },
+     "required": [
+      "type",
+      "event_timestamp",
+      "data"
+     ],
+     "type": "object"
+    }
+   ]
+  }
+ },
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "x-roots": {
+  "ConversationInitiationRequest": "the body of the conversation-initiation (personalization) webhook for phone calls",
+  "PostCallWebhook": "post-call webhooks: transcription, audio, call initiation failure"
+ },
+ "x-vendor": {
+  "docs": [
+   "https://elevenlabs.io/docs/agents-platform/workflows/post-call-webhooks",
+   "https://elevenlabs.io/docs/agents-platform/customization/personalization/twilio-personalization",
+   "https://elevenlabs.io/docs/agents-platform/customization/tools/server-tools"
+  ],
+  "kind": "documented",
+  "provider": "elevenlabs",
+  "title": "ElevenLabs Agents Platform webhooks"
+ }
+}

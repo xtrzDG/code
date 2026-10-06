@@ -13,7 +13,8 @@ class DocumentFormat(StrEnum):
     OPENAPI = "openapi"
     GOOGLE_DISCOVERY = "google-discovery"
     # The types of an installed SDK the vendor generates from its own
-    # specification (Stainless for Anthropic): read with pydantic.
+    # specification (Stainless for Anthropic, Fern for ElevenLabs): read
+    # with pydantic.
     PYTHON_SDK = "python-sdk"
 
 
@@ -27,7 +28,9 @@ class SchemaRoot:
     - "request:<METHOD> <path>": an operation's request body (JSON first,
       then form fields);
     - "response:<METHOD> <path> <status>": an operation's JSON response;
-    - "python:<module>:<type>": a type of an installed SDK.
+    - "python:<module>:<type>": a type of an installed SDK;
+    - "python-body:<module>:<Class>.<method>": the JSON body an SDK
+      method sends (`sdk_types`).
     """
 
     name: str
