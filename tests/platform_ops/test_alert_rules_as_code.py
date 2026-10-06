@@ -30,6 +30,8 @@ REQUIRED_FIELDS: frozenset[str] = frozenset(
         "runbook",
     }
 )
+# Only the multi-window burn-rate rules have a second window.
+OPTIONAL_FIELDS: frozenset[str] = frozenset({"short_window_minutes"})
 
 
 def read_rule_files() -> dict[str, dict[str, object]]:
@@ -51,7 +53,7 @@ def test_the_code_matches_the_reviewed_rule(code: PlatformAlertCode) -> None:
     written: dict[str, object] = read_rule_files()[code.value]
     rule: PlatformAlertRule = PLATFORM_ALERT_RULES[code]
 
-    assert set(written) == REQUIRED_FIELDS
+    assert REQUIRED_FIELDS <= set(written) <= REQUIRED_FIELDS | OPTIONAL_FIELDS
     assert written["severity"] == rule.severity.value
     assert written["summary"] == str(rule.summary)
     assert written["threshold"] == int(rule.threshold)
@@ -59,6 +61,10 @@ def test_the_code_matches_the_reviewed_rule(code: PlatformAlertCode) -> None:
     assert written["window_minutes"] == int(rule.window_minutes)
     assert written["volume_floor"] == int(rule.volume_floor)
     assert written["runbook"] == str(rule.runbook)
+    short_window = rule.short_window_minutes
+    assert written.get("short_window_minutes") == (
+        None if short_window is None else int(short_window)
+    )
 
 
 def test_every_linked_runbook_exists() -> None:

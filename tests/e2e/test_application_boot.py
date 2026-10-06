@@ -33,6 +33,8 @@ OPTIONAL_PROVIDERS: frozenset[str] = frozenset(
         "adapters.processes.storage_unit_of_work",
         "adapters.storage_read_session",
         "adapters.storage_unit_of_work",
+        # No OTEL_EXPORTER_OTLP_ENDPOINT: no tracer provider, nothing exported.
+        "utilities.tracer_provider",
     }
 )
 

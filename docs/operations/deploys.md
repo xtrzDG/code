@@ -221,6 +221,20 @@ again after the overlap), and an old instance that cancels records no
 reason. The new periodic jobs `run_subscription_pauses` and
 `send_win_back_messages` run only on new workers.
 
+The release with the service levels (W15-METRICS, migration 1163,
+`PlatformAlertStateDocument` version 4) also writes new enum values in the
+release that introduces them, an exception to the enum rule below: the
+alert codes `answer_budget_fast_burn`, `answer_budget_slow_burn`,
+`api_budget_fast_burn` and `api_budget_slow_burn`. Only the
+`platform_alerts` job writes them, each episode stored under its code, and
+every reader asks for the codes it knows by key (the alerts job, the
+system page, the status page), so an old instance never reads one. A
+rollback leaves the four states unread; nothing needs cleaning. The new
+collections (`service_level_slots`, `service_level_hours`) are unknown to
+the old release, which ignores them; during the overlap an old API process
+counts no requests for the availability SLI, so the hour of the deploy
+reads a little low.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

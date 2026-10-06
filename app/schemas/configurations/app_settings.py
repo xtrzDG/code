@@ -14,6 +14,7 @@ from app.schemas.configurations.seller_settings import SellerSettings
 from app.schemas.configurations.session_settings import SessionSettings
 from app.schemas.configurations.spend_guard_settings import SpendGuardSettings
 from app.schemas.configurations.support_settings import SupportSettings
+from app.schemas.configurations.telemetry_settings import TelemetrySettings
 from app.schemas.constants.assistants import LlmEffort, LlmProvider
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.jobs import JobLane
@@ -95,10 +96,7 @@ from app.schemas.typings.users.constrained_integers import (
     OtpVerifyLimit,
     SessionLifetimeSeconds,
 )
-from app.schemas.typings.users.constrained_strings import (
-    EmailAddress,
-    TurnstileSiteKey,
-)
+from app.schemas.typings.users.constrained_strings import EmailAddress, TurnstileSiteKey
 
 
 class AppSettings(ImmutableDTO):
@@ -298,3 +296,4 @@ class AppSettings(ImmutableDTO):
     # Spend limits, call caps, API limits (SPEND_*, CALL_*, API_*, PLATFORM_*).
     spend_guard: SpendGuardSettings = Field(default_factory=SpendGuardSettings)
     growth: GrowthSettings = Field(default_factory=GrowthSettings)
+    telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)

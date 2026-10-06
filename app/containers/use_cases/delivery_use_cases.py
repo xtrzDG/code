@@ -7,6 +7,7 @@ from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.message_media import MessageAttachment
@@ -101,6 +102,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- The inbox: what webhooks store, each event and its job in one
     # transaction.
@@ -113,6 +115,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         wall_clock=time_provider.microsecond_wall_clock,
         unit_of_work=adapters.storage_unit_of_work,
+        metrics=utilities.service_metrics,
     )
     accept_platform_bot_update_use_case: Factory[
         UseCaseContract[PlatformBotWebhookRequest, PlatformBotWebhookOutcome]
@@ -246,6 +249,7 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
         live_events=facilitators.event_publisher,
         delivery_recorder=facilitators.staff_delivery_recorder,
         feedback_request_repo=repositories.feedback_request_repo,
+        metrics=utilities.service_metrics,
     )
     build_undelivered_reply_handoff_use_case: Factory[
         UseCaseContract[OutboundMessageDocument, HandoffCommand | None]

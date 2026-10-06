@@ -1,7 +1,7 @@
 {
   "collection": "queued_jobs",
   "document_type": "QueuedJobDocument",
-  "schema_version": 2,
+  "schema_version": 3,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -107,11 +107,25 @@
       "payload": {
         "type": "string"
       },
+      "request_id": {
+        "anyOf": [
+          {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[\\x20-\\x7e]+$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "run_at": {
         "type": "integer"
       },
       "schema_version": {
-        "default": "2",
+        "default": "3",
         "type": "string"
       },
       "serial_key": {
@@ -138,6 +152,20 @@
           "discarded"
         ],
         "type": "string"
+      },
+      "trace_parent": {
+        "anyOf": [
+          {
+            "maxLength": 55,
+            "minLength": 55,
+            "pattern": "^00-(?!0{32})[0-9a-f]{32}-(?!0{16})[0-9a-f]{16}-[0-9a-f]{2}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "updated_at": {
         "type": "integer"

@@ -315,6 +315,11 @@ _.source_page_url  # app/schemas/dto/menu_import.py
 # HTMLParser calls handle_startendtag for "<br/>"-style tags.
 _.connect_unix_socket  # app/clients/http/vetting_network_backend.py
 _.handle_startendtag  # app/utilities/knowledge/website/html_to_text.py
+# http.server's: the worker's metrics port answers GET in daemon threads
+# and keeps the access log quiet (app/gateways/metrics/worker_metrics_server.py).
+_.daemon_threads  # ThreadingHTTPServer
+_.do_GET  # BaseHTTPRequestHandler
+_.log_message  # BaseHTTPRequestHandler
 # The value of a business, its digests and reports: totals and settings the
 # cabinet shows (dashboard hero, Reports page, digest choices).
 _.assistant_reply_count  # app/schemas/dto/value/value_model.py, domain/value_reports.py
@@ -619,3 +624,17 @@ _.LOOKUP_COLUMNS_WITHOUT_BACKFILL  # app/registries/maintenance/lookup_backfills
 _.is_indexing  # app/schemas/dto/contacts.py, knowledge_admin.py (list pages)
 _.settles_at  # app/schemas/dto/data_tasks.py (RolloutView)
 _.is_gate_open  # app/utilities/storage/release_gates.py (writers of a gated enum value)
+
+# The service levels (W15-METRICS): the hourly row's measured replies are
+# stored for the reviews (docs/operations/slo.md); the error budget card of
+# /admin/system reads the rest (GET /v1/admin/system/error-budget).
+_.measured_replies  # app/schemas/domain/service_levels.py (ServiceLevelHourDocument)
+_.good_events  # app/schemas/dto/service_levels.py (ObjectiveBudgetView)
+_.burn_rate_last_hour_percent  # app/schemas/dto/service_levels.py (ObjectiveBudgetView)
+_.target_ms  # app/schemas/dto/service_levels.py (AnswerLatencyBudgetView)
+_.last_hour_p95_ms  # app/schemas/dto/service_levels.py (AnswerLatencyBudgetView)
+_.hours_over_target  # app/schemas/dto/service_levels.py (AnswerLatencyBudgetView)
+_.measured_hours  # app/schemas/dto/service_levels.py (AnswerLatencyBudgetView)
+_.objectives  # app/schemas/dto/service_levels.py (ErrorBudgetView)
+_.measured_since  # app/schemas/dto/service_levels.py (ErrorBudgetView)
+_.measured_until  # app/schemas/dto/service_levels.py (ErrorBudgetView)

@@ -79,6 +79,24 @@ Spec: `d71f85e1a8235db5`
   page: a column the list reads is still being filled after a deploy, so
   the list may be incomplete for a while.
 
+## 2026-10-06 — service levels and the error budget
+
+Spec: `261b9dca1f9aeb29`
+
+- **Added** `GET /v1/admin/system/error-budget` (platform admins with the
+  operations view): `ErrorBudgetView` with each ratio SLO of the last 28
+  days of hourly rows (`objectives`: `series` `inbound_answered` or
+  `api_availability`, `objective`, `events`, `good_events`,
+  `budget_left_permille` from 1000 down to below 0, and
+  `burn_rate_last_hour_percent`, 100 being the pace that spends the
+  budget in exactly 28 days), the answer latency objective (`latency`:
+  `target_ms`, `last_hour_p95_ms`, `hours_over_target`, `measured_hours`)
+  and the rows' span (`measured_since`, `measured_until`; null before the
+  first row).
+- **Changed** `PlatformAlertCode` (system page alerts) gains
+  `answer_budget_fast_burn`, `answer_budget_slow_burn`,
+  `api_budget_fast_burn` and `api_budget_slow_burn`.
+
 ## 2026-10-06 — wave 15 together: worker resilience, referrals and partners, the waitlist and return visits
 
 Spec: `ce734ea095df4aa1`

@@ -10,6 +10,7 @@ from app.schemas.constants.jobs import (
 )
 from app.schemas.constants.observability import PeriodicJobOutcome
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.observability.constrained_strings import TraceParent
 from app.schemas.typings.platform.constrained_integers import (
     JobAttemptCount,
     LostJobLeaseCount,
@@ -21,6 +22,7 @@ from app.schemas.typings.platform.constrained_strings import (
     JobPeriodKey,
     JobSerialKey,
     ReleaseVersion,
+    RequestId,
     WorkerHostName,
 )
 from app.schemas.typings.platform.prefixed_id import (
@@ -48,9 +50,14 @@ class QueuedJobDocument(BaseDocument):
     second one in a row makes the job DEAD instead of a third attempt, and
     `dead_reason` says why a job is DEAD. Both optional; a recorded result
     (done, retry or dead) sets `lost_leases` back to 0.
+
+    Version 3: `request_id` and `trace_parent` of the code that queued the
+    job (an API request, a job, a periodic run), both optional: the job's
+    log lines carry that request id and its spans continue that trace
+    (webhook -> job -> model -> send).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("2")
+    schema_version: SchemaVersion = SchemaVersion("3")
 
     id: QueuedJobId = Field(default_factory=QueuedJobId)
     name: JobName
@@ -66,6 +73,8 @@ class QueuedJobDocument(BaseDocument):
     last_error: JobErrorText | None = None
     lost_leases: LostJobLeaseCount = LostJobLeaseCount(0)
     dead_reason: JobDeathReason | None = None
+    request_id: RequestId | None = None
+    trace_parent: TraceParent | None = None
 
 
 class PeriodicJobRunDocument(BaseDocument):

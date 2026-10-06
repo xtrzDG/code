@@ -21,7 +21,11 @@
           "quality_drop",
           "spend_spike",
           "spend_budget",
-          "backfill_stalled"
+          "backfill_stalled",
+          "answer_budget_fast_burn",
+          "answer_budget_slow_burn",
+          "api_budget_fast_burn",
+          "api_budget_slow_burn"
         ],
         "type": "string"
       },

@@ -4,6 +4,7 @@ from collections.abc import Callable
 import sentry_sdk
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.httpx import HttpxIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
 from app.contracts.observability import (
@@ -49,9 +50,12 @@ class SentryErrorReportingFacilitator(
     can be traced to one request or job. A share of API requests
     (SENTRY_TRACES_SAMPLE_RATE; widget polls a hundredth of it,
     `sentry_trace_sampling`) is traced, by route template, without URLs or
-    bodies. Integrations are listed explicitly: none of the SDK's
-    automatic ones (model clients, HTTP clients) records prompts or URLs.
-    Without a DSN every error goes to the log instead.
+    bodies; its calls to providers over httpx are spans of the trace (the
+    host and a path template, `scrub_span`), and no trace header goes to a
+    provider (`trace_propagation_targets` is empty). Integrations are
+    listed explicitly: none of the SDK's automatic ones (model clients)
+    records prompts or URLs. Without a DSN every error goes to the log
+    instead.
     """
 
     def __init__(
@@ -69,6 +73,7 @@ class SentryErrorReportingFacilitator(
         integrations: list[Integration] = [
             StarletteIntegration(transaction_style="url"),
             FastApiIntegration(transaction_style="url"),
+            HttpxIntegration(),
         ]
         sentry_init(
             dsn=str(dsn),
@@ -82,6 +87,7 @@ class SentryErrorReportingFacilitator(
             before_send_transaction=scrub_transaction,
             auto_enabling_integrations=False,
             integrations=integrations,
+            trace_propagation_targets=[],
         )
 
     @property

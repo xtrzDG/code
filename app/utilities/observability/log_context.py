@@ -3,11 +3,12 @@ The log context: which request, business, conversation and job the current
 code works for, so every log line and error report can be traced to them.
 
 It lives in a context variable: the request middleware binds the request
-id, `BusinessScopedPipelineOperator` the business, the conversation turn
-its conversation, contact and channel, the background worker the job. Bindings nest
-and are undone on exit; asyncio tasks and the request threads of AnyIO
-(`to_thread.run_sync` copies the context) inherit them, a new
-`threading.Thread` starts empty.
+id and its trace id, `BusinessScopedPipelineOperator` the business, the
+conversation turn its conversation, contact and channel, the background
+worker the job (with the request id and trace of what queued it).
+Bindings nest and are undone on exit; asyncio tasks and the request
+threads of AnyIO (`to_thread.run_sync` copies the context) inherit them, a
+new `threading.Thread` starts empty.
 
 An error that leaves a bound block is stamped with the context it came
 from (the innermost one), so the handler that reports it outside every
@@ -23,6 +24,7 @@ from app.schemas.dto.observability import LogContext
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
+from app.schemas.typings.observability.constrained_strings import TraceId
 from app.schemas.typings.platform.constrained_strings import JobName, RequestId
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 
@@ -46,6 +48,7 @@ def current_log_context() -> LogContext:
 def bound_log_context(
     *,
     request_id: RequestId | None = None,
+    trace_id: TraceId | None = None,
     business_id: BusinessId | None = None,
     conversation_id: ConversationId | None = None,
     contact_id: ContactId | None = None,
@@ -62,6 +65,7 @@ def bound_log_context(
         name: value
         for name, value in (
             ("request_id", request_id),
+            ("trace_id", trace_id),
             ("business_id", business_id),
             ("conversation_id", conversation_id),
             ("contact_id", contact_id),

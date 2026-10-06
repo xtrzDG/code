@@ -177,6 +177,7 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
     )
     notifications: NotificationUseCasesContainer = Container(  # type: ignore[assignment]
         NotificationUseCasesContainer,

@@ -1,5 +1,11 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Dict, Factory, List
+from dependency_injector.providers import (
+    DependenciesContainer,
+    Dict,
+    Factory,
+    List,
+    Singleton,
+)
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
@@ -11,8 +17,10 @@ from app.containers.queued_jobs import queued_job_operator_map
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
+from app.gateways.worker.job_telemetry import JobTelemetry
 
 
 class GatewaysContainer(containers.DeclarativeContainer):
@@ -43,6 +51,12 @@ class GatewaysContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         release=config.app_settings.provided.release_version,
     )
+    # Pickup delays, dead jobs and the spans of queued jobs.
+    job_telemetry: Factory[JobTelemetry] = Factory(
+        JobTelemetry,
+        metrics=utilities.service_metrics,
+        tracer=utilities.span_tracer,
+    )
     background_worker: Factory[BackgroundWorker] = Factory(
         BackgroundWorker,
         periodic_jobs=periodic_jobs,
@@ -59,4 +73,12 @@ class GatewaysContainer(containers.DeclarativeContainer):
         heartbeat_recorder=worker_heartbeat_recorder,
         inbound_poll_seconds=config.app_settings.provided.worker_inbound_poll_seconds,
         lanes=config.app_settings.provided.worker_lanes,
+        job_telemetry=job_telemetry,
+    )
+    # The API availability SLI of this API process, flushed every 15 s
+    # (started by `start_telemetry` of the API, closed on shutdown).
+    api_availability_tally: Singleton[ApiAvailabilityTally] = Singleton(
+        ApiAvailabilityTally,
+        operator=operators.telemetry.add_api_request_counts_operator,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

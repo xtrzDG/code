@@ -14,6 +14,8 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_strings import JobName, JobSerialKey
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import JobPayloadJson
+from app.utilities.observability.log_context import current_log_context
+from app.utilities.observability.tracing.trace_context import current_trace_parent
 
 
 class JobQueueFacilitator(JobQueueFacilitatorContract):
@@ -23,7 +25,9 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
     Postgres in every worker process (NOTIFY). The job row and its wake-up
     are one storage transaction (`unit_of_work`), so the signal leaves only
     once the job is committed and a woken worker always finds it; a job
-    queued for later is found by the polls when it is due.
+    queued for later is found by the polls when it is due. A job carries
+    the request id and the trace of the code that queued it, so its log
+    lines and spans join that request's.
     """
 
     def __init__(
@@ -55,6 +59,8 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
             lane=lane,
             serial_key=serial_key,
             run_at=now if run_at is None else run_at,
+            request_id=current_log_context().request_id,
+            trace_parent=current_trace_parent(),
             created_at=now,
             updated_at=now,
         )

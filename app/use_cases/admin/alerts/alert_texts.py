@@ -32,6 +32,10 @@ ALERT_TITLES: dict[str, str] = {
     "otp_cap_trips": "Login codes refused",
     "spend_spike": "Spend spike",
     "spend_budget": "Daily budget nearly spent",
+    "answer_budget_fast_burn": "Answer budget burns fast",
+    "answer_budget_slow_burn": "Answer budget burns",
+    "api_budget_fast_burn": "API budget burns fast",
+    "api_budget_slow_burn": "API budget burns",
 }
 
 

@@ -274,6 +274,16 @@ services:
         sync: false
       - key: SENTRY_DSN
         sync: false
+      # metrics (GET /metrics, the workers' port) and traces
+      # (docs/operations/observability.md)
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: WORKER_METRICS_PORT
+        value: "9464"
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        sync: false
       # platform alerts to the ops chat and inbox (docs/operations/slo.md)
       - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
         sync: false
@@ -637,6 +647,26 @@ services:
           type: web
           name: workshop-api
           envVarKey: SENTRY_DSN
+      - key: METRICS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: METRICS_TOKEN
+      - key: WORKER_METRICS_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WORKER_METRICS_PORT
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_ENDPOINT
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_HEADERS
       - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
         fromService:
           type: web
@@ -997,6 +1027,26 @@ services:
           type: web
           name: workshop-api
           envVarKey: SENTRY_DSN
+      - key: METRICS_TOKEN
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: METRICS_TOKEN
+      - key: WORKER_METRICS_PORT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: WORKER_METRICS_PORT
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_ENDPOINT
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        fromService:
+          type: web
+          name: workshop-api
+          envVarKey: OTEL_EXPORTER_OTLP_HEADERS
       - key: PLATFORM_ALERT_TELEGRAM_CHAT_IDS
         fromService:
           type: web

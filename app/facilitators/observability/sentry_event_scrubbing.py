@@ -1,16 +1,19 @@
 """
 What reaches Sentry: no request data, users or breadcrumbs (conversations
-hold customers' personal data), no secrets in span descriptions, and the
-log context as tags.
+hold customers' personal data), no secrets in span descriptions (a call to
+a provider is `METHOD https://host/path-template`, ids and tokens of the
+path as `*`), and the log context as tags.
 """
 
 from collections.abc import Mapping
 from typing import cast
 
+import httpx
 from sentry_sdk.types import Event, Hint
 
 from app.utilities.observability.log_context import current_log_context
 from app.utilities.observability.log_formatting import redact_secrets
+from app.utilities.observability.tracing.http_client_spans import path_template
 
 SCRUBBED_EVENT_KEYS: tuple[str, ...] = ("request", "user", "breadcrumbs")
 # Span data that may carry URLs with query strings or paths with tokens.
@@ -20,6 +23,7 @@ SCRUBBED_SPAN_DATA_KEYS: tuple[str, ...] = (
     "http.fragment",
     "http.request.url",
 )
+HTTP_CLIENT_OPERATION: str = "http.client"
 
 
 def scrub_event(event: Event, hint: Hint) -> Event | None:
@@ -52,13 +56,32 @@ def scrub_transaction(event: Event, hint: Hint) -> Event | None:
 def scrub_span(span: dict[str, object]) -> None:
     description: object = span.get("description")
     if isinstance(description, str):
-        span["description"] = redact_secrets(description.split("?", 1)[0])
+        span["description"] = (
+            describe_http_call(description)
+            if span.get("op") == HTTP_CLIENT_OPERATION
+            else redact_secrets(description.split("?", 1)[0])
+        )
 
     data: object = span.get("data")
     if isinstance(data, dict):
         span_data = cast(dict[str, object], data)
         for key in SCRUBBED_SPAN_DATA_KEYS:
             span_data.pop(key, None)
+
+
+def describe_http_call(description: str) -> str:
+    """`METHOD url` as `METHOD scheme://host/template` (nothing else of the URL)."""
+
+    method, _, raw_url = description.partition(" ")
+    try:
+        url = httpx.URL(raw_url)
+    except httpx.InvalidURL, TypeError, ValueError:
+        return method
+
+    if not url.host:
+        return method
+
+    return f"{method} {url.scheme}://{url.host}{path_template(url)}"
 
 
 def add_context_tags(event: Event, fields: Mapping[str, str]) -> None:

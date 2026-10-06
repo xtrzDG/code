@@ -6,9 +6,13 @@ from dataclasses import dataclass, field
 from typed_time_provider import MonotonicClock, Nanoseconds
 
 from app.contracts.resilience import CircuitBreakerContract
+from app.contracts.service_metrics import ServiceMetricsContract
 from app.schemas.constants.resilience import CircuitState
 from app.schemas.dto.resilience import CircuitBreakerPolicy
 from app.schemas.typings.resilience.constrained_strings import CircuitName
+from app.utilities.observability.metrics.null_service_metrics import (
+    NO_SERVICE_METRICS,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 NANOSECONDS_PER_SECOND: int = 1_000_000_000
@@ -33,13 +37,16 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
     goes through (half-open), and its success closes the circuit, its
     failure opens it again. Each process keeps its own breakers: a worker
     learns of an outage from its own calls within seconds. Thread-safe.
+    Each state change goes to /metrics (the circuit breaker state gauge).
     """
 
     def __init__(
         self,
         monotonic_clock: MonotonicClock[Nanoseconds],
         policy: CircuitBreakerPolicy | None = None,
+        metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
     ) -> None:
+        self._metrics: ServiceMetricsContract = metrics
         self._monotonic_clock: MonotonicClock[Nanoseconds] = monotonic_clock
         self._policy: CircuitBreakerPolicy = (
             CircuitBreakerPolicy() if policy is None else policy
@@ -60,6 +67,7 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
 
                 record.state = CircuitState.HALF_OPEN
                 record.is_trial_running = False
+                self._metrics.set_circuit_state(circuit, record.state)
 
             if record.is_trial_running:
                 return False
@@ -72,6 +80,7 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
             record: CircuitRecord = self._record(circuit)
             if record.state is not CircuitState.CLOSED:
                 logger.info("Circuit %s closed: its trial call succeeded.", circuit)
+                self._metrics.set_circuit_state(circuit, CircuitState.CLOSED)
 
             record.state = CircuitState.CLOSED
             record.failures.clear()
@@ -115,6 +124,7 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
         record.opened_at = now
         record.failures.clear()
         record.is_trial_running = False
+        self._metrics.set_circuit_state(circuit, record.state)
         logger.warning(
             "Circuit %s opened (%s); calls go elsewhere for %d s.",
             circuit,
@@ -127,6 +137,7 @@ class CircuitBreakerFacilitator(CircuitBreakerContract):
         if record is None:
             record = CircuitRecord()
             self._circuits[circuit] = record
+            self._metrics.set_circuit_state(circuit, record.state)
 
         return record
 

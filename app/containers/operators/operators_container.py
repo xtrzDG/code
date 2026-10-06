@@ -49,6 +49,7 @@ from app.containers.operators.spend_guard_operators import (
 from app.containers.operators.subscription_lifecycle_operators import (
     SubscriptionLifecycleOperatorsContainer,
 )
+from app.containers.operators.telemetry_operators import TelemetryOperatorsContainer
 from app.containers.operators.value_operators import ValueOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -159,6 +160,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     data_tasks: DataTaskOperatorsContainer = Container(  # type: ignore[assignment]
         DataTaskOperatorsContainer,
         data_task_pipelines=pipelines.data_tasks,
+        utilities=utilities,
+    )
+    telemetry: TelemetryOperatorsContainer = Container(  # type: ignore[assignment]
+        TelemetryOperatorsContainer,
+        telemetry_pipelines=pipelines.telemetry,
         utilities=utilities,
     )
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]

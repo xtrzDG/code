@@ -29,11 +29,19 @@ from app.gateways.http.background_threads import (
     stop_embedded_worker,
 )
 from app.gateways.http.live_events.exit_signals import end_streams_on_exit_signals
+from app.gateways.http.metrics_routes import build_metrics_router
 from app.gateways.http.router_assembly import build_application_routers
 from app.gateways.http.spend_guard_router_assembly import (
     anonymous_request_admission_of,
 )
+from app.gateways.metrics.metrics_rendering import metrics_renderer
 from app.gateways.startup_checks import check_processor_uses
+from app.gateways.telemetry_lifecycle import (
+    API_SERVICE_NAME,
+    finish_telemetry,
+    name_service,
+    start_telemetry,
+)
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.localization import OtpDeliveryChannel
@@ -66,8 +74,10 @@ def create_application() -> FastAPI:
     """
 
     install_access_log_redaction()
+    name_service(API_SERVICE_NAME)
     app_container = AppContainer()
     configure_logging(app_container.config.app_settings().log_format)
+    start_telemetry(app_container, is_api=True)
     return build_application(app_container)
 
 
@@ -76,7 +86,12 @@ def build_application(app_container: AppContainer) -> FastAPI:
 
     settings: AppSettings = app_container.config.app_settings()
     return build_http_application(
-        routers=build_application_routers(app_container),
+        routers=[
+            *build_application_routers(app_container),
+            build_metrics_router(
+                settings.telemetry.metrics_token, metrics_renderer(app_container)
+            ),
+        ],
         error_reporter=app_container.facilitators.error_reporter(),
         cors_allowed_origins=settings.cors_allowed_origins,
         lifespan=build_lifespan(app_container),
@@ -84,6 +99,9 @@ def build_application(app_container: AppContainer) -> FastAPI:
         anonymous_request_admission=anonymous_request_admission_of(
             app_container.operators
         ),
+        service_metrics=app_container.utilities.service_metrics(),
+        span_tracer=app_container.utilities.span_tracer(),
+        api_availability=app_container.gateways.api_availability_tally(),
     )
 
 
@@ -98,8 +116,8 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
     configured, start flushing model-call traces and, with EMBEDDED_WORKER,
     start the background worker in a thread; open live streams end as
     soon as the process is asked to stop. Shutdown: stop the worker
-    (running jobs may finish), flush the remaining traces, close the live
-    event bus and the Postgres pool.
+    (running jobs may finish), flush the remaining traces and spans, close
+    the live event bus and the Postgres pool.
     """
 
     @asynccontextmanager
@@ -131,6 +149,7 @@ def build_lifespan(app_container: AppContainer) -> Lifespan[FastAPI]:
                 stop_embedded_worker(worker_thread)
             flush_thread.join(timeout=TRACE_FLUSH_INTERVAL_SECONDS)
             trace_facilitator.flush()
+            finish_telemetry(app_container)
             live_event_bus.close()
             close_postgres_pool(app_container)
 

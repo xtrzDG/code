@@ -67,6 +67,7 @@ class AppEdgesContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = Container(  # type: ignore[assignment]
         ClientsContainer,
         config=config,
+        utilities=utilities,
     )
     adapters: AdaptersContainer = Container(  # type: ignore[assignment]
         AdaptersContainer,

@@ -21,6 +21,7 @@ from app.contracts.jobs import (
 )
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.gateways.worker.background_worker import BackgroundWorker, PeriodicJobSpec
+from app.gateways.worker.job_telemetry import NO_JOB_TELEMETRY, JobTelemetry
 from app.repositories.job_repositories import (
     PeriodicJobRunRepository,
     QueuedJobRepository,
@@ -144,6 +145,7 @@ def build_worker(
     lanes: tuple[JobLane, ...] = tuple(JobLane),
     stop_grace_seconds: float = 25.0,
     inbound_poll_seconds: int | None = None,
+    job_telemetry: JobTelemetry = NO_JOB_TELEMETRY,
 ) -> WorkerKit:
     job_stores: JobStores = build_job_stores() if stores is None else stores
     reporter = RecordingErrorReporter()
@@ -165,6 +167,7 @@ def build_worker(
             if inbound_poll_seconds is None
             else WorkerLanePollSeconds(inbound_poll_seconds)
         ),
+        job_telemetry=job_telemetry,
     )
     queue = JobQueueFacilitator(
         job_repo=job_stores.job_repo,

@@ -19,6 +19,7 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [stalled-data-task](stalled-data-task.md) | `backfill_stalled`, the data-task card | SEV3 |
 | [bad-deploy](bad-deploy.md) | errors right after a deploy, the smoke test | SEV1-SEV2 |
 | [data-breach](data-breach.md) | anyone who suspects one | SEV1, 48 h clock |
+| [error-budget-burn](error-budget-burn.md) | `answer_budget_fast_burn`, `answer_budget_slow_burn`, `api_budget_fast_burn`, `api_budget_slow_burn` | SEV1-SEV2 |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,
 queue lanes and dead letters, channels in ERROR, the last backup.

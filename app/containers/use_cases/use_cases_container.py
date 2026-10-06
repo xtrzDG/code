@@ -19,6 +19,7 @@ from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
 from app.containers.use_cases.subscription_lifecycle_use_cases import (
     SubscriptionLifecycleUseCasesContainer,
 )
+from app.containers.use_cases.telemetry_use_cases import TelemetryUseCasesContainer
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
 from app.use_cases.example_use_case import ExampleUseCase
 
@@ -162,6 +163,12 @@ class UseCasesContainer(BusinessUseCasesContainer):
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
         billing_use_cases=BusinessUseCasesContainer.billing,
+    )
+    telemetry: TelemetryUseCasesContainer = Container(  # type: ignore[assignment]
+        TelemetryUseCasesContainer,
+        platform_use_cases=platform,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
     )
 
     # --- Template example (keeps its concrete type).

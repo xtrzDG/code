@@ -52,6 +52,7 @@ from app.containers.pipelines.spend_guard_pipelines import (
 from app.containers.pipelines.subscription_lifecycle_pipelines import (
     SubscriptionLifecyclePipelinesContainer,
 )
+from app.containers.pipelines.telemetry_pipelines import TelemetryPipelinesContainer
 from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
@@ -154,6 +155,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     platform: PlatformPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformPipelinesContainer,
         platform_orchestrators=orchestrators.platform,
+    )
+    telemetry: TelemetryPipelinesContainer = Container(  # type: ignore[assignment]
+        TelemetryPipelinesContainer, telemetry_orchestrators=orchestrators.telemetry
     )
     platform_ops: PlatformOpsPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformOpsPipelinesContainer,

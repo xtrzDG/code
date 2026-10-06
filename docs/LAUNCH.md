@@ -967,6 +967,13 @@ Messenger и Instagram шаблонов не принимают: вне 24 ча�
 - Периодические задачи (напоминания, пробные периоды, очистка) сами
   создают мониторы в разделе Crons: пропущенный или упавший запуск придёт
   уведомлением Sentry.
+- Карты исходников кабинета (читаемые стеки ошибок кабинета): в GitHub
+  репозитория — секрет `SENTRY_AUTH_TOKEN` (токен организации Sentry с правом
+  загрузки релизов) и переменные `SENTRY_ORG`, `SENTRY_PROJECT` (проект
+  кабинета). Тогда CI на каждом коммите в `main` собирает кабинет ещё раз,
+  загружает карты для релиза-коммита и удаляет их из сборки
+  (`docs/operations/observability.md`, «Cabinet source maps»). Без секрета
+  шаг пропускается. Это переменные CI, не сервисов Render.
 
 **Оповещения платформы** — команда узнаёт о сбое раньше владельцев
 (`docs/operations/slo.md`, правила — `ops/alerts/*.yaml`). Каждые пять минут
@@ -1138,7 +1145,16 @@ API, и воркер. Чаще всего могут понадобиться:
   `LLM_CALL_TIMEOUT_SECONDS`, и медленная модель не занимает все потоки
   запросов: кабинет отвечает и под нагрузкой.
 - `LOG_FORMAT` — `json` в `production` (строки для поиска в логах Render с
-  `request_id`, `business_id`, `job_name`), `text` при отладке.
+  `request_id`, `trace_id`, `business_id`, `job_name`), `text` при отладке.
+- Метрики и трассы (`docs/operations/observability.md`): `METRICS_TOKEN` —
+  токен, с которым Prometheus или Grafana Agent читают `GET /metrics` API;
+  `WORKER_METRICS_PORT` — порт `/metrics` воркера (например, 9464, тот же
+  токен); `PROMETHEUS_MULTIPROC_DIR` — каталог общих рядов нескольких
+  процессов uvicorn (`workshop api` задаёт его сам).
+  `OTEL_EXPORTER_OTLP_ENDPOINT` и `OTEL_EXPORTER_OTLP_HEADERS` — коллектор
+  трасс OpenTelemetry (EU-регион) и его ключ; `OTEL_SERVICE_NAME` —
+  `workshop-api` или `workshop-worker`; `OTEL_TRACES_SAMPLE_RATE` — доля
+  сохраняемых трасс (0.1). Без них метрики и трассы выключены.
 - `LIVE_EVENTS_DATABASE_URL` — кабинет обновляется сам (новые передачи,
   заявки, брони и сообщения появляются за секунду): API слушает события базы
   (`LISTEN`) по одному соединению на процесс. На Render база подключена

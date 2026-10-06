@@ -18,6 +18,10 @@ class PlatformAlertCode(StrEnum):
     provider spend passed 80 % of the platform's daily budget.
     BACKFILL_STALLED: a post-deploy data task has not finished within a
     day of becoming due (docs/operations/deploys.md).
+    ANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of
+    "answered within 60 s" burns 14.4 times too fast over 1 h and 5 min, or
+    6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN
+    the same for API availability (docs/operations/slo.md).
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -32,6 +36,10 @@ class PlatformAlertCode(StrEnum):
     SPEND_SPIKE = "spend_spike"
     SPEND_BUDGET = "spend_budget"
     BACKFILL_STALLED = "backfill_stalled"
+    ANSWER_BUDGET_FAST_BURN = "answer_budget_fast_burn"
+    ANSWER_BUDGET_SLOW_BURN = "answer_budget_slow_burn"
+    API_BUDGET_FAST_BURN = "api_budget_fast_burn"
+    API_BUDGET_SLOW_BURN = "api_budget_slow_burn"
 
 
 class PlatformAlertStatus(StrEnum):

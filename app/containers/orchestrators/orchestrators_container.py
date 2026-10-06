@@ -96,6 +96,9 @@ from app.containers.orchestrators.spend_guard_orchestrators import (
 from app.containers.orchestrators.subscription_lifecycle_orchestrators import (
     SubscriptionLifecycleOrchestratorsContainer,
 )
+from app.containers.orchestrators.telemetry_orchestrators import (
+    TelemetryOrchestratorsContainer,
+)
 from app.containers.orchestrators.value_orchestrators import (
     ValueOrchestratorsContainer,
 )
@@ -233,6 +236,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     platform: PlatformOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOrchestratorsContainer,
         platform_use_cases=use_cases.platform,
+    )
+    telemetry: TelemetryOrchestratorsContainer = Container(  # type: ignore[assignment]
+        TelemetryOrchestratorsContainer, telemetry_use_cases=use_cases.telemetry
     )
     platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOrchestratorsContainer,

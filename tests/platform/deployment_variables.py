@@ -95,6 +95,11 @@ RENDER_OPTIONAL_VARIABLES: frozenset[str] = frozenset(
         # model); no budget alert until the team sets a daily budget.
         "SPEND_SOFT_LIMIT_MODEL_ID",
         "PLATFORM_DAILY_SPEND_BUDGET_USD",
+        # `workshop api` sets the directory of several uvicorn processes,
+        # and each entry point names its process's traces (workshop-api,
+        # workshop-worker) when no name is set.
+        "PROMETHEUS_MULTIPROC_DIR",
+        "OTEL_SERVICE_NAME",
     }
 )
 

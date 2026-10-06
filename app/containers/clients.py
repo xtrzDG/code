@@ -50,6 +50,8 @@ from app.containers.factories import (
     build_whatsapp_authentication_client,
 )
 from app.containers.notification_factories import build_web_push_client
+from app.containers.telemetry_factories import build_pool_instruments
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.channel_clients import ElevenLabsApiClientContract
 from app.contracts.object_storage import ObjectStorageClientContract
 from app.contracts.web_fetching import SafeHttpFetcherContract
@@ -57,11 +59,18 @@ from app.contracts.web_fetching import SafeHttpFetcherContract
 
 class ClientsContainer(containers.DeclarativeContainer):
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    # One pool for every Postgres collection; None without DATABASE_URL.
+    # One pool for every Postgres collection; None without DATABASE_URL. It
+    # reports waits and connections in use, and traces its statements.
     postgres_pool: Singleton[PostgresConnectionPoolClient | None] = Singleton(
         build_postgres_connection_pool,
         settings=config.app_settings,
+        instruments=Singleton(
+            build_pool_instruments,
+            metrics=utilities.service_metrics,
+            span_tracer=utilities.span_tracer,
+        ),
     )
     # SDK clients are created on first use, so no API key is needed to start.
     openai_responses_client: Singleton[OpenAiResponsesClient] = Singleton(

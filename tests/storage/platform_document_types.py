@@ -34,6 +34,10 @@ from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.referrals import ReferralCodeDocument, ReferralDocument
+from app.schemas.domain.service_levels import (
+    ServiceLevelHourDocument,
+    ServiceLevelSlotDocument,
+)
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -90,5 +94,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         SubprocessorAnnouncementDocument,
         # The post-deploy data tasks walk every business's rows at once.
         DataTaskStateDocument,
+        # The service level indicators count every business together (1163).
+        ServiceLevelSlotDocument,
+        ServiceLevelHourDocument,
     }
 )

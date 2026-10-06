@@ -16,6 +16,10 @@ from app.schemas.domain.platform_status import (
     PlatformAnnouncementDocument,
     PlatformStatusDayDocument,
 )
+from app.schemas.domain.service_levels import (
+    ServiceLevelHourDocument,
+    ServiceLevelSlotDocument,
+)
 
 
 class OperationsCollectionsContainer(containers.DeclarativeContainer):
@@ -94,6 +98,24 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     data_task_state_collection = document_collection(
         DataTaskStateDocument,
         "data_task_states",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The service level indicators (1163): five-minute slots per series and
+    # one row per hour.
+    service_level_slot_collection = document_collection(
+        ServiceLevelSlotDocument,
+        "service_level_slots",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    service_level_hour_collection = document_collection(
+        ServiceLevelHourDocument,
+        "service_level_hours",
         config,
         clients,
         utilities,

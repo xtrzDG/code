@@ -22,7 +22,8 @@ class LangfuseTraceFacilitator(LlmTraceFacilitatorContract):
     Call `flush` from a background job or at shutdown. A trace carries the
     ids of its business, contact and conversation as metadata and the
     conversation as its `sessionId`, so `LangfuseTraceErasureAdapter` can
-    delete a conversation's traces.
+    delete a conversation's traces; the request id and the distributed
+    trace id find the call's log lines and spans.
     """
 
     def __init__(self, client: LangfuseIngestionClient) -> None:
@@ -74,6 +75,7 @@ def build_generation_events(trace: LlmGenerationTrace) -> list[dict[str, object]
     owners: dict[str, object] = trace_owners(trace)
     metadata: dict[str, object] = {
         **owners,
+        **request_correlation(trace),
         "effort": str(trace.effort),
         "offered_tools": [str(tool) for tool in trace.offered_tools],
         "called_tools": [str(tool) for tool in trace.called_tools],
@@ -107,7 +109,11 @@ def build_generation_events(trace: LlmGenerationTrace) -> list[dict[str, object]
     trace_body: dict[str, object] = {
         "id": str(trace.trace_id),
         "name": "assistant_reply",
-        "metadata": {"model": str(trace.model_id), **owners},
+        "metadata": {
+            "model": str(trace.model_id),
+            **owners,
+            **request_correlation(trace),
+        },
     }
     if trace.conversation_id is not None:
         trace_body["sessionId"] = str(trace.conversation_id)
@@ -146,6 +152,19 @@ def trace_owners(trace: LlmGenerationTrace) -> dict[str, object]:
         owners["conversation_id"] = str(trace.conversation_id)
 
     return owners
+
+
+def request_correlation(trace: LlmGenerationTrace) -> dict[str, object]:
+    """The request id and trace id that find the call's logs and spans."""
+
+    correlation: dict[str, object] = {}
+    if trace.request_id is not None:
+        correlation["request_id"] = str(trace.request_id)
+
+    if trace.request_trace_id is not None:
+        correlation["trace_id"] = str(trace.request_trace_id)
+
+    return correlation
 
 
 def format_timestamp(unix_microseconds: int) -> str:

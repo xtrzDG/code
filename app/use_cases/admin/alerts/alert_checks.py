@@ -40,9 +40,8 @@ type AlertCheck = Callable[[PlatformAlertRule, Microseconds], AlertObservation]
 
 class PlatformAlertChecks:
     """
-    The checks behind the platform alert rules: indexed counts, the signal
-    counters, the worker pulses, the spend (`SpendAlertChecks`) and the data
-    tasks (`DataTaskAlertChecks`). A check that fails is skipped and logged.
+    The platform alert rules' checks (counts, signals, pulses, spend, data
+    tasks, `extra_checks` burn rates); a check that fails is skipped, logged.
     """
 
     def __init__(
@@ -53,6 +52,7 @@ class PlatformAlertChecks:
         quality_totals_repo: QualityTotalsRepoContract,
         spend_checks: SpendAlertChecks,
         data_task_checks: DataTaskAlertChecks,
+        extra_checks: Mapping[PlatformAlertCode, AlertCheck],
     ) -> None:
         self._health: SystemHealthRepoContract = system_health_repo
         self._activity: PlatformActivityRepoContract = platform_activity_repo
@@ -71,6 +71,7 @@ class PlatformAlertChecks:
             PlatformAlertCode.SPEND_SPIKE: spend_checks.spend_spike,
             PlatformAlertCode.SPEND_BUDGET: spend_checks.spend_budget,
             PlatformAlertCode.BACKFILL_STALLED: data_task_checks.backfill_stalled,
+            **extra_checks,  # The burn-rate checks (burn_rate_alert_checks.py).
         }
 
     def run(
@@ -84,7 +85,6 @@ class PlatformAlertChecks:
                 observations.append(self._checks[code](rule, now))
             except ApplicationError as error:
                 logger.warning("Platform alert check %s failed: %s", code, error)
-
         return observations
 
     def _dead_jobs(

@@ -89,4 +89,11 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
         text_field("status"),
         text_field("admin_user_id"),
     ),
+    # The SLIs (1163): a series' slots of a window (burn rates), the hourly
+    # rows of the last 28 days (the error budget), both purged by age.
+    DocumentCollectionName("service_level_slots"): (
+        text_field("series"),
+        integer_field("slot_start"),
+    ),
+    DocumentCollectionName("service_level_hours"): (integer_field("hour_start"),),
 }

@@ -7,6 +7,7 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import (
@@ -20,6 +21,9 @@ from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
+from app.schemas.typings.conversations.constrained_integers import (
+    ReplyLatencyMilliseconds,
+)
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.use_cases.conversations.reply_usage import (
@@ -35,6 +39,12 @@ from app.utilities.conversations.assistant_texts.business_name_placeholder impor
 )
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost
 from app.utilities.conversations.reply_latency import measure_reply_latency
+from app.utilities.observability.metrics.null_service_metrics import (
+    NO_SERVICE_METRICS,
+)
+from app.utilities.observability.metrics.observed_durations import (
+    milliseconds_as_seconds,
+)
 
 DISCLOSURE_SEPARATOR: str = "\n"
 
@@ -54,7 +64,8 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     one dialog per real conversation. The conversation, re-read because tools
     may have changed it, gets its last message time and the HANDOFF status
     when staff now own it. The reply names the version that answered and
-    carries the turn's tool calls.
+    carries the turn's tool calls. A real customer's measured wait is
+    observed for /metrics (answer latency by channel; test chats are not).
     """
 
     def __init__(
@@ -65,7 +76,9 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         localized_text_resolver: LocalizedTextResolverContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
     ) -> None:
+        self._metrics: ServiceMetricsContract = metrics
         self._message_repo: MessageRepoContract = message_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
         self._usage_event_repo: UsageEventRepoContract = usage_event_repo
@@ -95,7 +108,11 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         )
         # The id the inbox chose: the reply it sends is this one.
         reply_id: MessageId = turn.reply_message_id or MessageId()
+        reply_latency: ReplyLatencyMilliseconds | None = measure_reply_latency(
+            input_data.waiting_since, now
+        )
         if text is not None:
+            self._observe_answer_latency(turn, reply_latency)
             self._message_repo.save(
                 MessageDocument(
                     id=reply_id,
@@ -113,9 +130,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                         int(cost.total) + int(total_verifier_cost(input_data))
                     ),
                     channel=turn.conversation.channel,
-                    reply_latency_ms=measure_reply_latency(
-                        input_data.waiting_since, now
-                    ),
+                    reply_latency_ms=reply_latency,
                     llm_round_count=input_data.llm_round_count,
                     is_fallback_model=input_data.is_fallback_model,
                     guard_verdict=guard_verdict_of(input_data),
@@ -175,6 +190,14 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 for record in input_data.tool_calls
             ],
         )
+
+    def _observe_answer_latency(
+        self, turn: PreparedTurn, latency: ReplyLatencyMilliseconds | None
+    ) -> None:
+        if latency is not None and not turn.conversation.is_sandbox:
+            self._metrics.observe_answer_latency(
+                turn.conversation.channel, milliseconds_as_seconds(int(latency))
+            )
 
     def _find_disclosure(
         self,

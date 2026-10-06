@@ -17,6 +17,7 @@ import { AnnouncementsCard } from "./AnnouncementsCard";
 import { ChannelsCard } from "./ChannelsCard";
 import { DataTasksCard } from "./DataTasksCard";
 import { DeadLettersCard } from "./DeadLettersCard";
+import { ErrorBudgetCard } from "./ErrorBudgetCard";
 import { IncidentDialog } from "./IncidentDialog";
 import { IncidentsCard } from "./IncidentsCard";
 import { BackupsCard, DatabaseCard } from "./StorageCards";
@@ -27,8 +28,9 @@ import { LanesCard, WorkersCard } from "./WorkersAndQueues";
  * platform alerts, worker pulses, queue lanes and dead letters, channels in
  * error and expiring tokens, the database's size and the backups, and the
  * incident log with "Record incident". Every figure is an indexed count or
- * the database catalog; the page looks again every 30 seconds. The
- * announcements of the public status page sit under the alerts.
+ * the database catalog; the page looks again every 30 seconds. The SLOs'
+ * error budgets and the announcements of the public status page sit under
+ * the alerts.
  */
 export function SystemScreen() {
   const { t, tp } = useI18n();
@@ -80,6 +82,7 @@ export function SystemScreen() {
       ) : (
         <div className="space-y-6">
           <AlertsCard alerts={data.alerts} />
+          <ErrorBudgetCard />
           <AnnouncementsCard />
           {/* Full width: both tables have six columns. */}
           <WorkersCard workers={data.workers} />
