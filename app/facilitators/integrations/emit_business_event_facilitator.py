@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Iterator, Sequence
-from contextlib import contextmanager, nullcontext
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 
 from base_typed_id import BasePrefixedTypedId
 from pydantic import ValidationError
@@ -65,7 +65,7 @@ class EmitBusinessEventFacilitator(BusinessEventObserverContract):
         delivery_repo: WebhookDeliveryRepoContract,
         record_reader: PublicRecordReaderContract,
         job_queue: JobQueueFacilitatorContract,
-        unit_of_work: StorageUnitOfWorkContract,
+        unit_of_work: StorageUnitOfWorkContract | None,
         storage_scope: StorageScopeContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
@@ -74,7 +74,7 @@ class EmitBusinessEventFacilitator(BusinessEventObserverContract):
         self._delivery_repo: WebhookDeliveryRepoContract = delivery_repo
         self._record_reader: PublicRecordReaderContract = record_reader
         self._job_queue: JobQueueFacilitatorContract = job_queue
-        self._unit_of_work: StorageUnitOfWorkContract = unit_of_work
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._storage_scope: StorageScopeContract = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
@@ -88,7 +88,7 @@ class EmitBusinessEventFacilitator(BusinessEventObserverContract):
             return
 
         try:
-            with self._business_scope(business_id), self._unit_of_work.unit_of_work():
+            with self._business_scope(business_id), self._transaction():
                 self._emit(business_id, event, ids)
         except (ApplicationError, ValidationError) as error:
             LOGGER.warning(
@@ -174,3 +174,11 @@ class EmitBusinessEventFacilitator(BusinessEventObserverContract):
             else nullcontext()
         ):
             yield
+
+    def _transaction(self) -> AbstractContextManager[None]:
+        """The deliveries and their jobs as one unit (Postgres; as is in memory)."""
+
+        if self._unit_of_work is None:
+            return nullcontext()
+
+        return self._unit_of_work.unit_of_work()

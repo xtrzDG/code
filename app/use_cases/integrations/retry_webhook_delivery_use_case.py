@@ -18,6 +18,7 @@ from app.schemas.dto.integrations.webhook_views import (
 )
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
 from app.use_cases.integrations.webhook_records import delivery_view
+from app.use_cases.shared.storage_transaction import in_unit_of_work
 from app.utilities.integrations.webhook_jobs import (
     DELIVER_WEBHOOK_JOB,
     encode_webhook_job,
@@ -42,7 +43,7 @@ class RetryWebhookDeliveryUseCase(
         ],
         delivery_repo: WebhookDeliveryRepoContract,
         job_queue: JobQueueFacilitatorContract,
-        unit_of_work: StorageUnitOfWorkContract,
+        unit_of_work: StorageUnitOfWorkContract | None,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._authorize_business_access: UseCaseContract[
@@ -50,7 +51,7 @@ class RetryWebhookDeliveryUseCase(
         ] = authorize_business_access
         self._delivery_repo: WebhookDeliveryRepoContract = delivery_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
-        self._unit_of_work: StorageUnitOfWorkContract = unit_of_work
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: WebhookDeliveryCommand) -> WebhookDeliveryView:
@@ -80,7 +81,7 @@ class RetryWebhookDeliveryUseCase(
                 }
             )
 
-        with self._unit_of_work.unit_of_work():
+        with in_unit_of_work(self._unit_of_work):
             stored = self._delivery_repo.update(business.id, delivery.id, requeue)
             if stored is None:
                 raise NotFoundError("This delivery does not exist (any more).")

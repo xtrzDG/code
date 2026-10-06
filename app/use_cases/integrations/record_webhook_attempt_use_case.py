@@ -23,6 +23,7 @@ from app.schemas.typings.integrations.constrained_integers import (
     WebhookFailuresBeforeDisable,
 )
 from app.use_cases.integrations.endpoint_health import record_endpoint_outcome
+from app.use_cases.shared.storage_transaction import in_unit_of_work
 from app.utilities.integrations.webhook_jobs import (
     DELIVER_WEBHOOK_JOB,
     encode_webhook_job,
@@ -65,7 +66,7 @@ class RecordWebhookAttemptUseCase(
         delivery_repo: WebhookDeliveryRepoContract,
         endpoint_repo: WebhookEndpointRepoContract,
         job_queue: JobQueueFacilitatorContract,
-        unit_of_work: StorageUnitOfWorkContract,
+        unit_of_work: StorageUnitOfWorkContract | None,
         failures_before_disable: WebhookFailuresBeforeDisable,
         # Spreads retry times only; nothing secret depends on it.
         jitter: Callable[[], float] = random.random,  # nosec B311
@@ -73,7 +74,7 @@ class RecordWebhookAttemptUseCase(
         self._delivery_repo: WebhookDeliveryRepoContract = delivery_repo
         self._endpoint_repo: WebhookEndpointRepoContract = endpoint_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
-        self._unit_of_work: StorageUnitOfWorkContract = unit_of_work
+        self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._failures_before_disable: WebhookFailuresBeforeDisable = (
             failures_before_disable
         )
@@ -109,7 +110,7 @@ class RecordWebhookAttemptUseCase(
                 }
             )
 
-        with self._unit_of_work.unit_of_work():
+        with in_unit_of_work(self._unit_of_work):
             stored = self._delivery_repo.update(
                 delivery.business_id, delivery.id, record
             )

@@ -18,8 +18,6 @@ SIGNATURE_HEADER: str = "Workshop-Signature"
 EVENT_ID_HEADER: str = "Workshop-Event-Id"
 EVENT_TYPE_HEADER: str = "Workshop-Event-Type"
 DELIVERY_ID_HEADER: str = "Workshop-Delivery-Id"
-# A receiver should refuse signatures older than this (replays).
-SIGNATURE_TOLERANCE_SECONDS: int = 5 * 60
 
 
 def sign_webhook_body(
@@ -29,35 +27,6 @@ def sign_webhook_body(
 
     digest: str = _digest(secret, signed_at_seconds, str(body))
     return WebhookSignature(f"t={signed_at_seconds},v1={digest}")
-
-
-def is_valid_webhook_signature(
-    secret: WebhookSigningSecret,
-    header: str,
-    body: str,
-    now_seconds: int,
-    tolerance_seconds: int = SIGNATURE_TOLERANCE_SECONDS,
-) -> bool:
-    """
-    What a receiver checks: the header is well formed, its time is within
-    the tolerance of `now_seconds` and its digest matches the body.
-    """
-
-    parts: dict[str, str] = {}
-    for item in header.split(","):
-        name, separator, value = item.strip().partition("=")
-        if separator:
-            parts[name] = value
-
-    signed_at: str = parts.get("t", "")
-    expected: str = parts.get("v1", "")
-    if not signed_at.isdigit() or expected == "":
-        return False
-
-    if abs(now_seconds - int(signed_at)) > tolerance_seconds:
-        return False
-
-    return hmac.compare_digest(_digest(secret, int(signed_at), body), expected)
 
 
 def _digest(secret: WebhookSigningSecret, signed_at_seconds: int, body: str) -> str:
