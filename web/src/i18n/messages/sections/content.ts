@@ -35,6 +35,22 @@ import { knowledgeResourcesRu } from "./content/knowledgeResources.ru";
 import { knowledgeWebsiteEn } from "./content/knowledgeWebsite.en";
 import { knowledgeWebsiteKa } from "./content/knowledgeWebsite.ka";
 import { knowledgeWebsiteRu } from "./content/knowledgeWebsite.ru";
+import { assistantHe } from "./content/assistant.he";
+import { assistantDe } from "./content/assistant.de";
+import { assistantChatHe } from "./content/assistantChat.he";
+import { assistantChatDe } from "./content/assistantChat.de";
+import { assistantChecksHe } from "./content/assistantChecks.he";
+import { assistantChecksDe } from "./content/assistantChecks.de";
+import { assistantComparisonHe } from "./content/assistantComparison.he";
+import { assistantComparisonDe } from "./content/assistantComparison.de";
+import { knowledgeHe } from "./content/knowledge.he";
+import { knowledgeDe } from "./content/knowledge.de";
+import { knowledgeOfferHe } from "./content/knowledgeOffer.he";
+import { knowledgeOfferDe } from "./content/knowledgeOffer.de";
+import { knowledgeResourcesHe } from "./content/knowledgeResources.he";
+import { knowledgeResourcesDe } from "./content/knowledgeResources.de";
+import { knowledgeWebsiteHe } from "./content/knowledgeWebsite.he";
+import { knowledgeWebsiteDe } from "./content/knowledgeWebsite.de";
 
 export const contentEn = {
   knowledge: { ...knowledgeEn, ...knowledgeResourcesEn, ...knowledgeWebsiteEn, ...knowledgeOfferEn },
@@ -49,4 +65,14 @@ export const contentRu: Translation<typeof contentEn> = {
 export const contentKa: Translation<typeof contentEn> = {
   knowledge: { ...knowledgeKa, ...knowledgeResourcesKa, ...knowledgeWebsiteKa, ...knowledgeOfferKa },
   assistant: { ...assistantKa, ...assistantChecksKa, ...assistantComparisonKa, ...assistantChatKa },
+};
+
+export const contentHe: Translation<typeof contentEn> = {
+  knowledge: { ...knowledgeHe, ...knowledgeResourcesHe, ...knowledgeWebsiteHe, ...knowledgeOfferHe },
+  assistant: { ...assistantHe, ...assistantChecksHe, ...assistantComparisonHe, ...assistantChatHe },
+};
+
+export const contentDe: Translation<typeof contentEn> = {
+  knowledge: { ...knowledgeDe, ...knowledgeResourcesDe, ...knowledgeWebsiteDe, ...knowledgeOfferDe },
+  assistant: { ...assistantDe, ...assistantChecksDe, ...assistantComparisonDe, ...assistantChatDe },
 };
