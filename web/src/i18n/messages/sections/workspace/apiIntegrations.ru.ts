@@ -33,7 +33,7 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
       many: "{count} неудачных попыток подряд",
       other: "{count} неудачной попытки подряд",
     },
-    disabled: "Отключён {time}. Проверьте, что адрес работает, и включите снова.",
+    disabled: "Отключён {time} после неудачных попыток: проверьте, что адрес работает, и включите снова.",
     secretHint: "Секрет заканчивается на {hint}",
     actions: {
       menu: "Действия",

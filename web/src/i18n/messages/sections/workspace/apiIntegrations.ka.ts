@@ -28,7 +28,7 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
     lastSuccess: "ბოლო მიწოდება {time}",
     neverDelivered: "ჯერ არაფერი მიწოდებულა",
     failures: { one: "ზედიზედ {count} წარუმატებელი მცდელობა", other: "ზედიზედ {count} წარუმატებელი მცდელობა" },
-    disabled: "გამოირთო {time}. შეამოწმეთ, რომ მისამართი მუშაობს, და ხელახლა ჩართეთ.",
+    disabled: "გამოირთო {time} წარუმატებელი მცდელობების გამო: შეამოწმეთ, რომ მისამართი მუშაობს, და ხელახლა ჩართეთ.",
     secretHint: "საიდუმლო მთავრდება {hint}-ზე",
     actions: {
       menu: "მოქმედებები",

@@ -28,7 +28,7 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
     lastSuccess: "Zuletzt zugestellt {time}",
     neverDelivered: "Noch nichts zugestellt",
     failures: { one: "{count} fehlgeschlagener Versuch in Folge", other: "{count} fehlgeschlagene Versuche in Folge" },
-    disabled: "Abgeschaltet {time}. Prüfen Sie, ob die Adresse funktioniert, und schalten Sie sie wieder ein.",
+    disabled: "Abgeschaltet am {time} nach fehlgeschlagenen Versuchen: Prüfen Sie, ob die Adresse funktioniert, und schalten Sie sie wieder ein.",
     secretHint: "Geheimnis endet auf {hint}",
     actions: {
       menu: "Aktionen",

@@ -78,7 +78,7 @@ describe("WebhookDeliveriesDrawer: what was sent to a webhook", () => {
 
     const row = (await screen.findByText(t("apiIntegrations.deliveries.problems.http_status"))).closest("li");
     if (!row) throw new Error("the failed delivery is listed");
-    expect(vi.mocked(api.GET).mock.calls.some(([path]) => path === DELIVERY)).toBe(false);
+    expect(vi.mocked(api.GET).mock.calls.some((call) => (call as unknown[])[0] === DELIVERY)).toBe(false);
     await user.click(within(row).getByRole("button", { name: t("apiIntegrations.deliveries.showBody") }));
     const body = await screen.findByLabelText(t("apiIntegrations.deliveries.body"));
     expect(body.textContent).toContain('"type": "lead.created"');

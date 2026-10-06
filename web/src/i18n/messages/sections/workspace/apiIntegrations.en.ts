@@ -30,7 +30,7 @@ export const apiIntegrationsEn = {
     lastSuccess: "Last delivered {time}",
     neverDelivered: "Nothing delivered yet",
     failures: { one: "{count} failed attempt in a row", other: "{count} failed attempts in a row" },
-    disabled: "Switched off {time}. Check that the address works, then turn it on again.",
+    disabled: "Switched off on {time} after failed attempts: check that the address works, then turn it on again.",
     secretHint: "Secret ends in {hint}",
     actions: {
       menu: "Actions",
