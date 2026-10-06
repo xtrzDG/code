@@ -17,8 +17,8 @@ class MessageViewTransformer(TransformerContract[MessageDocument, MessageView]):
     """
     A stored message with its tool calls, model, tokens and cost, the
     voice notes, photos and places of a customer message (the storage path
-    stays inside: the cabinet asks for a file by its id) and what the reply
-    guard did with it.
+    stays inside: the cabinet asks for a file by its id), what it refers to
+    (a story), the options a reply offered and what the reply guard did.
     """
 
     def transform(self, input_data: MessageDocument) -> MessageView:
@@ -48,6 +48,10 @@ class MessageViewTransformer(TransformerContract[MessageDocument, MessageView]):
                 for attachment in input_data.attachments
             ],
             guard=build_guard_view(input_data),
+            context_note=input_data.context_note,
+            choices=[]
+            if input_data.choices is None
+            else list(input_data.choices.options),
         )
 
 

@@ -101,5 +101,9 @@ export const assistantHe: Translation<typeof assistantEn> = {
       name: "רישום שאלה ללא תשובה",
       description: "שומר שאלות שלא ידע לענות עליהן, כדי שתענו עליהן.",
     },
+    offer_choices: {
+      name: "תשובות לבחירה בכפתורים",
+      description: "מציג ללקוח כמה תשובות ככפתורים — שעה, שירות, כן או לא. בערוץ בלי כפתורים הן נשלחות כרשימה ממוספרת.",
+    },
   },
 };

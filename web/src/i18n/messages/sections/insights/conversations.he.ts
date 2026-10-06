@@ -155,6 +155,7 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     handoff_to_human: "העביר לאדם",
     send_link: "שלח קישור",
     record_unanswered_question: "רשם שאלה בלי תשובה",
+    offer_choices: "הציע תשובות לבחירה",
   },
   messageTokens: "{count} טוקנים",
   usage: {

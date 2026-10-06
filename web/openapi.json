@@ -1750,7 +1750,7 @@
       },
       "AssistantReply": {
         "additionalProperties": false,
-        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout. `assistant_version_id` and `assistant_version_number` name the\nversion that answered (the one the conversation is pinned to);\n`tool_calls` are the tools the model called in this turn, with their\ninput and result (the owner's test chat shows them).",
+        "description": "What the assistant answered and what happened during the turn.\n\n`text` is None when the assistant stays silent because staff took over the\nconversation (open handoff in a chat channel). `disclosure_text` is the\n\"I am an AI assistant\" sentence the server put in front of the first\nreply (part of `text`), so checks of what the model wrote can leave it\nout. `assistant_version_id` and `assistant_version_number` name the\nversion that answered (the one the conversation is pinned to);\n`tool_calls` are the tools the model called in this turn, with their\ninput and result (the owner's test chat shows them). `choices` are the\noptions the reply offers to tap (the text already ends with their\nprompt); every channel shows them its own way.",
         "properties": {
           "assistant_version_id": {
             "anyOf": [
@@ -1774,6 +1774,16 @@
               }
             ],
             "title": "Assistant Version Number"
+          },
+          "choices": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyChoices"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "conversation_id": {
             "title": "Conversation Id",
@@ -1904,7 +1914,8 @@
           "create_lead",
           "handoff_to_human",
           "send_link",
-          "record_unanswered_question"
+          "record_unanswered_question",
+          "offer_choices"
         ],
         "title": "AssistantToolName",
         "type": "string"
@@ -14257,9 +14268,18 @@
         "title": "InboundAttachment",
         "type": "object"
       },
+      "InboundContextNote": {
+        "description": "What a customer message refers to that the assistant cannot see, as\nthe channel told it: a reply to the business's Instagram story, or a\nmention of the business in the customer's own story.",
+        "enum": [
+          "story_reply",
+          "story_mention"
+        ],
+        "title": "InboundContextNote",
+        "type": "string"
+      },
       "InboundCustomerMessage": {
         "additionalProperties": false,
-        "description": "A customer's message as the channel adapter read it from the webhook:\nthe typed text and the attachments (voice notes, photos, places, ...),\nwhose files the worker fetches. `acquisition_source` is where the\ncustomer came from when the message carried it (a tagged link, an ad):\na conversation this message starts keeps it.",
+        "description": "A customer's message as the channel adapter read it from the webhook:\nthe typed text and the attachments (voice notes, photos, places, ...),\nwhose files the worker fetches. `acquisition_source` is where the\ncustomer came from when the message carried it (a tagged link, an ad):\na conversation this message starts keeps it. `context_note` is what\nthe message refers to that the assistant cannot see (a reply to the\nbusiness's Instagram story, a story mention).",
         "properties": {
           "acquisition_source": {
             "anyOf": [
@@ -14311,6 +14331,16 @@
             ],
             "title": "Contact Phone Number"
           },
+          "context_note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InboundContextNote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -14325,7 +14355,7 @@
       },
       "InboundEventDocument": {
         "additionalProperties": false,
-        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.",
+        "description": "One message a platform delivered, kept until it is processed (the inbox\nof reliability: a webhook is acknowledged as soon as its event is\nstored, and the worker does the slow work).\n\nThe id is derived from the business, the channel and the platform's own\nmessage id, so a redelivered webhook finds its event instead of making a\nsecond one. The ids of the customer's message and of the assistant's\nreply are chosen here, once: a turn that runs again after a crash stores\nthe same two transcript messages, and a reply that was already stored is\nsent instead of generated again.\n\n`business_id` is None for platform events (the staff bot, finished-call\nreports before their business is found). `payload` keeps the verified\nbody of those events until the worker reads it.\n\nVersion 2: the attachments of the customer message (optional, so\nversion 1 rows read as they are).\n\nVersion 3: when staff were asked to answer a customer message the\nassistant never answered (`handoff_requested_at`, set by the sweeper of\nthe inbox once per FAILED event; optional).\n\nVersion 4: the customer message's `acquisition_source` (optional).\n\nVersion 5: `customer_channel_user_id`, the sender of the customer\nmessage kept beside it (filled from it when missing, so older rows read\nthe same), for erasure to find a customer's events by an index.\n\nVersion 6: `holder_job_id`, the queued job that last took the event\n(optional). The queue runs a job in one place at a time, so a later\nattempt of that same job (its worker died) takes the event over at\nonce instead of waiting out the processing lease.\n\nVersion 7: the customer message's `context_note` (optional).",
         "properties": {
           "attempts": {
             "default": 0,
@@ -14493,7 +14523,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "6",
+            "default": "7",
             "title": "Schema Version",
             "type": "string"
           },
@@ -17971,7 +18001,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value).",
         "properties": {
           "attachments": {
             "items": {
@@ -17997,12 +18027,32 @@
               }
             ]
           },
+          "choices": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyChoices"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "claim_findings": {
             "items": {
               "$ref": "#/components/schemas/ClaimFinding"
             },
             "title": "Claim Findings",
             "type": "array"
+          },
+          "context_note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InboundContextNote"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "conversation_id": {
             "title": "Conversation Id",
@@ -18117,7 +18167,7 @@
             "title": "Reply Latency Ms"
           },
           "schema_version": {
-            "default": "6",
+            "default": "7",
             "title": "Schema Version",
             "type": "string"
           },
@@ -18246,7 +18296,7 @@
       },
       "MessageView": {
         "additionalProperties": false,
-        "description": "A message with the model usage behind it; `sent_by` is the owner or\nstaff member who wrote a staff message from the cabinet, and\n`delivery` how that message travels to the customer (None for every\nother message, and for staff messages kept for the website chat);\n`attachments` are a customer's voice notes, photos and places;\n`guard` what the reply guard did with it (None: nothing to show, e.g.\nstaff messages and replies stored before the guard recorded verdicts).",
+        "description": "A message with the model usage behind it. `sent_by`: who wrote a staff\nmessage in the cabinet; `delivery`: how it travels (None otherwise and\nfor the website chat); `attachments`: a customer's voice notes, photos\nand places; `context_note`: what a customer message refers to (a story);\n`choices`: the options a reply offered to tap; `guard`: what the reply\nguard did (None: nothing to show).",
         "properties": {
           "attachments": {
             "items": {
@@ -18257,6 +18307,26 @@
           },
           "author": {
             "$ref": "#/components/schemas/MessageAuthor"
+          },
+          "choices": {
+            "items": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+              "type": "string"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "context_note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InboundContextNote"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cost_micro_usd": {
             "minimum": 0.0,
@@ -19359,7 +19429,7 @@
       },
       "OutboundMessageDocument": {
         "additionalProperties": false,
-        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).\n\nVersion 6: the kind `booking_confirmation` (a guest's written\nconfirmation of a booking the assistant made or moved, with its manage\nlink). Rows of the earlier kinds read unchanged.",
+        "description": "One message to send (the outbox): an assistant reply to a customer or a\nnotification to staff. Queued once per idempotency key (the id derives\nfrom it), sent by the worker, retried with backoff until it is\nDELIVERED or DEAD, so its delivery state can be looked up.\n\nLong texts go out in several platform messages; `delivered_parts`\ncounts those already sent, so a retry continues after them instead of\nrepeating them. `recipient_key` names who it goes to: messages of one\nrecipient go out in the order they were queued.\n\nVersion 2: a staff notification may go to a cabinet user's device\n(`push`) instead of a staff contact.\n\nVersion 3: a message to a customer may be a WhatsApp template with its\nown parameters (`template.body_parameters`; outside the 24-hour\nwindow), and a request for feedback after a visit names its request\n(`feedback_request_id`), which follows its delivery. Both optional.\n\nVersion 4: why the last attempt failed in words for the owner\n(`last_failure_reason`, shown next to a staff reply in the cabinet),\nand what a message to a customer is about besides a conversation: the\nbooking a reminder is for (`booking_id`), the call a confirmation or\nits links follow (`call_id`) and the missed call a text-back answers\n(`missed_call_id`, whose text-back follows the delivery), and the\nmoment after which a message is no longer worth sending\n(`send_before`: it is given up instead). All optional.\n\nVersion 5: an e-mail to the billing contact may carry the invoice and\nreceipt PDFs of an invoice (`billing_documents`, optional; a release\nthat does not know it sends the e-mail without them).\n\nVersion 6: the kind `booking_confirmation` (a guest's written\nconfirmation of a booking the assistant made or moved, with its manage\nlink). Rows of the earlier kinds read unchanged.\n\nVersion 7: a reply to a customer may carry the options it offers\n(`choices`, optional): the channel shows them as buttons, a list,\nquick replies or an inline keyboard under the reply's last part. A\nrelease that does not know them sends the text alone, which already\nends with their prompt.",
         "properties": {
           "attempts": {
             "default": 0,
@@ -19403,6 +19473,16 @@
               }
             ],
             "title": "Call Id"
+          },
+          "choices": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplyChoices"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "conversation_id": {
             "anyOf": [
@@ -19554,7 +19634,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "6",
+            "default": "7",
             "title": "Schema Version",
             "type": "string"
           },
@@ -22774,6 +22854,51 @@
           "powered_by"
         ],
         "title": "ReferralProgramView",
+        "type": "object"
+      },
+      "ReplyChoices": {
+        "additionalProperties": false,
+        "description": "What the assistant asked and the options it offered with a reply: the\nreply ends with `prompt`, and each option becomes a WhatsApp reply\nbutton or list row, a Telegram inline button, a Messenger or Instagram\nquick reply or a website chat chip (a numbered list where a channel\ncannot show them). A tap comes back as the option's label. `language`\nis the language they are written in (the reply's), for the platform's\nown words around them (the button that opens a WhatsApp list).",
+        "properties": {
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "options": {
+            "items": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 2,
+            "title": "Options",
+            "type": "array"
+          },
+          "prompt": {
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+            "title": "Prompt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt",
+          "options"
+        ],
+        "title": "ReplyChoices",
         "type": "object"
       },
       "ReplyGuardReason": {
@@ -28878,10 +29003,20 @@
       },
       "WidgetMessageView": {
         "additionalProperties": false,
-        "description": "An assistant or staff message as the widget shows it.",
+        "description": "An assistant or staff message as the widget shows it; `choices` are the\noptions an assistant reply offers, shown as chips under it until the\nvisitor writes (a tap sends the label).",
         "properties": {
           "author": {
             "$ref": "#/components/schemas/MessageAuthor"
+          },
+          "choices": {
+            "items": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+              "type": "string"
+            },
+            "title": "Choices",
+            "type": "array"
           },
           "created_at": {
             "title": "Created At",

@@ -101,5 +101,9 @@ export const assistantEn = {
       name: "Note an unanswered question",
       description: "Saves questions it could not answer, for you to answer.",
     },
+    offer_choices: {
+      name: "Offer answers to tap",
+      description: "Shows the customer a few answers as buttons — a time, a service, yes or no. Where a channel has no buttons, they come as a numbered list.",
+    },
   },
 } as const;

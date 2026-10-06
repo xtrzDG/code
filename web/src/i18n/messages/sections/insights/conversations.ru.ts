@@ -169,6 +169,7 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     handoff_to_human: "Передал человеку",
     send_link: "Отправил ссылку",
     record_unanswered_question: "Записал вопрос без ответа",
+    offer_choices: "Предложил варианты ответа",
   },
   messageTokens: "токенов: {count}",
   usage: {

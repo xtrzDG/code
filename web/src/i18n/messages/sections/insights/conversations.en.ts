@@ -155,6 +155,7 @@ export const conversationsEn = {
     handoff_to_human: "Passed to a person",
     send_link: "Sent a link",
     record_unanswered_question: "Noted a question without an answer",
+    offer_choices: "Offered answers to tap",
   },
   messageTokens: "{count} tokens",
   usage: {

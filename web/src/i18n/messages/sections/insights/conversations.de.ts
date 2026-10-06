@@ -159,6 +159,7 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     handoff_to_human: "Hat an eine Person übergeben",
     send_link: "Hat einen Link gesendet",
     record_unanswered_question: "Hat eine unbeantwortete Frage notiert",
+    offer_choices: "Hat Antworten zum Antippen angeboten",
   },
   messageTokens: "{count} Tokens",
   usage: {
