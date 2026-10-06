@@ -184,7 +184,7 @@ class WidgetAccentColor(BaseConstrainedTypedString):
     Brand colour of the website chat widget as a six-digit hex colour.
 
     Example:
-        color = WidgetAccentColor("#0f766e")
+        color = WidgetAccentColor("#ad5732")
     """
 
     min_length = 7
