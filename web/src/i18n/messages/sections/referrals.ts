@@ -21,6 +21,12 @@ import { partnerPortalRu } from "./referrals/partnerPortal.ru";
 import { referralsEn } from "./referrals/referrals.en";
 import { referralsKa } from "./referrals/referrals.ka";
 import { referralsRu } from "./referrals/referrals.ru";
+import { adminPartnersHe } from "./referrals/adminPartners.he";
+import { adminPartnersDe } from "./referrals/adminPartners.de";
+import { partnerPortalHe } from "./referrals/partnerPortal.he";
+import { partnerPortalDe } from "./referrals/partnerPortal.de";
+import { referralsHe } from "./referrals/referrals.he";
+import { referralsDe } from "./referrals/referrals.de";
 
 export const referralsSectionEn = {
   referrals: referralsEn,
@@ -38,4 +44,16 @@ export const referralsSectionKa: Translation<typeof referralsSectionEn> = {
   referrals: referralsKa,
   partnerPortal: partnerPortalKa,
   adminPartners: adminPartnersKa,
+};
+
+export const referralsSectionHe: Translation<typeof referralsSectionEn> = {
+  referrals: referralsHe,
+  partnerPortal: partnerPortalHe,
+  adminPartners: adminPartnersHe,
+};
+
+export const referralsSectionDe: Translation<typeof referralsSectionEn> = {
+  referrals: referralsDe,
+  partnerPortal: partnerPortalDe,
+  adminPartners: adminPartnersDe,
 };

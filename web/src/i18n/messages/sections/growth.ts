@@ -23,6 +23,12 @@ import { returnVisitsRu } from "./growth/returnVisits.ru";
 import { waitlistEn } from "./growth/waitlist.en";
 import { waitlistKa } from "./growth/waitlist.ka";
 import { waitlistRu } from "./growth/waitlist.ru";
+import { growthValueHe } from "./growth/growthValue.he";
+import { growthValueDe } from "./growth/growthValue.de";
+import { returnVisitsHe } from "./growth/returnVisits.he";
+import { returnVisitsDe } from "./growth/returnVisits.de";
+import { waitlistHe } from "./growth/waitlist.he";
+import { waitlistDe } from "./growth/waitlist.de";
 
 export const growthSectionEn = {
   waitlist: waitlistEn,
@@ -40,4 +46,16 @@ export const growthSectionKa: Translation<typeof growthSectionEn> = {
   waitlist: waitlistKa,
   returnVisits: returnVisitsKa,
   growthValue: growthValueKa,
+};
+
+export const growthSectionHe: Translation<typeof growthSectionEn> = {
+  waitlist: waitlistHe,
+  returnVisits: returnVisitsHe,
+  growthValue: growthValueHe,
+};
+
+export const growthSectionDe: Translation<typeof growthSectionEn> = {
+  waitlist: waitlistDe,
+  returnVisits: returnVisitsDe,
+  growthValue: growthValueDe,
 };

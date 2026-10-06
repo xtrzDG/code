@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchLocale, negotiateLocale, resolveLocale } from "./config";
+import { CABINET_LANGUAGES, LOCALES, matchLocale, negotiateLocale, resolveLocale } from "./config";
 import { DICTIONARIES, getMessages } from "./messages";
 import { en } from "./messages/en";
 import { createTranslator, interpolate, lookupMessage, mergeMessages, type MessageTree } from "./translate";
@@ -79,18 +79,31 @@ describe("translator", () => {
   });
 });
 
+/** The English texts every dictionary needs (plural forms other than `other` are the language's own). */
+const REFERENCE_KEYS = leafKeys(en).filter((key) => !/\.(zero|one|two|few|many)$/.test(key));
+
+function missingKeys(locale: (typeof LOCALES)[number]): string[] {
+  const keys = new Set(leafKeys(DICTIONARIES[locale]));
+  return REFERENCE_KEYS.filter((key) => !keys.has(key));
+}
+
 describe("dictionaries", () => {
-  it("have every English text in Georgian and Russian", () => {
-    const reference = leafKeys(en).filter((key) => !/\.(zero|one|two|few|many)$/.test(key));
-    for (const locale of ["ka", "ru"] as const) {
-      const keys = new Set(leafKeys(DICTIONARIES[locale]));
-      expect(reference.filter((key) => !keys.has(key)), locale).toEqual([]);
+  it("are complete in every language owners can choose", () => {
+    for (const locale of CABINET_LANGUAGES) {
+      expect(missingKeys(locale), locale).toEqual([]);
+    }
+  });
+
+  it("offer every complete language, and only complete ones (a draft stays out of the picker)", () => {
+    for (const locale of LOCALES) {
+      const complete = missingKeys(locale).length === 0;
+      expect(CABINET_LANGUAGES.includes(locale), `${locale}: ${complete ? "complete" : "incomplete"}`).toBe(complete);
     }
   });
 
   it("never end a sentence on a formatted date (a Russian one ends with “г.”)", () => {
     const endsOnDate = /\{(date|when|until|time|start|end|from|to|day)\}\./;
-    for (const locale of ["en", "ru", "ka"] as const) {
+    for (const locale of LOCALES) {
       const offending = leafKeys(DICTIONARIES[locale]).filter((key) => {
         const text = lookupMessage(DICTIONARIES[locale], key);
         return typeof text === "string" && endsOnDate.test(text);
@@ -100,15 +113,30 @@ describe("dictionaries", () => {
   });
 
   it("keep the placeholders of the English texts", () => {
-    const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
-    for (const locale of ["ka", "ru"] as const) {
-      for (const key of leafKeys(en)) {
+    const placeholders = (text: string) => [...new Set([...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]))].sort();
+    for (const locale of LOCALES.filter((code) => code !== "en")) {
+      for (const key of leafKeys(DICTIONARIES[locale])) {
         const translated = lookupMessage(DICTIONARIES[locale], key);
-        const original = lookupMessage(en, key);
-        if (typeof translated === "string" && typeof original === "string") {
+        const plural = /\.(zero|one|two|few|many|other)$/.test(key);
+        // A plural form may say "a minute" for {count} = 1: its placeholders are among the English text's.
+        const original = lookupMessage(en, plural ? key.replace(/\.\w+$/, ".other") : key);
+        if (typeof translated !== "string" || typeof original !== "string") {
+          continue;
+        }
+        if (plural) {
+          expect(placeholders(original), `${locale}:${key}`).toEqual(expect.arrayContaining(placeholders(translated)));
+        } else {
           expect(placeholders(translated), `${locale}:${key}`).toEqual(placeholders(original));
         }
       }
+    }
+  });
+
+  it("have no text the English dictionary does not have", () => {
+    const reference = new Set(leafKeys(en).map((key) => key.replace(/\.(zero|one|two|few|many|other)$/, "")));
+    for (const locale of LOCALES) {
+      const extra = leafKeys(DICTIONARIES[locale]).filter((key) => !reference.has(key.replace(/\.(zero|one|two|few|many|other)$/, "")));
+      expect(extra, locale).toEqual([]);
     }
   });
 });
