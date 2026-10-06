@@ -8,14 +8,17 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { ErrorState, LoadingRegion, SkeletonCard } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
+import { ApiKeysCard } from "./integrations/ApiKeysCard";
 import { IntegrationsCard } from "./integrations/IntegrationsCard";
 import { ResourceCalendarsCard } from "./integrations/ResourceCalendarsCard";
+import { WebhooksCard } from "./integrations/WebhooksCard";
 
 /**
  * Settings → Integrations (owners): Google Calendar, imported and shared
  * iCal calendars and Cal.com, each with its state, how many resources use
- * it and when it last read; then the resources that have calendars. The
- * calendars themselves are set per resource on Resources and hours.
+ * it and when it last read; then the resources that have calendars (the
+ * calendars themselves are set per resource on Resources and hours); then
+ * outbound webhooks and the API keys of Zapier and the public API.
  */
 export function IntegrationsTab() {
   const { t } = useI18n();
@@ -46,6 +49,8 @@ export function IntegrationsTab() {
     <div className="space-y-6">
       <IntegrationsCard items={integrations.data.items} />
       <ResourceCalendarsCard summaries={integrations.data.resources ?? []} resourceName={resourceName} />
+      <WebhooksCard />
+      <ApiKeysCard />
     </div>
   );
 }

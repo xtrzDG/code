@@ -19,6 +19,7 @@ import { adminSystemDe } from "./adminSystem.de";
 import { adminTeamDe } from "./adminTeam.de";
 import { billingDe } from "./billing.de";
 import { billingLifecycleDe } from "./billingLifecycle.de";
+import { apiIntegrationsDe } from "./apiIntegrations.de";
 import { calendarSyncDe } from "./calendarSync.de";
 import { callSettingsDe } from "./callSettings.de";
 import { channelPagesDe } from "./channelPages.de";
@@ -54,6 +55,7 @@ export const workspaceDe: Translation<typeof workspaceEn> = {
   callSettings: callSettingsDe,
   reviewSettings: reviewSettingsDe,
   calendarSync: calendarSyncDe,
+  apiIntegrations: apiIntegrationsDe,
   quickReplies: quickRepliesDe,
   admin: adminDe,
   adminSecurity: adminSecurityDe,

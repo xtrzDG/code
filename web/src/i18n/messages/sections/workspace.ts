@@ -56,6 +56,9 @@ import { billingRu } from "./workspace/billing.ru";
 import { billingLifecycleEn } from "./workspace/billingLifecycle.en";
 import { billingLifecycleKa } from "./workspace/billingLifecycle.ka";
 import { billingLifecycleRu } from "./workspace/billingLifecycle.ru";
+import { apiIntegrationsEn } from "./workspace/apiIntegrations.en";
+import { apiIntegrationsKa } from "./workspace/apiIntegrations.ka";
+import { apiIntegrationsRu } from "./workspace/apiIntegrations.ru";
 import { calendarSyncEn } from "./workspace/calendarSync.en";
 import { calendarSyncKa } from "./workspace/calendarSync.ka";
 import { calendarSyncRu } from "./workspace/calendarSync.ru";
@@ -130,6 +133,7 @@ export const workspaceEn = {
   callSettings: callSettingsEn,
   reviewSettings: reviewSettingsEn,
   calendarSync: calendarSyncEn,
+  apiIntegrations: apiIntegrationsEn,
   quickReplies: quickRepliesEn,
   admin: adminEn,
   adminSecurity: adminSecurityEn,
@@ -167,6 +171,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   callSettings: callSettingsRu,
   reviewSettings: reviewSettingsRu,
   calendarSync: calendarSyncRu,
+  apiIntegrations: apiIntegrationsRu,
   quickReplies: quickRepliesRu,
   admin: adminRu,
   adminSecurity: adminSecurityRu,
@@ -204,6 +209,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   callSettings: callSettingsKa,
   reviewSettings: reviewSettingsKa,
   calendarSync: calendarSyncKa,
+  apiIntegrations: apiIntegrationsKa,
   quickReplies: quickRepliesKa,
   admin: adminKa,
   adminSecurity: adminSecurityKa,

@@ -19,6 +19,7 @@ import { adminSystemHe } from "./adminSystem.he";
 import { adminTeamHe } from "./adminTeam.he";
 import { billingHe } from "./billing.he";
 import { billingLifecycleHe } from "./billingLifecycle.he";
+import { apiIntegrationsHe } from "./apiIntegrations.he";
 import { calendarSyncHe } from "./calendarSync.he";
 import { callSettingsHe } from "./callSettings.he";
 import { channelPagesHe } from "./channelPages.he";
@@ -54,6 +55,7 @@ export const workspaceHe: Translation<typeof workspaceEn> = {
   callSettings: callSettingsHe,
   reviewSettings: reviewSettingsHe,
   calendarSync: calendarSyncHe,
+  apiIntegrations: apiIntegrationsHe,
   quickReplies: quickRepliesHe,
   admin: adminHe,
   adminSecurity: adminSecurityHe,
