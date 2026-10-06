@@ -16,7 +16,7 @@ import { localInputToMicros, microsToLocalInput } from "./localTime";
 export type Incident = Schema<"IncidentView">;
 export type IncidentKind = Schema<"IncidentKind">;
 export type IncidentSeverity = Schema<"IncidentSeverity">;
-export type IncidentScope = Schema<"IncidentScope">;
+type IncidentScope = Schema<"IncidentScope">;
 export type CreateIncidentBody = RequestBody<"/v1/admin/incidents", "post">;
 
 export const INCIDENT_KINDS: readonly IncidentKind[] = ["outage", "degradation", "data_breach"];
