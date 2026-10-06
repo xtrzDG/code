@@ -7,8 +7,7 @@
  * (for kinds that last a while). Its save state sits at the end. On a
  * phone the name and the price share one row, an example's tag sits on
  * the frame, and removing is in the line's "⋯" menu; with the kind and
- * minutes columns the line takes two rows: the name with its save state
- * and menu, then the kind, the price and the minutes.
+ * minutes columns those two go to a second row under the name and price.
  */
 
 import type { FocusEvent } from "react";
@@ -59,8 +58,6 @@ export function OfferLine({
   const hasDuration = kindHasDuration(row.kind);
   const problem = errors.title ?? errors.price ?? errors.duration;
   const twoRows = columns.showKind || columns.showDuration;
-  /** On a phone, what goes to the second row. */
-  const lower = twoRows ? "max-sm:order-1" : undefined;
 
   const leave = (event: FocusEvent<HTMLLIElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -91,10 +88,11 @@ export function OfferLine({
             className="border-transparent bg-transparent shadow-none focus:border-line-strong"
           />
         </div>
+        {/* On a phone the kind and the minutes (order-1) wrap under this break. */}
         {twoRows ? <span aria-hidden className="h-0 basis-full sm:hidden max-sm:order-1" /> : null}
         {row.isSuggestion ? (
           // On a phone the tag sits on the line's dashed frame, so the name and the price keep one row.
-          <Badge tone="neutral" className={cn("max-sm:absolute max-sm:-top-2.5 max-sm:start-3 max-sm:py-0 max-sm:text-[0.6875rem]", lower)}>
+          <Badge tone="neutral" className="max-sm:absolute max-sm:-top-2.5 max-sm:start-3 max-sm:py-0 max-sm:text-[0.6875rem]">
             {t("tunnelOffer.offer.suggestion")}
           </Badge>
         ) : null}
@@ -112,7 +110,7 @@ export function OfferLine({
             ))}
           </Select>
         ) : null}
-        <div className={cn("relative w-32 shrink-0 max-sm:w-28", lower)}>
+        <div className="relative w-32 shrink-0 max-sm:w-28">
           <Input
             aria-label={`${t("tunnelOffer.offer.price", { currency })} ${index + 1}`}
             aria-invalid={errors.price ? true : undefined}
@@ -153,7 +151,8 @@ export function OfferLine({
           label={t("tunnelOffer.offer.rowMenu", { name: label })}
           placement="bottom"
           className="shrink-0 sm:hidden"
-          actions={[{ key: "remove", label: t("tunnelOffer.offer.removeRow", { name }), onSelect: onRemove, tone: "danger" }]}
+          // The menu already names the line; its one item stays short enough for a phone.
+          actions={[{ key: "remove", label: t("common.delete"), onSelect: onRemove, tone: "danger" }]}
         />
       </div>
       {problem ? (

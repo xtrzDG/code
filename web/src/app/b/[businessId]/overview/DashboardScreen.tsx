@@ -164,7 +164,11 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
         )}
 
         {/* Bad ratings and questions without an answer, to fix while they are fresh. */}
-        {isLaunched(business.status) ? <AnswersToImproveCard /> : null}
+        {isLaunched(business.status) ? (
+          <PhoneFold name="answers" title={t("teaching.improve.title")}>
+            <AnswersToImproveCard />
+          </PhoneFold>
+        ) : null}
 
         {/* What customers asked about in the last 30 days (the period above does not change it). */}
         {isLaunched(business.status) ? (
