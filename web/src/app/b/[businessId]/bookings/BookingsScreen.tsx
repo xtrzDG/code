@@ -44,7 +44,8 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         description={t("pages.bookings.description")}
         status={<LiveStatus updatedAt={shown.updatedAt} isFetching={shown.isFetching && shown.items !== undefined} />}
         actions={
-          isOwner ? (
+          // Today's agenda on a phone keeps its first arrival high under the section's tabs; the list exports.
+          isOwner && !(page.isCompact && isToday) ? (
             <ExportCsvButton
               table="bookings"
               query={bookingApiQuery(filters, page.range)}

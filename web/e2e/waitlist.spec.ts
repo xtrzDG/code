@@ -27,21 +27,22 @@ test("the demo restaurant's waitlist by list, and a guest taken off it", async (
   await expect(page.getByRole("heading", { level: 1, name: en.navigation.sections.bookings })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: pages.bookingsWaitlist })).toBeVisible();
 
+  const filter = (label: string) => page.getByRole("radio", { name: new RegExp(`^${label}`) });
   const entries = page.getByRole("article");
   await expect(entries.first()).toBeVisible();
   const waiting = await entries.count();
   expect(waiting).toBeGreaterThan(0);
   await expect(entries.first().getByText(waitlist.status.waiting)).toBeVisible();
 
-  await page.getByText(waitlist.filters.booked, { exact: true }).click();
+  await filter(waitlist.filters.booked).check({ force: true });
   await expect(page).toHaveURL(/\?filter=booked$/);
   await expect(entries.first().getByText(waitlist.status.booked, { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: new RegExp(waitlist.remove) })).toHaveCount(0);
 
-  await page.getByText(waitlist.filters.ended, { exact: true }).click();
+  await filter(waitlist.filters.ended).check({ force: true });
   await expect(entries.first().getByText(waitlist.endReasons.no_answer)).toBeVisible();
 
-  await page.getByText(waitlist.filters.active, { exact: true }).click();
+  await filter(waitlist.filters.active).check({ force: true });
   await expect(entries).toHaveCount(waiting);
   const last = entries.last();
   const name = (await last.getAttribute("aria-label")) ?? "";
