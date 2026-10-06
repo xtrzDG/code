@@ -53,7 +53,8 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
         _rule(
             PlatformAlertCode.DEAD_JOBS,
             IncidentSeverity.SEV2,
-            "Background jobs ran out of attempts and wait in the dead letters.",
+            "Background jobs ran out of attempts or took their worker down "
+            "twice; they wait in the dead letters.",
             0,
             AlertUnit.COUNT,
             CHECK_INTERVAL_MINUTES,

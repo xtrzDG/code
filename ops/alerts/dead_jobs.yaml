@@ -1,8 +1,10 @@
-# Background jobs that ran out of attempts: a reply, a notification or an
-# import that will never happen unless someone retries or discards it.
+# Background jobs that ran out of attempts, or whose attempts took their
+# worker process down twice in a row (process_died): a reply, a
+# notification or an import that will never happen unless someone retries
+# or discards it.
 code: dead_jobs
 severity: sev2
-summary: Background jobs ran out of attempts and wait in the dead letters.
+summary: Background jobs ran out of attempts or took their worker down twice; they wait in the dead letters.
 # Fires when the figure is above the threshold: any dead job at all.
 measure: dead queued jobs, by job name
 threshold: 0

@@ -59,7 +59,7 @@ figure is above its threshold:
 
 | Alert | Fires when | Severity | Runbook |
 | --- | --- | --- | --- |
-| `dead_jobs` | any queued job ran out of attempts | SEV2 | [stuck-worker](runbooks/stuck-worker.md) |
+| `dead_jobs` | any queued job ran out of attempts or took its worker down twice (`process_died`) | SEV2 | [stuck-worker](runbooks/stuck-worker.md) |
 | `inbound_backlog` | the oldest due customer message has waited over 120 s | SEV2 | [stuck-worker](runbooks/stuck-worker.md) |
 | `outbound_failures` | over 10% of the last hour's settled outbox messages died (at least 20) | SEV2 | [delivery-failures](runbooks/delivery-failures.md) |
 | `llm_errors` | over 5% of the last 15-30 minutes' model calls failed (at least 20) | SEV1 | [llm-outage](runbooks/llm-outage.md) |
