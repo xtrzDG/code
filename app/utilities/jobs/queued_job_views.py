@@ -27,6 +27,7 @@ def build_queued_job_view(job: QueuedJobDocument) -> QueuedJobView:
         run_at=job.run_at,
         lease_until=job.lease_until,
         last_error=job.last_error,
+        dead_reason=job.dead_reason,
         created_at=job.created_at,
         updated_at=job.updated_at,
     )

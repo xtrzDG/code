@@ -106,6 +106,17 @@ class ListItemCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class LostJobLeaseCount(BaseConstrainedTypedInt):
+    """
+    How many attempts in a row of a queued job ended without a recorded
+    result: its lease ran out because its worker process died (killed, out
+    of memory) or lost the database while running it.
+    """
+
+    ge = 0
+    le = 1000
+
+
 class MigrationCount(BaseConstrainedTypedInt):
     """How many SQL migrations of this build a database has not applied yet."""
 
@@ -156,6 +167,12 @@ class RetryAfterSeconds(BaseConstrainedTypedInt):
 
     ge = 1
     le = 24 * 60 * 60
+
+
+class ResidentMemoryBytes(BaseConstrainedTypedInt):
+    """The memory a process holds in RAM (its resident set), in bytes."""
+
+    ge = 0
 
 
 class TestChatConcurrencyLimit(BaseConstrainedTypedInt):

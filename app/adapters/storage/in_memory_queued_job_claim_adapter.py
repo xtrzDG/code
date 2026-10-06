@@ -6,7 +6,7 @@ from typed_time_provider import Microseconds
 
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.jobs import QueuedJobClaimAdapterContract
-from app.schemas.constants.jobs import QueuedJobStatus
+from app.schemas.constants.jobs import JobDeathReason, QueuedJobStatus
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.dto.job_queue import (
     ExpiredLeaseRelease,
@@ -16,6 +16,7 @@ from app.schemas.dto.job_queue import (
 )
 from app.schemas.typings.platform.constrained_integers import (
     JobAttemptCount,
+    LostJobLeaseCount,
     ProcessedItemCount,
 )
 from app.schemas.typings.platform.constrained_strings import (
@@ -213,8 +214,10 @@ def release_expired(
     release: ExpiredLeaseRelease,
 ) -> QueuedJobDocument | None:
     """
-    A running job whose lease ended, back to PENDING (due now) or DEAD after
-    its last attempt; None when its lease is still alive.
+    A running job whose lease ended, with one more lost lease: back to
+    PENDING (due now), DEAD after its worker died with it `max_lost_leases`
+    times in a row (process_died) or after its last attempt
+    (attempts_exhausted); None when its lease is still alive.
     """
 
     if current.status is not QueuedJobStatus.RUNNING:
@@ -223,14 +226,20 @@ def release_expired(
     if current.lease_until is not None and current.lease_until >= release.now:
         return None
 
-    current.status = (
-        QueuedJobStatus.DEAD
-        if current.attempts >= release.max_attempts
-        else QueuedJobStatus.PENDING
-    )
+    lost_leases = LostJobLeaseCount(int(current.lost_leases) + 1)
+    current.lost_leases = lost_leases
+    current.last_error = release.error_text
+    current.status = QueuedJobStatus.DEAD
+    if lost_leases >= release.max_lost_leases:
+        current.dead_reason = JobDeathReason.PROCESS_DIED
+        current.last_error = release.process_died_text
+    elif current.attempts >= release.max_attempts:
+        current.dead_reason = JobDeathReason.ATTEMPTS_EXHAUSTED
+    else:
+        current.status = QueuedJobStatus.PENDING
+
     current.run_at = release.now
     current.lease_until = None
     current.lease_token = None
-    current.last_error = release.error_text
     current.updated_at = release.now
     return current

@@ -3,7 +3,7 @@
 import pytest
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.jobs import JobLane, QueuedJobStatus
+from app.schemas.constants.jobs import JobDeathReason, JobLane, QueuedJobStatus
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.dto.job_queue import (
     ExpiredLeaseRelease,
@@ -15,6 +15,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.platform.constrained_integers import (
     JobAttemptCount,
     JobClaimLimit,
+    LostJobLeaseCount,
 )
 from app.schemas.typings.platform.constrained_strings import (
     JobLeaseToken,
@@ -156,6 +157,10 @@ def test_expired_leases_are_released_or_the_job_dies(stores: JobStores) -> None:
     exhausted = add_job(stores, -4)
     exhausted.attempts = JobAttemptCount(4)
     stores.job_repo.save(exhausted)
+    # Its previous attempt ended with its worker too.
+    poison = add_job(stores, -3)
+    poison.lost_leases = LostJobLeaseCount(1)
+    stores.job_repo.save(poison)
     claim(stores)
     alive = add_job(stores, 100)
     claim(stores, at_seconds=100, token=SECOND_TOKEN)
@@ -165,19 +170,55 @@ def test_expired_leases_are_released_or_the_job_dies(stores: JobStores) -> None:
             now=Microseconds(int(NOW) + 150 * SECOND),
             max_attempts=JobAttemptCount(5),
             error_text=JobErrorText("Lease expired."),
+            max_lost_leases=LostJobLeaseCount(2),
+            process_died_text=JobErrorText("process_died: set aside."),
         )
     )
 
     by_id = {job.id: job for job in released}
-    assert set(by_id) == {retried.id, exhausted.id}
+    assert set(by_id) == {retried.id, exhausted.id, poison.id}
     assert by_id[retried.id].status is QueuedJobStatus.PENDING
     assert by_id[retried.id].run_at == Microseconds(int(NOW) + 150 * SECOND)
+    assert by_id[retried.id].dead_reason is None
     assert by_id[exhausted.id].status is QueuedJobStatus.DEAD
+    assert by_id[exhausted.id].dead_reason is JobDeathReason.ATTEMPTS_EXHAUSTED
+    assert by_id[poison.id].status is QueuedJobStatus.DEAD
+    assert by_id[poison.id].dead_reason is JobDeathReason.PROCESS_DIED
+    assert by_id[poison.id].last_error == "process_died: set aside."
     for job in released:
         assert job.lease_until is None and job.lease_token is None
-        assert job.last_error == "Lease expired."
+        assert int(job.lost_leases) == (2 if job.id == poison.id else 1)
+        if job.id != poison.id:
+            assert job.last_error == "Lease expired."
         assert stores.job_repo.get(job.id) == job
 
     still_running = stores.job_repo.get(alive.id)
     assert still_running is not None
     assert still_running.status is QueuedJobStatus.RUNNING
+
+
+def test_a_stopping_worker_hands_back_only_what_it_still_holds(
+    stores: JobStores,
+) -> None:
+    job = add_job(stores)
+    [running] = claim(stores)
+    later = Microseconds(int(NOW) + 30 * SECOND)
+
+    stolen = stores.job_repo.hand_back(
+        HeldJobLease(job_id=job.id, lease_token=SECOND_TOKEN), later
+    )
+    handed = stores.job_repo.hand_back(
+        HeldJobLease(job_id=job.id, lease_token=FIRST_TOKEN), later
+    )
+    again = stores.job_repo.hand_back(
+        HeldJobLease(job_id=job.id, lease_token=FIRST_TOKEN), later
+    )
+
+    assert int(running.attempts) == 1
+    assert (stolen, handed, again) == (False, True, False)
+    stored = stores.job_repo.get(job.id)
+    assert stored is not None
+    assert stored.status is QueuedJobStatus.PENDING
+    assert int(stored.attempts) == 0
+    assert stored.run_at == later
+    assert stored.lease_token is None and stored.lease_until is None

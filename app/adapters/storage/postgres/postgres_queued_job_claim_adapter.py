@@ -117,6 +117,8 @@ class PostgresQueuedJobClaimAdapter(QueuedJobClaimAdapterContract):
                     "now": int(release.now),
                     "max_attempts": int(release.max_attempts),
                     "error_text": str(release.error_text),
+                    "max_lost_leases": int(release.max_lost_leases),
+                    "process_died_text": str(release.process_died_text),
                 },
             ).fetchall()
 

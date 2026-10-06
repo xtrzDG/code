@@ -93,7 +93,7 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
   },
   deadLetters: {
     title: "„მკვდარი“ ამოცანები",
-    description: "ამოცანები, რომლებმაც ყველა მცდელობა ამოწურეს. გაიმეორეთ, როცა მიზეზი გამოსწორდება; უარყავით ის, რომელიც ვერასდროს შესრულდება.",
+    description: "ამოცანები, რომლებმაც ყველა მცდელობა ამოწურეს ან ზედიზედ ორჯერ გათიშეს ვორკერი. გაიმეორეთ, როცა მიზეზი გამოსწორდება; უარყავით ის, რომელიც ვერასდროს შესრულდება.",
     none: "„მკვდარი“ ამოცანები არ არის",
     noneDescription: "ყველა ამოცანა შესრულდა ან ჯერ კიდევ სრულდება.",
     tally: "{name}: {count}",
@@ -114,6 +114,11 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
     confirm: "ამოცანის უარყოფა",
     discarding: "უარვყოფთ…",
     changed: "ამოცანა ამასობაში შეიცვალა; სია ახლანდელი სახით არის ნაჩვენები.",
+    reasons: {
+      attempts_exhausted: "ყველა მცდელობა წარუმატებელი იყო",
+      process_died: "ორჯერ გათიშა ვორკერი",
+      no_handler: "დამმუშავებელი არ არის",
+    },
   },
   channels: {
     title: "არხები",

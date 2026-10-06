@@ -22,6 +22,7 @@ from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.jobs import PeriodicJobRunDocument, QueuedJobDocument
 from app.schemas.dto.job_queue import (
     ExpiredLeaseRelease,
+    HeldJobLease,
     JobClaimRequest,
     JobLeaseExtension,
     PeriodicRunLease,
@@ -153,6 +154,14 @@ class QueuedJobRepoContract(RepoContract, Protocol):
         self,
         release: ExpiredLeaseRelease,
     ) -> list[QueuedJobDocument]:
+        raise NotImplementedError
+
+    def hand_back(self, lease: HeldJobLease, now: Microseconds) -> bool:
+        """
+        A stopping worker gives a job it still runs back to the queue: due
+        `now`, the cut-off attempt not counted (`hand_back_job`). False when
+        the job no longer runs under the lease's token.
+        """
         raise NotImplementedError
 
     def update(

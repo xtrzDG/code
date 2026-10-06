@@ -13,6 +13,7 @@ export type AlertState = Schema<"AlertStateView">;
 export type AlertUnit = Schema<"AlertUnit">;
 export type IncidentSeverity = Schema<"IncidentSeverity">;
 export type JobLane = Schema<"JobLane">;
+export type JobDeathReason = Schema<"JobDeathReason">;
 export type Lane = Schema<"LaneView">;
 export type WorkerPulse = Schema<"WorkerPulseView">;
 export type ChannelIssue = Schema<"ChannelIssueView">;

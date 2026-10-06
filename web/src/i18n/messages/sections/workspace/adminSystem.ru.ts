@@ -97,7 +97,7 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
   },
   deadLetters: {
     title: "«Мёртвые» задачи",
-    description: "Задачи, исчерпавшие все попытки. Повторите, когда причина устранена; отбросьте ту, что никогда не выполнится.",
+    description: "Задачи, исчерпавшие все попытки или дважды подряд уронившие воркер. Повторите, когда причина устранена; отбросьте ту, что никогда не выполнится.",
     none: "«Мёртвых» задач нет",
     noneDescription: "Каждая задача выполнена или ещё выполняется.",
     tally: "{name}: {count}",
@@ -118,6 +118,11 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
     confirm: "Отбросить задачу",
     discarding: "Отбрасываем…",
     changed: "Задача тем временем изменилась; список показан в текущем виде.",
+    reasons: {
+      attempts_exhausted: "Все попытки неудачны",
+      process_died: "Дважды уронила воркер",
+      no_handler: "Нет обработчика",
+    },
   },
   channels: {
     title: "Каналы",

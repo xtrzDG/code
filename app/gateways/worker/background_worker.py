@@ -45,7 +45,7 @@ __all__ = ["BackgroundWorker", "PeriodicJobSpec", "WorkerTickReport"]
 # extends it every quarter of that while the job runs.
 DEFAULT_LEASE_SECONDS: JobLeaseSeconds = JobLeaseSeconds(120)
 # On shutdown running jobs get this long to finish (Render stops a service
-# 30 s after SIGTERM); the rest continue elsewhere once their lease ends.
+# 30 s after SIGTERM); the rest go back to the queue for another worker.
 STOP_GRACE_SECONDS: float = 25.0
 # After a tick that failed as a whole (the database is down), wait longer
 # and longer between ticks, up to this many seconds.
@@ -109,8 +109,10 @@ class BackgroundWorker:
         heartbeat_recorder: WorkerHeartbeatRecorder | None = None,
         inbound_poll_seconds: WorkerLanePollSeconds | None = None,
         lanes: Sequence[JobLane] = tuple(JobLane),
+        stop_grace_seconds: float = STOP_GRACE_SECONDS,
     ) -> None:
         self._poll_seconds: WorkerPollSeconds = poll_seconds
+        self._stop_grace_seconds: float = stop_grace_seconds
         self._lanes: tuple[JobLane, ...] = tuple(lanes)
         self._job_wakeup: JobWakeupContract = job_wakeup
         self._heartbeat_recorder: WorkerHeartbeatRecorder | None = heartbeat_recorder
@@ -215,7 +217,7 @@ class BackgroundWorker:
         the calling thread until `stop_event` is set. A tick that fails as a
         whole is reported and followed by a pause that doubles with every
         further failure (at most MAX_TICK_BACKOFF_SECONDS). On stop, running
-        jobs get STOP_GRACE_SECONDS to finish.
+        jobs get STOP_GRACE_SECONDS to finish; the rest are handed back.
         """
 
         with self._job_wakeup.listen():
@@ -241,7 +243,14 @@ class BackgroundWorker:
         finally:
             stopping.set()
             self._lane_threads.wake_all()
-            self._lane_threads.join(STOP_GRACE_SECONDS)
+            if not self._lane_threads.join(self._stop_grace_seconds):
+                self._hand_back_running_jobs()
+
+    def _hand_back_running_jobs(self) -> None:
+        try:
+            self._queued_runner.hand_back_running_jobs()
+        except Exception as error:  # noqa: BLE001 - their leases end anyway
+            self._failure_reporter.report(JOB_QUEUE_JOB, error)
 
     def _tick_periodic_jobs(self, stop_event: threading.Event) -> None:
         consecutive_failures: int = 0

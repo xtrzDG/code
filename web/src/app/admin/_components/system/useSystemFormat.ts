@@ -5,13 +5,28 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { formatNumber } from "@/lib/format";
 
-import { byteSize, durationParts, type AlertState, type AlertUnit, type JobLane, type RunState } from "../../_lib/system";
+import {
+  byteSize,
+  durationParts,
+  type AlertState,
+  type AlertUnit,
+  type JobDeathReason,
+  type JobLane,
+  type RunState,
+} from "../../_lib/system";
 
 export const LANE_NAMES: Readonly<Record<JobLane, MessageKey>> = {
   inbound: "adminSystem.lanes.names.inbound",
   outbound: "adminSystem.lanes.names.outbound",
   default: "adminSystem.lanes.names.default",
   autotests: "adminSystem.lanes.names.autotests",
+};
+
+/** Why a dead job died; a job that took its worker down is the one to look into first. */
+export const DEATH_REASON_NAMES: Readonly<Record<JobDeathReason, MessageKey>> = {
+  attempts_exhausted: "adminSystem.deadLetters.reasons.attempts_exhausted",
+  process_died: "adminSystem.deadLetters.reasons.process_died",
+  no_handler: "adminSystem.deadLetters.reasons.no_handler",
 };
 
 export const RUN_STATE_NAMES: Readonly<Record<RunState, MessageKey>> = {

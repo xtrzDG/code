@@ -13814,6 +13814,16 @@
         "title": "InvoiceView",
         "type": "object"
       },
+      "JobDeathReason": {
+        "description": "Why a queued job is DEAD: it failed on its last attempt, two attempts\nin a row ended with their worker process (killed, out of memory: the\njob is not tried a third time, so it cannot take down worker after\nworker), or no handler knows its name.",
+        "enum": [
+          "attempts_exhausted",
+          "process_died",
+          "no_handler"
+        ],
+        "title": "JobDeathReason",
+        "type": "string"
+      },
       "JobLane": {
         "description": "Worker lane of a queued job. Each lane has its own threads in every\nworker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up\na customer message or a notification.",
         "enum": [
@@ -20045,7 +20055,7 @@
       },
       "QueuedJobView": {
         "additionalProperties": false,
-        "description": "One queued job as the platform admin sees it (no payload).\n\n`lease_until` is set while a worker runs the job; `last_error` is the\nerror of the latest failed attempt.",
+        "description": "One queued job as the platform admin sees it (no payload).\n\n`lease_until` is set while a worker runs the job; `last_error` is the\nerror of the latest failed attempt; `dead_reason` says why a DEAD job\ndied (its attempts failed, it took its worker process down twice in a\nrow, or no handler knows it).",
         "properties": {
           "attempts": {
             "maximum": 1000.0,
@@ -20067,6 +20077,16 @@
           "created_at": {
             "title": "Created At",
             "type": "integer"
+          },
+          "dead_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobDeathReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "title": "Id",

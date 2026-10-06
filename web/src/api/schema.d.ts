@@ -9440,6 +9440,15 @@ export interface components {
             tax_rate_basis_points?: number | null;
         };
         /**
+         * JobDeathReason
+         * @description Why a queued job is DEAD: it failed on its last attempt, two attempts
+         *     in a row ended with their worker process (killed, out of memory: the
+         *     job is not tried a third time, so it cannot take down worker after
+         *     worker), or no handler knows its name.
+         * @enum {string}
+         */
+        JobDeathReason: "attempts_exhausted" | "process_died" | "no_handler";
+        /**
          * JobLane
          * @description Worker lane of a queued job. Each lane has its own threads in every
          *     worker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up
@@ -11843,7 +11852,9 @@ export interface components {
          * @description One queued job as the platform admin sees it (no payload).
          *
          *     `lease_until` is set while a worker runs the job; `last_error` is the
-         *     error of the latest failed attempt.
+         *     error of the latest failed attempt; `dead_reason` says why a DEAD job
+         *     died (its attempts failed, it took its worker process down twice in a
+         *     row, or no handler knows it).
          */
         QueuedJobView: {
             /** Attempts */
@@ -11852,6 +11863,7 @@ export interface components {
             business_id?: string | null;
             /** Created At */
             created_at: number;
+            dead_reason?: components["schemas"]["JobDeathReason"] | null;
             /** Id */
             id: string;
             lane: components["schemas"]["JobLane"];

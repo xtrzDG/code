@@ -14,7 +14,7 @@ import { ScrollingTable } from "../metrics/ScrollingTable";
 import { adminClientPath } from "../../_lib/clients";
 import type { QueuedJob } from "../../_lib/system";
 import { useDeadJobs } from "../../_lib/useDeadJobs";
-import { LANE_NAMES, useSystemFormat } from "./useSystemFormat";
+import { DEATH_REASON_NAMES, LANE_NAMES, useSystemFormat } from "./useSystemFormat";
 
 /**
  * The queue's dead letters: how many each job has, and each one with its
@@ -149,8 +149,15 @@ function DeadJobRow({
         )}
       </Td>
       <Td align="right">{format.number(job.attempts)}</Td>
-      <Td className="max-w-80 min-w-48 text-xs break-words text-ink-muted" lang="en" dir="ltr">
-        {job.last_error ?? "—"}
+      <Td className="max-w-80 min-w-48 text-xs break-words text-ink-muted">
+        {job.dead_reason ? (
+          <div className="mb-1">
+            <Badge tone={job.dead_reason === "process_died" ? "danger" : "neutral"}>{t(DEATH_REASON_NAMES[job.dead_reason])}</Badge>
+          </div>
+        ) : null}
+        <span lang="en" dir="ltr">
+          {job.last_error ?? "—"}
+        </span>
       </Td>
       <Td className="whitespace-nowrap text-ink-muted">{format.when(job.updated_at)}</Td>
       <Td align="right">

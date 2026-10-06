@@ -1,4 +1,5 @@
 from collections.abc import Callable, Sequence
+from functools import partial
 
 from typed_time_provider import Microseconds
 
@@ -14,6 +15,7 @@ from app.schemas.constants.jobs import QueuedJobStatus
 from app.schemas.domain.jobs import PeriodicJobRunDocument, QueuedJobDocument
 from app.schemas.dto.job_queue import (
     ExpiredLeaseRelease,
+    HeldJobLease,
     JobClaimRequest,
     JobLeaseExtension,
     PeriodicRunLease,
@@ -28,6 +30,7 @@ from app.schemas.typings.platform.constrained_strings import (
 )
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 from app.schemas.typings.platform.strings import JobPayloadJson
+from app.utilities.jobs.job_hand_back import hand_back_job
 
 
 class QueuedJobRepository(QueuedJobRepoContract):
@@ -84,6 +87,13 @@ class QueuedJobRepository(QueuedJobRepoContract):
         release: ExpiredLeaseRelease,
     ) -> list[QueuedJobDocument]:
         return self._claims.release_expired_leases(release)
+
+    def hand_back(self, lease: HeldJobLease, now: Microseconds) -> bool:
+        handed_back: QueuedJobDocument | None = self._collection.modify(
+            str(lease.job_id),
+            partial(hand_back_job, lease_token=lease.lease_token, now=now),
+        )
+        return handed_back is not None
 
     def update(
         self,
