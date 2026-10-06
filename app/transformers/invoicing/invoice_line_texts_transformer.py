@@ -9,24 +9,22 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.transformers.billing.billing_texts import (
+    fill_placeholders,
+)
+from app.transformers.billing.invoice_wording_texts import (
     BILLING_PERIOD_NAMES,
     PAUSE_PERIOD_NAME,
     SERVICE_NAME,
     SETUP_FEE_LINE,
-    fill_placeholders,
 )
 from app.utilities.localization.babel_locales import require_babel_locale
-from app.utilities.localization.localized_texts import build_localized_text
+from app.utilities.localization.owner_texts import reviewed_owner_text
 
-SERVICE_PERIOD_ITEM: LocalizedText = build_localized_text(
-    en="{service} — {plan}, {billing_period}",
-    ru="{service} — {plan}, {billing_period}",
-    ka="{service} — {plan}, {billing_period}",
+SERVICE_PERIOD_ITEM: LocalizedText = reviewed_owner_text(
+    "billing.invoice_line.service_period_item"
 )
-USAGE_OVERAGE_ITEM: LocalizedText = build_localized_text(
-    en="{service} — {minutes} call minutes above the package",
-    ru="{service} — {minutes} мин. звонков сверх пакета",
-    ka="{service} — პაკეტს ზემოთ {minutes} წუთი ზარი",
+USAGE_OVERAGE_ITEM: LocalizedText = reviewed_owner_text(
+    "billing.invoice_line.usage_overage_item"
 )
 
 
@@ -35,7 +33,8 @@ class InvoiceLineTextsTransformer(
 ):
     """
     The invoice line in every language the invoice and receipt PDFs are
-    written in (English, Russian, Georgian), without its dates, which the
+    written in (the reviewed ones: English, Russian, Georgian; a language
+    of drafts reads English until it is reviewed), without its dates, which the
     PDF and the cabinet print beside it: the service (concept tax rule: a
     "call and message handling service", never a licence), then the plan
     and its billing period (or, for a month of a seasonal pause, the

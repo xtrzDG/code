@@ -4,14 +4,12 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.operations.message_texts import BookingStaffNotificationInput
 from app.schemas.typings.conversations.strings import MessageText
 from app.transformers.notifications.message_rendering import (
-    localized,
     render_booking_staff_notification,
 )
+from app.utilities.localization.owner_texts import owner_text
 
-BOOKING_MOVED_TITLE: LocalizedText = localized(
-    en="Booking moved to a new time · {business}",
-    ru="Бронь перенесена на новое время · {business}",
-    ka="ჯავშანი ახალ დროზე გადაიტანეს · {business}",
+BOOKING_MOVED_TITLE: LocalizedText = owner_text(
+    "notifications.booking_moved.booking_moved_title"
 )
 
 

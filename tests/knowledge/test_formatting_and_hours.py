@@ -14,10 +14,8 @@ from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
     LanguageTag,
 )
-from app.utilities.knowledge.localized_texts import (
-    build_localized_rule_lines,
-    split_rule_lines,
-)
+from app.schemas.typings.localization.strings import LocalizedTextValue
+from app.utilities.knowledge.localized_texts import split_rule_lines
 from app.utilities.knowledge.money_formatting import (
     format_money_minor,
     resolve_babel_locale,
@@ -147,9 +145,5 @@ def test_minutes_render_as_clock_time() -> None:
     assert format_minute(1440) == "24:00"
 
 
-def test_rule_lines_round_trip_and_require_equal_counts() -> None:
-    text = build_localized_rule_lines(en=["A", "B"], ru=["А", "Б"], ka=["ა", "ბ"])
-
-    assert split_rule_lines(text.values[LanguageTag("ru")]) == ["А", "Б"]
-    with pytest.raises(ValueError, match="same number"):
-        build_localized_rule_lines(en=["A"], ru=["А", "Б"])
+def test_rule_lines_split_into_trimmed_non_empty_lines() -> None:
+    assert split_rule_lines(LocalizedTextValue("А\n\n Б \n")) == ["А", "Б"]

@@ -8,6 +8,9 @@ then its base language, then English) and links it from
 `DPA_DOCUMENT_VERSION` (default `2026-10-06`); a version without a text cannot be
 accepted.
 
+Hebrew and German translation drafts (not served, not accepted, marked
+needs_review) wait in `drafts/` with the steps to publish them.
+
 **These texts are templates.** Before production the operator must have them
 reviewed by a lawyer for its own jurisdiction and its clients' countries, fill in
 every field in square brackets (operator details, sub-processor locations,

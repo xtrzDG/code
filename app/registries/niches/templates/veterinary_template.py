@@ -1,7 +1,6 @@
 from app.registries.niches.examples.care_examples import VETERINARY_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
-    choice,
     forbidden_rules,
     handoff_rules,
     prompt_rules,
@@ -21,6 +20,8 @@ from app.schemas.typings.profiles.constrained_strings import (
 )
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 
+NICHE: NicheKey = NicheKey.VETERINARY
+
 
 def build_veterinary_template() -> NicheTemplate:
     """
@@ -31,26 +32,14 @@ def build_veterinary_template() -> NicheTemplate:
     """
 
     return NicheTemplate(
-        key=NicheKey.VETERINARY,
+        key=NICHE,
         wave=LaunchWave.C,
-        names=text(
-            en="Veterinary clinics and grooming",
-            ru="Ветклиники и груминг",
-            ka="ვეტკლინიკები და გრუმინგი",
-        ),
-        descriptions=text(
-            en="Appointments and prices; urgent cases go to a vet at once.",
-            ru="Запись, цены, срочное — сразу врачу.",
-            ka="ჩაწერა და ფასები; სასწრაფო შემთხვევები — მაშინვე ექიმს.",
-        ),
+        names=text(NICHE, "name"),
+        descriptions=text(NICHE, "description"),
         recommended_plans=[PlanKey.VOICE_AND_CHAT],
         resource_kind=ResourceKind.STAFF,
         booking_unit=BookingUnit.TIME_SLOT,
-        resource_nouns=text(
-            en="vet or groomer",
-            ru="ветеринар или грумер",
-            ka="ვეტერინარი ან გრუმერი",
-        ),
+        resource_nouns=text(NICHE, "resource_noun"),
         knowledge_kinds=[
             KnowledgeItemKind.SERVICE,
             KnowledgeItemKind.PRODUCT,
@@ -59,91 +48,45 @@ def build_veterinary_template() -> NicheTemplate:
         ],
         questions=[
             question(
+                NICHE,
                 QuestionKey("animals_treated"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="Which animals do you treat?",
-                    ru="Каких животных вы лечите?",
-                    ka="რომელ ცხოველებს მკურნალობთ?",
-                ),
                 is_required=True,
-                choices=[
-                    choice(Choice("dogs"), "Dogs", "Собаки", "ძაღლები"),
-                    choice(Choice("cats"), "Cats", "Кошки", "კატები"),
-                    choice(Choice("birds"), "Birds", "Птицы", "ფრინველები"),
-                    choice(
-                        Choice("rodents"),
-                        "Rodents and rabbits",
-                        "Грызуны и кролики",
-                        "მღრღნელები და კურდღლები",
-                    ),
-                    choice(
-                        Choice("exotic"),
-                        "Exotic animals",
-                        "Экзотические животные",
-                        "ეგზოტიკური ცხოველები",
-                    ),
-                ],
+                choices=(
+                    Choice("dogs"),
+                    Choice("cats"),
+                    Choice("birds"),
+                    Choice("rodents"),
+                    Choice("exotic"),
+                ),
             ),
             question(
+                NICHE,
                 QuestionKey("services_offered"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.MULTIPLE_CHOICE,
-                text(en="Services", ru="Услуги", ka="მომსახურება"),
-                choices=[
-                    choice(
-                        Choice("treatment"),
-                        "Treatment",
-                        "Лечение",
-                        "მკურნალობა",
-                    ),
-                    choice(
-                        Choice("vaccination"),
-                        "Vaccination",
-                        "Вакцинация",
-                        "ვაქცინაცია",
-                    ),
-                    choice(Choice("surgery"), "Surgery", "Хирургия", "ქირურგია"),
-                    choice(Choice("grooming"), "Grooming", "Груминг", "გრუმინგი"),
-                    choice(
-                        Choice("pet_hotel"),
-                        "Pet hotel",
-                        "Зоогостиница",
-                        "ცხოველების სასტუმრო",
-                    ),
-                ],
+                choices=(
+                    Choice("treatment"),
+                    Choice("vaccination"),
+                    Choice("surgery"),
+                    Choice("grooming"),
+                    Choice("pet_hotel"),
+                ),
             ),
             question(
+                NICHE,
                 QuestionKey("emergency_hours"),
                 Step.CONTACTS_AND_HOURS,
                 Answer.LONG_TEXT,
-                text(
-                    en="When and how do you take emergencies?",
-                    ru="Когда и как вы принимаете экстренные случаи?",
-                    ka="როდის და როგორ იღებთ სასწრაფო შემთხვევებს?",
-                ),
                 is_required=True,
             ),
+            question(NICHE, QuestionKey("home_visits"), Step.OFFER, Answer.YES_NO),
             question(
-                QuestionKey("home_visits"),
-                Step.OFFER,
-                Answer.YES_NO,
-                text(
-                    en="Do you make home visits?",
-                    ru="Есть ли выезд на дом?",
-                    ka="გაქვთ ბინაზე გამოძახება?",
-                ),
-            ),
-            question(
+                NICHE,
                 QuestionKey("visit_preparation"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.LONG_TEXT,
-                text(
-                    en="How should owners prepare an animal for a visit?",
-                    ru="Как подготовить животное к приёму?",
-                    ka="როგორ მოვამზადოთ ცხოველი ვიზიტისთვის?",
-                ),
             ),
         ],
         prompt_rules=prompt_rules(
@@ -155,28 +98,8 @@ def build_veterinary_template() -> NicheTemplate:
             "Ask for the kind of animal and the service when booking.",
         ),
         example_exchanges=VETERINARY_EXAMPLES,
-        default_handoff_rules=handoff_rules(
-            en=[
-                "Animal in danger or an emergency",
-                "Question about a diagnosis, treatment or medication",
-                "Complaint",
-            ],
-            ru=[
-                "Животное в опасности или экстренный случай",
-                "Вопрос о диагнозе, лечении или лекарствах",
-                "Жалоба",
-            ],
-            ka=[
-                "ცხოველი საფრთხეშია ან საგანგებო შემთხვევაა",
-                "კითხვა დიაგნოზზე, მკურნალობაზე ან მედიკამენტებზე",
-                "საჩივარი",
-            ],
-        ),
-        default_forbidden_rules=forbidden_rules(
-            en=["Veterinary advice, diagnoses or medication doses"],
-            ru=["Ветеринарные советы, диагнозы и дозировки лекарств"],
-            ka=["ვეტერინარული რჩევები, დიაგნოზები და მედიკამენტების დოზები"],
-        ),
+        default_handoff_rules=handoff_rules(NICHE),
+        default_forbidden_rules=forbidden_rules(NICHE),
         autotest_kinds=autotest_kinds(AutotestScenarioKind.EMERGENCY),
         booking_variants=[BookingScenarioVariant.SPECIFIC_PERFORMER],
     )

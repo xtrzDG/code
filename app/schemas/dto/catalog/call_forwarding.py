@@ -6,7 +6,10 @@ phone number.
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
-from app.schemas.constants.localization import CallForwardingCondition
+from app.schemas.constants.localization import (
+    CallForwardingCondition,
+    TextReviewStatus,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.localization import LocalizedText
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -34,11 +37,18 @@ class CallForwardingCodeTemplate(ImmutableDTO):
 
 
 class CarrierForwardingGuide(ImmutableDTO):
-    """Forwarding codes of one named mobile carrier."""
+    """
+    Forwarding codes of one named mobile carrier.
+
+    NEEDS_REVIEW: the codes are the standard GSM ones, not yet checked
+    against the carrier's own documentation; owners read that they are
+    unconfirmed (after `notes`, which hold what is known of the carrier).
+    """
 
     carrier_name: CarrierName
     code_templates: list[CallForwardingCodeTemplate]
     notes: LocalizedText | None = None
+    review_status: TextReviewStatus = TextReviewStatus.REVIEWED
 
 
 class CallForwardingGuide(ImmutableDTO):

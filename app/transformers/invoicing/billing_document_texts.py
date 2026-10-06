@@ -1,162 +1,68 @@
 """
-Texts of the invoice and receipt PDFs in English, Russian and Georgian
-(other languages read English). Placeholders in braces are filled by the
-layout. The VAT notes want an accountant's sign-off before VAT
+Texts of the invoice and receipt PDFs and the receipt e-mail in every
+language whose texts are reviewed (English, Russian and Georgian; other
+languages, Hebrew and German drafts among them, read English): an issued
+document is kept as printed, so it never carries a draft. Placeholders in
+braces are filled by the layout. The VAT notes want an accountant's sign-off before VAT
 registration (docs/LAUNCH.md).
 """
 
 from app.schemas.constants.billing import InvoiceStatus
 from app.schemas.constants.invoicing import TaxTreatment
 from app.schemas.dto.localization import LocalizedText
-from app.utilities.localization.localized_texts import build_localized_text
+from app.utilities.localization.owner_texts import reviewed_owner_text
 
-INVOICE_TITLE = build_localized_text(en="Invoice", ru="Счёт", ka="ინვოისი")
-RECEIPT_TITLE = build_localized_text(
-    en="Payment receipt", ru="Квитанция об оплате", ka="გადახდის ქვითარი"
-)
-NUMBER = build_localized_text(en="No. {number}", ru="№ {number}", ka="№ {number}")
-ISSUE_DATE = build_localized_text(
-    en="Issue date", ru="Дата выставления", ka="გამოწერის თარიღი"
-)
-PAYMENT_DATE = build_localized_text(
-    en="Payment date", ru="Дата оплаты", ka="გადახდის თარიღი"
-)
-SELLER = build_localized_text(en="Seller", ru="Исполнитель", ka="გამყიდველი")
-BUYER = build_localized_text(en="Buyer", ru="Заказчик", ka="მყიდველი")
-TAX_ID = build_localized_text(
-    en="Tax number", ru="Налоговый номер", ka="საიდენტიფიკაციო ნომერი"
-)
-EMAIL = build_localized_text(en="E-mail", ru="Эл. почта", ka="ელ. ფოსტა")
-DESCRIPTION = build_localized_text(en="Description", ru="Наименование", ka="დასახელება")
-PERIOD = build_localized_text(en="Period", ru="Период", ka="პერიოდი")
-AMOUNT = build_localized_text(en="Amount", ru="Сумма", ka="თანხა")
-SUBTOTAL = build_localized_text(
-    en="Subtotal excl. VAT", ru="Итого без НДС", ka="ჯამი დღგ-ის გარეშე"
-)
-VAT = build_localized_text(en="VAT {rate}", ru="НДС {rate}", ka="დღგ {rate}")
-TOTAL_DUE = build_localized_text(
-    en="Total due", ru="Итого к оплате", ka="სულ გადასახდელი"
-)
-TOTAL_PAID = build_localized_text(
-    en="Total paid", ru="Итого оплачено", ka="სულ გადახდილი"
-)
-AMOUNT_RECEIVED = build_localized_text(
-    en="Amount received", ru="Получено", ka="მიღებული თანხა"
-)
-RECEIPT_NUMBER = build_localized_text(
-    en="For invoice No. {number}",
-    ru="По счёту № {number}",
-    ka="ინვოისი № {number}",
-)
-PAYMENT_METHOD = build_localized_text(
-    en="Payment method", ru="Способ оплаты", ka="გადახდის საშუალება"
-)
-CARD_WITH_BRAND = build_localized_text(
-    en="{brand} card ending in {digits}",
-    ru="Карта {brand}, последние цифры {digits}",
-    ka="ბარათი {brand}, ბოლო ციფრები {digits}",
-)
-CARD_WITHOUT_BRAND = build_localized_text(
-    en="Card ending in {digits}",
-    ru="Карта, последние цифры {digits}",
-    ka="ბარათი, ბოლო ციფრები {digits}",
-)
-CARD_UNKNOWN = build_localized_text(
-    en="Online card payment",
-    ru="Оплата картой онлайн",
-    ka="ონლაინ გადახდა ბარათით",
-)
-DISCOUNT = build_localized_text(
-    en="Discount {percent}", ru="Скидка {percent}", ka="ფასდაკლება {percent}"
-)
-CREDIT_APPLIED = build_localized_text(
-    en="Credit applied", ru="Зачтён кредит", ka="ჩათვლილი კრედიტი"
-)
-PAID_BY_BANK_TRANSFER = build_localized_text(
-    en="Bank transfer, reference {reference}",
-    ru="Банковский перевод, основание {reference}",
-    ka="საბანკო გადარიცხვა, საფუძველი {reference}",
-)
-PAID_IN_CASH = build_localized_text(
-    en="Cash, receipt {reference}",
-    ru="Наличными, квитанция {reference}",
-    ka="ნაღდი ფულით, ქვითარი {reference}",
-)
-PAID_BY_CREDIT = build_localized_text(
-    en="Covered by discount and credit",
-    ru="Покрыто скидкой и кредитом",
-    ka="დაფარულია ფასდაკლებით და კრედიტით",
-)
-PAY_ONLINE = build_localized_text(
-    en="Pay online in the cabinet: Settings → Plan and billing.",
-    ru="Оплатите онлайн в кабинете: Настройки → Тариф и оплата.",
-    ka="გადაიხადეთ ონლაინ კაბინეტში: პარამეტრები → ტარიფი და გადახდა.",
-)
-RECEIPT_THANKS = build_localized_text(
-    en="Thank you. This receipt confirms the payment above.",
-    ru="Спасибо! Квитанция подтверждает оплату, указанную выше.",
-    ka="გმადლობთ. ეს ქვითარი ადასტურებს ზემოთ მითითებულ გადახდას.",
-)
-GENERATED_BY = build_localized_text(
-    en="Generated electronically by {seller}.",
-    ru="Документ сформирован электронно: {seller}.",
-    ka="დოკუმენტი შექმნილია ელექტრონულად: {seller}.",
-)
+INVOICE_TITLE = reviewed_owner_text("billing.document.invoice_title")
+RECEIPT_TITLE = reviewed_owner_text("billing.document.receipt_title")
+NUMBER = reviewed_owner_text("billing.document.number")
+ISSUE_DATE = reviewed_owner_text("billing.document.issue_date")
+PAYMENT_DATE = reviewed_owner_text("billing.document.payment_date")
+SELLER = reviewed_owner_text("billing.document.seller")
+BUYER = reviewed_owner_text("billing.document.buyer")
+TAX_ID = reviewed_owner_text("billing.document.tax_id")
+EMAIL = reviewed_owner_text("billing.document.email")
+DESCRIPTION = reviewed_owner_text("billing.document.description")
+PERIOD = reviewed_owner_text("billing.document.period")
+AMOUNT = reviewed_owner_text("billing.document.amount")
+SUBTOTAL = reviewed_owner_text("billing.document.subtotal")
+VAT = reviewed_owner_text("billing.document.vat")
+TOTAL_DUE = reviewed_owner_text("billing.document.total_due")
+TOTAL_PAID = reviewed_owner_text("billing.document.total_paid")
+AMOUNT_RECEIVED = reviewed_owner_text("billing.document.amount_received")
+RECEIPT_NUMBER = reviewed_owner_text("billing.document.receipt_number")
+PAYMENT_METHOD = reviewed_owner_text("billing.document.payment_method")
+CARD_WITH_BRAND = reviewed_owner_text("billing.document.card_with_brand")
+CARD_WITHOUT_BRAND = reviewed_owner_text("billing.document.card_without_brand")
+CARD_UNKNOWN = reviewed_owner_text("billing.document.card_unknown")
+DISCOUNT = reviewed_owner_text("billing.document.discount")
+CREDIT_APPLIED = reviewed_owner_text("billing.document.credit_applied")
+PAID_BY_BANK_TRANSFER = reviewed_owner_text("billing.document.paid_by_bank_transfer")
+PAID_IN_CASH = reviewed_owner_text("billing.document.paid_in_cash")
+PAID_BY_CREDIT = reviewed_owner_text("billing.document.paid_by_credit")
+PAY_ONLINE = reviewed_owner_text("billing.document.pay_online")
+RECEIPT_THANKS = reviewed_owner_text("billing.document.receipt_thanks")
+GENERATED_BY = reviewed_owner_text("billing.document.generated_by")
 
-RECEIPT_EMAIL_SUBJECT = build_localized_text(
-    en="Payment receipt for invoice {number}",
-    ru="Квитанция об оплате по счёту № {number}",
-    ka="გადახდის ქვითარი, ინვოისი № {number}",
-)
-RECEIPT_EMAIL_BODY = build_localized_text(
-    en="{business}: we received {amount} on {date}. The invoice and the "
-    "payment receipt are attached as PDF files for your accountant.",
-    ru="{business}: оплата {amount} получена {date}. Счёт и квитанция об "
-    "оплате приложены в PDF — их можно передать бухгалтеру.",
-    ka="{business}: {amount} მიღებულია {date}. ინვოისი და გადახდის ქვითარი "
-    "თან ერთვის PDF ფაილებად — შეგიძლიათ გადასცეთ ბუღალტერს.",
-)
-RECEIPT_EMAIL_HINT = build_localized_text(
-    en="You can download them again in the cabinet: Settings → Plan and billing.",
-    ru="Скачать их снова можно в кабинете: Настройки → Тариф и оплата.",
-    ka="მათი ხელახლა ჩამოტვირთვა შეგიძლიათ კაბინეტში: პარამეტრები → ტარიფი და გადახდა.",
-)
+RECEIPT_EMAIL_SUBJECT = reviewed_owner_text("billing.document.receipt_email_subject")
+RECEIPT_EMAIL_BODY = reviewed_owner_text("billing.document.receipt_email_body")
+RECEIPT_EMAIL_HINT = reviewed_owner_text("billing.document.receipt_email_hint")
 
 STATUS_NAMES: dict[InvoiceStatus, LocalizedText] = {
-    InvoiceStatus.ISSUED: build_localized_text(
-        en="Awaiting payment", ru="Ожидает оплаты", ka="ელოდება გადახდას"
-    ),
-    InvoiceStatus.PAID: build_localized_text(en="Paid", ru="Оплачен", ka="გადახდილია"),
-    InvoiceStatus.FAILED: build_localized_text(
-        en="Payment failed", ru="Оплата не прошла", ka="გადახდა ვერ შესრულდა"
-    ),
-    InvoiceStatus.VOID: build_localized_text(
-        en="Cancelled", ru="Аннулирован", ka="გაუქმებულია"
-    ),
+    InvoiceStatus.ISSUED: reviewed_owner_text("billing.document.status_names.issued"),
+    InvoiceStatus.PAID: reviewed_owner_text("billing.document.status_names.paid"),
+    InvoiceStatus.FAILED: reviewed_owner_text("billing.document.status_names.failed"),
+    InvoiceStatus.VOID: reviewed_owner_text("billing.document.status_names.void"),
 }
 
 TAX_NOTES: dict[TaxTreatment, LocalizedText] = {
-    TaxTreatment.NOT_REGISTERED: build_localized_text(
-        en="VAT is not charged: the seller is not registered for VAT.",
-        ru="Без НДС: исполнитель не зарегистрирован плательщиком НДС.",
-        ka="დღგ არ ერიცხება: გამყიდველი არ არის რეგისტრირებული დღგ-ის გადამხდელად.",
+    TaxTreatment.NOT_REGISTERED: reviewed_owner_text(
+        "billing.document.tax_notes.not_registered"
     ),
-    TaxTreatment.STANDARD: build_localized_text(
-        en="VAT is charged at {rate}.",
-        ru="НДС начислен по ставке {rate}.",
-        ka="დღგ დარიცხულია {rate} განაკვეთით.",
+    TaxTreatment.STANDARD: reviewed_owner_text("billing.document.tax_notes.standard"),
+    TaxTreatment.REVERSE_CHARGE: reviewed_owner_text(
+        "billing.document.tax_notes.reverse_charge"
     ),
-    TaxTreatment.REVERSE_CHARGE: build_localized_text(
-        en="Reverse charge: VAT is to be accounted for by the recipient.",
-        ru="Обратное начисление: НДС исчисляет и уплачивает получатель услуги.",
-        ka="უკუდაბეგვრა: დღგ-ის გადახდის ვალდებულება ეკისრება მომსახურების მიმღებს.",
-    ),
-    TaxTreatment.OUTSIDE_SCOPE: build_localized_text(
-        en="Not subject to VAT in {country}: the place of supply is outside "
-        "the seller's country.",
-        ru="Не облагается НДС страны исполнителя ({country}): место оказания "
-        "услуг за её пределами.",
-        ka="არ იბეგრება გამყიდველის ქვეყნის ({country}) დღგ-ით: მომსახურების "
-        "გაწევის ადგილი მის ფარგლებს გარეთაა.",
+    TaxTreatment.OUTSIDE_SCOPE: reviewed_owner_text(
+        "billing.document.tax_notes.outside_scope"
     ),
 }

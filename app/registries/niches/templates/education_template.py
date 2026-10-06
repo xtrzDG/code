@@ -1,7 +1,6 @@
 from app.registries.niches.examples.service_examples import EDUCATION_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
-    choice,
     forbidden_rules,
     handoff_rules,
     prompt_rules,
@@ -20,27 +19,21 @@ from app.schemas.typings.profiles.constrained_strings import (
 )
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 
+NICHE: NicheKey = NicheKey.EDUCATION
+
 
 def build_education_template() -> NicheTemplate:
     """Schools, courses, clubs and driving schools: trial lessons (wave C)."""
 
     return NicheTemplate(
-        key=NicheKey.EDUCATION,
+        key=NICHE,
         wave=LaunchWave.C,
-        names=text(
-            en="Schools, courses, clubs and driving schools",
-            ru="Школы, курсы, кружки и автошколы",
-            ka="სკოლები, კურსები, წრეები და ავტოსკოლები",
-        ),
-        descriptions=text(
-            en="Trial lessons, schedule, prices, sign-up and payment reminders.",
-            ru="Пробное занятие, расписание, цены, запись, напоминания об оплате.",
-            ka="საცდელი გაკვეთილი, განრიგი, ფასები, ჩაწერა და გადახდის შეხსენებები.",
-        ),
+        names=text(NICHE, "name"),
+        descriptions=text(NICHE, "description"),
         recommended_plans=[PlanKey.CHAT],
         resource_kind=ResourceKind.SLOT,
         booking_unit=BookingUnit.TIME_SLOT,
-        resource_nouns=text(en="lesson", ru="занятие", ka="გაკვეთილი"),
+        resource_nouns=text(NICHE, "resource_noun"),
         knowledge_kinds=[
             KnowledgeItemKind.SERVICE,
             KnowledgeItemKind.PACKAGE,
@@ -49,116 +42,53 @@ def build_education_template() -> NicheTemplate:
         ],
         questions=[
             question(
+                NICHE,
                 QuestionKey("subjects"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.SHORT_TEXT,
-                text(
-                    en="What do you teach?",
-                    ru="Чему вы учите?",
-                    ka="რას ასწავლით?",
-                ),
                 is_required=True,
             ),
             question(
+                NICHE,
                 QuestionKey("age_groups"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="Age groups",
-                    ru="Возрастные группы",
-                    ka="ასაკობრივი ჯგუფები",
-                ),
-                choices=[
-                    choice(Choice("kids"), "Children", "Дети", "ბავშვები"),
-                    choice(Choice("teens"), "Teenagers", "Подростки", "მოზარდები"),
-                    choice(Choice("adults"), "Adults", "Взрослые", "ზრდასრულები"),
-                ],
+                choices=(Choice("kids"), Choice("teens"), Choice("adults")),
             ),
             question(
+                NICHE,
                 QuestionKey("trial_lesson"),
                 Step.OFFER,
                 Answer.SINGLE_CHOICE,
-                text(
-                    en="Trial lesson",
-                    ru="Пробное занятие",
-                    ka="საცდელი გაკვეთილი",
-                ),
-                choices=[
-                    choice(Choice("free"), "Free", "Бесплатное", "უფასო"),
-                    choice(Choice("paid"), "Paid", "Платное", "ფასიანი"),
-                    choice(Choice("none"), "Not available", "Нет", "არ არის"),
-                ],
+                choices=(Choice("free"), Choice("paid"), Choice("none")),
             ),
             question(
+                NICHE,
                 QuestionKey("lesson_formats"),
                 Step.OFFER,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="Lesson formats",
-                    ru="Форматы занятий",
-                    ka="გაკვეთილების ფორმატები",
-                ),
-                choices=[
-                    choice(Choice("group"), "Group", "В группе", "ჯგუფური"),
-                    choice(
-                        Choice("individual"),
-                        "Individual",
-                        "Индивидуально",
-                        "ინდივიდუალური",
-                    ),
-                    choice(Choice("online"), "Online", "Онлайн", "ონლაინ"),
-                ],
+                choices=(Choice("group"), Choice("individual"), Choice("online")),
             ),
             question(
-                QuestionKey("group_schedule"),
-                Step.OFFER,
-                Answer.LONG_TEXT,
-                text(
-                    en="Schedule of groups",
-                    ru="Расписание групп",
-                    ka="ჯგუფების განრიგი",
-                ),
+                NICHE, QuestionKey("group_schedule"), Step.OFFER, Answer.LONG_TEXT
             ),
             question(
+                NICHE,
                 QuestionKey("payment_terms"),
                 Step.BOOKING_RULES,
                 Answer.LONG_TEXT,
-                text(
-                    en="Payment terms",
-                    ru="Условия оплаты",
-                    ka="გადახდის პირობები",
-                ),
             ),
             question(
+                NICHE,
                 QuestionKey("lead_fields"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="What should the assistant collect for a manager?",
-                    ru="Что помощник собирает для менеджера?",
-                    ka="რა შეაგროვოს ასისტენტმა მენეჯერისთვის?",
+                choices=(
+                    Choice("student_age"),
+                    Choice("level"),
+                    Choice("preferred_time"),
+                    Choice("format"),
                 ),
-                choices=[
-                    choice(
-                        Choice("student_age"),
-                        "Student's age",
-                        "Возраст ученика",
-                        "მოსწავლის ასაკი",
-                    ),
-                    choice(
-                        Choice("level"),
-                        "Current level",
-                        "Текущий уровень",
-                        "ამჟამინდელი დონე",
-                    ),
-                    choice(
-                        Choice("preferred_time"),
-                        "Preferred time",
-                        "Удобное время",
-                        "სასურველი დრო",
-                    ),
-                    choice(Choice("format"), "Format", "Формат", "ფორმატი"),
-                ],
             ),
         ],
         prompt_rules=prompt_rules(
@@ -169,27 +99,7 @@ def build_education_template() -> NicheTemplate:
             "Do not promise exam results or certificates that are not in the profile.",
         ),
         example_exchanges=EDUCATION_EXAMPLES,
-        default_handoff_rules=handoff_rules(
-            en=[
-                "Payment dispute or refund",
-                "Student with special needs",
-                "Complaint",
-            ],
-            ru=[
-                "Спор об оплате или возврат",
-                "Ученик с особыми потребностями",
-                "Жалоба",
-            ],
-            ka=[
-                "დავა გადახდაზე ან თანხის დაბრუნება",
-                "მოსწავლე განსაკუთრებული საჭიროებებით",
-                "საჩივარი",
-            ],
-        ),
-        default_forbidden_rules=forbidden_rules(
-            en=["Promising exam results"],
-            ru=["Обещания результатов экзаменов"],
-            ka=["გამოცდის შედეგების დაპირება"],
-        ),
+        default_handoff_rules=handoff_rules(NICHE),
+        default_forbidden_rules=forbidden_rules(NICHE),
         autotest_kinds=autotest_kinds(),
     )

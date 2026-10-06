@@ -8,67 +8,29 @@ from collections.abc import Mapping
 
 from app.schemas.constants.notifications import StaffBookingChange
 from app.schemas.dto.localization import LocalizedText
-from app.transformers.notifications.message_rendering import localized
+from app.utilities.localization.owner_texts import owner_text
 
-HANDOFF_TITLE: LocalizedText = localized(
-    en="A customer needs a person",
-    ru="Клиенту нужен человек",
-    ka="კლიენტს ადამიანი სჭირდება",
+HANDOFF_TITLE: LocalizedText = owner_text("notifications.staff_alert.handoff_title")
+URGENT_HANDOFF_TITLE: LocalizedText = owner_text(
+    "notifications.staff_alert.urgent_handoff_title"
 )
-URGENT_HANDOFF_TITLE: LocalizedText = localized(
-    en="Urgent: a customer needs a person",
-    ru="Срочно: клиенту нужен человек",
-    ka="სასწრაფო: კლიენტს ადამიანი სჭირდება",
-)
-HANDOFF_DETAIL: LocalizedText = localized(
-    en="{business} · {reason}",
-    ru="{business} · {reason}",
-    ka="{business} · {reason}",
-)
-LEAD_TITLE: LocalizedText = localized(
-    en="New request · {business}",
-    ru="Новая заявка · {business}",
-    ka="ახალი მოთხოვნა · {business}",
-)
-LEAD_DETAIL_WITH_DATE: LocalizedText = localized(
-    en="{lead_type} · {date}",
-    ru="{lead_type} · {date}",
-    ka="{lead_type} · {date}",
+HANDOFF_DETAIL: LocalizedText = owner_text("notifications.staff_alert.handoff_detail")
+LEAD_TITLE: LocalizedText = owner_text("notifications.staff_alert.lead_title")
+LEAD_DETAIL_WITH_DATE: LocalizedText = owner_text(
+    "notifications.staff_alert.lead_detail_with_date"
 )
 BOOKING_TITLES: Mapping[StaffBookingChange, LocalizedText] = {
-    StaffBookingChange.CREATED: localized(
-        en="New booking · {business}",
-        ru="Новая бронь · {business}",
-        ka="ახალი ჯავშანი · {business}",
+    StaffBookingChange.CREATED: owner_text(
+        "notifications.staff_alert.booking_titles.created"
     ),
-    StaffBookingChange.MOVED: localized(
-        en="Booking moved · {business}",
-        ru="Бронь перенесена · {business}",
-        ka="ჯავშანი გადატანილია · {business}",
+    StaffBookingChange.MOVED: owner_text(
+        "notifications.staff_alert.booking_titles.moved"
     ),
-    StaffBookingChange.CANCELLED: localized(
-        en="Booking cancelled · {business}",
-        ru="Бронь отменена · {business}",
-        ka="ჯავშანი გაუქმდა · {business}",
+    StaffBookingChange.CANCELLED: owner_text(
+        "notifications.staff_alert.booking_titles.cancelled"
     ),
 }
-BOOKING_DETAIL: LocalizedText = localized(
-    en="{period} · guests: {party}",
-    ru="{period} · гостей: {party}",
-    ka="{period} · სტუმრები: {party}",
-)
-LINK_LINE: LocalizedText = localized(
-    en="Open: {link}",
-    ru="Открыть: {link}",
-    ka="გახსნა: {link}",
-)
-TEST_TITLE: LocalizedText = localized(
-    en="Test notification · {business}",
-    ru="Проверка уведомлений · {business}",
-    ka="სატესტო შეტყობინება · {business}",
-)
-TEST_DETAIL: LocalizedText = localized(
-    en="Handoffs, requests and bookings will arrive here.",
-    ru="Сюда будут приходить передачи, заявки и брони.",
-    ka="აქ მოვა გადამისამართებები, მოთხოვნები და ჯავშნები.",
-)
+BOOKING_DETAIL: LocalizedText = owner_text("notifications.staff_alert.booking_detail")
+LINK_LINE: LocalizedText = owner_text("notifications.staff_alert.link_line")
+TEST_TITLE: LocalizedText = owner_text("notifications.staff_alert.test_title")
+TEST_DETAIL: LocalizedText = owner_text("notifications.staff_alert.test_detail")

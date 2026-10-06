@@ -1826,3 +1826,6 @@ f702f7ca2e4c78b68d8fbfbac9cb147e2adc77cb:tests/storage/golden/queued_jobs/v2.jso
 # Reviewed 2026-10-06 (W15-METRICS-TRACING): the sample job lease token
 # (0123456789abcdef...) of the queued_jobs v3 golden fixture; not a secret.
 69e4489c0b03b12b1ad842f08fad7d0e3ca49372:tests/storage/golden/queued_jobs/v3.json:generic-api-key:9
+# Reviewed 2026-10-06 (R16-OWNER-TEXT-CATALOG): `NICHE: NicheKey = NicheKey.B2B_SUPPLY`,
+# an enum member of the niche template, not a secret.
+56f9e170b7df55fc7211cd17e196062b728374a1:app/registries/niches/templates/b2b_supply_template.py:generic-api-key:22

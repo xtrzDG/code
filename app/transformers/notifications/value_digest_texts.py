@@ -9,110 +9,42 @@ from collections.abc import Mapping
 
 from app.schemas.constants.value import ValueBasis, ValueReportKind
 from app.schemas.dto.localization import LocalizedText
-from app.transformers.notifications.message_rendering import localized
+from app.utilities.localization.owner_texts import owner_text
 
 TITLES: Mapping[ValueReportKind, LocalizedText] = {
-    ValueReportKind.DAILY: localized(
-        en="Your assistant yesterday · {business}",
-        ru="Ваш помощник вчера · {business}",
-        ka="თქვენი ასისტენტი გუშინ · {business}",
-    ),
-    ValueReportKind.WEEKLY: localized(
-        en="Your assistant last week · {business}",
-        ru="Ваш помощник за неделю · {business}",
-        ka="თქვენი ასისტენტი გასულ კვირას · {business}",
-    ),
-    ValueReportKind.MONTHLY: localized(
-        en="Monthly report, {month} · {business}",
-        ru="Отчёт за месяц: {month} · {business}",
-        ka="თვის ანგარიში: {month} · {business}",
-    ),
+    ValueReportKind.DAILY: owner_text("notifications.value_digest.titles.daily"),
+    ValueReportKind.WEEKLY: owner_text("notifications.value_digest.titles.weekly"),
+    ValueReportKind.MONTHLY: owner_text("notifications.value_digest.titles.monthly"),
 }
 EARNINGS: Mapping[ValueBasis, LocalizedText] = {
-    ValueBasis.BOOKINGS: localized(
-        en="Bookings by the assistant: {count}",
-        ru="Брони через помощника: {count}",
-        ka="ასისტენტის ჯავშნები: {count}",
-    ),
-    ValueBasis.REQUESTS: localized(
-        en="Orders and requests taken: {count}",
-        ru="Принятые заказы и заявки: {count}",
-        ka="მიღებული შეკვეთები და მოთხოვნები: {count}",
-    ),
+    ValueBasis.BOOKINGS: owner_text("notifications.value_digest.earnings.bookings"),
+    ValueBasis.REQUESTS: owner_text("notifications.value_digest.earnings.requests"),
 }
-MONEY: LocalizedText = localized(en="≈ {money}", ru="≈ {money}", ka="≈ {money}")
-RETURN_SHORT: LocalizedText = localized(
-    en="≈ {multiple}× your plan", ru="≈ {multiple}× тарифа", ka="≈ {multiple}× ტარიფი"
-)
-RETURN_ON_PLAN: LocalizedText = localized(
-    en="That is ≈ {multiple}× the price of your plan ({price} for the period).",
-    ru="Это ≈ {multiple}× стоимости вашего тарифа ({price} за период).",
-    ka="ეს ≈ {multiple}×-ია თქვენი ტარიფის ფასისა ({price} ამ პერიოდში).",
-)
+MONEY: LocalizedText = owner_text("notifications.value_digest.money")
+RETURN_SHORT: LocalizedText = owner_text("notifications.value_digest.return_short")
+RETURN_ON_PLAN: LocalizedText = owner_text("notifications.value_digest.return_on_plan")
 CHANGE_AGAINST: Mapping[ValueReportKind, LocalizedText] = {
-    ValueReportKind.DAILY: localized(
-        en="({change} vs the day before)",
-        ru="({change} к предыдущему дню)",
-        ka="({change} წინა დღესთან შედარებით)",
+    ValueReportKind.DAILY: owner_text(
+        "notifications.value_digest.change_against.daily"
     ),
-    ValueReportKind.WEEKLY: localized(
-        en="({change} vs the week before)",
-        ru="({change} к предыдущей неделе)",
-        ka="({change} წინა კვირასთან შედარებით)",
+    ValueReportKind.WEEKLY: owner_text(
+        "notifications.value_digest.change_against.weekly"
     ),
-    ValueReportKind.MONTHLY: localized(
-        en="({change} vs the month before)",
-        ru="({change} к предыдущему месяцу)",
-        ka="({change} წინა თვესთან შედარებით)",
+    ValueReportKind.MONTHLY: owner_text(
+        "notifications.value_digest.change_against.monthly"
     ),
 }
-AFTER_HOURS: LocalizedText = localized(
-    en="Conversations after hours: {count} (of {total})",
-    ru="Обращения в нерабочее время: {count} (всего {total})",
-    ka="საუბრები არასამუშაო საათებში: {count} ({total}-დან)",
-)
-TIME_SAVED: LocalizedText = localized(
-    en="Staff time saved: about {time}",
-    ru="Сэкономлено времени сотрудников: около {time}",
-    ka="დაზოგილი სამუშაო დრო: დაახლოებით {time}",
-)
-HOURS: LocalizedText = localized(en="{count} h", ru="{count} ч", ka="{count} სთ")
-MINUTES: LocalizedText = localized(en="{count} min", ru="{count} мин", ka="{count} წთ")
+AFTER_HOURS: LocalizedText = owner_text("notifications.value_digest.after_hours")
+TIME_SAVED: LocalizedText = owner_text("notifications.value_digest.time_saved")
+HOURS: LocalizedText = owner_text("notifications.value_digest.hours")
+MINUTES: LocalizedText = owner_text("notifications.value_digest.minutes")
 OTHER_COUNTS: Mapping[ValueBasis, LocalizedText] = {
-    ValueBasis.BOOKINGS: localized(
-        en="Conversations: {conversations} · Requests: {requests} · "
-        "Needed a person: {handoffs}",
-        ru="Обращения: {conversations} · Заявки: {requests} · "
-        "Нужен человек: {handoffs}",
-        ka="საუბრები: {conversations} · მოთხოვნები: {requests} · "
-        "ადამიანის დახმარება: {handoffs}",
-    ),
-    ValueBasis.REQUESTS: localized(
-        en="Conversations: {conversations} · Needed a person: {handoffs}",
-        ru="Обращения: {conversations} · Нужен человек: {handoffs}",
-        ka="საუბრები: {conversations} · ადამიანის დახმარება: {handoffs}",
-    ),
+    ValueBasis.BOOKINGS: owner_text("notifications.value_digest.other_counts.bookings"),
+    ValueBasis.REQUESTS: owner_text("notifications.value_digest.other_counts.requests"),
 }
-NO_CHECK_HINT: LocalizedText = localized(
-    en="Add your average check in the cabinet to see this in money.",
-    ru="Укажите средний чек в кабинете, чтобы видеть это в деньгах.",
-    ka="მიუთითეთ საშუალო ჩეკი კაბინეტში, რომ ეს თანხაში დაინახოთ.",
+NO_CHECK_HINT: LocalizedText = owner_text("notifications.value_digest.no_check_hint")
+TYPICAL_CHECK_HINT: LocalizedText = owner_text(
+    "notifications.value_digest.typical_check_hint"
 )
-TYPICAL_CHECK_HINT: LocalizedText = localized(
-    en="The amount uses a typical check of {check}; set your own in the cabinet.",
-    ru="Сумма посчитана по типичному чеку {check}; укажите свой в кабинете.",
-    ka="თანხა ტიპური ჩეკით ({check}) არის გამოთვლილი; მიუთითეთ თქვენი კაბინეტში.",
-)
-LINK_LINE: LocalizedText = localized(
-    en="Open the report: {link}",
-    ru="Открыть отчёт: {link}",
-    ka="ანგარიშის გახსნა: {link}",
-)
-OPT_OUT: LocalizedText = localized(
-    en="You get this summary as an owner of {business}. To stop it, open the "
-    "report and turn it off under “Your summaries”.",
-    ru="Вы получаете эту сводку как владелец «{business}». Чтобы отписаться, "
-    "откройте отчёт и выключите её в блоке «Ваши сводки».",
-    ka="ამ შეჯამებას იღებთ, როგორც „{business}“-ის მფლობელი. გამოსართავად "
-    "გახსენით ანგარიში და გამორთეთ ის ბლოკში „თქვენი შეჯამებები“.",
-)
+LINK_LINE: LocalizedText = owner_text("notifications.value_digest.link_line")
+OPT_OUT: LocalizedText = owner_text("notifications.value_digest.opt_out")

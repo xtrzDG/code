@@ -100,6 +100,22 @@ class LanguageTag(BaseConstrainedTypedString):
     pattern = r"^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$"
 
 
+class OwnerTextKey(BaseConstrainedTypedString):
+    """
+    Key of a text in the owner text catalog
+    (`app/registries/localization/texts/<language>.json`): lower-case dotted
+    segments from the area down to the text. A numbered last segment is one
+    line of a list ("niches.restaurant.handoff_rules.2").
+
+    Example:
+        plan_name = OwnerTextKey("plans.chat.name")
+    """
+
+    min_length = 3
+    max_length = 160
+    pattern = r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+){1,7}$"
+
+
 class PhoneNumberPrefix(BaseConstrainedTypedString):
     """
     The start of E.164 phone numbers ("+" and 1 to 15 digits): a calling

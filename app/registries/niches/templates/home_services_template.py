@@ -1,7 +1,6 @@
 from app.registries.niches.examples.service_examples import HOME_SERVICES_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
-    choice,
     forbidden_rules,
     handoff_rules,
     prompt_rules,
@@ -20,29 +19,21 @@ from app.schemas.typings.profiles.constrained_strings import (
 )
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 
+NICHE: NicheKey = NicheKey.HOME_SERVICES
+
 
 def build_home_services_template() -> NicheTemplate:
     """Home services: cleaning, repairs and handymen at the customer (wave C)."""
 
     return NicheTemplate(
-        key=NicheKey.HOME_SERVICES,
+        key=NICHE,
         wave=LaunchWave.C,
-        names=text(
-            en="Home services: cleaning, repairs, handymen",
-            ru="Услуги на дому: клининг, ремонт, мастера",
-            ka="სახლის მომსახურება: დალაგება, რემონტი, ხელოსნები",
-        ),
-        descriptions=text(
-            en="Estimates from the price list, appointments, the address and "
-            "photos of the task.",
-            ru="Расчёт по прайсу, запись на время, адрес и фото задачи.",
-            ka="გაანგარიშება ფასების მიხედვით, ჩაწერა დროზე, მისამართი და "
-            "დავალების ფოტო.",
-        ),
+        names=text(NICHE, "name"),
+        descriptions=text(NICHE, "description"),
         recommended_plans=[PlanKey.CHAT],
         resource_kind=ResourceKind.STAFF,
         booking_unit=BookingUnit.TIME_SLOT,
-        resource_nouns=text(en="specialist", ru="мастер", ka="ხელოსანი"),
+        resource_nouns=text(NICHE, "resource_noun"),
         knowledge_kinds=[
             KnowledgeItemKind.SERVICE,
             KnowledgeItemKind.FAQ,
@@ -50,141 +41,54 @@ def build_home_services_template() -> NicheTemplate:
         ],
         questions=[
             question(
+                NICHE,
                 QuestionKey("service_types"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="Which services do you offer?",
-                    ru="Какие услуги вы оказываете?",
-                    ka="რა მომსახურებას გთავაზობთ?",
-                ),
                 is_required=True,
-                choices=[
-                    choice(Choice("cleaning"), "Cleaning", "Клининг", "დალაგება"),
-                    choice(
-                        Choice("plumbing"),
-                        "Plumbing",
-                        "Сантехника",
-                        "სანტექნიკა",
-                    ),
-                    choice(
-                        Choice("electrical"),
-                        "Electrical work",
-                        "Электрика",
-                        "ელექტროობა",
-                    ),
-                    choice(
-                        Choice("appliance_repair"),
-                        "Appliance repair",
-                        "Ремонт техники",
-                        "ტექნიკის შეკეთება",
-                    ),
-                    choice(
-                        Choice("renovation"),
-                        "Renovation",
-                        "Ремонт помещений",
-                        "სარემონტო სამუშაოები",
-                    ),
-                    choice(
-                        Choice("handyman"),
-                        "Small household jobs",
-                        "Мелкий бытовой ремонт",
-                        "წვრილმანი საოჯახო სამუშაოები",
-                    ),
-                ],
+                choices=(
+                    Choice("cleaning"),
+                    Choice("plumbing"),
+                    Choice("electrical"),
+                    Choice("appliance_repair"),
+                    Choice("renovation"),
+                    Choice("handyman"),
+                ),
             ),
             question(
+                NICHE,
                 QuestionKey("service_area"),
                 Step.CONTACTS_AND_HOURS,
                 Answer.SHORT_TEXT,
-                text(
-                    en="Which areas do you serve?",
-                    ru="В каких районах вы работаете?",
-                    ka="რომელ რაიონებში მუშაობთ?",
-                ),
                 is_required=True,
             ),
             question(
+                NICHE,
                 QuestionKey("pricing_basis"),
                 Step.OFFER,
                 Answer.SINGLE_CHOICE,
-                text(
-                    en="How do you price jobs?",
-                    ru="Как вы считаете стоимость?",
-                    ka="როგორ ითვლით ღირებულებას?",
-                ),
-                choices=[
-                    choice(
-                        Choice("per_hour"),
-                        "Per hour",
-                        "За час",
-                        "საათობრივად",
-                    ),
-                    choice(
-                        Choice("per_square_meter"),
-                        "Per square meter",
-                        "За квадратный метр",
-                        "კვადრატულ მეტრზე",
-                    ),
-                    choice(
-                        Choice("per_job"),
-                        "Per job",
-                        "За работу",
-                        "სამუშაოზე",
-                    ),
-                    choice(
-                        Choice("after_inspection"),
-                        "After an inspection",
-                        "После осмотра",
-                        "დათვალიერების შემდეგ",
-                    ),
-                ],
-            ),
-            question(
-                QuestionKey("call_out_fee"),
-                Step.OFFER,
-                Answer.SHORT_TEXT,
-                text(
-                    en="Call-out fee",
-                    ru="Стоимость выезда",
-                    ka="გამოძახების საფასური",
+                choices=(
+                    Choice("per_hour"),
+                    Choice("per_square_meter"),
+                    Choice("per_job"),
+                    Choice("after_inspection"),
                 ),
             ),
+            question(NICHE, QuestionKey("call_out_fee"), Step.OFFER, Answer.SHORT_TEXT),
             question(
-                QuestionKey("ask_for_photos"),
-                Step.BOOKING_RULES,
-                Answer.YES_NO,
-                text(
-                    en="Should the assistant ask for photos of the task?",
-                    ru="Просить ли у клиента фото задачи?",
-                    ka="სთხოვოს ასისტენტმა კლიენტს დავალების ფოტო?",
-                ),
+                NICHE, QuestionKey("ask_for_photos"), Step.BOOKING_RULES, Answer.YES_NO
             ),
             question(
+                NICHE,
                 QuestionKey("lead_fields"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="What should the assistant collect for a manager?",
-                    ru="Что помощник собирает для менеджера?",
-                    ka="რა შეაგროვოს ასისტენტმა მენეჯერისთვის?",
+                choices=(
+                    Choice("address"),
+                    Choice("task_description"),
+                    Choice("photos"),
+                    Choice("preferred_time"),
                 ),
-                choices=[
-                    choice(Choice("address"), "Address", "Адрес", "მისამართი"),
-                    choice(
-                        Choice("task_description"),
-                        "Task description",
-                        "Описание задачи",
-                        "დავალების აღწერა",
-                    ),
-                    choice(Choice("photos"), "Photos", "Фото", "ფოტოები"),
-                    choice(
-                        Choice("preferred_time"),
-                        "Preferred time",
-                        "Удобное время",
-                        "სასურველი დრო",
-                    ),
-                ],
             ),
         ],
         prompt_rules=prompt_rules(
@@ -197,27 +101,7 @@ def build_home_services_template() -> NicheTemplate:
             "off with high urgency.",
         ),
         example_exchanges=HOME_SERVICES_EXAMPLES,
-        default_handoff_rules=handoff_rules(
-            en=[
-                "Emergency at home (leak, electrical fault)",
-                "Large job that needs an inspection",
-                "Complaint",
-            ],
-            ru=[
-                "Авария дома (протечка, неисправность электрики)",
-                "Большой объём работ, нужен осмотр",
-                "Жалоба",
-            ],
-            ka=[
-                "ავარია სახლში (გაჟონვა, ელექტროობის გაუმართაობა)",
-                "დიდი მოცულობის სამუშაო, საჭიროა დათვალიერება",
-                "საჩივარი",
-            ],
-        ),
-        default_forbidden_rules=forbidden_rules(
-            en=["Final prices before an inspection"],
-            ru=["Окончательная цена до осмотра"],
-            ka=["საბოლოო ფასი დათვალიერებამდე"],
-        ),
+        default_handoff_rules=handoff_rules(NICHE),
+        default_forbidden_rules=forbidden_rules(NICHE),
         autotest_kinds=autotest_kinds(),
     )

@@ -95,5 +95,8 @@ def test_each_text_ends_with_the_link_in_the_recipients_language() -> None:
         "Handoffs, requests and bookings will arrive here.\n"
         f"Open: {LINK}"
     )
-    assert text(StaffTextStyle.BRIEF, "de", None).startswith("Test notification")
+    assert text(StaffTextStyle.BRIEF, "de", None).startswith(
+        "Testbenachrichtigung · Salobie Bia"
+    )
+    assert text(StaffTextStyle.BRIEF, "fr", None).startswith("Test notification")
     assert "+995" not in text(StaffTextStyle.BRIEF, "ru", LINK)

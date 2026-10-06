@@ -16,6 +16,10 @@ from app.schemas.typings.conversations.strings import UnverifiedReplyValue
 from app.schemas.typings.handoffs.strings import HandoffQuotedText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.scheduling.localized_formatting import (
+    FIRST_STRONG_ISOLATE,
+    POP_DIRECTIONAL_ISOLATE,
+)
 from tests.operations.handoff_fixture import HandoffFixture
 
 QUESTION: str = "Сколько стоит пломба?"
@@ -60,11 +64,12 @@ def test_the_cabinet_gets_the_code_the_quote_and_the_values() -> None:
     assert item.summary_code is HandoffSummaryCode.UNVERIFIED_VALUES
     assert item.quoted_text == QUESTION
     assert item.flagged_values == ["250 ₪", "19:30"]
-    # The owner writes in Hebrew, which has no template: English it is.
+    # The owner writes in Hebrew: the values and the quote stay isolated
+    # inside the right-to-left sentence.
     assert str(item.summary) == (
-        "The assistant held back an answer with figures or statements that are "
-        "not in your business details (250 ₪, 19:30). "
-        f"The customer's message: “{QUESTION}”"
+        "העוזר עצר תשובה עם נתונים או טענות שלא מופיעים בפרטי העסק שלכם "
+        f"({FIRST_STRONG_ISOLATE}250 ₪, 19:30{POP_DIRECTIONAL_ISOLATE}). "
+        f"ההודעה של הלקוח: „{FIRST_STRONG_ISOLATE}{QUESTION}{POP_DIRECTIONAL_ISOLATE}”"
     )
 
 

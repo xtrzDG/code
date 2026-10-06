@@ -4,13 +4,11 @@ import pytest
 from pydantic import ValidationError
 
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
-from app.registries.niches.template_parts import (
-    BASE_AUTOTEST_KINDS,
-    COMMON_FORBIDDEN_RULES_EN,
-)
+from app.registries.niches.template_parts import BASE_AUTOTEST_KINDS
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.constants.localization import CABINET_LANGUAGES
 from app.schemas.constants.niches import (
     LaunchWave,
     NicheKey,
@@ -21,8 +19,10 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.knowledge.localized_texts import split_rule_lines
+from app.utilities.localization.owner_texts import owner_rule_lines
 
 ENGLISH: LanguageTag = LanguageTag("en")
+CABINET_TAGS: tuple[str, ...] = tuple(language.value for language in CABINET_LANGUAGES)
 REGISTRY: NicheTemplateRegistry = NicheTemplateRegistry()
 TEMPLATES: list[NicheTemplate] = REGISTRY.list_all()
 CHOICE_TYPES: frozenset[QuestionAnswerType] = frozenset(
@@ -64,39 +64,29 @@ def test_registry_returns_immutable_templates_and_fresh_lists() -> None:
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=template_id)
-def test_display_texts_exist_in_english_russian_and_georgian(
+def test_display_texts_exist_in_every_cabinet_language(
     template: NicheTemplate,
 ) -> None:
-    assert has_languages(template.names, "en", "ru", "ka")
-    assert has_languages(template.descriptions, "en", "ru", "ka")
-    assert has_languages(template.resource_nouns, "en", "ru", "ka")
-    assert has_languages(template.default_handoff_rules, "en", "ru", "ka")
-    assert has_languages(template.default_forbidden_rules, "en", "ru", "ka")
+    assert has_languages(template.names, *CABINET_TAGS)
+    assert has_languages(template.descriptions, *CABINET_TAGS)
+    assert has_languages(template.resource_nouns, *CABINET_TAGS)
+    assert has_languages(template.default_handoff_rules, *CABINET_TAGS)
+    assert has_languages(template.default_forbidden_rules, *CABINET_TAGS)
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=template_id)
-def test_every_question_label_hint_and_choice_has_english_and_russian(
-    template: NicheTemplate,
-) -> None:
-    for question in template.questions:
-        assert has_languages(question.labels, "en", "ru"), question.key
-        if question.hints is not None:
-            assert has_languages(question.hints, "en", "ru"), question.key
-
-        for choice in question.choices:
-            assert has_languages(choice.labels, "en", "ru"), choice.key
-
-
-@pytest.mark.parametrize("template", TEMPLATES, ids=template_id)
-def test_every_question_label_and_hint_is_also_in_georgian(
+def test_every_question_label_hint_and_choice_is_in_every_cabinet_language(
     template: NicheTemplate,
 ) -> None:
     """The profile's section editors show them in the cabinet's language."""
 
     for question in template.questions:
-        assert has_languages(question.labels, "ka"), question.key
+        assert has_languages(question.labels, *CABINET_TAGS), question.key
         if question.hints is not None:
-            assert has_languages(question.hints, "ka"), question.key
+            assert has_languages(question.hints, *CABINET_TAGS), question.key
+
+        for choice in question.choices:
+            assert has_languages(choice.labels, *CABINET_TAGS), choice.key
 
 
 @pytest.mark.parametrize("template", TEMPLATES, ids=template_id)
@@ -150,9 +140,11 @@ def test_platform_rules_and_autotests_are_shared_by_every_niche(
     assert 2 <= len(rule_texts) <= 6
     assert all(NON_LATIN_LETTER.search(rule) is None for rule in rule_texts)
     assert not any("AI assistant" in rule for rule in rule_texts)
-    assert forbidden_en[: len(COMMON_FORBIDDEN_RULES_EN)] == list(
-        COMMON_FORBIDDEN_RULES_EN
+    common_en: list[str] = split_rule_lines(
+        owner_rule_lines("niches.common.forbidden_rules").values[ENGLISH]
     )
+    assert len(common_en) == 2
+    assert forbidden_en[: len(common_en)] == common_en
     assert template.autotest_kinds[: len(BASE_AUTOTEST_KINDS)] == list(
         BASE_AUTOTEST_KINDS
     )

@@ -1,7 +1,6 @@
 from app.registries.niches.examples.hospitality_examples import HOTEL_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
-    choice,
     forbidden_rules,
     handoff_rules,
     prompt_rules,
@@ -21,33 +20,21 @@ from app.schemas.typings.profiles.constrained_strings import (
 )
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 
+NICHE: NicheKey = NicheKey.HOTEL
+
 
 def build_hotel_template() -> NicheTemplate:
     """Hotels, guest houses and hostels: rooms booked by nights (wave A)."""
 
     return NicheTemplate(
-        key=NicheKey.HOTEL,
+        key=NICHE,
         wave=LaunchWave.A,
-        names=text(
-            en="Hotels, guest houses and hostels",
-            ru="Отели, гостевые дома и хостелы",
-            ka="სასტუმროები, საოჯახო სასტუმროები და ჰოსტელები",
-        ),
-        descriptions=text(
-            en="Free rooms and prices for dates, direct booking without platform "
-            "commission, transfer, early check-in and guest questions around the "
-            "clock in many languages.",
-            ru="Свободные номера и цены на даты, прямая бронь без комиссии "
-            "агрегаторов, трансфер, ранний заезд, вопросы гостей круглосуточно на "
-            "многих языках.",
-            ka="თავისუფალი ოთახები და ფასები თარიღებზე, პირდაპირი ჯავშანი "
-            "აგრეგატორების საკომისიოს გარეშე, ტრანსფერი, ადრეული შესახლება და "
-            "სტუმრების კითხვები 24/7 მრავალ ენაზე.",
-        ),
+        names=text(NICHE, "name"),
+        descriptions=text(NICHE, "description"),
         recommended_plans=[PlanKey.VOICE_AND_CHAT, PlanKey.PLUS],
         resource_kind=ResourceKind.ROOM,
         booking_unit=BookingUnit.NIGHT,
-        resource_nouns=text(en="room", ru="номер", ka="ოთახი"),
+        resource_nouns=text(NICHE, "resource_noun"),
         knowledge_kinds=[
             KnowledgeItemKind.ROOM_TYPE,
             KnowledgeItemKind.PACKAGE,
@@ -57,160 +44,70 @@ def build_hotel_template() -> NicheTemplate:
         ],
         questions=[
             question(
+                NICHE,
                 QuestionKey("property_type"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.SINGLE_CHOICE,
-                text(
-                    en="What kind of property is it?",
-                    ru="Какой у вас тип размещения?",
-                    ka="რა ტიპის განთავსებაა?",
-                ),
                 is_required=True,
-                choices=[
-                    choice(Choice("hotel"), "Hotel", "Отель", "სასტუმრო"),
-                    choice(
-                        Choice("guest_house"),
-                        "Guest house",
-                        "Гостевой дом",
-                        "საოჯახო სასტუმრო",
-                    ),
-                    choice(Choice("hostel"), "Hostel", "Хостел", "ჰოსტელი"),
-                    choice(
-                        Choice("apart_hotel"),
-                        "Apart-hotel",
-                        "Апарт-отель",
-                        "აპარტ-სასტუმრო",
-                    ),
-                ],
+                choices=(
+                    Choice("hotel"),
+                    Choice("guest_house"),
+                    Choice("hostel"),
+                    Choice("apart_hotel"),
+                ),
             ),
             question(
+                NICHE,
                 QuestionKey("check_in_time"),
                 Step.BOOKING_RULES,
                 Answer.SHORT_TEXT,
-                text(en="Check-in time", ru="Время заезда", ka="შესახლების დრო"),
                 is_required=True,
-                hints=text(
-                    en="For example: from 14:00",
-                    ru="Например: с 14:00",
-                    ka="მაგალითად: 14:00-დან",
-                ),
             ),
             question(
+                NICHE,
                 QuestionKey("check_out_time"),
                 Step.BOOKING_RULES,
                 Answer.SHORT_TEXT,
-                text(en="Check-out time", ru="Время выезда", ka="გამოსახლების დრო"),
                 is_required=True,
-                hints=text(
-                    en="For example: until 12:00",
-                    ru="Например: до 12:00",
-                    ka="მაგალითად: 12:00-მდე",
-                ),
             ),
             question(
+                NICHE,
                 QuestionKey("early_check_in"),
                 Step.BOOKING_RULES,
                 Answer.LONG_TEXT,
-                text(
-                    en="Early check-in and late check-out rules",
-                    ru="Правила раннего заезда и позднего выезда",
-                    ka="ადრეული შესახლებისა და გვიანი გამოსახლების წესები",
-                ),
             ),
             question(
-                QuestionKey("seasonal_prices"),
-                Step.OFFER,
-                Answer.LONG_TEXT,
-                text(
-                    en="How do prices change by season?",
-                    ru="Как меняются цены по сезонам?",
-                    ka="როგორ იცვლება ფასები სეზონების მიხედვით?",
-                ),
-                hints=text(
-                    en="Nightly prices by season are set on each room type in "
-                    "Assistant → Knowledge; describe the season dates and rules "
-                    "here.",
-                    ru="Цены за ночь по сезонам задаются у каждого типа номера в "
-                    "разделе «Помощник» → «Знания»; здесь опишите даты сезонов и "
-                    "правила.",
-                    ka="ღამის სეზონური ფასები თითოეული ოთახის ტიპს ეთითება "
-                    "განყოფილებაში „ასისტენტი“ → „ცოდნა“; აქ აღწერეთ სეზონების "
-                    "თარიღები და წესები.",
-                ),
+                NICHE, QuestionKey("seasonal_prices"), Step.OFFER, Answer.LONG_TEXT
             ),
             question(
+                NICHE,
                 QuestionKey("breakfast"),
                 Step.OFFER,
                 Answer.SINGLE_CHOICE,
-                text(en="Breakfast", ru="Завтрак", ka="საუზმე"),
-                choices=[
-                    choice(Choice("none"), "Not available", "Нет", "არ არის"),
-                    choice(
-                        Choice("included"),
-                        "Included in the price",
-                        "Включён в цену",
-                        "ფასში შედის",
-                    ),
-                    choice(
-                        Choice("extra_charge"),
-                        "For an extra charge",
-                        "За доплату",
-                        "დამატებითი საფასურით",
-                    ),
-                ],
+                choices=(Choice("none"), Choice("included"), Choice("extra_charge")),
             ),
             question(
+                NICHE,
                 QuestionKey("transfer"),
                 Step.OFFER,
                 Answer.SINGLE_CHOICE,
-                text(
-                    en="Airport or station transfer",
-                    ru="Трансфер из аэропорта или с вокзала",
-                    ka="ტრანსფერი აეროპორტიდან ან სადგურიდან",
-                ),
-                choices=[
-                    choice(Choice("none"), "Not available", "Нет", "არ არის"),
-                    choice(
-                        Choice("paid"),
-                        "On request, paid",
-                        "По запросу, платно",
-                        "მოთხოვნით, ფასიანი",
-                    ),
-                    choice(Choice("free"), "Free", "Бесплатно", "უფასო"),
-                ],
+                choices=(Choice("none"), Choice("paid"), Choice("free")),
             ),
             question(
-                QuestionKey("pets_allowed"),
-                Step.FAQ_AND_HANDOFF,
-                Answer.YES_NO,
-                text(
-                    en="Are pets allowed?",
-                    ru="Можно ли с животными?",
-                    ka="შეიძლება შინაური ცხოველებით?",
-                ),
+                NICHE, QuestionKey("pets_allowed"), Step.FAQ_AND_HANDOFF, Answer.YES_NO
             ),
             question(
+                NICHE,
                 QuestionKey("booking_system"),
                 Step.CHANNELS,
                 Answer.SINGLE_CHOICE,
-                text(
-                    en="Which booking system (PMS) do you use?",
-                    ru="Какой системой бронирования (PMS) вы пользуетесь?",
-                    ka="რომელ დაჯავშნის სისტემას (PMS) იყენებთ?",
+                choices=(
+                    Choice("none"),
+                    Choice("cloudbeds"),
+                    Choice("mews"),
+                    Choice("hotelrunner"),
+                    Choice("other"),
                 ),
-                hints=text(
-                    en="Add the direct booking link under Business → Links.",
-                    ru="Ссылку на прямую бронь добавьте в разделе «Бизнес» → «Ссылки».",
-                    ka="პირდაპირი ჯავშნის ბმული დაამატეთ განყოფილებაში „ბიზნესი“ "
-                    "→ „ბმულები“.",
-                ),
-                choices=[
-                    choice(Choice("none"), "None", "Никакой", "არცერთს"),
-                    choice(Choice("cloudbeds"), "Cloudbeds", "Cloudbeds"),
-                    choice(Choice("mews"), "Mews", "Mews"),
-                    choice(Choice("hotelrunner"), "HotelRunner", "HotelRunner"),
-                    choice(Choice("other"), "Other", "Другая", "სხვა"),
-                ],
             ),
         ],
         prompt_rules=prompt_rules(
@@ -225,31 +122,8 @@ def build_hotel_template() -> NicheTemplate:
             "pass emergencies and complaints to staff right away.",
         ),
         example_exchanges=HOTEL_EXAMPLES,
-        default_handoff_rules=handoff_rules(
-            en=[
-                "Complaint during the stay",
-                "Group booking of more than 5 rooms",
-                "Request for a special price or a long stay",
-                "A guest cannot get in or has an emergency",
-            ],
-            ru=[
-                "Жалоба во время проживания",
-                "Групповая бронь больше 5 номеров",
-                "Просьба об особой цене или долгом проживании",
-                "Гость не может попасть внутрь или у него экстренная ситуация",
-            ],
-            ka=[
-                "საჩივარი ცხოვრების დროს",
-                "ჯგუფური ჯავშანი 5-ზე მეტ ოთახზე",
-                "განსაკუთრებული ფასის ან ხანგრძლივი ცხოვრების თხოვნა",
-                "სტუმარი ვერ შედის შიგნით ან საგანგებო ვითარებაშია",
-            ],
-        ),
-        default_forbidden_rules=forbidden_rules(
-            en=["Confirming a room without checking availability"],
-            ru=["Подтверждение номера без проверки наличия"],
-            ka=["ოთახის დადასტურება ხელმისაწვდომობის შემოწმების გარეშე"],
-        ),
+        default_handoff_rules=handoff_rules(NICHE),
+        default_forbidden_rules=forbidden_rules(NICHE),
         autotest_kinds=autotest_kinds(),
         booking_variants=[BookingScenarioVariant.ROOM_TYPE_STAY],
         integrations=[

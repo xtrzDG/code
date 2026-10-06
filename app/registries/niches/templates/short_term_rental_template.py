@@ -19,30 +19,21 @@ from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.niches.strings import IntegrationName
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 
+NICHE: NicheKey = NicheKey.SHORT_TERM_RENTAL
+
 
 def build_short_term_rental_template() -> NicheTemplate:
     """Short-term rental apartments: stays booked by nights (wave B)."""
 
     return NicheTemplate(
-        key=NicheKey.SHORT_TERM_RENTAL,
+        key=NICHE,
         wave=LaunchWave.B,
-        names=text(
-            en="Short-term rental apartments",
-            ru="Квартиры посуточно",
-            ka="დღიურად გასაქირავებელი ბინები",
-        ),
-        descriptions=text(
-            en="Questions before booking, check-in instructions, Wi-Fi, house "
-            "rules and stay extensions in the guest's language.",
-            ru="Вопросы до брони, инструкция по заселению, Wi-Fi, правила, "
-            "продление — на языке гостя.",
-            ka="კითხვები დაჯავშნამდე, შესახლების ინსტრუქცია, Wi-Fi, წესები და "
-            "გახანგრძლივება — სტუმრის ენაზე.",
-        ),
+        names=text(NICHE, "name"),
+        descriptions=text(NICHE, "description"),
         recommended_plans=[PlanKey.CHAT],
         resource_kind=ResourceKind.ROOM,
         booking_unit=BookingUnit.NIGHT,
-        resource_nouns=text(en="apartment", ru="квартира", ka="ბინა"),
+        resource_nouns=text(NICHE, "resource_noun"),
         knowledge_kinds=[
             KnowledgeItemKind.ROOM_TYPE,
             KnowledgeItemKind.SERVICE,
@@ -51,93 +42,52 @@ def build_short_term_rental_template() -> NicheTemplate:
         ],
         questions=[
             question(
+                NICHE,
                 QuestionKey("apartment_count"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.NUMBER,
-                text(
-                    en="How many apartments do you rent out?",
-                    ru="Сколько квартир вы сдаёте?",
-                    ka="რამდენ ბინას აქირავებთ?",
-                ),
                 is_required=True,
             ),
             question(
+                NICHE,
                 QuestionKey("host_phone"),
                 Step.CONTACTS_AND_HOURS,
                 Answer.PHONE_NUMBER,
-                text(
-                    en="Phone for guests who are already staying",
-                    ru="Телефон для гостей, которые уже заселились",
-                    ka="ტელეფონი უკვე შესახლებული სტუმრებისთვის",
-                ),
             ),
             question(
+                NICHE,
                 QuestionKey("check_in_time"),
                 Step.BOOKING_RULES,
                 Answer.SHORT_TEXT,
-                text(en="Check-in time", ru="Время заезда", ka="შესახლების დრო"),
                 is_required=True,
             ),
             question(
+                NICHE,
                 QuestionKey("check_out_time"),
                 Step.BOOKING_RULES,
                 Answer.SHORT_TEXT,
-                text(en="Check-out time", ru="Время выезда", ka="გამოსახლების დრო"),
                 is_required=True,
             ),
             question(
+                NICHE,
                 QuestionKey("extension_policy"),
                 Step.BOOKING_RULES,
                 Answer.LONG_TEXT,
-                text(
-                    en="How can guests extend their stay?",
-                    ru="Как продлить проживание?",
-                    ka="როგორ შეიძლება ცხოვრების გახანგრძლივება?",
-                ),
             ),
             question(
+                NICHE,
                 QuestionKey("check_in_instructions"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.LONG_TEXT,
-                text(
-                    en="How do guests check in?",
-                    ru="Как гости заселяются?",
-                    ka="როგორ ხდება სტუმრების შესახლება?",
-                ),
-                hints=text(
-                    en="Do not write door or safe codes here: the assistant shares "
-                    "this text with anyone who asks.",
-                    ru="Не пишите сюда коды от дверей и сейфов: помощник отправит "
-                    "этот текст любому, кто спросит.",
-                    ka="აქ ნუ ჩაწერთ კარის ან სეიფის კოდებს: ასისტენტი ამ ტექსტს "
-                    "ყველას გაუზიარებს, ვინც იკითხავს.",
-                ),
             ),
             question(
-                QuestionKey("wifi_info"),
-                Step.FAQ_AND_HANDOFF,
-                Answer.LONG_TEXT,
-                text(
-                    en="Wi-Fi information for guests",
-                    ru="Wi-Fi для гостей",
-                    ka="Wi-Fi სტუმრებისთვის",
-                ),
-                hints=text(
-                    en="The assistant shares this text with anyone who asks.",
-                    ru="Помощник отправит этот текст любому, кто спросит.",
-                    ka="ასისტენტი ამ ტექსტს ყველას გაუზიარებს, ვინც იკითხავს.",
-                ),
+                NICHE, QuestionKey("wifi_info"), Step.FAQ_AND_HANDOFF, Answer.LONG_TEXT
             ),
             question(
+                NICHE,
                 QuestionKey("house_rules"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.LONG_TEXT,
-                text(
-                    en="House rules (smoking, parties, pets, quiet hours)",
-                    ru="Правила проживания (курение, вечеринки, животные, тишина)",
-                    ka="ცხოვრების წესები (მოწევა, წვეულებები, შინაური ცხოველები, "
-                    "სიჩუმე)",
-                ),
             ),
         ],
         prompt_rules=prompt_rules(
@@ -150,31 +100,8 @@ def build_short_term_rental_template() -> NicheTemplate:
             "with high urgency.",
         ),
         example_exchanges=SHORT_TERM_RENTAL_EXAMPLES,
-        default_handoff_rules=handoff_rules(
-            en=[
-                "A guest cannot get in",
-                "Damage, breakdown or emergency in the apartment",
-                "Complaint",
-                "Stay longer than 30 nights",
-            ],
-            ru=[
-                "Гость не может попасть в квартиру",
-                "Поломка, ущерб или авария в квартире",
-                "Жалоба",
-                "Проживание дольше 30 ночей",
-            ],
-            ka=[
-                "სტუმარი ვერ შედის ბინაში",
-                "დაზიანება, გაფუჭება ან ავარია ბინაში",
-                "საჩივარი",
-                "30 ღამეზე მეტი ცხოვრება",
-            ],
-        ),
-        default_forbidden_rules=forbidden_rules(
-            en=["Sharing door, lock-box or safe codes"],
-            ru=["Сообщать коды от дверей, ключниц и сейфов"],
-            ka=["კარის, გასაღების ყუთის ან სეიფის კოდების გაზიარება"],
-        ),
+        default_handoff_rules=handoff_rules(NICHE),
+        default_forbidden_rules=forbidden_rules(NICHE),
         autotest_kinds=autotest_kinds(),
         booking_variants=[BookingScenarioVariant.ROOM_TYPE_STAY],
         integrations=[IntegrationName("WhatsApp")],

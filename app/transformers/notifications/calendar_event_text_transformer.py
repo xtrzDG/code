@@ -12,22 +12,16 @@ from app.transformers.notifications.message_rendering import (
     CHANNEL_LABELS,
     NOTES_LINE,
     describe_phone,
-    localized,
     render,
     resolve_label,
     text_or_missing,
 )
+from app.utilities.localization.owner_texts import owner_text
 from app.utilities.scheduling.localized_formatting import choose_template_language
 
-EVENT_TITLE: LocalizedText = localized(
-    en="Booking: {name}, guests: {party}",
-    ru="Бронь: {name}, гостей: {party}",
-    ka="ჯავშანი: {name}, სტუმრები: {party}",
-)
-EVENT_DESCRIPTION: LocalizedText = localized(
-    en="{resource}\nPhone: {phone}\nChannel: {channel}\nBooking: {booking_id}",
-    ru="{resource}\nТелефон: {phone}\nКанал: {channel}\nБронь: {booking_id}",
-    ka="{resource}\nტელეფონი: {phone}\nარხი: {channel}\nჯავშანი: {booking_id}",
+EVENT_TITLE: LocalizedText = owner_text("notifications.calendar_event.event_title")
+EVENT_DESCRIPTION: LocalizedText = owner_text(
+    "notifications.calendar_event.event_description"
 )
 
 
