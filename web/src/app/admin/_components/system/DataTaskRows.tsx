@@ -33,6 +33,8 @@ export function DataTasksTable({
   onRetry: (task: DataTask) => void;
 }) {
   const { t } = useI18n();
+  // Only a failed task has an action ("walk again"): no empty column otherwise.
+  const hasActions = tasks.some((task) => task.status === "failed");
   return (
     <ScrollingTable caption={caption}>
       <THead>
@@ -41,19 +43,35 @@ export function DataTasksTable({
           <Th>{t("dataTasks.columns.status")}</Th>
           <Th>{t("dataTasks.columns.progress")}</Th>
           <Th>{t("dataTasks.columns.when")}</Th>
-          <Th align="right">{t("dataTasks.columns.actions")}</Th>
+          {hasActions ? <Th align="right">{t("dataTasks.columns.actions")}</Th> : null}
         </Tr>
       </THead>
       <TBody>
         {tasks.map((task) => (
-          <DataTaskRow key={task.key} task={task} isRetrying={retryingKey === task.key} onRetry={() => onRetry(task)} />
+          <DataTaskRow
+            key={task.key}
+            task={task}
+            hasActions={hasActions}
+            isRetrying={retryingKey === task.key}
+            onRetry={() => onRetry(task)}
+          />
         ))}
       </TBody>
     </ScrollingTable>
   );
 }
 
-function DataTaskRow({ task, isRetrying, onRetry }: { task: DataTask; isRetrying: boolean; onRetry: () => void }) {
+function DataTaskRow({
+  task,
+  hasActions,
+  isRetrying,
+  onRetry,
+}: {
+  task: DataTask;
+  hasActions: boolean;
+  isRetrying: boolean;
+  onRetry: () => void;
+}) {
   const { t } = useI18n();
   const format = useSystemFormat();
   const percent = dataTaskPercent(task);
@@ -127,25 +145,44 @@ function DataTaskRow({ task, isRetrying, onRetry }: { task: DataTask; isRetrying
         {task.status === "done" ? (
           <div>{t("dataTasks.doneAt", { time: format.when(task.finished_at) })}</div>
         ) : (
-          <div>{t("dataTasks.dueSince", { time: format.when(task.pending_since) })}</div>
+          <>
+            <div>{t("dataTasks.dueSince", { time: format.when(task.pending_since) })}</div>
+            {task.last_batch_at ? <div>{t("dataTasks.lastBatch", { time: format.when(task.last_batch_at) })}</div> : null}
+          </>
         )}
-        {task.last_batch_at ? <div>{t("dataTasks.lastBatch", { time: format.when(task.last_batch_at) })}</div> : null}
       </Td>
-      <Td align="right">
-        {task.status === "failed" ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            leadingIcon={<IconRefresh className="size-4" aria-hidden />}
-            isLoading={isRetrying}
-            loadingText={t("dataTasks.retry")}
-            onClick={onRetry}
-            aria-label={`${t("dataTasks.retry")}: ${target}`}
-          >
-            {t("dataTasks.retry")}
-          </Button>
-        ) : null}
-      </Td>
+      {hasActions ? <RetryCell task={task} target={target} isRetrying={isRetrying} onRetry={onRetry} /> : null}
     </Tr>
+  );
+}
+
+function RetryCell({
+  task,
+  target,
+  isRetrying,
+  onRetry,
+}: {
+  task: DataTask;
+  target: string;
+  isRetrying: boolean;
+  onRetry: () => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <Td align="right">
+      {task.status === "failed" ? (
+        <Button
+          size="sm"
+          variant="secondary"
+          leadingIcon={<IconRefresh className="size-4" aria-hidden />}
+          isLoading={isRetrying}
+          loadingText={t("dataTasks.retry")}
+          onClick={onRetry}
+          aria-label={`${t("dataTasks.retry")}: ${target}`}
+        >
+          {t("dataTasks.retry")}
+        </Button>
+      ) : null}
+    </Td>
   );
 }

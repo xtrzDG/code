@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-import { IconCheckCircle } from "@/components/icons";
+import { IconCheckCircle, IconChevronDown } from "@/components/icons";
 import { Badge, Button, Card, EmptyState, ErrorState, SkeletonText } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { useI18n } from "@/i18n/client";
@@ -22,6 +22,7 @@ import { useSystemFormat } from "./useSystemFormat";
 export function DataTasksCard() {
   const { t } = useI18n();
   const toast = useToast();
+  const format = useSystemFormat();
   const { tasks, walkAgain, isRetrying } = useDataTasks();
   const [retrying, setRetrying] = useState<string | null>(null);
   const view = tasks.data;
@@ -39,7 +40,7 @@ export function DataTasksCard() {
     <Card
       aria-label={title}
       title={title}
-      description={t("dataTasks.description", { size: view ? String(view.batch_size) : "5000" })}
+      description={t("dataTasks.description", { size: format.number(view?.batch_size ?? 5000) })}
       padded={false}
     >
       {tasks.error && !view ? (
@@ -90,6 +91,9 @@ function DataTaskLists({
             <Button
               size="sm"
               variant="ghost"
+              leadingIcon={
+                <IconChevronDown className={showsDone ? "size-4 rotate-180" : "size-4"} aria-hidden />
+              }
               aria-expanded={showsDone}
               aria-controls={doneId}
               onClick={() => setShowsDone((shown) => !shown)}
