@@ -44,19 +44,16 @@ from app.utilities.conversations.language_evidence.script_languages import (
 from app.utilities.conversations.language_evidence.transliterated_languages import (
     TRANSLITERATED_LANGUAGE_EVIDENCE,
 )
-from app.utilities.conversations.language_evidence.writing_scripts import (
-    COMPATIBLE_TAG_SCRIPTS,
-)
 from app.utilities.conversations.language_scoring import (
     HAN_SCRIPT,
     collect_script_letters,
     evidence_code,
     find_dominant_script,
     find_evidence,
+    is_written_in,
     score_language,
     split_words,
 )
-from app.utilities.localization.language_scripts import find_likely_script_code
 
 # Evidence needed to leave a kept language: two frequent words, or one
 # distinctive letter and a word.
@@ -118,7 +115,10 @@ def detect_any_language(text: str, context: LanguageContext) -> DetectedLanguage
             return read_language(leader, best_score)
 
         return DetectedLanguage(
-            language=context.kept_language,
+            # Kept "uz" read in Cyrillic is "uz-Cyrl": the reply follows.
+            language=context.kept_language
+            if kept is None or kept_score <= 0
+            else kept.tag,
             script_hint=script_hint(kept, kept_score),
             is_read_from_text=kept_score > 0 and kept_score == best_score,
         )
@@ -200,7 +200,7 @@ def collect_candidates(
 
     native: list[LanguageCandidate] = [
         LanguageCandidate(
-            tag=known_tags.get(code, LanguageTag(code)), evidence=evidence
+            tag=native_tag(LanguageTag(code), script, known_tags), evidence=evidence
         )
         for code, evidence in LANGUAGE_EVIDENCE.items()
         if evidence.script == script
@@ -220,6 +220,20 @@ def collect_candidates(
         )
 
     return unique_candidates(native)
+
+
+def native_tag(
+    evidence_tag: LanguageTag,
+    script: str,
+    known_tags: dict[str, LanguageTag],
+) -> LanguageTag:
+    """The business's tag ("pt-BR") if written in `script`, else "uz-Cyrl"."""
+
+    known: LanguageTag | None = known_tags.get(evidence_code(evidence_tag))
+    if known is not None and is_written_in(known, script):
+        return known
+
+    return evidence_tag
 
 
 def unique_candidates(
@@ -282,11 +296,3 @@ def preference_rank(
         return (2, 0)
 
     return (3, candidates.index(candidate))
-
-
-def is_written_in(language: LanguageTag, script: str) -> bool:
-    """Whether a tag's own script (CLDR likely script) is `script`."""
-
-    return find_likely_script_code(language) in COMPATIBLE_TAG_SCRIPTS.get(
-        script, frozenset({script})
-    )
