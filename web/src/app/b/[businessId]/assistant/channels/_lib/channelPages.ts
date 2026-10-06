@@ -13,7 +13,7 @@
 
 import { businessPath } from "@/lib/navigation";
 
-export const CHANNEL_SUBPAGES = ["website", "calls", "share"] as const;
+const CHANNEL_SUBPAGES = ["website", "calls", "share"] as const;
 
 export type ChannelSubpage = (typeof CHANNEL_SUBPAGES)[number];
 

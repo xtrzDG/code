@@ -18,7 +18,7 @@ export const LIST_WIDTH_PREFERENCE = "inbox-list-width";
 export const MIN_LIST_WIDTH = 320;
 export const MAX_LIST_WIDTH = 520;
 /** One arrow key press on the column's edge. */
-export const LIST_WIDTH_STEP = 16;
+const LIST_WIDTH_STEP = 16;
 
 export function parseDensity(stored: string | null): InboxDensity {
   return stored === "compact" ? "compact" : DEFAULT_INBOX_DENSITY;
