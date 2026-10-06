@@ -203,13 +203,14 @@ again after the overlap).
 
 The release with the subscription lifecycle (R14-SUB-LIFECYCLE,
 migration 1161, `SubscriptionDocument` version 4, `BillingCreditDocument`
-version 3) follows the enum rule below by a flag instead of a second
-release: it knows the subscription status `paused` and the billing
-notices `pause_started` and `pause_ended`, but writes them only with
-`SUBSCRIPTION_PAUSE_ENABLED=true` (default `false`). Deploy it with the
-flag off; once no instance of the previous release serves, turn the flag
-on (an environment change, a restart). Before rolling back past that
-release, turn the flag off, let running pauses end or resume them in the
+version 3) follows the enum rule below: it knows the subscription status
+`paused` and the billing notices `pause_started` and `pause_ended`, but
+`paused` sits behind the closed release gate `subscription_pause`, so no
+pause is offered or stored even with `SUBSCRIPTION_PAUSE_ENABLED=true`.
+The next release opens the gate; pausing then also needs the flag (default
+`false`): turn it on once that release serves everywhere (an environment
+change, a restart). Before rolling back past the release that opened the
+gate, turn the flag off, let running pauses end or resume them in the
 cabinet (no subscription with status `paused`), or the previous release
 cannot read those subscriptions. The new fields (a subscription's
 `pause_starts_at` and `pause_until`, a credit line's `save_offer_for`) and

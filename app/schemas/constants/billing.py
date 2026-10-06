@@ -44,7 +44,8 @@ class SubscriptionStatus(StrEnum):
     the assistant only takes requests, the channels stay connected and
     the pause costs a share of the price (R14). Written only with
     SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
-    every reader the value (docs/operations/deploys.md).
+    every reader the value: the release gate `subscription_pause`
+    (docs/operations/deploys.md).
     """
 
     INCOMPLETE = "incomplete"

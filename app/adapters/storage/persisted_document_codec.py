@@ -44,7 +44,6 @@ from app.schemas.typings.storage.constrained_integers import (
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.release_gates import (
-    RELEASE_GATES,
     ClosedGate,
     closed_gates_of,
     refuse_closed_values,
@@ -65,7 +64,7 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
         document_type: type[StoredDocument],
         collection_name: DocumentCollectionName | None,
         upcasters: Mapping[DocumentSchemaVersionNumber, DocumentUpcaster] | None = None,
-        release_gates: Sequence[ReleaseGate] = RELEASE_GATES,
+        release_gates: Sequence[ReleaseGate] | None = None,
     ) -> None:
         self._document_type: type[StoredDocument] = document_type
         self._current_version: DocumentSchemaVersionNumber | None = (

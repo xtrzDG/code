@@ -1304,6 +1304,50 @@
         "title": "AnswerCorrectionScope",
         "type": "string"
       },
+      "AnswerLatencyBudgetView": {
+        "additionalProperties": false,
+        "description": "The answer latency objective (p95 under 15 s): the last complete hour's\np95 and how many of the measured hours of 28 days missed it.",
+        "properties": {
+          "hours_over_target": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Hours Over Target",
+            "type": "integer"
+          },
+          "last_hour_p95_ms": {
+            "anyOf": [
+              {
+                "maximum": 86400000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Hour P95 Ms"
+          },
+          "measured_hours": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Measured Hours",
+            "type": "integer"
+          },
+          "target_ms": {
+            "maximum": 86400000.0,
+            "minimum": 0.0,
+            "title": "Target Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "target_ms",
+          "hours_over_target",
+          "measured_hours"
+        ],
+        "title": "AnswerLatencyBudgetView",
+        "type": "object"
+      },
       "AnswerToImproveKind": {
         "description": "One item of the Overview's \"Answers worth improving\": a question the\nassistant could not answer, or a conversation rated bad.",
         "enum": [
@@ -11947,6 +11991,49 @@
         "title": "ErrorBody",
         "type": "object"
       },
+      "ErrorBudgetView": {
+        "additionalProperties": false,
+        "description": "The error budgets of the SLOs (docs/operations/slo.md) as the hourly\nrows of `record_sli` give them; `measured_since` is the oldest row of\nthe 28 days, `measured_until` the end of the newest (None: no row yet).",
+        "properties": {
+          "latency": {
+            "$ref": "#/components/schemas/AnswerLatencyBudgetView"
+          },
+          "measured_since": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Measured Since"
+          },
+          "measured_until": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Measured Until"
+          },
+          "objectives": {
+            "items": {
+              "$ref": "#/components/schemas/ObjectiveBudgetView"
+            },
+            "title": "Objectives",
+            "type": "array"
+          }
+        },
+        "required": [
+          "latency"
+        ],
+        "title": "ErrorBudgetView",
+        "type": "object"
+      },
       "ErrorReason": {
         "additionalProperties": false,
         "description": "One reason a request was refused, in the `reasons` list of an error\nresponse: a stable `code` clients branch on, an English `message`, and\n`details` that qualify it (gap kinds, statuses, missing settings).\n\nExample: {\"code\": \"profile_gaps\", \"message\": \"Complete the profile ...\",\n\"details\": [\"no_opening_hours\"]}",
@@ -18971,6 +19058,55 @@
         "title": "NotificationContactView",
         "type": "object"
       },
+      "ObjectiveBudgetView": {
+        "additionalProperties": false,
+        "description": "One ratio objective over the last 28 days of hourly rows: its events,\nthe good ones, what is left of its error budget (1000 untouched, 0\nspent, below 0 overspent) and how fast the last hour burned it (100 is\nthe pace that spends it in exactly 28 days).",
+        "properties": {
+          "budget_left_permille": {
+            "maximum": 1000.0,
+            "minimum": -100000.0,
+            "title": "Budget Left Permille",
+            "type": "integer"
+          },
+          "burn_rate_last_hour_percent": {
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Burn Rate Last Hour Percent",
+            "type": "integer"
+          },
+          "events": {
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Events",
+            "type": "integer"
+          },
+          "good_events": {
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Good Events",
+            "type": "integer"
+          },
+          "objective": {
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Objective",
+            "type": "number"
+          },
+          "series": {
+            "$ref": "#/components/schemas/ServiceLevelSeries"
+          }
+        },
+        "required": [
+          "series",
+          "objective",
+          "events",
+          "good_events",
+          "budget_left_permille",
+          "burn_rate_last_hour_percent"
+        ],
+        "title": "ObjectiveBudgetView",
+        "type": "object"
+      },
       "OfferPerformer": {
         "additionalProperties": false,
         "description": "A resource that performs or provides an offer.",
@@ -21198,7 +21334,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -21211,7 +21347,11 @@
           "quality_drop",
           "spend_spike",
           "spend_budget",
-          "backfill_stalled"
+          "backfill_stalled",
+          "answer_budget_fast_burn",
+          "answer_budget_slow_burn",
+          "api_budget_fast_burn",
+          "api_budget_slow_burn"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -23579,6 +23719,15 @@
         "title": "SegmentView",
         "type": "object"
       },
+      "ServiceLevelSeries": {
+        "description": "The service level indicators counted in shared five-minute slots\n(docs/operations/slo.md): customer messages answered or handed off\nwithin 60 s of arriving, and API requests answered without a server\nerror.",
+        "enum": [
+          "inbound_answered",
+          "api_availability"
+        ],
+        "title": "ServiceLevelSeries",
+        "type": "string"
+      },
       "ServiceMode": {
         "description": "What the assistant may do for customers.\n\nLEADS_ONLY is used after an unpaid subscription's grace period: the\nassistant only takes requests and passes them to staff.",
         "enum": [
@@ -25326,7 +25475,7 @@
         "type": "object"
       },
       "SubscriptionStatus": {
-        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.\nPAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;\nthe assistant only takes requests, the channels stay connected and\nthe pause costs a share of the price (R14). Written only with\nSUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught\nevery reader the value (docs/operations/deploys.md).",
+        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.\nPAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;\nthe assistant only takes requests, the channels stay connected and\nthe pause costs a share of the price (R14). Written only with\nSUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught\nevery reader the value: the release gate `subscription_pause`\n(docs/operations/deploys.md).",
         "enum": [
           "incomplete",
           "trialing",
@@ -34800,6 +34949,115 @@
           }
         },
         "summary": "Retry Data Task",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/system/error-budget": {
+      "get": {
+        "operationId": "get_error_budget_v1_admin_system_error_budget_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBudgetView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Error Budget",
         "tags": [
           "admin"
         ]

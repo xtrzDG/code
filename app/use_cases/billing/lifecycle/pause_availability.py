@@ -21,6 +21,7 @@ from app.utilities.billing.pause_allowance import (
     max_pause_months,
     months_paused_before,
 )
+from app.utilities.storage.release_gates import SUBSCRIPTION_PAUSE_GATE, is_gate_open
 
 
 def read_pause_availability(
@@ -34,8 +35,12 @@ def read_pause_availability(
     """
     A business pauses a paid monthly subscription from the end of what is
     paid, for whole months within the cap; never while a pause is
-    scheduled or running, and only once the platform turned pausing on.
+    scheduled or running, and only once the platform turned pausing on and
+    the release gate of the `paused` status is open (every running release
+    reads it, docs/operations/deploys.md).
     """
+
+    is_on: IsPauseEnabled = is_enabled and is_gate_open(SUBSCRIPTION_PAUSE_GATE)
 
     reason: PauseUnavailableReason | None = None
     starts_at: Microseconds | None = None
@@ -54,7 +59,7 @@ def read_pause_availability(
             int(policy.pause_window_months),
         )
 
-    if not is_enabled:
+    if not is_on:
         reason = PauseUnavailableReason.FEATURE_OFF
     elif subscription is not None and (
         subscription.status is SubscriptionStatus.PAUSED
@@ -69,7 +74,7 @@ def read_pause_availability(
         reason = PauseUnavailableReason.ALLOWANCE_USED
 
     return PauseAvailability(
-        is_enabled=is_enabled,
+        is_enabled=is_on,
         unavailable_reason=reason,
         starts_at=starts_at,
         max_months=PauseMonthsAllowed(max_months if reason is None else 0),

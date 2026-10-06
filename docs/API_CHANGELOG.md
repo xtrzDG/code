@@ -11,6 +11,22 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — wave 16 together: the live widget, the subscription lifecycle, data tasks, service levels, calendars
+
+Spec: `d055b5c7ca2f4a76`
+
+The API description with the five entries below merged together (the
+website chat's live stream; cancel reasons, offers, the seasonal pause and
+win-back; the post-deploy data tasks; the error budget; resource calendars
+and booking systems). Each of those entries names the description of its
+own change alone. One change of its own:
+
+- **Changed** (description only) `SubscriptionStatus`: `paused` sits behind
+  the closed release gate `subscription_pause` in this release, so
+  `GET …/billing/lifecycle` reports the pause as `feature_off` (and
+  `POST …/billing/pause` answers 409) even with
+  `SUBSCRIPTION_PAUSE_ENABLED`, until the next release opens the gate.
+
 ## 2026-10-06 — the website chat's live stream
 
 Spec: `5c058fb4b7ac5ebe`

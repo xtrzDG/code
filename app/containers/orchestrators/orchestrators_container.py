@@ -1,19 +1,5 @@
-from dependency_injector import containers
-from dependency_injector.providers import Container, DependenciesContainer
+from dependency_injector.providers import Container
 
-from app.containers.adapters.adapters_container import AdaptersContainer
-from app.containers.config import ConfigContainer
-from app.containers.container_edges import composed_container_edge
-from app.containers.facilitators import FacilitatorsContainer
-from app.containers.orchestrators.account_orchestrators import (
-    AccountOrchestratorsContainer,
-)
-from app.containers.orchestrators.admin_action_orchestrators import (
-    AdminActionOrchestratorsContainer,
-)
-from app.containers.orchestrators.analytics_orchestrators import (
-    AnalyticsOrchestratorsContainer,
-)
 from app.containers.orchestrators.assistant_orchestrators import (
     AssistantOrchestratorsContainer,
 )
@@ -32,19 +18,15 @@ from app.containers.orchestrators.call_orchestrators import (
 from app.containers.orchestrators.channel_orchestrators import (
     ChannelOrchestratorsContainer,
 )
-from app.containers.orchestrators.compliance_orchestrators import (
-    ComplianceOrchestratorsContainer,
-)
 from app.containers.orchestrators.conversation_orchestrators import (
     ConversationOrchestratorsContainer,
+)
+from app.containers.orchestrators.core_orchestrators_container import (
+    CoreOrchestratorsContainer,
 )
 from app.containers.orchestrators.customer_orchestrators import (
     CustomerOrchestratorsContainer,
 )
-from app.containers.orchestrators.data_task_orchestrators import (
-    DataTaskOrchestratorsContainer,
-)
-from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsContainer
 from app.containers.orchestrators.feedback_orchestrators import (
     FeedbackOrchestratorsContainer,
 )
@@ -57,9 +39,6 @@ from app.containers.orchestrators.inbox_orchestrators import (
 from app.containers.orchestrators.knowledge_orchestrators import (
     KnowledgeOrchestratorsContainer,
 )
-from app.containers.orchestrators.legal_orchestrators import (
-    LegalOrchestratorsContainer,
-)
 from app.containers.orchestrators.memory_orchestrators import (
     MemoryOrchestratorsContainer,
 )
@@ -69,53 +48,27 @@ from app.containers.orchestrators.notification_orchestrators import (
 from app.containers.orchestrators.operations_orchestrators import (
     OperationsOrchestratorsContainer,
 )
-from app.containers.orchestrators.platform_ops_orchestrators import (
-    PlatformOpsOrchestratorsContainer,
-)
-from app.containers.orchestrators.platform_orchestrators import (
-    PlatformOrchestratorsContainer,
-)
-from app.containers.orchestrators.privacy_orchestrators import (
-    PrivacyOrchestratorsContainer,
-)
-from app.containers.orchestrators.public_demo_orchestrators import (
-    PublicDemoOrchestratorsContainer,
-)
-from app.containers.orchestrators.referral_orchestrators import (
-    ReferralOrchestratorsContainer,
-)
-from app.containers.orchestrators.security_orchestrators import (
-    SecurityOrchestratorsContainer,
-)
 from app.containers.orchestrators.setup_orchestrators import (
     SetupOrchestratorsContainer,
 )
 from app.containers.orchestrators.sharing_orchestrators import (
     SharingOrchestratorsContainer,
 )
-from app.containers.orchestrators.spend_guard_orchestrators import (
-    SpendGuardOrchestratorsContainer,
-)
 from app.containers.orchestrators.subscription_lifecycle_orchestrators import (
     SubscriptionLifecycleOrchestratorsContainer,
-)
-from app.containers.orchestrators.telemetry_orchestrators import (
-    TelemetryOrchestratorsContainer,
 )
 from app.containers.orchestrators.value_orchestrators import (
     ValueOrchestratorsContainer,
 )
-from app.containers.repositories import RepositoriesContainer
-from app.containers.time_provider import TimeProviderContainer
-from app.containers.use_cases.use_cases_container import UseCasesContainer
-from app.containers.utilities import UtilitiesContainer
 
 
-class OrchestratorsContainer(containers.DeclarativeContainer):
+class OrchestratorsContainer(CoreOrchestratorsContainer):
     """
     Orchestrators, one child container per bounded context: the generic one
     around each single-use-case endpoint and the dedicated ones that
-    coordinate several use cases.
+    coordinate several use cases. The edges and the platform's own contexts
+    come from `CoreOrchestratorsContainer`; this layer adds a business's own
+    work (conversations, calls, assistants, channels, billing, growth).
 
     The autotest scenario runner is a use case of the assembly module, but it
     drives the conversation turn orchestrator, so it is wired with the
@@ -123,191 +76,119 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     orchestrators).
     """
 
-    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
-    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
-    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
-    repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
-    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
-    use_cases: UseCasesContainer = composed_container_edge(UseCasesContainer)  # type: ignore[assignment]
-    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
-
-    accounts: AccountOrchestratorsContainer = Container(  # type: ignore[assignment]
-        AccountOrchestratorsContainer,
-        account_use_cases=use_cases.accounts,
-        catalog_use_cases=use_cases.catalog,
-        assistant_use_cases=use_cases.assistants,
-    )
-    compliance: ComplianceOrchestratorsContainer = Container(  # type: ignore[assignment]
-        ComplianceOrchestratorsContainer,
-        compliance_use_cases=use_cases.compliance,
-    )
-    privacy: PrivacyOrchestratorsContainer = Container(  # type: ignore[assignment]
-        PrivacyOrchestratorsContainer,
-        privacy_use_cases=use_cases.privacy,
-    )
-    legal: LegalOrchestratorsContainer = Container(  # type: ignore[assignment]
-        LegalOrchestratorsContainer,
-        legal_use_cases=use_cases.legal,
-    )
-    public_demos: PublicDemoOrchestratorsContainer = Container(  # type: ignore[assignment]
-        PublicDemoOrchestratorsContainer,
-        public_demo_use_cases=use_cases.public_demos,
-        utilities=utilities,
-    )
     inbox: InboxOrchestratorsContainer = Container(  # type: ignore[assignment]
         InboxOrchestratorsContainer,
-        inbox_use_cases=use_cases.inbox,
+        inbox_use_cases=CoreOrchestratorsContainer.use_cases.inbox,
     )
     memory: MemoryOrchestratorsContainer = Container(  # type: ignore[assignment]
         MemoryOrchestratorsContainer,
-        memory_use_cases=use_cases.memory,
+        memory_use_cases=CoreOrchestratorsContainer.use_cases.memory,
     )
     customers: CustomerOrchestratorsContainer = Container(  # type: ignore[assignment]
         CustomerOrchestratorsContainer,
-        customer_use_cases=use_cases.customers,
+        customer_use_cases=CoreOrchestratorsContainer.use_cases.customers,
     )
     knowledge: KnowledgeOrchestratorsContainer = Container(  # type: ignore[assignment]
         KnowledgeOrchestratorsContainer,
-        knowledge_use_cases=use_cases.knowledge,
-        menu_import_use_cases=use_cases.menu_import,
-        scheduling_use_cases=use_cases.scheduling,
+        knowledge_use_cases=CoreOrchestratorsContainer.use_cases.knowledge,
+        menu_import_use_cases=CoreOrchestratorsContainer.use_cases.menu_import,
+        scheduling_use_cases=CoreOrchestratorsContainer.use_cases.scheduling,
     )
     operations: OperationsOrchestratorsContainer = Container(  # type: ignore[assignment]
         OperationsOrchestratorsContainer,
-        scheduling_use_cases=use_cases.scheduling,
-        booking_use_cases=use_cases.bookings,
-        follow_up_use_cases=use_cases.follow_ups,
+        scheduling_use_cases=CoreOrchestratorsContainer.use_cases.scheduling,
+        booking_use_cases=CoreOrchestratorsContainer.use_cases.bookings,
+        follow_up_use_cases=CoreOrchestratorsContainer.use_cases.follow_ups,
     )
     calls: CallOrchestratorsContainer = Container(  # type: ignore[assignment]
         CallOrchestratorsContainer,
-        call_use_cases=use_cases.calls,
+        call_use_cases=CoreOrchestratorsContainer.use_cases.calls,
     )
     conversations: ConversationOrchestratorsContainer = Container(  # type: ignore[assignment]
         ConversationOrchestratorsContainer,
-        utilities=utilities,
-        account_use_cases=use_cases.accounts,
-        follow_up_use_cases=use_cases.follow_ups,
-        conversation_use_cases=use_cases.conversations,
-        conversation_feed_use_cases=use_cases.conversation_feed,
-        voice_use_cases=use_cases.voice,
-        delivery_use_cases=use_cases.deliveries,
-        call_use_cases=use_cases.calls,
+        utilities=CoreOrchestratorsContainer.utilities,
+        account_use_cases=CoreOrchestratorsContainer.use_cases.accounts,
+        follow_up_use_cases=CoreOrchestratorsContainer.use_cases.follow_ups,
+        conversation_use_cases=CoreOrchestratorsContainer.use_cases.conversations,
+        conversation_feed_use_cases=CoreOrchestratorsContainer.use_cases.conversation_feed,
+        voice_use_cases=CoreOrchestratorsContainer.use_cases.voice,
+        delivery_use_cases=CoreOrchestratorsContainer.use_cases.deliveries,
+        call_use_cases=CoreOrchestratorsContainer.use_cases.calls,
         call_orchestrators=calls,
-        feedback_use_cases=use_cases.feedback,
-        spend_guard_use_cases=use_cases.spend_guard,
-        waitlist_use_cases=use_cases.waitlist,
+        feedback_use_cases=CoreOrchestratorsContainer.use_cases.feedback,
+        spend_guard_use_cases=CoreOrchestratorsContainer.use_cases.spend_guard,
+        waitlist_use_cases=CoreOrchestratorsContainer.use_cases.waitlist,
     )
     assistants: AssistantOrchestratorsContainer = Container(  # type: ignore[assignment]
         AssistantOrchestratorsContainer,
-        adapters=adapters,
-        config=config,
-        repositories=repositories,
-        assistant_use_cases=use_cases.assistants,
-        autotest_use_cases=use_cases.autotests,
-        apply_use_cases=use_cases.apply,
-        pending_change_use_cases=use_cases.pending_changes,
+        adapters=CoreOrchestratorsContainer.adapters,
+        config=CoreOrchestratorsContainer.config,
+        repositories=CoreOrchestratorsContainer.repositories,
+        assistant_use_cases=CoreOrchestratorsContainer.use_cases.assistants,
+        autotest_use_cases=CoreOrchestratorsContainer.use_cases.autotests,
+        apply_use_cases=CoreOrchestratorsContainer.use_cases.apply,
+        pending_change_use_cases=CoreOrchestratorsContainer.use_cases.pending_changes,
         conversation_orchestrators=conversations,
     )
     setup: SetupOrchestratorsContainer = Container(  # type: ignore[assignment]
         SetupOrchestratorsContainer,
-        setup_use_cases=use_cases.setup,
-        launch_use_cases=use_cases.launch,
-        guide_use_cases=use_cases.guide,
+        setup_use_cases=CoreOrchestratorsContainer.use_cases.setup,
+        launch_use_cases=CoreOrchestratorsContainer.use_cases.launch,
+        guide_use_cases=CoreOrchestratorsContainer.use_cases.guide,
     )
     channels: ChannelOrchestratorsContainer = Container(  # type: ignore[assignment]
         ChannelOrchestratorsContainer,
-        channel_use_cases=use_cases.channels,
-        delivery_use_cases=use_cases.deliveries,
-        follow_up_use_cases=use_cases.follow_ups,
-        conversation_use_cases=use_cases.conversations,
-        reply_speed_use_cases=use_cases.reply_speed,
-        config=config,
-        facilitators=facilitators,
-        time_provider=time_provider,
-        utilities=utilities,
+        channel_use_cases=CoreOrchestratorsContainer.use_cases.channels,
+        delivery_use_cases=CoreOrchestratorsContainer.use_cases.deliveries,
+        follow_up_use_cases=CoreOrchestratorsContainer.use_cases.follow_ups,
+        conversation_use_cases=CoreOrchestratorsContainer.use_cases.conversations,
+        reply_speed_use_cases=CoreOrchestratorsContainer.use_cases.reply_speed,
+        config=CoreOrchestratorsContainer.config,
+        facilitators=CoreOrchestratorsContainer.facilitators,
+        time_provider=CoreOrchestratorsContainer.time_provider,
+        utilities=CoreOrchestratorsContainer.utilities,
     )
     billing: BillingOrchestratorsContainer = Container(  # type: ignore[assignment]
         BillingOrchestratorsContainer,
-        billing_use_cases=use_cases.billing,
-        invoicing_use_cases=use_cases.invoicing,
+        billing_use_cases=CoreOrchestratorsContainer.use_cases.billing,
+        invoicing_use_cases=CoreOrchestratorsContainer.use_cases.invoicing,
     )
     notifications: NotificationOrchestratorsContainer = Container(  # type: ignore[assignment]
         NotificationOrchestratorsContainer,
-        notification_use_cases=use_cases.notifications,
-        delivery_use_cases=use_cases.deliveries,
-    )
-    platform: PlatformOrchestratorsContainer = Container(  # type: ignore[assignment]
-        PlatformOrchestratorsContainer,
-        platform_use_cases=use_cases.platform,
-    )
-    telemetry: TelemetryOrchestratorsContainer = Container(  # type: ignore[assignment]
-        TelemetryOrchestratorsContainer, telemetry_use_cases=use_cases.telemetry
-    )
-    platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
-        PlatformOpsOrchestratorsContainer,
-        platform_ops_use_cases=use_cases.platform_ops,
-        help_use_cases=use_cases.help,
-    )
-    data_tasks: DataTaskOrchestratorsContainer = Container(  # type: ignore[assignment]
-        DataTaskOrchestratorsContainer, data_task_use_cases=use_cases.data_tasks
-    )
-    spend_guard: SpendGuardOrchestratorsContainer = Container(  # type: ignore[assignment]
-        SpendGuardOrchestratorsContainer,
-        spend_guard_use_cases=use_cases.spend_guard,
-        platform_ops_use_cases=use_cases.platform_ops,
-    )
-    admin_actions: AdminActionOrchestratorsContainer = Container(  # type: ignore[assignment]
-        AdminActionOrchestratorsContainer,
-        admin_action_use_cases=use_cases.admin_actions,
-    )
-    security: SecurityOrchestratorsContainer = Container(  # type: ignore[assignment]
-        SecurityOrchestratorsContainer,
-        security_use_cases=use_cases.security,
-        mfa_use_cases=use_cases.mfa,
+        notification_use_cases=CoreOrchestratorsContainer.use_cases.notifications,
+        delivery_use_cases=CoreOrchestratorsContainer.use_cases.deliveries,
     )
     sharing: SharingOrchestratorsContainer = Container(  # type: ignore[assignment]
         SharingOrchestratorsContainer,
-        sharing_use_cases=use_cases.sharing,
-        follow_up_use_cases=use_cases.follow_ups,
-        utilities=utilities,
+        sharing_use_cases=CoreOrchestratorsContainer.use_cases.sharing,
+        follow_up_use_cases=CoreOrchestratorsContainer.use_cases.follow_ups,
+        utilities=CoreOrchestratorsContainer.utilities,
     )
     booking_links: BookingLinkOrchestratorsContainer = Container(  # type: ignore[assignment]
         BookingLinkOrchestratorsContainer,
-        booking_link_use_cases=use_cases.booking_links,
-        utilities=utilities,
+        booking_link_use_cases=CoreOrchestratorsContainer.use_cases.booking_links,
+        utilities=CoreOrchestratorsContainer.utilities,
     )
     feedback: FeedbackOrchestratorsContainer = Container(  # type: ignore[assignment]
         FeedbackOrchestratorsContainer,
-        feedback_use_cases=use_cases.feedback,
+        feedback_use_cases=CoreOrchestratorsContainer.use_cases.feedback,
     )
     # The waitlist and the rebooking campaigns (1151).
     growth: GrowthOrchestratorsContainer = Container(  # type: ignore[assignment]
         GrowthOrchestratorsContainer,
-        waitlist_use_cases=use_cases.waitlist,
-        campaign_use_cases=use_cases.campaigns,
+        waitlist_use_cases=CoreOrchestratorsContainer.use_cases.waitlist,
+        campaign_use_cases=CoreOrchestratorsContainer.use_cases.campaigns,
     )
     # Cancel reasons, offers, the seasonal pause and win-back (1161).
     lifecycle: SubscriptionLifecycleOrchestratorsContainer = Container(  # type: ignore[assignment]
         SubscriptionLifecycleOrchestratorsContainer,
-        lifecycle=use_cases.subscription_lifecycle,
+        lifecycle=CoreOrchestratorsContainer.use_cases.subscription_lifecycle,
     )
     calendars: CalendarSyncOrchestratorsContainer = Container(  # type: ignore[assignment]
-        CalendarSyncOrchestratorsContainer, calendar_use_cases=use_cases.calendars
-    )  # fmt: skip
-    analytics: AnalyticsOrchestratorsContainer = Container(  # type: ignore[assignment]
-        AnalyticsOrchestratorsContainer,
-        analytics_use_cases=use_cases.analytics,
-    )
-    demo: DemoOrchestratorsContainer = Container(  # type: ignore[assignment]
-        DemoOrchestratorsContainer,
-        demo_use_cases=use_cases.demo,
-        assistant_use_cases=use_cases.assistants,
+        CalendarSyncOrchestratorsContainer,
+        calendar_use_cases=CoreOrchestratorsContainer.use_cases.calendars,
     )
     value: ValueOrchestratorsContainer = Container(  # type: ignore[assignment]
         ValueOrchestratorsContainer,
-        value_use_cases=use_cases.value,
-    )
-    referrals: ReferralOrchestratorsContainer = Container(  # type: ignore[assignment]
-        ReferralOrchestratorsContainer,
-        referral_use_cases=use_cases.referrals,
+        value_use_cases=CoreOrchestratorsContainer.use_cases.value,
     )

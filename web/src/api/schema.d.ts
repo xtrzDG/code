@@ -587,6 +587,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/system/error-budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Error Budget */
+        get: operations["get_error_budget_v1_admin_system_error_budget_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/team": {
         parameters: {
             query?: never;
@@ -5092,6 +5109,21 @@ export interface components {
          */
         AnswerCorrectionScope: "faq" | "price" | "hours" | "rule";
         /**
+         * AnswerLatencyBudgetView
+         * @description The answer latency objective (p95 under 15 s): the last complete hour's
+         *     p95 and how many of the measured hours of 28 days missed it.
+         */
+        AnswerLatencyBudgetView: {
+            /** Hours Over Target */
+            hours_over_target: number;
+            /** Last Hour P95 Ms */
+            last_hour_p95_ms?: number | null;
+            /** Measured Hours */
+            measured_hours: number;
+            /** Target Ms */
+            target_ms: number;
+        };
+        /**
          * AnswerToImproveKind
          * @description One item of the Overview's "Answers worth improving": a question the
          *     assistant could not answer, or a conversation rated bad.
@@ -9222,6 +9254,21 @@ export interface components {
             reasons?: components["schemas"]["ErrorReason"][] | null;
         };
         /**
+         * ErrorBudgetView
+         * @description The error budgets of the SLOs (docs/operations/slo.md) as the hourly
+         *     rows of `record_sli` give them; `measured_since` is the oldest row of
+         *     the 28 days, `measured_until` the end of the newest (None: no row yet).
+         */
+        ErrorBudgetView: {
+            latency: components["schemas"]["AnswerLatencyBudgetView"];
+            /** Measured Since */
+            measured_since?: number | null;
+            /** Measured Until */
+            measured_until?: number | null;
+            /** Objectives */
+            objectives?: components["schemas"]["ObjectiveBudgetView"][];
+        };
+        /**
          * ErrorReason
          * @description One reason a request was refused, in the `reasons` list of an error
          *     response: a stable `code` clients branch on, an English `message`, and
@@ -12015,6 +12062,26 @@ export interface components {
             telegram_username?: string | null;
         };
         /**
+         * ObjectiveBudgetView
+         * @description One ratio objective over the last 28 days of hourly rows: its events,
+         *     the good ones, what is left of its error budget (1000 untouched, 0
+         *     spent, below 0 overspent) and how fast the last hour burned it (100 is
+         *     the pace that spends it in exactly 28 days).
+         */
+        ObjectiveBudgetView: {
+            /** Budget Left Permille */
+            budget_left_permille: number;
+            /** Burn Rate Last Hour Percent */
+            burn_rate_last_hour_percent: number;
+            /** Events */
+            events: number;
+            /** Good Events */
+            good_events: number;
+            /** Objective */
+            objective: number;
+            series: components["schemas"]["ServiceLevelSeries"];
+        };
+        /**
          * OfferPerformer
          * @description A resource that performs or provides an offer.
          */
@@ -12865,9 +12932,13 @@ export interface components {
          *     provider spend passed 80 % of the platform's daily budget.
          *     BACKFILL_STALLED: a post-deploy data task has not finished within a
          *     day of becoming due (docs/operations/deploys.md).
+         *     ANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of
+         *     "answered within 60 s" burns 14.4 times too fast over 1 h and 5 min, or
+         *     6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN
+         *     the same for API availability (docs/operations/slo.md).
          * @enum {string}
          */
-        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled";
+        PlatformAlertCode: "dead_jobs" | "inbound_backlog" | "outbound_failures" | "llm_errors" | "handoff_spike" | "tool_errors" | "stale_worker" | "otp_cap_trips" | "quality_drop" | "spend_spike" | "spend_budget" | "backfill_stalled" | "answer_budget_fast_burn" | "answer_budget_slow_burn" | "api_budget_fast_burn" | "api_budget_slow_burn";
         /**
          * PlatformAlertStatus
          * @description Whether a platform alert fires right now or its last episode is over.
@@ -13823,6 +13894,15 @@ export interface components {
             updated_at: number;
         };
         /**
+         * ServiceLevelSeries
+         * @description The service level indicators counted in shared five-minute slots
+         *     (docs/operations/slo.md): customer messages answered or handed off
+         *     within 60 s of arriving, and API requests answered without a server
+         *     error.
+         * @enum {string}
+         */
+        ServiceLevelSeries: "inbound_answered" | "api_availability";
+        /**
          * ServiceMode
          * @description What the assistant may do for customers.
          *
@@ -14578,7 +14658,8 @@ export interface components {
          *     the assistant only takes requests, the channels stay connected and
          *     the pause costs a share of the price (R14). Written only with
          *     SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
-         *     every reader the value (docs/operations/deploys.md).
+         *     every reader the value: the release gate `subscription_pause`
+         *     (docs/operations/deploys.md).
          * @enum {string}
          */
         SubscriptionStatus: "incomplete" | "trialing" | "active" | "past_due" | "cancelled" | "paused";
@@ -19562,6 +19643,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RetryDataTaskResult"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_error_budget_v1_admin_system_error_budget_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBudgetView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

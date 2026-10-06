@@ -11,6 +11,7 @@ from app.utilities.llm_rehearsal.rehearsal_facts import find_fact_answer
 from app.utilities.llm_rehearsal.rehearsal_reading import (
     last_customer_text as read_customer_words,
 )
+from app.utilities.llm_rehearsal.rehearsal_reading import next_days
 from app.utilities.memory.conversation_summary_prompt import (
     CONVERSATION_SUMMARY_SYSTEM_PROMPT,
 )
@@ -41,6 +42,16 @@ from tests.e2e.model_script_turns import (
     read_turn_texts,
     say,
 )
+
+# The journey's booking day: the day after the e2e clock's START. A world on
+# the wall clock (the two-process tests) books the first of the next days the
+# platform context names instead, so the day is never in the past.
+BOOKING_DATE: str = "2026-10-06"
+
+
+def booking_date(transcript: list[str]) -> str:
+    upcoming: list[str] = next_days(transcript)
+    return BOOKING_DATE if not upcoming or BOOKING_DATE in upcoming else upcoming[0]
 
 
 class WorkshopModelScript:
@@ -90,9 +101,10 @@ class WorkshopModelScript:
         language: str = read_reply_language(
             "\n".join(read_turn_texts(payload) for payload in request.transcript)
         ) or detect_language(last_customer_text(request))
+        day: str = booking_date([str(payload) for payload in request.transcript])
         answered: tuple[str, JsonObject] | None = last_tool_call(request)
         if answered is not None:
-            return self._after_tool(*answered, language=language)
+            return self._after_tool(*answered, language=language, day=day)
 
         return self._answer(
             read_turn_texts(request.transcript[-1]),
@@ -100,6 +112,7 @@ class WorkshopModelScript:
             find_fact_answer(
                 str(request.system_prompt), read_customer_words(request.transcript)
             ),
+            day,
         )
 
     def _play_customer(self, request: LlmRequest) -> ScriptedLlmTurn:
@@ -129,7 +142,7 @@ class WorkshopModelScript:
         )
 
     def _answer(
-        self, customer_text: str, language: str, known_answer: str | None
+        self, customer_text: str, language: str, known_answer: str | None, day: str
     ) -> ScriptedLlmTurn:
         if any(word in customer_text for word in HANDOFF_WORDS):
             return self._call(
@@ -146,7 +159,7 @@ class WorkshopModelScript:
                 AssistantToolName.CHECK_AVAILABILITY,
                 {
                     "resource_type": None,
-                    "date": "2026-10-06",
+                    "date": day,
                     "time": "19:00",
                     "party_size": 2,
                     "duration_minutes": None,
@@ -175,6 +188,7 @@ class WorkshopModelScript:
         tool_name: str,
         result: JsonObject,
         language: str,
+        day: str,
     ) -> ScriptedLlmTurn:
         texts: dict[str, str] = ASSISTANT_TEXTS[language]
         if tool_name == AssistantToolName.CHECK_AVAILABILITY:
@@ -182,7 +196,7 @@ class WorkshopModelScript:
                 "name": "Нино",
                 "phone": "+995 555 12 34 56",
                 "resource_type": None,
-                "date": "2026-10-06",
+                "date": day,
                 "time": "19:00",
                 "party_size": 2,
                 "duration_minutes": None,

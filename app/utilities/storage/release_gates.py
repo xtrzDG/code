@@ -26,12 +26,26 @@ from app.schemas.dto.release_gates import ReleaseGate
 from app.schemas.exceptions.storage_errors import ClosedReleaseGateError
 from app.schemas.typings.maintenance.booleans import IsReleaseGateOpen
 from app.schemas.typings.maintenance.constrained_strings import (
+    GatedEnumValue,
     ReleaseGateName,
     StoredEnumPath,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 
-RELEASE_GATES: tuple[ReleaseGate, ...] = ()
+SUBSCRIPTION_PAUSE_GATE: ReleaseGateName = ReleaseGateName("subscription_pause")
+
+RELEASE_GATES: tuple[ReleaseGate, ...] = (
+    # The seasonal pause (R14, migration 1161) stores a subscription as
+    # `paused`; it opens in the next release. Pausing also needs
+    # SUBSCRIPTION_PAUSE_ENABLED.
+    ReleaseGate(
+        name=SUBSCRIPTION_PAUSE_GATE,
+        collection_name=DocumentCollectionName("subscriptions"),
+        path=StoredEnumPath("status"),
+        values=[GatedEnumValue("paused")],
+        is_open=False,
+    ),
+)
 
 PATH_STEP: re.Pattern[str] = re.compile(r"[a-z_][a-z0-9_]*|\[\]|\{\}")
 LIST_STEP: str = "[]"
@@ -41,11 +55,14 @@ type ClosedGate = tuple[tuple[str, ...], frozenset[str]]
 
 
 def is_gate_open(
-    name: ReleaseGateName, gates: Sequence[ReleaseGate] = RELEASE_GATES
+    name: ReleaseGateName, gates: Sequence[ReleaseGate] | None = None
 ) -> IsReleaseGateOpen:
-    """Whether the gate lets the code write its values (an unknown name: no)."""
+    """
+    Whether the gate lets the code write its values (an unknown name: no);
+    `gates` default to this release's `RELEASE_GATES`.
+    """
 
-    return any(gate.name == name and gate.is_open for gate in gates)
+    return any(gate.name == name and gate.is_open for gate in gates_or_release(gates))
 
 
 def path_steps(path: StoredEnumPath) -> tuple[str, ...]:
@@ -56,15 +73,24 @@ def path_steps(path: StoredEnumPath) -> tuple[str, ...]:
 
 def closed_gates_of(
     collection_name: DocumentCollectionName | None,
-    gates: Sequence[ReleaseGate] = RELEASE_GATES,
+    gates: Sequence[ReleaseGate] | None = None,
 ) -> tuple[ClosedGate, ...]:
     """The closed gates of a collection, ready for `refuse_closed_values`."""
 
     return tuple(
         (path_steps(gate.path), frozenset(str(value) for value in gate.values))
-        for gate in gates
+        for gate in gates_or_release(gates)
         if not gate.is_open and gate.collection_name == collection_name
     )
+
+
+def gates_or_release(gates: Sequence[ReleaseGate] | None) -> Sequence[ReleaseGate]:
+    """
+    The gates given, else this release's, read when asked (not when the
+    caller was defined), so a test can stand in the next release.
+    """
+
+    return RELEASE_GATES if gates is None else gates
 
 
 def values_at(node: object, steps: tuple[str, ...]) -> Iterator[object]:
