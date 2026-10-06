@@ -85,7 +85,7 @@ function CallItem({ call }: { call: CallView }) {
       {call.transcript ? (
         <details className="group mt-3 rounded-xl border border-line bg-surface text-sm">
           <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2 text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
-            <IconChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
+            <IconChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90 rtl:-scale-x-100 rtl:group-open:-rotate-90" aria-hidden />
             <span className="font-medium">{t("conversations.calls.transcript")}</span>
           </summary>
           <pre

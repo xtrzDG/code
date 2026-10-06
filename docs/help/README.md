@@ -4,8 +4,15 @@ The articles of the cabinet's help center (`/help`, the "?" beside a page's
 title), served by `GET /v1/help/{language}` and
 `GET /v1/help/{language}/{slug}` (`app/registries/help/`).
 
-- One folder per language (`en`, `ru`, `ka`), the same file names (slugs) in
-  every folder: `tests/help/test_help_articles.py` fails otherwise.
+- One folder per language (`en`, `ru`, `ka`, `he`, `de`), the same file
+  names (slugs) in every folder: `tests/help/test_help_articles.py` fails
+  otherwise.
+- Hebrew and German are drafts written by the team: their front matter says
+  `status: needs_review` until a native speaker has read them (the test keeps
+  the mark on every draft; drop it from a file once it is reviewed). Hebrew
+  articles are shown right to left; wrap a Latin fragment that starts or ends
+  with punctuation (`@BotFather`, `</body>`) in left-to-right marks (U+200E)
+  so it does not flip.
 - Each file starts with front matter and its `# ` title:
 
   ```markdown
@@ -15,6 +22,7 @@ title), served by `GET /v1/help/{language}` and
   order: 10
   keywords: words owners search with, in this language
   related: other-slug, another-slug
+  status: needs_review   # Hebrew and German drafts only
   ---
   # Title
   ```

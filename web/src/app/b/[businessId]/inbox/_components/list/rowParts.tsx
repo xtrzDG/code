@@ -89,7 +89,12 @@ export function WorkChip({ row, className }: { row: InboxRow; className?: string
   return null;
 }
 
-/** The beginning of the last message on one line: who wrote it (not the customer), a media mark, the text. */
+/**
+ * The beginning of the last message on one line: who wrote it (not the
+ * customer), a media mark, the text. The text is clipped on its own, in its
+ * own direction, so an English message in the Hebrew cabinet (or a Hebrew
+ * one in the English cabinet) still shows its first words.
+ */
 export function RowPreview({ row, className }: { row: InboxRow; className?: string }) {
   const { t } = useI18n();
   if (!row.lastMessageText && !row.lastMessageAttachment) {
@@ -97,20 +102,24 @@ export function RowPreview({ row, className }: { row: InboxRow; className?: stri
   }
   const Media = row.lastMessageAttachment ? ATTACHMENT_ICONS[row.lastMessageAttachment] : null;
   return (
-    <span className={cn("min-w-0 truncate", className)} data-clip="content">
+    <span className={cn("flex min-w-0 items-baseline overflow-hidden whitespace-nowrap", className)} data-clip="content">
       {row.lastMessageAuthor && row.lastMessageAuthor !== "customer" ? (
-        <span className="text-ink-subtle">{t(MESSAGE_AUTHORS[row.lastMessageAuthor])}: </span>
+        <span className="shrink-0 whitespace-pre text-ink-subtle">{t(MESSAGE_AUTHORS[row.lastMessageAuthor])}: </span>
       ) : null}
       {Media && row.lastMessageAttachment ? (
         <>
-          <Media className="me-1 inline-block size-3.5 align-[-2px] text-ink-subtle" aria-hidden />
-          <span className={row.lastMessageText ? "sr-only" : undefined}>
+          <Media className="me-1 inline-block size-3.5 shrink-0 self-center text-ink-subtle" aria-hidden />
+          <span className={row.lastMessageText ? "sr-only" : "truncate"}>
             {t(ATTACHMENT_KIND_LABELS[row.lastMessageAttachment])}
             {row.lastMessageText ? ": " : null}
           </span>
         </>
       ) : null}
-      {row.lastMessageText ? <bdi data-user-content>{row.lastMessageText}</bdi> : null}
+      {row.lastMessageText ? (
+        <bdi data-user-content className="min-w-0 truncate">
+          {row.lastMessageText}
+        </bdi>
+      ) : null}
     </span>
   );
 }

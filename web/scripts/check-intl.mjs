@@ -7,10 +7,12 @@
  * before `next build` (`npm run check:intl`).
  */
 
-const LOCALES = ["ka", "ru", "en"];
+// The cabinet's languages (src/i18n/config.ts, LOCALES).
+const LOCALES = ["ka", "ru", "en", "he", "de"];
 const DATE = new Date(Date.UTC(2026, 9, 16, 12, 0));
 const GEORGIAN_LETTER = /[ა-ჿ]/;
 const CYRILLIC_LETTER = /[Ѐ-ӿ]/;
+const HEBREW_LETTER = /[\u05d0-\u05ea]/;
 
 const problems = [];
 
@@ -58,6 +60,18 @@ attempt("Russian plural rules", () => {
     rules.select(1) === "one" && rules.select(3) === "few" && rules.select(5) === "many",
     "Russian plural rules are not the CLDR ones (1 one, 3 few, 5 many).",
   );
+});
+attempt("Hebrew dates", () => {
+  const date = new Intl.DateTimeFormat("he", { dateStyle: "long", timeZone: "UTC" }).format(DATE);
+  check(HEBREW_LETTER.test(date), `A Hebrew date came out as “${date}”.`);
+});
+attempt("Hebrew plural rules", () => {
+  const rules = new Intl.PluralRules("he");
+  check(rules.select(1) === "one" && rules.select(2) === "two" && rules.select(5) === "other", "Hebrew plural rules are not the CLDR ones (1 one, 2 two, 5 other).");
+});
+attempt("German dates", () => {
+  const date = new Intl.DateTimeFormat("de", { month: "long", timeZone: "UTC" }).format(DATE);
+  check(date === "Oktober", `A German month name came out as “${date}”.`);
 });
 attempt("Georgian relative time", () => {
   const text = new Intl.RelativeTimeFormat("ka", { numeric: "auto" }).format(-1, "day");

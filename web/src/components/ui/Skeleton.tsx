@@ -96,7 +96,7 @@ export function SkeletonCardList({ cards = 3, className }: { cards?: number; cla
           <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="ml-auto h-3 w-14" />
+            <Skeleton className="ms-auto h-3 w-14" />
           </div>
           <SkeletonText lines={2} className="mt-3" />
           <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">

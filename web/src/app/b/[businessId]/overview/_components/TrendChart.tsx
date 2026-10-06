@@ -89,12 +89,14 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
         ))}
       </ul>
 
-      <div className="flex gap-2">
-        <div className="relative h-40 w-8 shrink-0 text-right text-xs text-ink-subtle tabular-nums" aria-hidden>
+      {/* The graphic reads left to right in every language (time runs to the right, as the
+          plot's positions and its arrow keys do); the texts inside keep their own direction. */}
+      <div className="flex gap-2" dir="ltr">
+        <div className="relative h-40 w-8 shrink-0 text-end text-xs text-ink-subtle tabular-nums" aria-hidden>
           {axis.ticks.map((tick) => (
             <span
               key={tick}
-              className="absolute right-0 -translate-y-1/2"
+              className="absolute end-0 -translate-y-1/2"
               style={{ top: `${100 - (tick / axis.max) * 100}%` }}
             >
               {format.number(tick)}
@@ -180,6 +182,7 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
                     activeLeft > 50 ? "-translate-x-[calc(100%+0.75rem)]" : "translate-x-3",
                   )}
                   style={{ left: `${activeLeft}%` }}
+                  dir="auto"
                   aria-hidden
                 >
                   <p className="mb-1 font-medium text-ink-muted">
@@ -212,7 +215,7 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
       <details className="group mt-4 text-sm">
         <summary className="cursor-pointer text-accent hover:underline">{t("dashboard.trend.showTable")}</summary>
         <div className="mt-2 max-h-72 overflow-auto rounded-lg border border-line">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-start text-sm">
             <caption className="sr-only">{t("dashboard.trend.title")}</caption>
             <thead className="sticky top-0 bg-surface-muted text-xs text-ink-muted">
               <tr>
@@ -220,7 +223,7 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
                   {t("dashboard.trend.date")}
                 </th>
                 {TREND_SERIES.map((series) => (
-                  <th key={series} scope="col" className="px-3 py-2 text-right font-medium">
+                  <th key={series} scope="col" className="px-3 py-2 text-end font-medium">
                     {t(SERIES_STYLE[series].label)}
                   </th>
                 ))}
@@ -233,7 +236,7 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
                     {formatLocalDate(day.date, locale, { weekday: "short", day: "numeric", month: "short" })}
                   </th>
                   {TREND_SERIES.map((series) => (
-                    <td key={series} className="px-3 py-1.5 text-right text-ink tabular-nums">
+                    <td key={series} className="px-3 py-1.5 text-end text-ink tabular-nums">
                       {format.number(day[series])}
                     </td>
                   ))}

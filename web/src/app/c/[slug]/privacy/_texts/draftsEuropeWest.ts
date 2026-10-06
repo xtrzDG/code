@@ -20,7 +20,8 @@ export const DRAFTS_EUROPE_WEST: Readonly<Record<string, PrivacyNoticeDraft>> = 
       sharedTitle: "Wer es sieht",
       shared: "Die Mitarbeitenden von {business}. Um Antworten zu schreiben, wird der Text des Gesprächs vom Anbieter des KI-Modells verarbeitet, auf dem der Assistent läuft – nur zu diesem Zweck.",
       keptTitle: "Wie lange",
-      kept: "{business} entscheidet, wie lange Gespräche gespeichert werden. Sie können jederzeit verlangen, dass Ihres gelöscht wird.",
+      kept:
+        "{business} speichert Gespräche {conversations} nach ihrer letzten Nachricht, danach werden sie automatisch gelöscht, und die Aufzeichnungen der KI-Aufrufe des Assistenten {modelRecords}. Sie können jederzeit verlangen, dass Ihres gelöscht wird.",
       rightsTitle: "Ihre Möglichkeiten",
       rights: "Sie können {business} fragen, was über Sie gespeichert ist, und die Berichtigung oder Löschung verlangen: Schreiben Sie in den Chat oder wenden Sie sich direkt an das Unternehmen. Der Assistent kann sich irren – prüfen Sie wichtige Angaben (Preise, Zeiten) beim Unternehmen.",
       platformNote: "Dies ist der Standardhinweis der Plattform Assistant Workshop. {business} kann einen eigenen veröffentlichen.",

@@ -81,7 +81,7 @@ export function VersionDetailScreen({ versionId, showProblems = false }: { versi
   return (
     <div className="space-y-6">
       <Link href={`${base}/versions`} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink">
-        <IconArrowLeft className="size-4" aria-hidden />
+        <IconArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
         {t("assistant.detail.back")}
       </Link>
 

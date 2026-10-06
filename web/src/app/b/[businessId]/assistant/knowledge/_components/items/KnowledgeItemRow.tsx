@@ -82,7 +82,7 @@ export function KnowledgeItemRow({
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:pt-0.5">
-        <span className="mr-2 flex items-center gap-2 text-sm text-ink-muted">
+        <span className="me-2 flex items-center gap-2 text-sm text-ink-muted">
           <Switch
             checked={item.is_active}
             label={t("knowledge.items.useToggle", { title: item.title })}

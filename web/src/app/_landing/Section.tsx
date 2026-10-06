@@ -40,7 +40,7 @@ export function Section({
           className={cn(
             "pointer-events-none absolute top-1/4 -z-10 size-[28rem] rounded-full opacity-70",
             "bg-[radial-gradient(circle,color-mix(in_oklab,var(--accent-solid)_28%,transparent),transparent_70%)]",
-            glow === "left" ? "-left-40" : "-right-40",
+            glow === "left" ? "-start-40" : "-end-40",
           )}
         />
       ) : null}

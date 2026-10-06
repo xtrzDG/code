@@ -80,7 +80,7 @@ export function ResourceRow({
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <span className="mr-2 flex items-center gap-2">
+        <span className="me-2 flex items-center gap-2">
           <Switch
             checked={resource.is_active}
             label={t("knowledge.resources.toggle", { name: resource.name })}

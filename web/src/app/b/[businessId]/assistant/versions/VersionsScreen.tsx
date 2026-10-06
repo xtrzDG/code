@@ -103,7 +103,7 @@ export function VersionsScreen() {
                     {version.is_voice_enabled ? ` · ${t("assistant.versions.voice")}` : ""}
                   </p>
                 </div>
-                <IconChevronRight className="size-5 shrink-0 text-ink-subtle" aria-hidden />
+                <IconChevronRight className="size-5 shrink-0 text-ink-subtle rtl:-scale-x-100" aria-hidden />
               </Link>
             </li>
           ))}

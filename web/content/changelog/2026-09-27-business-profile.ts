@@ -24,5 +24,19 @@ export const businessProfile: ChangelogEntry = {
         "„ანგარიში → უსაფრთხოებაში“ ჩანს მოწყობილობები, სადაც შესული ხართ, და ნებისმიერიდან შეგიძლიათ გამოსვლა.",
       ],
     },
+    he: {
+      title: "פרופיל העסק שלכם בשישה חלקים",
+      body: [
+        "עוזר → פרופיל העסק מציג עכשיו שישה כרטיסים: מה כל אחד מכיל ומה עוד נשאר להוסיף. פתחו אחד כדי לערוך אותו; כל שינוי נשמר מעצמו.",
+        "חשבון → אבטחה מציג את המכשירים שבהם אתם מחוברים, ואפשר להתנתק מכל אחד מהם.",
+      ],
+    },
+    de: {
+      title: "Ihr Unternehmensprofil in sechs Bereichen",
+      body: [
+        "Assistent → Unternehmensprofil zeigt jetzt sechs Karten: was jede enthält und was noch fehlt. Öffnen Sie eine, um sie zu bearbeiten; jede Änderung speichert sich selbst.",
+        "Konto → Sicherheit listet die Geräte, auf denen Sie angemeldet sind, und Sie können sich von jedem davon abmelden.",
+      ],
+    },
   },
 };

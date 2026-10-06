@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 export function ScrollingTable({ caption, children }: { caption: string; children: ReactNode }) {
   return (
     <div role="group" aria-label={caption} tabIndex={0} className="w-full overflow-x-auto">
-      <table className="w-full border-collapse text-left text-sm">
+      <table className="w-full border-collapse text-start text-sm">
         <caption className="sr-only">{caption}</caption>
         {children}
       </table>

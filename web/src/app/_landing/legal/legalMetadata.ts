@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Metadata } from "next";
 
-import { isLocale } from "@/i18n/config";
+import { isCabinetLanguage } from "@/i18n/config";
 import { getI18n } from "@/i18n/server";
 import type { LegalPage } from "@/lib/publicSite/paths";
 
@@ -16,7 +16,7 @@ import { loadLegalOverview } from "./legalData";
  */
 export async function legalPageMetadata(params: Promise<{ locale: string }>, page: LegalPage): Promise<Metadata> {
   const { locale } = await params;
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     return {};
   }
   const [{ t }, overview] = await Promise.all([getI18n(), loadLegalOverview()]);

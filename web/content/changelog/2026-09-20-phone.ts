@@ -24,5 +24,19 @@ export const phone: ChangelogEntry = {
         "ჯავშნები დღევანდელი განრიგით იხსნება, შემთხვევით შეცვლილი სტატუსის გაუქმება კი რამდენიმე წამის განმავლობაში შეიძლება.",
       ],
     },
+    he: {
+      title: "לוח בקרה רגוע יותר בטלפון",
+      body: [
+        "בטלפון הכותרת של כל עמוד עוברת לסרגל העליון, והפעולה הראשית שלו צפה מעל הלשוניות.",
+        "ההזמנות נפתחות בסדר היום של היום, ואת שינוי הסטטוס שנעשה בטעות אפשר לבטל במשך כמה שניות.",
+      ],
+    },
+    de: {
+      title: "Ein ruhigeres Dashboard auf dem Handy",
+      body: [
+        "Auf dem Handy wandert der Titel jeder Seite in die obere Leiste, und ihre Hauptaktion schwebt über den Tabs.",
+        "Buchungen öffnet sich mit dem heutigen Tagesplan, und ein versehentlich geänderter Status lässt sich einige Sekunden lang rückgängig machen.",
+      ],
+    },
   },
 };

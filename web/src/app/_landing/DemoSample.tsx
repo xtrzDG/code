@@ -22,13 +22,13 @@ export function DemoSample({ t }: { t: Translator["t"] }) {
         <span className="rounded-full border border-line px-2 py-0.5 text-xs text-ink-muted">{t("publicDemo.sampleBadge")}</span>
       </div>
       <Stagger step={0.45} delay={0.15} amount={0.4} className="space-y-3 px-4 py-5 text-sm">
-        <StaggerItem as="p" className={`${bubble} ml-auto rounded-br-md bg-surface-muted text-ink`}>
+        <StaggerItem as="p" className={`${bubble} ms-auto rounded-ee-md bg-surface-muted text-ink`}>
           {t("landing.demo.customer")}
         </StaggerItem>
-        <StaggerItem as="p" className={`${bubble} rounded-bl-md bg-accent-soft text-ink`}>
+        <StaggerItem as="p" className={`${bubble} rounded-es-md bg-accent-soft text-ink`}>
           {t("landing.demo.assistant")}
         </StaggerItem>
-        <StaggerItem as="p" className={`${bubble} ml-auto rounded-br-md bg-surface-muted text-ink`}>
+        <StaggerItem as="p" className={`${bubble} ms-auto rounded-ee-md bg-surface-muted text-ink`}>
           {t("landing.demo.customerReply")}
         </StaggerItem>
       </Stagger>

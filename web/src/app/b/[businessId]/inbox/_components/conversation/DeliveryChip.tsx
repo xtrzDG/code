@@ -38,7 +38,7 @@ export function DeliveryChip({ delivery, className }: { delivery: MessageDeliver
     <p className={cn("flex justify-end", className)} data-delivery-state={delivery.state}>
       <span className={cn("inline-flex max-w-full items-start gap-1 rounded-2xl px-2.5 py-0.5 text-xs", chip)}>
         <Icon className={cn("mt-0.5 size-3.5 shrink-0", delivery.state === "sending" && "motion-safe:animate-pulse")} aria-hidden />
-        <span className="min-w-0 text-left break-words">
+        <span className="min-w-0 text-start break-words">
           <span className="sr-only">{`${t("messageDelivery.label")}: `}</span>
           <span className="font-medium">{t(state)}</span>
           {details.length > 0 ? <span>{`: ${details.join(", ")}`}</span> : null}

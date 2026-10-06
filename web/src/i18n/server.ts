@@ -4,9 +4,9 @@ import { cookies, headers } from "next/headers";
 
 import { PATH_LOCALE_HEADER } from "@/lib/publicSite/paths";
 
-import { LOCALE_COOKIE, matchLocale, resolveLocale, type Locale } from "./config";
+import { LOCALE_COOKIE, localeDirection, matchLocale, resolveLocale, type Locale, type LocaleDirection } from "./config";
 import { FALLBACK_MESSAGES, getMessages } from "./messages";
-import { pseudoMessages, wantsPseudoLocale } from "./pseudo";
+import { pseudoLocaleDirection, pseudoMessages } from "./pseudo";
 import { createTranslator, type MessageTree, type Translator } from "./translate";
 
 let pseudoDictionary: MessageTree | undefined;
@@ -30,17 +30,19 @@ export async function getLocale(): Promise<Locale> {
 }
 
 /**
- * The texts of the current request: its language's dictionary, or the
- * pseudo-locale when the server allows it and the cookie asks for it
- * (English dates and numbers, stretched accented texts; see ./pseudo.ts).
+ * The texts of the current request and the direction its pages read in: its
+ * language's dictionary, or the pseudo-locale when the server allows it and
+ * the cookie asks for it (English dates and numbers, stretched accented
+ * texts, left to right or right to left; see ./pseudo.ts).
  */
-async function getRequestMessages(locale: Locale): Promise<MessageTree> {
+async function getRequestTexts(locale: Locale): Promise<{ messages: MessageTree; direction: LocaleDirection }> {
   const cookieStore = await cookies();
-  if (wantsPseudoLocale(cookieStore.get(LOCALE_COOKIE)?.value)) {
+  const pseudoDirection = pseudoLocaleDirection(cookieStore.get(LOCALE_COOKIE)?.value);
+  if (pseudoDirection) {
     pseudoDictionary ??= pseudoMessages(getMessages("en"));
-    return pseudoDictionary;
+    return { messages: pseudoDictionary, direction: pseudoDirection };
   }
-  return getMessages(locale);
+  return { messages: getMessages(locale), direction: localeDirection(locale) };
 }
 
 /**
@@ -49,8 +51,8 @@ async function getRequestMessages(locale: Locale): Promise<MessageTree> {
  *     const { t } = await getI18n();
  *     return <h1>{t("businesses.title")}</h1>;
  */
-export async function getI18n(): Promise<Translator & { messages: MessageTree }> {
+export async function getI18n(): Promise<Translator & { messages: MessageTree; direction: LocaleDirection }> {
   const locale = await getLocale();
-  const messages = await getRequestMessages(locale);
-  return { ...createTranslator(locale, messages, FALLBACK_MESSAGES), messages };
+  const { messages, direction } = await getRequestTexts(locale);
+  return { ...createTranslator(locale, messages, FALLBACK_MESSAGES), messages, direction };
 }

@@ -238,7 +238,7 @@ function AnswerDialog({
       }
     >
       <form id={formId} onSubmit={(event) => void submit(event)} noValidate className="space-y-4">
-        <blockquote className="rounded-xl border-l-4 border-accent-solid bg-surface-muted px-4 py-3 text-sm break-words text-ink" dir="auto" data-user-content>
+        <blockquote className="rounded-xl border-s-4 border-accent-solid bg-surface-muted px-4 py-3 text-sm break-words text-ink" dir="auto" data-user-content>
           {question.question}
         </blockquote>
         <Field label={t("knowledge.questions.answer")} hint={t("knowledge.questions.answerHint")} error={errors.answer && t(errors.answer)} required>

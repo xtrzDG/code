@@ -32,9 +32,9 @@ import { AnswerTools } from "./AnswerTools";
 import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
 const BUBBLE: Record<MessageView["author"], string> = {
-  customer: "rounded-bl-md bg-surface-muted text-ink",
-  assistant: "rounded-br-md bg-accent-soft text-ink",
-  staff: "rounded-br-md bg-success-soft text-ink",
+  customer: "rounded-es-md bg-surface-muted text-ink",
+  assistant: "rounded-ee-md bg-accent-soft text-ink",
+  staff: "rounded-ee-md bg-success-soft text-ink",
   system: "bg-transparent text-ink-muted italic",
 };
 
@@ -133,7 +133,7 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
           isVoiceAction && "w-full sm:w-[75%]",
         )}
       >
-        <p className={cn("mb-1 text-xs text-ink-subtle", side === "end" && "text-right")}>
+        <p className={cn("mb-1 text-xs text-ink-subtle", side === "end" && "text-end")}>
           <span className="font-medium text-ink-muted">
             {isVoiceAction ? t("conversations.author.voiceAgent") : t(MESSAGE_AUTHORS[message.author])}
           </span>

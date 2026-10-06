@@ -2,9 +2,9 @@
  * Texts of the cabinet sections: Channels, billing, settings (Calls, Quick replies, Reviews and Integrations among them), resources' calendars and the platform admin.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
- * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
- * namespaces of the other dictionaries. `ru` and `ka` are type-checked
- * against `en`.
+ * spread into en.ts, ru.ts, ka.ts, he.ts and de.ts, so they must not clash
+ * with the namespaces of the other dictionaries. The other languages are
+ * type-checked against `en`.
  *
  * Each namespace (a large one in a few parts) lives in its own file per
  * language under `./workspace/`; this file composes them.
@@ -227,3 +227,6 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   dataTasks: dataTasksKa,
   formFields: formFieldsKa,
 };
+
+export { workspaceHe } from "./workspace/section.he";
+export { workspaceDe } from "./workspace/section.de";

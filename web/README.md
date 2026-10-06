@@ -8,7 +8,9 @@ then five calm sections (Overview, Inbox, Bookings, Assistant, Settings; see
 [Navigation](#navigation)) and the platform admin. It installs as an app (manifest, icons, service worker,
 offline page).
 Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
-Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`).
+Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`), Hebrew (`he`,
+right to left) and German (`de`); Hebrew and German are drafts awaiting a
+native speaker's review.
 Colour themes: dark (the default), light and the system's setting.
 
 The browser never talks to the Python API directly and never sees the bearer
@@ -47,7 +49,7 @@ development the 6-digit code appears in the API log
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.05` | Share of server requests traced in Sentry (0 to 1). |
 | `APP_RELEASE`, `RENDER_GIT_COMMIT` | none | The deployed build in error reports; Render sets `RENDER_GIT_COMMIT` itself, `APP_RELEASE` names it on other platforms. |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | none | Build time only (CI on `main`): with the token, `next build` uploads the source maps to that Sentry organization and project for the release `APP_RELEASE` and deletes them from the build; without it the build is unchanged (`src/lib/monitoring/sourceMaps.ts`, `docs/operations/observability.md`). |
-| `PSEUDO_LOCALE` | off | `true` serves the pseudo-locale `en-XA` (English accented, 40 % longer, in brackets) to a browser whose `aw_locale` cookie is `en-XA`; for development and the overflow test, never in production. See [Translations](#translations). |
+| `PSEUDO_LOCALE` | off | `true` serves the pseudo-locale `en-XA` (English accented, 40 % longer, in brackets) to a browser whose `aw_locale` cookie is `en-XA`, and its right-to-left twin to `ar-XB`; for development and the overflow test, never in production. See [Translations](#translations). |
 
 Behind a reverse proxy, run the API with
 `--proxy-headers --forwarded-allow-ips=<address range of this web server>` (never
@@ -150,7 +152,7 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   hero with reduced motion and the 3D one without, every section revealed),
   the public site (`e2e/public-site.spec.ts`, `public-demo.spec.ts`,
   `public-a11y.spec.ts`: the live demo answers in sandbox, the value
-  calculator, niche pages in three languages with hreflang and JSON-LD, every
+  calculator, niche pages in every cabinet language with hreflang and JSON-LD, every
   footer link opens, the legal pages' draft banner, the sitemap, no raw
   "$1,145.97" conversions, axe in both themes),
   sign-in with a German number and with e-mail (and a wrong code),
@@ -232,7 +234,8 @@ web/
   e2e/                         Playwright end-to-end tests (playwright.config.ts, *.spec.ts, support/)
   public/                      sw.js (the service worker: offline page, build files, push), icons/
                                (the installed app's PNG icons, `npm run gen:icons`)
-  scripts/                     measure-first-load.mjs, render-app-icons.mjs
+  scripts/                     measure-first-load.mjs, render-app-icons.mjs, check-intl.mjs,
+                               rtl-codemod.mjs, translation-status.mjs
   content/changelog/           "What's new": one entry per file (key = the day it shipped + a name,
                                title and paragraphs in en/ru/ka), listed in index.ts
   src/
@@ -396,10 +399,10 @@ web/
       managedBooking.ts        the booking page's lookup (GET /v1/public/bookings/{token}) and its language
       bodyLimits.ts            request body limits of the BFF (413)
     i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
-      messages/en.ts ru.ts ka.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
+      messages/en.ts ru.ts ka.ts he.ts de.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
       messages/onboarding/     the business profile's texts (profileEdit.*), one file per language
       messages/landing/        the landing page's texts, one file per language
-      messages/sections/       section texts, spread into en/ru/ka: insights.ts (dashboard, conversations,
+      messages/sections/       section texts, spread into every dictionary: insights.ts (dashboard, conversations,
                                bookings, leads, handoffs), content.ts (knowledge, assistant),
                                workspace.ts (channels, billing, settings, admin), shell.ts (navigation,
                                account, setup, app); each composes one file per namespace and language
@@ -1211,24 +1214,46 @@ as `reasonMessages` to `useMutation`); never match the English message.
 ### Translations
 
 - Shared texts (common, auth, nav, theme, pages, errors, validation) live
-  in `src/i18n/messages/{en,ru,ka}.ts`; section texts in
+  in `src/i18n/messages/{en,ru,ka,he,de}.ts`; section texts in
   `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
-  `*En`/`*Ru`/`*Ka` objects are spread into those files; each is composed of
-  one file per namespace and language in its folder
-  (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`; a
-  large namespace in a few parts); the business profile's and the landing page's in
+  `*En`/`*Ru`/`*Ka`/`*He`/`*De` objects are spread into those files; each is
+  composed of one file per namespace and language in its folder
+  (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`,
+  `bookings.he.ts`, `bookings.de.ts`; a large namespace in a few parts); the business profile's and the landing page's in
   `messages/onboarding/` and `messages/landing/` (one file per language).
   Translations are typed `Translation<typeof …En>`. English is the
-  reference; `ru` and `ka` are typed as `Messages`, so a key added in English
-  and missing in another language fails `npm run typecheck` (and a unit test).
-  At runtime a missing text falls back to English, then to the key.
+  reference; the other dictionaries are typed as `Messages`, so a key added in
+  English and missing in another language fails `npm run typecheck` (and a unit
+  test). At runtime a missing text falls back to English, then to the key.
+- Languages (`src/i18n/config.ts`): `LOCALES` are those with a dictionary,
+  `CABINET_LANGUAGES` those owners can pick (the language switcher, the
+  public site, the sitemap and hreflang, notification languages; the backend
+  keeps the same list), `NEEDS_REVIEW_LOCALES` the drafts no native speaker has
+  read yet (`he`, `de`). A new language joins `LOCALES` while it is translated
+  and `CABINET_LANGUAGES` once every text is there: `i18n.test.ts` fails when
+  the picker and completeness disagree.
+  `node --no-warnings scripts/translation-status.mjs` prints each locale's
+  share of texts and help articles; `--missing he` gives the English texts a
+  locale lacks as JSON (the brief for a translator), `--check` fails like the
+  test.
+- Right to left: `LOCALE_DIRECTION` sets `<html dir>` (Hebrew `rtl`). Use
+  logical classes (`ms-2`, `ps-3`, `start-0`, `text-start`, `border-s`,
+  `rounded-e-lg`), never physical ones: `logicalClasses.policy.test.ts` fails on
+  `ml-2`, `left-0` or `text-left`, and `node --no-warnings scripts/rtl-codemod.mjs`
+  rewrites a file. A direction a person chose stays physical under `rtl:`
+  (the sliding knob `translate-x-5 rtl:-translate-x-5`, the toast's
+  `rtl:origin-right`); a directional icon (arrow, chevron) gets
+  `rtl:-scale-x-100`; charts, phone numbers, codes and times keep `dir="ltr"`,
+  a customer's text `dir="auto"`. In Hebrew texts wrap a Latin fragment that
+  starts or ends with punctuation (`@BotFather`, `</body>`) in U+200E marks.
 - Top-level keys are namespaces and must not clash between the files. An
   object with a key named `other` is read as plural forms, so do not use
   `other` as an ordinary key (e.g. `leads.type.otherRequest`).
 - Client Components: `const { t, tp, locale } = useI18n();` —
   `t("bookings.title")`, `t("tunnel.stepOf", { number: 2, total: 8 })`,
   plurals `tp("onboarding.gaps.times", count)` with Intl plural categories
-  (`one`/`few`/`many`/`other`; Russian needs `few` and `many`).
+  (`one`/`two`/`few`/`many`/`other`; Russian needs `few` and `many`, Hebrew
+  `two`).
 - Server Components: `const { t } = await getI18n();` (`@/i18n/server`).
 - Keys are checked by TypeScript (`MessageKey`); for keys built at runtime
   keep a `Record<EnumValue, MessageKey>` map (see `BusinessStatusBadge.tsx`).
@@ -1259,9 +1284,9 @@ Words follow the glossary (`docs/glossary.md`): "Needs a person", updates
 and checks, Platform; staff never see an English system text in a Russian or
 Georgian cabinet, and no sentence ends on a formatted date (a unit test).
 `src/i18n/glossary.test.ts` checks the dictionaries themselves: every text
-in its own script (no Cyrillic in English or Georgian, no Georgian in English
-or Russian, no Russian or Georgian text made mostly of Latin words beyond
-brand names), "помощник" and never "ассистент" in the Russian cabinet (the
+in its own script (no Cyrillic in English, Georgian, Hebrew or German, no
+Georgian or Hebrew in the others, no Russian, Georgian or Hebrew text made
+mostly of Latin words beyond brand names), "помощник" and never "ассистент" in the Russian cabinet (the
 product's name aside), and version and autotest words only on the
 Assistant's advanced pages and the platform's. It replaces the screenshot
 tour's text lint.
@@ -1280,7 +1305,9 @@ the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser
 bracket), a hard-coded string (no accents) and an overflowing layout stand
 out. `e2e/pseudo-locale.spec.ts` opens every page this way at 1440 and 390 px
 and fails on a page that scrolls sideways or a button, tab or link whose
-text does not fit. Dates and numbers stay English.
+text does not fit. Dates and numbers stay English. Its right-to-left twin
+`ar-XB` (the usual tag of the bidi pseudo-locale) has the same texts on pages
+laid out right to left, as for Hebrew; the spec runs every page in both.
 
 The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from
@@ -1457,7 +1484,7 @@ the cabinet in that language too. The language switch opens the same page
 at the other language's address.
 
 Every public page has its canonical address, hreflang alternates for the
-three languages and `x-default`, Open Graph and JSON-LD (`Organization`,
+every cabinet language and `x-default`, Open Graph and JSON-LD (`Organization`,
 `SoftwareApplication` with the plans' prices, `FAQPage` on the landing;
 `Service` on a niche page). `sitemap.xml` lists every page in every language
 with its alternates (the legal pages only once `LEGAL_TEXTS_FINAL` is on:

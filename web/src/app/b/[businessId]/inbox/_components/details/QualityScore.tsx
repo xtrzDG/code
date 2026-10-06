@@ -68,7 +68,7 @@ export function QualityScore({ conversationId }: { conversationId: string }) {
       {notes.length > 0 ? (
         <div>
           <h4 className="mb-1 text-xs font-semibold tracking-wide text-ink-muted uppercase">{t("quality.conversation.notes")}</h4>
-          <ul className="list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
+          <ul className="list-disc space-y-0.5 ps-5 text-sm text-ink-muted">
             {notes.map((note, index) => (
               <li key={index} dir="auto">
                 {note}

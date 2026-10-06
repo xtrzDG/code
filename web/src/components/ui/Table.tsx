@@ -19,9 +19,9 @@ export function Table({
 }: ComponentPropsWithRef<"table"> & { caption?: ReactNode; captionHidden?: boolean }) {
   return (
     <div className="w-full overflow-x-auto">
-      <table className={cn("w-full border-collapse text-left text-sm", className)} {...props}>
+      <table className={cn("w-full border-collapse text-start text-sm", className)} {...props}>
         {caption ? (
-          <caption className={cn(captionHidden ? "sr-only" : "px-4 py-3 text-left text-sm text-ink-muted")}>
+          <caption className={cn(captionHidden ? "sr-only" : "px-4 py-3 text-start text-sm text-ink-muted")}>
             {caption}
           </caption>
         ) : null}
@@ -44,7 +44,7 @@ export function Tr({ className, ...props }: ComponentPropsWithRef<"tr">) {
 }
 
 type Align = "left" | "right" | "center";
-const ALIGN: Record<Align, string> = { left: "text-left", right: "text-right", center: "text-center" };
+const ALIGN: Record<Align, string> = { left: "text-start", right: "text-end", center: "text-center" };
 
 export function Th({
   align = "left",

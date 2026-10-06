@@ -2,15 +2,23 @@
  * The pseudo-locale `en-XA`: English with accented letters, 40 % longer and
  * in brackets, so a layout that breaks on long Russian or Georgian texts
  * breaks on it too, an untranslated (hard-coded) text stands out, and a cut
- * text is easy to spot (its closing bracket is missing).
+ * text is easy to spot (its closing bracket is missing). Its right-to-left
+ * twin `ar-XB` (the usual tag of the bidi pseudo-locale) has the same texts
+ * on a page laid out right to left, as for Hebrew.
  *
  * Off by default: a server started with PSEUDO_LOCALE=true serves it to a
- * browser whose language cookie says `en-XA` (web/README.md, "Pseudo-locale").
+ * browser whose language cookie says `en-XA` or `ar-XB` (web/README.md,
+ * "Pseudo-locale").
  */
 
+import type { LocaleDirection } from "./config";
 import type { MessageTree } from "./translate";
 
-const PSEUDO_LOCALE_TAG = "en-xa";
+/** The pseudo-locales and the direction each lays the page out in. */
+const PSEUDO_LOCALES = new Map<string, LocaleDirection>([
+  ["en-xa", "ltr"],
+  ["ar-xb", "rtl"],
+]);
 
 /** How much longer than English a pseudo text is (Russian and Georgian run 20–40 % longer). */
 export const PSEUDO_EXPANSION = 0.4;
@@ -59,10 +67,25 @@ export function pseudoMessages(tree: MessageTree): MessageTree {
   );
 }
 
-/** Whether this request gets the pseudo-locale: the server allows it and the cookie asks for it. */
+/**
+ * The direction of the pseudo-locale this request gets ("ltr" for `en-XA`,
+ * "rtl" for `ar-XB`), or null: the server must allow it and the cookie ask
+ * for it.
+ */
+export function pseudoLocaleDirection(
+  cookieValue: string | null | undefined,
+  env: Record<string, string | undefined> = process.env,
+): LocaleDirection | null {
+  if (env.PSEUDO_LOCALE !== "true" || !cookieValue) {
+    return null;
+  }
+  return PSEUDO_LOCALES.get(cookieValue.trim().toLowerCase().replace("_", "-")) ?? null;
+}
+
+/** Whether this request gets a pseudo-locale: the server allows it and the cookie asks for it. */
 export function wantsPseudoLocale(
   cookieValue: string | null | undefined,
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return env.PSEUDO_LOCALE === "true" && cookieValue?.trim().toLowerCase().replace("_", "-") === PSEUDO_LOCALE_TAG;
+  return pseudoLocaleDirection(cookieValue, env) !== null;
 }

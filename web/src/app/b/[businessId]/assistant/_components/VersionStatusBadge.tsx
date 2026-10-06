@@ -17,7 +17,7 @@ export const VERSION_STATUS_LABELS: Record<AssistantVersionStatus, MessageKey> =
 export function VersionStatusBadge({ status }: { status: AssistantVersionStatus }) {
   const { t } = useI18n();
   return (
-    <Badge tone={VERSION_STATUS_TONES[status]} icon={status === "testing" ? <Spinner size="sm" className="-ml-0.5 [&_svg]:size-3" /> : undefined}>
+    <Badge tone={VERSION_STATUS_TONES[status]} icon={status === "testing" ? <Spinner size="sm" className="-ms-0.5 [&_svg]:size-3" /> : undefined}>
       {t(VERSION_STATUS_LABELS[status])}
     </Badge>
   );

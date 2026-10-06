@@ -14,7 +14,7 @@ export function LandingHeader({ t, home = "" }: { t: Translator["t"]; home?: str
     <TopBar
       actions={
         <>
-          <nav aria-label={t("landing.nav.label")} className="mr-2 hidden items-center lg:flex">
+          <nav aria-label={t("landing.nav.label")} className="me-2 hidden items-center lg:flex">
             <a href={`${home}#how`} className={linkClass}>
               {t("landing.nav.how")}
             </a>

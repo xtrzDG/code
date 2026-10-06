@@ -5,9 +5,9 @@
  * phone's compact page chrome, and the notice of a new data processing
  * agreement.
  *
- * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
- * ka.ts, so they must not clash with the namespaces of the other
- * dictionaries. `ru` and `ka` are type-checked against `en`.
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
+ * dictionaries. The other languages are type-checked against `en`.
  *
  * Each namespace lives in its own file per language under `./shell/`; this
  * file composes them.
@@ -35,6 +35,20 @@ import { navigationRu } from "./shell/navigation.ru";
 import { setupEn } from "./shell/setup.en";
 import { setupKa } from "./shell/setup.ka";
 import { setupRu } from "./shell/setup.ru";
+import { accountHe } from "./shell/account.he";
+import { accountDe } from "./shell/account.de";
+import { appHe } from "./shell/app.he";
+import { appDe } from "./shell/app.de";
+import { chromeHe } from "./shell/chrome.he";
+import { chromeDe } from "./shell/chrome.de";
+import { dpaNoticeHe } from "./shell/dpaNotice.he";
+import { dpaNoticeDe } from "./shell/dpaNotice.de";
+import { liveHe } from "./shell/live.he";
+import { liveDe } from "./shell/live.de";
+import { navigationHe } from "./shell/navigation.he";
+import { navigationDe } from "./shell/navigation.de";
+import { setupHe } from "./shell/setup.he";
+import { setupDe } from "./shell/setup.de";
 
 export const shellEn = {
   navigation: navigationEn,
@@ -64,4 +78,24 @@ export const shellKa: Translation<typeof shellEn> = {
   live: liveKa,
   chrome: chromeKa,
   dpaNotice: dpaNoticeKa,
+};
+
+export const shellHe: Translation<typeof shellEn> = {
+  navigation: navigationHe,
+  account: accountHe,
+  setup: setupHe,
+  app: appHe,
+  live: liveHe,
+  chrome: chromeHe,
+  dpaNotice: dpaNoticeHe,
+};
+
+export const shellDe: Translation<typeof shellEn> = {
+  navigation: navigationDe,
+  account: accountDe,
+  setup: setupDe,
+  app: appDe,
+  live: liveDe,
+  chrome: chromeDe,
+  dpaNotice: dpaNoticeDe,
 };

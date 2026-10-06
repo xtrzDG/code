@@ -44,7 +44,7 @@ export function MrrCard({ mrr, format }: { mrr: MrrView; format: MetricsFormat }
             const amount = movement.amount.amount_minor;
             return (
               <Tr key={movement.kind}>
-                <Th scope="row" className="pl-8 font-normal text-ink-muted">
+                <Th scope="row" className="ps-8 font-normal text-ink-muted">
                   {t(`adminMetrics.mrr.kinds.${movement.kind}`)}
                 </Th>
                 <Td

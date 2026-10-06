@@ -19,7 +19,7 @@ function FailureReasons({ test }: { test: FailedAutotest }) {
   const criteria = test.low_criteria ?? [];
   const notes = test.judge_notes ?? [];
   const noteList = (
-    <ul lang="en" className="list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
+    <ul lang="en" className="list-disc space-y-0.5 ps-5 text-sm text-ink-muted">
       {notes.map((note, index) => (
         <li key={index} dir="auto">
           {note}
@@ -30,7 +30,7 @@ function FailureReasons({ test }: { test: FailedAutotest }) {
   return (
     <>
       {codes.length > 0 || criteria.length > 0 ? (
-        <ul className="list-disc space-y-0.5 pl-5 text-sm text-ink">
+        <ul className="list-disc space-y-0.5 ps-5 text-sm text-ink">
           {codes.map((code) => (
             <li key={code}>{t(CHECK_CODE_LABELS[code])}</li>
           ))}

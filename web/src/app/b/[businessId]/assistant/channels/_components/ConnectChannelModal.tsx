@@ -153,7 +153,7 @@ function ConnectChannelForm({
               <h3 id={`connect-${kind}-steps`} className="text-sm font-semibold text-ink">
                 {t("channels.howTo")}
               </h3>
-              <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-ink-muted marker:text-ink-subtle">
+              <ol className="mt-2 list-decimal space-y-1.5 ps-5 text-sm text-ink-muted marker:text-ink-subtle">
                 {steps.map((step) => (
                   <li key={step}>{t(step)}</li>
                 ))}

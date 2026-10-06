@@ -45,16 +45,16 @@ export function DemoTranscript({
 
   return (
     <div ref={log} role="log" aria-live="polite" aria-relevant="additions" className="h-72 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 sm:h-80">
-      <p className={cn(bubble, "rounded-bl-md bg-accent-soft text-ink")}>{greeting}</p>
+      <p className={cn(bubble, "rounded-es-md bg-accent-soft text-ink")}>{greeting}</p>
       {entries.map((entry) =>
         entry.role === "visitor" ? (
-          <p key={entry.id} className={cn(bubble, "ml-auto rounded-br-md bg-surface-muted text-ink")} dir="auto" data-role="visitor">
+          <p key={entry.id} className={cn(bubble, "ms-auto rounded-ee-md bg-surface-muted text-ink")} dir="auto" data-role="visitor">
             <span className="sr-only">{t("publicDemo.you")}: </span>
             <span data-user-content>{entry.text}</span>
           </p>
         ) : (
           <div key={entry.id} className="space-y-1.5">
-            <p className={cn(bubble, "rounded-bl-md bg-accent-soft text-ink")} lang={entry.lang} dir="auto" data-role="assistant">
+            <p className={cn(bubble, "rounded-es-md bg-accent-soft text-ink")} lang={entry.lang} dir="auto" data-role="assistant">
               <span className="sr-only">{t("publicDemo.assistant")}: </span>
               {entry.text}
             </p>
@@ -75,7 +75,7 @@ export function DemoTranscript({
         ),
       )}
       {isSending ? (
-        <p className={cn(bubble, "flex w-fit items-center gap-1 rounded-bl-md bg-accent-soft text-ink-muted")}>
+        <p className={cn(bubble, "flex w-fit items-center gap-1 rounded-es-md bg-accent-soft text-ink-muted")}>
           <span className="sr-only">{t("publicDemo.typing")}</span>
           {[0, 1, 2].map((dot) => (
             <span

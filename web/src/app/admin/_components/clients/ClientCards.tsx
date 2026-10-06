@@ -62,7 +62,7 @@ export function ClientCards({ clients, nicheName }: { clients: AdminClientSummar
                 </div>
               </dl>
             </div>
-            <IconChevronRight className="mt-1 size-5 shrink-0 text-ink-subtle" aria-hidden />
+            <IconChevronRight className="mt-1 size-5 shrink-0 text-ink-subtle rtl:-scale-x-100" aria-hidden />
           </Link>
         </li>
       ))}

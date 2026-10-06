@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useId, useTransition } from "react";
 
 import { readApiError } from "@/api/errors";
-import { LOCALES, LOCALE_NATIVE_NAMES, isLocale, type Locale } from "@/i18n/config";
+import { CABINET_LANGUAGES, LOCALE_NATIVE_NAMES, isCabinetLanguage, localeDirection, type Locale } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { switchPathLocale } from "@/lib/publicSite/paths";
@@ -26,7 +26,8 @@ async function changeInterfaceLanguage(locale: Locale): Promise<void> {
 
 /**
  * Interface language picker: a globe, the current language by its own name
- * (ქართული / Русский / English) and a native select, so it works with the
+ * (ქართული / Русский / English / עברית / Deutsch) and a native select; it
+ * offers only the languages whose texts are complete (CABINET_LANGUAGES), so it works with the
  * keyboard, screen readers and phone pickers. The page stays where it is and
  * re-renders in the new language; a public page that has its language in
  * its address (/ru/for/hotel) opens in the new one (/ka/for/hotel).
@@ -46,7 +47,7 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
       <div className="relative min-w-0">
         {/* Below 360 px the globe makes room for the language's name. */}
         <IconGlobe
-          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-ink-muted max-[359px]:hidden"
+          className="pointer-events-none absolute top-1/2 start-2.5 size-4 -translate-y-1/2 text-ink-muted max-[359px]:hidden"
           aria-hidden
         />
         <select
@@ -56,7 +57,7 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
           title={t("language.label")}
           onChange={(event) => {
             const next = event.target.value;
-            if (!isLocale(next)) {
+            if (!isCabinetLanguage(next)) {
               return;
             }
             startTransition(async () => {
@@ -77,18 +78,18 @@ export function LanguageSwitcher({ className, compact = false }: { className?: s
             });
           }}
           className={cn(
-            "h-8 w-full cursor-pointer appearance-none truncate rounded-lg border border-line bg-surface py-0 pr-7 pl-8 text-sm font-medium text-ink max-[359px]:pl-2.5",
+            "h-8 w-full cursor-pointer appearance-none truncate rounded-lg border border-line bg-surface py-0 pe-7 ps-8 text-sm font-medium text-ink max-[359px]:ps-2.5",
             "transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus disabled:opacity-60",
           )}
         >
-          {LOCALES.map((option) => (
-            <option key={option} value={option} lang={option}>
+          {CABINET_LANGUAGES.map((option) => (
+            <option key={option} value={option} lang={option} dir={localeDirection(option)}>
               {LOCALE_NATIVE_NAMES[option]}
             </option>
           ))}
         </select>
         <IconChevronDown
-          className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-ink-subtle"
+          className="pointer-events-none absolute top-1/2 end-2 size-3.5 -translate-y-1/2 text-ink-subtle"
           aria-hidden
         />
       </div>

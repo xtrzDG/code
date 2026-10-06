@@ -74,7 +74,7 @@ function AttachmentCard({ kind, aside, children }: { kind: AttachmentKind; aside
   const { t } = useI18n();
   const Icon = ATTACHMENT_ICONS[kind];
   return (
-    <div className="w-80 max-w-full space-y-2 rounded-2xl rounded-bl-md bg-surface-muted px-4 py-3 text-ink">
+    <div className="w-80 max-w-full space-y-2 rounded-2xl rounded-es-md bg-surface-muted px-4 py-3 text-ink">
       <p className="flex items-center gap-2 text-sm font-medium">
         <Icon className="size-4 shrink-0 text-ink-muted" aria-hidden />
         <span className="min-w-0 flex-1">{t(ATTACHMENT_KIND_LABELS[kind])}</span>

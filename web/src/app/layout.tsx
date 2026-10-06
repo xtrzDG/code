@@ -33,10 +33,11 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [{ locale, messages }, theme, viewerTimeZone] = await Promise.all([getI18n(), getTheme(), getViewerTimeZone()]);
+  const [{ locale, messages, direction }, theme, viewerTimeZone] = await Promise.all([getI18n(), getTheme(), getViewerTimeZone()]);
   return (
-    // data-theme is rendered on the server, so the first paint already has the right colours.
-    <html lang={locale} data-theme={theme} className="h-full">
+    // data-theme and dir are rendered on the server, so the first paint already
+    // has the right colours and reads in the language's direction (Hebrew: right to left).
+    <html lang={locale} dir={direction} data-theme={theme} className="h-full">
       <body className="min-h-full bg-canvas text-ink antialiased">
         <WebVitalsReporter />
         <I18nProvider locale={locale} messages={messages}>

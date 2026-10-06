@@ -4,7 +4,7 @@
  * engines find and pair them.
  */
 
-import { LOCALES } from "@/i18n/config";
+import { CABINET_LANGUAGES } from "@/i18n/config";
 
 import { LEGAL_PAGES } from "./paths";
 import { absoluteUrl } from "./seo";
@@ -31,8 +31,8 @@ export function publicPageRests(nicheKeys: readonly string[], legalTextsFinal: b
 
 export function sitemapEntries(origin: string, rests: readonly string[]): SitemapEntry[] {
   return rests.flatMap((rest) => {
-    const languages = Object.fromEntries(LOCALES.map((locale) => [locale, absoluteUrl(origin, `/${locale}${rest}`)]));
-    return LOCALES.map((locale) => ({
+    const languages = Object.fromEntries(CABINET_LANGUAGES.map((locale) => [locale, absoluteUrl(origin, `/${locale}${rest}`)]));
+    return CABINET_LANGUAGES.map((locale) => ({
       url: absoluteUrl(origin, `/${locale}${rest}`),
       changeFrequency: rest.startsWith("/for/") || rest === "" ? ("weekly" as const) : ("monthly" as const),
       priority: rest === "" ? 1 : rest.startsWith("/for/") ? 0.8 : 0.3,

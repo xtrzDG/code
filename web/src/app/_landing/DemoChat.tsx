@@ -108,7 +108,7 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
                 key={starter}
                 type="button"
                 onClick={() => submit(starter)}
-                className="rounded-full border border-line bg-surface px-3 py-1 text-left text-xs text-ink transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+                className="rounded-full border border-line bg-surface px-3 py-1 text-start text-xs text-ink transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
               >
                 {starter}
               </button>
@@ -118,7 +118,7 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
       ) : null}
       {isOut ? (
         <div className="border-t border-line px-4 py-3">
-          <ButtonLink href={CREATE_PATH} size="sm" fullWidth trailingIcon={<IconArrowRight className="size-4" aria-hidden />}>
+          <ButtonLink href={CREATE_PATH} size="sm" fullWidth trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
             {t("publicDemo.cta")}
           </ButtonLink>
         </div>

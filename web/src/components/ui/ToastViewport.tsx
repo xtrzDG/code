@@ -169,7 +169,7 @@ function ToastCard({
         // The undo window running down; it stops while the toast is paused.
         <span
           aria-hidden
-          className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-countdown bg-accent-solid/70 motion-reduce:hidden"
+          className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-countdown rtl:origin-right bg-accent-solid/70 motion-reduce:hidden"
           style={{ animationDuration: `${item.durationMs}ms`, animationPlayState: isPaused ? "paused" : "running" }}
         />
       ) : null}

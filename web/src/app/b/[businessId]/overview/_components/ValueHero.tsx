@@ -94,7 +94,7 @@ function WorkingHero({ model, isPlaceholder }: { model: ValueModel; isPlaceholde
           className="group inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
         >
           {t("value.hero.reports")}
-          <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" aria-hidden />
+          <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" aria-hidden />
         </Link>
       </div>
 

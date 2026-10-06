@@ -41,7 +41,7 @@ export function HelpDrawer({
         slug ? (
           <>
             {canGoBack ? (
-              <Button variant="ghost" size="sm" leadingIcon={<IconArrowLeft className="size-4" aria-hidden />} onClick={onBack} className="me-auto">
+              <Button variant="ghost" size="sm" leadingIcon={<IconArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />} onClick={onBack} className="me-auto">
                 {t("helpCenter.back")}
               </Button>
             ) : null}

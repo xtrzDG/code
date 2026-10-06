@@ -109,7 +109,7 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
           {notes.length > 0 ? (
             <div>
               <h4 className="mb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">{t("assistant.autotests.notes")}</h4>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-ink-muted">
+              <ul className="list-disc space-y-1 ps-5 text-sm text-ink-muted">
                 {notes.map((note, index) => (
                   <li key={index} dir="auto">
                     {note}
@@ -129,7 +129,7 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
                     key={index}
                     className={cn(
                       "max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words",
-                      line.author === "customer" ? "ml-auto bg-accent-soft text-ink" : line.author === "assistant" ? "bg-surface-muted text-ink" : "mx-auto bg-warning-soft text-ink-muted",
+                      line.author === "customer" ? "ms-auto bg-accent-soft text-ink" : line.author === "assistant" ? "bg-surface-muted text-ink" : "mx-auto bg-warning-soft text-ink-muted",
                     )}
                   >
                     <span className="mb-0.5 block text-xs font-medium text-ink-subtle">{t(`assistant.authors.${line.author}`)}</span>

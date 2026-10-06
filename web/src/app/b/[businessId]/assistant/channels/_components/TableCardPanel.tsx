@@ -104,7 +104,7 @@ export function TableCardPanel({
           srcDoc={html}
           tabIndex={-1}
           data-testid="table-card-preview"
-          className="pointer-events-none origin-top-left border-0 bg-white"
+          className="pointer-events-none origin-top-left border-0 bg-white rtl:origin-top-right"
           style={{ width: CARD_WIDTH_PX, height: CARD_HEIGHT_PX, transform: `scale(${PREVIEW_SCALE})` }}
         />
       </div>

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { entryDay, newestFirst, newestKey, unreadKeys, type ChangelogEntry } from "./changelog";
 
 const text = { title: "T", body: ["B"] };
-const entry = (key: string): ChangelogEntry => ({ key, texts: { en: text, ru: text, ka: text } });
+const entry = (key: string): ChangelogEntry => ({ key, texts: { en: text, ru: text, ka: text, he: text, de: text } });
 const ENTRIES = [entry("2026-09-13-value"), entry("2026-10-04-help-center"), entry("2026-09-27-profile")];
 
 describe("the changelog", () => {

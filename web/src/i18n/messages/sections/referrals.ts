@@ -3,9 +3,9 @@
  * link, the partner portal (/partner) and the platform admin's partners
  * and payouts (/admin/partners).
  *
- * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
- * ka.ts, so they must not clash with the namespaces of the other
- * dictionaries. `ru` and `ka` are type-checked against `en`.
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
+ * dictionaries. The other languages are type-checked against `en`.
  *
  * Each namespace lives in its own file per language under `./referrals/`;
  * this file composes them.
@@ -21,6 +21,12 @@ import { partnerPortalRu } from "./referrals/partnerPortal.ru";
 import { referralsEn } from "./referrals/referrals.en";
 import { referralsKa } from "./referrals/referrals.ka";
 import { referralsRu } from "./referrals/referrals.ru";
+import { adminPartnersHe } from "./referrals/adminPartners.he";
+import { adminPartnersDe } from "./referrals/adminPartners.de";
+import { partnerPortalHe } from "./referrals/partnerPortal.he";
+import { partnerPortalDe } from "./referrals/partnerPortal.de";
+import { referralsHe } from "./referrals/referrals.he";
+import { referralsDe } from "./referrals/referrals.de";
 
 export const referralsSectionEn = {
   referrals: referralsEn,
@@ -38,4 +44,16 @@ export const referralsSectionKa: Translation<typeof referralsSectionEn> = {
   referrals: referralsKa,
   partnerPortal: partnerPortalKa,
   adminPartners: adminPartnersKa,
+};
+
+export const referralsSectionHe: Translation<typeof referralsSectionEn> = {
+  referrals: referralsHe,
+  partnerPortal: partnerPortalHe,
+  adminPartners: adminPartnersHe,
+};
+
+export const referralsSectionDe: Translation<typeof referralsSectionEn> = {
+  referrals: referralsDe,
+  partnerPortal: partnerPortalDe,
+  adminPartners: adminPartnersDe,
 };

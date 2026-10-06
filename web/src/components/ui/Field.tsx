@@ -58,11 +58,11 @@ export function Field({
     <label id={fieldLabelId(id)} htmlFor={id} className="block text-sm font-medium text-ink">
       {label}
       {required ? (
-        <span className="ml-0.5 text-danger" aria-hidden>
+        <span className="ms-0.5 text-danger" aria-hidden>
           *
         </span>
       ) : null}
-      {optionalLabel ? <span className="ml-1.5 font-normal text-ink-subtle">({optionalLabel})</span> : null}
+      {optionalLabel ? <span className="ms-1.5 font-normal text-ink-subtle">({optionalLabel})</span> : null}
     </label>
   );
 

@@ -9,9 +9,9 @@ import { SEVERITY_TONES, groupAlerts, type AlertState } from "../../_lib/system"
 import { useSystemFormat } from "./useSystemFormat";
 
 const SEVERITY_EDGES = {
-  sev1: "border-l-danger",
-  sev2: "border-l-warning",
-  sev3: "border-l-info",
+  sev1: "border-s-danger",
+  sev2: "border-s-warning",
+  sev3: "border-s-info",
 } as const;
 
 /**
@@ -60,8 +60,8 @@ function AlertRow({ alert }: { alert: AlertState }) {
   return (
     <li
       className={cn(
-        "space-y-2 rounded-xl border border-l-4 border-line p-4",
-        isFiring ? cn("bg-surface", SEVERITY_EDGES[alert.severity]) : "border-l-line bg-surface-muted/40",
+        "space-y-2 rounded-xl border border-s-4 border-line p-4",
+        isFiring ? cn("bg-surface", SEVERITY_EDGES[alert.severity]) : "border-s-line bg-surface-muted/40",
       )}
     >
       <div className="flex flex-wrap items-center gap-2">

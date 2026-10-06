@@ -30,7 +30,7 @@ export function CalendarReturnAlert({ calendarReturn, onDismiss }: { calendarRet
             ? t("channels.calendar.returnConnected")
             : t(CALENDAR_RETURN_REASONS[calendarReturn.reason])}
         </p>
-        <Button variant="ghost" size="sm" className="mt-2 -ml-2" onClick={onDismiss}>
+        <Button variant="ghost" size="sm" className="mt-2 -ms-2" onClick={onDismiss}>
           {t("channels.calendar.dismiss")}
         </Button>
       </Alert>

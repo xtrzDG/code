@@ -2,9 +2,9 @@
  * Texts of the cabinet sections: Dashboard and its setup guide, value and reports, the inbox and its conversations, bookings, leads and handoffs.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
- * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
- * namespaces of the other dictionaries. `ru` and `ka` are type-checked
- * against `en`.
+ * spread into en.ts, ru.ts, ka.ts, he.ts and de.ts, so they must not clash
+ * with the namespaces of the other dictionaries. The other languages are
+ * type-checked against `en`.
  *
  * Each namespace (a large one in a few parts) lives in its own file per
  * language under `./insights/`; this file composes them.
@@ -65,6 +65,42 @@ import { topicsRu } from "./insights/topics.ru";
 import { valueEn } from "./insights/value.en";
 import { valueKa } from "./insights/value.ka";
 import { valueRu } from "./insights/value.ru";
+import { bookingsHe } from "./insights/bookings.he";
+import { bookingsDe } from "./insights/bookings.de";
+import { insightsCommonHe } from "./insights/common.he";
+import { insightsCommonDe } from "./insights/common.de";
+import { conversationMediaHe } from "./insights/conversationMedia.he";
+import { conversationMediaDe } from "./insights/conversationMedia.de";
+import { conversationsHe } from "./insights/conversations.he";
+import { conversationsDe } from "./insights/conversations.de";
+import { digestChannelsHe } from "./insights/digestChannels.he";
+import { digestChannelsDe } from "./insights/digestChannels.de";
+import { dashboardHe } from "./insights/dashboard.he";
+import { dashboardDe } from "./insights/dashboard.de";
+import { handoffsHe } from "./insights/handoffs.he";
+import { handoffsDe } from "./insights/handoffs.de";
+import { inboxHe } from "./insights/inbox.he";
+import { inboxDe } from "./insights/inbox.de";
+import { inboxCardHe } from "./insights/inboxCard.he";
+import { inboxCardDe } from "./insights/inboxCard.de";
+import { inboxTriageHe } from "./insights/inboxTriage.he";
+import { inboxTriageDe } from "./insights/inboxTriage.de";
+import { leadsHe } from "./insights/leads.he";
+import { leadsDe } from "./insights/leads.de";
+import { messageDeliveryHe } from "./insights/messageDelivery.he";
+import { messageDeliveryDe } from "./insights/messageDelivery.de";
+import { overviewPhoneHe } from "./insights/overviewPhone.he";
+import { overviewPhoneDe } from "./insights/overviewPhone.de";
+import { reportsHe } from "./insights/reports.he";
+import { reportsDe } from "./insights/reports.de";
+import { setupGuideHe } from "./insights/setupGuide.he";
+import { setupGuideDe } from "./insights/setupGuide.de";
+import { sourcesHe } from "./insights/sources.he";
+import { sourcesDe } from "./insights/sources.de";
+import { topicsHe } from "./insights/topics.he";
+import { topicsDe } from "./insights/topics.de";
+import { valueHe } from "./insights/value.he";
+import { valueDe } from "./insights/value.de";
 
 export const insightsEn = {
   insights: insightsCommonEn,
@@ -127,4 +163,46 @@ export const insightsKa: Translation<typeof insightsEn> = {
   sources: sourcesKa,
   topics: topicsKa,
   digestChannels: digestChannelsKa,
+};
+
+export const insightsHe: Translation<typeof insightsEn> = {
+  insights: insightsCommonHe,
+  dashboard: dashboardHe,
+  conversations: conversationsHe,
+  conversationMedia: conversationMediaHe,
+  messageDelivery: messageDeliveryHe,
+  bookings: bookingsHe,
+  leads: leadsHe,
+  handoffs: handoffsHe,
+  value: valueHe,
+  reports: reportsHe,
+  inbox: inboxHe,
+  inboxCard: inboxCardHe,
+  inboxTriage: inboxTriageHe,
+  overviewPhone: overviewPhoneHe,
+  setupGuide: setupGuideHe,
+  sources: sourcesHe,
+  topics: topicsHe,
+  digestChannels: digestChannelsHe,
+};
+
+export const insightsDe: Translation<typeof insightsEn> = {
+  insights: insightsCommonDe,
+  dashboard: dashboardDe,
+  conversations: conversationsDe,
+  conversationMedia: conversationMediaDe,
+  messageDelivery: messageDeliveryDe,
+  bookings: bookingsDe,
+  leads: leadsDe,
+  handoffs: handoffsDe,
+  value: valueDe,
+  reports: reportsDe,
+  inbox: inboxDe,
+  inboxCard: inboxCardDe,
+  inboxTriage: inboxTriageDe,
+  overviewPhone: overviewPhoneDe,
+  setupGuide: setupGuideDe,
+  sources: sourcesDe,
+  topics: topicsDe,
+  digestChannels: digestChannelsDe,
 };

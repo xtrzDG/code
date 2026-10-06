@@ -105,7 +105,7 @@ export function AuditTab() {
   // Views within five minutes, which download of the full export, or the records covered.
   const recordCount = (entry: AuditLogEntry) =>
     entry.record_count === null || entry.record_count === undefined ? null : (
-      <span className="ml-2 text-xs text-ink-subtle">{tp(auditCountKey(entry), entry.record_count)}</span>
+      <span className="ms-2 text-xs text-ink-subtle">{tp(auditCountKey(entry), entry.record_count)}</span>
     );
   const actorName = (actorId: string | null | undefined, action?: AuditAction) => {
     // A member's name is user content; "Platform support" and "System" are the interface's.
@@ -230,7 +230,7 @@ export function AuditTab() {
                     <Td>
                       {entityText(entry.entity)}
                       {entry.entity_id ? (
-                        <span className="ml-2 font-mono text-xs text-ink-subtle" title={entry.entity_id}>
+                        <span className="ms-2 font-mono text-xs text-ink-subtle" title={entry.entity_id}>
                           {shortId(entry.entity_id)}
                         </span>
                       ) : null}
@@ -252,7 +252,7 @@ export function AuditTab() {
                 </div>
                 <p className="text-sm text-ink">
                   {entityText(entry.entity)}
-                  {entry.entity_id ? <span className="ml-2 font-mono text-xs text-ink-subtle">{shortId(entry.entity_id)}</span> : null}
+                  {entry.entity_id ? <span className="ms-2 font-mono text-xs text-ink-subtle">{shortId(entry.entity_id)}</span> : null}
                   {recordCount(entry)}
                 </p>
                 <p className="text-xs text-ink-muted" dir="auto">

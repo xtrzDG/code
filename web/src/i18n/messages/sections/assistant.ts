@@ -4,9 +4,9 @@
  * its sheet), and teaching it from conversations ("Fix this answer", "My
  * checks", "Answers worth improving").
  *
- * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
- * ka.ts, so they must not clash with the namespaces of the other
- * dictionaries. `ru` and `ka` are type-checked against `en`.
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
+ * dictionaries. The other languages are type-checked against `en`.
  */
 
 import type { Translation } from "../../translate";
@@ -19,6 +19,12 @@ import { teachingRu } from "./assistant/teaching.ru";
 import { updatesEn } from "./assistant/updates.en";
 import { updatesKa } from "./assistant/updates.ka";
 import { updatesRu } from "./assistant/updates.ru";
+import { applyChangesHe } from "./assistant/applyChanges.he";
+import { applyChangesDe } from "./assistant/applyChanges.de";
+import { teachingHe } from "./assistant/teaching.he";
+import { teachingDe } from "./assistant/teaching.de";
+import { updatesHe } from "./assistant/updates.he";
+import { updatesDe } from "./assistant/updates.de";
 
 export const assistantFlowEn = {
   applyChanges: applyChangesEn,
@@ -36,4 +42,16 @@ export const assistantFlowKa: Translation<typeof assistantFlowEn> = {
   applyChanges: applyChangesKa,
   teaching: teachingKa,
   updates: updatesKa,
+};
+
+export const assistantFlowHe: Translation<typeof assistantFlowEn> = {
+  applyChanges: applyChangesHe,
+  teaching: teachingHe,
+  updates: updatesHe,
+};
+
+export const assistantFlowDe: Translation<typeof assistantFlowEn> = {
+  applyChanges: applyChangesDe,
+  teaching: teachingDe,
+  updates: updatesDe,
 };

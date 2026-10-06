@@ -10,6 +10,7 @@ import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useIsClient } from "@/components/workspace/useIsClient";
 import { useI18n } from "@/i18n/client";
+import { CABINET_LANGUAGES } from "@/i18n/config";
 import { capitalizeFirst, languageName } from "@/lib/format";
 import { sortZones } from "@/lib/timeZones";
 
@@ -59,7 +60,7 @@ export function useGeneralChoices(baseline: BusinessView, form: GeneralForm) {
   const addable = (catalog.data?.languages ?? [])
     .filter((item) => !choices.includes(item.profile.tag))
     .sort((left, right) => left.display_name.localeCompare(right.display_name, locale));
-  const ownerLanguages = languageChoices(["ka", "ru", "en"], [baseline.owner_language], form.languages);
+  const ownerLanguages = languageChoices(CABINET_LANGUAGES, [baseline.owner_language], form.languages);
 
   const countryZones = countryProfile?.timezones ?? [];
   // From west to east, so a zone is found near its neighbours (labels name cities, not regions).

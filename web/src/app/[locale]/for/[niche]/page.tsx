@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import type { NicheSummaryView } from "@/api/types";
 import { TESTIMONIALS } from "@/content/testimonials";
-import { isLocale, type Locale } from "@/i18n/config";
+import { isCabinetLanguage, type Locale } from "@/i18n/config";
 import { getI18n } from "@/i18n/server";
 import { localeHomePath, nichePath } from "@/lib/publicSite/paths";
 import { absoluteUrl, serviceJsonLd } from "@/lib/publicSite/seo";
@@ -35,7 +35,7 @@ async function loadNiche(locale: Locale, key: string): Promise<NicheSummaryView 
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/for/[niche]">): Promise<Metadata> {
   const { locale, niche: key } = await params;
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     return {};
   }
   const [{ t }, niche] = await Promise.all([getI18n(), loadNiche(locale, key)]);
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/for/[nic
  */
 export default async function NichePage({ params, searchParams }: PageProps<"/[locale]/for/[niche]">) {
   const [{ locale, niche: key }, query] = await Promise.all([params, searchParams]);
-  if (!isLocale(locale)) {
+  if (!isCabinetLanguage(locale)) {
     notFound();
   }
   const translator = await getI18n();
