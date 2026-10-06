@@ -1,4 +1,5 @@
 import json
+import logging
 
 from typed_time_provider import Microseconds
 
@@ -45,10 +46,14 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.language_codes import from_voice_platform_language
+from app.utilities.channels.skipped_webhook_parts import known_kind, log_skipped_parts
 from app.utilities.channels.webhook_signatures import is_valid_elevenlabs_signature
 
+LOGGER: logging.Logger = logging.getLogger(__name__)
 POST_CALL_TRANSCRIPTION_EVENT: str = "post_call_transcription"
 CALL_INITIATION_FAILURE_EVENT: str = "call_initiation_failure"
+# The audio of a call comes in its own event when the agent sends it.
+POST_CALL_AUDIO_EVENT: str = "post_call_audio"
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # Fields of a tool webhook body that ElevenLabs fills, not the model.
 RESERVED_TOOL_FIELDS: frozenset[str] = frozenset(
@@ -142,7 +147,14 @@ class ElevenLabsVoiceWebhookAdapter(VoiceWebhookAdapterContract):
 
     def parse_call_start_failure(self, body: bytes) -> MissedCallReport | None:
         root: JsonObject | None = parse_json_object(body)
-        if root is None or read_text(root, "type") != CALL_INITIATION_FAILURE_EVENT:
+        event_type: str | None = None if root is None else read_text(root, "type")
+        if root is None or event_type != CALL_INITIATION_FAILURE_EVENT:
+            log_skipped_parts(
+                LOGGER,
+                "ElevenLabs post-call",
+                [known_kind(event_type, {POST_CALL_AUDIO_EVENT})],
+                routine_kinds={POST_CALL_AUDIO_EVENT},
+            )
             return None
 
         data: JsonObject = read_object(root, "data") or {}
