@@ -1,29 +1,35 @@
 "use client";
 
-import { IconPencil } from "@/components/icons";
+import { IconAlert, IconCalendar, IconPencil } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
 import { Badge, Button, UserSentence } from "@/components/ui";
 import type { KnowledgeItemDetails } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { listFormat } from "@/lib/intl/formatters";
 import { servicesOf } from "@/lib/offers";
+import { summaryLine, type ResourceSyncSummary } from "@/lib/resourceCalendar";
 import type { ResourceView } from "@/lib/resources";
 
 import { BOOKING_UNIT_LABELS, RESOURCE_KIND_LABELS } from "../ResourceEditor";
 
 /**
  * One bookable resource: name, kind, capacity, units, slot and hours, the
- * services it performs or its room type; switch and edit.
+ * services it performs or its room type, how its calendars stand; switch,
+ * calendars and edit.
  */
 export function ResourceRow({
   resource,
   offers,
+  calendars,
   onToggle,
+  onCalendars,
   onEdit,
 }: {
   resource: ResourceView;
   offers: readonly KnowledgeItemDetails[];
+  calendars?: ResourceSyncSummary;
   onToggle: (isActive: boolean) => void;
+  onCalendars: () => void;
   onEdit: () => void;
 }) {
   const { t, tp, locale } = useI18n();
@@ -37,6 +43,7 @@ export function ResourceRow({
     resource.booking_unit === "night" ? t(BOOKING_UNIT_LABELS.night) : null,
   ].filter((part): part is string => part !== null);
   const ownHours = resource.schedule ?? [];
+  const calendarLine = summaryLine(calendars);
   return (
     <li className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-6">
       <div className="min-w-0 flex-1 space-y-1">
@@ -63,6 +70,14 @@ export function ResourceRow({
             <UserSentence text={t("knowledge.resources.roomTypeValue")} values={{ name: roomType.title }} />
           </p>
         ) : null}
+        {calendarLine ? (
+          <p className={calendarLine.tone === "warning" ? "flex items-center gap-1.5 text-sm text-warning" : "text-sm text-ink-subtle"}>
+            {calendarLine.tone === "warning" ? <IconAlert className="size-4 shrink-0" aria-hidden /> : null}
+            {calendarLine.count === undefined
+              ? t(calendarLine.key)
+              : tp(calendarLine.key, calendarLine.count)}
+          </p>
+        ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <span className="mr-2 flex items-center gap-2">
@@ -72,6 +87,15 @@ export function ResourceRow({
             onChange={onToggle}
           />
         </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          leadingIcon={<IconCalendar className="size-4" aria-hidden />}
+          aria-label={t("calendarSync.row.buttonLabel", { name: resource.name })}
+          onClick={onCalendars}
+        >
+          {t("calendarSync.row.button")}
+        </Button>
         <Button
           variant="ghost"
           size="sm"

@@ -79,6 +79,7 @@ class SecurityUseCasesContainer(AccessUseCasesContainer):
         secret_rotation=adapters.secret_cipher,
         telegram_client=clients.telegram_bot_client,
         app_settings=config.app_settings,
+        calendar_link_repo=repositories.resource_calendar_link_repo,
     )
     totp_secret_resealer: Factory[TotpSecretResealer] = Factory(
         TotpSecretResealer,

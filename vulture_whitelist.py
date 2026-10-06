@@ -638,3 +638,9 @@ _.measured_hours  # app/schemas/dto/service_levels.py (AnswerLatencyBudgetView)
 _.objectives  # app/schemas/dto/service_levels.py (ErrorBudgetView)
 _.measured_since  # app/schemas/dto/service_levels.py (ErrorBudgetView)
 _.measured_until  # app/schemas/dto/service_levels.py (ErrorBudgetView)
+
+# Two-way availability (R13): response fields the cabinet reads (a resource's
+# calendars, the Google calendar list to link one, each resource's summary).
+_.access_role  # app/schemas/dto/calendar_sync/busy_reads.py (GoogleCalendarEntry)
+_.ical_export  # app/schemas/dto/calendar_sync/resource_calendar.py
+_.problem_count  # app/schemas/dto/calendar_sync/integrations.py (ResourceSyncSummary)

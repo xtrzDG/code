@@ -13,6 +13,7 @@ from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.knowledge.constrained_integers import BufferMinutes
 from app.utilities.scheduling.nights import StayTimes
+from app.utilities.scheduling.overlap import BlockedTime
 
 
 class PlacementRequest(NamedTuple):
@@ -22,6 +23,8 @@ class PlacementRequest(NamedTuple):
     only that conversation's own test bookings take its units. A booking
     of a service with a buffer (`buffer_minutes`) keeps its unit for that
     long after it ends, so the next booking must start after the buffer.
+    Times a calendar outside the platform made a resource busy
+    (`blocked_times`) take all of its units, for real and test bookings.
     """
 
     local_date: date
@@ -39,3 +42,4 @@ class PlacementRequest(NamedTuple):
     excluded_booking_id: BookingId | None = None
     sandbox_conversation_id: ConversationId | None = None
     buffer_minutes: BufferMinutes | None = None
+    blocked_times: Sequence[BlockedTime] = ()

@@ -15,6 +15,11 @@ from app.schemas.domain.calendar import (
     CalendarConnectionDocument,
     CalendarEventLinkDocument,
 )
+from app.schemas.dto.calendar_sync.busy_reads import (
+    BusyPeriod,
+    BusyWindow,
+    GoogleCalendarEntry,
+)
 from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarTokenGrant,
@@ -32,6 +37,7 @@ from app.schemas.typings.bookings.strings import (
     ExternalCalendarId,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 
 
 class CalendarConnectionRepoContract(RepoContract, Protocol):
@@ -174,4 +180,36 @@ class GoogleCalendarClientContract(ClientContract, Protocol):
         event_id: CalendarEventId,
     ) -> None:
         """Deleting an event that is already gone is not an error."""
+        raise NotImplementedError
+
+    def query_free_busy(
+        self,
+        access_token: CalendarAccessToken,
+        calendar_id: ExternalCalendarId,
+        window: BusyWindow,
+        timeout: BusyTimeFetchSeconds,
+    ) -> list[BusyPeriod]:
+        """
+        The calendar's busy periods in the window (Google merges overlapping
+        events; transparent "free" events are left out).
+
+        Raises:
+            BusyTimeSourceError: NEEDS_RECONNECT (the consent lacks the read
+                permission), NOT_FOUND, TIMEOUT, UNREACHABLE or
+                PROVIDER_ERROR.
+        """
+        raise NotImplementedError
+
+    def list_calendars(
+        self,
+        access_token: CalendarAccessToken,
+        timeout: BusyTimeFetchSeconds,
+    ) -> list[GoogleCalendarEntry]:
+        """
+        The calendars of the account whose busy times it may see, primary
+        first.
+
+        Raises:
+            BusyTimeSourceError: as `query_free_busy`.
+        """
         raise NotImplementedError

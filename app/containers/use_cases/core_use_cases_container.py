@@ -14,6 +14,9 @@ from app.containers.use_cases.booking_link_use_cases import (
     BookingLinkUseCasesContainer,
 )
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
+from app.containers.use_cases.calendar_sync_use_cases import (
+    CalendarSyncUseCasesContainer,
+)
 from app.containers.use_cases.campaign_use_cases import CampaignUseCasesContainer
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
@@ -209,6 +212,13 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         account_use_cases=accounts,
         booking_use_cases=bookings,
     )
+    # Two-way availability: resources' calendars, the sync job, exports (1160).
+    calendars: CalendarSyncUseCasesContainer = Container(  # type: ignore[assignment]
+        CalendarSyncUseCasesContainer, adapters=adapters, clients=clients,
+        config=config, facilitators=facilitators, registries=registries,
+        repositories=repositories, time_provider=time_provider,
+        utilities=utilities,
+    )  # fmt: skip
     # The rebooking campaigns: the hourly job, Return visits (1151).
     campaigns: CampaignUseCasesContainer = Container(  # type: ignore[assignment]
         CampaignUseCasesContainer,

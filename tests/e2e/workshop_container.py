@@ -30,6 +30,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from tests.billing.rate_feed_fakes import fixture_rate_clients
+from tests.calendar_sync.calendar_edges import CalendarEdges
 from tests.e2e.edge_fakes import (
     CapturingOtpDelivery,
     MovableClock,
@@ -145,6 +146,8 @@ def build_workshop_container(
             transport=build_transport(google, answer_with_empty_object),
         ),
     )
+    # Calendars outside the platform (iCal feeds, Cal.com) stay here too.
+    CalendarEdges().install(container)
     if (
         settings.langfuse_public_key is not None
         and settings.langfuse_secret_key is not None

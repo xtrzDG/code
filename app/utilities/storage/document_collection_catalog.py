@@ -13,11 +13,6 @@ from app.schemas.domain.billing import (
 )
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.calendar import (
-    CalendarAuthorizationStateDocument,
-    CalendarConnectionDocument,
-    CalendarEventLinkDocument,
-)
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channel_receipts import ChannelMessageReceiptDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -69,6 +64,7 @@ from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
 from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
+from app.utilities.storage.calendar_sync_collections import CALENDAR_COLLECTIONS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
 from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
 from app.utilities.storage.document_collection_definition import (
@@ -186,17 +182,9 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(
         DocumentCollectionName("outbound_messages"), OutboundMessageDocument
     ),
-    # Google Calendar: connection, OAuth state, event per booking (0002).
-    DocumentCollectionDefinition(
-        DocumentCollectionName("calendar_connections"), CalendarConnectionDocument
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("calendar_authorization_states"),
-        CalendarAuthorizationStateDocument,
-    ),
-    DocumentCollectionDefinition(
-        DocumentCollectionName("calendar_event_links"), CalendarEventLinkDocument
-    ),
+    # Google Calendar: connection, OAuth state, event per booking (0002);
+    # the calendars that block resources and their busy times (1160).
+    *CALENDAR_COLLECTIONS,
     # Payments: checkout orders and package usage warnings (0003).
     DocumentCollectionDefinition(
         DocumentCollectionName("payment_orders"), PaymentOrderDocument

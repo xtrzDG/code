@@ -16,7 +16,7 @@ from app.utilities.scheduling.opening_hours import (
     is_open_on_date,
     resource_ranges_starting_on,
 )
-from app.utilities.scheduling.overlap import BusyRange
+from app.utilities.scheduling.overlap import BlockedTime, BusyRange
 from app.utilities.scheduling.zoned_time import SECONDS_PER_MINUTE
 
 DEFAULT_SLOT_MINUTES: int = 60
@@ -57,20 +57,29 @@ def busy_ranges(
     include_sandbox: bool,
     excluded_booking_id: BookingId | None = None,
     sandbox_conversation_id: ConversationId | None = None,
+    blocked_times: Sequence[BlockedTime] = (),
 ) -> list[BusyRange]:
     """
     When the resource's units are taken: each blocking booking from its
     start to its end plus its buffer (the performer's cleaning or rest
-    time after a service).
+    time after a service), and every unit during each time a linked
+    calendar outside the platform made the resource busy.
     """
 
-    return [
+    booked: list[BusyRange] = [
         BusyRange(int(booking.starts_at), blocked_until(booking))
         for booking in bookings
         if booking.resource_id == resource.id
         and booking.id != excluded_booking_id
         and is_blocking(booking, include_sandbox, sandbox_conversation_id)
     ]
+    blocked: list[BusyRange] = [
+        BusyRange(blocked_time.starts_at, blocked_time.ends_at)
+        for blocked_time in blocked_times
+        if blocked_time.resource_id == resource.id
+        for _ in range(int(resource.unit_count))
+    ]
+    return booked + blocked
 
 
 def blocked_until(booking: BookingDocument) -> int:

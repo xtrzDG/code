@@ -4,6 +4,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.calendar_sync import CalendarBusyTimesRepoContract
 from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
@@ -83,19 +84,16 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
     """
     Booking added by staff in the cabinet (concept: manual adding).
 
-    The phone may be typed in any format and is parsed with the given
-    country hint (the business country when omitted). Booked from a
-    conversation card (`conversation_id`), the booking is linked to that
-    conversation, made for its customer (name and phone updated) and comes
-    from its channel; otherwise a contact with the phone is reused, else a
-    new one is created. Opening hours and capacity are enforced under the
-    business lock; the online-booking limits (minimum notice, maximum party)
-    are not. A service (`service_item_id`) is booked with one of its
-    performers, for its length unless staff give another, with its buffer
-    and its value. The customer's language (given, else the contact's, else the
-    business default) is stored for later texts and used for the
-    confirmation. The booking and the contact change are audited with the
-    staff member.
+    The phone is parsed with the given country hint (else the business's).
+    From a conversation card (`conversation_id`) the booking is linked to
+    it, made for its customer (name and phone updated) and comes from its
+    channel; otherwise a contact with the phone is reused, else a new one
+    is created. Opening hours, capacity and the times linked calendars
+    made busy are enforced under the business lock; the online limits
+    (minimum notice, maximum party) are not. A service (`service_item_id`)
+    is booked with one of its performers, for its length unless staff give
+    another, with its buffer and value. The customer's language (given,
+    else the contact's, else the business default) is kept. Audited.
     """
 
     def __init__(
@@ -115,9 +113,11 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
         growth: GrowthBookingsFacilitatorContract,
+        busy_times_repo: CalendarBusyTimesRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._growth: GrowthBookingsFacilitatorContract = growth
+        self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -145,6 +145,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
             self._resource_repo,
             self._schedule_exception_repo,
             input_data.business_id,
+            self._busy_times_repo,
         )
         phone_number: E164PhoneNumber | None = None
         if input_data.contact_phone_number is not None:
@@ -209,6 +210,7 @@ class CreateManualBookingUseCase(UseCaseContract[ManualBookingCommand, BookingRe
                         None if conversation is None else conversation.id
                     ),
                     buffer_minutes=chosen.choice.buffer_minutes,
+                    blocked_times=inputs.blocked_times,
                 ),
             )
             booked: BookedOffer = price_placement(

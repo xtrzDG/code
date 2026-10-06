@@ -2,6 +2,9 @@ from dependency_injector import containers
 from dependency_injector.providers import Container, DependenciesContainer, Singleton
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.calendar_sync_facilitators import (
+    CalendarSyncFacilitatorsContainer,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.growth_facilitators import GrowthFacilitatorsContainer
@@ -17,9 +20,6 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.observability import JobMonitorFacilitatorContract
-from app.facilitators.calendar.google_calendar_sync_facilitator import (
-    GoogleCalendarSyncFacilitator,
-)
 from app.facilitators.channels.typing_signal_facilitator import TypingSignalFacilitator
 from app.facilitators.claim_check.claim_check_facilitator import ClaimCheckFacilitator
 from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
@@ -255,19 +255,15 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         messenger_adapter=adapters.messenger_channel_adapter,
         instagram_adapter=adapters.instagram_channel_adapter,
     )
-    calendar_sync_facilitator: Singleton[GoogleCalendarSyncFacilitator] = Singleton(
-        GoogleCalendarSyncFacilitator,
-        connection_repo=repositories.calendar_connection_repo,
-        event_link_repo=repositories.calendar_event_link_repo,
-        business_repo=repositories.business_repo,
-        resource_repo=repositories.resource_repo,
-        contact_repo=repositories.contact_repo,
-        calendar_client=clients.google_calendar_client,
-        secret_cipher=adapters.secret_cipher,
-        phone_number_parser=utilities.phone_number_parser,
-        event_text_transformer=transformers.calendar_event_text_transformer,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
+    # Bookings mirrored to Google Calendar; outside calendars' busy times.
+    calendars: CalendarSyncFacilitatorsContainer = Container(  # type: ignore[assignment]
+        CalendarSyncFacilitatorsContainer, adapters=adapters, clients=clients,
+        repositories=repositories, time_provider=time_provider,
+        transformers=transformers, utilities=utilities,
+    )  # fmt: skip
+    calendar_sync_facilitator = calendars.calendar_sync_facilitator
+    busy_time_sync = calendars.busy_time_sync
+    booking_system_connectors = calendars.booking_system_connectors
     # Invoice numbers, VAT and the invoice and receipt PDFs (1114).
     invoicing: InvoicingFacilitatorsContainer = Container(  # type: ignore[assignment]
         InvoicingFacilitatorsContainer, adapters=adapters, config=config,

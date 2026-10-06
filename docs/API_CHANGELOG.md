@@ -97,6 +97,41 @@ Spec: `261b9dca1f9aeb29`
   `answer_budget_fast_burn`, `answer_budget_slow_burn`,
   `api_budget_fast_burn` and `api_budget_slow_burn`.
 
+## 2026-10-06 — two-way availability: calendars and booking systems per resource
+
+Spec: `d5d9a886a9e8990e`
+
+- **Added** `GET /v1/businesses/{business_id}/resources/{resource_id}/calendar`
+  (`ResourceCalendarView`): the linked Google calendar, the iCal feeds
+  imported (host only, never the address), the booking system (Cal.com),
+  the iCal export, each source's `status` (`BusySourceStatusView`: last
+  attempt, last success, block count, `problem` from
+  `CalendarSyncProblem`) and the next busy times (`BusyTimeView`, at most
+  20). `POST …/calendar/sync` reads every source now and returns the view.
+- **Added** owner-only changes: `PUT`/`DELETE …/calendar/google`
+  (`calendar_id` from `GET …/integrations/google-calendar/calendars`,
+  `GoogleCalendarList`, or `primary`); `POST …/calendar/ical-imports`
+  (201; `url` https, http or webcal; refused addresses are 422
+  `address_refused`, a sixth feed `feed_limit`, the same feed twice
+  `feed_already_imported`); `DELETE …/calendar/ical-imports/{feed_id}`;
+  `PUT`/`DELETE …/calendar/booking-system` (`kind` `cal_com`,
+  `external_resource_id` the event type, `api_key`; a key Cal.com refuses
+  is 422 with the `CalendarSyncProblem` code); `POST`/`DELETE
+  …/calendar/ical-export` (`IcalExportCreated`: the feed `url`, shown once
+  — the platform keeps only its hash — and the calendar view).
+- **Added** `GET …/integrations` (owners, `IntegrationList`): Google
+  Calendar, iCal import, iCal export and Cal.com with their
+  `IntegrationState` (`off`, `on`, `attention`, `unavailable`) and how many
+  resources use each, plus `resources` (`ResourceSyncSummary`: per resource
+  with a calendar, its source and problem counts, last read and whether its
+  bookings are shared) for the resources list's one-line summaries.
+- **Added** `GET /v1/public/ical/{token}.ics` (no sign-in): the resource's
+  busy times as an iCal feed (bookings and Google or Cal.com busy times,
+  never imported iCal events, no guest data; `no-store`, `noindex`; rate
+  limited per network and platform-wide; an unknown token is 404).
+- **Changed** availability, booking, rescheduling and manual bookings treat
+  a resource's busy times from its calendars as taken (no new fields).
+
 ## 2026-10-06 — wave 15 together: worker resilience, referrals and partners, the waitlist and return visits
 
 Spec: `ce734ea095df4aa1`

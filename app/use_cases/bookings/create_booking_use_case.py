@@ -2,6 +2,7 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.calendar_sync import CalendarBusyTimesRepoContract
 from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
@@ -122,9 +123,11 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
         calendar_sync: BookingCalendarSyncFacilitatorContract,
         live_events: EventPublisherFacilitatorContract,
         growth: GrowthBookingsFacilitatorContract,
+        busy_times_repo: CalendarBusyTimesRepoContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._growth: GrowthBookingsFacilitatorContract = growth
+        self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -158,6 +161,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
             self._resource_repo,
             self._schedule_exception_repo,
             input_data.business_id,
+            self._busy_times_repo,
         )
         ensure_party_size_allowed(input_data.party_size, inputs.rules)
         contact: ContactDocument = require_contact(
@@ -215,6 +219,7 @@ class CreateBookingUseCase(UseCaseContract[CreateBookingCommand, BookingResult])
                     include_sandbox=input_data.is_sandbox,
                     sandbox_conversation_id=input_data.conversation_id,
                     buffer_minutes=choice.buffer_minutes,
+                    blocked_times=inputs.blocked_times,
                 ),
             )
             booked: BookedOffer = price_placement(

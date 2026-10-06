@@ -5,6 +5,7 @@ from datetime import date
 from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
+from app.contracts.calendar_sync import CalendarBusyTimesRepoContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
@@ -54,13 +55,18 @@ from app.use_cases.shared.operations_support import (
     display_phone,
 )
 from app.use_cases.shared.staff_alerts import StaffAlertTexts, booking_alert
+from app.utilities.calendar_sync.busy_periods import blocked_times_of
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.nights import StayTimes, read_stay_times
+from app.utilities.scheduling.overlap import BlockedTime
 from app.utilities.scheduling.zoned_time import load_time_zone, to_local_moment
 
 
 class SchedulingInputs(NamedTuple):
-    """A business with everything its availability depends on."""
+    """
+    A business with everything its availability depends on, the times its
+    resources' linked calendars made busy included.
+    """
 
     business: BusinessDocument
     zone: ZoneInfo
@@ -70,6 +76,7 @@ class SchedulingInputs(NamedTuple):
     stay_times: StayTimes
     resources: list[ResourceDocument]
     exceptions: list[ScheduleExceptionDocument]
+    blocked_times: tuple[BlockedTime, ...] = ()
 
 
 def load_scheduling_inputs(
@@ -78,6 +85,7 @@ def load_scheduling_inputs(
     resource_repo: ResourceRepoContract,
     schedule_exception_repo: ScheduleExceptionRepoContract,
     business_id: BusinessId,
+    busy_times_repo: CalendarBusyTimesRepoContract | None = None,
 ) -> SchedulingInputs:
     business: BusinessDocument = require_business(business_repo, business_id)
     profile: BusinessProfileDocument | None = business_profile_repo.get_by_business(
@@ -92,6 +100,11 @@ def load_scheduling_inputs(
         stay_times=read_stay_times(profile),
         resources=resource_repo.list_by_business(business_id),
         exceptions=schedule_exception_repo.list_by_business(business_id),
+        blocked_times=(
+            ()
+            if busy_times_repo is None
+            else blocked_times_of(busy_times_repo.list_by_business(business_id))
+        ),
     )
 
 

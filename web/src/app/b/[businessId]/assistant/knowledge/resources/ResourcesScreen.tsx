@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { api } from "@/api/client";
+import { useIntegrations } from "@/api/integrations";
 import { useBookableOffers } from "@/api/offers";
 import { queryCache } from "@/api/queryCache";
 import { queryKeys } from "@/api/queryKeys";
@@ -19,6 +20,7 @@ import { formatLocalDate, splitExceptions, todayInTimeZone, type ScheduleExcepti
 import { useNicheDetails } from "../_components/hooks";
 import { ExceptionsCard } from "./_components/ExceptionsCard";
 import { ResourceRow } from "./_components/ResourceRow";
+import { ResourceCalendarSheet, type CalendarResource } from "./calendar/ResourceCalendarSheet";
 import { ExceptionEditor } from "./ExceptionEditor";
 import { ResourceEditor } from "./ResourceEditor";
 
@@ -46,6 +48,8 @@ export function ResourcesScreen() {
   const [resourceEditor, setResourceEditor] = useState<{ key: number; resource: ResourceView | null } | null>(null);
   const [exceptionEditor, setExceptionEditor] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<ScheduleExceptionView | null>(null);
+  const [calendarOf, setCalendarOf] = useState<CalendarResource | null>(null);
+  const integrations = useIntegrations(business.id);
 
   // The switch moves at once and goes back if the API refuses.
   const toggle = useMutation(
@@ -153,7 +157,9 @@ export function ResourcesScreen() {
                 key={resource.id}
                 resource={resource}
                 offers={offers.data ?? []}
+                calendars={integrations.data?.resources?.find((summary) => summary.resource_id === resource.id)}
                 onToggle={(isActive) => void setActive(resource, isActive)}
+                onCalendars={() => setCalendarOf({ id: resource.id, name: resource.name })}
                 onEdit={() => setResourceEditor((current) => ({ key: (current?.key ?? 0) + 1, resource }))}
               />
             ))}
@@ -198,6 +204,8 @@ export function ResourcesScreen() {
           }}
         />
       ) : null}
+
+      <ResourceCalendarSheet resource={calendarOf} onClose={() => setCalendarOf(null)} />
 
       <ConfirmDialog
         open={deleting !== null}

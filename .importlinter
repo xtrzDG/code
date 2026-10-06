@@ -61,6 +61,7 @@ modules =
     app.use_cases.bookings
     app.use_cases.businesses
     app.use_cases.calendar
+    app.use_cases.calendar_sync
     app.use_cases.campaigns
     app.use_cases.catalog
     app.use_cases.channels

@@ -47,6 +47,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "privacy.purge_business_exports_operator": "expired export archives, all",
     "privacy.retention_purge_operator": "data past every business's retention",
     "legal.send_subprocessor_notices_operator": "daily job over every business",
+    "calendars.sync_due_calendars_operator": "periodic job over every business",
     "conversations.voice_tool_webhook_operator": "voice webhook, then scoped",
     "conversations.post_call_webhook_operator": "voice webhook: agent first",
     "conversations.process_post_call_operator": "after-call job: agent first",

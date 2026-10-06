@@ -154,6 +154,16 @@ export const queryKeys = {
     all: (businessId: Id) => ["resources", businessId] as const,
     list: (businessId: Id) => ["resources", businessId, "list"] as const,
     exceptions: (businessId: Id) => ["resources", businessId, "exceptions"] as const,
+    /** One resource's calendars: its sources, export address and busy times ahead. */
+    calendar: (businessId: Id, resourceId: Id) => ["resources", businessId, "calendar", resourceId] as const,
+  },
+
+  integrations: {
+    all: (businessId: Id) => ["integrations", businessId] as const,
+    /** Settings → Integrations, with each resource's calendars at a glance. */
+    list: (businessId: Id) => ["integrations", businessId, "list"] as const,
+    /** The connected Google account's calendars to link a resource to. */
+    googleCalendars: (businessId: Id) => ["integrations", businessId, "googleCalendars"] as const,
   },
 
   profile: {

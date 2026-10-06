@@ -148,6 +148,8 @@ def patch_resource(
             if "room_type_item_id" in provided
             else existing.room_type_item_id
         ),
+        # The linked Google calendar is changed on the resource's calendars.
+        external_calendar_id=existing.external_calendar_id,
         created_at=existing.created_at,
         updated_at=now,
     )

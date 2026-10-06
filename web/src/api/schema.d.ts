@@ -2301,6 +2301,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Business Integrations */
+        get: operations["get_business_integrations_v1_businesses__business_id__integrations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/integrations/google-calendar": {
         parameters: {
             query?: never;
@@ -2314,6 +2331,23 @@ export interface paths {
         post?: never;
         /** Delete Google Calendar */
         delete: operations["delete_google_calendar_v1_businesses__business_id__integrations_google_calendar_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/integrations/google-calendar/calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Google Calendars */
+        get: operations["get_google_calendars_v1_businesses__business_id__integrations_google_calendar_calendars_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2906,6 +2940,128 @@ export interface paths {
         head?: never;
         /** Update Resource */
         patch: operations["update_resource_v1_businesses__business_id__resources__resource_id__patch"];
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Resource Calendar */
+        get: operations["get_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar/booking-system": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Resource Booking System */
+        put: operations["put_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_put"];
+        post?: never;
+        /** Delete Resource Booking System */
+        delete: operations["delete_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Resource Google Calendar */
+        put: operations["put_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_put"];
+        post?: never;
+        /** Delete Resource Google Calendar */
+        delete: operations["delete_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar/ical-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Resource Ical Export */
+        post: operations["post_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_post"];
+        /** Delete Resource Ical Export */
+        delete: operations["delete_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar/ical-imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Resource Ical Import */
+        post: operations["post_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar/ical-imports/{feed_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Resource Ical Import */
+        delete: operations["delete_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports__feed_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/resources/{resource_id}/calendar/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync Resource Calendar */
+        post: operations["sync_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/businesses/{business_id}/review-settings": {
@@ -4228,6 +4384,23 @@ export interface paths {
         };
         /** Get Hosted Chat */
         get: operations["get_hosted_chat_v1_public_chat__address__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/ical/{token}.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Public Ical Feed */
+        get: operations["get_public_ical_feed_v1_public_ical__token__ics_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5927,6 +6100,27 @@ export interface components {
             status: components["schemas"]["BookingStatus"];
         };
         /**
+         * BookingSystemKind
+         * @description The booking systems the platform reads busy times from and writes its
+         *     bookings to (one adapter each, in the connector registry).
+         * @enum {string}
+         */
+        BookingSystemKind: "cal_com";
+        /**
+         * BookingSystemView
+         * @description The booking system the resource follows (its key is never shown).
+         */
+        BookingSystemView: {
+            /** Added At */
+            added_at: number;
+            /** External Resource Id */
+            external_resource_id: string;
+            /** External Resource Title */
+            external_resource_title?: string | null;
+            kind: components["schemas"]["BookingSystemKind"];
+            status: components["schemas"]["BusySourceStatusView"];
+        };
+        /**
          * BookingUnit
          * @description How a resource is booked: for a time slot or for nights (hotels).
          * @enum {string}
@@ -6326,6 +6520,46 @@ export interface components {
             viewer_role?: components["schemas"]["BusinessMemberRole"] | null;
         };
         /**
+         * BusySourceStatusView
+         * @description How a source synced last; `problem` is why its last read failed.
+         */
+        BusySourceStatusView: {
+            /**
+             * Block Count
+             * @default 0
+             */
+            block_count: number;
+            /** Last Attempt At */
+            last_attempt_at?: number | null;
+            /** Last Synced At */
+            last_synced_at?: number | null;
+            problem?: components["schemas"]["CalendarSyncProblem"] | null;
+            /** Problem Detail */
+            problem_detail?: string | null;
+        };
+        /**
+         * BusyTimeSource
+         * @description A calendar outside the platform whose busy times block a resource:
+         *     the Google calendar linked to it (free/busy of the connected account),
+         *     an imported iCal feed (Airbnb, Booking.com, Vrbo, any public calendar)
+         *     or a booking system (Cal.com).
+         * @enum {string}
+         */
+        BusyTimeSource: "google" | "ical" | "booking_system";
+        /**
+         * BusyTimeView
+         * @description One busy time ahead and where it came from (a feed's host for iCal).
+         */
+        BusyTimeView: {
+            /** Ends At */
+            ends_at: number;
+            /** Feed Host */
+            feed_host?: string | null;
+            source: components["schemas"]["BusyTimeSource"];
+            /** Starts At */
+            starts_at: number;
+        };
+        /**
          * CabinetSection
          * @description Cabinet page of a business (concept section 8).
          * @enum {string}
@@ -6406,6 +6640,13 @@ export interface components {
             /** Connected At */
             connected_at: number;
         };
+        /**
+         * CalendarSyncProblem
+         * @description Why the last read of a source failed; the cabinet explains each one in
+         *     the owner's language. The busy times read before stay in force.
+         * @enum {string}
+         */
+        CalendarSyncProblem: "not_connected" | "needs_reconnect" | "not_found" | "access_denied" | "address_refused" | "timeout" | "unreachable" | "not_a_calendar" | "provider_error";
         /**
          * CallDocument
          * @description Phone call handled by the voice agent (concept table `calls`).
@@ -9370,6 +9611,50 @@ export interface components {
             version_status: components["schemas"]["AssistantVersionStatus"];
         };
         /**
+         * GoogleCalendarEntry
+         * @description A calendar on the connected Google account's list.
+         */
+        GoogleCalendarEntry: {
+            /** Access Role */
+            access_role: string;
+            /** Calendar Id */
+            calendar_id: string;
+            /**
+             * Is Primary
+             * @default false
+             */
+            is_primary: boolean;
+            /** Name */
+            name: string;
+        };
+        /**
+         * GoogleCalendarList
+         * @description The calendars a resource can be linked to. `is_readable` is False, with
+         *     the reason, when they cannot be listed: Google Calendar is not
+         *     connected, or its consent predates reading calendars (reconnect).
+         */
+        GoogleCalendarList: {
+            /** Is Readable */
+            is_readable: boolean;
+            /** Items */
+            items: components["schemas"]["GoogleCalendarEntry"][];
+            problem?: components["schemas"]["CalendarSyncProblem"] | null;
+        };
+        /**
+         * GoogleCalendarSourceView
+         * @description The Google calendar that blocks the resource. `is_available`: this
+         *     server can connect Google Calendar; `is_connected`: the business did.
+         */
+        GoogleCalendarSourceView: {
+            /** Calendar Id */
+            calendar_id?: string | null;
+            /** Is Available */
+            is_available: boolean;
+            /** Is Connected */
+            is_connected: boolean;
+            status?: components["schemas"]["BusySourceStatusView"] | null;
+        };
+        /**
          * GrowthView
          * @description The funnel of the period's sign-ups and what explains it, and the
          *     business-level funnel and tunnel of every business created in the
@@ -9733,6 +10018,40 @@ export interface components {
             timezone?: string | null;
             /** Widget Script Url */
             widget_script_url?: string | null;
+        };
+        /**
+         * IcalExportCreated
+         * @description The new export address, shown this once, and the resource's calendars.
+         */
+        IcalExportCreated: {
+            calendar: components["schemas"]["ResourceCalendarView"];
+            /** Url */
+            url: string;
+        };
+        /**
+         * IcalExportView
+         * @description Whether the resource's export address exists, and when it was read.
+         */
+        IcalExportView: {
+            /** Created At */
+            created_at?: number | null;
+            /** Is On */
+            is_on: boolean;
+            /** Last Read At */
+            last_read_at?: number | null;
+        };
+        /**
+         * IcalImportView
+         * @description An imported feed: its host only (the address is a secret).
+         */
+        IcalImportView: {
+            /** Added At */
+            added_at: number;
+            /** Feed Id */
+            feed_id: string;
+            /** Host */
+            host: string;
+            status: components["schemas"]["BusySourceStatusView"];
         };
         /**
          * ImportedMenuItemView
@@ -10226,6 +10545,53 @@ export interface components {
          * @enum {string}
          */
         InjectionSignal: "instruction_override" | "role_change" | "prompt_extraction" | "data_exfiltration" | "fake_platform_text";
+        /**
+         * IntegrationKind
+         * @description The integrations Settings → Integrations lists.
+         * @enum {string}
+         */
+        IntegrationKind: "google_calendar" | "ical_import" | "ical_export" | "cal_com";
+        /**
+         * IntegrationList
+         * @description Every integration the platform offers a business, in a fixed order, and
+         *     each resource that has calendars (`resources`).
+         */
+        IntegrationList: {
+            /** Items */
+            items: components["schemas"]["IntegrationView"][];
+            /**
+             * Resources
+             * @default []
+             */
+            resources: components["schemas"]["ResourceSyncSummary"][];
+        };
+        /**
+         * IntegrationState
+         * @description How an integration stands for a business.
+         * @enum {string}
+         */
+        IntegrationState: "off" | "on" | "attention" | "unavailable";
+        /**
+         * IntegrationView
+         * @description One integration: its state, how many resources use it (and how many of
+         *     those need attention), and when it last synced anywhere.
+         */
+        IntegrationView: {
+            /**
+             * Attention Count
+             * @default 0
+             */
+            attention_count: number;
+            kind: components["schemas"]["IntegrationKind"];
+            /** Last Synced At */
+            last_synced_at?: number | null;
+            /**
+             * Resource Count
+             * @default 0
+             */
+            resource_count: number;
+            state: components["schemas"]["IntegrationState"];
+        };
         /**
          * InvoiceKind
          * @description What an invoice charges for.
@@ -13073,6 +13439,31 @@ export interface components {
          */
         ReplyGuardVerdict: "clean" | "rewritten" | "handed_off";
         /**
+         * ResourceCalendarView
+         * @description The calendars of one resource: every source that blocks it, its export,
+         *     the booking systems it may follow, when it syncs next, and the next
+         *     busy times (at most 20) its sources reported.
+         */
+        ResourceCalendarView: {
+            booking_system?: components["schemas"]["BookingSystemView"] | null;
+            /** Booking System Kinds */
+            booking_system_kinds: components["schemas"]["BookingSystemKind"][];
+            /** Business Id */
+            business_id: string;
+            google: components["schemas"]["GoogleCalendarSourceView"];
+            ical_export: components["schemas"]["IcalExportView"];
+            /** Ical Imports */
+            ical_imports: components["schemas"]["IcalImportView"][];
+            /** Next Sync At */
+            next_sync_at?: number | null;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Name */
+            resource_name: string;
+            /** Upcoming Busy Times */
+            upcoming_busy_times: components["schemas"]["BusyTimeView"][];
+        };
+        /**
          * ResourceKind
          * @description What is booked, as in the concept's resources table.
          * @enum {string}
@@ -13085,6 +13476,27 @@ export interface components {
         ResourceList: {
             /** Items */
             items?: components["schemas"]["ResourceView"][];
+        };
+        /**
+         * ResourceSyncSummary
+         * @description One resource's calendars at a glance (the resources list shows it):
+         *     how many sources block it, how many failed their last read, when one
+         *     last synced, and whether its export address exists.
+         */
+        ResourceSyncSummary: {
+            /**
+             * Is Export On
+             * @default false
+             */
+            is_export_on: boolean;
+            /** Last Synced At */
+            last_synced_at?: number | null;
+            /** Problem Count */
+            problem_count: number;
+            /** Resource Id */
+            resource_id: string;
+            /** Source Count */
+            source_count: number;
         };
         /**
          * ResourceView
@@ -30984,6 +31396,93 @@ export interface operations {
             };
         };
     };
+    get_business_integrations_v1_businesses__business_id__integrations_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get: {
         parameters: {
             query?: never;
@@ -31090,6 +31589,93 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_google_calendars_v1_businesses__business_id__integrations_google_calendar_calendars_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleCalendarList"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {
@@ -35764,6 +36350,909 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResourceView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceCalendarView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    put_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Api Key */
+                    api_key: string;
+                    /** External Resource Id */
+                    external_resource_id: string;
+                    /**
+                     * BookingSystemKind
+                     * @description The booking systems the platform reads busy times from and writes its
+                     *     bookings to (one adapter each, in the connector registry).
+                     * @enum {string}
+                     */
+                    kind: "cal_com";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceCalendarView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    put_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Calendar Id */
+                    calendar_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceCalendarView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    post_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IcalExportCreated"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    post_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Url */
+                    url: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceCalendarView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports__feed_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+                feed_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    sync_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_sync_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceCalendarView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -43562,6 +45051,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HostedChatView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_public_ical_feed_v1_public_ical__token__ics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The resource's busy times as an iCalendar feed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

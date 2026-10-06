@@ -49,6 +49,8 @@ class OperationsBookingFactories(OperationsSeeding):
             booking_repo=self.booking_repo,
             knowledge_item_repo=self.knowledge_repo,
             growth=self.growth,
+            busy_times_repo=self.busy_times_repo,
+            busy_time_sync=self.busy_time_sync,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -76,6 +78,7 @@ class OperationsBookingFactories(OperationsSeeding):
             calendar_sync=calendar_sync or self.calendar_sync,
             live_events=self.live_events,
             growth=self.growth,
+            busy_times_repo=self.busy_times_repo,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -121,6 +124,7 @@ class OperationsBookingFactories(OperationsSeeding):
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
             growth=self.growth,
+            busy_times_repo=self.busy_times_repo,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -152,6 +156,7 @@ class OperationsBookingFactories(OperationsSeeding):
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
             growth=self.growth,
+            busy_times_repo=self.busy_times_repo,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -168,6 +173,7 @@ class OperationsBookingFactories(OperationsSeeding):
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
             growth=self.growth,
+            busy_times_repo=self.busy_times_repo,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -184,5 +190,6 @@ class OperationsBookingFactories(OperationsSeeding):
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
             growth=self.growth,
+            busy_times_repo=self.busy_times_repo,
             wall_clock=self.clock.wall_clock,
         )

@@ -2,6 +2,10 @@ from datetime import date
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.calendar_sync import (
+    BusyTimeSyncFacilitatorContract,
+    CalendarBusyTimesRepoContract,
+)
 from app.contracts.growth import GrowthBookingsFacilitatorContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
 from app.contracts.repositories.business_repositories import (
@@ -40,6 +44,7 @@ from app.use_cases.bookings.offer_selection import (
     choose_offer,
 )
 from app.utilities.bookings.offer_views import build_offer_view, list_offer_views
+from app.utilities.calendar_sync.busy_windows import ON_DEMAND_READ_SECONDS
 from app.utilities.scheduling.placement_request import PlacementRequest
 from app.utilities.scheduling.resource_selection import (
     ensure_party_size_allowed,
@@ -82,7 +87,11 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
 
     Places held for waiting customers count as taken (except for the
     customer a place is held for); a query that finds nothing says whether
-    the business keeps a waitlist the customer could join.
+    the business keeps a waitlist the customer could join. Times the
+    resources' linked calendars made busy (walk-ins in Google Calendar,
+    Airbnb reservations, a booking system's bookings) take every unit;
+    sources the sync job has not read for two periods are read again
+    first, within 2 s.
     """
 
     def __init__(
@@ -94,9 +103,13 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
         booking_repo: BookingRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
         growth: GrowthBookingsFacilitatorContract,
+        busy_times_repo: CalendarBusyTimesRepoContract,
+        busy_time_sync: BusyTimeSyncFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._growth: GrowthBookingsFacilitatorContract = growth
+        self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
+        self._busy_time_sync: BusyTimeSyncFacilitatorContract = busy_time_sync
         self._business_repo: BusinessRepoContract = business_repo
         self._business_profile_repo: BusinessProfileRepoContract = business_profile_repo
         self._resource_repo: ResourceRepoContract = resource_repo
@@ -108,12 +121,16 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: AvailabilityQuery) -> AvailabilityResult:
+        self._busy_time_sync.refresh_stale(
+            input_data.business_id, ON_DEMAND_READ_SECONDS
+        )
         inputs: SchedulingInputs = load_scheduling_inputs(
             self._business_repo,
             self._business_profile_repo,
             self._resource_repo,
             self._schedule_exception_repo,
             input_data.business_id,
+            self._busy_times_repo,
         )
         if input_data.party_size is not None and not input_data.full_day:
             ensure_party_size_allowed(input_data.party_size, inputs.rules)
@@ -163,6 +180,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             excluded_booking_id=input_data.excluded_booking_id,
             sandbox_conversation_id=input_data.conversation_id,
             buffer_minutes=choice.buffer_minutes,
+            blocked_times=inputs.blocked_times,
         )
         candidates: list[ResourceDocument] = seating_resources(
             choice.candidates, input_data.party_size

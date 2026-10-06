@@ -9,6 +9,9 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
+from app.containers.use_cases.booking_confirmation_providers import (
+    booking_confirmation_use_case,
+)
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.booking_manage import (
@@ -35,15 +38,6 @@ from app.schemas.dto.operations.bookings import (
 )
 from app.use_cases.bookings.cancel_booking_use_case import CancelBookingUseCase
 from app.use_cases.bookings.check_availability_use_case import CheckAvailabilityUseCase
-from app.use_cases.bookings.confirmations.confirmation_delivery import (
-    BookingConfirmationDelivery,
-)
-from app.use_cases.bookings.confirmations.confirmation_message import (
-    ConfirmationWriter,
-)
-from app.use_cases.bookings.confirmations.send_booking_confirmation_use_case import (
-    SendBookingConfirmationUseCase,
-)
 from app.use_cases.bookings.create_booking_use_case import CreateBookingUseCase
 from app.use_cases.bookings.guest_booking import GuestBookingReader
 from app.use_cases.bookings.list_bookings_use_case import ListBookingsUseCase
@@ -88,6 +82,8 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         booking_repo=repositories.booking_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
+        busy_time_sync=facilitators.busy_time_sync,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     create_booking_use_case: Factory[
@@ -111,6 +107,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
         growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     cancel_booking_use_case: Factory[
@@ -154,6 +151,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
         growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # The customer's own bookings to come (model tool list_my_bookings).
@@ -199,6 +197,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
         growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     update_booking_use_case: Factory[
@@ -216,6 +215,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
         growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     revert_booking_status_use_case: Factory[
@@ -233,6 +233,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
         growth=facilitators.growth_bookings,
+        busy_times_repo=repositories.calendar_busy_times_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     send_booking_reminders_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
@@ -273,28 +274,12 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
     # The guest's written confirmation after the assistant books or moves.
     send_booking_confirmation_use_case: Factory[
         UseCaseContract[BookingConfirmationRequest, BookingConfirmationReceipt]
-    ] = Factory(
-        SendBookingConfirmationUseCase,
-        guest_bookings=guest_booking_reader,
-        conversation_repo=repositories.conversation_repo,
-        delivery=Factory(
-            BookingConfirmationDelivery,
-            contact_repo=repositories.contact_repo,
-            conversation_repo=repositories.conversation_repo,
-            message_repo=repositories.message_repo,
-            channel_repo=repositories.channel_repo,
-            outbound_message_repo=repositories.outbound_message_repo,
-            job_queue=facilitators.job_queue_facilitator,
-            live_events=facilitators.event_publisher,
-            unit_of_work=adapters.storage_unit_of_work,
-            wall_clock=time_provider.microsecond_wall_clock,
-            whatsapp_template=(
-                config.app_settings.provided.whatsapp_booking_confirmation_template_name
-            ),
-        ),
-        writer=Factory(
-            ConfirmationWriter, text_resolver=utilities.localized_text_resolver
-        ),
-        link_signer=utilities.booking_manage_token_signer,
-        cabinet_base_url=config.app_settings.provided.cabinet_base_url,
+    ] = booking_confirmation_use_case(
+        guest_booking_reader,
+        repositories,
+        facilitators,
+        adapters,
+        time_provider,
+        config,
+        utilities,
     )

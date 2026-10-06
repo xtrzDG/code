@@ -15,6 +15,9 @@ from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
 from app.containers.pipelines.booking_link_pipelines import (
     BookingLinkPipelinesContainer,
 )
+from app.containers.pipelines.calendar_sync_pipelines import (
+    CalendarSyncPipelinesContainer,
+)
 from app.containers.pipelines.call_pipelines import CallPipelinesContainer
 from app.containers.pipelines.channel_pipelines import ChannelPipelinesContainer
 from app.containers.pipelines.compliance_pipelines import CompliancePipelinesContainer
@@ -199,6 +202,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
         SubscriptionLifecyclePipelinesContainer,
         lifecycle=orchestrators.lifecycle,
     )
+    calendars: CalendarSyncPipelinesContainer = Container(  # type: ignore[assignment]
+        CalendarSyncPipelinesContainer, calendars=orchestrators.calendars
+    )  # fmt: skip
     analytics: AnalyticsPipelinesContainer = Container(  # type: ignore[assignment]
         AnalyticsPipelinesContainer,
         analytics=orchestrators.analytics,

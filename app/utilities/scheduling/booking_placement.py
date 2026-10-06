@@ -51,6 +51,7 @@ def free_time_slots(
         request.include_sandbox,
         request.excluded_booking_id,
         request.sandbox_conversation_id,
+        request.blocked_times,
     )
     return [
         slot
@@ -127,6 +128,7 @@ def place_stay(
         request.include_sandbox,
         request.excluded_booking_id,
         request.sandbox_conversation_id,
+        request.blocked_times,
     )
     if not has_free_unit(
         busy, bounds.starts_at, bounds.ends_at, int(resource.unit_count)
@@ -165,6 +167,7 @@ def place_time_slot(
         request.include_sandbox,
         request.excluded_booking_id,
         request.sandbox_conversation_id,
+        request.blocked_times,
     )
     if not has_free_unit(
         busy,

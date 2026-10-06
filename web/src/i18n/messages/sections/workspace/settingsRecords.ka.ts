@@ -141,6 +141,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       customer_segment: "კლიენტების სეგმენტი",
       customer_settings: "კლიენტების პარამეტრები",
       waitlist_entry: "მოლოდინის სია",
+      resource_calendar: "რესურსის კალენდრები",
       waitlist_settings: "მოლოდინის სიის პარამეტრები",
       campaign_settings: "განმეორებითი ვიზიტების პარამეტრები",
       campaign_message: "განმეორებითი ვიზიტების შეტყობინებები",
