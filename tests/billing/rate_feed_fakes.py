@@ -1,7 +1,6 @@
 """Rate feeds over fixture files: the real clients, a fetcher that never dials."""
 
 from collections.abc import Mapping
-from pathlib import Path
 
 from app.clients.ecb.ecb_rates_client import ECB_RATES_URL, EcbRatesClient
 from app.clients.nbg.nbg_rates_client import NBG_RATES_URL, NbgRatesClient
@@ -14,10 +13,11 @@ from app.schemas.typings.web_fetching.constrained_strings import (
     WebMediaType,
     WebResourceUrl,
 )
+from tests.contracts.contract_files import read_fixture_bytes
 
-FIXTURES: Path = Path(__file__).parent / "fixtures"
-NBG_FIXTURE: bytes = (FIXTURES / "nbg_rates.json").read_bytes()
-ECB_FIXTURE: bytes = (FIXTURES / "ecb_rates.xml").read_bytes()
+# The banks' published feeds (tests/contracts/ecb, tests/contracts/nbg).
+NBG_FIXTURE: bytes = read_fixture_bytes("nbg", "nbg_rates.json")
+ECB_FIXTURE: bytes = read_fixture_bytes("ecb", "ecb_rates.xml")
 type ServedFeed = tuple[str, bytes]
 
 

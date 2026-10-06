@@ -9,14 +9,16 @@ from app.schemas.domain.billing import UsageEventDocument
 from app.schemas.domain.message_media import MessageAttachment
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from tests.channels.testbed import ChannelsTestbed
-from tests.media.recorded_payloads import load_fixture
+from tests.contracts.contract_files import load_json_fixture
 
 # Past the backoff of any attempt of a queued job.
 PAST_EVERY_BACKOFF_SECONDS: int = 24 * 3600
 
 
 def telegram_update(index: int) -> dict[str, Any]:
-    update: dict[str, Any] = load_fixture("telegram_media_updates.json")[index]
+    update: dict[str, Any] = load_json_fixture(
+        "telegram", "telegram_media_updates.json"
+    )[index]
     return update
 
 
