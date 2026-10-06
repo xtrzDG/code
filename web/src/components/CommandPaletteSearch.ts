@@ -53,7 +53,9 @@ function useSettledText(text: string): string | null {
 export function useCommandPaletteSearch(scope: PaletteSearchScope | null, text: string): PaletteSearch {
   const { t, tp, locale } = useI18n();
   const settled = useSettledText(text);
-  const searched = scope ? settled : null;
+  // The settled text lags the box by the typing pause: a fresh opening (or a
+  // box cleared to too few letters) shows no hits of the text searched before.
+  const searched = scope && searchTextOf(text) !== null ? settled : null;
   const businessId = scope?.businessId ?? "";
   const results = useQuery<SearchResults>(
     queryKeys.customers.search(businessId, searched ?? ""),
