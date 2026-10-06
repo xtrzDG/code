@@ -1021,6 +1021,95 @@
    ],
    "type": "object"
   },
+  "Trace": {
+   "properties": {
+    "environment": {
+     "type": "string"
+    },
+    "id": {
+     "type": "string"
+    },
+    "input": {
+     "anyOf": [
+      {},
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "metadata": {
+     "additionalProperties": true,
+     "type": [
+      "object",
+      "null"
+     ]
+    },
+    "name": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "output": {
+     "anyOf": [
+      {},
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "public": {
+     "type": "boolean"
+    },
+    "release": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "sessionId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "tags": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "timestamp": {
+     "format": "date-time",
+     "type": "string"
+    },
+    "userId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "version": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "id",
+    "timestamp",
+    "name",
+    "sessionId",
+    "release",
+    "version",
+    "userId",
+    "tags",
+    "public",
+    "environment"
+   ],
+   "type": "object"
+  },
   "TraceBody": {
    "properties": {
     "environment": {
@@ -1127,6 +1216,82 @@
    },
    "required": [
     "body"
+   ],
+   "type": "object"
+  },
+  "TraceWithDetails": {
+   "allOf": [
+    {
+     "$ref": "#/$defs/Trace"
+    }
+   ],
+   "properties": {
+    "htmlPath": {
+     "type": "string"
+    },
+    "latency": {
+     "format": "double",
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "observations": {
+     "items": {
+      "type": "string"
+     },
+     "type": [
+      "array",
+      "null"
+     ]
+    },
+    "scores": {
+     "items": {
+      "type": "string"
+     },
+     "type": [
+      "array",
+      "null"
+     ]
+    },
+    "totalCost": {
+     "format": "double",
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "htmlPath"
+   ],
+   "type": "object"
+  },
+  "Traces": {
+   "properties": {
+    "_deprecation": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Deprecation"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "data": {
+     "items": {
+      "$ref": "#/$defs/TraceWithDetails"
+     },
+     "type": "array"
+    },
+    "meta": {
+     "$ref": "#/$defs/utilsMetaResponse"
+    }
+   },
+   "required": [
+    "data",
+    "meta"
    ],
    "type": "object"
   },
@@ -1386,13 +1551,40 @@
   },
   "response:ingestion": {
    "$ref": "#/$defs/IngestionResponse"
+  },
+  "response:traces.list": {
+   "$ref": "#/$defs/Traces"
+  },
+  "utilsMetaResponse": {
+   "properties": {
+    "limit": {
+     "type": "integer"
+    },
+    "page": {
+     "type": "integer"
+    },
+    "totalItems": {
+     "type": "integer"
+    },
+    "totalPages": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "page",
+    "limit",
+    "totalItems",
+    "totalPages"
+   ],
+   "type": "object"
   }
  },
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "x-roots": {
   "request:ingestion": "request:post /api/public/ingestion",
   "request:traces.delete": "request:delete /api/public/traces",
-  "response:ingestion": "response:post /api/public/ingestion 207"
+  "response:ingestion": "response:post /api/public/ingestion 207",
+  "response:traces.list": "response:get /api/public/traces 200"
  },
  "x-vendor": {
   "format": "openapi",

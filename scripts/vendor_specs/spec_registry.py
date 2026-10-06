@@ -246,6 +246,7 @@ LANGFUSE_SPEC = VendorSpec(
         SchemaRoot("request:ingestion", "request:post /api/public/ingestion"),
         SchemaRoot("response:ingestion", "response:post /api/public/ingestion 207"),
         SchemaRoot("request:traces.delete", "request:delete /api/public/traces"),
+        SchemaRoot("response:traces.list", "response:get /api/public/traces 200"),
     ),
 )
 
