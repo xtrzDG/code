@@ -207,7 +207,7 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
 | `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: every spec that signs in through `support/admin.ts` shares one shard, as they build one admin team on the shard's API; the rest are balanced by test count) |
 | `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
-| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.56.1, Chromium 141) |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.63.0, which downloads Chromium 153; it also drives the Chromium 141 of older machine images) |
 
 Failures leave screenshots and traces in `e2e/.artifacts/results/`
 (`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
