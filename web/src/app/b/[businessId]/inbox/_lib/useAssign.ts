@@ -87,7 +87,9 @@ export function useAssign(conversationId: string) {
         ? t("inbox.assign.cleared")
         : assignee.isMe
           ? t("inbox.assign.taken")
-          : t("inbox.assign.assigned", { name: assignee.name ?? t("inbox.assign.teammate") }),
+          : assignee.name
+            ? { text: t("inbox.assign.assigned"), values: { name: assignee.name } }
+            : t("inbox.assign.assigned", { name: t("inbox.assign.teammate") }),
     );
   };
 

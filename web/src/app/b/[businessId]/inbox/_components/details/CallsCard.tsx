@@ -60,7 +60,7 @@ function CallItem({ call }: { call: CallView }) {
       {summary ? (
         <div className="mt-3 text-sm">
           <p className="text-ink-muted">{t("conversations.calls.summary")}</p>
-          <p lang={summary.language} dir="auto" className="mt-1 text-ink">
+          <p lang={summary.language} dir="auto" data-user-content className="mt-1 text-ink">
             {summary.text}
           </p>
         </div>
@@ -117,6 +117,7 @@ function CallGuardFindingsNotice({ call }: { call: CallView }) {
           <li
             key={value}
             dir="auto"
+            data-user-content
             className="rounded-lg border border-warning/30 bg-surface px-2 py-0.5 font-medium text-ink tabular-nums"
           >
             {value}

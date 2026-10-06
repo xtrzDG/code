@@ -31,7 +31,7 @@ export function BookingValueLine({
         <span className="text-sm text-ink-muted">
           {t("bookings.form.value")}
           <span className="text-ink-subtle"> · </span>
-          <span dir="auto" className="text-ink">
+          <span dir="auto" data-user-content className="text-ink">
             {offer.title}
           </span>
         </span>

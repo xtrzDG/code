@@ -15,7 +15,7 @@ import { useMutation } from "@/api/useMutation";
 import type { Query } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconDownload, IconShield } from "@/components/icons";
-import { Button, Card, ConfirmDialog, useToast } from "@/components/ui";
+import { Button, Card, ConfirmDialog, UserSentence, useToast } from "@/components/ui";
 import { downloadJson, isoDay } from "@/components/workspace/helpers";
 import { useI18n } from "@/i18n/client";
 
@@ -80,7 +80,7 @@ export function CustomerDataCard({ detail, name }: { detail: Query<CustomerDetai
       current ? { ...current, blocked_at: null, contact: markErased(current.contact, erasedAt) } : current,
     );
     setErasing(false);
-    toast.success(t("settings.requests.deletedSummary", { name }));
+    toast.success({ text: t("settings.requests.deletedSummary"), values: { name } });
   };
 
   return (
@@ -105,7 +105,7 @@ export function CustomerDataCard({ detail, name }: { detail: Query<CustomerDetai
         onConfirm={onErase}
         isPending={erase.isPending}
         error={erase.error}
-        title={t("settings.requests.deleteTitle", { name })}
+        title={<UserSentence text={t("settings.requests.deleteTitle")} values={{ name }} />}
         confirmLabel={t("settings.requests.deleteConfirm")}
         confirmationText={erasureConfirmation(data.contact)}
       >

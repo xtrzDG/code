@@ -3,7 +3,7 @@
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconBell, IconPlus } from "@/components/icons";
 import { Button, ButtonLink, Card, EmptyState, Modal } from "@/components/ui";
-import { ConfirmDialog } from "@/components/ui";
+import { ConfirmDialog, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -124,10 +124,14 @@ export function NotificationsTab() {
         isPending={list.isBusy}
         error={list.dialogError}
         errorOverrides={STALE_LIST_MESSAGES}
-        title={removingContact ? t("settings.contacts.removeTitle", { name: removingContact.name }) : ""}
+        title={removingContact ? <UserSentence text={t("settings.contacts.removeTitle")} values={{ name: removingContact.name }} /> : ""}
         confirmLabel={t("settings.contacts.remove")}
       >
-        {removingContact ? <p>{t("settings.contacts.removeDescription", { name: removingContact.name })}</p> : null}
+        {removingContact ? (
+          <p>
+            <UserSentence text={t("settings.contacts.removeDescription")} values={{ name: removingContact.name }} />
+          </p>
+        ) : null}
       </ConfirmDialog>
     </div>
   );

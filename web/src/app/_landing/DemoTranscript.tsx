@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { IconCalendar, IconClipboard, IconHandoff } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
@@ -25,7 +25,8 @@ export function DemoTranscript({
   isSending,
   failure,
 }: {
-  greeting: string;
+  /** The assistant's first words, naming the business (user content). */
+  greeting: ReactNode;
   entries: readonly DemoEntry[];
   isSending: boolean;
   failure: DemoFailure | null;
@@ -49,7 +50,7 @@ export function DemoTranscript({
         entry.role === "visitor" ? (
           <p key={entry.id} className={cn(bubble, "ml-auto rounded-br-md bg-surface-muted text-ink")} dir="auto" data-role="visitor">
             <span className="sr-only">{t("publicDemo.you")}: </span>
-            {entry.text}
+            <span data-user-content>{entry.text}</span>
           </p>
         ) : (
           <div key={entry.id} className="space-y-1.5">

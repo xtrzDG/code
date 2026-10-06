@@ -14,7 +14,7 @@ import { api } from "@/api/client";
 import { unwrap } from "@/api/result";
 import type { ProfileWizardView, Schema } from "@/api/types";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { ButtonLink, ErrorState, LoadingRegion, SkeletonText, useToast } from "@/components/ui";
+import { ButtonLink, ErrorState, LoadingRegion, SkeletonText, UserSentence, useToast } from "@/components/ui";
 import { describeError } from "@/api/errors";
 import { useI18n } from "@/i18n/client";
 import { businessPath, HOME_PATH } from "@/lib/navigation";
@@ -146,7 +146,9 @@ export function SetupTunnel() {
     return (
       <Centered>
         <h1 className="text-2xl font-semibold text-ink">{t("tunnel.ownerOnlyTitle")}</h1>
-        <p className="mt-3 text-ink-muted">{t("tunnel.ownerOnlyText", { business: business.name })}</p>
+        <p className="mt-3 text-ink-muted">
+          <UserSentence text={t("tunnel.ownerOnlyText")} values={{ business: business.name }} />
+        </p>
         <ButtonLink href={businessPath(business.id, "overview")} className="mt-6 self-start">
           {t("tunnel.openCabinet")}
         </ButtonLink>

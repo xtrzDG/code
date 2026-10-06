@@ -44,7 +44,9 @@ function NoteItem({ note, onDelete }: { note: ConversationNoteView; onDelete: ()
       <div className="flex items-center gap-2">
         <MemberAvatar member={{ initials: initialsOf(note.author_name), tone: avatarTone(note.author_user_id) }} size="xs" />
         <p className="min-w-0 flex-1 truncate text-xs text-ink-muted">
-          <span className="font-medium text-ink">{name}</span>
+          <span className="font-medium text-ink" data-user-content={note.author_name ? true : undefined}>
+            {name}
+          </span>
           {" · "}
           <time dateTime={new Date(note.created_at / 1000).toISOString()} title={format.dateTime(note.created_at)}>
             {when}
@@ -61,7 +63,7 @@ function NoteItem({ note, onDelete }: { note: ConversationNoteView; onDelete: ()
           </button>
         ) : null}
       </div>
-      <p dir="auto" className="mt-1.5 text-sm break-words whitespace-pre-wrap text-ink">
+      <p dir="auto" data-user-content className="mt-1.5 text-sm break-words whitespace-pre-wrap text-ink">
         {note.text}
       </p>
     </li>

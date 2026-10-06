@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ConfirmDialog, Field, Textarea } from "@/components/ui";
+import { ConfirmDialog, Field, Textarea, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { SUPPORT_REASON_MAX, cleanSupportReason, isSupportReasonValid } from "../../_lib/supportReason";
@@ -50,7 +50,7 @@ export function OpenCabinetDialog({
       pendingLabel={t("admin.detail.opening")}
       confirmDisabled={!isValid}
       error={error}
-      title={t("admin.detail.openTitle", { name })}
+      title={<UserSentence text={t("admin.detail.openTitle")} values={{ name }} />}
       description={t("admin.detail.openDescription")}
       confirmLabel={t("admin.detail.openCabinet")}
     >

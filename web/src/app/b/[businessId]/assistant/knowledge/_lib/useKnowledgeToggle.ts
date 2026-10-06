@@ -55,8 +55,8 @@ export function useKnowledgeToggle() {
       saveIntoLists(business.id, result.data);
       toast.success(
         isActive
-          ? t("knowledge.items.switchedOn", { title: item.title })
-          : t("knowledge.items.switchedOff", { title: item.title }),
+          ? { text: t("knowledge.items.switchedOn"), values: { title: item.title } }
+          : { text: t("knowledge.items.switchedOff"), values: { title: item.title } },
       );
     }
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import { IconClock, IconTrash } from "@/components/icons";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatLocalDate, intervalsLabel, type ScheduleExceptionView } from "@/lib/specialDays";
 
@@ -32,9 +32,9 @@ export function ExceptionRow({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-ink-subtle">{appliesTo ?? t("knowledge.exceptions.wholeBusiness")}</p>
+        <p className="text-sm text-ink-subtle">{appliesTo ? <UserContent>{appliesTo}</UserContent> : t("knowledge.exceptions.wholeBusiness")}</p>
         {exception.note ? (
-          <p className="text-sm break-words text-ink-muted" dir="auto">
+          <p className="text-sm break-words text-ink-muted" dir="auto" data-user-content>
             {exception.note}
           </p>
         ) : null}

@@ -93,7 +93,7 @@ export function VariantField({
       {value.trim() ? (
         <figure className="rounded-xl bg-surface-muted px-3 py-2">
           <figcaption className="text-xs text-ink-subtle">{t("quickReplies.editor.preview")}</figcaption>
-          <p dir="auto" lang={language} className="mt-0.5 text-sm break-words whitespace-pre-wrap text-ink">
+          <p dir="auto" lang={language} data-user-content className="mt-0.5 text-sm break-words whitespace-pre-wrap text-ink">
             {preview}
           </p>
         </figure>

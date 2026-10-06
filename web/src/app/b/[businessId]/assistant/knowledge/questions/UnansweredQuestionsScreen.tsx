@@ -108,7 +108,7 @@ export function UnansweredQuestionsScreen() {
               {list.map((question) => (
                 <li key={question.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-6">
                   <div className="min-w-0 flex-1 space-y-1.5">
-                    <p className="font-medium break-words text-ink" dir="auto">
+                    <p className="font-medium break-words text-ink" dir="auto" data-user-content>
                       {question.question}
                     </p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-subtle">
@@ -238,7 +238,7 @@ function AnswerDialog({
       }
     >
       <form id={formId} onSubmit={(event) => void submit(event)} noValidate className="space-y-4">
-        <blockquote className="rounded-xl border-l-4 border-accent-solid bg-surface-muted px-4 py-3 text-sm break-words text-ink" dir="auto">
+        <blockquote className="rounded-xl border-l-4 border-accent-solid bg-surface-muted px-4 py-3 text-sm break-words text-ink" dir="auto" data-user-content>
           {question.question}
         </blockquote>
         <Field label={t("knowledge.questions.answer")} hint={t("knowledge.questions.answerHint")} error={errors.answer && t(errors.answer)} required>

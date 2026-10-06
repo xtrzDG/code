@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { en } from "@/i18n/messages/en";
 import { ka } from "@/i18n/messages/ka";
 import { ru } from "@/i18n/messages/ru";
-import { createTranslator } from "@/i18n/translate";
+import { createTranslator, interpolate } from "@/i18n/translate";
+import { splitUserValues, type SentenceWithUserValues } from "@/i18n/userValues";
 
 import {
   describeChange,
@@ -18,6 +19,11 @@ import { failedChecksPath, fixPath } from "./applyFixes";
 const english = createTranslator("en", en);
 const russian = createTranslator("ru", ru, en);
 const georgian = createTranslator("ka", ka, en);
+
+/** The sentence as the owner reads it (null: none). */
+function said(sentence: SentenceWithUserValues | null): string | null {
+  return sentence ? interpolate(sentence.text, sentence.values) : null;
+}
 
 const priceChange: PendingChange = {
   area: "offer",
@@ -38,12 +44,12 @@ describe("pending changes in the owner's words", () => {
   });
 
   it("name a new price with its item, before and after", () => {
-    const line = describeChange(priceChange, english);
+    const line = said(describeChange(priceChange, english));
     expect(line).toMatch(/^Price of “Khachapuri”: .*18\.00.* → .*20\.00/);
-    expect(describeChange(priceChange, russian)).toMatch(/^Цена «Khachapuri»: /);
-    expect(describeChange({ ...priceChange, before: null }, english)).toMatch(/^Price of “Khachapuri”: .*20\.00/);
-    expect(describeChange({ ...priceChange, after: null }, english)).toBe("Price of “Khachapuri” removed");
-    expect(describeChange({ ...priceChange, detail: "details" }, english)).toBe("Details of “Khachapuri” changed");
+    expect(said(describeChange(priceChange, russian))).toMatch(/^Цена «Khachapuri»: /);
+    expect(said(describeChange({ ...priceChange, before: null }, english))).toMatch(/^Price of “Khachapuri”: .*20\.00/);
+    expect(said(describeChange({ ...priceChange, after: null }, english))).toBe("Price of “Khachapuri” removed");
+    expect(said(describeChange({ ...priceChange, detail: "details" }, english))).toBe("Details of “Khachapuri” changed");
   });
 
   it("say what was added, changed or removed in each area", () => {
@@ -61,18 +67,18 @@ describe("pending changes in the owner's words", () => {
       [{ area: "conversation", action: "changed" }, en.applyChanges.conversation],
     ];
     for (const [change, text] of cases) {
-      expect(describeChange(change, english)).toBe(text);
+      expect(said(describeChange(change, english))).toBe(text);
     }
-    expect(describeChange({ area: "special_days", action: "added", date: "2026-12-31" }, english)).toBe(
+    expect(said(describeChange({ area: "special_days", action: "added", date: "2026-12-31" }, english))).toBe(
       "Added: special day December 31, 2026",
     );
   });
 
   it("have every text in Russian and Georgian", () => {
     const change: PendingChange = { area: "profile", action: "changed", field: "public_phone" };
-    expect(describeChange(change, russian)).toBe("Изменено: телефон для клиентов");
-    expect(describeChange(change, georgian)).not.toContain("applyChanges");
-    expect(describeChange({ area: "links", action: "removed", link_kind: "google_review" }, georgian)).not.toContain("applyChanges");
+    expect(said(describeChange(change, russian))).toBe("Изменено: телефон для клиентов");
+    expect(said(describeChange(change, georgian))).not.toContain("applyChanges");
+    expect(said(describeChange({ area: "links", action: "removed", link_kind: "google_review" }, georgian))).not.toContain("applyChanges");
   });
 
   it("group the changes by area in a fixed order", () => {
@@ -86,20 +92,23 @@ describe("pending changes in the owner's words", () => {
   });
 
   it("sum up what the assistant now knows for the toast", () => {
-    expect(summarizeChanges([priceChange], english)).toMatch(/^Your assistant now knows: “Khachapuri”, .*20\.00/);
-    expect(summarizeChanges([priceChange], russian)).toMatch(/^Теперь помощник знает: «Khachapuri» — .*20,00/);
+    expect(said(summarizeChanges([priceChange], english))).toMatch(/^Your assistant now knows: “Khachapuri”, .*20\.00/);
+    expect(said(summarizeChanges([priceChange], russian))).toMatch(/^Теперь помощник знает: «Khachapuri» — .*20,00/);
     const many: PendingChange[] = ["A", "B", "C", "D", "E"].map((subject) => ({ area: "offer", action: "added", subject }));
-    expect(summarizeChanges(many, english)).toBe("Your assistant now knows: “A”, “B”, “C” and 2 more changes");
+    expect(said(summarizeChanges(many, english))).toBe("Your assistant now knows: “A”, “B”, “C” and 2 more changes");
+    // The items' names are the owner's words, each apart from the interface's (user content on the page).
+    const summary = summarizeChanges(many, english)!;
+    expect(splitUserValues(summary.text, summary.values).flatMap((part) => (part.kind === "value" ? [part.value] : []))).toEqual(["A", "B", "C"]);
     expect(summarizeChanges([{ area: "offer", action: "removed", subject: "A" }], english)).toBeNull();
   });
 
   it("keep a line readable when the API leaves a detail out", () => {
-    expect(describeChange({ area: "special_days", action: "removed", date: null }, english)).toBe("Removed: special day ");
-    expect(describeChange({ area: "hours", action: "added" }, english)).toBe("Added: opening hours ()");
-    expect(describeChange({ area: "links", action: "added" }, english)).toBe("Added: ");
-    expect(describeChange({ area: "profile", action: "changed" }, english)).toBe("Changed: ");
-    expect(describeChange({ area: "offer", action: "added" }, english)).toBe("Added: “”");
-    expect(describeChange({ area: "calls", action: "removed" }, english)).toBe("The assistant no longer answers phone calls");
+    expect(said(describeChange({ area: "special_days", action: "removed", date: null }, english))).toBe("Removed: special day ");
+    expect(said(describeChange({ area: "hours", action: "added" }, english))).toBe("Added: opening hours ()");
+    expect(said(describeChange({ area: "links", action: "added" }, english))).toBe("Added: ");
+    expect(said(describeChange({ area: "profile", action: "changed" }, english))).toBe("Changed: ");
+    expect(said(describeChange({ area: "offer", action: "added" }, english))).toBe("Added: “”");
+    expect(said(describeChange({ area: "calls", action: "removed" }, english))).toBe("The assistant no longer answers phone calls");
   });
 
   it("read the changes again when a source section of the same business changes", () => {

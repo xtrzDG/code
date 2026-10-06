@@ -4,7 +4,7 @@
 
 import type { PlatformAdminRole, PlatformAdminView } from "@/api/types";
 import { useViewerFormat } from "@/components/time/ViewerTimeZone";
-import { Badge, Button, Select } from "@/components/ui";
+import { Badge, Button, Select, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { ADMIN_ROLES, ROLE_LABELS, adminDestination } from "../../_lib/team";
@@ -31,26 +31,23 @@ export function AdminRow({
     !member.added_by
       ? t("adminTeam.bootstrapped", { date: when })
       : member.added_by_name
-        ? t("adminTeam.addedBy", { name: member.added_by_name, date: when })
+        ? // The admin's name is user content.
+          <UserSentence text={t("adminTeam.addedBy", { date: when })} values={{ name: member.added_by_name }} />
         : t("adminTeam.addedOn", { date: when });
 
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-3 py-4 first:pt-0 last:pb-0">
       <div className="min-w-0 flex-1 space-y-1">
         <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
-          <span className="break-all" dir="auto">
+          <span className="break-all" dir="auto" data-user-content>
             {name}
           </span>
           {admin.is_you ? <Badge tone="accent">{t("adminTeam.you")}</Badge> : null}
         </p>
         {admin.display_name ? <p className="break-all text-sm text-ink-muted">{destination}</p> : null}
         <p className="text-xs text-ink-subtle">
-          {[
-            admin.user_id ? null : t("adminTeam.notSignedIn"),
-            addedLine(admin, date),
-          ]
-            .filter(Boolean)
-            .join(" · ")}
+          {admin.user_id ? null : `${t("adminTeam.notSignedIn")} · `}
+          {addedLine(admin, date)}
         </p>
       </div>
       <div className="flex w-full items-center gap-2 sm:w-auto">

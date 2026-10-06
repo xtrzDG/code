@@ -48,7 +48,8 @@ export function useNotificationContacts() {
       return;
     }
     const outcome = contactCheckOutcome(result.data);
-    const title = t(outcome.key, { name: contact.name, error: result.data.delivery.last_error ?? "" });
+    // The contact's name is user content.
+    const title = { text: t(outcome.key, { error: result.data.delivery.last_error ?? "" }), values: { name: contact.name } };
     toast.show({ tone: outcome.tone, title });
   };
 

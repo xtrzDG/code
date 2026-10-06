@@ -2,7 +2,7 @@
 
 import { IconPencil } from "@/components/icons";
 import { Switch } from "@/components/content/Switch";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, UserSentence } from "@/components/ui";
 import type { KnowledgeItemDetails } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { listFormat } from "@/lib/intl/formatters";
@@ -41,7 +41,7 @@ export function ResourceRow({
     <li className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-6">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className={resource.is_active ? "font-medium text-ink" : "font-medium text-ink-muted"} dir="auto">
+          <p className={resource.is_active ? "font-medium text-ink" : "font-medium text-ink-muted"} dir="auto" data-user-content>
             {resource.name}
           </p>
           {!resource.is_active ? <Badge>{t("knowledge.resources.inactive")}</Badge> : null}
@@ -51,13 +51,16 @@ export function ResourceRow({
           {ownHours.length > 0 ? t("knowledge.resources.ownHoursSet") : t("knowledge.resources.followsBusiness")}
         </p>
         {services.length > 0 ? (
-          <p className="line-clamp-2 text-sm text-ink-muted" dir="auto">
-            {t("knowledge.resources.servesValue", { names: listFormat(locale, { type: "conjunction" }).format(services) })}
+          <p className="line-clamp-2 text-sm text-ink-muted">
+            <UserSentence
+              text={t("knowledge.resources.servesValue")}
+              values={{ names: listFormat(locale, { type: "conjunction" }).format(services) }}
+            />
           </p>
         ) : null}
         {roomType ? (
-          <p className="text-sm text-ink-muted" dir="auto">
-            {t("knowledge.resources.roomTypeValue", { name: roomType.title })}
+          <p className="text-sm text-ink-muted">
+            <UserSentence text={t("knowledge.resources.roomTypeValue")} values={{ name: roomType.title }} />
           </p>
         ) : null}
       </div>

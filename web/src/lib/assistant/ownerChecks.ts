@@ -8,6 +8,7 @@
 
 import type { Schema } from "@/api/types";
 import type { Translator } from "@/i18n/translate";
+import type { SentenceWithUserValues } from "@/i18n/userValues";
 import { businessPath } from "@/lib/navigation";
 
 import type { AutotestScenarioResult } from "./autotests";
@@ -36,21 +37,33 @@ export interface NamedFailure extends AskedCheck {
   reason: string | null;
 }
 
+/*
+ * The sentences below name the owner's own words (the question, the words
+ * the answer must mention): each comes as its translation with those
+ * placeholders left in and the words apart (`UserSentence` shows them as
+ * user content).
+ */
+
 /** "the answer must mention “20 GEL”" in the owner's language. */
-export function expectationSentence(check: Pick<AskedCheck, "expectation" | "expected_text">, words: Words): string {
-  return words.t(`updates.expectation.${check.expectation}`, { text: check.expected_text?.trim() ?? "" });
+export function expectationSentence(check: Pick<AskedCheck, "expectation" | "expected_text">, words: Words): SentenceWithUserValues {
+  return { text: words.t(`updates.expectation.${check.expectation}`), values: { text: check.expected_text?.trim() ?? "" } };
 }
 
 /** "Your check did not pass: “…” — the answer must pass the customer to a person". */
-export function failureSentence(check: AskedCheck, words: Words): string {
-  return words.t("updates.failed.one", { question: check.question, expectation: expectationSentence(check, words) });
+export function failureSentence(check: AskedCheck, words: Words): SentenceWithUserValues {
+  const expectation = expectationSentence(check, words);
+  return {
+    text: words.t("updates.failed.one", { expectation: expectation.text }),
+    values: { ...expectation.values, question: check.question },
+  };
 }
 
 /** "New check: “…”" / "Changed check: “…”" for the pending sheet. */
-export function pendingCheckLine(check: PendingOwnerCheck, words: Words): string {
-  return check.action === "added"
-    ? words.t("updates.pending.added", { question: check.question })
-    : words.t("updates.pending.changed", { question: check.question });
+export function pendingCheckLine(check: PendingOwnerCheck, words: Words): SentenceWithUserValues {
+  return {
+    text: check.action === "added" ? words.t("updates.pending.added") : words.t("updates.pending.changed"),
+    values: { question: check.question },
+  };
 }
 
 /** Whether something is still not with customers: a change, one of the owner's checks or a draft. */

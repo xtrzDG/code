@@ -80,14 +80,14 @@ export function QuickReplyPicker({
               className={cn("cursor-pointer px-4 py-2.5 text-sm", isActive ? "bg-accent-soft" : "hover:bg-surface-muted")}
             >
               <span className="flex items-baseline gap-2">
-                <span className="font-mono text-xs text-accent-ink" dir="auto">
+                <span className="font-mono text-xs text-accent-ink" dir="auto" data-user-content>
                   /{reply.shortcut}
                 </span>
-                <span className="min-w-0 truncate font-medium text-ink" dir="auto">
+                <span className="min-w-0 truncate font-medium text-ink" dir="auto" data-user-content>
                   {reply.title}
                 </span>
               </span>
-              <span className="mt-0.5 line-clamp-2 text-ink-muted" dir="auto">
+              <span className="mt-0.5 line-clamp-2 text-ink-muted" dir="auto" data-user-content>
                 {reply.text}
               </span>
               {(reply.missing_variables ?? []).length > 0 ? (

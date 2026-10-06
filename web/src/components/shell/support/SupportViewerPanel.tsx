@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 import type { SupportAccessView } from "@/api/types";
 import { useViewerFormat } from "@/components/time/ViewerTimeZone";
-import { Button, useToast } from "@/components/ui";
+import { Button, UserSentence, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { adminClientPath } from "@/lib/navigation";
 import { supportUntil } from "@/lib/supportAccess";
@@ -45,7 +45,9 @@ export function SupportViewerPanel({
   return (
     <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="w-full min-w-0 flex-1 space-y-1">
-        <p className="font-medium text-ink">{t("supportAccess.support.title", { name: businessName })}</p>
+        <p className="font-medium text-ink">
+          <UserSentence text={t("supportAccess.support.title")} values={{ name: businessName }} />
+        </p>
         <p className="text-ink-muted">
           {[
             view.viewer_can_write && writeUntil

@@ -26,11 +26,11 @@ export function PhoneLink({ phone, className }: { phone: string; className?: str
   );
 }
 
-/** The customer's name (any script, so `dir="auto"`), or a neutral placeholder. */
+/** The customer's name (any script, so `dir="auto"`; user content), or a neutral placeholder. */
 export function CustomerName({ name, className }: { name: string | null | undefined; className?: string }) {
   const { t } = useI18n();
   return name ? (
-    <span dir="auto" className={cn("break-words", className)}>
+    <span data-user-content dir="auto" className={cn("break-words", className)}>
       {name}
     </span>
   ) : (

@@ -7,10 +7,11 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingRegion, SkeletonText, useToast } from "@/components/ui";
+import { Alert, Badge, Button, Card, Checkbox, ErrorState, LoadingRegion, SkeletonText, UserSentence, useToast } from "@/components/ui";
 import { IconFile } from "@/components/icons";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
+import { interpolate } from "@/i18n/translate";
 
 import { memberLabel } from "../../_lib/team";
 import { DpaReader } from "./DpaReader";
@@ -45,12 +46,9 @@ export function DpaCard() {
 
   const data = dpa.data;
   const acceptance = data?.latest_acceptance;
-  const acceptedBy = acceptance
-    ? (() => {
-        const member = business.members.find((item) => item.user_id === acceptance.accepted_by);
-        return member ? memberLabel(member) : t("settings.dpa.someone");
-      })()
-    : "";
+  // "Accepted on … by {name}": a member's name is user content, "someone" the interface's.
+  const acceptor = acceptance ? business.members.find((item) => item.user_id === acceptance.accepted_by) : undefined;
+  const acceptedOn = acceptance ? t("settings.dpa.acceptedOn", { date: format.dateTime(acceptance.accepted_at) }) : "";
   const hasText = Boolean(data?.document_url);
   const canAccept = data !== undefined && !data.is_current_version_accepted && isOwner && hasText;
 
@@ -80,9 +78,13 @@ export function DpaCard() {
           </dl>
           {acceptance ? (
             <p className="text-sm text-ink-muted">
-              {data.is_current_version_accepted
-                ? t("settings.dpa.acceptedOn", { date: format.dateTime(acceptance.accepted_at), name: acceptedBy })
-                : t("settings.dpa.oldAccepted", { version: acceptance.document_version })}
+              {!data.is_current_version_accepted ? (
+                t("settings.dpa.oldAccepted", { version: acceptance.document_version })
+              ) : acceptor ? (
+                <UserSentence text={acceptedOn} values={{ name: memberLabel(acceptor) }} />
+              ) : (
+                interpolate(acceptedOn, { name: t("settings.dpa.someone") })
+              )}
             </p>
           ) : null}
           {hasText ? (

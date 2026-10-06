@@ -43,7 +43,7 @@ export function ContactRow({
     <li className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:px-6">
       <div className="min-w-0 flex-1 space-y-2">
         <div>
-          <p className="text-sm font-medium text-ink" dir="auto">
+          <p className="text-sm font-medium text-ink" dir="auto" data-user-content>
             {contact.name}
           </p>
           {contact.channel === "telegram" ? (

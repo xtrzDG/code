@@ -100,7 +100,7 @@ function CheckNowOutcome({ outcome }: { outcome: OwnerCheckOutcome }) {
       {outcome.answer ? (
         <p className="text-ink-muted">
           <span className="text-ink-subtle">{t("updates.failed.answered")}: </span>
-          <span dir="auto" className="[overflow-wrap:anywhere]">
+          <span dir="auto" data-user-content className="[overflow-wrap:anywhere]">
             {outcome.answer}
           </span>
         </p>

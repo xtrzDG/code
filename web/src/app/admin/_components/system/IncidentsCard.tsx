@@ -67,7 +67,7 @@ function IncidentRow({ incident }: { incident: Incident }) {
         <Badge tone={incident.kind === "data_breach" ? "danger" : "neutral"}>{t(`adminSystem.incidents.kinds.${incident.kind}`)}</Badge>
         <Badge tone={incident.status === "open" ? "warning" : "success"}>{t(`adminSystem.incidents.status.${incident.status}`)}</Badge>
       </div>
-      <h3 className="font-medium break-words text-ink" dir="auto">
+      <h3 className="font-medium break-words text-ink" dir="auto" data-user-content>
         {incident.title}
       </h3>
       <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">

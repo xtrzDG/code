@@ -48,7 +48,7 @@ function ContactList({ contacts, onRemove }: { contacts: readonly Schema<"Manage
             className="flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent-soft/50 py-2 ps-4 pe-2 backdrop-blur-sm"
           >
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-ink" dir="auto">
+              <span className="block truncate text-sm font-semibold text-ink" dir="auto" data-user-content>
                 {contact.name}
               </span>
               <span className="block truncate text-xs text-ink-muted">

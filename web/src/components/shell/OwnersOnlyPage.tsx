@@ -2,7 +2,7 @@
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconShield } from "@/components/icons";
-import { ButtonLink, Card } from "@/components/ui";
+import { ButtonLink, Card, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
@@ -21,7 +21,9 @@ export function OwnersOnlyPage() {
           <IconShield className="size-6" />
         </div>
         <h1 className="text-lg font-semibold text-ink">{t("navigation.ownerOnlyTitle")}</h1>
-        <p className="mt-2 max-w-md text-sm text-ink-muted">{t("navigation.ownerOnlyDescription", { business: business.name })}</p>
+        <p className="mt-2 max-w-md text-sm text-ink-muted">
+          <UserSentence text={t("navigation.ownerOnlyDescription")} values={{ business: business.name }} />
+        </p>
         <ButtonLink href={businessPath(business.id)} className="mt-6">
           {t("navigation.toOverview")}
         </ButtonLink>

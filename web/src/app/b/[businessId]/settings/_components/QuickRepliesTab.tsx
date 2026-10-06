@@ -9,7 +9,7 @@
 import { useState } from "react";
 
 import { IconChat, IconPencil, IconPlus, IconTrash } from "@/components/icons";
-import { Button, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, PageHeader, SkeletonCard, useToast } from "@/components/ui";
+import { Button, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, PageHeader, SkeletonCard, UserSentence, useToast } from "@/components/ui";
 import { AnimatedPresenceList } from "@/components/motion";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -25,10 +25,10 @@ function QuickReplyCard({ reply, onEdit, onDelete }: { reply: QuickReplyView; on
     <article className="flex h-full flex-col gap-3 rounded-2xl border border-line bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-xs text-accent-ink" dir="auto">
+          <p className="font-mono text-xs text-accent-ink" dir="auto" data-user-content>
             /{reply.shortcut}
           </p>
-          <h3 className="mt-0.5 truncate text-base font-semibold text-ink" dir="auto">
+          <h3 className="mt-0.5 truncate text-base font-semibold text-ink" dir="auto" data-user-content>
             {reply.title}
           </h3>
         </div>
@@ -54,7 +54,7 @@ function QuickReplyCard({ reply, onEdit, onDelete }: { reply: QuickReplyView; on
         </div>
       </div>
       {first ? (
-        <p dir="auto" lang={first.language} className="line-clamp-3 text-sm whitespace-pre-wrap text-ink-muted">
+        <p dir="auto" lang={first.language} data-user-content className="line-clamp-3 text-sm whitespace-pre-wrap text-ink-muted">
           {first.text}
         </p>
       ) : null}
@@ -145,7 +145,7 @@ export function QuickRepliesTab() {
       <ConfirmDialog
         open={deleting !== null}
         title={t("quickReplies.confirmDelete.title")}
-        description={t("quickReplies.confirmDelete.description", { title: deleting?.title ?? "" })}
+        description={<UserSentence text={t("quickReplies.confirmDelete.description")} values={{ title: deleting?.title ?? "" }} />}
         confirmLabel={t("quickReplies.confirmDelete.confirm")}
         onClose={() => setDeleting(null)}
         onConfirm={async () => {

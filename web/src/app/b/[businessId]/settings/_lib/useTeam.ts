@@ -53,7 +53,11 @@ export function useTeam() {
       setRoleError(result.error);
       return;
     }
-    toast.success(t("settings.roles.changed", { name: memberLabel(roleChange.member), role: t(ROLE_NAMES[roleChange.role]) }));
+    // The member's name is user content.
+    toast.success({
+      text: t("settings.roles.changed", { role: t(ROLE_NAMES[roleChange.role]) }),
+      values: { name: memberLabel(roleChange.member) },
+    });
     setMembers(result.data.members);
     setRoleChange(null);
     // The layout knows the viewer's role; it changes when owners demote themselves.
@@ -77,7 +81,7 @@ export function useTeam() {
       setRemoveError(result.error);
       return;
     }
-    toast.success(t("settings.team.removed", { name: memberLabel(removing) }));
+    toast.success({ text: t("settings.team.removed"), values: { name: memberLabel(removing) } });
     setRemoving(null);
     if (removing.user_id === me.user.id) {
       router.replace(HOME_PATH);
@@ -93,7 +97,7 @@ export function useTeam() {
     setMembers(updated);
     setInviting(false);
     router.refresh();
-    toast.success(t("settings.team.invited", { name }));
+    toast.success({ text: t("settings.team.invited"), values: { name } });
   };
 
   return {

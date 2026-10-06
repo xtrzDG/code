@@ -15,7 +15,7 @@ import { AfterHoursBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName } from "@/components/insights/common";
 import { formatRelative } from "@/components/insights/dates";
 import { CHANNEL_LABELS, HANDOFF_REASONS, HANDOFF_URGENCY, LEAD_TYPES, MESSAGE_AUTHORS } from "@/components/insights/labels";
-import { Badge } from "@/components/ui";
+import { Badge, UserSentence } from "@/components/ui";
 import { sourceLabel } from "@/components/value/sourceLabel";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -45,12 +45,16 @@ function Assignee({ row, member }: { row: InboxRow; member: TeamMember | null })
     // Only worth saying where someone is needed.
     return row.handoff || row.request ? <span className="text-ink-subtle">{t("inbox.row.unassigned")}</span> : null;
   }
+  // A teammate's name is user content; "You" and "A teammate" are the interface's.
+  const userName = member && !member.isMe ? member.name : null;
   const name = member?.isMe ? t("inbox.row.you") : (member?.name ?? t("inbox.assign.teammate"));
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       <MemberAvatar member={member ?? { initials: "#", tone: 0 }} size="xs" />
-      <span className="sr-only">{t("inbox.row.assignedTo", { name })}</span>
-      <span aria-hidden className="truncate">
+      <span className="sr-only">
+        {userName ? <UserSentence text={t("inbox.row.assignedTo")} values={{ name: userName }} /> : t("inbox.row.assignedTo", { name })}
+      </span>
+      <span aria-hidden className="truncate" data-user-content={userName ? true : undefined}>
         {name}
       </span>
     </span>
@@ -105,6 +109,7 @@ export function InboxRowItem({
         <span
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-semibold text-ink-muted"
           aria-hidden
+          data-user-content
         >
           {initialsOf(row.contactName)}
         </span>
@@ -127,7 +132,7 @@ export function InboxRowItem({
                 <span className="text-ink-subtle">{t(MESSAGE_AUTHORS[row.lastMessageAuthor])}: </span>
               ) : null}
               {row.lastMessageAttachment ? <AttachmentMark kind={row.lastMessageAttachment} withLabel={!row.lastMessageText} /> : null}
-              {row.lastMessageText ? <bdi>{row.lastMessageText}</bdi> : null}
+              {row.lastMessageText ? <bdi data-user-content>{row.lastMessageText}</bdi> : null}
             </span>
           ) : null}
           <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-ink-muted">

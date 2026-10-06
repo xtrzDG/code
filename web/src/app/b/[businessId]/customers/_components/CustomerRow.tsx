@@ -55,7 +55,11 @@ export function CustomerRow({ contact }: { contact: CustomerSummary }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span dir={contact.name ? "auto" : "ltr"} className={isErased ? "text-sm text-ink-muted" : "text-sm font-medium break-words text-ink"}>
+            <span
+              dir={contact.name ? "auto" : "ltr"}
+              data-user-content={contact.name && !isErased ? true : undefined}
+              className={isErased ? "text-sm text-ink-muted" : "text-sm font-medium break-words text-ink"}
+            >
               {name}
             </span>
             {contact.is_vip ? (
