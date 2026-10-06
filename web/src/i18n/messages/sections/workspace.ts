@@ -53,6 +53,9 @@ import { callSettingsRu } from "./workspace/callSettings.ru";
 import { channelSetupEn } from "./workspace/channelSetup.en";
 import { channelSetupKa } from "./workspace/channelSetup.ka";
 import { channelSetupRu } from "./workspace/channelSetup.ru";
+import { channelPagesEn } from "./workspace/channelPages.en";
+import { channelPagesKa } from "./workspace/channelPages.ka";
+import { channelPagesRu } from "./workspace/channelPages.ru";
 import { channelsEn } from "./workspace/channels.en";
 import { channelsKa } from "./workspace/channels.ka";
 import { channelsRu } from "./workspace/channels.ru";
@@ -102,6 +105,7 @@ import { widgetSitesRu } from "./workspace/widgetSites.ru";
 export const workspaceEn = {
   workspace: workspaceCommonEn,
   channels: channelsEn,
+  channelPages: channelPagesEn,
   channelSetup: channelSetupEn,
   loginOptions: loginOptionsEn,
   billing: billingEn,
@@ -133,6 +137,7 @@ export const workspaceEn = {
 export const workspaceRu: Translation<typeof workspaceEn> = {
   workspace: workspaceCommonRu,
   channels: channelsRu,
+  channelPages: channelPagesRu,
   channelSetup: channelSetupRu,
   loginOptions: loginOptionsRu,
   billing: billingRu,
@@ -164,6 +169,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
 export const workspaceKa: Translation<typeof workspaceEn> = {
   workspace: workspaceCommonKa,
   channels: channelsKa,
+  channelPages: channelPagesKa,
   channelSetup: channelSetupKa,
   loginOptions: loginOptionsKa,
   billing: billingKa,

@@ -105,7 +105,9 @@ test.describe("on a phone", () => {
   test("the chat page's address keeps its own name in sight", async ({ page, request, account, consoleErrors }) => {
     consoleErrors.allow(SNIPPET_UNAVAILABLE);
     const business = await openChatBusiness(request, account.token);
-    await page.goto(`/b/${business.id}/assistant/channels`);
+    // On a phone sharing is a page of its own; the large page's #share anchor leads there.
+    await page.goto(`/b/${business.id}/assistant/channels#share`);
+    await expect(page).toHaveURL(new RegExp(`/b/${business.id}/assistant/channels/share$`));
     const address = page.getByRole("region", { name: en.share.title }).getByTestId("share-chat-page-url");
     await expect(address).toHaveText(`${new URL(WEB_URL).host}/c/${business.slug}`);
     // The host may give way; the page's name is shown whole.
