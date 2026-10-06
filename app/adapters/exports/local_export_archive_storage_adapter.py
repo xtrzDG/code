@@ -1,9 +1,14 @@
+import shutil
 from pathlib import Path
+from typing import BinaryIO
 
 from app.contracts.export_archives import ExportArchiveStorageContract
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.privacy.strings import ExportArchivePath
+
+# Copied a megabyte at a time.
+COPY_BLOCK_SIZE: int = 1024 * 1024
 
 
 class LocalExportArchiveStorageAdapter(ExportArchiveStorageContract):
@@ -19,13 +24,15 @@ class LocalExportArchiveStorageAdapter(ExportArchiveStorageContract):
         self._root_directory: Path = root_directory.resolve()
 
     def store(
-        self, business_id: BusinessId, path: ExportArchivePath, archive: bytes
+        self, business_id: BusinessId, path: ExportArchivePath, archive: BinaryIO
     ) -> None:
         file_path: Path = self.resolve_path(path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
         # Written beside it and renamed: a reader never sees half a file.
         partial_path: Path = file_path.with_name(f".{file_path.name}.partial")
-        partial_path.write_bytes(archive)
+        archive.seek(0)
+        with partial_path.open("wb") as partial:
+            shutil.copyfileobj(archive, partial, COPY_BLOCK_SIZE)
         partial_path.replace(file_path)
 
     def read(self, business_id: BusinessId, path: ExportArchivePath) -> bytes | None:

@@ -1,5 +1,7 @@
 """Small fakes and samples of the previous-key tests."""
 
+from collections.abc import Iterable
+
 from typed_time_provider import Microseconds
 
 from app.contracts.object_storage import ObjectStorageClientContract
@@ -23,6 +25,11 @@ class DictObjectStorage(ObjectStorageClientContract):
 
     def put_object(self, key: RecordingStoragePath, body: bytes) -> None:
         self.objects[str(key)] = body
+
+    def put_object_parts(
+        self, key: RecordingStoragePath, parts: Iterable[bytes]
+    ) -> None:
+        self.objects[str(key)] = b"".join(parts)
 
     def get_object_range(
         self, key: RecordingStoragePath, first_byte: int, last_byte: int

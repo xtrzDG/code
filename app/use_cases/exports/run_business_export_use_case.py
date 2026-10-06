@@ -1,4 +1,5 @@
 import logging
+import tempfile
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -9,6 +10,7 @@ from app.contracts.repositories.privacy_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.privacy import BusinessExportStatus
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.business_exports import BusinessExportDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
@@ -17,9 +19,11 @@ from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.privacy.constrained_integers import (
     ExportArchiveByteCount,
     ExportArchiveLifetimeHours,
+    ExportedRecordCount,
 )
 from app.schemas.typings.privacy.strings import ExportArchivePath, ExportErrorText
-from app.use_cases.exports.business_archive import BuiltArchive, BusinessArchiveBuilder
+from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.exports.business_archive import BusinessArchiveBuilder
 from app.use_cases.exports.business_export_views import archive_path
 from app.use_cases.shared.business_access import require_business
 
@@ -40,11 +44,14 @@ RUNNABLE: frozenset[BusinessExportStatus] = frozenset(
 class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     """
     The worker writes one full export: the archive of the business's data
-    (`BusinessArchiveBuilder`) into the export storage, encrypted with the
-    business's key, then the export is READY: owners download it through
-    one-time links while the archive is kept (EXPORT_ARCHIVE_HOURS). A
-    failure is retried by the queue; the last attempt leaves the export
-    FAILED with a reason the owner can read.
+    (`BusinessArchiveBuilder`) into a temporary file, a page at a time,
+    then from that file into the export storage, encrypted with the
+    business's key; then the export is READY: owners download it through
+    one-time links while the archive is kept (EXPORT_ARCHIVE_HOURS). The
+    worker's memory stays the same whatever the size of the business's
+    history (`tests/exports/test_bounded_export.py`). A failure is retried
+    by the queue; the last attempt leaves the export FAILED with a reason
+    the owner can read.
     """
 
     def __init__(
@@ -90,10 +97,17 @@ class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
 
         path: ExportArchivePath = archive_path(business.id, export.id)
         try:
-            built: BuiltArchive = self._archive_builder.build(
-                business, export.language, started_at
-            )
-            self._archive_storage.store(business.id, path, built.content)
+            # Deleted when closed; never named, so nothing else can open it.
+            with tempfile.TemporaryFile() as archive:
+                record_count: ExportedRecordCount = self._archive_builder.write(
+                    business,
+                    export.language,
+                    started_at,
+                    viewer_of(export, business),
+                    archive,
+                )
+                archive_size: int = archive.tell()
+                self._archive_storage.store(business.id, path, archive)
         except Exception:
             logger.exception("The export %s of %s failed.", export.id, business.id)
             if not input_data.is_final_attempt:
@@ -110,8 +124,8 @@ class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             BusinessExportStatus.READY,
             {
                 "archive_path": path,
-                "archive_bytes": ExportArchiveByteCount(len(built.content)),
-                "record_count": built.record_count,
+                "archive_bytes": ExportArchiveByteCount(archive_size),
+                "record_count": record_count,
                 "expires_at": Microseconds(
                     int(finished_at) + int(EXPORT_ARCHIVE_HOURS) * MICROSECONDS_PER_HOUR
                 ),
@@ -139,3 +153,16 @@ class RunBusinessExportUseCase(UseCaseContract[QueuedJobInput, JobReport]):
                 }
             ),
         )
+
+
+def viewer_of(export: BusinessExportDocument, business: BusinessDocument) -> UserId:
+    """Who reads the archive's tables: the owner who asked, else the owner."""
+
+    if export.requested_by is not None:
+        return export.requested_by
+
+    return next(
+        member.user_id
+        for member in business.members
+        if member.role is BusinessMemberRole.OWNER
+    )

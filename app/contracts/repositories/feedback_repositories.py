@@ -12,6 +12,9 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.schemas.domain.feedback import FeedbackRequestDocument, ReviewSettingsDocument
 from app.schemas.dto.feedback.feedback_tallies import FeedbackTally
 from app.schemas.dto.paging import KeysetSlice
@@ -38,7 +41,9 @@ class ReviewSettingsRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class FeedbackRequestRepoContract(RepoContract, Protocol):
+class FeedbackRequestRepoContract(
+    BusinessDocumentPagesContract[FeedbackRequestDocument], RepoContract, Protocol
+):
     def insert_if_new(self, request: FeedbackRequestDocument) -> IsDocumentInserted:
         """
         Store a request unless one with its id exists (atomic, also across

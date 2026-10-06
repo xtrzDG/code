@@ -10,6 +10,9 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
@@ -22,7 +25,9 @@ from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
 
-class KnowledgeItemRepoContract(RepoContract, Protocol):
+class KnowledgeItemRepoContract(
+    BusinessDocumentPagesContract[KnowledgeItemDocument], RepoContract, Protocol
+):
     def save(self, item: KnowledgeItemDocument) -> None:
         raise NotImplementedError
 

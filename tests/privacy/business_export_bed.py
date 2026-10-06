@@ -132,28 +132,30 @@ class BusinessExportBed:
             wall_clock=wall_clock,
             link_minutes=ExportDownloadLinkMinutes(10),
         )
+        self.archive_builder = BusinessArchiveBuilder(
+            contact_repo=testbed.contact_repo,
+            conversation_repo=testbed.conversation_repo,
+            message_repo=testbed.message_repo,
+            call_repo=testbed.call_repo,
+            booking_repo=testbed.booking_repo,
+            lead_repo=testbed.lead_repo,
+            handoff_repo=testbed.handoff_repo,
+            resource_repo=ResourceRepository(
+                InMemoryDocumentCollectionAdapter(ResourceDocument)
+            ),
+            knowledge_item_repo=KnowledgeItemRepository(
+                InMemoryDocumentCollectionAdapter(KnowledgeItemDocument)
+            ),
+            missed_call_repo=testbed.missed_call_repo,
+            feedback_request_repo=testbed.feedback_request_repo,
+            audit_log_repo=testbed.audit_log_repo,
+            text_resolver=LocalizedTextResolver(),
+            phone_number_parser=testbed.phone_parser,
+        )
         self.job = RunBusinessExportUseCase(
             business_repo=testbed.business_repo,
             export_repo=self.export_repo,
-            archive_builder=BusinessArchiveBuilder(
-                contact_repo=testbed.contact_repo,
-                conversation_repo=testbed.conversation_repo,
-                message_repo=testbed.message_repo,
-                call_repo=testbed.call_repo,
-                booking_repo=testbed.booking_repo,
-                lead_repo=testbed.lead_repo,
-                handoff_repo=testbed.handoff_repo,
-                resource_repo=ResourceRepository(
-                    InMemoryDocumentCollectionAdapter(ResourceDocument)
-                ),
-                knowledge_item_repo=KnowledgeItemRepository(
-                    InMemoryDocumentCollectionAdapter(KnowledgeItemDocument)
-                ),
-                missed_call_repo=testbed.missed_call_repo,
-                feedback_request_repo=testbed.feedback_request_repo,
-                audit_log_repo=testbed.audit_log_repo,
-                text_resolver=LocalizedTextResolver(),
-            ),
+            archive_builder=self.archive_builder,
             archive_storage=storage,
             wall_clock=wall_clock,
         )

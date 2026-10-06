@@ -12,6 +12,9 @@ from typing import Protocol
 from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.contracts.repositories.conversation_listing_contracts import (
     CallListingContract,
     ContactListingContract,
@@ -42,7 +45,12 @@ from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCal
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 
 
-class ContactRepoContract(ContactListingContract, RepoContract, Protocol):
+class ContactRepoContract(
+    ContactListingContract,
+    BusinessDocumentPagesContract[ContactDocument],
+    RepoContract,
+    Protocol,
+):
     def save(self, contact: ContactDocument) -> None:
         raise NotImplementedError
 
@@ -142,7 +150,12 @@ class ConversationRepoContract(ConversationListingContract, RepoContract, Protoc
         raise NotImplementedError
 
 
-class MessageRepoContract(MessageListingContract, RepoContract, Protocol):
+class MessageRepoContract(
+    MessageListingContract,
+    BusinessDocumentPagesContract[MessageDocument],
+    RepoContract,
+    Protocol,
+):
     def save(self, message: MessageDocument) -> None:
         raise NotImplementedError
 
@@ -213,7 +226,12 @@ class LlmTurnRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
 
-class CallRepoContract(CallListingContract, RepoContract, Protocol):
+class CallRepoContract(
+    CallListingContract,
+    BusinessDocumentPagesContract[CallDocument],
+    RepoContract,
+    Protocol,
+):
     def save(self, call: CallDocument) -> None:
         raise NotImplementedError
 

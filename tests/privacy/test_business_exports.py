@@ -6,6 +6,7 @@ purged.
 """
 
 import json
+from typing import BinaryIO
 
 import pytest
 
@@ -58,7 +59,7 @@ def test_the_owner_asks_once_and_the_worker_writes_the_archive() -> None:
     assert int(ready.downloads_left) == 3
     assert ready.archive_bytes is not None and int(ready.archive_bytes) > 0
     [sealed] = bed.objects.objects.values()
-    assert sealed.startswith(b"AWX1")
+    assert sealed.startswith(b"AWX2")  # sealed in segments as it was read
     assert b"Giorgi" not in sealed
 
     download = bed.download(str(bed.link(ready.id).download_path))
@@ -131,7 +132,7 @@ def test_the_archive_is_purged_after_its_day() -> None:
 def test_a_failure_is_retried_then_left_failed() -> None:
     class BrokenStorage(ExportArchiveStorageContract):
         def store(
-            self, business_id: BusinessId, path: ExportArchivePath, archive: bytes
+            self, business_id: BusinessId, path: ExportArchivePath, archive: BinaryIO
         ) -> None:
             raise OSError("disk full")
 

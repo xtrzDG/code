@@ -4,6 +4,7 @@ archives: a token is random and stored only as its hash; an archive is
 sealed with its business's key and opens only there.
 """
 
+import io
 from pathlib import Path
 
 import pytest
@@ -64,7 +65,7 @@ def test_an_archive_is_sealed_with_its_business_key() -> None:
     objects = DictObjectStorage()
     storage = EncryptedObjectExportArchiveStorageAdapter(objects, NEW_KEY)
 
-    storage.store(BUSINESS, PATH, b"PK zip bytes of Giorgi")
+    storage.store(BUSINESS, PATH, io.BytesIO(b"PK zip bytes of Giorgi"))
 
     [sealed] = objects.objects.values()
     assert b"Giorgi" not in sealed
@@ -78,7 +79,7 @@ def test_an_archive_is_sealed_with_its_business_key() -> None:
     storage.delete(BUSINESS, PATH)
     assert storage.read(BUSINESS, PATH) is None
     with pytest.raises(ValidationFailedError):
-        storage.store(BUSINESS, ExportArchivePath("../escape.zip"), b"x")
+        storage.store(BUSINESS, ExportArchivePath("../escape.zip"), io.BytesIO(b"x"))
 
 
 def test_development_keeps_archives_as_files_inside_one_directory(
@@ -86,7 +87,7 @@ def test_development_keeps_archives_as_files_inside_one_directory(
 ) -> None:
     storage = LocalExportArchiveStorageAdapter(tmp_path)
 
-    storage.store(BUSINESS, PATH, b"zip")
+    storage.store(BUSINESS, PATH, io.BytesIO(b"zip"))
 
     assert (tmp_path / str(PATH)).read_bytes() == b"zip"
     assert storage.read(BUSINESS, PATH) == b"zip"

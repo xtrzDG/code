@@ -1,6 +1,6 @@
 """Storage of the archives of full business exports, encrypted at rest."""
 
-from typing import Protocol
+from typing import BinaryIO, Protocol
 
 from app.contracts.adapter_contract import AdapterContract
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -9,10 +9,12 @@ from app.schemas.typings.privacy.strings import ExportArchivePath
 
 class ExportArchiveStorageContract(AdapterContract, Protocol):
     def store(
-        self, business_id: BusinessId, path: ExportArchivePath, archive: bytes
+        self, business_id: BusinessId, path: ExportArchivePath, archive: BinaryIO
     ) -> None:
         """
-        Keep a business's archive at its path (replacing one stored there).
+        Keep a business's archive at its path (replacing one stored there),
+        read from the start of `archive` (a file) to its end a piece at a
+        time, so an archive of any size never sits in memory whole.
         Raises ValidationFailedError for a path this storage does not keep,
         ExternalServiceError when the storage cannot be reached.
         """

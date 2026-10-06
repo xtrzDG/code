@@ -16,6 +16,9 @@ from app.contracts.repositories.booking_listing_contracts import (
     LeadListingContract,
     UnansweredQuestionListingContract,
 )
+from app.contracts.repositories.business_document_pages import (
+    BusinessDocumentPagesContract,
+)
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.handoffs import HandoffDocument, UnansweredQuestionDocument
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
@@ -23,7 +26,12 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 
 
-class BookingRepoContract(BookingListingContract, RepoContract, Protocol):
+class BookingRepoContract(
+    BookingListingContract,
+    BusinessDocumentPagesContract[BookingDocument],
+    RepoContract,
+    Protocol,
+):
     def save(self, booking: BookingDocument) -> None:
         raise NotImplementedError
 
@@ -43,7 +51,12 @@ class BookingRepoContract(BookingListingContract, RepoContract, Protocol):
         raise NotImplementedError
 
 
-class LeadRepoContract(LeadListingContract, RepoContract, Protocol):
+class LeadRepoContract(
+    LeadListingContract,
+    BusinessDocumentPagesContract[LeadDocument],
+    RepoContract,
+    Protocol,
+):
     def save(self, lead: LeadDocument) -> None:
         raise NotImplementedError
 
@@ -55,7 +68,12 @@ class LeadRepoContract(LeadListingContract, RepoContract, Protocol):
         raise NotImplementedError
 
 
-class HandoffRepoContract(HandoffListingContract, RepoContract, Protocol):
+class HandoffRepoContract(
+    HandoffListingContract,
+    BusinessDocumentPagesContract[HandoffDocument],
+    RepoContract,
+    Protocol,
+):
     def save(self, handoff: HandoffDocument) -> None:
         raise NotImplementedError
 
