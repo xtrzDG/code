@@ -55,6 +55,7 @@ LISTED_IDS: dict[str, str] = {
     "question_id": "unanswered-questions",
     "resource_id": "resources",
     "exception_id": "schedule-exceptions",
+    "entry_id": "waitlist",
 }
 
 

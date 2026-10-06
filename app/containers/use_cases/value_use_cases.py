@@ -109,6 +109,7 @@ class ValueUseCasesContainer(containers.DeclarativeContainer):
         lead_repo=repositories.lead_repo,
         handoff_repo=repositories.handoff_repo,
         value_count_repo=repositories.value_count_repo,
+        origin_booking_count_repo=repositories.origin_booking_count_repo,
     )
     estimate_catalogs: Factory[EstimateCatalogs] = Factory(
         EstimateCatalogs,

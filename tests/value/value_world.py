@@ -10,6 +10,9 @@ from app.facilitators.value.owner_digest_facilitator import OwnerDigestFacilitat
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.repositories.conversation_repositories import MessageRepository
+from app.repositories.origin_booking_count_repository import (
+    OriginBookingCountRepository,
+)
 from app.repositories.value_count_repository import ValueCountRepository
 from app.repositories.value_repositories import (
     DigestPreferencesRepository,
@@ -107,6 +110,9 @@ class ValueWorld(OperationsWorld):
             lead_repo=self.lead_repo,
             handoff_repo=self.handoff_repo,
             value_count_repo=self.value_count_repo,
+            origin_booking_count_repo=OriginBookingCountRepository(
+                self.booking_collection
+            ),
         )
 
     def compute_value(self) -> ComputeValueModelUseCase:

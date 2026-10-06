@@ -28,7 +28,11 @@ from app.schemas.typings.storage.constrained_strings import DocumentCollectionNa
 from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
-from app.utilities.storage.lookup_field_builders import integer_field, text_field
+from app.utilities.storage.lookup_field_builders import (
+    filter_field,
+    integer_field,
+    text_field,
+)
 
 WAITLIST_ENTRIES: DocumentCollectionName = DocumentCollectionName("waitlist_entries")
 WAITLIST_SETTINGS: DocumentCollectionName = DocumentCollectionName("waitlist_settings")
@@ -51,6 +55,8 @@ GROWTH_LOOKUP_FIELDS: Mapping[
         integer_field("created_at"),
         integer_field("offer_expires_at"),
         integer_field("waits_until"),
+        # The cabinet's lists and counts leave the owner's test chats out.
+        filter_field("is_sandbox"),
     ),
     CAMPAIGN_SETTINGS: (text_field("is_enabled"),),
     CAMPAIGN_MESSAGES: (

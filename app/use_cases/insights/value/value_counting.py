@@ -15,12 +15,15 @@ from app.contracts.repositories.booking_repositories import (
     HandoffRepoContract,
     LeadRepoContract,
 )
+from app.contracts.repositories.campaign_repositories import (
+    OriginBookingCountRepoContract,
+)
 from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
 from app.contracts.repositories.value_repositories import ValueCountRepoContract
-from app.schemas.constants.bookings import BookingStatus
+from app.schemas.constants.bookings import BookingOrigin, BookingStatus
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.value import ValueBasis
 from app.schemas.dto.operations.activity_counts import (
@@ -49,6 +52,7 @@ from app.use_cases.insights.dashboard_timeline import (
     timeline_period,
 )
 from app.use_cases.insights.dashboard_values import EARNING_STATUSES
+from app.use_cases.insights.value.growth_lines import GrowthLine, count_growth_lines
 from app.use_cases.insights.value.value_money import (
     BookedMoney,
     MoneyEstimate,
@@ -73,6 +77,7 @@ class ValueSources:
     lead_repo: LeadRepoContract
     handoff_repo: HandoffRepoContract
     value_count_repo: ValueCountRepoContract
+    origin_booking_count_repo: OriginBookingCountRepoContract
 
 
 @dataclass(frozen=True)
@@ -160,6 +165,13 @@ def count_value_totals(
     money: MoneyEstimate = estimate_money(
         rates.basis, earning_units, booked, rates.average_check
     )
+    growth: dict[BookingOrigin, GrowthLine] = count_growth_lines(
+        sources.origin_booking_count_repo,
+        business_id,
+        whole.start,
+        whole.end,
+        rates.currency_code,
+    )
     return ValueTotals(
         conversation_count=PeriodItemCount(conversations.total),
         after_hours_conversation_count=PeriodItemCount(conversations.after_hours),
@@ -189,6 +201,10 @@ def count_value_totals(
         valued_booking_count=booked.count,
         booked_value_minor=money.booked_value_minor,
         revenue_source=money.revenue_source,
+        waitlist_booking_count=growth[BookingOrigin.WAITLIST].count,
+        waitlist_value_minor=growth[BookingOrigin.WAITLIST].value_minor,
+        campaign_booking_count=growth[BookingOrigin.CAMPAIGN].count,
+        campaign_value_minor=growth[BookingOrigin.CAMPAIGN].value_minor,
     )
 
 

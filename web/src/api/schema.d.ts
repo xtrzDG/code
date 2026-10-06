@@ -1343,6 +1343,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/campaign-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Campaign Messages */
+        get: operations["list_campaign_messages_v1_businesses__business_id__campaign_messages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/campaign-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Campaign Settings */
+        get: operations["get_campaign_settings_v1_businesses__business_id__campaign_settings_get"];
+        /** Update Campaign Settings */
+        put: operations["update_campaign_settings_v1_businesses__business_id__campaign_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/channels": {
         parameters: {
             query?: never;
@@ -3172,6 +3207,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Waitlist Entries */
+        get: operations["list_waitlist_entries_v1_businesses__business_id__waitlist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/waitlist-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Waitlist Settings */
+        get: operations["get_waitlist_settings_v1_businesses__business_id__waitlist_settings_get"];
+        /** Update Waitlist Settings */
+        put: operations["update_waitlist_settings_v1_businesses__business_id__waitlist_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/waitlist/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Waitlist Entry */
+        delete: operations["remove_waitlist_entry_v1_businesses__business_id__waitlist__entry_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/catalog/countries": {
         parameters: {
             query?: never;
@@ -4746,7 +4833,7 @@ export interface components {
          * @description Tool the language model may call (concept section 5).
          * @enum {string}
          */
-        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
+        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
         /**
          * AssistantVersionDetails
          * @description An assistant version with its frozen instructions and fact table: the
@@ -5199,6 +5286,11 @@ export interface components {
         AvailabilityResult: {
             /** Is Open On Date */
             is_open_on_date: boolean;
+            /**
+             * Is Waitlist Open
+             * @default false
+             */
+            is_waitlist_open: boolean;
             service?: components["schemas"]["BookableOfferView"] | null;
             /** Services */
             services?: components["schemas"]["BookableOfferView"][];
@@ -5351,6 +5443,10 @@ export interface components {
          *     `last_status_change` is the last status change staff made in the
          *     cabinet, which they may undo for a short while; any other change of
          *     the status (the customer cancelling, an undo) clears it.
+         *
+         *     `origin` marks a booking the waitlist filled (a freed place a waiting
+         *     customer took) or one a rebooking campaign brought back, for the
+         *     revenue lines of the value report; None for every other booking.
          */
         BookingDocument: {
             /** Buffer Minutes */
@@ -5382,6 +5478,7 @@ export interface components {
             last_status_change?: components["schemas"]["BookingStatusChange"] | null;
             /** Notes */
             notes?: string | null;
+            origin?: components["schemas"]["BookingOrigin"] | null;
             /** Party Size */
             party_size: number;
             /** Reminder Sent At */
@@ -5390,7 +5487,7 @@ export interface components {
             resource_id: string;
             /**
              * Schema Version
-             * @default 3
+             * @default 4
              */
             schema_version: string;
             /** Service Item Id */
@@ -5426,6 +5523,16 @@ export interface components {
             starts_at: number;
             status: components["schemas"]["BookingStatus"];
         };
+        /**
+         * BookingOrigin
+         * @description Where a booking came from besides the usual ways, for the revenue the
+         *     assistant brought: a place freed by a cancellation that a customer on
+         *     the waitlist took (WAITLIST), or a booking a customer made after a
+         *     rebooking campaign invited them back (CAMPAIGN). None for every other
+         *     booking.
+         * @enum {string}
+         */
+        BookingOrigin: "waitlist" | "campaign";
         /**
          * BookingPage
          * @description One page of bookings; `next_cursor` is None on the last page.
@@ -6195,6 +6302,111 @@ export interface components {
             transcript?: string | null;
             /** Unverified Values */
             unverified_values?: string[];
+        };
+        /**
+         * CampaignAudience
+         * @description Who a campaign may write to: every customer the rule finds, or only the
+         *     members of one of the owner's saved segments (Customers → Segments).
+         * @enum {string}
+         */
+        CampaignAudience: "all_customers" | "segment";
+        /** CampaignMessagePage */
+        CampaignMessagePage: {
+            /** Items */
+            items: components["schemas"]["CampaignMessageView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * CampaignMessagePreview
+         * @description The message of the rule in one language, as a customer reads it.
+         */
+        CampaignMessagePreview: {
+            /** Language */
+            language: string;
+            /** Text */
+            text: string;
+        };
+        /**
+         * CampaignMessageStatus
+         * @description SENT went into the outbox; BOOKED is a sent invitation the customer
+         *     booked again after (within the attribution window); SKIPPED was never
+         *     sent (`CampaignSkipReason`).
+         * @enum {string}
+         */
+        CampaignMessageStatus: "sent" | "booked" | "skipped";
+        /**
+         * CampaignMessageView
+         * @description One customer the campaign wrote to (or skipped, and why) and what followed.
+         */
+        CampaignMessageView: {
+            /** Booked At */
+            booked_at?: number | null;
+            /** Booking Id */
+            booking_id?: string | null;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Created At */
+            created_at: number;
+            /** Id */
+            id: string;
+            rule_kind: components["schemas"]["RebookingRuleKind"];
+            /** Sent At */
+            sent_at?: number | null;
+            skip_reason?: components["schemas"]["CampaignSkipReason"] | null;
+            status: components["schemas"]["CampaignMessageStatus"];
+        };
+        /**
+         * CampaignSettingsView
+         * @description The settings (the niche's rule until the owner changes it), the
+         *     niche's own rule, this month's messages against the cap, the last
+         *     30 days by status, and the message in each language of the business.
+         */
+        CampaignSettingsView: {
+            audience: components["schemas"]["CampaignAudience"];
+            /** Delay Days */
+            delay_days: number;
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Month Sent Count */
+            month_sent_count: number;
+            /** Monthly Cap */
+            monthly_cap: number;
+            /** Niche Delay Days */
+            niche_delay_days: number;
+            niche_rule_kind: components["schemas"]["RebookingRuleKind"];
+            /** Previews */
+            previews?: components["schemas"]["CampaignMessagePreview"][];
+            /** Recent Counts */
+            recent_counts?: components["schemas"]["CampaignStatusCount"][];
+            rule_kind: components["schemas"]["RebookingRuleKind"];
+            /** Segment Id */
+            segment_id?: string | null;
+            /** Segment Name */
+            segment_name?: string | null;
+        };
+        /**
+         * CampaignSkipReason
+         * @description Why a customer the rule found got no message: they said STOP (or are on
+         *     the suppression list, or blocked), are unknown or erased, can be reached
+         *     in no connected messenger, or only where the 24-hour window is closed
+         *     without an approved template.
+         * @enum {string}
+         */
+        CampaignSkipReason: "opted_out" | "no_contact" | "no_channel" | "window_closed";
+        /**
+         * CampaignStatusCount
+         * @description How many of a business's campaign messages of a period are in one status.
+         */
+        CampaignStatusCount: {
+            /** Count */
+            count: number;
+            status: components["schemas"]["CampaignMessageStatus"];
         };
         /**
          * CarrierForwardingInstructions
@@ -10355,7 +10567,8 @@ export interface components {
          *     read as they are.
          *
          *     Version 5: `tool_calls` may name the tool list_my_bookings (a new
-         *     value; version 4 rows read as they are).
+         *     value; version 4 rows read as they are). Version 6: they may name the
+         *     tool join_waitlist (a new value; version 5 rows read as they are).
          */
         MessageDocument: {
             /** Attachments */
@@ -10413,7 +10626,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 5
+             * @default 6
              */
             schema_version: string;
             /** Sent By */
@@ -11942,6 +12155,19 @@ export interface components {
             /** Text */
             text: string;
         };
+        /**
+         * RebookingRuleKind
+         * @description What a business's rebooking campaign sends, and when:
+         *
+         *     - REBOOK: an invitation back the given days after a customer's last
+         *       visit (a salon after five weeks);
+         *     - RECALL: a reminder that a regular check is due the given days after
+         *       the last visit (a clinic, a car service);
+         *     - PRE_ARRIVAL: a note with the practical details the given days before
+         *       a booking starts (a hotel two days before arrival).
+         * @enum {string}
+         */
+        RebookingRuleKind: "rebook" | "recall" | "pre_arrival";
         /**
          * RecordingConsentRule
          * @description What the law requires before a call may be recorded.
@@ -13700,7 +13926,11 @@ export interface components {
          *       priced service in the business currency) plus the others times the
          *       average check (or, for niches that take orders instead, its requests
          *       times the average check); `revenue_source` says which; None without
-         *       either.
+         *       either;
+         *     - of the bookings kept, those the waitlist filled (a freed place a
+         *       waiting customer took) and those a rebooking campaign brought back,
+         *       each with their own values in the business currency (None: none had
+         *       one): the growth the assistant made, not only what came in by itself.
          */
         ValueTotals: {
             /** After Hours Conversation Count */
@@ -13715,6 +13945,13 @@ export interface components {
             booking_count: number;
             /** Call Count */
             call_count: number;
+            /**
+             * Campaign Booking Count
+             * @default 0
+             */
+            campaign_booking_count: number;
+            /** Campaign Value Minor */
+            campaign_value_minor?: number | null;
             /** Conversation Count */
             conversation_count: number;
             /** Customer Message Count */
@@ -13733,6 +13970,13 @@ export interface components {
              * @default 0
              */
             valued_booking_count: number;
+            /**
+             * Waitlist Booking Count
+             * @default 0
+             */
+            waitlist_booking_count: number;
+            /** Waitlist Value Minor */
+            waitlist_value_minor?: number | null;
         };
         /**
          * VisitScoreCount
@@ -13743,6 +13987,132 @@ export interface components {
             count: number;
             /** Score */
             score: number;
+        };
+        /**
+         * WaitlistEndReason
+         * @description Why a waitlist entry ended without a booking: the customer said no to
+         *     the place they were offered, did not answer within the hold, the day
+         *     they wanted passed, they could be reached in no messenger or chat, or
+         *     staff took them off the list.
+         * @enum {string}
+         */
+        WaitlistEndReason: "declined" | "no_answer" | "date_passed" | "unreachable" | "removed";
+        /** WaitlistEntryPage */
+        WaitlistEntryPage: {
+            /** Items */
+            items: components["schemas"]["WaitlistEntryView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Timezone */
+            timezone: string;
+        };
+        /**
+         * WaitlistEntryView
+         * @description One customer's place on the list: who (their name when known), what
+         *     they want (date, time window, party, nights, service, resource), where
+         *     they asked, where it stands and, while one is held, the offered place.
+         */
+        WaitlistEntryView: {
+            /** Booked At */
+            booked_at?: number | null;
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Created At */
+            created_at: number;
+            /** Date */
+            date: string;
+            end_reason?: components["schemas"]["WaitlistEndReason"] | null;
+            /** Ended At */
+            ended_at?: number | null;
+            /** Id */
+            id: string;
+            /** Language */
+            language: string;
+            /** Nights */
+            nights?: number | null;
+            /** Notes */
+            notes?: string | null;
+            offer?: components["schemas"]["WaitlistOfferView"] | null;
+            /** Offer Count */
+            offer_count: number;
+            /** Party Size */
+            party_size: number;
+            /** Resource Id */
+            resource_id?: string | null;
+            resource_kind?: components["schemas"]["ResourceKind"] | null;
+            /** Resource Name */
+            resource_name?: string | null;
+            /** Service Item Id */
+            service_item_id?: string | null;
+            /** Service Title */
+            service_title?: string | null;
+            source_channel: components["schemas"]["ChannelKind"];
+            status: components["schemas"]["WaitlistStatus"];
+            /** Time From */
+            time_from?: string | null;
+            /** Time To */
+            time_to?: string | null;
+        };
+        /**
+         * WaitlistOfferView
+         * @description The freed place held for the customer, in the business's local time.
+         */
+        WaitlistOfferView: {
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Date */
+            date: string;
+            /** End Time */
+            end_time?: string | null;
+            /** Expires At */
+            expires_at?: number | null;
+            /** Freed Booking Id */
+            freed_booking_id: string;
+            /** Offered At */
+            offered_at: number;
+            /** Resource Id */
+            resource_id: string;
+            /** Resource Name */
+            resource_name?: string | null;
+            /** Time */
+            time?: string | null;
+        };
+        /**
+         * WaitlistSettingsView
+         * @description The settings with how many real entries are in each status.
+         */
+        WaitlistSettingsView: {
+            /** Counts */
+            counts?: components["schemas"]["WaitlistStatusCount"][];
+            /** Hold Minutes */
+            hold_minutes: number;
+            /** Is Enabled */
+            is_enabled: boolean;
+        };
+        /**
+         * WaitlistStatus
+         * @description Where a customer's place on the waitlist stands.
+         *
+         *     WAITING: nothing has opened up yet. OFFERED: a freed place is held for
+         *     the customer until `offer_expires_at`. BOOKED: the customer said yes and
+         *     the place became their booking. EXPIRED: the entry is over without a
+         *     booking (`WaitlistEndReason` says why).
+         * @enum {string}
+         */
+        WaitlistStatus: "waiting" | "offered" | "booked" | "expired";
+        /**
+         * WaitlistStatusCount
+         * @description How many of a business's (real) waitlist entries are in one status.
+         */
+        WaitlistStatusCount: {
+            /** Count */
+            count: number;
+            status: components["schemas"]["WaitlistStatus"];
         };
         /**
          * WebPushUrgency
@@ -23007,6 +23377,310 @@ export interface operations {
             };
             /** @description The requested range lies outside the recording. */
             416: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_campaign_messages_v1_businesses__business_id__campaign_messages_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignMessagePage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_campaign_settings_v1_businesses__business_id__campaign_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_campaign_settings_v1_businesses__business_id__campaign_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * CampaignAudience
+                     * @description Who a campaign may write to: every customer the rule finds, or only the
+                     *     members of one of the owner's saved segments (Customers → Segments).
+                     * @default all_customers
+                     * @enum {string}
+                     */
+                    audience?: "all_customers" | "segment";
+                    /** Delay Days */
+                    delay_days: number;
+                    /**
+                     * Is Enabled
+                     * @default false
+                     */
+                    is_enabled?: boolean;
+                    /**
+                     * Monthly Cap
+                     * @default 100
+                     */
+                    monthly_cap?: number;
+                    /**
+                     * RebookingRuleKind
+                     * @description What a business's rebooking campaign sends, and when:
+                     *
+                     *     - REBOOK: an invitation back the given days after a customer's last
+                     *       visit (a salon after five weeks);
+                     *     - RECALL: a reminder that a regular check is due the given days after
+                     *       the last visit (a clinic, a car service);
+                     *     - PRE_ARRIVAL: a note with the practical details the given days before
+                     *       a booking starts (a hotel two days before arrival).
+                     * @enum {string}
+                     */
+                    rule_kind: "rebook" | "recall" | "pre_arrival";
+                    /** Segment Id */
+                    segment_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -36032,6 +36706,372 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ConversationTopicsView"];
                 };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_waitlist_entries_v1_businesses__business_id__waitlist_get: {
+        parameters: {
+            query?: {
+                filter?: string | null;
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistEntryPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_waitlist_settings_v1_businesses__business_id__waitlist_settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_waitlist_settings_v1_businesses__business_id__waitlist_settings_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Hold Minutes
+                     * @default 30
+                     */
+                    hold_minutes?: number;
+                    /**
+                     * Is Enabled
+                     * @default true
+                     */
+                    is_enabled?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    remove_waitlist_entry_v1_businesses__business_id__waitlist__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

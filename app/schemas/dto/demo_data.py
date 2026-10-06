@@ -27,6 +27,10 @@ from app.schemas.domain.billing import (
 from app.schemas.domain.billing_profiles import BillingProfileDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.campaigns import (
+    CampaignMessageDocument,
+    CampaignSettingsDocument,
+)
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.contacts import ContactDocument
@@ -47,6 +51,7 @@ from app.schemas.domain.package_usage import PackageUsageWarningDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.domain.waitlist import WaitlistEntryDocument
 from app.schemas.typings.assistants.constrained_floats import AverageJudgeScore
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
@@ -225,6 +230,13 @@ class DemoBusinessActivity(ImmutableDTO):
     conversation_topics: ConversationTopicsDocument | None = None
     quality_scores: list[ConversationQualityScoreDocument] = Field(
         default_factory=list[ConversationQualityScoreDocument]
+    )
+    waitlist_entries: list[WaitlistEntryDocument] = Field(
+        default_factory=list[WaitlistEntryDocument]
+    )
+    campaign_settings: CampaignSettingsDocument | None = None
+    campaign_messages: list[CampaignMessageDocument] = Field(
+        default_factory=list[CampaignMessageDocument]
     )
 
 

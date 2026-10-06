@@ -46,6 +46,7 @@ select workshop.add_lookup_column('waitlist_entries', 'status', 'text');
 select workshop.add_lookup_column('waitlist_entries', 'created_at', 'bigint');
 select workshop.add_lookup_column('waitlist_entries', 'offer_expires_at', 'bigint');
 select workshop.add_lookup_column('waitlist_entries', 'waits_until', 'bigint');
+select workshop.add_lookup_column('waitlist_entries', 'is_sandbox', 'text');
 create index if not exists waitlist_entries_doc_status_idx
     on workshop.waitlist_entries (business_id, doc_status, doc_created_at, row_sequence);
 create index if not exists waitlist_entries_doc_contact_id_idx

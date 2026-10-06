@@ -3,6 +3,10 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds
 
 from app.registries.demo.demo_billing import metered_usage
+from app.registries.demo.demo_campaigns import (
+    build_demo_campaign_messages,
+    build_demo_campaign_settings,
+)
 from app.registries.demo.demo_clock import DemoClock
 from app.registries.demo.demo_contact_activity import mark_demo_contacts_seen
 from app.registries.demo.demo_conversation_recorder import DemoConversationRecorder
@@ -13,6 +17,7 @@ from app.registries.demo.demo_feedback import (
 from app.registries.demo.demo_insights import build_demo_topics, tag_demo_sources
 from app.registries.demo.demo_operations_recorder import DemoOperationsRecorder
 from app.registries.demo.demo_quality import build_demo_quality_scores
+from app.registries.demo.demo_waitlist import build_demo_waitlist
 from app.schemas.constants.assistants import AssistantVersionStatus
 from app.schemas.constants.conversations import ConversationStatus
 from app.schemas.constants.users import BusinessMemberRole
@@ -127,6 +132,15 @@ class DemoActivityBuilder:
             autotest_run=autotest_run,
             review_settings=build_demo_review_settings(self.business, self.clock.now),
             feedback_requests=build_demo_feedback_requests(
+                self.business, self.desk.bookings, self.talk.contacts, self.clock.now
+            ),
+            waitlist_entries=build_demo_waitlist(
+                self.business, self.desk.bookings, self.talk.contacts, self.clock.now
+            ),
+            campaign_settings=build_demo_campaign_settings(
+                self.business, self.clock.now
+            ),
+            campaign_messages=build_demo_campaign_messages(
                 self.business, self.desk.bookings, self.talk.contacts, self.clock.now
             ),
             media_files=self.talk.media_files,

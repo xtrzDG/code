@@ -63,6 +63,7 @@ from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.use_cases.demo.demo_channel_activity import stamp_demo_channels
+from app.use_cases.demo.demo_growth_store import DemoGrowthStore
 from app.use_cases.demo.demo_invoice_issuing import issue_demo_invoice_if_paid
 from app.use_cases.demo.demo_media_storing import store_demo_media
 from app.utilities.assembly.autotest_evaluation import build_verdict
@@ -78,7 +79,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
     draft), go live with the published one, and store the month of activity
     the demo catalog describes: customers, conversations with tool calls,
     phone calls, bookings, leads, handoffs, unanswered questions, feedback
-    after visits, the subscription with its usage, the accepted DPA and
+    after visits, the waitlist and the return visits, the subscription with
+    its usage, the accepted DPA and
     audit entries, the voice notes and photos customers sent, the topics
     customers asked about, and when each channel last carried a message. A
     paid demo invoice gets its number and VAT as a payment gives them, with
@@ -115,7 +117,9 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         conversation_quality_repo: ConversationQualityRepoContract,
         app_settings: AppSettings,
         channel_repo: ChannelRepoContract,
+        growth_store: DemoGrowthStore | None = None,
     ) -> None:
+        self._growth_store: DemoGrowthStore | None = growth_store
         self._channel_repo: ChannelRepoContract = channel_repo
         self._registry: DemoDatasetRegistryContract = demo_dataset_registry
         self._business_repo: BusinessRepoContract = business_repo
@@ -163,6 +167,8 @@ class StoreDemoActivityUseCase(UseCaseContract[DemoActivityStorage, BusinessId])
         self._store_customers(activity)
         stamp_demo_channels(self._channel_repo, business.id, activity)
         self._store_feedback(activity)
+        if self._growth_store is not None:
+            self._growth_store.store(activity)
         self._store_billing(business, activity)
         self._store_compliance(input_data, activity)
         return business.id
