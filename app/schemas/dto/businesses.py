@@ -193,12 +193,20 @@ class BusinessSettingsChanges(ImmutableDTO):
 
 
 class UpdateBusinessSettingsCommand(ImmutableDTO):
-    """Owner changes the settings of a business."""
+    """
+    Owner changes the settings of a business.
+
+    `if_match_revisions` are the revisions the request's If-Match header
+    accepts (None without the header or with `*`): when the stored revision
+    is not one of them, or someone saves the business meanwhile, nothing
+    changes and the answer is 412 with the reason `precondition_failed`.
+    """
 
     user_id: UserId
     business_id: BusinessId
     changes: BusinessSettingsChanges
     client_ip_address: ClientIpAddress | None = None
+    if_match_revisions: list[BusinessRevision] | None = None
 
 
 class InviteStaffRequest(ImmutableDTO):

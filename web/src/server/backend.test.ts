@@ -105,6 +105,19 @@ describe("BFF path and headers", () => {
     expect(partial.get("content-length")).toBe("2");
   });
 
+  it("passes idempotency keys and revisions both ways", () => {
+    const request = buildUpstreamHeaders(
+      new Headers({ "idempotency-key": "key-0000", "if-match": '"7"' }),
+      { requestId: "r8" },
+    );
+    expect(request.get("idempotency-key")).toBe("key-0000");
+    expect(request.get("if-match")).toBe('"7"');
+
+    const answer = pickResponseHeaders(new Headers({ etag: '"8"', "idempotent-replayed": "true" }), "r9");
+    expect(answer.get("etag")).toBe('"8"');
+    expect(answer.get("idempotent-replayed")).toBe("true");
+  });
+
   it("keeps sane request ids and replaces others", () => {
     expect(sanitizeRequestId("abc-123")).toBe("abc-123");
     expect(sanitizeRequestId("bad id\n")).not.toBe("bad id\n");

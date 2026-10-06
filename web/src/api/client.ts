@@ -16,6 +16,7 @@ import createClient, { type Middleware } from "openapi-fetch";
 import { loginPath } from "@/lib/navigation";
 import { isStepUpChallenge } from "@/lib/stepUpChallenge";
 
+import { idempotencyKeys } from "./idempotencyKey";
 import type { paths } from "./schema";
 import { stepUpRetry } from "./stepUp";
 
@@ -42,4 +43,5 @@ export const api = createClient<paths>({
 });
 
 api.use(redirectOnSessionExpiry);
+api.use(idempotencyKeys);
 api.use(stepUpRetry);

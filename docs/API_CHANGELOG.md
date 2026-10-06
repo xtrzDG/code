@@ -11,9 +11,9 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
-## 2026-10-06 — SDK-ready operation names
+## 2026-10-06 — SDK-ready operation names, idempotency keys, ETags
 
-Spec: `2edf0e3a095994af`
+Spec: `d4bd89d5604f6613`
 
 - **Breaking** (`api-breaking`) every `operationId` is now
   `<tag>_<route function name>` in snake_case instead of FastAPI's
@@ -33,6 +33,23 @@ Spec: `2edf0e3a095994af`
 - **Changed** the catalog routes (`/v1/catalog/*`, `/v1/phone-numbers/parse`
   and `…/call-forwarding-instructions`) carry the tag `catalog`; every
   operation has a tag now.
+- **Added** an optional `Idempotency-Key` request header on
+  `POST /v1/assistants`, `POST /v1/businesses/{business_id}/bookings`,
+  `POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages`,
+  `POST /v1/businesses/{business_id}/billing/checkout` and `…/subscribe`: a
+  retry with the same key and body gets the first answer again (header
+  `Idempotent-Replayed: true`) instead of creating twice; the same key with
+  another body is 409 `idempotency_key_reused`, a retry while the first
+  request runs is 409 `in_progress`. Keys are kept 24 hours per user
+  ([api-versioning.md](api-versioning.md#idempotency-keys)). Requests
+  without the header behave as before.
+- **Added** `ETag` on `GET` and `PATCH /v1/businesses/{business_id}` (the
+  business revision, `"7"`) and an optional `If-Match` request header on the
+  `PATCH`: a change whose If-Match names another revision is
+  `412 Precondition Failed` with `error: conflict` and the reason
+  `precondition_failed` (details: the current revision). Without `If-Match`
+  nothing changes; the body's `expected_revision` still answers 409
+  `stale_revision`.
 
 ## 2026-10-06 — wave 16 together: the live widget, the subscription lifecycle, data tasks, service levels, calendars
 

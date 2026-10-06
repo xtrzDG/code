@@ -20177,6 +20177,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path?: never;
@@ -21336,6 +21338,8 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    /** @description The business revision as a strong entity tag (`"7"`); send it back as If-Match with a change. */
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -21411,6 +21415,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. The ETag of the business this change was made from (as GET returned it, e.g. `"7"`), or `*`. When the business was saved since, nothing changes and the answer is 412 with the reason `precondition_failed`. The body's `expected_revision` is the same check answered with 409. */
+                "If-Match"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -21471,6 +21477,8 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    /** @description The business revision as a strong entity tag (`"7"`); send it back as If-Match with a change. */
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -21506,6 +21514,15 @@ export interface operations {
             };
             /** @description Conflicts with the current state (stale revision, slot taken). */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The If-Match precondition does not hold: the resource was saved after the ETag was read (`error` conflict, reason `precondition_failed` with the current revision). */
+            412: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23866,6 +23883,8 @@ export interface operations {
                 language?: string | null;
             };
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -24735,6 +24754,8 @@ export interface operations {
                 language?: string | null;
             };
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -25049,6 +25070,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -28378,6 +28401,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {

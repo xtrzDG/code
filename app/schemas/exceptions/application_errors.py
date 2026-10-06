@@ -23,6 +23,13 @@ class ConflictError(ApplicationError):
     """Action conflicts with current state (slot taken, already active)."""
 
 
+class PreconditionFailedError(ApplicationError):
+    """
+    The request's precondition (an If-Match header) does not hold: what it
+    names was changed since the caller read it.
+    """
+
+
 class AuthenticationRequiredError(ApplicationError):
     """Caller is not authenticated or the credentials are invalid or expired."""
 
