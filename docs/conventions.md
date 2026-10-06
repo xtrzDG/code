@@ -169,7 +169,19 @@ a stored shape changes only by expand and contract
 - Phone numbers: parse with `PhoneNumberParserContract`, store E.164 only.
 - Texts shown to owners or customers: `LocalizedText` resolved with
   `LocalizedTextResolverContract` (requested tag -> base language -> English).
-  English is mandatory; Russian is provided for every owner-facing text.
+  English is mandatory and the only fallback.
+- Owner-facing backend texts (plans, niche templates, staff notifications,
+  call forwarding guides, billing texts) live in the owner text catalog,
+  `app/registries/localization/texts/<language>.json`, one file per cabinet
+  language (`CABINET_LANGUAGES`: ka, ru, en, he, de). Code reads them by key
+  (`owner_text("plans.chat.name")`, `app/utilities/localization/owner_texts.py`)
+  and never writes them as literals (architecture policy test). A new text is
+  added to `en.json` and to every other file; a text not checked by a native
+  speaker goes into the file's `draft_keys` (`uv run python -m
+  scripts.translate_catalogs backend draft --language <tag>` drafts missing
+  texts that way). Wording of issued invoices and receipts uses
+  `reviewed_owner_text`, so drafts never reach a kept document. The
+  assistant's prompts read only English values.
 - Never hard-code a country, currency, language, or time zone in business logic;
   read them from the business document or the country profile.
 
