@@ -13,7 +13,11 @@ from app.contracts.repositories.conversation_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.businesses import BusinessStatus
-from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.channels import (
+    ChannelKind,
+    ChannelStatus,
+    WidgetHandoffReason,
+)
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -31,6 +35,7 @@ from app.schemas.typings.sharing.constrained_strings import AcquisitionSourceTag
 from app.use_cases.shared.conversation_resolution import (
     find_open_conversation,
 )
+from app.use_cases.widget.no_answer_handoffs import no_answer_target
 from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_handoff_texts import (
     LAST_MESSAGE,
@@ -118,12 +123,17 @@ class OpenWidgetHandoffUseCase(
             or input_data.request.language
             or business.default_language
         )
+        last_question: MessageDocument | None = self._last_question(conversation)
+        if input_data.request.reason is WidgetHandoffReason.NO_ANSWER:
+            # No answer came: staff read why, at once (`no_answer_target`).
+            return no_answer_target(business, conversation, language, last_question)
+
         return WidgetHandoffTarget(
             business_id=business.id,
             conversation_id=conversation.id,
             contact_id=contact.id,
             language=language,
-            summary=self._summary(business, conversation),
+            summary=self._summary(business, last_question),
             is_already_handed_off=conversation.status is ConversationStatus.HANDOFF,
         )
 
@@ -201,27 +211,31 @@ class OpenWidgetHandoffUseCase(
         self._conversation_repo.save(conversation)
         return conversation
 
-    def _summary(
-        self,
-        business: BusinessDocument,
-        conversation: ConversationDocument,
-    ) -> HandoffSummary:
-        language: LanguageTag = business.owner_language
-        lines: list[str] = [
-            str(self._text_resolver.resolve(PERSON_REQUESTED, language))
-        ]
-        last_question: MessageDocument | None = next(
+    def _last_question(
+        self, conversation: ConversationDocument
+    ) -> MessageDocument | None:
+        return next(
             (
                 message
                 for message in reversed(
                     self._message_repo.list_by_conversation(
-                        business.id, conversation.id
+                        conversation.business_id, conversation.id
                     )
                 )
                 if message.author is MessageAuthor.CUSTOMER
             ),
             None,
         )
+
+    def _summary(
+        self,
+        business: BusinessDocument,
+        last_question: MessageDocument | None,
+    ) -> HandoffSummary:
+        language: LanguageTag = business.owner_language
+        lines: list[str] = [
+            str(self._text_resolver.resolve(PERSON_REQUESTED, language))
+        ]
         if last_question is not None:
             lines.append(
                 str(self._text_resolver.resolve(LAST_MESSAGE, language)).replace(

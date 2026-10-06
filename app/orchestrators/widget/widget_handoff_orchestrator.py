@@ -1,7 +1,6 @@
 from app.contracts.orchestrator_contract import OrchestratorContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.channels import ChannelKind
-from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.channels.widget_handoff import (
     WidgetHandoffCommand,
     WidgetHandoffNotice,
@@ -15,12 +14,12 @@ class WidgetHandoffOrchestrator(
     OrchestratorContract[WidgetHandoffCommand, WidgetHandoffView]
 ):
     """
-    "Talk to a person" in the website chat: find (or open) the visitor's
-    conversation, pass it to staff like the assistant's own handoff
-    (reason customer_request: notifications, the cabinet's queue, the
-    assistant silent until staff close it), and tell the visitor in their
-    language when they hear back. Asking again while staff have the
-    conversation changes nothing and notifies nobody.
+    "Talk to a person" in the website chat, or the widget giving up on an
+    answer that never came: find (or open) the visitor's conversation,
+    pass it to staff like the assistant's own handoff (notifications, the
+    cabinet's queue, the assistant silent until staff close it), and tell
+    the visitor in their language when they hear back. Asking again while
+    staff have the conversation changes nothing and notifies nobody.
     """
 
     def __init__(
@@ -57,9 +56,9 @@ class WidgetHandoffOrchestrator(
                 business_id=target.business_id,
                 conversation_id=target.conversation_id,
                 contact_id=target.contact_id,
-                reason=HandoffReason.CUSTOMER_REQUEST,
+                reason=target.reason,
                 summary=target.summary,
-                urgency=HandoffUrgency.NORMAL,
+                urgency=target.urgency,
                 source_channel=ChannelKind.WEB_CHAT,
                 language=target.language,
             )

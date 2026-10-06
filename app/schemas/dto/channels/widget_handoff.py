@@ -2,7 +2,10 @@
 
 from base_pydantic_schemas import ImmutableDTO
 
+from app.schemas.constants.channels import WidgetHandoffReason
+from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.constants.localization import TextDirection
+from app.schemas.dto.handoffs import CodedHandoffSummary
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import (
     WidgetSessionKey,
@@ -21,13 +24,15 @@ class WidgetHandoffRequest(ImmutableDTO):
     """
     HTTP body of "Talk to a person": the visitor's key and the widget's
     interface language (the language staff's notice to the visitor is in
-    when the visitor has not written yet), and where the visitor came from
-    (a conversation the request opens keeps it).
+    when the visitor has not written yet), where the visitor came from (a
+    conversation the request opens keeps it), and why (`no_answer`: the
+    widget gave up waiting for the assistant's answer).
     """
 
     session_key: WidgetSessionKey
     language: LanguageTag | None = None
     source: WidgetSourceInput | None = None
+    reason: WidgetHandoffReason = WidgetHandoffReason.CUSTOMER_REQUEST
 
 
 class WidgetHandoffCommand(ImmutableDTO):
@@ -41,16 +46,19 @@ class WidgetHandoffCommand(ImmutableDTO):
 class WidgetHandoffTarget(ImmutableDTO):
     """
     The visitor's conversation a handoff goes to (opened now when the
-    visitor had none), in the visitor's language, and what staff read.
-    `is_already_handed_off`: staff already own it, nothing new is created.
+    visitor had none), in the visitor's language, and what staff read,
+    with the handoff's reason and urgency. `is_already_handed_off`: staff
+    already own it, nothing new is created.
     """
 
     business_id: BusinessId
     conversation_id: ConversationId
     contact_id: ContactId
     language: LanguageTag
-    summary: HandoffSummary
+    summary: HandoffSummary | CodedHandoffSummary
     is_already_handed_off: IsConversationHandedOff
+    reason: HandoffReason = HandoffReason.CUSTOMER_REQUEST
+    urgency: HandoffUrgency = HandoffUrgency.NORMAL
 
 
 class WidgetHandoffNotice(ImmutableDTO):

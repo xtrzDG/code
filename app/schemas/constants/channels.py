@@ -49,3 +49,15 @@ class WidgetPosition(StrEnum):
 
     LEFT = "left"
     RIGHT = "right"
+
+
+class WidgetHandoffReason(StrEnum):
+    """
+    Why a website visitor's conversation goes to staff from the widget:
+    the visitor pressed "Talk to a person", or the widget waited for an
+    answer that never came (no worker answered in time), so a person
+    answers instead of the typing dots just disappearing.
+    """
+
+    CUSTOMER_REQUEST = "customer_request"
+    NO_ANSWER = "no_answer"

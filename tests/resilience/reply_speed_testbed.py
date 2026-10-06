@@ -93,5 +93,6 @@ def process_inbound_message_orchestrator(
                 deadline_seconds
                 or testbed.settings.reply_speed.chat_turn_deadline_seconds,
             ),
+            testbed.live_events,
         ),
     )

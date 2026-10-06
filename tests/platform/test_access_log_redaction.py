@@ -58,3 +58,16 @@ def test_the_filter_is_installed_once() -> None:
 
     filters = logging.getLogger(ACCESS_LOGGER_NAME).filters
     assert len([f for f in filters if isinstance(f, SessionKeyRedactionFilter)]) == 1
+
+
+def test_widget_stream_tickets_are_redacted() -> None:
+    record = access_record(
+        "/v1/widget/business_x/events?ticket=AX3SaMT86UaGgdEXyc2LIyEf&x=1"
+    )
+
+    SessionKeyRedactionFilter().filter(record)
+
+    assert record.getMessage() == (
+        '127.0.0.1:5000 - "GET /v1/widget/business_x/events'
+        '?ticket=REDACTED&x=1 HTTP/1.1" 200'
+    )
