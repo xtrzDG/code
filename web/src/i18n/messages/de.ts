@@ -9,6 +9,7 @@ import { setupFlowDe } from "./sections/setup";
 import { siteDe } from "./sections/site";
 import { assistantFlowDe } from "./sections/assistant";
 import { contentDe } from "./sections/content";
+import { insightsDe } from "./sections/insights";
 
 /**
  * German texts (Deutsch), drafted by the team and awaiting a native
@@ -25,4 +26,5 @@ export const de: PartialMessages = {
   ...siteDe,
   ...assistantFlowDe,
   ...contentDe,
+  ...insightsDe,
 };

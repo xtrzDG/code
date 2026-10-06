@@ -9,6 +9,7 @@ import { setupFlowHe } from "./sections/setup";
 import { siteHe } from "./sections/site";
 import { assistantFlowHe } from "./sections/assistant";
 import { contentHe } from "./sections/content";
+import { insightsHe } from "./sections/insights";
 
 /**
  * Hebrew texts (עברית), drafted by the team and awaiting a native
@@ -25,4 +26,5 @@ export const he: PartialMessages = {
   ...siteHe,
   ...assistantFlowHe,
   ...contentHe,
+  ...insightsHe,
 };
