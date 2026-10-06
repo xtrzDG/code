@@ -11,6 +11,18 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — wave 17 together: operation names, idempotency keys, ETags, the pipeline watchdog
+
+Spec: `a7fd87bc6c9d6bb9`
+
+The API description with the two entries below merged together (the
+SDK-ready operation names, `Idempotency-Key` and `ETag`/`If-Match`; the
+incidents of every business and the monitoring freshness of the status
+page). Each of those entries names the description of its own change
+alone; nothing else changed for clients. `POST /v1/admin/incidents`, which
+the watchdog entry extends, is `admin_create_incident` under the naming rule
+of the first entry.
+
 ## 2026-10-06 — the pipeline watchdog: incidents of every business, monitoring freshness
 
 Spec: `302207442e9d9f78`

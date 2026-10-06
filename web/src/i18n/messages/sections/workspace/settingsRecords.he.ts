@@ -114,6 +114,7 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       billing_profile: "פרטי חיוב",
       business_export: "ייצוא נתונים מלא",
       export_download_link: "קישור להורדת הייצוא",
+      idempotency_key: "תשובות שמורות לבקשות חוזרות",
       business_profile_contacts: "פרטי הקשר של העסק",
       business_profile_starter_answers: "תשובות פתיחה",
       business_security: "אבטחת הכניסה של הצוות",

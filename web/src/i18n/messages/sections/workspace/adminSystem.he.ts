@@ -65,6 +65,7 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
       answer_budget_slow_burn: "תקציב המענה נשרף",
       api_budget_fast_burn: "תקציב ה-API נשרף מהר",
       api_budget_slow_burn: "תקציב ה-API נשרף",
+      worker_down: "אף worker לא עונה",
     },
   },
   errorBudget: {
@@ -231,6 +232,16 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
       two: "שני עסקים",
       other: "{count} עסקים",
     },
+    everyBusiness: {
+      one: "כל העסקים ({count})",
+      other: "כל העסקים ({count})",
+    },
+    everyBusinessWalking: {
+      one: "כל העסקים: עד כה הגענו לעסק אחד",
+      two: "כל העסקים: עד כה הגענו לשני עסקים",
+      other: "כל העסקים: עד כה הגענו ל-{count} עסקים",
+    },
+    announced: "הודעת סטטוס פורסמה",
     notified: {
       one: "בעלים אחד עודכן",
       two: "שני בעלים עודכנו",

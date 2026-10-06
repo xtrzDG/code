@@ -63,6 +63,7 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
       answer_budget_slow_burn: "Antwortbudget schwindet",
       api_budget_fast_burn: "API-Budget schwindet schnell",
       api_budget_slow_burn: "API-Budget schwindet",
+      worker_down: "Kein Worker antwortet",
     },
   },
   errorBudget: {
@@ -227,6 +228,15 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
       one: "{count} Unternehmen",
       other: "{count} Unternehmen",
     },
+    everyBusiness: {
+      one: "Alle Unternehmen ({count})",
+      other: "Alle Unternehmen ({count})",
+    },
+    everyBusinessWalking: {
+      one: "Alle Unternehmen: bisher {count} erreicht",
+      other: "Alle Unternehmen: bisher {count} erreicht",
+    },
+    announced: "Statusmeldung veröffentlicht",
     notified: {
       one: "{count} Inhaber informiert",
       other: "{count} Inhaber informiert",

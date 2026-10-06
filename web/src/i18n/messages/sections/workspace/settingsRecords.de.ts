@@ -114,6 +114,7 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       billing_profile: "Rechnungsdaten",
       business_export: "Vollständiger Datenexport",
       export_download_link: "Download-Link des Exports",
+      idempotency_key: "Gespeicherte Antworten auf wiederholte Anfragen",
       business_profile_contacts: "Kontaktdaten des Unternehmens",
       business_profile_starter_answers: "Startantworten",
       business_security: "Anmeldesicherheit des Teams",

@@ -28,6 +28,15 @@ export const platformStatusDe: Translation<typeof platformStatusEn> = {
     cabinet: "Dashboard und Anmeldung",
   },
   checkedAt: "Geprüft {time}",
+  monitoringDelayed: {
+    title: "Die eigenen Prüfungen der Plattform sind im Verzug",
+    minutesAgo: {
+      one: "Die letzte Prüfung war vor {count} Minute.",
+      other: "Die letzte Prüfung war vor {count} Minuten.",
+    },
+    at: "Letzte Prüfung: {time}",
+    body: "Bis die Prüfungen aufgeholt haben, kann niemand für die Stufen unten bürgen, daher werden die Chats als langsamer angezeigt.",
+  },
   componentsTitle: "Teile der Plattform",
   historyLabel: "{component}: die letzten 90 Tage",
   historyStart: "Vor 90 Tagen",

@@ -19,6 +19,18 @@ export const adminIncidentDe: Translation<typeof adminIncidentEn> = {
   timeZone: "Die Zeiten gelten in der Zeitzone Ihres Geräts.",
   businesses: "Betroffene Unternehmen",
   businessesHint: "Unternehmens-IDs (business_…) oder Links zu ihren Seiten unter Kunden, eine pro Zeile.",
+  scope: {
+    legend: "Welche Unternehmen",
+    listed: "Die unten aufgeführten Unternehmen",
+    all: "Alle Unternehmen der Plattform",
+    allHint:
+      "Wird sofort erfasst; danach geht der Worker alle Unternehmen in Stapeln durch: Jedes erhält seinen Audit-Eintrag, und bei einer Datenpanne erhalten seine Inhaber die Benachrichtigung. Das Protokoll zeigt, wie weit er gekommen ist.",
+  },
+  announcement: {
+    offer: "Auch eine Statusmeldung veröffentlichen",
+    offerHint: "Ab sofort auf der öffentlichen Statusseite und im Banner jedes Kabinetts sichtbar; beenden Sie sie auf dieser Seite, sobald der Vorfall vorbei ist.",
+    title: "Statusmeldung",
+  },
   breach: {
     title: "Mitteilung an die Inhaber",
     description:

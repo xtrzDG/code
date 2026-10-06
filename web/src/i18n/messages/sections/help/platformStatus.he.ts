@@ -28,6 +28,16 @@ export const platformStatusHe: Translation<typeof platformStatusEn> = {
     cabinet: "לוח הבקרה וההתחברות",
   },
   checkedAt: "נבדק {time}",
+  monitoringDelayed: {
+    title: "הבדיקות של הפלטפורמה עצמה מתעכבות",
+    minutesAgo: {
+      one: "הבדיקה האחרונה הייתה לפני דקה.",
+      two: "הבדיקה האחרונה הייתה לפני שתי דקות.",
+      other: "הבדיקה האחרונה הייתה לפני {count} דקות.",
+    },
+    at: "בדיקה אחרונה: {time}",
+    body: "עד שהבדיקות יתעדכנו אף אחד לא יכול להתחייב לרמות שלמטה, ולכן הצ'אטים מוצגים כאיטיים יותר.",
+  },
   componentsTitle: "חלקי הפלטפורמה",
   historyLabel: "{component}: 90 הימים האחרונים",
   historyStart: "לפני 90 יום",
