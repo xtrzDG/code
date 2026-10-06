@@ -14,25 +14,21 @@ import { readRelease } from "./options";
 
 type Environment = Record<string, string | undefined>;
 
-function setting(env: Environment, name: string): string | undefined {
-  return env[name]?.trim() || undefined;
-}
-
 export function warnUploadFailed(error: Error): void {
   console.warn(`Sentry source map upload failed: ${error.message}`);
 }
 
 /** Options of `withSentryConfig`, or null when this build uploads nothing. */
 export function sourceMapUploadOptions(env: Environment): SentryBuildOptions | null {
-  const authToken = setting(env, "SENTRY_AUTH_TOKEN");
-  if (authToken === undefined) {
+  const authToken = env.SENTRY_AUTH_TOKEN?.trim();
+  if (!authToken) {
     return null;
   }
   const release = readRelease(env);
   return {
     authToken,
-    org: setting(env, "SENTRY_ORG"),
-    project: setting(env, "SENTRY_PROJECT"),
+    org: env.SENTRY_ORG?.trim() || undefined,
+    project: env.SENTRY_PROJECT?.trim() || undefined,
     // Without a release name the maps are still found by the debug ids
     // the build writes into each file.
     release: release === undefined ? { create: false } : { name: release, create: true, finalize: true },

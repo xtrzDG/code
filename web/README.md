@@ -46,6 +46,7 @@ development the 6-digit code appears in the API log
 | `SENTRY_DSN` | none | Sentry project of the cabinet's errors (server and browser). Empty: nothing is sent. Browser errors go through the cabinet's own `/api/monitoring` (no CSP or ad-blocker trouble; the browser never sees the DSN), at most 120 envelopes a minute per server. Events carry no request, cookies, user or breadcrumbs, and e-mails and phone numbers in error texts are masked (`src/lib/monitoring`). The browser SDK is downloaded only after the first error. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.05` | Share of server requests traced in Sentry (0 to 1). |
 | `APP_RELEASE`, `RENDER_GIT_COMMIT` | none | The deployed build in error reports; Render sets `RENDER_GIT_COMMIT` itself, `APP_RELEASE` names it on other platforms. |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | none | Build time only (CI on `main`): with the token, `next build` uploads the source maps to that Sentry organization and project for the release `APP_RELEASE` and deletes them from the build; without it the build is unchanged (`src/lib/monitoring/sourceMaps.ts`, `docs/operations/observability.md`). |
 | `PSEUDO_LOCALE` | off | `true` serves the pseudo-locale `en-XA` (English accented, 40 % longer, in brackets) to a browser whose `aw_locale` cookie is `en-XA`; for development and the overflow test, never in production. See [Translations](#translations). |
 
 Behind a reverse proxy, run the API with
