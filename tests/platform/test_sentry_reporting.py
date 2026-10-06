@@ -6,6 +6,7 @@ from typing import Any, cast
 import pytest
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.httpx import HttpxIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from sentry_sdk.types import Event
 
@@ -78,7 +79,10 @@ def test_sentry_is_set_up_with_release_sampling_and_no_personal_data() -> None:
     assert {type(integration) for integration in init.options["integrations"]} == {
         StarletteIntegration,
         FastApiIntegration,
+        HttpxIntegration,
     }
+    # Provider calls are spans, but no trace header goes to a provider.
+    assert init.options["trace_propagation_targets"] == []
 
 
 def test_events_lose_personal_data_and_gain_the_log_context_as_tags() -> None:
@@ -108,6 +112,10 @@ def test_traces_keep_no_urls_or_tokens() -> None:
                 "description": "POST https://api.telegram.org/bot123:AAH-x/sendMessage?a=1",
                 "data": {"url": "https://api.telegram.org/bot123:AAH-x", "kept": 1},
             },
+            {
+                "op": "http.client",
+                "description": "POST https://graph.facebook.com/v21.0/1155/messages?x=1",
+            },
             "not a span",
         ],
     }
@@ -122,6 +130,9 @@ def test_traces_keep_no_urls_or_tokens() -> None:
         span["description"] == "POST https://api.telegram.org/bot<redacted>/sendMessage"
     )
     assert span["data"] == {"kept": 1}
+    assert fields["spans"][1]["description"] == (
+        "POST https://graph.facebook.com/v21.0/*/messages"
+    )
 
 
 def test_an_error_is_sent_with_the_context_it_was_raised_in(

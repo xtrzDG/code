@@ -40,6 +40,7 @@ from app.gateways.telemetry_lifecycle import (
     API_SERVICE_NAME,
     finish_telemetry,
     name_service,
+    start_telemetry,
 )
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -76,6 +77,7 @@ def create_application() -> FastAPI:
     name_service(API_SERVICE_NAME)
     app_container = AppContainer()
     configure_logging(app_container.config.app_settings().log_format)
+    start_telemetry(app_container)
     return build_application(app_container)
 
 

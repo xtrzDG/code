@@ -28,6 +28,7 @@ from app.gateways.telemetry_lifecycle import (
     WORKER_SERVICE_NAME,
     finish_telemetry,
     name_service,
+    start_telemetry,
 )
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.utilities.observability.logging_setup import configure_logging
@@ -98,6 +99,7 @@ def run_from_environment() -> int:
     name_service(WORKER_SERVICE_NAME)
     app_container = AppContainer()
     configure_logging(app_container.config.app_settings().log_format)
+    start_telemetry(app_container)
     return main(app_container)
 
 
