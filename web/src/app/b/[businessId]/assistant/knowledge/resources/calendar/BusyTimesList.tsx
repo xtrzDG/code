@@ -23,14 +23,14 @@ export function BusyTimesList({ blocks }: { blocks: readonly BusyTimeView[] }) {
       {blocks.length === 0 ? (
         <p className="text-sm text-ink-subtle">{t("calendarSync.busy.empty")}</p>
       ) : (
-        <ul className="space-y-1.5">
+        <ul className="space-y-2.5">
           {blocks.map((block) => (
             <li
               key={`${block.source}-${block.feed_host ?? ""}-${block.starts_at}`}
-              className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+              className="flex flex-col gap-0.5 text-sm"
             >
               <span className="text-ink tabular-nums">{busyRange(block, format)}</span>
-              <span className="truncate text-ink-subtle">
+              <span className="break-words text-ink-subtle">
                 {t(SOURCE_LABELS[block.source])}
                 {block.feed_host ? (
                   <>
