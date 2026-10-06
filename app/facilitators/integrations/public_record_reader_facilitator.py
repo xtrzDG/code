@@ -1,5 +1,7 @@
 """A business's records in their public shape (webhooks and the public API)."""
 
+from collections.abc import Sequence
+
 from app.contracts.integrations import PublicRecordReaderContract
 from app.contracts.repositories.booking_repositories import (
     BookingRepoContract,
@@ -16,6 +18,7 @@ from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
 )
+from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.paging import KeysetSlice
@@ -79,30 +82,17 @@ class PublicRecordReaderFacilitator(PublicRecordReaderContract):
         self, business: BusinessDocument, booking_id: BookingId
     ) -> PublicBooking | None:
         booking = self._booking_repo.get(business.id, booking_id)
-        if booking is None:
+        if booking is None or booking.is_sandbox:
             return None
 
-        return public_booking(
-            business,
-            booking,
-            self._contact_repo.get(business.id, booking.contact_id),
-            self._resource_repo.get(business.id, booking.resource_id),
-            None
-            if booking.service_item_id is None
-            else self._knowledge_item_repo.get(business.id, booking.service_item_id),
-            self._conversation_of(business, booking.conversation_id),
-        )
+        return self.bookings(business, [booking])[0]
 
     def lead(self, business: BusinessDocument, lead_id: LeadId) -> PublicLead | None:
         lead = self._lead_repo.get(business.id, lead_id)
-        if lead is None:
+        if lead is None or lead.is_sandbox:
             return None
 
-        return public_lead(
-            lead,
-            self._contact_repo.get(business.id, lead.contact_id),
-            self._conversation_of(business, lead.conversation_id),
-        )
+        return self.leads(business, [lead])[0]
 
     def contact(
         self, business: BusinessDocument, contact_id: ContactId
@@ -114,12 +104,10 @@ class PublicRecordReaderFacilitator(PublicRecordReaderContract):
         self, business: BusinessDocument, conversation_id: ConversationId
     ) -> PublicConversation | None:
         conversation = self._conversation_of(business, conversation_id)
-        if conversation is None:
+        if conversation is None or conversation.is_sandbox:
             return None
 
-        return public_conversation(
-            conversation, self._contact_repo.get(business.id, conversation.contact_id)
-        )
+        return self.conversations(business, [conversation])[0]
 
     def conversation_detail(
         self, business: BusinessDocument, conversation_id: ConversationId
@@ -160,6 +148,54 @@ class PublicRecordReaderFacilitator(PublicRecordReaderContract):
             if conversation is None
             else self._contact_repo.get(business.id, conversation.contact_id),
         )
+
+    def bookings(
+        self, business: BusinessDocument, bookings: Sequence[BookingDocument]
+    ) -> list[PublicBooking]:
+        contacts = self._contact_repo.get_many(
+            business.id, [booking.contact_id for booking in bookings]
+        )
+        return [
+            public_booking(
+                business,
+                booking,
+                contacts.get(booking.contact_id),
+                self._resource_repo.get(business.id, booking.resource_id),
+                None
+                if booking.service_item_id is None
+                else self._knowledge_item_repo.get(
+                    business.id, booking.service_item_id
+                ),
+                self._conversation_of(business, booking.conversation_id),
+            )
+            for booking in bookings
+        ]
+
+    def leads(
+        self, business: BusinessDocument, leads: Sequence[LeadDocument]
+    ) -> list[PublicLead]:
+        contacts = self._contact_repo.get_many(
+            business.id, [lead.contact_id for lead in leads]
+        )
+        return [
+            public_lead(
+                lead,
+                contacts.get(lead.contact_id),
+                self._conversation_of(business, lead.conversation_id),
+            )
+            for lead in leads
+        ]
+
+    def conversations(
+        self, business: BusinessDocument, conversations: Sequence[ConversationDocument]
+    ) -> list[PublicConversation]:
+        contacts = self._contact_repo.get_many(
+            business.id, [conversation.contact_id for conversation in conversations]
+        )
+        return [
+            public_conversation(conversation, contacts.get(conversation.contact_id))
+            for conversation in conversations
+        ]
 
     def _conversation_of(
         self, business: BusinessDocument, conversation_id: ConversationId | None

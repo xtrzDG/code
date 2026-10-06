@@ -45,6 +45,7 @@ from app.containers.pipelines.platform_ops_pipelines import (
 )
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
 from app.containers.pipelines.privacy_pipelines import PrivacyPipelinesContainer
+from app.containers.pipelines.public_api_pipelines import PublicApiPipelinesContainer
 from app.containers.pipelines.public_demo_pipelines import (
     PublicDemoPipelinesContainer,
 )
@@ -237,4 +238,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     )
     webhooks: WebhookPipelinesContainer = Container(  # type: ignore[assignment]
         WebhookPipelinesContainer, webhooks=orchestrators.webhooks
+    )  # fmt: skip
+    public_api: PublicApiPipelinesContainer = Container(  # type: ignore[assignment]
+        PublicApiPipelinesContainer, public_api=orchestrators.public_api
     )  # fmt: skip

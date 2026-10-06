@@ -48,6 +48,9 @@ from app.containers.orchestrators.notification_orchestrators import (
 from app.containers.orchestrators.operations_orchestrators import (
     OperationsOrchestratorsContainer,
 )
+from app.containers.orchestrators.public_api_orchestrators import (
+    PublicApiOrchestratorsContainer,
+)
 from app.containers.orchestrators.setup_orchestrators import (
     SetupOrchestratorsContainer,
 )
@@ -198,4 +201,10 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
     webhooks: WebhookOrchestratorsContainer = Container(  # type: ignore[assignment]
         WebhookOrchestratorsContainer,
         webhook_use_cases=CoreOrchestratorsContainer.use_cases.webhooks,
+    )
+    public_api: PublicApiOrchestratorsContainer = Container(  # type: ignore[assignment]
+        PublicApiOrchestratorsContainer,
+        public_api_use_cases=CoreOrchestratorsContainer.use_cases.public_api,
+        booking_use_cases=CoreOrchestratorsContainer.use_cases.bookings,
+        follow_up_use_cases=CoreOrchestratorsContainer.use_cases.follow_ups,
     )

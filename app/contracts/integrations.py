@@ -12,7 +12,9 @@ from base_typed_id import BasePrefixedTypedId
 from app.contracts.client_contract import ClientContract
 from app.contracts.facilitator_contract import FacilitatorContract
 from app.schemas.constants.live_events import LiveEventKind
+from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.integrations.webhook_attempts import (
     WebhookPostRequest,
     WebhookPostResult,
@@ -36,7 +38,7 @@ class PublicRecordReaderContract(FacilitatorContract, Protocol):
     """
     A business's records as the public API and webhooks show them, each
     with the customer it is about and where they came from. None for a
-    record of another business or one that is gone.
+    record of another business, a test one (sandbox) or one that is gone.
     """
 
     def booking(
@@ -69,6 +71,22 @@ class PublicRecordReaderContract(FacilitatorContract, Protocol):
         raise NotImplementedError
 
     def call(self, business: BusinessDocument, call_id: CallId) -> PublicCall | None:
+        raise NotImplementedError
+
+    def bookings(
+        self, business: BusinessDocument, bookings: Sequence[BookingDocument]
+    ) -> list[PublicBooking]:
+        """A page of bookings in their public shape (customers read at once)."""
+        raise NotImplementedError
+
+    def leads(
+        self, business: BusinessDocument, leads: Sequence[LeadDocument]
+    ) -> list[PublicLead]:
+        raise NotImplementedError
+
+    def conversations(
+        self, business: BusinessDocument, conversations: Sequence[ConversationDocument]
+    ) -> list[PublicConversation]:
         raise NotImplementedError
 
 

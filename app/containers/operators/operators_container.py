@@ -42,6 +42,7 @@ from app.containers.operators.platform_ops_operators import (
     PlatformOpsOperatorsContainer,
 )
 from app.containers.operators.privacy_operators import PrivacyOperatorsContainer
+from app.containers.operators.public_api_operators import PublicApiOperatorsContainer
 from app.containers.operators.public_demo_operators import (
     PublicDemoOperatorsContainer,
 )
@@ -260,5 +261,10 @@ class OperatorsContainer(containers.DeclarativeContainer):
     webhooks: WebhookOperatorsContainer = Container(  # type: ignore[assignment]
         WebhookOperatorsContainer,
         webhook_pipelines=pipelines.webhooks,
+        utilities=utilities,
+    )
+    public_api: PublicApiOperatorsContainer = Container(  # type: ignore[assignment]
+        PublicApiOperatorsContainer,
+        public_api_pipelines=pipelines.public_api,
         utilities=utilities,
     )
