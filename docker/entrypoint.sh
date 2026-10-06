@@ -43,6 +43,17 @@ case "$role" in
     # entry wins). Workers: WEB_CONCURRENCY (default 1).
     # On SIGTERM open requests get 25 s to finish (Render waits 30 s, see
     # maxShutdownDelaySeconds); idle keep-alive connections close after 5 s.
+    # Several workers share their Prometheus series through files
+    # (docs/operations/observability.md): a directory of their own, emptied
+    # at start so the series of a previous run are not added up.
+    if [ "${WEB_CONCURRENCY:-1}" -gt 1 ] && [ -z "${PROMETHEUS_MULTIPROC_DIR:-}" ]; then
+      PROMETHEUS_MULTIPROC_DIR=/tmp/workshop-metrics
+      export PROMETHEUS_MULTIPROC_DIR
+    fi
+    if [ -n "${PROMETHEUS_MULTIPROC_DIR:-}" ]; then
+      mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
+      find "$PROMETHEUS_MULTIPROC_DIR" -maxdepth 1 -name '*.db' -type f -delete
+    fi
     exec uvicorn app.main:create_application --factory \
       --host 0.0.0.0 --port "${PORT:-8000}" \
       --proxy-headers --no-server-header \
