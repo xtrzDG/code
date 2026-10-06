@@ -48,6 +48,7 @@ export const PAGE_HELP: Readonly<Record<BusinessPage, HelpArticleSlug>> = {
   "settings/quick-replies": "inbox",
   "settings/calls": "call-forwarding",
   "settings/reviews": "bookings",
+  "settings/integrations": "bookings",
   "settings/billing": "billing",
   "settings/privacy": "privacy",
   "settings/audit": "privacy",

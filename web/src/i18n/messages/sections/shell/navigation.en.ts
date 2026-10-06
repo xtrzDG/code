@@ -49,6 +49,7 @@ export const navigationEn = {
     settingsQuickReplies: "Quick replies",
     settingsCalls: "Calls",
     settingsReviews: "Reviews",
+    settingsIntegrations: "Integrations",
     settingsBilling: "Plan and billing",
     settingsPrivacy: "Privacy",
     settingsAudit: "Audit log",

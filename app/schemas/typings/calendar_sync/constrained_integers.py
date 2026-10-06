@@ -34,4 +34,13 @@ class LinkedResourceCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class LinkedSourceCount(BaseConstrainedTypedInt):
+    """
+    How many calendar sources (a Google calendar, imported feeds, a booking
+    system) block one resource, or how many of them failed their last read.
+    """
+
+    ge = 0
+
+
 # Keep abc order for all non example types, if possible.

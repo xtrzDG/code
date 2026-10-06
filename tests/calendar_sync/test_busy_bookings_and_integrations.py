@@ -49,6 +49,12 @@ def test_integrations_list_what_each_integration_does() -> None:
     assert by_kind["ical_export"]["state"] == "on"
     assert by_kind["cal_com"]["state"] == "on"
     assert by_kind["cal_com"]["resource_count"] == 1
+    assert before["resources"] == []
+    [summary] = after["resources"]
+    assert summary["resource_id"] == shop.resource_id
+    assert (summary["source_count"], summary["problem_count"]) == (2, 1)
+    assert summary["is_export_on"] is True
+    assert summary["last_synced_at"] is not None
 
 
 def test_a_connected_google_account_is_on_for_integrations() -> None:

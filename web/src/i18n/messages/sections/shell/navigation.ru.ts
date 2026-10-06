@@ -48,6 +48,7 @@ export const navigationRu: Translation<typeof navigationEn> = {
     settingsQuickReplies: "Быстрые ответы",
     settingsCalls: "Звонки",
     settingsReviews: "Отзывы",
+    settingsIntegrations: "Интеграции",
     settingsBilling: "Тариф и оплата",
     settingsPrivacy: "Приватность",
     settingsAudit: "Журнал действий",

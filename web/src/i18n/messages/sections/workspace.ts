@@ -1,5 +1,5 @@
 /**
- * Texts of the cabinet sections: Channels, billing, settings (Calls, Quick replies and Reviews among them) and the platform admin.
+ * Texts of the cabinet sections: Channels, billing, settings (Calls, Quick replies, Reviews and Integrations among them), resources' calendars and the platform admin.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
  * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
@@ -47,6 +47,9 @@ import { adminTeamRu } from "./workspace/adminTeam.ru";
 import { billingEn } from "./workspace/billing.en";
 import { billingKa } from "./workspace/billing.ka";
 import { billingRu } from "./workspace/billing.ru";
+import { calendarSyncEn } from "./workspace/calendarSync.en";
+import { calendarSyncKa } from "./workspace/calendarSync.ka";
+import { calendarSyncRu } from "./workspace/calendarSync.ru";
 import { callSettingsEn } from "./workspace/callSettings.en";
 import { callSettingsKa } from "./workspace/callSettings.ka";
 import { callSettingsRu } from "./workspace/callSettings.ru";
@@ -116,6 +119,7 @@ export const workspaceEn = {
   notifications: notificationsEn,
   callSettings: callSettingsEn,
   reviewSettings: reviewSettingsEn,
+  calendarSync: calendarSyncEn,
   quickReplies: quickRepliesEn,
   admin: adminEn,
   adminSecurity: adminSecurityEn,
@@ -149,6 +153,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   notifications: notificationsRu,
   callSettings: callSettingsRu,
   reviewSettings: reviewSettingsRu,
+  calendarSync: calendarSyncRu,
   quickReplies: quickRepliesRu,
   admin: adminRu,
   adminSecurity: adminSecurityRu,
@@ -182,6 +187,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   notifications: notificationsKa,
   callSettings: callSettingsKa,
   reviewSettings: reviewSettingsKa,
+  calendarSync: calendarSyncKa,
   quickReplies: quickRepliesKa,
   admin: adminKa,
   adminSecurity: adminSecurityKa,

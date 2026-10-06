@@ -10238,11 +10238,17 @@ export interface components {
         IntegrationKind: "google_calendar" | "ical_import" | "ical_export" | "cal_com";
         /**
          * IntegrationList
-         * @description Every integration the platform offers a business, in a fixed order.
+         * @description Every integration the platform offers a business, in a fixed order, and
+         *     each resource that has calendars (`resources`).
          */
         IntegrationList: {
             /** Items */
             items: components["schemas"]["IntegrationView"][];
+            /**
+             * Resources
+             * @default []
+             */
+            resources: components["schemas"]["ResourceSyncSummary"][];
         };
         /**
          * IntegrationState
@@ -13103,6 +13109,27 @@ export interface components {
         ResourceList: {
             /** Items */
             items?: components["schemas"]["ResourceView"][];
+        };
+        /**
+         * ResourceSyncSummary
+         * @description One resource's calendars at a glance (the resources list shows it):
+         *     how many sources block it, how many failed their last read, when one
+         *     last synced, and whether its export address exists.
+         */
+        ResourceSyncSummary: {
+            /**
+             * Is Export On
+             * @default false
+             */
+            is_export_on: boolean;
+            /** Last Synced At */
+            last_synced_at?: number | null;
+            /** Problem Count */
+            problem_count: number;
+            /** Resource Id */
+            resource_id: string;
+            /** Source Count */
+            source_count: number;
         };
         /**
          * ResourceView

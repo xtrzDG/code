@@ -14757,13 +14757,21 @@
       },
       "IntegrationList": {
         "additionalProperties": false,
-        "description": "Every integration the platform offers a business, in a fixed order.",
+        "description": "Every integration the platform offers a business, in a fixed order, and\neach resource that has calendars (`resources`).",
         "properties": {
           "items": {
             "items": {
               "$ref": "#/components/schemas/IntegrationView"
             },
             "title": "Items",
+            "type": "array"
+          },
+          "resources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ResourceSyncSummary"
+            },
+            "title": "Resources",
             "type": "array"
           }
         },
@@ -22165,6 +22173,49 @@
           }
         },
         "title": "ResourceList",
+        "type": "object"
+      },
+      "ResourceSyncSummary": {
+        "additionalProperties": false,
+        "description": "One resource's calendars at a glance (the resources list shows it):\nhow many sources block it, how many failed their last read, when one\nlast synced, and whether its export address exists.",
+        "properties": {
+          "is_export_on": {
+            "default": false,
+            "title": "Is Export On",
+            "type": "boolean"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          },
+          "problem_count": {
+            "minimum": 0.0,
+            "title": "Problem Count",
+            "type": "integer"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "source_count": {
+            "minimum": 0.0,
+            "title": "Source Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "resource_id",
+          "source_count",
+          "problem_count"
+        ],
+        "title": "ResourceSyncSummary",
         "type": "object"
       },
       "ResourceView": {

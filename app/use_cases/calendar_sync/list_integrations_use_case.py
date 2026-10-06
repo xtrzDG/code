@@ -20,7 +20,10 @@ from app.schemas.domain.calendar_sync import (
 )
 from app.schemas.dto.calendar_sync.calendar_commands import BusinessCalendarsQuery
 from app.schemas.dto.calendar_sync.integrations import IntegrationList, IntegrationView
-from app.use_cases.calendar_sync.integration_states import integration_view
+from app.use_cases.calendar_sync.integration_states import (
+    integration_view,
+    resource_summaries,
+)
 
 
 class ListIntegrationsUseCase(UseCaseContract[BusinessCalendarsQuery, IntegrationList]):
@@ -29,7 +32,8 @@ class ListIntegrationsUseCase(UseCaseContract[BusinessCalendarsQuery, Integratio
     has no Google credentials; its bookings mirror and the resources it
     blocks), iCal import, iCal export (last read by a calendar) and
     Cal.com, each with how many resources use it, how many need attention
-    (their last read failed) and when it last synced.
+    (their last read failed) and when it last synced; and each resource's
+    calendars at a glance for the resources list.
     """
 
     def __init__(
@@ -69,7 +73,8 @@ class ListIntegrationsUseCase(UseCaseContract[BusinessCalendarsQuery, Integratio
                         and link.booking_system.kind is BookingSystemKind.CAL_COM
                     ],
                 ),
-            ]
+            ],
+            resources=resource_summaries(links),
         )
 
     def _google(

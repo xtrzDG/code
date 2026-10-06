@@ -5,10 +5,17 @@ from collections.abc import Sequence
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.calendar_sync import IntegrationKind, IntegrationState
-from app.schemas.domain.calendar_sync import BusySourceStatus
-from app.schemas.dto.calendar_sync.integrations import IntegrationView
+from app.schemas.domain.calendar_sync import (
+    BusySourceStatus,
+    ResourceCalendarLinkDocument,
+)
+from app.schemas.dto.calendar_sync.integrations import (
+    IntegrationView,
+    ResourceSyncSummary,
+)
 from app.schemas.typings.calendar_sync.constrained_integers import (
     LinkedResourceCount,
+    LinkedSourceCount,
 )
 
 
@@ -51,3 +58,45 @@ def integration_view(
         attention_count=LinkedResourceCount(attention),
         last_synced_at=Microseconds(max(synced)) if synced else None,
     )
+
+
+def source_statuses(link: ResourceCalendarLinkDocument) -> list[BusySourceStatus]:
+    """The status of every source that blocks the resource."""
+
+    statuses: list[BusySourceStatus] = [feed.status for feed in link.ical_imports]
+    if link.google_status is not None:
+        statuses.insert(0, link.google_status)
+    if link.booking_system is not None:
+        statuses.append(link.booking_system.status)
+    return statuses
+
+
+def resource_summaries(
+    links: Sequence[ResourceCalendarLinkDocument],
+) -> list[ResourceSyncSummary]:
+    """Each resource with a source or an export address, at a glance."""
+
+    summaries: list[ResourceSyncSummary] = []
+    for link in links:
+        statuses: list[BusySourceStatus] = source_statuses(link)
+        is_export_on: bool = link.ical_export_token_hash is not None
+        if not statuses and not is_export_on:
+            continue
+
+        synced: list[int] = [
+            int(status.last_synced_at)
+            for status in statuses
+            if status.last_synced_at is not None
+        ]
+        summaries.append(
+            ResourceSyncSummary(
+                resource_id=link.resource_id,
+                source_count=LinkedSourceCount(len(statuses)),
+                problem_count=LinkedSourceCount(
+                    sum(1 for status in statuses if status.problem is not None)
+                ),
+                last_synced_at=Microseconds(max(synced)) if synced else None,
+                is_export_on=is_export_on,
+            )
+        )
+    return summaries

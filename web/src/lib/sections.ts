@@ -86,6 +86,7 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
     { page: "settings/quick-replies", label: "navigation.pages.settingsQuickReplies", roles: OWNERS },
     { page: "settings/calls", label: "navigation.pages.settingsCalls", roles: OWNERS },
     { page: "settings/reviews", label: "navigation.pages.settingsReviews", roles: OWNERS },
+    { page: "settings/integrations", label: "navigation.pages.settingsIntegrations", roles: OWNERS },
     { page: "settings/billing", label: "navigation.pages.settingsBilling", roles: OWNERS },
     { page: "settings/privacy", label: "navigation.pages.settingsPrivacy", roles: OWNERS },
     { page: "settings/audit", label: "navigation.pages.settingsAudit", roles: OWNERS },
@@ -110,6 +111,7 @@ export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
   "settings/quick-replies": "quickReplies.description",
   "settings/calls": "callSettings.description",
   "settings/reviews": "reviewSettings.description",
+  "settings/integrations": "calendarSync.integrations.description",
   "settings/billing": "pages.billing.description",
 };
 
