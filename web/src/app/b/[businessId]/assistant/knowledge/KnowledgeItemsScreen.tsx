@@ -1,6 +1,7 @@
 "use client";
 
 import { useBusiness } from "@/components/business/BusinessContext";
+import { StillIndexingNote } from "@/components/lists/StillIndexingNote";
 import { IconBook, IconPlus } from "@/components/icons";
 import { Alert, Button, ButtonLink, Card, ConfirmDialog, EmptyState, ErrorState, LoadingRegion, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -46,6 +47,8 @@ export function KnowledgeItemsScreen() {
           {t("knowledge.items.questionsHint")}
         </Alert>
       ) : null}
+
+      <StillIndexingNote isIndexing={items.page?.is_indexing} />
 
       <div className="max-lg:order-last">
         <KnowledgeSearch onOpen={list.openById} />

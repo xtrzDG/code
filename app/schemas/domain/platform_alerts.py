@@ -30,7 +30,10 @@ class PlatformAlertStateDocument(BaseDocument):
     # 2: `code` may be `quality_drop` (production quality, migration 1120).
     # 3: `code` may be `spend_spike` or `spend_budget` (the spend guard,
     # migration 1142).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: `code` may be `backfill_stalled` (post-deploy data tasks, 1164).
+    # States are stored and read under their code, so a release that does
+    # not know a code never reads its row.
+    schema_version: SchemaVersion = SchemaVersion("4")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

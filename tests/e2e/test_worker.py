@@ -62,6 +62,7 @@ from app.gateways.worker.periodic.request_visit_feedback import (
     REQUEST_VISIT_FEEDBACK_JOB,
 )
 from app.gateways.worker.periodic.retention import PURGE_EXPIRED_PERSONAL_DATA_JOB
+from app.gateways.worker.periodic.run_data_tasks import RUN_DATA_TASKS_JOB
 from app.gateways.worker.periodic.send_subprocessor_notices import (
     SEND_SUBPROCESSOR_NOTICES_JOB,
 )
@@ -153,6 +154,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
         (SEND_WIN_BACK_MESSAGES_JOB, 3_600),
+        (RUN_DATA_TASKS_JOB, 300),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -176,7 +178,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ERASE_PROCESSOR_COPIES_JOB,
         OFFER_FREED_PLACE_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (33, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (34, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush and the end of the waitlist's expired holds.
     assert a_minute_later.periodic_runs == 2
@@ -186,9 +188,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # requests, the milestones, the activation nudges, the platform alerts,
     # the Meta token check, the platform status record, the end of expired
     # support access, the purge of expired exports, the waitlist's expired
-    # holds, the rebooking campaigns, the seasonal pauses and the win-back
-    # messages.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (22, 0)
+    # holds, the rebooking campaigns, the seasonal pauses, the win-back
+    # messages and the post-deploy data tasks.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (23, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

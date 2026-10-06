@@ -156,5 +156,14 @@ PLATFORM_ALERT_RULES: Mapping[PlatformAlertCode, PlatformAlertRule] = {
             DAY_MINUTES,
             "spend-spike.md",
         ),
+        _rule(
+            PlatformAlertCode.BACKFILL_STALLED,
+            IncidentSeverity.SEV3,
+            "A post-deploy data task is not done a day after it became due.",
+            0,
+            AlertUnit.COUNT,
+            DAY_MINUTES,
+            "stalled-data-task.md",
+        ),
     )
 }

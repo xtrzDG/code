@@ -33,6 +33,7 @@ import {
   type CustomerListFilter,
 } from "./_lib/customerFilters";
 import { CUSTOMERS_PAGE_SIZE, type CustomerPage, type CustomerSummary } from "./_lib/customerModel";
+import { StillIndexingNote } from "@/components/lists/StillIndexingNote";
 import { useCustomerSettings } from "./_lib/useCustomerSettings";
 
 const SEARCH_DELAY_MS = 300;
@@ -119,6 +120,8 @@ export function CustomersScreen({ initialFilters }: { initialFilters: CustomerFi
             </Select>
           ) : null}
         </div>
+
+        <StillIndexingNote isIndexing={customers.page?.is_indexing} />
 
         {customers.error && isEmpty ? (
           <ErrorState error={customers.error} onRetry={customers.reload} className="py-6" />

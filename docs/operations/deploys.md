@@ -27,7 +27,9 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   `.github/workflows/deploy-smoke.yml` moves `release`, and only forward
   (no force push) to a commit of `main` whose staging smoke test passed.
   Without staging, move it by hand after a green CI run:
-  `git push origin <commit>:release`.
+  `git push origin <commit>:release`. The promotion waits until
+  production finished the post-deploy data tasks of the release it runs
+  (`scripts/check_data_tasks.sh`, see "Data tasks after a deploy").
 - API, worker and cabinet of one environment follow the same branch, so
   they always deploy the same commit. Never deploy one of them from another
   commit by hand: the worker runs the same document and job code as the API.
@@ -69,6 +71,10 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
 6. If `release` is a protected branch, allow GitHub Actions to push to it.
    Set the repository variable `PROMOTE_AFTER_STAGING_SMOKE=false` to
    promote by hand instead.
+7. Set the repository variable `PRODUCTION_API_URL` (the production
+   API's public address): the promotion reads production's `/readyz` and
+   refuses while a data task is open. Without it every promotion stops
+   with a message that names the variable.
 
 ## Two releases at once
 
@@ -98,34 +104,6 @@ a widget script from before that release (cached in a visitor's browser)
 takes the `202` as an answer without text and shows the answer at its
 next poll, only without the typing dots meanwhile.
 
-The release that moved every message to a customer into the outbox
-(staff replies, booking reminders, call confirmations and links,
-text-backs; PLAN 16.9.5) writes five new `OutboundMessageKind` values in
-the release that introduces them, an exception to the enum rule below. An
-old worker that claims the delivery job of such a row, or reads it among a
-recipient's waiting messages, fails the job, and the job queue tries it
-again (30 s backoff, five attempts) until a new worker takes it: replies
-are late during the overlap, not lost. Before rolling back past that
-release, let the outbox drain (no `pending` rows of the new kinds), or
-the previous release cannot read them.
-
-The release with device sessions, the admin team and support access
-(PLAN 16.10.4) also writes new enum values in the release that introduces
-them, an exception to the enum rule below: four `AuditAction` values
-(`support_access_start`, `support_access_end`, `session_revoked`,
-`platform_admin_changed`) and the staff link target `account_security`
-(code 11 in signed staff links). An old API instance that lists an audit
-log holding such an entry may fail that page until the overlap ends, and
-an old instance refuses a new-device link: both only during the minutes
-of the overlap, nothing is lost. Its new collections
-(`platform_admins`, `support_access_grants`, migration 1103) and the new
-optional session fields are unknown to the old release, which ignores
-them; but an old instance does not check support grants, so a platform
-admin may read a client's cabinet without an open look during the
-overlap (it still needs two factors). Before rolling back past that
-release, note that the admin rights fall back to the
-`PLATFORM_ADMIN_*` lists.
-
 The release with WhatsApp staff templates per language and channel health
 (R9-CONNECT, `ChannelDocument` version 4) adds `whatsapp_staff_templates`,
 `last_error_reason`, `last_inbound_at` and `last_outbound_at` and keeps
@@ -139,65 +117,6 @@ fields: the list falls back to the single template and the owner adds the
 other languages again; the activity times come back with the next
 messages. `workshop migrate-documents --collection channels` after the
 release is optional (reads upcast anyway).
-
-The release that teaches the assistant from conversations ("Fix this
-answer", bad rating reasons and the owner's checks, migration 1112) also
-writes new enum values in the release that introduces them, an exception
-to the enum rule below: autotest runs hold scenarios of the new kind
-`owner_check` and the check codes `expected_text_missing`,
-`forbidden_text_mentioned` and `no_lead_created`. An old API instance
-that reads such a run (the autotest page, the go-live checklist) may fail
-that request until the overlap ends, and an old worker that plays a run a
-new instance planned fails the job, which the queue tries again until a
-new worker takes it: nothing is lost. The new review fields of
-conversations (`rating_reason`, `rated_message_id`, `improved_at`,
-`awaits_improvement`), `correction_of` of knowledge items and the new
-`autotest_cases` collection are unknown to the old release, which ignores
-them; but an old instance that saves a conversation during the overlap (a
-customer turn) writes it without them, so the reason of a bad rating given
-just before may be lost and the conversation leaves "Answers worth
-improving" (the rating itself stays). Before rolling back past that
-release, let running autotests finish.
-
-The release with deeper autotests and production quality sampling
-(R11-AUTOTEST-DEPTH-QUALITY, migration 1120, `AutotestRunDocument`
-version 5, `PlatformAlertStateDocument` version 2) also writes new enum
-values in the release that introduces them, an exception to the enum
-rule below: autotest runs hold scenarios of the attack kinds
-`prompt_injection_spoof`, `data_exfiltration`, `staff_impersonation` and
-`tool_abuse` and the check codes `price_not_named`, `unsupported_price`,
-`instructions_revealed`, `personal_data_revealed`, `unauthorized_action`
-and `tools_misused`, and the alert job may store the alert code
-`quality_drop`. An old API instance that reads such a run may fail that
-request until the overlap ends, an old worker that plays a run a new
-instance planned fails the job, which the queue tries again until a new
-worker takes it, and an old alert job that reads a `quality_drop` state
-fails that tick and runs again on the next: nothing is lost. The new
-optional fields (`sample_count`, `passed_sample_count` of results,
-`compared_to_run_id` of runs) and the `conversation_quality_scores`
-collection are unknown to the old release, which ignores them. Before
-rolling back past that release, let running autotests finish; the
-quality scores stay and are read again after the next deploy.
-
-The release with the customer memory (migration 1121) also writes a new
-enum value in the release that introduces it, an exception to the enum
-rule below: the assistant tool `list_my_bookings`, in the `tools` of
-assistant versions assembled from it on (`AssistantVersionDocument`
-version 6) and in the `tool_calls` of messages (`MessageDocument` version
-5). An old API instance that reads such a version or message (the version
-page, a conversation card) may fail that request until the overlap ends,
-and an old worker that answers a conversation pinned to such a version
-fails the inbound job, which the queue tries again until a new worker
-takes it: replies are late during the overlap, not lost. The new job
-`summarize_conversation` is queued only by the new release; an old worker
-that claims it fails it the same way (the queue retries it), so summaries
-may come a little late. `summary` and `summarized_at` of conversations and
-the new `assistant_settings` collection are unknown to the old release,
-which ignores them; an old instance that saves a conversation during the
-overlap (a customer turn) writes it without its summary, which the next
-quiet period writes again. Before rolling back past that release, note
-that versions assembled since offer `list_my_bookings`: publish a version
-assembled by the previous release first.
 
 The release with the admin's account actions and the client's story
 (R13-ADMIN-ACTIONS, migration 1143, `SubscriptionDocument` and
@@ -220,37 +139,13 @@ the discount and the credit, and an old instance that saves a subscription
 after the overlap (the audit log names them). Before rolling back past
 that release, note that discounts, credit and waived fees stop applying.
 
-The release with online-safe migrations (W12, migration 1122) adds
+The release with online-safe migrations (W12, migration 1122) added
 trigger-filled lookup columns to `contacts`, `knowledge_items`, `bookings`
-and `leads`, the `client_standings` collection and the periodic job
-`refresh_client_standings` (every 15 minutes), and moves contacts to
-version 3 (`last_seen_at`, `display_name_folded`, upcast from version 2).
-The customer list, the knowledge list and a customer's counts page by the
-new columns, which are empty for rows written before the migration, so
-**right after the deploy** (all three services on the new commit):
-
-```
-workshop migrate-documents --collection contacts   # version 3 for old customers
-workshop backfill-lookup --dry-run                 # what is left to fill
-workshop backfill-lookup                           # every new column, batches of 5000
-```
-
-Until then those lists show only rows written since the migration (by
-either release: the trigger fills them on every write), and a customer's
-counts leave out older bookings and leads; nothing is lost, and running
-the commands again is harmless. A version 2 customer's latest activity
-starts as the moment they first wrote (the row knows no better), so older
-customers stand in the list by that until their next message, call or
-booking. The old release, during the overlap,
-still writes version 2 contacts, which clears their two new columns until
-`migrate-documents` (run it after the overlap ended) or the customer's
-next message. The admin client list of the new release reads the
-standings the new worker computes on its first tick and every 15 minutes
-after (the page says when; until the first run it is empty); the old
-release keeps summarizing live. The old release ignores the new columns,
-the new collection and the version 3 fields, so a rollback needs nothing
-beyond the usual. `BusinessRepoContract.list_all` is gone: a job over
-every business walks them with `walk_businesses` (keyset batches of 200).
+and `leads` that are empty for rows written before it. Since the data
+tasks (below) their backfill runs by itself after every deploy; the old
+manual `migrate-documents` and `backfill-lookup` steps are gone, and a
+test (`tests/storage/test_data_tasks_on_postgres.py`) proves that such a
+column fills and the lists that page by it come out complete.
 
 The release with written booking confirmations (W16-BOOKING-CONFIRMATION,
 `OutboundMessageDocument` version 6, no migration) also writes a new enum
@@ -284,15 +179,9 @@ and calls without the spend check and serves the website chat to any site.
 The three new lookup columns of `usage_events` (`doc_kind`,
 `doc_cost_micro_usd`, `doc_quantity`) are empty for rows written before
 the migration, so the spend of a day that began before the deploy reads
-low (limits pass later, the spend alerts and the admin's spend tile
-under-count) until, **right after the deploy**:
-
-```
-workshop backfill-lookup --collection usage_events
-```
-
-Running it again is harmless; a rollback needs nothing beyond the usual
-(the old release ignores the new columns and collections).
+low until the data task `backfill_lookup:usage_events.*` is done (a few
+minutes after the deploy). A rollback needs nothing beyond the usual (the
+old release ignores the new columns and collections).
 
 The release with referrals and partners (R15, migration 1150,
 `BusinessDocument` version 6, `BillingCreditDocument` version 2) also
@@ -352,9 +241,10 @@ Spread a breaking change over releases:
    `tests/storage/golden/<collection>/v<N+1>.json`. The previous release
    ignores the new field; old rows read with the default.
 2. **Backfill** — write the field for old rows: an upcaster (version N →
-   N+1, a pure function of the stored JSON) fills it on read, and
-   `workshop migrate-documents --collection <name>` rewrites the rows once
-   the release is fully deployed.
+   N+1, a pure function of the stored JSON) fills it on read, and the
+   collection's data task rewrites the rows once the release is fully
+   deployed (`migrate_documents:<collection>`, "Data tasks after a
+   deploy").
 3. **Require** — only in a later release, once no instance of the expand
    release or older is left and the backfill ran, make the field required.
 
@@ -363,9 +253,19 @@ Rules that follow from it:
 - **Never rename or remove a field in one release.** Add the new name
   (expand), write both or upcast, switch the readers, and drop the old
   name in a later release with an upcaster that maps it.
-- **Enum values:** a release may write a new value only if the release
-  before it already knows the value. Add the value first (one release),
-  write it in the next.
+- **Enum values one release ahead:** a release may write a new value
+  only if the release before it already reads it. Add the value behind a
+  closed gate in `app/utilities/storage/release_gates.py` (storage refuses
+  to write it; writers ask `is_gate_open`), open the gate in the next
+  release, delete it in the one after.
+  `tests/architecture_policy/test_enum_values_are_known_one_release_ahead.py`
+  compares every stored enum with the snapshot of the last release
+  (`tests/storage/release_enums.json`) and fails on a new value no closed
+  gate covers; a field that is its document's key (alert codes) is exempt
+  because a release reads only the keys it knows. When a release reaches
+  production, record its snapshot:
+  `uv run python -m tests.storage.document_evolution.record_release_enums
+  $(git rev-parse origin/release) <release name>`.
 - **Types:** never change the type of a field in place (string → object,
   integer → string); add a new field instead. Lookup fields
   (`app/utilities/storage/document_lookup_catalog.py`) have typed columns
@@ -400,10 +300,54 @@ progress) are left alone — running it again is harmless. It reports, per
 collection, outdated, upgraded, newer, changed-meanwhile and failed rows
 (with the first failing keys) and exits with 1 if any row failed.
 
-Run it from the API's Render Shell or as a one-off job **after** the
-release is fully deployed and you do not intend to roll back: the previous
-release reads upgraded rows only if the change was purely additive. Never
-run it in `preDeployCommand`.
+The batch worker does this by itself after every deploy (see "Data tasks
+after a deploy"); run it by hand from the API's Render Shell only to hurry
+it, **after** the release is fully deployed and you do not intend to roll
+back. Never run it in `preDeployCommand`.
+
+## Data tasks after a deploy
+
+What used to be manual steps after a deploy runs by itself: the
+`data_tasks` registry (`app/registries/maintenance/data_task_registry.py`)
+holds one task per collection whose documents have a version above 1 (the
+`migrate-documents` rewrite to that version) and one per trigger-kept
+lookup column added to a table that already held rows (the
+`backfill-lookup` fill, declared in
+`app/registries/maintenance/lookup_backfills.py`;
+`tests/architecture_policy/test_lookup_columns_are_backfilled.py` fails
+on an undeclared one). Their progress is stored in `data_task_states`
+(migration 1164).
+
+- **Who runs them.** The batch worker's job `run_data_tasks` (every 5
+  minutes, one process at a time under an advisory lock) walks every open
+  task in keyset batches of 5,000 rows, one short transaction per batch,
+  and stores the position after each, so a restart goes on where it
+  stopped. A run starts no batch after 4 minutes.
+- **When.** Only once no worker of another release has beaten for 15
+  minutes (`worker_heartbeats`): while the previous release still runs it
+  would write the old shape again. After a rollback the same wait applies
+  the other way round.
+- **Failures.** A batch that fails as a whole is retried on the next run
+  (the card shows the error). Rows a migration cannot upgrade leave the
+  task `failed` with their keys; a new release walks it again, or a
+  platform admin retries it (audited).
+- **Where to look.** The admin system page's data-task card (progress
+  against the table's estimated rows, failures, retry), `checks.data_tasks`
+  of `GET /readyz` (open, failed and stalled counts; it never makes an
+  instance not ready) and the alert `BACKFILL_STALLED` when a task is not
+  done a day after it became due (runbook
+  `docs/operations/runbooks/stalled-data-task.md`).
+- **Lists.** The customer and knowledge lists say "still indexing" while
+  a task that fills what they page by is open; they may miss older rows
+  until it is done.
+- **The next release waits.** The promotion to production
+  (`.github/workflows/deploy-smoke.yml`) runs `scripts/check_data_tasks.sh` against
+  production and refuses while any task is open, so a release that stops
+  reading the old shape never lands before the rewrite finished. Re-run the
+  promote job once the card shows every task done.
+
+`workshop migrate-documents` and `workshop backfill-lookup` stay for a
+manual run (they do the same work and are idempotent with the tasks).
 
 ## Changing the SQL schema
 
@@ -421,10 +365,9 @@ The same expand and contract, for tables and columns:
   `UPDATE`/`DELETE`, type change or validated constraint on an existing
   table (`tests/storage/test_migration_safety.py` lints every new file).
   A lookup field on an existing table is a nullable column filled by a
-  BEFORE INSERT/UPDATE trigger, backfilled by
-  `workshop backfill-lookup --collection X --field Y --batch 5000` in
-  keyset batches outside the deploy, then indexed CONCURRENTLY in a later
-  file.
+  BEFORE INSERT/UPDATE trigger, backfilled after the deploy by its data
+  task (declare it in `app/registries/maintenance/lookup_backfills.py`),
+  then indexed CONCURRENTLY in a later file.
 - Every statement of `workshop migrate` waits at most 5 s for a lock and a
   file that timed out is tried again, five times in all, with growing
   jittered pauses. When the deploy still fails on it ("could not obtain

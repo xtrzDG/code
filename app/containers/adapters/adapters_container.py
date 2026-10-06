@@ -140,6 +140,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
     storage_unit_of_work = processes.storage_unit_of_work
     storage_read_session = processes.storage_read_session
     job_wakeup = processes.job_wakeup
+    data_task_batches = processes.data_task_batches
     # Locks every process respects (Postgres advisory locks over the shared
     # pool; in-process locks without a database).
     advisory_locks: Singleton[AdvisoryLockAdapterContract] = Singleton(

@@ -61,6 +61,24 @@ Spec: `6765ca8037bdcb78`
   reason, offers made and accepted, pauses, win-back messages sent and
   returns after them, the newest owner comments.
 
+## 2026-10-06 — post-deploy data tasks
+
+Spec: `d71f85e1a8235db5`
+
+- **Added** `GET /v1/admin/system/data-tasks` (platform admins): every
+  post-deploy data task (a collection's document migration or a lookup
+  column's backfill) with its status, progress, failures and
+  `is_stalled`; the batch size, whether the release overlap is over
+  (`rollout`) and the open, failed and stalled counts.
+- **Added** `POST /v1/admin/system/data-tasks/{task_key}/retry` walks a
+  failed task again (audited; 409 unless the task failed, 404 for an
+  unknown key).
+- **Added** `checks.data_tasks` in `GET /readyz` (`status`, `open`,
+  `failed`, `stalled`); it never makes an instance not ready.
+- **Added** `is_indexing` on the customers page and the knowledge items
+  page: a column the list reads is still being filled after a deploy, so
+  the list may be incomplete for a while.
+
 ## 2026-10-06 — wave 15 together: worker resilience, referrals and partners, the waitlist and return visits
 
 Spec: `ce734ea095df4aa1`

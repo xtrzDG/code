@@ -16,6 +16,7 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [assistant-quality](assistant-quality.md) | `handoff_spike`, `tool_errors`, `quality_drop` | SEV2-SEV3 |
 | [sms-pumping](sms-pumping.md) | `otp_cap_trips` | SEV2 |
 | [spend-spike](spend-spike.md) | provider budget e-mails, margin on Admin → Metrics | SEV2 |
+| [stalled-data-task](stalled-data-task.md) | `backfill_stalled`, the data-task card | SEV3 |
 | [bad-deploy](bad-deploy.md) | errors right after a deploy, the smoke test | SEV1-SEV2 |
 | [data-breach](data-breach.md) | anyone who suspects one | SEV1, 48 h clock |
 

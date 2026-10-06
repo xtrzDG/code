@@ -59,6 +59,7 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       quality_drop: "საუბრების ხარისხი დაეცა",
       spend_spike: "ხარჯების მკვეთრი ზრდა",
       spend_budget: "დღიური ბიუჯეტი თითქმის ამოიწურა",
+      backfill_stalled: "მონაცემთა დავალება გაჭედილია",
     },
   },
   workers: {

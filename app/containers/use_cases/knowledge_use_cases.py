@@ -188,6 +188,8 @@ class KnowledgeUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
         resource_repo=repositories.resource_repo,
+        data_task_registry=registries.data_task_registry,
+        data_task_state_repo=repositories.data_task_state_repo,
     )
     update_knowledge_item_use_case: Factory[
         UseCaseContract[UpdateKnowledgeItemCommand, KnowledgeItemDetails]

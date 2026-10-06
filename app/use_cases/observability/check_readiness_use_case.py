@@ -2,6 +2,7 @@ import logging
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.data_tasks import DataTaskRegistryContract, DataTaskStateRepoContract
 from app.contracts.health import (
     DatabaseProbeAdapterContract,
     ReadinessMemoryContract,
@@ -22,6 +23,7 @@ from app.schemas.dto.health import (
     ConnectionPoolCheck,
     DatabaseCheck,
     DatabaseProbe,
+    DataTasksCheck,
     MigrationsCheck,
     ReadinessChecks,
     ReadinessQuery,
@@ -35,6 +37,7 @@ from app.schemas.typings.platform.constrained_integers import (
     PoolExhaustedSeconds,
 )
 from app.schemas.typings.storage.constrained_strings import SchemaMigrationName
+from app.use_cases.observability.data_task_readiness import check_data_tasks
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -66,7 +69,9 @@ class CheckReadinessUseCase(UseCaseContract[ReadinessQuery, ReadinessReport]):
       traffic: only a pool exhausted on every probe for more than
       POOL_EXHAUSTION_LIMIT_SECONDS fails the check;
     - the freshest worker pulse is reported with its age, never a reason to
-      stop traffic (DEGRADED when it is old or missing).
+      stop traffic (DEGRADED when it is old or missing);
+    - the post-deploy data tasks still open (DEGRADED while some are), also
+      only reported: the deploy guard reads them.
 
     Without a database the first three are SKIPPED. Never raises.
     """
@@ -79,6 +84,8 @@ class CheckReadinessUseCase(UseCaseContract[ReadinessQuery, ReadinessReport]):
         storage_scope: StorageScopeContract,
         wall_clock: WallClock[Microseconds],
         memory: ReadinessMemoryContract,
+        data_task_registry: DataTaskRegistryContract,
+        data_task_state_repo: DataTaskStateRepoContract,
     ) -> None:
         self._database_probe: DatabaseProbeAdapterContract = database_probe
         self._migration_source: SchemaMigrationSourceAdapterContract = migration_source
@@ -86,6 +93,8 @@ class CheckReadinessUseCase(UseCaseContract[ReadinessQuery, ReadinessReport]):
         self._storage_scope: StorageScopeContract = storage_scope
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._memory: ReadinessMemoryContract = memory
+        self._data_tasks: DataTaskRegistryContract = data_task_registry
+        self._data_task_states: DataTaskStateRepoContract = data_task_state_repo
         self._expected_migrations: list[SchemaMigrationName] | None = None
 
     def run(self, input_data: ReadinessQuery) -> ReadinessReport:
@@ -108,6 +117,7 @@ class CheckReadinessUseCase(UseCaseContract[ReadinessQuery, ReadinessReport]):
                     size=probe.pool_size,
                 ),
                 worker=self._check_worker(),
+                data_tasks=self._check_data_tasks(probe),
             )
 
         is_ready: bool = all(
@@ -189,6 +199,19 @@ class CheckReadinessUseCase(UseCaseContract[ReadinessQuery, ReadinessReport]):
             ]
 
         return self._expected_migrations
+
+    def _check_data_tasks(self, probe: DatabaseProbe) -> DataTasksCheck:
+        """Read only when the database answered (else as the database)."""
+
+        if probe.status is not HealthCheckStatus.OK:
+            return DataTasksCheck(status=HealthCheckStatus.SKIPPED)
+
+        return check_data_tasks(
+            self._data_tasks,
+            self._data_task_states,
+            self._storage_scope,
+            self._wall_clock.now_unix(),
+        )
 
     def _check_worker(self) -> WorkerCheck:
         try:

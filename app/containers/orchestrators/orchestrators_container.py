@@ -38,6 +38,9 @@ from app.containers.orchestrators.conversation_orchestrators import (
 from app.containers.orchestrators.customer_orchestrators import (
     CustomerOrchestratorsContainer,
 )
+from app.containers.orchestrators.data_task_orchestrators import (
+    DataTaskOrchestratorsContainer,
+)
 from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsContainer
 from app.containers.orchestrators.feedback_orchestrators import (
     FeedbackOrchestratorsContainer,
@@ -235,6 +238,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         PlatformOpsOrchestratorsContainer,
         platform_ops_use_cases=use_cases.platform_ops,
         help_use_cases=use_cases.help,
+    )
+    data_tasks: DataTaskOrchestratorsContainer = Container(  # type: ignore[assignment]
+        DataTaskOrchestratorsContainer, data_task_use_cases=use_cases.data_tasks
     )
     spend_guard: SpendGuardOrchestratorsContainer = Container(  # type: ignore[assignment]
         SpendGuardOrchestratorsContainer,

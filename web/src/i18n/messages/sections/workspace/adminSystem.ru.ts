@@ -63,6 +63,7 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       quality_drop: "Качество разговоров снизилось",
       spend_spike: "Всплеск расходов",
       spend_budget: "Дневной бюджет почти исчерпан",
+      backfill_stalled: "Задача с данными зависла",
     },
   },
   workers: {

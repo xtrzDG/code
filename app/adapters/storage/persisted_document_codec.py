@@ -15,11 +15,12 @@ still validated.
 Reads also upgrade older documents through the upcasters of their
 collection (`document_upgrades.py`) and stamp the reader's current
 `schema_version`; writes stamp it too, so a stored document always says
-which release shape it has.
+which release shape it has. A write refuses enum values of a closed
+release gate (`release_gates.py`): the previous release could not read them.
 """
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import cast
 
 from base_pydantic_schemas import PersistentDocument, SchemaVersion
@@ -36,11 +37,18 @@ from app.adapters.storage.document_upgrades import (
     upgrade_stored_json,
 )
 from app.schemas.constants.storage import StoredDocumentVersionState
+from app.schemas.dto.release_gates import ReleaseGate
 from app.schemas.exceptions.storage_errors import UnreadableStoredDocumentError
 from app.schemas.typings.storage.constrained_integers import (
     DocumentSchemaVersionNumber,
 )
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
+from app.utilities.storage.release_gates import (
+    RELEASE_GATES,
+    ClosedGate,
+    closed_gates_of,
+    refuse_closed_values,
+)
 
 
 class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
@@ -57,6 +65,7 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
         document_type: type[StoredDocument],
         collection_name: DocumentCollectionName | None,
         upcasters: Mapping[DocumentSchemaVersionNumber, DocumentUpcaster] | None = None,
+        release_gates: Sequence[ReleaseGate] = RELEASE_GATES,
     ) -> None:
         self._document_type: type[StoredDocument] = document_type
         self._current_version: DocumentSchemaVersionNumber | None = (
@@ -64,6 +73,9 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
         )
         self._upcasters: dict[DocumentSchemaVersionNumber, DocumentUpcaster] = dict(
             upcasters_of(collection_name) if upcasters is None else upcasters
+        )
+        self._closed_gates: tuple[ClosedGate, ...] = closed_gates_of(
+            collection_name, release_gates
         )
         # Compared with every document read: built once.
         self._current_text: SchemaVersion | None = (
@@ -79,9 +91,17 @@ class PersistedDocumentCodec[StoredDocument: PersistentDocument]:
         return self._current_version
 
     def encode(self, document: StoredDocument) -> str:
-        """JSON of the document with the current `schema_version`."""
+        """
+        JSON of the document with the current `schema_version`.
 
-        return self._stamped(document).model_dump_json()
+        Raises:
+            ClosedReleaseGateError: it holds a value of a closed release gate.
+        """
+
+        stamped: StoredDocument = self._stamped(document)
+        if self._closed_gates:
+            refuse_closed_values(stamped.model_dump(mode="json"), self._closed_gates)
+        return stamped.model_dump_json()
 
     def decode(self, stored_text: str) -> StoredDocument:
         """

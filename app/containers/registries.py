@@ -34,9 +34,11 @@ from app.registries.locks.business_lock_registry import BusinessLockRegistry
 from app.registries.locks.customer_message_lock_registry import (
     CustomerMessageLockRegistry,
 )
+from app.registries.locks.data_task_lock_registry import DataTaskLockRegistry
 from app.registries.locks.login_code_send_lock_registry import (
     LoginCodeSendLockRegistry,
 )
+from app.registries.maintenance.data_task_registry import DataTaskRegistry
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
 from app.registries.niches.rebooking_rule_registry import RebookingRuleRegistry
@@ -180,4 +182,9 @@ class RegistriesContainer(containers.DeclarativeContainer):
     # Bulk histories of load-test businesses (`workshop seed-load`).
     load_dataset_registry: Singleton[LoadDatasetRegistry] = Singleton(
         LoadDatasetRegistry
+    )
+    # The post-deploy data tasks of this release and the lock of their run.
+    data_task_registry: Singleton[DataTaskRegistry] = Singleton(DataTaskRegistry)
+    data_task_lock_registry: Singleton[DataTaskLockRegistry] = Singleton(
+        DataTaskLockRegistry, advisory_locks=adapters.advisory_locks
     )

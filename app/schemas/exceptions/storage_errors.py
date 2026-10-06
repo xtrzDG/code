@@ -41,3 +41,11 @@ class MigrationLockTimeoutError(ExternalServiceError):
     front of the live release's writes. The runner tries it again after a
     pause; nothing of the failed try is kept.
     """
+
+
+class ClosedReleaseGateError(ValueError):
+    """
+    A document holds an enum value of a release gate that is still closed:
+    the previous release cannot read it yet (app/utilities/storage/
+    release_gates.py). A programming error, never a user's.
+    """

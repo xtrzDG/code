@@ -8,6 +8,7 @@ from app.schemas.constants.observability import (
     HealthCheckStatus,
     ReadinessState,
 )
+from app.schemas.typings.maintenance.constrained_integers import DataTaskCount
 from app.schemas.typings.platform.constrained_integers import (
     DatabaseConnectionCount,
     DatabasePoolSize,
@@ -82,11 +83,25 @@ class WorkerCheck(ImmutableDTO):
     release: ReleaseVersion | None = None
 
 
+class DataTasksCheck(ImmutableDTO):
+    """
+    The post-deploy data tasks of this release that are not done yet
+    (failed and stalled ones among them). Reported, never a reason to stop
+    traffic: open tasks are DEGRADED. The deploy guard reads `open`.
+    """
+
+    status: HealthCheckStatus
+    open: DataTaskCount | None = None
+    failed: DataTaskCount | None = None
+    stalled: DataTaskCount | None = None
+
+
 class ReadinessChecks(ImmutableDTO):
     database: DatabaseCheck
     migrations: MigrationsCheck
     pool: ConnectionPoolCheck
     worker: WorkerCheck
+    data_tasks: DataTasksCheck = DataTasksCheck(status=HealthCheckStatus.SKIPPED)
 
 
 class ReadinessReport(ImmutableDTO):

@@ -41,6 +41,7 @@ from app.schemas.typings.localization.constrained_strings import (
     E164PhoneNumber,
     LanguageTag,
 )
+from app.schemas.typings.maintenance.booleans import IsListIndexing
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -109,10 +110,16 @@ class ContactSummaryView(ImmutableDTO):
 
 
 class ContactPage(ImmutableDTO):
-    """One page of customers; `next_cursor` is None on the last page."""
+    """
+    One page of customers; `next_cursor` is None on the last page.
+    `is_indexing`: a post-deploy data task that fills what the list pages
+    by is not done yet, so customers written before the release may be
+    missing for a while.
+    """
 
     items: list[ContactSummaryView]
     next_cursor: PageCursor | None = None
+    is_indexing: IsListIndexing = False
 
 
 class ContactConversationView(ImmutableDTO):

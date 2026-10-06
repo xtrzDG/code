@@ -122,6 +122,8 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
             audit_log_repo=repositories.audit_log_repo,
             wall_clock=time_provider.microsecond_wall_clock,
             phone_number_parser=utilities.phone_number_parser,
+            data_task_registry=registries.data_task_registry,
+            data_task_state_repo=repositories.data_task_state_repo,
         )
     )
     get_contact_use_case: Factory[UseCaseContract[ContactQuery, ContactDetailView]] = (

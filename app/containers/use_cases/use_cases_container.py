@@ -6,6 +6,7 @@ from app.containers.use_cases.business_use_cases_container import (
     BusinessUseCasesContainer,
 )
 from app.containers.use_cases.core_use_cases_container import CoreUseCasesContainer
+from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
 from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
 from app.containers.use_cases.platform_ops_use_cases import (
@@ -57,8 +58,19 @@ class UseCasesContainer(BusinessUseCasesContainer):
         platform_use_cases=platform,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
+    # Post-deploy data tasks: the batch worker's runs, the admin card.
+    data_tasks: DataTaskUseCasesContainer = Container(  # type: ignore[assignment]
+        DataTaskUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        platform_use_cases=platform,
+    )
     platform_ops: PlatformOpsUseCasesContainer = Container(  # type: ignore[assignment]
         PlatformOpsUseCasesContainer,
+        data_task_use_cases=data_tasks,
         adapters=CoreUseCasesContainer.adapters,
         clients=CoreUseCasesContainer.clients,
         config=CoreUseCasesContainer.config,

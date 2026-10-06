@@ -46,6 +46,7 @@ from app.use_cases.resources.list_schedule_exceptions_use_case import (
 )
 from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCase
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.knowledge_store import KnowledgeStore
@@ -133,10 +134,13 @@ class KnowledgeHarness(KnowledgeStore):
             knowledge_item_repo=self.knowledge_item_repo,
             resource_repo=self.resource_repo,
         )
+        self.data_task_states = data_task_states()
         self.list_knowledge_items = ListKnowledgeItemsUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
             resource_repo=self.resource_repo,
+            data_task_registry=no_data_tasks(),
+            data_task_state_repo=self.data_task_states,
         )
         self.upsert_knowledge_items = UpsertKnowledgeItemsUseCase(
             business_repo=self.business_repo,

@@ -15,6 +15,7 @@ import { useIncidents } from "../../_lib/useIncidents";
 import { AlertsCard } from "./AlertsCard";
 import { AnnouncementsCard } from "./AnnouncementsCard";
 import { ChannelsCard } from "./ChannelsCard";
+import { DataTasksCard } from "./DataTasksCard";
 import { DeadLettersCard } from "./DeadLettersCard";
 import { IncidentDialog } from "./IncidentDialog";
 import { IncidentsCard } from "./IncidentsCard";
@@ -84,6 +85,7 @@ export function SystemScreen() {
           <WorkersCard workers={data.workers} />
           <LanesCard lanes={data.lanes} />
           <DeadLettersCard tallies={data.dead_jobs} />
+          <DataTasksCard />
           <div className="grid gap-6 xl:grid-cols-2">
             <ChannelsCard
               inError={data.channels_in_error}
