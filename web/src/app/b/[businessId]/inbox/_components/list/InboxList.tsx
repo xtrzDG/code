@@ -219,7 +219,7 @@ function InboxRowsSkeleton({ rows = 8, density }: { rows?: number; density: Inbo
   const isCompact = density === "compact";
   return (
     <div aria-hidden className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
-      <div className="h-11" />
+      <div className="h-10" />
       {Array.from({ length: rows }, (_, index) => (
         <div key={index} className={cn("flex items-center gap-3", isCompact ? "px-2 py-2" : "px-3 py-2.5")}>
           <Skeleton className={cn("shrink-0 rounded-full", isCompact ? "size-7" : "size-10")} />

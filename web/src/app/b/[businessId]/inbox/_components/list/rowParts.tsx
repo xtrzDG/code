@@ -7,7 +7,7 @@
  * exact time) that the hover card shows and screen readers hear.
  */
 
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import {
@@ -147,44 +147,53 @@ function AssigneeValue({ row, member }: { row: InboxRow; member: TeamMember | nu
   );
 }
 
+/** One detail: its name over its value. */
+function Detail({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span className="block min-w-0">
+      <span className="block text-[0.6875rem] font-medium tracking-wide text-ink-subtle uppercase">{label}</span>
+      <span className="block min-w-0 break-words text-ink">{children}</span>
+    </span>
+  );
+}
+
 /**
  * What the row no longer shows on its face: who handles it, where the
  * customer came from, after hours, notes and the exact time of the last
- * message. A list of label and value, for the hover card and (read in
- * the row's link) for screen readers.
+ * message. Each name over its value, for the hover card and (read in the
+ * row's link) for screen readers.
  */
 export function RowDetails({ row, member, className }: { row: InboxRow; member: TeamMember | null; className?: string }) {
   const { t, tp } = useI18n();
   const format = useBusinessFormat();
   const showsAssignee = row.assigneeUserId !== undefined && (row.assigneeUserId !== null || row.handoff || row.request);
   return (
-    <span className={cn("grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5", className)}>
+    <span className={cn("flex flex-col gap-2", className)}>
       {showsAssignee ? (
-        <>
-          <span className="text-ink-subtle">{t("inboxTriage.details.assignee")}</span>
+        <Detail label={t("inboxTriage.details.assignee")}>
           <AssigneeValue row={row} member={member} />
-        </>
+        </Detail>
       ) : null}
-      {row.acquisitionSource ? (
-        <>
-          <span className="text-ink-subtle">{t("inboxTriage.details.source")}</span>
-          <span className="truncate">{sourceLabel(row.acquisitionSource, t)}</span>
-        </>
-      ) : null}
-      {row.isAfterHours ? (
-        <span className="col-span-2 inline-flex items-center gap-1.5 text-ink-muted">
-          <IconMoon className="size-3.5" aria-hidden />
-          {t("insights.afterHours")}
+      {row.acquisitionSource ? <Detail label={t("inboxTriage.details.source")}>{sourceLabel(row.acquisitionSource, t)}</Detail> : null}
+      <Detail label={t("inboxTriage.details.lastMessage")}>
+        <span className="tabular-nums">{format.dateTime(row.lastMessageAt)}</span>
+      </Detail>
+      {row.isAfterHours || row.noteCount > 0 ? (
+        <span className="flex flex-wrap gap-x-3 gap-y-1">
+          {row.isAfterHours ? (
+            <span className="inline-flex items-center gap-1.5 text-ink-muted">
+              <IconMoon className="size-3.5" aria-hidden />
+              {t("insights.afterHours")}
+            </span>
+          ) : null}
+          {row.noteCount > 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-warning">
+              <IconPencil className="size-3.5" aria-hidden />
+              {tp("inbox.row.notes", row.noteCount)}
+            </span>
+          ) : null}
         </span>
       ) : null}
-      {row.noteCount > 0 ? (
-        <span className="col-span-2 inline-flex items-center gap-1.5 text-warning">
-          <IconPencil className="size-3.5" aria-hidden />
-          {tp("inbox.row.notes", row.noteCount)}
-        </span>
-      ) : null}
-      <span className="text-ink-subtle">{t("inboxTriage.details.lastMessage")}</span>
-      <span className="tabular-nums">{format.dateTime(row.lastMessageAt)}</span>
     </span>
   );
 }

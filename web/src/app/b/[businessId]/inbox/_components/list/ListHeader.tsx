@@ -10,7 +10,7 @@
 
 import { useEffect, useId, useRef } from "react";
 
-import { IconCheck } from "@/components/icons";
+import { IconCheck, IconX } from "@/components/icons";
 import { Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -132,21 +132,28 @@ export function ListHeader({
   return (
     <div
       className={cn(
-        "sticky top-0 z-20 flex min-h-11 items-center gap-1.5 border-b border-line px-2 py-1.5 transition-colors",
+        "sticky top-0 z-20 flex min-h-10 items-center gap-1.5 border-b border-line px-2 py-1 transition-colors",
         isSelecting ? "bg-accent-soft" : "bg-surface",
       )}
     >
       {canSelect ? <SelectAllBox state={selection} onToggle={onToggleAll} /> : null}
       {isSelecting ? (
         <>
-          <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink" aria-live="polite">
+          <p className="min-w-0 flex-1 truncate ps-1 text-sm font-medium text-ink" aria-live="polite">
             {tp("inboxTriage.select.count", selectedCount)}
           </p>
           <Button size="sm" onClick={onResolve} isLoading={isResolving} className="shrink-0">
             {t("inboxTriage.select.resolve")}
           </Button>
-          <Button size="sm" variant="ghost" onClick={onClear} className="shrink-0">
-            {t("inboxTriage.select.clear")}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onClear}
+            aria-label={t("inboxTriage.select.clear")}
+            title={t("inboxTriage.select.clear")}
+            className="w-8 shrink-0 px-0"
+          >
+            <IconX className="size-4" />
           </Button>
         </>
       ) : (

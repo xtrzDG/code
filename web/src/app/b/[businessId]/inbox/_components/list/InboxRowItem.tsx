@@ -86,7 +86,7 @@ function RowCheck({ row, state, onToggle }: { row: InboxRow; state: RowState; on
     <label
       className={cn(
         "absolute z-10 flex cursor-pointer items-center justify-center rounded-full transition-opacity",
-        isCompact ? "start-2 top-1/2 size-7 -translate-y-1/2" : "start-3 top-2.5 size-10",
+        isCompact ? "start-2 top-1/2 size-7 -translate-y-1/2" : "start-3 top-1/2 size-9 -translate-y-1/2",
         shows ? "opacity-100" : "opacity-0 group-hover/row:opacity-100 focus-within:opacity-100",
       )}
     >
@@ -157,7 +157,7 @@ export function InboxRowItem({
           "relative flex min-w-0 transition-colors focus-visible:-outline-offset-2",
           "before:absolute before:inset-y-1.5 before:start-0 before:w-1 before:rounded-full",
           row.handoff ? URGENCY_EDGE[row.handoff.urgency] : "before:bg-transparent",
-          isCompact ? "items-center gap-2 py-2 ps-11 pe-3" : "flex-col gap-1 py-2.5 ps-16 pe-4",
+          isCompact ? "items-center gap-2 py-2 ps-11 pe-3" : "flex-col gap-0.5 py-2 ps-15 pe-4",
           state.isOpen || state.isChecked ? "bg-accent-soft" : "hover:bg-surface-muted active:bg-surface-muted",
           state.isCursor && !state.isOpen && !state.isChecked && "bg-surface-muted",
         )}
@@ -167,7 +167,7 @@ export function InboxRowItem({
           data-user-content
           className={cn(
             "absolute flex items-center justify-center rounded-full bg-surface-muted font-semibold text-ink-muted transition-opacity",
-            isCompact ? "start-2 top-1/2 size-7 -translate-y-1/2 text-[0.6875rem]" : "start-3 top-2.5 size-10 text-sm",
+            isCompact ? "start-2 top-1/2 size-7 -translate-y-1/2 text-[0.6875rem]" : "start-3 top-1/2 size-9 -translate-y-1/2 text-[0.8125rem]",
             hideCheckAvatar ? "opacity-0" : state.isSelectable && "group-hover/row:opacity-0",
           )}
         >
@@ -195,7 +195,7 @@ export function InboxRowItem({
         <span
           className={cn(
             "flex shrink-0 items-center gap-1.5 text-xs text-ink-subtle tabular-nums",
-            !isCompact && "absolute end-4 top-3",
+            !isCompact && "absolute end-4 top-2.5",
           )}
         >
           <ChannelGlyph channel={row.channel} />

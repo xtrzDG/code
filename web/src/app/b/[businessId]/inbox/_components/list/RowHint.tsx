@@ -20,7 +20,7 @@ import { RowDetails } from "./rowParts";
 
 /** How long the pointer or the focus rests on a row before its card shows. */
 const SHOW_AFTER_MS = 450;
-const CARD_WIDTH = 288;
+const CARD_WIDTH = 264;
 const GAP = 8;
 
 export interface HintTarget {
