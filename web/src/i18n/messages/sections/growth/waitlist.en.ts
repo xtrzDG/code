@@ -64,7 +64,7 @@ export const waitlistEn = {
   showMore: "Show more",
   timeZone: "Times are in {timezone}.",
   settings: {
-    title: "Waitlist",
+    title: "Waitlist settings",
     description:
       "A cancelled or moved booking frees a place: it is held for the first customer it fits and offered in their channel and language. A “yes” books it.",
     toggle: "Keep a waitlist",

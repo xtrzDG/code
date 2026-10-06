@@ -25,7 +25,7 @@ test("the demo restaurant's waitlist by list, and a guest taken off it", async (
   await tabs.getByRole("link", { name: pages.bookingsWaitlist }).click();
   await expect(page).toHaveURL(new RegExp(`/b/${demo.businessId}/bookings/waitlist$`));
   await expect(page.getByRole("heading", { level: 1, name: en.navigation.sections.bookings })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: pages.bookingsWaitlist })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: pages.bookingsWaitlist, exact: true })).toBeVisible();
 
   const filter = (label: string) => page.getByRole("radio", { name: new RegExp(`^${label}`) });
   const entries = page.getByRole("article");
@@ -97,7 +97,7 @@ test("staff have the waitlist tab, not the return-visit messages", async ({ brow
   const page = await context.newPage();
 
   await page.goto(`/b/${owner.businessId}/bookings/waitlist`);
-  await expect(page.getByRole("heading", { level: 2, name: pages.bookingsWaitlist })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: pages.bookingsWaitlist, exact: true })).toBeVisible();
   await expect(page.getByText(waitlist.empty.active)).toBeVisible();
   await expect(page.getByText(waitlist.settings.ownersOnly)).toBeVisible();
   await expect(page.getByRole("link", { name: pages.bookingsReturnVisits })).toHaveCount(0);
