@@ -76,7 +76,17 @@ class DropProperty:
     reason: str
 
 
-type DefinitionPatch = DropRequired | AddProperty | DropProperty
+@dataclass(frozen=True)
+class DropPropertyKeyword:
+    """A constraint of one property that the vendor wrote wrongly."""
+
+    definition: str
+    property_name: str
+    keyword: str
+    reason: str
+
+
+type DefinitionPatch = DropRequired | AddProperty | DropProperty | DropPropertyKeyword
 type SpecPatch = RepairSectionReferences | DefinitionPatch
 
 

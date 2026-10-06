@@ -11,6 +11,7 @@ from scripts.vendor_specs.spec_model import (
     AddProperty,
     DocumentFormat,
     DropProperty,
+    DropPropertyKeyword,
     DropRequired,
     RepairSectionReferences,
     SchemaRoot,
@@ -72,6 +73,16 @@ META_SPEC = VendorSpec(
             reason=(
                 "templates are sent with the language code only; 'deterministic' "
                 "is the only policy and the Cloud API applies it by default"
+            ),
+        ),
+        DropPropertyKeyword(
+            definition="TemplateComponent",
+            property_name="index",
+            keyword="pattern",
+            reason=(
+                "the published pattern '^[2-6, 11-14]$' is a one-character "
+                "class; buttons are numbered from 0 (an authentication "
+                "template's copy-code button is index 0)"
             ),
         ),
         AddProperty(

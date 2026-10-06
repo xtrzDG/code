@@ -2166,7 +2166,6 @@
   "TemplateComponent": {
    "properties": {
     "index": {
-     "pattern": "^[2-6, 11-14]$",
      "type": "string"
     },
     "parameters": {
@@ -2482,6 +2481,7 @@
   "patches": [
    "references from WebhookPayload on: the merged document renamed the webhook's message schemas (TextMessage_2, AudioMessage_1, ...) but kept references to the send API's schemas of the same name",
    "LanguageObject.policy: templates are sent with the language code only; 'deterministic' is the only policy and the Cloud API applies it by default",
+   "TemplateComponent.index: the published pattern '^[2-6, 11-14]$' is a one-character class; buttons are numbered from 0 (an authentication template's copy-code button is index 0)",
    "MarkMessageRequestPayload.typing_indicator: typing indicators ride on the read receipt (developers.facebook.com/docs/whatsapp/cloud-api/typing-indicators)"
   ],
   "provider": "meta",

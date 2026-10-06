@@ -41,8 +41,8 @@ def log_skipped_parts(
     is_routine: bool = all(kind in routine_kinds for kind in counts)
     logger.log(
         logging.DEBUG if is_routine else logging.INFO,
-        "Skipped %d part(s) of a %s webhook without a customer message: %s.",
-        len(kinds),
+        "%s webhook: skipped %d part(s) without a customer message: %s.",
         platform,
+        len(kinds),
         ", ".join(f"{kind}={count}" for kind, count in sorted(counts.items())),
     )

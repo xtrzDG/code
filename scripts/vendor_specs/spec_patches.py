@@ -16,6 +16,7 @@ from scripts.vendor_specs.spec_model import (
     AddProperty,
     DefinitionPatch,
     DropProperty,
+    DropPropertyKeyword,
     DropRequired,
     JsonObject,
     JsonValue,
@@ -89,8 +90,21 @@ def apply_definition_patch(definitions: JsonObject, patch: DefinitionPatch) -> N
                 f"{patch.definition}.{patch.property_name} is now in the spec."
             )
         properties[patch.property_name] = patch.schema
+    elif isinstance(patch, DropPropertyKeyword):
+        drop_property_keyword(target, patch)
     else:
         drop_property(target, patch)
+
+
+def drop_property_keyword(definition: JsonObject, patch: DropPropertyKeyword) -> None:
+    properties: JsonObject = property_map(definition, patch.definition)
+    schema: object = properties.get(patch.property_name)
+    if not isinstance(schema, dict) or patch.keyword not in schema:
+        raise StalePatchError(
+            f"{patch.definition}.{patch.property_name} has no {patch.keyword}."
+        )
+
+    del cast(JsonObject, schema)[patch.keyword]
 
 
 def drop_required(definition: JsonObject, patch: DropRequired) -> None:

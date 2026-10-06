@@ -1,0 +1,30 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "104922111111111",
+      "time": 1750276000123,
+      "messaging": [
+        {
+          "sender": {
+            "id": "7034567890123456"
+          },
+          "recipient": {
+            "id": "104922111111111"
+          },
+          "timestamp": 1750276020000,
+          "postback": {
+            "title": "Get Started",
+            "payload": "GET_STARTED",
+            "mid": "m_postback-0001",
+            "referral": {
+              "ref": "src_flyer",
+              "source": "SHORTLINK",
+              "type": "OPEN_THREAD"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
