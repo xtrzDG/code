@@ -13,6 +13,9 @@ from app.schemas.constants.telemetry import ServiceLevelSeries
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.service_levels import ServiceLevelSlotDocument
 from app.schemas.dto.service_levels import LatencyBucketTally, ServiceLevelTally
+from app.schemas.typings.deliveries.constrained_integers import (
+    InboundProcessingAttemptCount,
+)
 from app.schemas.typings.observability.constrained_floats import (
     ServiceLevelObjective,
 )
@@ -43,6 +46,9 @@ OBJECTIVES: Mapping[ServiceLevelSeries, ServiceLevelObjective] = {
     ServiceLevelSeries.INBOUND_ANSWERED: ServiceLevelObjective(0.995),
     ServiceLevelSeries.API_AVAILABILITY: ServiceLevelObjective(0.999),
 }
+# A refusal on the first processing attempt is final at once
+# (app/utilities/deliveries/inbound_failures.py).
+FIRST_ATTEMPT: InboundProcessingAttemptCount = InboundProcessingAttemptCount(1)
 ANSWERED_STATUSES: frozenset[InboundEventStatus] = frozenset(
     {InboundEventStatus.ANSWERED, InboundEventStatus.HANDED_OFF}
 )
@@ -71,9 +77,25 @@ def slot_key(series: ServiceLevelSeries, slot_start: Microseconds) -> str:
 
 
 def is_customer_message(event: InboundEventDocument) -> bool:
+    """A business's customer message the answer SLO counts (see below)."""
+
     return (
         event.kind is InboundEventKind.CUSTOMER_MESSAGE
         and event.business_id is not None
+        and not is_refused_by_design(event)
+    )
+
+
+def is_refused_by_design(event: InboundEventDocument) -> bool:
+    """
+    Given up on its first try or before any: a refusal no later attempt
+    could change (the business is not live, the message cannot be read) or
+    an erasure. The SLO does not count these, as it does not count a paused
+    assistant; a message that failed after retries counts as missed.
+    """
+
+    return event.status is InboundEventStatus.FAILED and int(event.attempts) <= int(
+        FIRST_ATTEMPT
     )
 
 

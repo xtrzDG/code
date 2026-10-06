@@ -50,6 +50,33 @@ only when the worker runs as a private service or next to an agent; the
 queue series are on the API's `/metrics` too, so the queue can always be
 graphed. Scrape with Grafana Alloy or Prometheus (EU region) every 15-30 s.
 
+**Dashboards.** `ops/grafana/workshop-service.json` graphs every series
+above in one dashboard (HTTP, webhooks and the queue, answers and models,
+outbound sends, the database pool and the circuit breakers) and the burn
+rates of both error budgets; `ops/grafana/README.md` says how to import it.
+
+## Service level rows (`record_sli`)
+
+The SLOs of `docs/operations/slo.md` are counted in the database rather
+than in Prometheus, so every instance, the error budget card and the
+alerts read the same figures (migration 1163):
+
+- Each API process counts the requests it answers (not `/healthz`,
+  `/readyz` or `/metrics`) and those answered with a 5xx, per five-minute
+  slot, and adds them to `service_level_slots` every 15 s and at shutdown;
+  a failed write keeps the counts for the next one.
+- The `record_sli` job (every 5 min, once across workers) judges the
+  customer messages of each slot once the 60 s deadline has passed: a
+  message answered or handed off within 60 s of arriving is good. After
+  each full hour it writes a `service_level_hours` row: messages and those
+  in time, the reply p95 from `messages.reply_latency_ms`, API requests and
+  server errors. A first run starts with the previous hour; a stopped job
+  catches up at most one day.
+- Slots are kept 35 days, hour rows 90 days.
+- `/admin/system` shows the error budget of the last 28 days per objective
+  and the last hour's burn rate (`GET /v1/admin/system/error-budget`), and
+  the four burn-rate alerts read the slots.
+
 ## Traces (OpenTelemetry and Sentry)
 
 With `OTEL_EXPORTER_OTLP_ENDPOINT` (an OTLP/HTTP collector, EU region;

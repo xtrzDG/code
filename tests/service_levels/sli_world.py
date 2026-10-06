@@ -27,6 +27,9 @@ from app.schemas.typings.conversations.constrained_integers import (
 )
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.deliveries.constrained_integers import (
+    InboundProcessingAttemptCount,
+)
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.observability.record_service_levels_use_case import (
     RecordServiceLevelsUseCase,
@@ -50,6 +53,7 @@ def inbound(
     status: InboundEventStatus = InboundEventStatus.ANSWERED,
     kind: InboundEventKind = InboundEventKind.CUSTOMER_MESSAGE,
     business_id: BusinessId | None = BUSINESS,
+    attempts: int = 1,
 ) -> InboundEventDocument:
     """A customer message received at `created_at`, processed after a wait."""
 
@@ -62,6 +66,7 @@ def inbound(
         kind=kind,
         channel=ChannelKind.TELEGRAM,
         provider_message_id=provider_message_id,
+        attempts=InboundProcessingAttemptCount(attempts),
         status=(status if answered_after is not None else InboundEventStatus.RECEIVED),
         processed_at=(
             None

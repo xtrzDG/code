@@ -31,23 +31,39 @@ by e-mail to owners).
 
 ## How each SLO is read today
 
-- **Answered in time.** Each inbound job logs its pickup delay
-  (`pickup_delay_ms`, `docs/operations/capacity.md`, "Pickup"), and each
-  turn its duration in the conversation log. The early signal is the
-  `inbound_backlog` alert: a customer message waiting more than 120 s for
-  a worker means this SLO is being spent right now. The exact SLI is a
-  query over `messages` (first assistant reply or handoff after each
-  inbound message); the metrics pipeline of W15 (OpenTelemetry) turns it
-  into a dashboard and a burn-rate alert.
-- **Answer latency.** The same pairs, replies only. The metrics pipeline
-  (W15) reports the p95 per day; until it does, Sentry's traces of
-  `process_inbound_message` (sampled at `SENTRY_TRACES_SAMPLE_RATE`) give
-  the distribution, and the `llm_errors` alert catches the most common
-  cause, a slow or failing provider.
-- **API availability.** Render's HTTP metrics per service (5xx rate) and
-  an external uptime monitor on `GET /readyz` every minute (UptimeRobot or
-  Better Stack, EU probe; set it up at launch, `docs/LAUNCH.md` 4.9).
-  Sentry shows the errors behind each 5xx.
+Every SLI is counted in the database (migration 1163,
+`docs/operations/observability.md`, "Service level rows"), so every
+instance, the error budget card and the alerts read the same figures:
+
+- **Answered in time.** The `record_sli` job (every 5 minutes) judges each
+  five-minute slot of customer messages once their 60 s are over: an inbox
+  event answered or handed off within 60 s of arriving is good; one answered
+  later, never, or failed after its retries is bad. A message refused on its
+  first try (the business is not live, the message cannot be read) or
+  dropped by an erasure is not counted, like a paused assistant. The slots
+  live in `service_level_slots`; every hour is summed into
+  `service_level_hours`.
+- **Answer latency.** The hour row's p95 of `messages.reply_latency_ms`
+  (assistant replies stored in that hour), from the latency buckets the
+  reply speed page uses. The budget card counts the hours whose p95 was
+  above 15 s. Prometheus has the same in
+  `workshop_answer_latency_seconds` per channel, and Sentry's traces of
+  `process_inbound_message` show where a slow turn spent its time.
+- **API availability.** Each API process counts the requests it answers
+  (not the probes `/healthz`, `/readyz` or `/metrics`) and those answered
+  with a 5xx per slot, and adds them to the shared slots every 15 s. A
+  request that never reached the API (a crash, the edge refusing) is not
+  in these counts: the external uptime monitor on `GET /readyz` every
+  minute (UptimeRobot or Better Stack, EU probe; set it up at launch,
+  `docs/LAUNCH.md` 4.9) and Render's HTTP metrics cover that, and Sentry
+  shows the errors behind each 5xx.
+
+`/admin/system` shows, per objective, what is left of the 28-day budget
+and how fast the last hour burned it (1x spends the budget exactly in 28
+days), and the answer p95 against 15 s
+(`GET /v1/admin/system/error-budget`). The Grafana dashboard
+(`ops/grafana/`) graphs the same objectives from the Prometheus histograms
+between those rows.
 
 ## Alerts
 
@@ -68,6 +84,21 @@ figure is above its threshold:
 | `stale_worker` | a worker of the current release has not beaten for 10 minutes while others run | SEV2 | [stuck-worker](runbooks/stuck-worker.md) |
 | `otp_cap_trips` | a platform cap refused a login code in the last 15-30 minutes | SEV2 | [sms-pumping](runbooks/sms-pumping.md) |
 | `quality_drop` | the judge's average score of the last day's sampled real conversations is over 10% below the 7 days before (at least 10 scored in each) | SEV3 | [assistant-quality](runbooks/assistant-quality.md) |
+| `answer_budget_fast_burn` | the answer budget burns over 14.4 times the sustainable pace in the last hour and the last 5 minutes (at least 20 messages) | SEV1 | [error-budget-burn](runbooks/error-budget-burn.md) |
+| `answer_budget_slow_burn` | the answer budget burns over 6 times the sustainable pace in the last 6 hours and the last 30 minutes (at least 20 messages) | SEV2 | [error-budget-burn](runbooks/error-budget-burn.md) |
+| `api_budget_fast_burn` | the API budget burns over 14.4 times the sustainable pace in the last hour and the last 5 minutes (at least 100 requests) | SEV1 | [error-budget-burn](runbooks/error-budget-burn.md) |
+| `api_budget_slow_burn` | the API budget burns over 6 times the sustainable pace in the last 6 hours and the last 30 minutes (at least 100 requests) | SEV2 | [error-budget-burn](runbooks/error-budget-burn.md) |
+
+**Burn rates.** The four budget alerts are multi-window burn-rate rules
+on the `service_level_slots` rows. A burn rate of 14.4 for an hour spends
+2% of the 28-day budget; 6 for six hours spends 5%. Each rule needs its
+long window (the size of the problem) and its short window (that it is
+still happening) both above the threshold, so it fires within minutes of
+a real outage and resolves soon after it ends instead of an hour later.
+The customer-message windows end with the newest slot `record_sli` judged
+(about two minutes behind), and a rule whose newest slot is older than its
+long window stays quiet: a stopped `record_sli` pages through Sentry Crons
+and `stale_worker`, not as a burn.
 
 **Episodes and cooldown.** An alert that starts firing is sent at once
 ("FIRING"). While it keeps firing it is sent again only after

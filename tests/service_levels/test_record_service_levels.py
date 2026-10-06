@@ -43,12 +43,19 @@ def test_an_hour_counts_messages_answered_or_handed_off_within_60_s() -> None:
         ),
         inbound(HOUR_START + 20 * MINUTE, 61 * SECOND),  # too late
         inbound(HOUR_START + 30 * MINUTE, None),  # never answered
-        inbound(
+        inbound(  # failed after its retries
             HOUR_START + 40 * MINUTE,
             2 * SECOND,
             status=InboundEventStatus.FAILED,
+            attempts=5,
         ),
-        # Not customer messages: a platform bot update, one without business.
+        # Not counted: refused at once (the business is not live), a
+        # platform bot update, one without business.
+        inbound(
+            HOUR_START + 40 * MINUTE + SECOND,
+            1 * SECOND,
+            status=InboundEventStatus.FAILED,
+        ),
         inbound(
             HOUR_START + 41 * MINUTE,
             1 * SECOND,
