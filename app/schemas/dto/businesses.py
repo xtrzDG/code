@@ -207,7 +207,9 @@ class InviteStaffRequest(ImmutableDTO):
 
     Exactly one of `phone_number` and `email` is set. National phone formats
     are read in `country_hint`, or in the business country when it is missing.
-    `role` is staff unless an owner adds another owner.
+    `role` is staff unless an owner adds another owner, or an agency: an
+    outside helper who does staff's work and builds the assistant, never
+    billing, the team or copies of customers' data.
 
     Example: {"email": "chef@example.com", "role": "owner"}.
     """

@@ -294,6 +294,24 @@ workshop backfill-lookup --collection usage_events
 Running it again is harmless; a rollback needs nothing beyond the usual
 (the old release ignores the new columns and collections).
 
+The release with referrals and partners (R15, migration 1150,
+`BusinessDocument` version 6, `BillingCreditDocument` version 2) also
+writes a new enum value in the release that introduces it, an exception
+to the enum rule below: the team role `agency` (an outside helper an owner
+lets into the team, without billing). An old API instance reads a business
+with such a member as invalid and fails that request, so add agency
+members only once the deploy has finished; before rolling back past that
+release, change every agency member to staff or remove them. The new
+fields (a business's `referred_by` and `hides_powered_by`, a credit line's
+`referral_of`) and the new collections (`partners`, `referral_codes`,
+`referrals`, `commission_entries`) are unknown to the old release, which
+ignores them; but during the overlap a business created on an old
+instance is referred by nobody, a payment an old instance books earns no
+commission and no month of credit (grant the month by hand: the referral
+row names the business), and an old instance that saves a business drops
+who referred it and a Plus owner's hidden "Powered by" link (choose it
+again after the overlap).
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their
