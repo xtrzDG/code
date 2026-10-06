@@ -54,7 +54,9 @@ class BusinessLinkKind(StrEnum):
 
 
 class BusinessSettingsRefusalCode(StrEnum):
-    """Machine-readable reasons a settings change is refused (409)."""
+    """Machine-readable reasons a settings change is refused (409, 412)."""
 
     # The change was made from an older revision: someone saved since.
     STALE_REVISION = "stale_revision"
+    # The If-Match header names another revision than the stored one (412).
+    PRECONDITION_FAILED = "precondition_failed"

@@ -38,6 +38,7 @@ from app.schemas.exceptions.application_errors import (
     ConflictError,
     ExternalServiceError,
     NotFoundError,
+    PreconditionFailedError,
     RateLimitedError,
     ValidationFailedError,
 )
@@ -53,6 +54,9 @@ ERROR_STATUS_CODES: tuple[tuple[type[ApplicationError], int, ApiErrorCode], ...]
     (NotFoundError, 404, ApiErrorCode.NOT_FOUND),
     (ValidationFailedError, 422, ApiErrorCode.VALIDATION_FAILED),
     (ConflictError, 409, ApiErrorCode.CONFLICT),
+    # An edit conflict found by If-Match: the same broad kind as a stale
+    # revision in the body, with the status HTTP defines for it.
+    (PreconditionFailedError, 412, ApiErrorCode.CONFLICT),
     (AuthenticationRequiredError, 401, ApiErrorCode.AUTHENTICATION_REQUIRED),
     (AccessDeniedError, 403, ApiErrorCode.ACCESS_DENIED),
     (RateLimitedError, 429, ApiErrorCode.RATE_LIMITED),

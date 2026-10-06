@@ -6,6 +6,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.operations.business_access import (
     BUSINESS_PREFIX,
     BusinessAuthorizer,
@@ -74,6 +78,7 @@ def build_booking_routes(
     reschedule_booking: OperatorContract[RescheduleBookingCommand, BookingResult],
     update_booking: OperatorContract[UpdateBookingCommand, BookingView],
     revert_booking_status: OperatorContract[RevertBookingStatusCommand, BookingView],
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Availability and bookings under /v1/businesses/{business_id} (Bearer
@@ -153,6 +158,7 @@ def build_booking_routes(
         f"{BUSINESS_PREFIX}/bookings",
         status_code=201,
         openapi_extra=describe_json_body(ManualBookingRequest),
+        dependencies=[Depends(idempotent)],
     )
     def post_booking(
         business_id: str,

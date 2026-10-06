@@ -132,6 +132,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       billing_profile: "Платёжные реквизиты",
       business_export: "Полная выгрузка данных",
       export_download_link: "Ссылка на скачивание выгрузки",
+      idempotency_key: "Сохранённые ответы на повторные запросы",
       business_profile_contacts: "Контакты бизнеса",
       business_profile_starter_answers: "Готовые ответы",
       business_security: "Безопасность входа команды",

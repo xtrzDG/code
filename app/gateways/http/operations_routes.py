@@ -11,6 +11,10 @@ Lists are paged with `?limit=N&cursor=…`.
 from fastapi import APIRouter
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.operations.booking_routes import build_booking_routes
 from app.gateways.http.operations.business_access import build_business_authorizer
@@ -110,6 +114,7 @@ def build_operations_router(
         CalendarConnectionStatusQuery, CalendarConnectionStatusView
     ],
     cabinet_base_url: CabinetBaseUrl | None,
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Cabinet routes under /v1/businesses/{business_id} (Bearer auth; owners
@@ -132,6 +137,7 @@ def build_operations_router(
             reschedule_booking=reschedule_booking,
             update_booking=update_booking,
             revert_booking_status=revert_booking_status,
+            idempotent=idempotent,
         )
     )
     router.include_router(

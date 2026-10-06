@@ -94,7 +94,16 @@ export function sanitizeRequestId(value: string | null | undefined): string {
 }
 
 /** `range` and `if-range`: media players ask for parts of a recording. */
-const FORWARDED_REQUEST_HEADERS = ["accept", "content-type", "user-agent", "range", "if-range"] as const;
+const FORWARDED_REQUEST_HEADERS = [
+  "accept",
+  "content-type",
+  "user-agent",
+  "range",
+  "if-range",
+  // One key per user action, so a retry is answered, not repeated.
+  "idempotency-key",
+  "if-match",
+] as const;
 
 /**
  * The X-Forwarded-For hops the cabinet's own proxies added: the right-most
@@ -165,6 +174,9 @@ const FORWARDED_RESPONSE_HEADERS = [
   // A media player seeks and (Safari, iOS) plays only with byte ranges.
   "accept-ranges",
   "content-range",
+  // The settings revision, and whether an answer is a replay of a retry.
+  "etag",
+  "idempotent-replayed",
   REQUEST_ID_HEADER,
 ] as const;
 

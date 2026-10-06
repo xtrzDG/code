@@ -32,6 +32,11 @@ ERROR_STATUS_DESCRIPTIONS: dict[int, str] = {
         "data are reported as not found."
     ),
     409: "Conflicts with the current state (stale revision, slot taken).",
+    412: (
+        "The If-Match precondition does not hold: the resource was saved "
+        "after the ETag was read (`error` conflict, reason "
+        "`precondition_failed` with the current revision)."
+    ),
     422: (
         "The request is invalid: a missing or malformed parameter, header or "
         "body (`reasons` name the fields), or a broken business rule."

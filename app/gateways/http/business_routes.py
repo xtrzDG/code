@@ -2,9 +2,15 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.entity_tags import (
+    ETAG_RESPONSE_HEADER,
+    IfMatchHeader,
+    read_if_match_revisions,
+    tag_response_with_revision,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -66,7 +72,10 @@ def build_business_router(
     The last owner of a business can be neither removed nor made staff (409).
     A settings change carries the `revision` it was made from as
     `expected_revision`; when someone saved the business since, nothing
-    changes and the answer is 409 with the reason `stale_revision`.
+    changes and the answer is 409 with the reason `stale_revision`. GET and
+    PATCH of one business answer its revision as ETag too, and a PATCH
+    with If-Match naming another revision is refused with 412
+    (app/gateways/http/entity_tags.py).
     """
 
     router = APIRouter(tags=["businesses"], responses=standard_error_responses())
@@ -90,36 +99,51 @@ def build_business_router(
     ) -> list[BusinessView]:
         return list_my_businesses_operator.operate(user_id)
 
-    @router.get("/v1/businesses/{business_id}")
+    @router.get(
+        "/v1/businesses/{business_id}",
+        responses={200: {"headers": ETAG_RESPONSE_HEADER}},
+    )
     def get_business(
         business_id: str,
+        response: Response,
         user_id: Annotated[UserId, Depends(current_user)],
     ) -> BusinessView:
-        return get_business_operator.operate(
+        business: BusinessView = get_business_operator.operate(
             BusinessQuery(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
             )
         )
+        tag_response_with_revision(response, business.revision)
+        return business
 
     @router.patch(
         "/v1/businesses/{business_id}",
         openapi_extra=describe_json_body(BusinessSettingsChanges),
+        responses={
+            200: {"headers": ETAG_RESPONSE_HEADER},
+            **standard_error_responses(412),
+        },
     )
     def update_business_settings(
         request: Request,
+        response: Response,
         business_id: str,
         user_id: Annotated[UserId, Depends(current_user)],
         body: Annotated[BusinessSettingsChanges, Depends(read_business_settings_body)],
+        if_match: IfMatchHeader = None,
     ) -> BusinessView:
-        return update_business_settings_operator.operate(
+        business: BusinessView = update_business_settings_operator.operate(
             UpdateBusinessSettingsCommand(
                 user_id=user_id,
                 business_id=parse_path_identifier(business_id, BusinessId, "Business"),
                 changes=body,
                 client_ip_address=read_client_ip_address(request),
+                if_match_revisions=read_if_match_revisions(if_match),
             )
         )
+        tag_response_with_revision(response, business.revision)
+        return business
 
     @router.post(
         "/v1/businesses/{business_id}/members",

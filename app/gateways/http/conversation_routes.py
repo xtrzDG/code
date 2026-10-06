@@ -17,6 +17,10 @@ from app.gateways.http.conversations.recording_response import (
     RECORDING_OPENAPI_RESPONSES,
     build_recording_response,
 )
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.message_media_routes import build_message_media_router
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.paging_query import parse_page_request
@@ -87,6 +91,7 @@ def build_conversation_router(
         ConversationMessagesQuery, MessagePage
     ],
     get_message_media_operator: OperatorContract[MessageMediaQuery, StoredMediaFile],
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Routes (all require a bearer token; owners and staff):
@@ -217,6 +222,7 @@ def build_conversation_router(
         "/v1/businesses/{business_id}/conversations/{conversation_id}/messages",
         status_code=201,
         openapi_extra=describe_json_body(StaffMessageRequest),
+        dependencies=[Depends(idempotent)],
     )
     def send_staff_message(
         request: Request,

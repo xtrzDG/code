@@ -4,7 +4,9 @@ name: API contract
 # compares web/openapi.json with its state at the merge base and fails on
 # breaking changes. A deliberate break (agreed with every client, recorded
 # in docs/API_CHANGELOG.md) is let through by the `api-breaking` label; the
-# label events re-run this workflow alone.
+# label events re-run this workflow alone. .github/oasdiff-severity-levels.txt
+# raises oasdiff's own levels where our clients need more: a changed
+# operationId renames a method of every generated SDK, so it is an error.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -68,4 +70,5 @@ jobs:
         if: steps.base.outputs.found == 'true'
         run: |
           "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base-openapi.json" web/openapi.json --fail-on ERR \
+            --severity-levels .github/oasdiff-severity-levels.txt \
             || { echo "::error::Breaking API change. Make it additive (docs/api-versioning.md) or, if agreed, label the pull request api-breaking and record it in docs/API_CHANGELOG.md."; exit 1; }

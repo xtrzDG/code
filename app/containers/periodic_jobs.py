@@ -36,6 +36,9 @@ from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_business_exports import (
     purge_business_exports_job,
 )
+from app.gateways.worker.periodic.purge_idempotency_keys import (
+    purge_idempotency_keys_job,
+)
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
 from app.gateways.worker.periodic.quality_sampling import quality_sampling_job
 from app.gateways.worker.periodic.record_platform_status import (
@@ -252,6 +255,10 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         ),
         Factory(
             retention_purge_job, operator=operators.privacy.retention_purge_operator
+        ),
+        Factory(  # Idempotency keys of creating requests, a day each (1174).
+            purge_idempotency_keys_job,
+            operator=operators.idempotency.purge_idempotency_keys_operator,
         ),
         Factory(  # Sub-processor changes told 30 days ahead (DPA 8.3).
             send_subprocessor_notices_job,

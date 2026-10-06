@@ -26,6 +26,9 @@ from app.containers.operators.data_task_operators import DataTaskOperatorsContai
 from app.containers.operators.demo_operators import DemoOperatorsContainer
 from app.containers.operators.feedback_operators import FeedbackOperatorsContainer
 from app.containers.operators.growth_operators import GrowthOperatorsContainer
+from app.containers.operators.idempotency_operators import (
+    IdempotencyOperatorsContainer,
+)
 from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
 from app.containers.operators.legal_operators import LegalOperatorsContainer
@@ -176,6 +179,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     reliability: ReliabilityOperatorsContainer = Container(  # type: ignore[assignment]
         ReliabilityOperatorsContainer,
         reliability_pipelines=pipelines.reliability,
+        utilities=utilities,
+    )
+    idempotency: IdempotencyOperatorsContainer = Container(  # type: ignore[assignment]
+        IdempotencyOperatorsContainer,
+        idempotency_pipelines=pipelines.idempotency,
         utilities=utilities,
     )
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]

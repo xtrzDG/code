@@ -6,6 +6,7 @@ from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.billing_document_routes import build_billing_document_router
 from app.gateways.http.billing_lifecycle_routes import build_billing_lifecycle_router
 from app.gateways.http.billing_routes import build_billing_router
+from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.user_authentication import CurrentUserDependency
 
 
@@ -29,6 +30,7 @@ def build_billing_routers(
             subscribe_operator=billing.subscribe_operator(),
             payment_webhook_operator=billing.process_payment_webhook_operator(),
             current_user=current_user,
+            idempotent=idempotency_of(operators, current_user),
         ),
         build_billing_document_router(
             get_billing_profile_operator=billing.get_billing_profile_operator(),

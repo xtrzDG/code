@@ -96,4 +96,6 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
         integer_field("slot_start"),
     ),
     DocumentCollectionName("service_level_hours"): (integer_field("hour_start"),),
+    # The hourly purge of expired idempotency keys (1174).
+    DocumentCollectionName("idempotency_keys"): (integer_field("expires_at"),),
 }

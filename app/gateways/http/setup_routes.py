@@ -5,6 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.language_negotiation import parse_language_parameter
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
@@ -51,6 +55,7 @@ def build_setup_router(
     get_starter_answers_operator: OperatorContract[
         StarterAnswersQuery, StarterAnswersView
     ],
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Routes (bearer token; reads for owners and staff, changes for owners
@@ -79,6 +84,7 @@ def build_setup_router(
         "/v1/assistants",
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(CreateBusinessRequest),
+        dependencies=[Depends(idempotent)],
     )
     def create_assistant(
         user_id: Annotated[UserId, Depends(current_user)],

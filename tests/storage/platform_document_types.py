@@ -14,6 +14,7 @@ from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import LlmTurnDocument
 from app.schemas.domain.data_tasks import DataTaskStateDocument
 from app.schemas.domain.exchange_rates import ExchangeRateDocument
+from app.schemas.domain.idempotency_keys import IdempotencyKeyDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.jobs import (
@@ -99,5 +100,7 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # The service level indicators count every business together (1163).
         ServiceLevelSlotDocument,
         ServiceLevelHourDocument,
+        # Idempotency keys belong to a signed-in user, not a business (1174).
+        IdempotencyKeyDocument,
     }
 )

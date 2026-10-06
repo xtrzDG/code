@@ -71,6 +71,7 @@ from app.utilities.storage.document_collection_definition import (
     DocumentCollectionDefinition,
 )
 from app.utilities.storage.growth_collections import GROWTH_COLLECTIONS
+from app.utilities.storage.idempotency_collections import IDEMPOTENCY_COLLECTIONS
 from app.utilities.storage.invoicing_collections import INVOICING_COLLECTIONS
 from app.utilities.storage.legal_collections import LEGAL_COLLECTIONS
 from app.utilities.storage.memory_collections import MEMORY_COLLECTIONS
@@ -271,6 +272,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *CLIENT_CARE_COLLECTIONS,  # Credits, notes, health changes, digests (1143).
     *REFERRAL_COLLECTIONS,  # Partners, codes, referrals, commissions (1150).
     *GROWTH_COLLECTIONS,  # The waitlist and rebooking campaigns (1151).
+    *IDEMPOTENCY_COLLECTIONS,  # Idempotency keys of creating requests (1174).
 )
 
 

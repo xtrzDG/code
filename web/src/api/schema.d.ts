@@ -12,10 +12,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Announcements */
-        get: operations["list_announcements_v1_admin_announcements_get"];
+        get: operations["platform_status_list_announcements"];
         put?: never;
         /** Create Announcement */
-        post: operations["create_announcement_v1_admin_announcements_post"];
+        post: operations["platform_status_create_announcement"];
         delete?: never;
         options?: never;
         head?: never;
@@ -36,7 +36,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Announcement */
-        patch: operations["update_announcement_v1_admin_announcements__announcement_id__patch"];
+        patch: operations["platform_status_update_announcement"];
         trace?: never;
     };
     "/v1/admin/clients": {
@@ -47,7 +47,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Clients */
-        get: operations["list_clients_v1_admin_clients_get"];
+        get: operations["admin_list_clients"];
         put?: never;
         post?: never;
         delete?: never;
@@ -64,7 +64,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Client Health */
-        get: operations["get_client_health_v1_admin_clients__business_id__get"];
+        get: operations["admin_get_client_health"];
         put?: never;
         post?: never;
         delete?: never;
@@ -84,7 +84,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Close Client Cabinet */
-        delete: operations["close_client_cabinet_v1_admin_clients__business_id__access_delete"];
+        delete: operations["admin_close_client_cabinet"];
         options?: never;
         head?: never;
         patch?: never;
@@ -100,7 +100,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Grant Credit */
-        post: operations["grant_credit_v1_admin_clients__business_id__credits_post"];
+        post: operations["admin_grant_credit"];
         delete?: never;
         options?: never;
         head?: never;
@@ -117,7 +117,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Give Discount */
-        post: operations["give_discount_v1_admin_clients__business_id__discount_post"];
+        post: operations["admin_give_discount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -134,7 +134,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Mark Invoice Paid */
-        post: operations["mark_invoice_paid_v1_admin_clients__business_id__invoices__invoice_id__manual_payment_post"];
+        post: operations["admin_mark_invoice_paid"];
         delete?: never;
         options?: never;
         head?: never;
@@ -149,10 +149,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Notes */
-        get: operations["list_notes_v1_admin_clients__business_id__notes_get"];
+        get: operations["admin_list_notes"];
         put?: never;
         /** Create Note */
-        post: operations["create_note_v1_admin_clients__business_id__notes_post"];
+        post: operations["admin_create_note"];
         delete?: never;
         options?: never;
         head?: never;
@@ -170,11 +170,11 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete Note */
-        delete: operations["delete_note_v1_admin_clients__business_id__notes__note_id__delete"];
+        delete: operations["admin_delete_note"];
         options?: never;
         head?: never;
         /** Update Note */
-        patch: operations["update_note_v1_admin_clients__business_id__notes__note_id__patch"];
+        patch: operations["admin_update_note"];
         trace?: never;
     };
     "/v1/admin/clients/{business_id}/onboarding-request/done": {
@@ -187,7 +187,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Complete Onboarding */
-        post: operations["complete_onboarding_v1_admin_clients__business_id__onboarding_request_done_post"];
+        post: operations["admin_complete_onboarding"];
         delete?: never;
         options?: never;
         head?: never;
@@ -204,7 +204,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Open Client Cabinet */
-        post: operations["open_client_cabinet_v1_admin_clients__business_id__open_post"];
+        post: operations["admin_open_client_cabinet"];
         delete?: never;
         options?: never;
         head?: never;
@@ -221,7 +221,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Override Plan */
-        post: operations["override_plan_v1_admin_clients__business_id__plan_post"];
+        post: operations["admin_override_plan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -236,7 +236,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Client Quality Route */
-        get: operations["get_client_quality_route_v1_admin_clients__business_id__quality_get"];
+        get: operations["quality_get_client_quality"];
         put?: never;
         post?: never;
         delete?: never;
@@ -255,7 +255,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Waive Setup Fee */
-        post: operations["waive_setup_fee_v1_admin_clients__business_id__setup_fee_waiver_post"];
+        post: operations["admin_waive_setup_fee"];
         delete?: never;
         options?: never;
         head?: never;
@@ -271,7 +271,7 @@ export interface paths {
         };
         get?: never;
         /** Set Client Spend Limits */
-        put: operations["set_client_spend_limits_v1_admin_clients__business_id__spend_limits_put"];
+        put: operations["admin_set_client_spend_limits"];
         post?: never;
         delete?: never;
         options?: never;
@@ -287,7 +287,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Timeline */
-        get: operations["get_timeline_v1_admin_clients__business_id__timeline_get"];
+        get: operations["admin_get_timeline"];
         put?: never;
         post?: never;
         delete?: never;
@@ -306,7 +306,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Extend Trial */
-        post: operations["extend_trial_v1_admin_clients__business_id__trial_extension_post"];
+        post: operations["admin_extend_trial"];
         delete?: never;
         options?: never;
         head?: never;
@@ -321,10 +321,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Incidents */
-        get: operations["list_incidents_v1_admin_incidents_get"];
+        get: operations["admin_list_incidents"];
         put?: never;
         /** Create Incident */
-        post: operations["create_incident_v1_admin_incidents_post"];
+        post: operations["admin_create_incident"];
         delete?: never;
         options?: never;
         head?: never;
@@ -339,7 +339,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Queued Jobs */
-        get: operations["list_queued_jobs_v1_admin_jobs_get"];
+        get: operations["admin_list_queued_jobs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -358,7 +358,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Discard Queued Job */
-        post: operations["discard_queued_job_v1_admin_jobs__job_id__discard_post"];
+        post: operations["admin_discard_queued_job"];
         delete?: never;
         options?: never;
         head?: never;
@@ -375,7 +375,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Retry Queued Job */
-        post: operations["retry_queued_job_v1_admin_jobs__job_id__retry_post"];
+        post: operations["admin_retry_queued_job"];
         delete?: never;
         options?: never;
         head?: never;
@@ -390,7 +390,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Admin Metrics */
-        get: operations["get_admin_metrics_v1_admin_metrics_get"];
+        get: operations["analytics_get_admin_metrics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -407,10 +407,10 @@ export interface paths {
             cookie?: never;
         };
         /** Get Partners */
-        get: operations["get_partners_v1_admin_partners_get"];
+        get: operations["admin_get_partners"];
         put?: never;
         /** Post Partner */
-        post: operations["post_partner_v1_admin_partners_post"];
+        post: operations["admin_post_partner"];
         delete?: never;
         options?: never;
         head?: never;
@@ -425,7 +425,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Payouts */
-        get: operations["get_payouts_v1_admin_partners_payouts_get"];
+        get: operations["admin_get_payouts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -448,7 +448,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** Patch Partner */
-        patch: operations["patch_partner_v1_admin_partners__partner_id__patch"];
+        patch: operations["admin_patch_partner"];
         trace?: never;
     };
     "/v1/admin/partners/{partner_id}/codes": {
@@ -461,7 +461,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Partner Code */
-        post: operations["post_partner_code_v1_admin_partners__partner_id__codes_post"];
+        post: operations["admin_post_partner_code"];
         delete?: never;
         options?: never;
         head?: never;
@@ -478,7 +478,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Payout */
-        post: operations["post_payout_v1_admin_partners__partner_id__payouts_post"];
+        post: operations["admin_post_payout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -493,7 +493,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Encryption Keys */
-        get: operations["get_encryption_keys_v1_admin_security_encryption_keys_get"];
+        get: operations["admin_get_encryption_keys"];
         put?: never;
         post?: never;
         delete?: never;
@@ -512,7 +512,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Key Rotation */
-        post: operations["start_key_rotation_v1_admin_security_encryption_keys_rotate_post"];
+        post: operations["admin_start_key_rotation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -527,7 +527,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Admin Spend */
-        get: operations["get_admin_spend_v1_admin_spend_get"];
+        get: operations["admin_get_admin_spend"];
         put?: never;
         post?: never;
         delete?: never;
@@ -544,7 +544,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Admin System */
-        get: operations["get_admin_system_v1_admin_system_get"];
+        get: operations["admin_get_admin_system"];
         put?: never;
         post?: never;
         delete?: never;
@@ -561,7 +561,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Data Tasks */
-        get: operations["get_data_tasks_v1_admin_system_data_tasks_get"];
+        get: operations["admin_get_data_tasks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -580,7 +580,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Retry Data Task */
-        post: operations["retry_data_task_v1_admin_system_data_tasks__task_key__retry_post"];
+        post: operations["admin_retry_data_task"];
         delete?: never;
         options?: never;
         head?: never;
@@ -595,7 +595,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Error Budget */
-        get: operations["get_error_budget_v1_admin_system_error_budget_get"];
+        get: operations["admin_get_error_budget"];
         put?: never;
         post?: never;
         delete?: never;
@@ -612,10 +612,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Platform Admins */
-        get: operations["list_platform_admins_v1_admin_team_get"];
+        get: operations["admin_list_platform_admins"];
         put?: never;
         /** Add Platform Admin */
-        post: operations["add_platform_admin_v1_admin_team_post"];
+        post: operations["admin_add_platform_admin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -633,11 +633,11 @@ export interface paths {
         put?: never;
         post?: never;
         /** Remove Platform Admin */
-        delete: operations["remove_platform_admin_v1_admin_team__admin_id__delete"];
+        delete: operations["admin_remove_platform_admin"];
         options?: never;
         head?: never;
         /** Change Platform Admin Role */
-        patch: operations["change_platform_admin_role_v1_admin_team__admin_id__patch"];
+        patch: operations["admin_change_platform_admin_role"];
         trace?: never;
     };
     "/v1/assistants": {
@@ -650,7 +650,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create Assistant */
-        post: operations["create_assistant_v1_assistants_post"];
+        post: operations["setup_create_assistant"];
         delete?: never;
         options?: never;
         head?: never;
@@ -665,7 +665,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Login Options */
-        get: operations["get_login_options_v1_auth_login_options_get"];
+        get: operations["auth_get_login_options"];
         put?: never;
         post?: never;
         delete?: never;
@@ -684,7 +684,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Logout */
-        post: operations["logout_v1_auth_logout_post"];
+        post: operations["auth_logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -701,7 +701,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Mfa Login Enrollment */
-        post: operations["start_mfa_login_enrollment_v1_auth_mfa_enroll_post"];
+        post: operations["auth_start_mfa_login_enrollment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -718,7 +718,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Verify Mfa Login */
-        post: operations["verify_mfa_login_v1_auth_mfa_verify_post"];
+        post: operations["auth_verify_mfa_login"];
         delete?: never;
         options?: never;
         head?: never;
@@ -735,7 +735,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Otp Login */
-        post: operations["start_otp_login_v1_auth_otp_start_post"];
+        post: operations["auth_start_otp_login"];
         delete?: never;
         options?: never;
         head?: never;
@@ -752,7 +752,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Verify Otp Login */
-        post: operations["verify_otp_login_v1_auth_otp_verify_post"];
+        post: operations["auth_verify_otp_login"];
         delete?: never;
         options?: never;
         head?: never;
@@ -769,7 +769,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Step Up */
-        post: operations["start_step_up_v1_auth_step_up_post"];
+        post: operations["auth_start_step_up"];
         delete?: never;
         options?: never;
         head?: never;
@@ -786,7 +786,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Verify Step Up */
-        post: operations["verify_step_up_v1_auth_step_up_verify_post"];
+        post: operations["auth_verify_step_up"];
         delete?: never;
         options?: never;
         head?: never;
@@ -801,7 +801,7 @@ export interface paths {
             cookie?: never;
         };
         /** Download Business Export */
-        get: operations["download_business_export_v1_business_exports__business_id___export_id__download_get"];
+        get: operations["exports_download_business_export"];
         put?: never;
         post?: never;
         delete?: never;
@@ -818,10 +818,10 @@ export interface paths {
             cookie?: never;
         };
         /** List My Businesses */
-        get: operations["list_my_businesses_v1_businesses_get"];
+        get: operations["businesses_list_my_businesses"];
         put?: never;
         /** Create Business */
-        post: operations["create_business_v1_businesses_post"];
+        post: operations["businesses_create_business"];
         delete?: never;
         options?: never;
         head?: never;
@@ -836,14 +836,14 @@ export interface paths {
             cookie?: never;
         };
         /** Get Business */
-        get: operations["get_business_v1_businesses__business_id__get"];
+        get: operations["businesses_get_business"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         /** Update Business Settings */
-        patch: operations["update_business_settings_v1_businesses__business_id__patch"];
+        patch: operations["businesses_update_business_settings"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/answers-to-improve": {
@@ -854,7 +854,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Answers To Improve */
-        get: operations["get_answers_to_improve_v1_businesses__business_id__answers_to_improve_get"];
+        get: operations["conversations_get_answers_to_improve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -871,9 +871,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Assistant Settings */
-        get: operations["get_assistant_settings_v1_businesses__business_id__assistant_settings_get"];
+        get: operations["assistant_settings_get_assistant_settings"];
         /** Update Assistant Settings */
-        put: operations["update_assistant_settings_v1_businesses__business_id__assistant_settings_put"];
+        put: operations["assistant_settings_update_assistant_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -889,10 +889,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Assistant Versions */
-        get: operations["list_assistant_versions_v1_businesses__business_id__assistant_versions_get"];
+        get: operations["assistant_list_assistant_versions"];
         put?: never;
         /** Assemble Assistant Version */
-        post: operations["assemble_assistant_version_v1_businesses__business_id__assistant_versions_post"];
+        post: operations["assistant_assemble_assistant_version"];
         delete?: never;
         options?: never;
         head?: never;
@@ -907,7 +907,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Assistant Version */
-        get: operations["get_assistant_version_v1_businesses__business_id__assistant_versions__version_id__get"];
+        get: operations["assistant_get_assistant_version"];
         put?: never;
         post?: never;
         delete?: never;
@@ -924,7 +924,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Autotest Run */
-        get: operations["get_autotest_run_v1_businesses__business_id__assistant_versions__version_id__autotest_run_get"];
+        get: operations["assistant_get_autotest_run"];
         put?: never;
         post?: never;
         delete?: never;
@@ -943,7 +943,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Run Autotests */
-        post: operations["run_autotests_v1_businesses__business_id__assistant_versions__version_id__autotests_post"];
+        post: operations["assistant_run_autotests"];
         delete?: never;
         options?: never;
         head?: never;
@@ -958,7 +958,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Go Live Readiness */
-        get: operations["get_go_live_readiness_v1_businesses__business_id__assistant_versions__version_id__go_live_readiness_get"];
+        get: operations["assistant_get_go_live_readiness"];
         put?: never;
         post?: never;
         delete?: never;
@@ -977,7 +977,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Publish Assistant Version */
-        post: operations["publish_assistant_version_v1_businesses__business_id__assistant_versions__version_id__publish_post"];
+        post: operations["assistant_publish_assistant_version"];
         delete?: never;
         options?: never;
         head?: never;
@@ -994,7 +994,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Rollback Assistant Version */
-        post: operations["rollback_assistant_version_v1_businesses__business_id__assistant_versions__version_id__rollback_post"];
+        post: operations["assistant_rollback_assistant_version"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1009,10 +1009,10 @@ export interface paths {
             cookie?: never;
         };
         /** Get Apply Changes */
-        get: operations["get_apply_changes_v1_businesses__business_id__assistant_apply_get"];
+        get: operations["assistant_get_apply_changes"];
         put?: never;
         /** Apply Changes */
-        post: operations["apply_changes_v1_businesses__business_id__assistant_apply_post"];
+        post: operations["assistant_apply_changes"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1030,7 +1030,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Discard Assistant Draft */
-        delete: operations["discard_assistant_draft_v1_businesses__business_id__assistant_drafts__version_id__delete"];
+        delete: operations["assistant_discard_assistant_draft"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1044,7 +1044,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Pending Changes */
-        get: operations["get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get"];
+        get: operations["assistant_get_pending_changes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1068,7 +1068,7 @@ export interface paths {
          *     cabinet's navigation, the same numbers as …/inbox/counts. Indexed
          *     counts only, no personal data, so it records no view.
          */
-        get: operations["get_attention_counts_route_v1_businesses__business_id__attention_counts_get"];
+        get: operations["live_get_attention_counts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1085,7 +1085,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Audit Log */
-        get: operations["list_audit_log_v1_businesses__business_id__audit_log_get"];
+        get: operations["compliance_list_audit_log"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1102,10 +1102,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Autotest Cases */
-        get: operations["list_autotest_cases_v1_businesses__business_id__autotest_cases_get"];
+        get: operations["assistants_list_autotest_cases"];
         put?: never;
         /** Create Autotest Case */
-        post: operations["create_autotest_case_v1_businesses__business_id__autotest_cases_post"];
+        post: operations["assistants_create_autotest_case"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1123,11 +1123,11 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete Autotest Case */
-        delete: operations["delete_autotest_case_v1_businesses__business_id__autotest_cases__case_id__delete"];
+        delete: operations["assistants_delete_autotest_case"];
         options?: never;
         head?: never;
         /** Update Autotest Case */
-        patch: operations["update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch"];
+        patch: operations["assistants_update_autotest_case"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/autotest-cases/{case_id}/check": {
@@ -1140,7 +1140,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Check Autotest Case Now */
-        post: operations["check_autotest_case_now_v1_businesses__business_id__autotest_cases__case_id__check_post"];
+        post: operations["assistants_check_autotest_case_now"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1155,7 +1155,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Availability */
-        get: operations["get_availability_v1_businesses__business_id__availability_get"];
+        get: operations["operations_get_availability"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1172,7 +1172,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Billing Overview */
-        get: operations["get_billing_overview_v1_businesses__business_id__billing_get"];
+        get: operations["billing_get_billing_overview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1191,7 +1191,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Cancel Subscription */
-        post: operations["cancel_subscription_v1_businesses__business_id__billing_cancel_post"];
+        post: operations["billing_cancel_subscription"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1208,7 +1208,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Checkout */
-        post: operations["start_checkout_v1_businesses__business_id__billing_checkout_post"];
+        post: operations["billing_start_checkout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1223,7 +1223,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Billing Document */
-        get: operations["get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get"];
+        get: operations["billing_get_billing_document"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1240,7 +1240,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Subscription Lifecycle */
-        get: operations["get_subscription_lifecycle_v1_businesses__business_id__billing_lifecycle_get"];
+        get: operations["billing_get_subscription_lifecycle"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1259,7 +1259,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Accept Retention Offer */
-        post: operations["accept_retention_offer_v1_businesses__business_id__billing_offers_accept_post"];
+        post: operations["billing_accept_retention_offer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1276,7 +1276,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Pause Subscription */
-        post: operations["pause_subscription_v1_businesses__business_id__billing_pause_post"];
+        post: operations["billing_pause_subscription"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1293,7 +1293,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Change Plan */
-        post: operations["change_plan_v1_businesses__business_id__billing_plan_post"];
+        post: operations["billing_change_plan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1308,9 +1308,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Billing Profile */
-        get: operations["get_billing_profile_v1_businesses__business_id__billing_profile_get"];
+        get: operations["billing_get_billing_profile"];
         /** Save Billing Profile */
-        put: operations["save_billing_profile_v1_businesses__business_id__billing_profile_put"];
+        put: operations["billing_save_billing_profile"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1328,7 +1328,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Resume Subscription */
-        post: operations["resume_subscription_v1_businesses__business_id__billing_resume_post"];
+        post: operations["billing_resume_subscription"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1345,7 +1345,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Subscribe */
-        post: operations["subscribe_v1_businesses__business_id__billing_subscribe_post"];
+        post: operations["billing_subscribe"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1362,7 +1362,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Trial */
-        post: operations["start_trial_v1_businesses__business_id__billing_trial_post"];
+        post: operations["billing_start_trial"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1377,10 +1377,10 @@ export interface paths {
             cookie?: never;
         };
         /** Get Bookings */
-        get: operations["get_bookings_v1_businesses__business_id__bookings_get"];
+        get: operations["operations_get_bookings"];
         put?: never;
         /** Post Booking */
-        post: operations["post_booking_v1_businesses__business_id__bookings_post"];
+        post: operations["operations_post_booking"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1401,7 +1401,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** Patch Booking */
-        patch: operations["patch_booking_v1_businesses__business_id__bookings__booking_id__patch"];
+        patch: operations["operations_patch_booking"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/bookings/{booking_id}/cancel": {
@@ -1414,7 +1414,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Booking Cancel */
-        post: operations["post_booking_cancel_v1_businesses__business_id__bookings__booking_id__cancel_post"];
+        post: operations["operations_post_booking_cancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1431,7 +1431,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Booking Reschedule */
-        post: operations["post_booking_reschedule_v1_businesses__business_id__bookings__booking_id__reschedule_post"];
+        post: operations["operations_post_booking_reschedule"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1454,7 +1454,7 @@ export interface paths {
          *     (nothing_to_undo, status_changed, undo_expired, slot_taken,
          *     place_gone) when it cannot be undone.
          */
-        post: operations["post_booking_revert_status_v1_businesses__business_id__bookings__booking_id__revert_status_post"];
+        post: operations["operations_post_booking_revert_status"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1469,10 +1469,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Business Exports */
-        get: operations["list_business_exports_v1_businesses__business_id__business_exports_get"];
+        get: operations["exports_list_business_exports"];
         put?: never;
         /** Start Business Export */
-        post: operations["start_business_export_v1_businesses__business_id__business_exports_post"];
+        post: operations["exports_start_business_export"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1489,7 +1489,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create Business Export Download Link */
-        post: operations["create_business_export_download_link_v1_businesses__business_id__business_exports__export_id__download_link_post"];
+        post: operations["exports_create_business_export_download_link"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1504,7 +1504,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Call Forwarding Instructions */
-        get: operations["get_call_forwarding_instructions_v1_businesses__business_id__call_forwarding_instructions_get"];
+        get: operations["catalog_get_call_forwarding_instructions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1521,9 +1521,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Call Settings */
-        get: operations["get_call_settings_v1_businesses__business_id__call_settings_get"];
+        get: operations["calls_get_call_settings"];
         /** Update Call Settings */
-        put: operations["update_call_settings_v1_businesses__business_id__call_settings_put"];
+        put: operations["calls_update_call_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1539,7 +1539,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Call Recording */
-        get: operations["get_call_recording_v1_businesses__business_id__calls__call_id__recording_get"];
+        get: operations["conversations_get_call_recording"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1556,7 +1556,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Campaign Messages */
-        get: operations["list_campaign_messages_v1_businesses__business_id__campaign_messages_get"];
+        get: operations["return_visits_list_campaign_messages"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1573,9 +1573,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Campaign Settings */
-        get: operations["get_campaign_settings_v1_businesses__business_id__campaign_settings_get"];
+        get: operations["return_visits_get_campaign_settings"];
         /** Update Campaign Settings */
-        put: operations["update_campaign_settings_v1_businesses__business_id__campaign_settings_put"];
+        put: operations["return_visits_update_campaign_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1591,7 +1591,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Channels */
-        get: operations["list_channels_v1_businesses__business_id__channels_get"];
+        get: operations["channels_list_channels"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1610,7 +1610,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Validate Telegram Token */
-        post: operations["validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post"];
+        post: operations["channels_validate_telegram_token"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1625,9 +1625,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Widget Allowed Origins */
-        get: operations["get_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_get"];
+        get: operations["channels_get_widget_allowed_origins"];
         /** Save Widget Allowed Origins */
-        put: operations["save_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_put"];
+        put: operations["channels_save_widget_allowed_origins"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1643,7 +1643,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Widget Snippet */
-        get: operations["get_widget_snippet_v1_businesses__business_id__channels_web_snippet_get"];
+        get: operations["channels_get_widget_snippet"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1661,7 +1661,7 @@ export interface paths {
         };
         get?: never;
         /** Set Whatsapp Staff Template */
-        put: operations["set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put"];
+        put: operations["channels_set_whatsapp_staff_template"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1678,7 +1678,7 @@ export interface paths {
         };
         get?: never;
         /** Set Whatsapp Staff Templates */
-        put: operations["set_whatsapp_staff_templates_v1_businesses__business_id__channels_whatsapp_staff_templates_put"];
+        put: operations["channels_set_whatsapp_staff_templates"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1695,10 +1695,10 @@ export interface paths {
         };
         get?: never;
         /** Connect Channel */
-        put: operations["connect_channel_v1_businesses__business_id__channels__channel__put"];
+        put: operations["channels_connect_channel"];
         post?: never;
         /** Disable Channel */
-        delete: operations["disable_channel_v1_businesses__business_id__channels__channel__delete"];
+        delete: operations["channels_disable_channel"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1712,7 +1712,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Contacts */
-        get: operations["list_contacts_v1_businesses__business_id__contacts_get"];
+        get: operations["compliance_list_contacts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1729,11 +1729,11 @@ export interface paths {
             cookie?: never;
         };
         /** Get Contact */
-        get: operations["get_contact_v1_businesses__business_id__contacts__contact_id__get"];
+        get: operations["compliance_get_contact"];
         put?: never;
         post?: never;
         /** Delete Contact Data */
-        delete: operations["delete_contact_data_v1_businesses__business_id__contacts__contact_id__delete"];
+        delete: operations["compliance_delete_contact_data"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1748,7 +1748,7 @@ export interface paths {
         };
         get?: never;
         /** Change Customer Blocking */
-        put: operations["change_customer_blocking_v1_businesses__business_id__contacts__contact_id__blocking_put"];
+        put: operations["customers_change_customer_blocking"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1770,7 +1770,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** Change Customer Card */
-        patch: operations["change_customer_card_v1_businesses__business_id__contacts__contact_id__card_patch"];
+        patch: operations["customers_change_customer_card"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/contacts/{contact_id}/export": {
@@ -1781,7 +1781,7 @@ export interface paths {
             cookie?: never;
         };
         /** Export Contact Data */
-        get: operations["export_contact_data_v1_businesses__business_id__contacts__contact_id__export_get"];
+        get: operations["compliance_export_contact_data"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1798,7 +1798,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Contact Standing */
-        get: operations["get_contact_standing_v1_businesses__business_id__contacts__contact_id__standing_get"];
+        get: operations["customers_get_contact_standing"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1815,7 +1815,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Conversations */
-        get: operations["list_conversations_v1_businesses__business_id__conversations_get"];
+        get: operations["conversations_list_conversations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1832,7 +1832,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Conversation */
-        get: operations["get_conversation_v1_businesses__business_id__conversations__conversation_id__get"];
+        get: operations["conversations_get_conversation"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1851,7 +1851,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Assign Conversation */
-        post: operations["assign_conversation_v1_businesses__business_id__conversations__conversation_id__assign_post"];
+        post: operations["inbox_assign_conversation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1866,10 +1866,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Conversation Messages */
-        get: operations["list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get"];
+        get: operations["conversations_list_conversation_messages"];
         put?: never;
         /** Send Staff Message */
-        post: operations["send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post"];
+        post: operations["conversations_send_staff_message"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1884,10 +1884,10 @@ export interface paths {
             cookie?: never;
         };
         /** Get Answer Correction Draft */
-        get: operations["get_answer_correction_draft_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_get"];
+        get: operations["conversations_get_answer_correction_draft"];
         put?: never;
         /** Correct Assistant Answer */
-        post: operations["correct_assistant_answer_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_post"];
+        post: operations["conversations_correct_assistant_answer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1902,10 +1902,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Conversation Notes */
-        get: operations["list_conversation_notes_v1_businesses__business_id__conversations__conversation_id__notes_get"];
+        get: operations["inbox_list_conversation_notes"];
         put?: never;
         /** Create Conversation Note */
-        post: operations["create_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes_post"];
+        post: operations["inbox_create_conversation_note"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1923,7 +1923,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete Conversation Note */
-        delete: operations["delete_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes__note_id__delete"];
+        delete: operations["inbox_delete_conversation_note"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1937,7 +1937,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Conversation Quality Route */
-        get: operations["get_conversation_quality_route_v1_businesses__business_id__conversations__conversation_id__quality_get"];
+        get: operations["quality_get_conversation_quality"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1954,7 +1954,7 @@ export interface paths {
             cookie?: never;
         };
         /** Fill Quick Replies */
-        get: operations["fill_quick_replies_v1_businesses__business_id__conversations__conversation_id__quick_replies_get"];
+        get: operations["inbox_fill_quick_replies"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1972,7 +1972,7 @@ export interface paths {
         };
         get?: never;
         /** Rate Conversation */
-        put: operations["rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put"];
+        put: operations["conversations_rate_conversation"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1988,10 +1988,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Customer Segments */
-        get: operations["list_customer_segments_v1_businesses__business_id__customer_segments_get"];
+        get: operations["customers_list_customer_segments"];
         put?: never;
         /** Create Customer Segment */
-        post: operations["create_customer_segment_v1_businesses__business_id__customer_segments_post"];
+        post: operations["customers_create_customer_segment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2008,7 +2008,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Preview Customer Segment */
-        post: operations["preview_customer_segment_v1_businesses__business_id__customer_segments_preview_post"];
+        post: operations["customers_preview_customer_segment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2024,10 +2024,10 @@ export interface paths {
         };
         get?: never;
         /** Update Customer Segment */
-        put: operations["update_customer_segment_v1_businesses__business_id__customer_segments__segment_id__put"];
+        put: operations["customers_update_customer_segment"];
         post?: never;
         /** Delete Customer Segment */
-        delete: operations["delete_customer_segment_v1_businesses__business_id__customer_segments__segment_id__delete"];
+        delete: operations["customers_delete_customer_segment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2041,7 +2041,7 @@ export interface paths {
             cookie?: never;
         };
         /** Export Customer Segment */
-        get: operations["export_customer_segment_v1_businesses__business_id__customer_segments__segment_id__export_get"];
+        get: operations["customers_export_customer_segment"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2058,7 +2058,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Customer Segment Members */
-        get: operations["list_customer_segment_members_v1_businesses__business_id__customer_segments__segment_id__members_get"];
+        get: operations["customers_list_customer_segment_members"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2075,9 +2075,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Customer Settings */
-        get: operations["get_customer_settings_v1_businesses__business_id__customer_settings_get"];
+        get: operations["customers_get_customer_settings"];
         /** Update Customer Settings */
-        put: operations["update_customer_settings_v1_businesses__business_id__customer_settings_put"];
+        put: operations["customers_update_customer_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2093,7 +2093,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Dashboard */
-        get: operations["get_dashboard_v1_businesses__business_id__dashboard_get"];
+        get: operations["operations_get_dashboard"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2110,9 +2110,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Digest Preferences */
-        get: operations["get_digest_preferences_v1_businesses__business_id__digest_preferences_get"];
+        get: operations["value_get_digest_preferences"];
         /** Update Digest Preferences */
-        put: operations["update_digest_preferences_v1_businesses__business_id__digest_preferences_put"];
+        put: operations["value_update_digest_preferences"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2128,10 +2128,10 @@ export interface paths {
             cookie?: never;
         };
         /** Get Dpa Status */
-        get: operations["get_dpa_status_v1_businesses__business_id__dpa_get"];
+        get: operations["compliance_get_dpa_status"];
         put?: never;
         /** Accept Dpa */
-        post: operations["accept_dpa_v1_businesses__business_id__dpa_post"];
+        post: operations["compliance_accept_dpa"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2151,7 +2151,7 @@ export interface paths {
          *     Events name what changed by id; the cabinet reloads it through the
          *     normal routes, which check access and audit views.
          */
-        get: operations["stream_live_events_v1_businesses__business_id__events_get"];
+        get: operations["live_stream_live_events"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2168,7 +2168,7 @@ export interface paths {
             cookie?: never;
         };
         /** Export Table */
-        get: operations["export_table_v1_businesses__business_id__exports__table__get"];
+        get: operations["exports_export_table"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2185,7 +2185,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Feedback Requests */
-        get: operations["list_feedback_requests_v1_businesses__business_id__feedback_requests_get"];
+        get: operations["reviews_list_feedback_requests"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2202,7 +2202,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Handoffs */
-        get: operations["get_handoffs_v1_businesses__business_id__handoffs_get"];
+        get: operations["operations_get_handoffs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2225,7 +2225,7 @@ export interface paths {
          * @description Open a resolved handoff again (the Undo of "Resolved"): it waits for
          *     a person and the assistant stays silent in its conversation again.
          */
-        post: operations["post_handoff_reopen_v1_businesses__business_id__handoffs__handoff_id__reopen_post"];
+        post: operations["operations_post_handoff_reopen"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2242,7 +2242,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Handoff Resolve */
-        post: operations["post_handoff_resolve_v1_businesses__business_id__handoffs__handoff_id__resolve_post"];
+        post: operations["operations_post_handoff_resolve"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2257,7 +2257,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Inbox */
-        get: operations["list_inbox_v1_businesses__business_id__inbox_get"];
+        get: operations["inbox_list_inbox"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2274,7 +2274,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Inbox Assignees */
-        get: operations["list_inbox_assignees_v1_businesses__business_id__inbox_assignees_get"];
+        get: operations["inbox_list_inbox_assignees"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2291,7 +2291,7 @@ export interface paths {
             cookie?: never;
         };
         /** Count Inbox Views */
-        get: operations["count_inbox_views_v1_businesses__business_id__inbox_counts_get"];
+        get: operations["inbox_count_inbox_views"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2308,9 +2308,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Inbox Settings */
-        get: operations["get_inbox_settings_v1_businesses__business_id__inbox_settings_get"];
+        get: operations["inbox_get_inbox_settings"];
         /** Update Inbox Settings */
-        put: operations["update_inbox_settings_v1_businesses__business_id__inbox_settings_put"];
+        put: operations["inbox_update_inbox_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2326,7 +2326,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Business Integrations */
-        get: operations["get_business_integrations_v1_businesses__business_id__integrations_get"];
+        get: operations["integrations_get_business_integrations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2343,11 +2343,11 @@ export interface paths {
             cookie?: never;
         };
         /** Get Google Calendar */
-        get: operations["get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get"];
+        get: operations["operations_get_google_calendar"];
         put?: never;
         post?: never;
         /** Delete Google Calendar */
-        delete: operations["delete_google_calendar_v1_businesses__business_id__integrations_google_calendar_delete"];
+        delete: operations["operations_delete_google_calendar"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2361,7 +2361,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Google Calendars */
-        get: operations["get_google_calendars_v1_businesses__business_id__integrations_google_calendar_calendars_get"];
+        get: operations["integrations_get_google_calendars"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2378,7 +2378,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Google Calendar Connect Url */
-        get: operations["get_google_calendar_connect_url_v1_businesses__business_id__integrations_google_calendar_connect_url_get"];
+        get: operations["operations_get_google_calendar_connect_url"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2395,10 +2395,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Knowledge Items */
-        get: operations["list_knowledge_items_v1_businesses__business_id__knowledge_get"];
+        get: operations["knowledge_list_knowledge_items"];
         put?: never;
         /** Create Knowledge Item */
-        post: operations["create_knowledge_item_v1_businesses__business_id__knowledge_post"];
+        post: operations["knowledge_create_knowledge_item"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2415,7 +2415,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Import Menu */
-        post: operations["import_menu_v1_businesses__business_id__knowledge_import_post"];
+        post: operations["knowledge_import_menu"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2432,7 +2432,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Website Import */
-        post: operations["start_website_import_v1_businesses__business_id__knowledge_import_website_post"];
+        post: operations["knowledge_start_website_import"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2447,7 +2447,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Website Import */
-        get: operations["get_website_import_v1_businesses__business_id__knowledge_import_website_current_get"];
+        get: operations["knowledge_get_website_import"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2466,7 +2466,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Confirm Imported Items */
-        post: operations["confirm_imported_items_v1_businesses__business_id__knowledge_import_confirm_post"];
+        post: operations["knowledge_confirm_imported_items"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2484,7 +2484,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Discard Import Batch */
-        delete: operations["discard_import_batch_v1_businesses__business_id__knowledge_import__batch_id__delete"];
+        delete: operations["knowledge_discard_import_batch"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2500,7 +2500,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Search Knowledge */
-        post: operations["search_knowledge_v1_businesses__business_id__knowledge_search_post"];
+        post: operations["knowledge_search_knowledge"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2515,15 +2515,15 @@ export interface paths {
             cookie?: never;
         };
         /** Get Knowledge Item */
-        get: operations["get_knowledge_item_v1_businesses__business_id__knowledge__item_id__get"];
+        get: operations["knowledge_get_knowledge_item"];
         put?: never;
         post?: never;
         /** Delete Knowledge Item */
-        delete: operations["delete_knowledge_item_v1_businesses__business_id__knowledge__item_id__delete"];
+        delete: operations["knowledge_delete_knowledge_item"];
         options?: never;
         head?: never;
         /** Update Knowledge Item */
-        patch: operations["update_knowledge_item_v1_businesses__business_id__knowledge__item_id__patch"];
+        patch: operations["knowledge_update_knowledge_item"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/leads": {
@@ -2534,7 +2534,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Leads */
-        get: operations["get_leads_v1_businesses__business_id__leads_get"];
+        get: operations["operations_get_leads"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2557,7 +2557,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** Patch Lead */
-        patch: operations["patch_lead_v1_businesses__business_id__leads__lead_id__patch"];
+        patch: operations["operations_patch_lead"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/manager-contacts/telegram-link": {
@@ -2570,7 +2570,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create Telegram Link */
-        post: operations["create_telegram_link_v1_businesses__business_id__manager_contacts_telegram_link_post"];
+        post: operations["channels_create_telegram_link"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2585,7 +2585,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Message Media */
-        get: operations["get_message_media_v1_businesses__business_id__media__media_id__get"];
+        get: operations["conversations_get_message_media"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2604,7 +2604,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Invite Staff */
-        post: operations["invite_staff_v1_businesses__business_id__members_post"];
+        post: operations["businesses_invite_staff"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2622,11 +2622,11 @@ export interface paths {
         put?: never;
         post?: never;
         /** Remove Member */
-        delete: operations["remove_member_v1_businesses__business_id__members__user_id__delete"];
+        delete: operations["businesses_remove_member"];
         options?: never;
         head?: never;
         /** Change Member Role */
-        patch: operations["change_member_role_v1_businesses__business_id__members__user_id__patch"];
+        patch: operations["businesses_change_member_role"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/notification-contacts": {
@@ -2637,7 +2637,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Notification Contacts */
-        get: operations["list_notification_contacts_v1_businesses__business_id__notification_contacts_get"];
+        get: operations["notifications_list_notification_contacts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2656,7 +2656,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Check Notification Contact */
-        post: operations["check_notification_contact_v1_businesses__business_id__notification_contacts__contact_key__test_post"];
+        post: operations["notifications_check_notification_contact"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2671,7 +2671,7 @@ export interface paths {
             cookie?: never;
         };
         /** Resolve Notification Link */
-        get: operations["resolve_notification_link_v1_businesses__business_id__notification_links__token__get"];
+        get: operations["notifications_resolve_notification_link"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2688,9 +2688,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Notification Settings */
-        get: operations["get_notification_settings_v1_businesses__business_id__notification_preferences_get"];
+        get: operations["notifications_get_notification_settings"];
         /** Update Notification Preferences */
-        put: operations["update_notification_preferences_v1_businesses__business_id__notification_preferences_put"];
+        put: operations["notifications_update_notification_preferences"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2706,9 +2706,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Privacy Settings */
-        get: operations["get_privacy_settings_v1_businesses__business_id__privacy_settings_get"];
+        get: operations["compliance_get_privacy_settings"];
         /** Update Privacy Settings */
-        put: operations["update_privacy_settings_v1_businesses__business_id__privacy_settings_put"];
+        put: operations["compliance_update_privacy_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2724,15 +2724,15 @@ export interface paths {
             cookie?: never;
         };
         /** Get Profile */
-        get: operations["get_profile_v1_businesses__business_id__profile_get"];
+        get: operations["profile_get_profile"];
         /** Save Profile */
-        put: operations["save_profile_v1_businesses__business_id__profile_put"];
+        put: operations["profile_save_profile"];
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         /** Patch Profile */
-        patch: operations["patch_profile_v1_businesses__business_id__profile_patch"];
+        patch: operations["setup_patch_profile"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/profile/gaps": {
@@ -2743,7 +2743,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Profile Gaps */
-        get: operations["get_profile_gaps_v1_businesses__business_id__profile_gaps_get"];
+        get: operations["profile_get_profile_gaps"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2761,7 +2761,7 @@ export interface paths {
         };
         get?: never;
         /** Save Profile Step */
-        put: operations["save_profile_step_v1_businesses__business_id__profile_steps__step__put"];
+        put: operations["profile_save_profile_step"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2777,7 +2777,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Profile Wizard */
-        get: operations["get_profile_wizard_v1_businesses__business_id__profile_wizard_get"];
+        get: operations["profile_get_profile_wizard"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2795,7 +2795,7 @@ export interface paths {
         };
         get?: never;
         /** Set Public Slug */
-        put: operations["set_public_slug_v1_businesses__business_id__public_slug_put"];
+        put: operations["sharing_set_public_slug"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2813,7 +2813,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Subscribe Push Device */
-        post: operations["subscribe_push_device_v1_businesses__business_id__push_subscriptions_post"];
+        post: operations["notifications_subscribe_push_device"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2831,7 +2831,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Unsubscribe Push Device */
-        delete: operations["unsubscribe_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__delete"];
+        delete: operations["notifications_unsubscribe_push_device"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2847,7 +2847,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Check Push Device */
-        post: operations["check_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__test_post"];
+        post: operations["notifications_check_push_device"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2862,10 +2862,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Quick Replies */
-        get: operations["list_quick_replies_v1_businesses__business_id__quick_replies_get"];
+        get: operations["inbox_list_quick_replies"];
         put?: never;
         /** Create Quick Reply */
-        post: operations["create_quick_reply_v1_businesses__business_id__quick_replies_post"];
+        post: operations["inbox_create_quick_reply"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2881,10 +2881,10 @@ export interface paths {
         };
         get?: never;
         /** Update Quick Reply */
-        put: operations["update_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__put"];
+        put: operations["inbox_update_quick_reply"];
         post?: never;
         /** Delete Quick Reply */
-        delete: operations["delete_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__delete"];
+        delete: operations["inbox_delete_quick_reply"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2898,7 +2898,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Referrals */
-        get: operations["get_referrals_v1_businesses__business_id__referrals_get"];
+        get: operations["referrals_get_referrals"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2916,7 +2916,7 @@ export interface paths {
         };
         get?: never;
         /** Put Powered By */
-        put: operations["put_powered_by_v1_businesses__business_id__referrals_powered_by_put"];
+        put: operations["referrals_put_powered_by"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2932,10 +2932,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Resources */
-        get: operations["list_resources_v1_businesses__business_id__resources_get"];
+        get: operations["resources_list_resources"];
         put?: never;
         /** Create Resource */
-        post: operations["create_resource_v1_businesses__business_id__resources_post"];
+        post: operations["resources_create_resource"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2956,7 +2956,7 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Resource */
-        patch: operations["update_resource_v1_businesses__business_id__resources__resource_id__patch"];
+        patch: operations["resources_update_resource"];
         trace?: never;
     };
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar": {
@@ -2967,7 +2967,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Resource Calendar */
-        get: operations["get_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_get"];
+        get: operations["resources_get_resource_calendar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2985,10 +2985,10 @@ export interface paths {
         };
         get?: never;
         /** Put Resource Booking System */
-        put: operations["put_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_put"];
+        put: operations["resources_put_resource_booking_system"];
         post?: never;
         /** Delete Resource Booking System */
-        delete: operations["delete_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_delete"];
+        delete: operations["resources_delete_resource_booking_system"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3003,10 +3003,10 @@ export interface paths {
         };
         get?: never;
         /** Put Resource Google Calendar */
-        put: operations["put_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_put"];
+        put: operations["resources_put_resource_google_calendar"];
         post?: never;
         /** Delete Resource Google Calendar */
-        delete: operations["delete_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_delete"];
+        delete: operations["resources_delete_resource_google_calendar"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3022,9 +3022,9 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Resource Ical Export */
-        post: operations["post_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_post"];
+        post: operations["resources_post_resource_ical_export"];
         /** Delete Resource Ical Export */
-        delete: operations["delete_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_delete"];
+        delete: operations["resources_delete_resource_ical_export"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3040,7 +3040,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Resource Ical Import */
-        post: operations["post_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports_post"];
+        post: operations["resources_post_resource_ical_import"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3058,7 +3058,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete Resource Ical Import */
-        delete: operations["delete_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports__feed_id__delete"];
+        delete: operations["resources_delete_resource_ical_import"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3074,7 +3074,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Sync Resource Calendar */
-        post: operations["sync_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_sync_post"];
+        post: operations["resources_sync_resource_calendar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3089,9 +3089,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Review Settings */
-        get: operations["get_review_settings_v1_businesses__business_id__review_settings_get"];
+        get: operations["reviews_get_review_settings"];
         /** Update Review Settings */
-        put: operations["update_review_settings_v1_businesses__business_id__review_settings_put"];
+        put: operations["reviews_update_review_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3107,7 +3107,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Review Stats */
-        get: operations["get_review_stats_v1_businesses__business_id__review_stats_get"];
+        get: operations["reviews_get_review_stats"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3124,10 +3124,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Schedule Exceptions */
-        get: operations["list_schedule_exceptions_v1_businesses__business_id__schedule_exceptions_get"];
+        get: operations["resources_list_schedule_exceptions"];
         put?: never;
         /** Create Schedule Exception */
-        post: operations["create_schedule_exception_v1_businesses__business_id__schedule_exceptions_post"];
+        post: operations["resources_create_schedule_exception"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3145,7 +3145,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete Schedule Exception */
-        delete: operations["delete_schedule_exception_v1_businesses__business_id__schedule_exceptions__exception_id__delete"];
+        delete: operations["resources_delete_schedule_exception"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3159,7 +3159,7 @@ export interface paths {
             cookie?: never;
         };
         /** Search Business */
-        get: operations["search_business_v1_businesses__business_id__search_get"];
+        get: operations["customers_search_business"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3176,9 +3176,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Business Security */
-        get: operations["get_business_security_v1_businesses__business_id__security_get"];
+        get: operations["businesses_get_business_security"];
         /** Update Business Security */
-        put: operations["update_business_security_v1_businesses__business_id__security_put"];
+        put: operations["businesses_update_business_security"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3194,7 +3194,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Setup */
-        get: operations["get_setup_v1_businesses__business_id__setup_get"];
+        get: operations["setup_get_setup"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3212,10 +3212,10 @@ export interface paths {
         };
         get?: never;
         /** Dismiss Guide */
-        put: operations["dismiss_guide_v1_businesses__business_id__setup_guide_dismissal_put"];
+        put: operations["setup_dismiss_guide"];
         post?: never;
         /** Bring Guide Back */
-        delete: operations["bring_guide_back_v1_businesses__business_id__setup_guide_dismissal_delete"];
+        delete: operations["setup_bring_guide_back"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3231,7 +3231,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Celebrate Milestone */
-        post: operations["celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post"];
+        post: operations["setup_celebrate_milestone"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3248,7 +3248,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Phone Check */
-        post: operations["start_phone_check_v1_businesses__business_id__setup_phone_check_post"];
+        post: operations["setup_start_phone_check"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3263,9 +3263,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Reminders */
-        get: operations["get_reminders_v1_businesses__business_id__setup_reminders_get"];
+        get: operations["setup_get_reminders"];
         /** Update Reminders */
-        put: operations["update_reminders_v1_businesses__business_id__setup_reminders_put"];
+        put: operations["setup_update_reminders"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3283,7 +3283,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Mark Shared */
-        post: operations["mark_shared_v1_businesses__business_id__setup_share_marks__mark__post"];
+        post: operations["setup_mark_shared"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3299,10 +3299,10 @@ export interface paths {
         };
         get?: never;
         /** Skip Setup Step */
-        put: operations["skip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__put"];
+        put: operations["setup_skip_setup_step"];
         post?: never;
         /** Unskip Setup Step */
-        delete: operations["unskip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__delete"];
+        delete: operations["setup_unskip_setup_step"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3316,7 +3316,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Starter Answers */
-        get: operations["get_starter_answers_v1_businesses__business_id__setup_starter_answers_get"];
+        get: operations["setup_get_starter_answers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3335,7 +3335,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Apply Starter Answers */
-        post: operations["apply_starter_answers_v1_businesses__business_id__setup_starter_answers_apply_post"];
+        post: operations["setup_apply_starter_answers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3350,7 +3350,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Share Links */
-        get: operations["get_share_links_v1_businesses__business_id__share_links_get"];
+        get: operations["sharing_get_share_links"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3367,11 +3367,11 @@ export interface paths {
             cookie?: never;
         };
         /** Get Support Access */
-        get: operations["get_support_access_v1_businesses__business_id__support_access_get"];
+        get: operations["businesses_get_support_access"];
         put?: never;
         post?: never;
         /** End Support Access */
-        delete: operations["end_support_access_v1_businesses__business_id__support_access_delete"];
+        delete: operations["businesses_end_support_access"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3386,7 +3386,7 @@ export interface paths {
         };
         get?: never;
         /** Update Support Write Access */
-        put: operations["update_support_write_access_v1_businesses__business_id__support_access_write_access_put"];
+        put: operations["businesses_update_support_write_access"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3404,7 +3404,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Owner Test Chat */
-        post: operations["owner_test_chat_v1_businesses__business_id__test_chat_post"];
+        post: operations["conversations_owner_test_chat"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3419,7 +3419,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Call Text Backs */
-        get: operations["list_call_text_backs_v1_businesses__business_id__text_backs_get"];
+        get: operations["calls_list_call_text_backs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3439,7 +3439,7 @@ export interface paths {
          * Get Today Queue Route
          * @description Today's bookings: on, still to start, waiting for confirmation.
          */
-        get: operations["get_today_queue_route_v1_businesses__business_id__today_queue_get"];
+        get: operations["value_get_today_queue"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3456,7 +3456,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Unanswered Questions */
-        get: operations["get_unanswered_questions_v1_businesses__business_id__unanswered_questions_get"];
+        get: operations["operations_get_unanswered_questions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3475,7 +3475,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Unanswered Question Answer */
-        post: operations["post_unanswered_question_answer_v1_businesses__business_id__unanswered_questions__question_id__answer_post"];
+        post: operations["operations_post_unanswered_question_answer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3494,7 +3494,7 @@ export interface paths {
          * @description `period`: today, 7d, 30d, 90d, last_week or last_month; or local
          *     dates `from` and `to`; compared with the period before.
          */
-        get: operations["get_business_value_v1_businesses__business_id__value_get"];
+        get: operations["value_get_business_value"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3514,7 +3514,7 @@ export interface paths {
          * List Value Reports
          * @description `kind`: monthly (default), weekly or daily.
          */
-        get: operations["list_value_reports_v1_businesses__business_id__value_reports_get"];
+        get: operations["value_list_value_reports"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3531,7 +3531,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Value Report */
-        get: operations["get_value_report_v1_businesses__business_id__value_reports__report_id__get"];
+        get: operations["value_get_value_report"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3548,9 +3548,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Value Settings */
-        get: operations["get_value_settings_v1_businesses__business_id__value_settings_get"];
+        get: operations["value_get_value_settings"];
         /** Update Value Settings */
-        put: operations["update_value_settings_v1_businesses__business_id__value_settings_put"];
+        put: operations["value_update_value_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3572,7 +3572,7 @@ export interface paths {
          *     7d, 30d, 90d, last_week or last_month; or local dates `from` and
          *     `to`; neither: the last 30 days.
          */
-        get: operations["get_customer_sources_v1_businesses__business_id__value_sources_get"];
+        get: operations["value_get_customer_sources"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3593,7 +3593,7 @@ export interface paths {
          * @description The topics of the last 30 days' first messages, grouped nightly,
          *     labelled in `?language=` (the cabinet's; else the owner's).
          */
-        get: operations["get_conversation_topics_v1_businesses__business_id__value_topics_get"];
+        get: operations["value_get_conversation_topics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3610,7 +3610,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Waitlist Entries */
-        get: operations["list_waitlist_entries_v1_businesses__business_id__waitlist_get"];
+        get: operations["waitlist_list_waitlist_entries"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3627,9 +3627,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get Waitlist Settings */
-        get: operations["get_waitlist_settings_v1_businesses__business_id__waitlist_settings_get"];
+        get: operations["waitlist_get_waitlist_settings"];
         /** Update Waitlist Settings */
-        put: operations["update_waitlist_settings_v1_businesses__business_id__waitlist_settings_put"];
+        put: operations["waitlist_update_waitlist_settings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3648,7 +3648,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Remove Waitlist Entry */
-        delete: operations["remove_waitlist_entry_v1_businesses__business_id__waitlist__entry_id__delete"];
+        delete: operations["waitlist_remove_waitlist_entry"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3662,7 +3662,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Countries */
-        get: operations["list_countries_v1_catalog_countries_get"];
+        get: operations["catalog_list_countries"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3679,7 +3679,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Country Profile */
-        get: operations["get_country_profile_v1_catalog_countries__country_code__get"];
+        get: operations["catalog_get_country_profile"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3696,7 +3696,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Languages */
-        get: operations["list_languages_v1_catalog_languages_get"];
+        get: operations["catalog_list_languages"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3713,7 +3713,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Niches */
-        get: operations["list_niches_v1_catalog_niches_get"];
+        get: operations["profile_list_niches"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3730,7 +3730,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Niche */
-        get: operations["get_niche_v1_catalog_niches__niche_key__get"];
+        get: operations["profile_get_niche"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3747,7 +3747,7 @@ export interface paths {
             cookie?: never;
         };
         /** Quote Plans */
-        get: operations["quote_plans_v1_catalog_plans_get"];
+        get: operations["catalog_quote_plans"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3764,10 +3764,10 @@ export interface paths {
             cookie?: never;
         };
         /** Verify Meta Webhook */
-        get: operations["verify_meta_webhook_v1_channels_meta_webhook_get"];
+        get: operations["channels_verify_meta_webhook"];
         put?: never;
         /** Receive Meta Webhook */
-        post: operations["receive_meta_webhook_v1_channels_meta_webhook_post"];
+        post: operations["channels_receive_meta_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3784,7 +3784,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Receive Platform Bot Webhook */
-        post: operations["receive_platform_bot_webhook_v1_channels_telegram_platform_webhook_post"];
+        post: operations["channels_receive_platform_bot_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3801,7 +3801,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Receive Telegram Webhook */
-        post: operations["receive_telegram_webhook_v1_channels_telegram__channel_id__webhook_post"];
+        post: operations["channels_receive_telegram_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3816,7 +3816,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Help Center */
-        get: operations["get_help_center_v1_help__language__get"];
+        get: operations["help_get_help_center"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3833,7 +3833,7 @@ export interface paths {
             cookie?: never;
         };
         /** Search Help */
-        get: operations["search_help_v1_help__language__search_get"];
+        get: operations["help_search_help"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3850,7 +3850,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Help Article */
-        get: operations["get_help_article_v1_help__language___slug__get"];
+        get: operations["help_get_help_article"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3867,7 +3867,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Google Calendar Callback */
-        get: operations["get_google_calendar_callback_v1_integrations_google_calendar_callback_get"];
+        get: operations["operations_get_google_calendar_callback"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3890,7 +3890,7 @@ export interface paths {
          * @description Finish connecting with Google's callback values; only the user who
          *     started connecting can (another user's state is an expired link).
          */
-        post: operations["post_google_calendar_completion_v1_integrations_google_calendar_complete_post"];
+        post: operations["operations_post_google_calendar_completion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3905,7 +3905,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Dpa Document */
-        get: operations["get_dpa_document_v1_legal_dpa__version__get"];
+        get: operations["compliance_get_dpa_document"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3922,7 +3922,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Legal Overview */
-        get: operations["get_legal_overview_v1_legal_overview_get"];
+        get: operations["legal_get_legal_overview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3939,7 +3939,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Subprocessors */
-        get: operations["get_subprocessors_v1_legal_subprocessors_get"];
+        get: operations["legal_get_subprocessors"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3956,7 +3956,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Legal Document */
-        get: operations["get_legal_document_v1_legal__document__get"];
+        get: operations["legal_get_legal_document"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3973,14 +3973,14 @@ export interface paths {
             cookie?: never;
         };
         /** Get Current User */
-        get: operations["get_current_user_v1_me_get"];
+        get: operations["auth_get_current_user"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         /** Update Current User */
-        patch: operations["update_current_user_v1_me_patch"];
+        patch: operations["auth_update_current_user"];
         trace?: never;
     };
     "/v1/me/help": {
@@ -3991,7 +3991,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Help Progress */
-        get: operations["get_help_progress_v1_me_help_get"];
+        get: operations["help_get_help_progress"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4009,7 +4009,7 @@ export interface paths {
         };
         get?: never;
         /** Read Changelog */
-        put: operations["read_changelog_v1_me_help_changelog_put"];
+        put: operations["help_read_changelog"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4028,7 +4028,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Reset Coach Marks */
-        delete: operations["reset_coach_marks_v1_me_help_coach_marks_delete"];
+        delete: operations["help_reset_coach_marks"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4043,7 +4043,7 @@ export interface paths {
         };
         get?: never;
         /** Mark Coach Mark Seen */
-        put: operations["mark_coach_mark_seen_v1_me_help_coach_marks__key__put"];
+        put: operations["help_mark_coach_mark_seen"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4061,7 +4061,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Regenerate Recovery Codes */
-        post: operations["regenerate_recovery_codes_v1_me_mfa_recovery_codes_post"];
+        post: operations["auth_regenerate_recovery_codes"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4078,9 +4078,9 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Totp Enrollment */
-        post: operations["start_totp_enrollment_v1_me_mfa_totp_post"];
+        post: operations["auth_start_totp_enrollment"];
         /** Remove Totp Factor */
-        delete: operations["remove_totp_factor_v1_me_mfa_totp_delete"];
+        delete: operations["auth_remove_totp_factor"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4096,7 +4096,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Confirm Totp Enrollment */
-        post: operations["confirm_totp_enrollment_v1_me_mfa_totp_confirm_post"];
+        post: operations["auth_confirm_totp_enrollment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4111,7 +4111,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Account Security */
-        get: operations["get_account_security_v1_me_security_get"];
+        get: operations["auth_get_account_security"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4128,7 +4128,7 @@ export interface paths {
             cookie?: never;
         };
         /** List My Sessions */
-        get: operations["list_my_sessions_v1_me_sessions_get"];
+        get: operations["auth_list_my_sessions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4147,7 +4147,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Revoke Other Sessions */
-        post: operations["revoke_other_sessions_v1_me_sessions_revoke_others_post"];
+        post: operations["auth_revoke_other_sessions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4165,7 +4165,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Revoke Session */
-        delete: operations["revoke_session_v1_me_sessions__session_id__delete"];
+        delete: operations["auth_revoke_session"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4179,7 +4179,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Partner */
-        get: operations["get_partner_v1_partner_get"];
+        get: operations["referrals_get_partner"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4196,7 +4196,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Partner Commissions */
-        get: operations["get_partner_commissions_v1_partner_commissions_get"];
+        get: operations["referrals_get_partner_commissions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4213,7 +4213,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Partner Referrals */
-        get: operations["get_partner_referrals_v1_partner_referrals_get"];
+        get: operations["referrals_get_partner_referrals"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4232,7 +4232,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Receive Flitt Webhook */
-        post: operations["receive_flitt_webhook_v1_payments_flitt_webhook_post"];
+        post: operations["billing_receive_flitt_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4249,7 +4249,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Parse Phone Number */
-        post: operations["parse_phone_number_v1_phone_numbers_parse_post"];
+        post: operations["catalog_parse_phone_number"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4264,7 +4264,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Platform Status */
-        get: operations["get_platform_status_v1_platform_status_get"];
+        get: operations["platform_status_get_platform_status"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4281,7 +4281,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Public Demos */
-        get: operations["list_public_demos_v1_public_demos_get"];
+        get: operations["public_demos_list_public_demos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4300,7 +4300,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Send Public Demo Message */
-        post: operations["send_public_demo_message_v1_public_demos__business_id__messages_post"];
+        post: operations["public_demos_send_public_demo_message"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4315,7 +4315,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Managed Booking */
-        get: operations["get_managed_booking_v1_public_bookings__token__get"];
+        get: operations["bookings_get_managed_booking"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4332,7 +4332,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Managed Booking Calendar */
-        get: operations["get_managed_booking_calendar_v1_public_bookings__token__calendar_ics_get"];
+        get: operations["bookings_get_managed_booking_calendar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4351,7 +4351,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Cancel Managed Booking */
-        post: operations["cancel_managed_booking_v1_public_bookings__token__cancel_post"];
+        post: operations["bookings_cancel_managed_booking"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4368,7 +4368,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Reschedule Managed Booking */
-        post: operations["reschedule_managed_booking_v1_public_bookings__token__reschedule_post"];
+        post: operations["bookings_reschedule_managed_booking"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4383,7 +4383,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Managed Booking Slots */
-        get: operations["get_managed_booking_slots_v1_public_bookings__token__slots_get"];
+        get: operations["bookings_get_managed_booking_slots"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4400,7 +4400,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Hosted Chat */
-        get: operations["get_hosted_chat_v1_public_chat__address__get"];
+        get: operations["widget_get_hosted_chat"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4417,7 +4417,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Public Ical Feed */
-        get: operations["get_public_ical_feed_v1_public_ical__token__ics_get"];
+        get: operations["integrations_get_public_ical_feed"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4434,7 +4434,7 @@ export interface paths {
             cookie?: never;
         };
         /** Open Review */
-        get: operations["open_review_v1_public_reviews__token__get"];
+        get: operations["reviews_open_review"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4451,7 +4451,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Support Contacts */
-        get: operations["get_support_contacts_v1_support_contacts_get"];
+        get: operations["help_get_support_contacts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4470,7 +4470,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Record Telemetry */
-        post: operations["record_telemetry_v1_telemetry_events_post"];
+        post: operations["analytics_record_telemetry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4485,10 +4485,10 @@ export interface paths {
             cookie?: never;
         };
         /** Echo Zadarma Check */
-        get: operations["echo_zadarma_check_v1_telephony_zadarma_notifications_get"];
+        get: operations["telephony_echo_zadarma_check"];
         put?: never;
         /** Receive Zadarma Notification */
-        post: operations["receive_zadarma_notification_v1_telephony_zadarma_notifications_post"];
+        post: operations["telephony_receive_zadarma_notification"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4505,7 +4505,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Run Voice Tool */
-        post: operations["run_voice_tool_v1_voice_tools__tool_name__post"];
+        post: operations["voice_run_voice_tool"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4522,7 +4522,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Start Voice Call */
-        post: operations["start_voice_call_v1_voice_webhooks_conversation_initiation_post"];
+        post: operations["voice_start_voice_call"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4539,7 +4539,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Receive Post Call */
-        post: operations["receive_post_call_v1_voice_webhooks_post_call_post"];
+        post: operations["voice_receive_post_call"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4556,7 +4556,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Report Widget Error */
-        post: operations["report_widget_error_v1_widget_errors_post"];
+        post: operations["widget_report_widget_error"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4571,7 +4571,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Widget Config */
-        get: operations["get_widget_config_v1_widget__business_id__config_get"];
+        get: operations["channels_get_widget_config"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4591,7 +4591,7 @@ export interface paths {
          * Stream Widget Events
          * @description The visitor's typing and answers, as they happen (see the 200 answer).
          */
-        get: operations["stream_widget_events_v1_widget__business_id__events_get"];
+        get: operations["channels_stream_widget_events"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4610,7 +4610,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Request Widget Handoff */
-        post: operations["request_widget_handoff_v1_widget__business_id__handoff_post"];
+        post: operations["channels_request_widget_handoff"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4625,10 +4625,10 @@ export interface paths {
             cookie?: never;
         };
         /** List Widget Messages */
-        get: operations["list_widget_messages_v1_widget__business_id__messages_get"];
+        get: operations["channels_list_widget_messages"];
         put?: never;
         /** Send Widget Message */
-        post: operations["send_widget_message_v1_widget__business_id__messages_post"];
+        post: operations["channels_send_widget_message"];
         delete?: never;
         options?: never;
         head?: never;
@@ -16110,7 +16110,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_announcements_v1_admin_announcements_get: {
+    platform_status_list_announcements: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -16198,7 +16198,7 @@ export interface operations {
             };
         };
     };
-    create_announcement_v1_admin_announcements_post: {
+    platform_status_create_announcement: {
         parameters: {
             query?: never;
             header?: {
@@ -16310,7 +16310,7 @@ export interface operations {
             };
         };
     };
-    update_announcement_v1_admin_announcements__announcement_id__patch: {
+    platform_status_update_announcement: {
         parameters: {
             query?: never;
             header?: {
@@ -16419,7 +16419,7 @@ export interface operations {
             };
         };
     };
-    list_clients_v1_admin_clients_get: {
+    admin_list_clients: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -16513,7 +16513,7 @@ export interface operations {
             };
         };
     };
-    get_client_health_v1_admin_clients__business_id__get: {
+    admin_get_client_health: {
         parameters: {
             query?: never;
             header?: {
@@ -16600,7 +16600,7 @@ export interface operations {
             };
         };
     };
-    close_client_cabinet_v1_admin_clients__business_id__access_delete: {
+    admin_close_client_cabinet: {
         parameters: {
             query?: never;
             header?: {
@@ -16685,7 +16685,7 @@ export interface operations {
             };
         };
     };
-    grant_credit_v1_admin_clients__business_id__credits_post: {
+    admin_grant_credit: {
         parameters: {
             query?: never;
             header?: {
@@ -16781,7 +16781,7 @@ export interface operations {
             };
         };
     };
-    give_discount_v1_admin_clients__business_id__discount_post: {
+    admin_give_discount: {
         parameters: {
             query?: never;
             header?: {
@@ -16879,7 +16879,7 @@ export interface operations {
             };
         };
     };
-    mark_invoice_paid_v1_admin_clients__business_id__invoices__invoice_id__manual_payment_post: {
+    admin_mark_invoice_paid: {
         parameters: {
             query?: never;
             header?: {
@@ -16983,7 +16983,7 @@ export interface operations {
             };
         };
     };
-    list_notes_v1_admin_clients__business_id__notes_get: {
+    admin_list_notes: {
         parameters: {
             query?: never;
             header?: {
@@ -17070,7 +17070,7 @@ export interface operations {
             };
         };
     };
-    create_note_v1_admin_clients__business_id__notes_post: {
+    admin_create_note: {
         parameters: {
             query?: never;
             header?: {
@@ -17169,7 +17169,7 @@ export interface operations {
             };
         };
     };
-    delete_note_v1_admin_clients__business_id__notes__note_id__delete: {
+    admin_delete_note: {
         parameters: {
             query?: never;
             header?: {
@@ -17255,7 +17255,7 @@ export interface operations {
             };
         };
     };
-    update_note_v1_admin_clients__business_id__notes__note_id__patch: {
+    admin_update_note: {
         parameters: {
             query?: never;
             header?: {
@@ -17352,7 +17352,7 @@ export interface operations {
             };
         };
     };
-    complete_onboarding_v1_admin_clients__business_id__onboarding_request_done_post: {
+    admin_complete_onboarding: {
         parameters: {
             query?: never;
             header?: {
@@ -17439,7 +17439,7 @@ export interface operations {
             };
         };
     };
-    open_client_cabinet_v1_admin_clients__business_id__open_post: {
+    admin_open_client_cabinet: {
         parameters: {
             query?: never;
             header?: {
@@ -17533,7 +17533,7 @@ export interface operations {
             };
         };
     };
-    override_plan_v1_admin_clients__business_id__plan_post: {
+    admin_override_plan: {
         parameters: {
             query?: never;
             header?: {
@@ -17634,7 +17634,7 @@ export interface operations {
             };
         };
     };
-    get_client_quality_route_v1_admin_clients__business_id__quality_get: {
+    quality_get_client_quality: {
         parameters: {
             query?: never;
             header?: {
@@ -17721,7 +17721,7 @@ export interface operations {
             };
         };
     };
-    waive_setup_fee_v1_admin_clients__business_id__setup_fee_waiver_post: {
+    admin_waive_setup_fee: {
         parameters: {
             query?: never;
             header?: {
@@ -17815,7 +17815,7 @@ export interface operations {
             };
         };
     };
-    set_client_spend_limits_v1_admin_clients__business_id__spend_limits_put: {
+    admin_set_client_spend_limits: {
         parameters: {
             query?: never;
             header?: {
@@ -17911,7 +17911,7 @@ export interface operations {
             };
         };
     };
-    get_timeline_v1_admin_clients__business_id__timeline_get: {
+    admin_get_timeline: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -18001,7 +18001,7 @@ export interface operations {
             };
         };
     };
-    extend_trial_v1_admin_clients__business_id__trial_extension_post: {
+    admin_extend_trial: {
         parameters: {
             query?: never;
             header?: {
@@ -18097,7 +18097,7 @@ export interface operations {
             };
         };
     };
-    list_incidents_v1_admin_incidents_get: {
+    admin_list_incidents: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -18185,7 +18185,7 @@ export interface operations {
             };
         };
     };
-    create_incident_v1_admin_incidents_post: {
+    admin_create_incident: {
         parameters: {
             query?: never;
             header?: {
@@ -18354,7 +18354,7 @@ export interface operations {
             };
         };
     };
-    list_queued_jobs_v1_admin_jobs_get: {
+    admin_list_queued_jobs: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -18444,7 +18444,7 @@ export interface operations {
             };
         };
     };
-    discard_queued_job_v1_admin_jobs__job_id__discard_post: {
+    admin_discard_queued_job: {
         parameters: {
             query?: never;
             header?: {
@@ -18531,7 +18531,7 @@ export interface operations {
             };
         };
     };
-    retry_queued_job_v1_admin_jobs__job_id__retry_post: {
+    admin_retry_queued_job: {
         parameters: {
             query?: never;
             header?: {
@@ -18618,7 +18618,7 @@ export interface operations {
             };
         };
     };
-    get_admin_metrics_v1_admin_metrics_get: {
+    analytics_get_admin_metrics: {
         parameters: {
             query?: {
                 from?: string | null;
@@ -18710,7 +18710,7 @@ export interface operations {
             };
         };
     };
-    get_partners_v1_admin_partners_get: {
+    admin_get_partners: {
         parameters: {
             query?: never;
             header?: {
@@ -18795,7 +18795,7 @@ export interface operations {
             };
         };
     };
-    post_partner_v1_admin_partners_post: {
+    admin_post_partner: {
         parameters: {
             query?: never;
             header?: {
@@ -18897,7 +18897,7 @@ export interface operations {
             };
         };
     };
-    get_payouts_v1_admin_partners_payouts_get: {
+    admin_get_payouts: {
         parameters: {
             query?: {
                 month?: string | null;
@@ -18984,7 +18984,7 @@ export interface operations {
             };
         };
     };
-    patch_partner_v1_admin_partners__partner_id__patch: {
+    admin_patch_partner: {
         parameters: {
             query?: never;
             header?: {
@@ -19081,7 +19081,7 @@ export interface operations {
             };
         };
     };
-    post_partner_code_v1_admin_partners__partner_id__codes_post: {
+    admin_post_partner_code: {
         parameters: {
             query?: never;
             header?: {
@@ -19175,7 +19175,7 @@ export interface operations {
             };
         };
     };
-    post_payout_v1_admin_partners__partner_id__payouts_post: {
+    admin_post_payout: {
         parameters: {
             query?: never;
             header?: {
@@ -19271,7 +19271,7 @@ export interface operations {
             };
         };
     };
-    get_encryption_keys_v1_admin_security_encryption_keys_get: {
+    admin_get_encryption_keys: {
         parameters: {
             query?: never;
             header?: {
@@ -19356,7 +19356,7 @@ export interface operations {
             };
         };
     };
-    start_key_rotation_v1_admin_security_encryption_keys_rotate_post: {
+    admin_start_key_rotation: {
         parameters: {
             query?: never;
             header?: {
@@ -19441,7 +19441,7 @@ export interface operations {
             };
         };
     };
-    get_admin_spend_v1_admin_spend_get: {
+    admin_get_admin_spend: {
         parameters: {
             query?: never;
             header?: {
@@ -19526,7 +19526,7 @@ export interface operations {
             };
         };
     };
-    get_admin_system_v1_admin_system_get: {
+    admin_get_admin_system: {
         parameters: {
             query?: never;
             header?: {
@@ -19611,7 +19611,7 @@ export interface operations {
             };
         };
     };
-    get_data_tasks_v1_admin_system_data_tasks_get: {
+    admin_get_data_tasks: {
         parameters: {
             query?: never;
             header?: {
@@ -19696,7 +19696,7 @@ export interface operations {
             };
         };
     };
-    retry_data_task_v1_admin_system_data_tasks__task_key__retry_post: {
+    admin_retry_data_task: {
         parameters: {
             query?: never;
             header?: {
@@ -19783,7 +19783,7 @@ export interface operations {
             };
         };
     };
-    get_error_budget_v1_admin_system_error_budget_get: {
+    admin_get_error_budget: {
         parameters: {
             query?: never;
             header?: {
@@ -19868,7 +19868,7 @@ export interface operations {
             };
         };
     };
-    list_platform_admins_v1_admin_team_get: {
+    admin_list_platform_admins: {
         parameters: {
             query?: never;
             header?: {
@@ -19953,7 +19953,7 @@ export interface operations {
             };
         };
     };
-    add_platform_admin_v1_admin_team_post: {
+    admin_add_platform_admin: {
         parameters: {
             query?: never;
             header?: {
@@ -20058,7 +20058,7 @@ export interface operations {
             };
         };
     };
-    remove_platform_admin_v1_admin_team__admin_id__delete: {
+    admin_remove_platform_admin: {
         parameters: {
             query?: never;
             header?: {
@@ -20143,7 +20143,7 @@ export interface operations {
             };
         };
     };
-    change_platform_admin_role_v1_admin_team__admin_id__patch: {
+    admin_change_platform_admin_role: {
         parameters: {
             query?: never;
             header?: {
@@ -20246,10 +20246,12 @@ export interface operations {
             };
         };
     };
-    create_assistant_v1_assistants_post: {
+    setup_create_assistant: {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path?: never;
@@ -20357,7 +20359,7 @@ export interface operations {
             };
         };
     };
-    get_login_options_v1_auth_login_options_get: {
+    auth_get_login_options: {
         parameters: {
             query?: {
                 country_code?: string | null;
@@ -20442,7 +20444,7 @@ export interface operations {
             };
         };
     };
-    logout_v1_auth_logout_post: {
+    auth_logout: {
         parameters: {
             query?: never;
             header?: {
@@ -20525,7 +20527,7 @@ export interface operations {
             };
         };
     };
-    start_mfa_login_enrollment_v1_auth_mfa_enroll_post: {
+    auth_start_mfa_login_enrollment: {
         parameters: {
             query?: never;
             header?: never;
@@ -20615,7 +20617,7 @@ export interface operations {
             };
         };
     };
-    verify_mfa_login_v1_auth_mfa_verify_post: {
+    auth_verify_mfa_login: {
         parameters: {
             query?: never;
             header?: never;
@@ -20709,7 +20711,7 @@ export interface operations {
             };
         };
     };
-    start_otp_login_v1_auth_otp_start_post: {
+    auth_start_otp_login: {
         parameters: {
             query?: never;
             header?: never;
@@ -20808,7 +20810,7 @@ export interface operations {
             };
         };
     };
-    verify_otp_login_v1_auth_otp_verify_post: {
+    auth_verify_otp_login: {
         parameters: {
             query?: never;
             header?: never;
@@ -20924,7 +20926,7 @@ export interface operations {
             };
         };
     };
-    start_step_up_v1_auth_step_up_post: {
+    auth_start_step_up: {
         parameters: {
             query?: never;
             header?: {
@@ -21009,7 +21011,7 @@ export interface operations {
             };
         };
     };
-    verify_step_up_v1_auth_step_up_verify_post: {
+    auth_verify_step_up: {
         parameters: {
             query?: never;
             header?: {
@@ -21107,7 +21109,7 @@ export interface operations {
             };
         };
     };
-    download_business_export_v1_business_exports__business_id___export_id__download_get: {
+    exports_download_business_export: {
         parameters: {
             query?: {
                 token?: string | null;
@@ -21197,7 +21199,7 @@ export interface operations {
             };
         };
     };
-    list_my_businesses_v1_businesses_get: {
+    businesses_list_my_businesses: {
         parameters: {
             query?: never;
             header?: {
@@ -21282,7 +21284,7 @@ export interface operations {
             };
         };
     };
-    create_business_v1_businesses_post: {
+    businesses_create_business: {
         parameters: {
             query?: never;
             header?: {
@@ -21393,7 +21395,7 @@ export interface operations {
             };
         };
     };
-    get_business_v1_businesses__business_id__get: {
+    businesses_get_business: {
         parameters: {
             query?: never;
             header?: {
@@ -21409,6 +21411,8 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    /** @description The business revision as a strong entity tag (`"7"`); send it back as If-Match with a change. */
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -21480,10 +21484,12 @@ export interface operations {
             };
         };
     };
-    update_business_settings_v1_businesses__business_id__patch: {
+    businesses_update_business_settings: {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. The ETag of the business this change was made from (as GET returned it, e.g. `"7"`), or `*`. When the business was saved since, nothing changes and the answer is 412 with the reason `precondition_failed`. The body's `expected_revision` is the same check answered with 409. */
+                "If-Match"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -21544,6 +21550,8 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    /** @description The business revision as a strong entity tag (`"7"`); send it back as If-Match with a change. */
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -21586,6 +21594,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description The If-Match precondition does not hold: the resource was saved after the ETag was read (`error` conflict, reason `precondition_failed` with the current revision). */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
             /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
             422: {
                 headers: {
@@ -21615,7 +21632,7 @@ export interface operations {
             };
         };
     };
-    get_answers_to_improve_v1_businesses__business_id__answers_to_improve_get: {
+    conversations_get_answers_to_improve: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -21704,7 +21721,7 @@ export interface operations {
             };
         };
     };
-    get_assistant_settings_v1_businesses__business_id__assistant_settings_get: {
+    assistant_settings_get_assistant_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -21791,7 +21808,7 @@ export interface operations {
             };
         };
     };
-    update_assistant_settings_v1_businesses__business_id__assistant_settings_put: {
+    assistant_settings_update_assistant_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -21893,7 +21910,7 @@ export interface operations {
             };
         };
     };
-    list_assistant_versions_v1_businesses__business_id__assistant_versions_get: {
+    assistant_list_assistant_versions: {
         parameters: {
             query?: never;
             header?: {
@@ -21980,7 +21997,7 @@ export interface operations {
             };
         };
     };
-    assemble_assistant_version_v1_businesses__business_id__assistant_versions_post: {
+    assistant_assemble_assistant_version: {
         parameters: {
             query?: never;
             header?: {
@@ -22081,7 +22098,7 @@ export interface operations {
             };
         };
     };
-    get_assistant_version_v1_businesses__business_id__assistant_versions__version_id__get: {
+    assistant_get_assistant_version: {
         parameters: {
             query?: never;
             header?: {
@@ -22169,7 +22186,7 @@ export interface operations {
             };
         };
     };
-    get_autotest_run_v1_businesses__business_id__assistant_versions__version_id__autotest_run_get: {
+    assistant_get_autotest_run: {
         parameters: {
             query?: never;
             header?: {
@@ -22257,7 +22274,7 @@ export interface operations {
             };
         };
     };
-    run_autotests_v1_businesses__business_id__assistant_versions__version_id__autotests_post: {
+    assistant_run_autotests: {
         parameters: {
             query?: never;
             header?: {
@@ -22354,7 +22371,7 @@ export interface operations {
             };
         };
     };
-    get_go_live_readiness_v1_businesses__business_id__assistant_versions__version_id__go_live_readiness_get: {
+    assistant_get_go_live_readiness: {
         parameters: {
             query?: never;
             header?: {
@@ -22442,7 +22459,7 @@ export interface operations {
             };
         };
     };
-    publish_assistant_version_v1_businesses__business_id__assistant_versions__version_id__publish_post: {
+    assistant_publish_assistant_version: {
         parameters: {
             query?: never;
             header?: {
@@ -22540,7 +22557,7 @@ export interface operations {
             };
         };
     };
-    rollback_assistant_version_v1_businesses__business_id__assistant_versions__version_id__rollback_post: {
+    assistant_rollback_assistant_version: {
         parameters: {
             query?: never;
             header?: {
@@ -22628,7 +22645,7 @@ export interface operations {
             };
         };
     };
-    get_apply_changes_v1_businesses__business_id__assistant_apply_get: {
+    assistant_get_apply_changes: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -22717,7 +22734,7 @@ export interface operations {
             };
         };
     };
-    apply_changes_v1_businesses__business_id__assistant_apply_post: {
+    assistant_apply_changes: {
         parameters: {
             query?: never;
             header?: {
@@ -22804,7 +22821,7 @@ export interface operations {
             };
         };
     };
-    discard_assistant_draft_v1_businesses__business_id__assistant_drafts__version_id__delete: {
+    assistant_discard_assistant_draft: {
         parameters: {
             query?: never;
             header?: {
@@ -22890,7 +22907,7 @@ export interface operations {
             };
         };
     };
-    get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get: {
+    assistant_get_pending_changes: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -22979,7 +22996,7 @@ export interface operations {
             };
         };
     };
-    get_attention_counts_route_v1_businesses__business_id__attention_counts_get: {
+    live_get_attention_counts: {
         parameters: {
             query?: never;
             header?: {
@@ -23066,7 +23083,7 @@ export interface operations {
             };
         };
     };
-    list_audit_log_v1_businesses__business_id__audit_log_get: {
+    compliance_list_audit_log: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -23161,7 +23178,7 @@ export interface operations {
             };
         };
     };
-    list_autotest_cases_v1_businesses__business_id__autotest_cases_get: {
+    assistants_list_autotest_cases: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -23250,7 +23267,7 @@ export interface operations {
             };
         };
     };
-    create_autotest_case_v1_businesses__business_id__autotest_cases_post: {
+    assistants_create_autotest_case: {
         parameters: {
             query?: never;
             header?: {
@@ -23371,7 +23388,7 @@ export interface operations {
             };
         };
     };
-    delete_autotest_case_v1_businesses__business_id__autotest_cases__case_id__delete: {
+    assistants_delete_autotest_case: {
         parameters: {
             query?: never;
             header?: {
@@ -23457,7 +23474,7 @@ export interface operations {
             };
         };
     };
-    update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch: {
+    assistants_update_autotest_case: {
         parameters: {
             query?: never;
             header?: {
@@ -23559,7 +23576,7 @@ export interface operations {
             };
         };
     };
-    check_autotest_case_now_v1_businesses__business_id__autotest_cases__case_id__check_post: {
+    assistants_check_autotest_case_now: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -23649,7 +23666,7 @@ export interface operations {
             };
         };
     };
-    get_availability_v1_businesses__business_id__availability_get: {
+    operations_get_availability: {
         parameters: {
             query: {
                 date: string;
@@ -23746,7 +23763,7 @@ export interface operations {
             };
         };
     };
-    get_billing_overview_v1_businesses__business_id__billing_get: {
+    billing_get_billing_overview: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -23835,7 +23852,7 @@ export interface operations {
             };
         };
     };
-    cancel_subscription_v1_businesses__business_id__billing_cancel_post: {
+    billing_cancel_subscription: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -23933,12 +23950,14 @@ export interface operations {
             };
         };
     };
-    start_checkout_v1_businesses__business_id__billing_checkout_post: {
+    billing_start_checkout: {
         parameters: {
             query?: {
                 language?: string | null;
             };
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -24029,7 +24048,7 @@ export interface operations {
             };
         };
     };
-    get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get: {
+    billing_get_billing_document: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -24120,7 +24139,7 @@ export interface operations {
             };
         };
     };
-    get_subscription_lifecycle_v1_businesses__business_id__billing_lifecycle_get: {
+    billing_get_subscription_lifecycle: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -24209,7 +24228,7 @@ export interface operations {
             };
         };
     };
-    accept_retention_offer_v1_businesses__business_id__billing_offers_accept_post: {
+    billing_accept_retention_offer: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -24322,7 +24341,7 @@ export interface operations {
             };
         };
     };
-    pause_subscription_v1_businesses__business_id__billing_pause_post: {
+    billing_pause_subscription: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -24418,7 +24437,7 @@ export interface operations {
             };
         };
     };
-    change_plan_v1_businesses__business_id__billing_plan_post: {
+    billing_change_plan: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -24524,7 +24543,7 @@ export interface operations {
             };
         };
     };
-    get_billing_profile_v1_businesses__business_id__billing_profile_get: {
+    billing_get_billing_profile: {
         parameters: {
             query?: never;
             header?: {
@@ -24611,7 +24630,7 @@ export interface operations {
             };
         };
     };
-    save_billing_profile_v1_businesses__business_id__billing_profile_put: {
+    billing_save_billing_profile: {
         parameters: {
             query?: never;
             header?: {
@@ -24713,7 +24732,7 @@ export interface operations {
             };
         };
     };
-    resume_subscription_v1_businesses__business_id__billing_resume_post: {
+    billing_resume_subscription: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -24802,12 +24821,14 @@ export interface operations {
             };
         };
     };
-    subscribe_v1_businesses__business_id__billing_subscribe_post: {
+    billing_subscribe: {
         parameters: {
             query?: {
                 language?: string | null;
             };
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -24920,7 +24941,7 @@ export interface operations {
             };
         };
     };
-    start_trial_v1_businesses__business_id__billing_trial_post: {
+    billing_start_trial: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -25022,7 +25043,7 @@ export interface operations {
             };
         };
     };
-    get_bookings_v1_businesses__business_id__bookings_get: {
+    operations_get_bookings: {
         parameters: {
             query?: {
                 from?: string | null;
@@ -25118,10 +25139,12 @@ export interface operations {
             };
         };
     };
-    post_booking_v1_businesses__business_id__bookings_post: {
+    operations_post_booking: {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -25244,7 +25267,7 @@ export interface operations {
             };
         };
     };
-    patch_booking_v1_businesses__business_id__bookings__booking_id__patch: {
+    operations_patch_booking: {
         parameters: {
             query?: never;
             header?: {
@@ -25346,7 +25369,7 @@ export interface operations {
             };
         };
     };
-    post_booking_cancel_v1_businesses__business_id__bookings__booking_id__cancel_post: {
+    operations_post_booking_cancel: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -25436,7 +25459,7 @@ export interface operations {
             };
         };
     };
-    post_booking_reschedule_v1_businesses__business_id__bookings__booking_id__reschedule_post: {
+    operations_post_booking_reschedule: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -25535,7 +25558,7 @@ export interface operations {
             };
         };
     };
-    post_booking_revert_status_v1_businesses__business_id__bookings__booking_id__revert_status_post: {
+    operations_post_booking_revert_status: {
         parameters: {
             query?: never;
             header?: {
@@ -25634,7 +25657,7 @@ export interface operations {
             };
         };
     };
-    list_business_exports_v1_businesses__business_id__business_exports_get: {
+    exports_list_business_exports: {
         parameters: {
             query?: never;
             header?: {
@@ -25721,7 +25744,7 @@ export interface operations {
             };
         };
     };
-    start_business_export_v1_businesses__business_id__business_exports_post: {
+    exports_start_business_export: {
         parameters: {
             query?: never;
             header?: {
@@ -25815,7 +25838,7 @@ export interface operations {
             };
         };
     };
-    create_business_export_download_link_v1_businesses__business_id__business_exports__export_id__download_link_post: {
+    exports_create_business_export_download_link: {
         parameters: {
             query?: never;
             header?: {
@@ -25903,7 +25926,7 @@ export interface operations {
             };
         };
     };
-    get_call_forwarding_instructions_v1_businesses__business_id__call_forwarding_instructions_get: {
+    catalog_get_call_forwarding_instructions: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -25992,7 +26015,7 @@ export interface operations {
             };
         };
     };
-    get_call_settings_v1_businesses__business_id__call_settings_get: {
+    calls_get_call_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -26079,7 +26102,7 @@ export interface operations {
             };
         };
     };
-    update_call_settings_v1_businesses__business_id__call_settings_put: {
+    calls_update_call_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -26188,7 +26211,7 @@ export interface operations {
             };
         };
     };
-    get_call_recording_v1_businesses__business_id__calls__call_id__recording_get: {
+    conversations_get_call_recording: {
         parameters: {
             query?: never;
             header?: {
@@ -26294,7 +26317,7 @@ export interface operations {
             };
         };
     };
-    list_campaign_messages_v1_businesses__business_id__campaign_messages_get: {
+    return_visits_list_campaign_messages: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -26384,7 +26407,7 @@ export interface operations {
             };
         };
     };
-    get_campaign_settings_v1_businesses__business_id__campaign_settings_get: {
+    return_visits_get_campaign_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -26471,7 +26494,7 @@ export interface operations {
             };
         };
     };
-    update_campaign_settings_v1_businesses__business_id__campaign_settings_put: {
+    return_visits_update_campaign_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -26598,7 +26621,7 @@ export interface operations {
             };
         };
     };
-    list_channels_v1_businesses__business_id__channels_get: {
+    channels_list_channels: {
         parameters: {
             query?: never;
             header?: {
@@ -26685,7 +26708,7 @@ export interface operations {
             };
         };
     };
-    validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post: {
+    channels_validate_telegram_token: {
         parameters: {
             query?: never;
             header?: {
@@ -26779,7 +26802,7 @@ export interface operations {
             };
         };
     };
-    get_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_get: {
+    channels_get_widget_allowed_origins: {
         parameters: {
             query?: never;
             header?: {
@@ -26866,7 +26889,7 @@ export interface operations {
             };
         };
     };
-    save_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_put: {
+    channels_save_widget_allowed_origins: {
         parameters: {
             query?: never;
             header?: {
@@ -26960,7 +26983,7 @@ export interface operations {
             };
         };
     };
-    get_widget_snippet_v1_businesses__business_id__channels_web_snippet_get: {
+    channels_get_widget_snippet: {
         parameters: {
             query?: never;
             header?: {
@@ -27047,7 +27070,7 @@ export interface operations {
             };
         };
     };
-    set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put: {
+    channels_set_whatsapp_staff_template: {
         parameters: {
             query?: never;
             header?: {
@@ -27143,7 +27166,7 @@ export interface operations {
             };
         };
     };
-    set_whatsapp_staff_templates_v1_businesses__business_id__channels_whatsapp_staff_templates_put: {
+    channels_set_whatsapp_staff_templates: {
         parameters: {
             query?: never;
             header?: {
@@ -27242,7 +27265,7 @@ export interface operations {
             };
         };
     };
-    connect_channel_v1_businesses__business_id__channels__channel__put: {
+    channels_connect_channel: {
         parameters: {
             query?: never;
             header?: {
@@ -27352,7 +27375,7 @@ export interface operations {
             };
         };
     };
-    disable_channel_v1_businesses__business_id__channels__channel__delete: {
+    channels_disable_channel: {
         parameters: {
             query?: never;
             header?: {
@@ -27438,7 +27461,7 @@ export interface operations {
             };
         };
     };
-    list_contacts_v1_businesses__business_id__contacts_get: {
+    compliance_list_contacts: {
         parameters: {
             query?: {
                 search?: string | null;
@@ -27531,7 +27554,7 @@ export interface operations {
             };
         };
     };
-    get_contact_v1_businesses__business_id__contacts__contact_id__get: {
+    compliance_get_contact: {
         parameters: {
             query?: never;
             header?: {
@@ -27619,7 +27642,7 @@ export interface operations {
             };
         };
     };
-    delete_contact_data_v1_businesses__business_id__contacts__contact_id__delete: {
+    compliance_delete_contact_data: {
         parameters: {
             query?: never;
             header?: {
@@ -27705,7 +27728,7 @@ export interface operations {
             };
         };
     };
-    change_customer_blocking_v1_businesses__business_id__contacts__contact_id__blocking_put: {
+    customers_change_customer_blocking: {
         parameters: {
             query?: never;
             header?: {
@@ -27800,7 +27823,7 @@ export interface operations {
             };
         };
     };
-    change_customer_card_v1_businesses__business_id__contacts__contact_id__card_patch: {
+    customers_change_customer_card: {
         parameters: {
             query?: never;
             header?: {
@@ -27899,7 +27922,7 @@ export interface operations {
             };
         };
     };
-    export_contact_data_v1_businesses__business_id__contacts__contact_id__export_get: {
+    compliance_export_contact_data: {
         parameters: {
             query?: never;
             header?: {
@@ -27987,7 +28010,7 @@ export interface operations {
             };
         };
     };
-    get_contact_standing_v1_businesses__business_id__contacts__contact_id__standing_get: {
+    customers_get_contact_standing: {
         parameters: {
             query?: never;
             header?: {
@@ -28075,7 +28098,7 @@ export interface operations {
             };
         };
     };
-    list_conversations_v1_businesses__business_id__conversations_get: {
+    conversations_list_conversations: {
         parameters: {
             query?: {
                 channel?: string | null;
@@ -28171,7 +28194,7 @@ export interface operations {
             };
         };
     };
-    get_conversation_v1_businesses__business_id__conversations__conversation_id__get: {
+    conversations_get_conversation: {
         parameters: {
             query?: never;
             header?: {
@@ -28259,7 +28282,7 @@ export interface operations {
             };
         };
     };
-    assign_conversation_v1_businesses__business_id__conversations__conversation_id__assign_post: {
+    inbox_assign_conversation: {
         parameters: {
             query?: never;
             header?: {
@@ -28356,7 +28379,7 @@ export interface operations {
             };
         };
     };
-    list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get: {
+    conversations_list_conversation_messages: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -28447,10 +28470,12 @@ export interface operations {
             };
         };
     };
-    send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post: {
+    conversations_send_staff_message: {
         parameters: {
             query?: never;
             header?: {
+                /** @description Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key. */
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
             };
             path: {
@@ -28547,7 +28572,7 @@ export interface operations {
             };
         };
     };
-    get_answer_correction_draft_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_get: {
+    conversations_get_answer_correction_draft: {
         parameters: {
             query?: never;
             header?: {
@@ -28636,7 +28661,7 @@ export interface operations {
             };
         };
     };
-    correct_assistant_answer_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_post: {
+    conversations_correct_assistant_answer: {
         parameters: {
             query?: never;
             header?: {
@@ -28746,7 +28771,7 @@ export interface operations {
             };
         };
     };
-    list_conversation_notes_v1_businesses__business_id__conversations__conversation_id__notes_get: {
+    inbox_list_conversation_notes: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -28837,7 +28862,7 @@ export interface operations {
             };
         };
     };
-    create_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes_post: {
+    inbox_create_conversation_note: {
         parameters: {
             query?: never;
             header?: {
@@ -28932,7 +28957,7 @@ export interface operations {
             };
         };
     };
-    delete_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes__note_id__delete: {
+    inbox_delete_conversation_note: {
         parameters: {
             query?: never;
             header?: {
@@ -29019,7 +29044,7 @@ export interface operations {
             };
         };
     };
-    get_conversation_quality_route_v1_businesses__business_id__conversations__conversation_id__quality_get: {
+    quality_get_conversation_quality: {
         parameters: {
             query?: never;
             header?: {
@@ -29107,7 +29132,7 @@ export interface operations {
             };
         };
     };
-    fill_quick_replies_v1_businesses__business_id__conversations__conversation_id__quick_replies_get: {
+    inbox_fill_quick_replies: {
         parameters: {
             query?: never;
             header?: {
@@ -29195,7 +29220,7 @@ export interface operations {
             };
         };
     };
-    rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put: {
+    conversations_rate_conversation: {
         parameters: {
             query?: never;
             header?: {
@@ -29292,7 +29317,7 @@ export interface operations {
             };
         };
     };
-    list_customer_segments_v1_businesses__business_id__customer_segments_get: {
+    customers_list_customer_segments: {
         parameters: {
             query?: never;
             header?: {
@@ -29379,7 +29404,7 @@ export interface operations {
             };
         };
     };
-    create_customer_segment_v1_businesses__business_id__customer_segments_post: {
+    customers_create_customer_segment: {
         parameters: {
             query?: never;
             header?: {
@@ -29494,7 +29519,7 @@ export interface operations {
             };
         };
     };
-    preview_customer_segment_v1_businesses__business_id__customer_segments_preview_post: {
+    customers_preview_customer_segment: {
         parameters: {
             query?: never;
             header?: {
@@ -29599,7 +29624,7 @@ export interface operations {
             };
         };
     };
-    update_customer_segment_v1_businesses__business_id__customer_segments__segment_id__put: {
+    customers_update_customer_segment: {
         parameters: {
             query?: never;
             header?: {
@@ -29715,7 +29740,7 @@ export interface operations {
             };
         };
     };
-    delete_customer_segment_v1_businesses__business_id__customer_segments__segment_id__delete: {
+    customers_delete_customer_segment: {
         parameters: {
             query?: never;
             header?: {
@@ -29801,7 +29826,7 @@ export interface operations {
             };
         };
     };
-    export_customer_segment_v1_businesses__business_id__customer_segments__segment_id__export_get: {
+    customers_export_customer_segment: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -29891,7 +29916,7 @@ export interface operations {
             };
         };
     };
-    list_customer_segment_members_v1_businesses__business_id__customer_segments__segment_id__members_get: {
+    customers_list_customer_segment_members: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -29982,7 +30007,7 @@ export interface operations {
             };
         };
     };
-    get_customer_settings_v1_businesses__business_id__customer_settings_get: {
+    customers_get_customer_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -30069,7 +30094,7 @@ export interface operations {
             };
         };
     };
-    update_customer_settings_v1_businesses__business_id__customer_settings_put: {
+    customers_update_customer_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -30163,7 +30188,7 @@ export interface operations {
             };
         };
     };
-    get_dashboard_v1_businesses__business_id__dashboard_get: {
+    operations_get_dashboard: {
         parameters: {
             query?: {
                 from?: string | null;
@@ -30253,7 +30278,7 @@ export interface operations {
             };
         };
     };
-    get_digest_preferences_v1_businesses__business_id__digest_preferences_get: {
+    value_get_digest_preferences: {
         parameters: {
             query?: never;
             header?: {
@@ -30340,7 +30365,7 @@ export interface operations {
             };
         };
     };
-    update_digest_preferences_v1_businesses__business_id__digest_preferences_put: {
+    value_update_digest_preferences: {
         parameters: {
             query?: never;
             header?: {
@@ -30453,7 +30478,7 @@ export interface operations {
             };
         };
     };
-    get_dpa_status_v1_businesses__business_id__dpa_get: {
+    compliance_get_dpa_status: {
         parameters: {
             query?: never;
             header?: {
@@ -30540,7 +30565,7 @@ export interface operations {
             };
         };
     };
-    accept_dpa_v1_businesses__business_id__dpa_post: {
+    compliance_accept_dpa: {
         parameters: {
             query?: never;
             header?: {
@@ -30627,7 +30652,7 @@ export interface operations {
             };
         };
     };
-    stream_live_events_v1_businesses__business_id__events_get: {
+    live_stream_live_events: {
         parameters: {
             query?: never;
             header?: {
@@ -30715,7 +30740,7 @@ export interface operations {
             };
         };
     };
-    export_table_v1_businesses__business_id__exports__table__get: {
+    exports_export_table: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -30819,7 +30844,7 @@ export interface operations {
             };
         };
     };
-    list_feedback_requests_v1_businesses__business_id__feedback_requests_get: {
+    reviews_list_feedback_requests: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -30909,7 +30934,7 @@ export interface operations {
             };
         };
     };
-    get_handoffs_v1_businesses__business_id__handoffs_get: {
+    operations_get_handoffs: {
         parameters: {
             query?: {
                 status?: string | null;
@@ -31002,7 +31027,7 @@ export interface operations {
             };
         };
     };
-    post_handoff_reopen_v1_businesses__business_id__handoffs__handoff_id__reopen_post: {
+    operations_post_handoff_reopen: {
         parameters: {
             query?: never;
             header?: {
@@ -31090,7 +31115,7 @@ export interface operations {
             };
         };
     };
-    post_handoff_resolve_v1_businesses__business_id__handoffs__handoff_id__resolve_post: {
+    operations_post_handoff_resolve: {
         parameters: {
             query?: never;
             header?: {
@@ -31178,7 +31203,7 @@ export interface operations {
             };
         };
     };
-    list_inbox_v1_businesses__business_id__inbox_get: {
+    inbox_list_inbox: {
         parameters: {
             query?: {
                 view?: string | null;
@@ -31270,7 +31295,7 @@ export interface operations {
             };
         };
     };
-    list_inbox_assignees_v1_businesses__business_id__inbox_assignees_get: {
+    inbox_list_inbox_assignees: {
         parameters: {
             query?: never;
             header?: {
@@ -31357,7 +31382,7 @@ export interface operations {
             };
         };
     };
-    count_inbox_views_v1_businesses__business_id__inbox_counts_get: {
+    inbox_count_inbox_views: {
         parameters: {
             query?: never;
             header?: {
@@ -31444,7 +31469,7 @@ export interface operations {
             };
         };
     };
-    get_inbox_settings_v1_businesses__business_id__inbox_settings_get: {
+    inbox_get_inbox_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -31531,7 +31556,7 @@ export interface operations {
             };
         };
     };
-    update_inbox_settings_v1_businesses__business_id__inbox_settings_put: {
+    inbox_update_inbox_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -31635,7 +31660,7 @@ export interface operations {
             };
         };
     };
-    get_business_integrations_v1_businesses__business_id__integrations_get: {
+    integrations_get_business_integrations: {
         parameters: {
             query?: never;
             header?: {
@@ -31722,7 +31747,7 @@ export interface operations {
             };
         };
     };
-    get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get: {
+    operations_get_google_calendar: {
         parameters: {
             query?: never;
             header?: {
@@ -31809,7 +31834,7 @@ export interface operations {
             };
         };
     };
-    delete_google_calendar_v1_businesses__business_id__integrations_google_calendar_delete: {
+    operations_delete_google_calendar: {
         parameters: {
             query?: never;
             header?: {
@@ -31894,7 +31919,7 @@ export interface operations {
             };
         };
     };
-    get_google_calendars_v1_businesses__business_id__integrations_google_calendar_calendars_get: {
+    integrations_get_google_calendars: {
         parameters: {
             query?: never;
             header?: {
@@ -31981,7 +32006,7 @@ export interface operations {
             };
         };
     };
-    get_google_calendar_connect_url_v1_businesses__business_id__integrations_google_calendar_connect_url_get: {
+    operations_get_google_calendar_connect_url: {
         parameters: {
             query?: never;
             header?: {
@@ -32068,7 +32093,7 @@ export interface operations {
             };
         };
     };
-    list_knowledge_items_v1_businesses__business_id__knowledge_get: {
+    knowledge_list_knowledge_items: {
         parameters: {
             query?: {
                 kind?: string | null;
@@ -32161,7 +32186,7 @@ export interface operations {
             };
         };
     };
-    create_knowledge_item_v1_businesses__business_id__knowledge_post: {
+    knowledge_create_knowledge_item: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -32302,7 +32327,7 @@ export interface operations {
             };
         };
     };
-    import_menu_v1_businesses__business_id__knowledge_import_post: {
+    knowledge_import_menu: {
         parameters: {
             query?: never;
             header?: {
@@ -32400,7 +32425,7 @@ export interface operations {
             };
         };
     };
-    start_website_import_v1_businesses__business_id__knowledge_import_website_post: {
+    knowledge_start_website_import: {
         parameters: {
             query?: never;
             header?: {
@@ -32494,7 +32519,7 @@ export interface operations {
             };
         };
     };
-    get_website_import_v1_businesses__business_id__knowledge_import_website_current_get: {
+    knowledge_get_website_import: {
         parameters: {
             query?: never;
             header?: {
@@ -32581,7 +32606,7 @@ export interface operations {
             };
         };
     };
-    confirm_imported_items_v1_businesses__business_id__knowledge_import_confirm_post: {
+    knowledge_confirm_imported_items: {
         parameters: {
             query?: never;
             header?: {
@@ -32675,7 +32700,7 @@ export interface operations {
             };
         };
     };
-    discard_import_batch_v1_businesses__business_id__knowledge_import__batch_id__delete: {
+    knowledge_discard_import_batch: {
         parameters: {
             query?: never;
             header?: {
@@ -32761,7 +32786,7 @@ export interface operations {
             };
         };
     };
-    search_knowledge_v1_businesses__business_id__knowledge_search_post: {
+    knowledge_search_knowledge: {
         parameters: {
             query?: never;
             header?: {
@@ -32862,7 +32887,7 @@ export interface operations {
             };
         };
     };
-    get_knowledge_item_v1_businesses__business_id__knowledge__item_id__get: {
+    knowledge_get_knowledge_item: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -32952,7 +32977,7 @@ export interface operations {
             };
         };
     };
-    delete_knowledge_item_v1_businesses__business_id__knowledge__item_id__delete: {
+    knowledge_delete_knowledge_item: {
         parameters: {
             query?: never;
             header?: {
@@ -33038,7 +33063,7 @@ export interface operations {
             };
         };
     };
-    update_knowledge_item_v1_businesses__business_id__knowledge__item_id__patch: {
+    knowledge_update_knowledge_item: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -33172,7 +33197,7 @@ export interface operations {
             };
         };
     };
-    get_leads_v1_businesses__business_id__leads_get: {
+    operations_get_leads: {
         parameters: {
             query?: {
                 status?: string | null;
@@ -33264,7 +33289,7 @@ export interface operations {
             };
         };
     };
-    patch_lead_v1_businesses__business_id__leads__lead_id__patch: {
+    operations_patch_lead: {
         parameters: {
             query?: never;
             header?: {
@@ -33363,7 +33388,7 @@ export interface operations {
             };
         };
     };
-    create_telegram_link_v1_businesses__business_id__manager_contacts_telegram_link_post: {
+    channels_create_telegram_link: {
         parameters: {
             query?: never;
             header?: {
@@ -33459,7 +33484,7 @@ export interface operations {
             };
         };
     };
-    get_message_media_v1_businesses__business_id__media__media_id__get: {
+    conversations_get_message_media: {
         parameters: {
             query?: never;
             header?: {
@@ -33548,7 +33573,7 @@ export interface operations {
             };
         };
     };
-    invite_staff_v1_businesses__business_id__members_post: {
+    businesses_invite_staff: {
         parameters: {
             query?: never;
             header?: {
@@ -33658,7 +33683,7 @@ export interface operations {
             };
         };
     };
-    remove_member_v1_businesses__business_id__members__user_id__delete: {
+    businesses_remove_member: {
         parameters: {
             query?: never;
             header?: {
@@ -33744,7 +33769,7 @@ export interface operations {
             };
         };
     };
-    change_member_role_v1_businesses__business_id__members__user_id__patch: {
+    businesses_change_member_role: {
         parameters: {
             query?: never;
             header?: {
@@ -33846,7 +33871,7 @@ export interface operations {
             };
         };
     };
-    list_notification_contacts_v1_businesses__business_id__notification_contacts_get: {
+    notifications_list_notification_contacts: {
         parameters: {
             query?: never;
             header?: {
@@ -33933,7 +33958,7 @@ export interface operations {
             };
         };
     };
-    check_notification_contact_v1_businesses__business_id__notification_contacts__contact_key__test_post: {
+    notifications_check_notification_contact: {
         parameters: {
             query?: never;
             header?: {
@@ -34021,7 +34046,7 @@ export interface operations {
             };
         };
     };
-    resolve_notification_link_v1_businesses__business_id__notification_links__token__get: {
+    notifications_resolve_notification_link: {
         parameters: {
             query?: never;
             header?: {
@@ -34109,7 +34134,7 @@ export interface operations {
             };
         };
     };
-    get_notification_settings_v1_businesses__business_id__notification_preferences_get: {
+    notifications_get_notification_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -34196,7 +34221,7 @@ export interface operations {
             };
         };
     };
-    update_notification_preferences_v1_businesses__business_id__notification_preferences_put: {
+    notifications_update_notification_preferences: {
         parameters: {
             query?: never;
             header?: {
@@ -34296,7 +34321,7 @@ export interface operations {
             };
         };
     };
-    get_privacy_settings_v1_businesses__business_id__privacy_settings_get: {
+    compliance_get_privacy_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -34383,7 +34408,7 @@ export interface operations {
             };
         };
     };
-    update_privacy_settings_v1_businesses__business_id__privacy_settings_put: {
+    compliance_update_privacy_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -34481,7 +34506,7 @@ export interface operations {
             };
         };
     };
-    get_profile_v1_businesses__business_id__profile_get: {
+    profile_get_profile: {
         parameters: {
             query?: never;
             header?: {
@@ -34568,7 +34593,7 @@ export interface operations {
             };
         };
     };
-    save_profile_v1_businesses__business_id__profile_put: {
+    profile_save_profile: {
         parameters: {
             query?: never;
             header?: {
@@ -34744,7 +34769,7 @@ export interface operations {
             };
         };
     };
-    patch_profile_v1_businesses__business_id__profile_patch: {
+    setup_patch_profile: {
         parameters: {
             query?: never;
             header?: {
@@ -34915,7 +34940,7 @@ export interface operations {
             };
         };
     };
-    get_profile_gaps_v1_businesses__business_id__profile_gaps_get: {
+    profile_get_profile_gaps: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -35004,7 +35029,7 @@ export interface operations {
             };
         };
     };
-    save_profile_step_v1_businesses__business_id__profile_steps__step__put: {
+    profile_save_profile_step: {
         parameters: {
             query?: never;
             header?: {
@@ -35294,7 +35319,7 @@ export interface operations {
             };
         };
     };
-    get_profile_wizard_v1_businesses__business_id__profile_wizard_get: {
+    profile_get_profile_wizard: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -35383,7 +35408,7 @@ export interface operations {
             };
         };
     };
-    set_public_slug_v1_businesses__business_id__public_slug_put: {
+    sharing_set_public_slug: {
         parameters: {
             query?: never;
             header?: {
@@ -35477,7 +35502,7 @@ export interface operations {
             };
         };
     };
-    subscribe_push_device_v1_businesses__business_id__push_subscriptions_post: {
+    notifications_subscribe_push_device: {
         parameters: {
             query?: never;
             header?: {
@@ -35583,7 +35608,7 @@ export interface operations {
             };
         };
     };
-    unsubscribe_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__delete: {
+    notifications_unsubscribe_push_device: {
         parameters: {
             query?: never;
             header?: {
@@ -35669,7 +35694,7 @@ export interface operations {
             };
         };
     };
-    check_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__test_post: {
+    notifications_check_push_device: {
         parameters: {
             query?: never;
             header?: {
@@ -35757,7 +35782,7 @@ export interface operations {
             };
         };
     };
-    list_quick_replies_v1_businesses__business_id__quick_replies_get: {
+    inbox_list_quick_replies: {
         parameters: {
             query?: never;
             header?: {
@@ -35844,7 +35869,7 @@ export interface operations {
             };
         };
     };
-    create_quick_reply_v1_businesses__business_id__quick_replies_post: {
+    inbox_create_quick_reply: {
         parameters: {
             query?: never;
             header?: {
@@ -35947,7 +35972,7 @@ export interface operations {
             };
         };
     };
-    update_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__put: {
+    inbox_update_quick_reply: {
         parameters: {
             query?: never;
             header?: {
@@ -36051,7 +36076,7 @@ export interface operations {
             };
         };
     };
-    delete_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__delete: {
+    inbox_delete_quick_reply: {
         parameters: {
             query?: never;
             header?: {
@@ -36137,7 +36162,7 @@ export interface operations {
             };
         };
     };
-    get_referrals_v1_businesses__business_id__referrals_get: {
+    referrals_get_referrals: {
         parameters: {
             query?: never;
             header?: {
@@ -36224,7 +36249,7 @@ export interface operations {
             };
         };
     };
-    put_powered_by_v1_businesses__business_id__referrals_powered_by_put: {
+    referrals_put_powered_by: {
         parameters: {
             query?: never;
             header?: {
@@ -36318,7 +36343,7 @@ export interface operations {
             };
         };
     };
-    list_resources_v1_businesses__business_id__resources_get: {
+    resources_list_resources: {
         parameters: {
             query?: {
                 is_active?: string | null;
@@ -36407,7 +36432,7 @@ export interface operations {
             };
         };
     };
-    create_resource_v1_businesses__business_id__resources_post: {
+    resources_create_resource: {
         parameters: {
             query?: never;
             header?: {
@@ -36534,7 +36559,7 @@ export interface operations {
             };
         };
     };
-    update_resource_v1_businesses__business_id__resources__resource_id__patch: {
+    resources_update_resource: {
         parameters: {
             query?: never;
             header?: {
@@ -36656,7 +36681,7 @@ export interface operations {
             };
         };
     };
-    get_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_get: {
+    resources_get_resource_calendar: {
         parameters: {
             query?: never;
             header?: {
@@ -36744,7 +36769,7 @@ export interface operations {
             };
         };
     };
-    put_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_put: {
+    resources_put_resource_booking_system: {
         parameters: {
             query?: never;
             header?: {
@@ -36848,7 +36873,7 @@ export interface operations {
             };
         };
     };
-    delete_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_delete: {
+    resources_delete_resource_booking_system: {
         parameters: {
             query?: never;
             header?: {
@@ -36934,7 +36959,7 @@ export interface operations {
             };
         };
     };
-    put_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_put: {
+    resources_put_resource_google_calendar: {
         parameters: {
             query?: never;
             header?: {
@@ -37029,7 +37054,7 @@ export interface operations {
             };
         };
     };
-    delete_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_delete: {
+    resources_delete_resource_google_calendar: {
         parameters: {
             query?: never;
             header?: {
@@ -37115,7 +37140,7 @@ export interface operations {
             };
         };
     };
-    post_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_post: {
+    resources_post_resource_ical_export: {
         parameters: {
             query?: never;
             header?: {
@@ -37203,7 +37228,7 @@ export interface operations {
             };
         };
     };
-    delete_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_delete: {
+    resources_delete_resource_ical_export: {
         parameters: {
             query?: never;
             header?: {
@@ -37289,7 +37314,7 @@ export interface operations {
             };
         };
     };
-    post_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports_post: {
+    resources_post_resource_ical_import: {
         parameters: {
             query?: never;
             header?: {
@@ -37384,7 +37409,7 @@ export interface operations {
             };
         };
     };
-    delete_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports__feed_id__delete: {
+    resources_delete_resource_ical_import: {
         parameters: {
             query?: never;
             header?: {
@@ -37471,7 +37496,7 @@ export interface operations {
             };
         };
     };
-    sync_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_sync_post: {
+    resources_sync_resource_calendar: {
         parameters: {
             query?: never;
             header?: {
@@ -37559,7 +37584,7 @@ export interface operations {
             };
         };
     };
-    get_review_settings_v1_businesses__business_id__review_settings_get: {
+    reviews_get_review_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -37646,7 +37671,7 @@ export interface operations {
             };
         };
     };
-    update_review_settings_v1_businesses__business_id__review_settings_put: {
+    reviews_update_review_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -37752,7 +37777,7 @@ export interface operations {
             };
         };
     };
-    get_review_stats_v1_businesses__business_id__review_stats_get: {
+    reviews_get_review_stats: {
         parameters: {
             query?: never;
             header?: {
@@ -37839,7 +37864,7 @@ export interface operations {
             };
         };
     };
-    list_schedule_exceptions_v1_businesses__business_id__schedule_exceptions_get: {
+    resources_list_schedule_exceptions: {
         parameters: {
             query?: {
                 resource_id?: string | null;
@@ -37929,7 +37954,7 @@ export interface operations {
             };
         };
     };
-    create_schedule_exception_v1_businesses__business_id__schedule_exceptions_post: {
+    resources_create_schedule_exception: {
         parameters: {
             query?: never;
             header?: {
@@ -38045,7 +38070,7 @@ export interface operations {
             };
         };
     };
-    delete_schedule_exception_v1_businesses__business_id__schedule_exceptions__exception_id__delete: {
+    resources_delete_schedule_exception: {
         parameters: {
             query?: never;
             header?: {
@@ -38131,7 +38156,7 @@ export interface operations {
             };
         };
     };
-    search_business_v1_businesses__business_id__search_get: {
+    customers_search_business: {
         parameters: {
             query?: {
                 q?: string;
@@ -38220,7 +38245,7 @@ export interface operations {
             };
         };
     };
-    get_business_security_v1_businesses__business_id__security_get: {
+    businesses_get_business_security: {
         parameters: {
             query?: never;
             header?: {
@@ -38307,7 +38332,7 @@ export interface operations {
             };
         };
     };
-    update_business_security_v1_businesses__business_id__security_put: {
+    businesses_update_business_security: {
         parameters: {
             query?: never;
             header?: {
@@ -38401,7 +38426,7 @@ export interface operations {
             };
         };
     };
-    get_setup_v1_businesses__business_id__setup_get: {
+    setup_get_setup: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -38490,7 +38515,7 @@ export interface operations {
             };
         };
     };
-    dismiss_guide_v1_businesses__business_id__setup_guide_dismissal_put: {
+    setup_dismiss_guide: {
         parameters: {
             query?: never;
             header?: {
@@ -38577,7 +38602,7 @@ export interface operations {
             };
         };
     };
-    bring_guide_back_v1_businesses__business_id__setup_guide_dismissal_delete: {
+    setup_bring_guide_back: {
         parameters: {
             query?: never;
             header?: {
@@ -38662,7 +38687,7 @@ export interface operations {
             };
         };
     };
-    celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post: {
+    setup_celebrate_milestone: {
         parameters: {
             query?: never;
             header?: {
@@ -38750,7 +38775,7 @@ export interface operations {
             };
         };
     };
-    start_phone_check_v1_businesses__business_id__setup_phone_check_post: {
+    setup_start_phone_check: {
         parameters: {
             query?: never;
             header?: {
@@ -38837,7 +38862,7 @@ export interface operations {
             };
         };
     };
-    get_reminders_v1_businesses__business_id__setup_reminders_get: {
+    setup_get_reminders: {
         parameters: {
             query?: never;
             header?: {
@@ -38924,7 +38949,7 @@ export interface operations {
             };
         };
     };
-    update_reminders_v1_businesses__business_id__setup_reminders_put: {
+    setup_update_reminders: {
         parameters: {
             query?: never;
             header?: {
@@ -39018,7 +39043,7 @@ export interface operations {
             };
         };
     };
-    mark_shared_v1_businesses__business_id__setup_share_marks__mark__post: {
+    setup_mark_shared: {
         parameters: {
             query?: never;
             header?: {
@@ -39104,7 +39129,7 @@ export interface operations {
             };
         };
     };
-    skip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__put: {
+    setup_skip_setup_step: {
         parameters: {
             query?: never;
             header?: {
@@ -39192,7 +39217,7 @@ export interface operations {
             };
         };
     };
-    unskip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__delete: {
+    setup_unskip_setup_step: {
         parameters: {
             query?: never;
             header?: {
@@ -39278,7 +39303,7 @@ export interface operations {
             };
         };
     };
-    get_starter_answers_v1_businesses__business_id__setup_starter_answers_get: {
+    setup_get_starter_answers: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -39367,7 +39392,7 @@ export interface operations {
             };
         };
     };
-    apply_starter_answers_v1_businesses__business_id__setup_starter_answers_apply_post: {
+    setup_apply_starter_answers: {
         parameters: {
             query?: never;
             header?: {
@@ -39465,7 +39490,7 @@ export interface operations {
             };
         };
     };
-    get_share_links_v1_businesses__business_id__share_links_get: {
+    sharing_get_share_links: {
         parameters: {
             query?: {
                 src?: string | null;
@@ -39554,7 +39579,7 @@ export interface operations {
             };
         };
     };
-    get_support_access_v1_businesses__business_id__support_access_get: {
+    businesses_get_support_access: {
         parameters: {
             query?: never;
             header?: {
@@ -39641,7 +39666,7 @@ export interface operations {
             };
         };
     };
-    end_support_access_v1_businesses__business_id__support_access_delete: {
+    businesses_end_support_access: {
         parameters: {
             query?: never;
             header?: {
@@ -39726,7 +39751,7 @@ export interface operations {
             };
         };
     };
-    update_support_write_access_v1_businesses__business_id__support_access_write_access_put: {
+    businesses_update_support_write_access: {
         parameters: {
             query?: never;
             header?: {
@@ -39822,7 +39847,7 @@ export interface operations {
             };
         };
     };
-    owner_test_chat_v1_businesses__business_id__test_chat_post: {
+    conversations_owner_test_chat: {
         parameters: {
             query?: never;
             header?: {
@@ -39920,7 +39945,7 @@ export interface operations {
             };
         };
     };
-    list_call_text_backs_v1_businesses__business_id__text_backs_get: {
+    calls_list_call_text_backs: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -40010,7 +40035,7 @@ export interface operations {
             };
         };
     };
-    get_today_queue_route_v1_businesses__business_id__today_queue_get: {
+    value_get_today_queue: {
         parameters: {
             query?: never;
             header?: {
@@ -40097,7 +40122,7 @@ export interface operations {
             };
         };
     };
-    get_unanswered_questions_v1_businesses__business_id__unanswered_questions_get: {
+    operations_get_unanswered_questions: {
         parameters: {
             query?: {
                 include_resolved?: string | null;
@@ -40189,7 +40214,7 @@ export interface operations {
             };
         };
     };
-    post_unanswered_question_answer_v1_businesses__business_id__unanswered_questions__question_id__answer_post: {
+    operations_post_unanswered_question_answer: {
         parameters: {
             query?: never;
             header?: {
@@ -40286,7 +40311,7 @@ export interface operations {
             };
         };
     };
-    get_business_value_v1_businesses__business_id__value_get: {
+    value_get_business_value: {
         parameters: {
             query?: {
                 period?: string | null;
@@ -40377,7 +40402,7 @@ export interface operations {
             };
         };
     };
-    list_value_reports_v1_businesses__business_id__value_reports_get: {
+    value_list_value_reports: {
         parameters: {
             query?: {
                 kind?: string | null;
@@ -40468,7 +40493,7 @@ export interface operations {
             };
         };
     };
-    get_value_report_v1_businesses__business_id__value_reports__report_id__get: {
+    value_get_value_report: {
         parameters: {
             query?: never;
             header?: {
@@ -40556,7 +40581,7 @@ export interface operations {
             };
         };
     };
-    get_value_settings_v1_businesses__business_id__value_settings_get: {
+    value_get_value_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -40643,7 +40668,7 @@ export interface operations {
             };
         };
     };
-    update_value_settings_v1_businesses__business_id__value_settings_put: {
+    value_update_value_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -40737,7 +40762,7 @@ export interface operations {
             };
         };
     };
-    get_customer_sources_v1_businesses__business_id__value_sources_get: {
+    value_get_customer_sources: {
         parameters: {
             query?: {
                 period?: string | null;
@@ -40828,7 +40853,7 @@ export interface operations {
             };
         };
     };
-    get_conversation_topics_v1_businesses__business_id__value_topics_get: {
+    value_get_conversation_topics: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -40917,7 +40942,7 @@ export interface operations {
             };
         };
     };
-    list_waitlist_entries_v1_businesses__business_id__waitlist_get: {
+    waitlist_list_waitlist_entries: {
         parameters: {
             query?: {
                 filter?: string | null;
@@ -41008,7 +41033,7 @@ export interface operations {
             };
         };
     };
-    get_waitlist_settings_v1_businesses__business_id__waitlist_settings_get: {
+    waitlist_get_waitlist_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -41095,7 +41120,7 @@ export interface operations {
             };
         };
     };
-    update_waitlist_settings_v1_businesses__business_id__waitlist_settings_put: {
+    waitlist_update_waitlist_settings: {
         parameters: {
             query?: never;
             header?: {
@@ -41197,7 +41222,7 @@ export interface operations {
             };
         };
     };
-    remove_waitlist_entry_v1_businesses__business_id__waitlist__entry_id__delete: {
+    waitlist_remove_waitlist_entry: {
         parameters: {
             query?: never;
             header?: {
@@ -41283,7 +41308,7 @@ export interface operations {
             };
         };
     };
-    list_countries_v1_catalog_countries_get: {
+    catalog_list_countries: {
         parameters: {
             query?: {
                 language?: string;
@@ -41368,7 +41393,7 @@ export interface operations {
             };
         };
     };
-    get_country_profile_v1_catalog_countries__country_code__get: {
+    catalog_get_country_profile: {
         parameters: {
             query?: {
                 language?: string;
@@ -41455,7 +41480,7 @@ export interface operations {
             };
         };
     };
-    list_languages_v1_catalog_languages_get: {
+    catalog_list_languages: {
         parameters: {
             query?: {
                 language?: string;
@@ -41540,7 +41565,7 @@ export interface operations {
             };
         };
     };
-    list_niches_v1_catalog_niches_get: {
+    profile_list_niches: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -41627,7 +41652,7 @@ export interface operations {
             };
         };
     };
-    get_niche_v1_catalog_niches__niche_key__get: {
+    profile_get_niche: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -41716,7 +41741,7 @@ export interface operations {
             };
         };
     };
-    quote_plans_v1_catalog_plans_get: {
+    catalog_quote_plans: {
         parameters: {
             query: {
                 country_code: string;
@@ -41802,7 +41827,7 @@ export interface operations {
             };
         };
     };
-    verify_meta_webhook_v1_channels_meta_webhook_get: {
+    channels_verify_meta_webhook: {
         parameters: {
             query?: {
                 "hub.mode"?: string | null;
@@ -41889,7 +41914,7 @@ export interface operations {
             };
         };
     };
-    receive_meta_webhook_v1_channels_meta_webhook_post: {
+    channels_receive_meta_webhook: {
         parameters: {
             query?: never;
             header?: {
@@ -41974,7 +41999,7 @@ export interface operations {
             };
         };
     };
-    receive_platform_bot_webhook_v1_channels_telegram_platform_webhook_post: {
+    channels_receive_platform_bot_webhook: {
         parameters: {
             query?: never;
             header?: {
@@ -42059,7 +42084,7 @@ export interface operations {
             };
         };
     };
-    receive_telegram_webhook_v1_channels_telegram__channel_id__webhook_post: {
+    channels_receive_telegram_webhook: {
         parameters: {
             query?: never;
             header?: {
@@ -42146,7 +42171,7 @@ export interface operations {
             };
         };
     };
-    get_help_center_v1_help__language__get: {
+    help_get_help_center: {
         parameters: {
             query?: never;
             header?: never;
@@ -42231,7 +42256,7 @@ export interface operations {
             };
         };
     };
-    search_help_v1_help__language__search_get: {
+    help_search_help: {
         parameters: {
             query?: {
                 q?: string | null;
@@ -42318,7 +42343,7 @@ export interface operations {
             };
         };
     };
-    get_help_article_v1_help__language___slug__get: {
+    help_get_help_article: {
         parameters: {
             query?: never;
             header?: never;
@@ -42404,7 +42429,7 @@ export interface operations {
             };
         };
     };
-    get_google_calendar_callback_v1_integrations_google_calendar_callback_get: {
+    operations_get_google_calendar_callback: {
         parameters: {
             query?: {
                 code?: string | null;
@@ -42489,7 +42514,7 @@ export interface operations {
             };
         };
     };
-    post_google_calendar_completion_v1_integrations_google_calendar_complete_post: {
+    operations_post_google_calendar_completion: {
         parameters: {
             query?: never;
             header?: {
@@ -42585,7 +42610,7 @@ export interface operations {
             };
         };
     };
-    get_dpa_document_v1_legal_dpa__version__get: {
+    compliance_get_dpa_document: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -42672,7 +42697,7 @@ export interface operations {
             };
         };
     };
-    get_legal_overview_v1_legal_overview_get: {
+    legal_get_legal_overview: {
         parameters: {
             query?: never;
             header?: never;
@@ -42755,7 +42780,7 @@ export interface operations {
             };
         };
     };
-    get_subprocessors_v1_legal_subprocessors_get: {
+    legal_get_subprocessors: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -42840,7 +42865,7 @@ export interface operations {
             };
         };
     };
-    get_legal_document_v1_legal__document__get: {
+    legal_get_legal_document: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -42928,7 +42953,7 @@ export interface operations {
             };
         };
     };
-    get_current_user_v1_me_get: {
+    auth_get_current_user: {
         parameters: {
             query?: never;
             header?: {
@@ -43013,7 +43038,7 @@ export interface operations {
             };
         };
     };
-    update_current_user_v1_me_patch: {
+    auth_update_current_user: {
         parameters: {
             query?: never;
             header?: {
@@ -43107,7 +43132,7 @@ export interface operations {
             };
         };
     };
-    get_help_progress_v1_me_help_get: {
+    help_get_help_progress: {
         parameters: {
             query?: never;
             header?: {
@@ -43192,7 +43217,7 @@ export interface operations {
             };
         };
     };
-    read_changelog_v1_me_help_changelog_put: {
+    help_read_changelog: {
         parameters: {
             query?: never;
             header?: {
@@ -43284,7 +43309,7 @@ export interface operations {
             };
         };
     };
-    reset_coach_marks_v1_me_help_coach_marks_delete: {
+    help_reset_coach_marks: {
         parameters: {
             query?: never;
             header?: {
@@ -43367,7 +43392,7 @@ export interface operations {
             };
         };
     };
-    mark_coach_mark_seen_v1_me_help_coach_marks__key__put: {
+    help_mark_coach_mark_seen: {
         parameters: {
             query?: never;
             header?: {
@@ -43454,7 +43479,7 @@ export interface operations {
             };
         };
     };
-    regenerate_recovery_codes_v1_me_mfa_recovery_codes_post: {
+    auth_regenerate_recovery_codes: {
         parameters: {
             query?: never;
             header?: {
@@ -43539,7 +43564,7 @@ export interface operations {
             };
         };
     };
-    start_totp_enrollment_v1_me_mfa_totp_post: {
+    auth_start_totp_enrollment: {
         parameters: {
             query?: never;
             header?: {
@@ -43624,7 +43649,7 @@ export interface operations {
             };
         };
     };
-    remove_totp_factor_v1_me_mfa_totp_delete: {
+    auth_remove_totp_factor: {
         parameters: {
             query?: never;
             header?: {
@@ -43707,7 +43732,7 @@ export interface operations {
             };
         };
     };
-    confirm_totp_enrollment_v1_me_mfa_totp_confirm_post: {
+    auth_confirm_totp_enrollment: {
         parameters: {
             query?: never;
             header?: {
@@ -43799,7 +43824,7 @@ export interface operations {
             };
         };
     };
-    get_account_security_v1_me_security_get: {
+    auth_get_account_security: {
         parameters: {
             query?: never;
             header?: {
@@ -43884,7 +43909,7 @@ export interface operations {
             };
         };
     };
-    list_my_sessions_v1_me_sessions_get: {
+    auth_list_my_sessions: {
         parameters: {
             query?: never;
             header?: {
@@ -43969,7 +43994,7 @@ export interface operations {
             };
         };
     };
-    revoke_other_sessions_v1_me_sessions_revoke_others_post: {
+    auth_revoke_other_sessions: {
         parameters: {
             query?: never;
             header?: {
@@ -44054,7 +44079,7 @@ export interface operations {
             };
         };
     };
-    revoke_session_v1_me_sessions__session_id__delete: {
+    auth_revoke_session: {
         parameters: {
             query?: never;
             header?: {
@@ -44139,7 +44164,7 @@ export interface operations {
             };
         };
     };
-    get_partner_v1_partner_get: {
+    referrals_get_partner: {
         parameters: {
             query?: never;
             header?: {
@@ -44224,7 +44249,7 @@ export interface operations {
             };
         };
     };
-    get_partner_commissions_v1_partner_commissions_get: {
+    referrals_get_partner_commissions: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -44312,7 +44337,7 @@ export interface operations {
             };
         };
     };
-    get_partner_referrals_v1_partner_referrals_get: {
+    referrals_get_partner_referrals: {
         parameters: {
             query?: {
                 limit?: string | null;
@@ -44400,7 +44425,7 @@ export interface operations {
             };
         };
     };
-    receive_flitt_webhook_v1_payments_flitt_webhook_post: {
+    billing_receive_flitt_webhook: {
         parameters: {
             query?: never;
             header?: {
@@ -44485,7 +44510,7 @@ export interface operations {
             };
         };
     };
-    parse_phone_number_v1_phone_numbers_parse_post: {
+    catalog_parse_phone_number: {
         parameters: {
             query?: never;
             header?: never;
@@ -44572,7 +44597,7 @@ export interface operations {
             };
         };
     };
-    get_platform_status_v1_platform_status_get: {
+    platform_status_get_platform_status: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -44657,7 +44682,7 @@ export interface operations {
             };
         };
     };
-    list_public_demos_v1_public_demos_get: {
+    public_demos_list_public_demos: {
         parameters: {
             query?: {
                 language?: string | null;
@@ -44742,7 +44767,7 @@ export interface operations {
             };
         };
     };
-    send_public_demo_message_v1_public_demos__business_id__messages_post: {
+    public_demos_send_public_demo_message: {
         parameters: {
             query?: never;
             header?: never;
@@ -44836,7 +44861,7 @@ export interface operations {
             };
         };
     };
-    get_managed_booking_v1_public_bookings__token__get: {
+    bookings_get_managed_booking: {
         parameters: {
             query?: never;
             header?: never;
@@ -44921,7 +44946,7 @@ export interface operations {
             };
         };
     };
-    get_managed_booking_calendar_v1_public_bookings__token__calendar_ics_get: {
+    bookings_get_managed_booking_calendar: {
         parameters: {
             query?: never;
             header?: never;
@@ -45006,7 +45031,7 @@ export interface operations {
             };
         };
     };
-    cancel_managed_booking_v1_public_bookings__token__cancel_post: {
+    bookings_cancel_managed_booking: {
         parameters: {
             query?: never;
             header?: never;
@@ -45091,7 +45116,7 @@ export interface operations {
             };
         };
     };
-    reschedule_managed_booking_v1_public_bookings__token__reschedule_post: {
+    bookings_reschedule_managed_booking: {
         parameters: {
             query?: never;
             header?: never;
@@ -45185,7 +45210,7 @@ export interface operations {
             };
         };
     };
-    get_managed_booking_slots_v1_public_bookings__token__slots_get: {
+    bookings_get_managed_booking_slots: {
         parameters: {
             query?: {
                 date?: string | null;
@@ -45272,7 +45297,7 @@ export interface operations {
             };
         };
     };
-    get_hosted_chat_v1_public_chat__address__get: {
+    widget_get_hosted_chat: {
         parameters: {
             query?: never;
             header?: never;
@@ -45357,7 +45382,7 @@ export interface operations {
             };
         };
     };
-    get_public_ical_feed_v1_public_ical__token__ics_get: {
+    integrations_get_public_ical_feed: {
         parameters: {
             query?: never;
             header?: never;
@@ -45442,7 +45467,7 @@ export interface operations {
             };
         };
     };
-    open_review_v1_public_reviews__token__get: {
+    reviews_open_review: {
         parameters: {
             query?: never;
             header?: never;
@@ -45525,7 +45550,7 @@ export interface operations {
             };
         };
     };
-    get_support_contacts_v1_support_contacts_get: {
+    help_get_support_contacts: {
         parameters: {
             query?: never;
             header?: never;
@@ -45608,7 +45633,7 @@ export interface operations {
             };
         };
     };
-    record_telemetry_v1_telemetry_events_post: {
+    analytics_record_telemetry: {
         parameters: {
             query?: never;
             header?: {
@@ -45746,7 +45771,7 @@ export interface operations {
             };
         };
     };
-    echo_zadarma_check_v1_telephony_zadarma_notifications_get: {
+    telephony_echo_zadarma_check: {
         parameters: {
             query?: {
                 zd_echo?: string | null;
@@ -45831,7 +45856,7 @@ export interface operations {
             };
         };
     };
-    receive_zadarma_notification_v1_telephony_zadarma_notifications_post: {
+    telephony_receive_zadarma_notification: {
         parameters: {
             query?: never;
             header?: {
@@ -45916,7 +45941,7 @@ export interface operations {
             };
         };
     };
-    run_voice_tool_v1_voice_tools__tool_name__post: {
+    voice_run_voice_tool: {
         parameters: {
             query?: never;
             header?: {
@@ -46005,7 +46030,7 @@ export interface operations {
             };
         };
     };
-    start_voice_call_v1_voice_webhooks_conversation_initiation_post: {
+    voice_start_voice_call: {
         parameters: {
             query?: never;
             header?: {
@@ -46094,7 +46119,7 @@ export interface operations {
             };
         };
     };
-    receive_post_call_v1_voice_webhooks_post_call_post: {
+    voice_receive_post_call: {
         parameters: {
             query?: never;
             header?: {
@@ -46179,7 +46204,7 @@ export interface operations {
             };
         };
     };
-    report_widget_error_v1_widget_errors_post: {
+    widget_report_widget_error: {
         parameters: {
             query?: never;
             header?: never;
@@ -46287,7 +46312,7 @@ export interface operations {
             };
         };
     };
-    get_widget_config_v1_widget__business_id__config_get: {
+    channels_get_widget_config: {
         parameters: {
             query?: never;
             header?: never;
@@ -46372,7 +46397,7 @@ export interface operations {
             };
         };
     };
-    stream_widget_events_v1_widget__business_id__events_get: {
+    channels_stream_widget_events: {
         parameters: {
             query?: {
                 ticket?: string | null;
@@ -46459,7 +46484,7 @@ export interface operations {
             };
         };
     };
-    request_widget_handoff_v1_widget__business_id__handoff_post: {
+    channels_request_widget_handoff: {
         parameters: {
             query?: never;
             header?: never;
@@ -46565,7 +46590,7 @@ export interface operations {
             };
         };
     };
-    list_widget_messages_v1_widget__business_id__messages_get: {
+    channels_list_widget_messages: {
         parameters: {
             query?: {
                 after?: string | null;
@@ -46654,7 +46679,7 @@ export interface operations {
             };
         };
     };
-    send_widget_message_v1_widget__business_id__messages_post: {
+    channels_send_widget_message: {
         parameters: {
             query?: never;
             header?: never;

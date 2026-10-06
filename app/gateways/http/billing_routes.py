@@ -5,6 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, status
 
 from app.contracts.operator_contract import OperatorContract
+from app.gateways.http.idempotency.idempotency_dependency import (
+    NO_IDEMPOTENCY,
+    IdempotencyDependency,
+)
 from app.gateways.http.openapi_error_contract import standard_error_responses
 from app.gateways.http.strict_request_parsing import (
     build_json_body_dependency,
@@ -73,6 +77,7 @@ def build_billing_router(
     subscribe_operator: SubscribeOperator,
     payment_webhook_operator: PaymentWebhookOperator,
     current_user: CurrentUserDependency,
+    idempotent: IdempotencyDependency = NO_IDEMPOTENCY,
 ) -> APIRouter:
     """
     Routes (cabinet routes need a bearer token of a business owner):
@@ -172,6 +177,7 @@ def build_billing_router(
         "/v1/businesses/{business_id}/billing/checkout",
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(StartCheckoutRequest, optional=True),
+        dependencies=[Depends(idempotent)],
     )
     def start_checkout(
         business_id: str,
@@ -192,6 +198,7 @@ def build_billing_router(
         "/v1/businesses/{business_id}/billing/subscribe",
         status_code=status.HTTP_201_CREATED,
         openapi_extra=describe_json_body(SubscribeRequest),
+        dependencies=[Depends(idempotent)],
     )
     def subscribe(
         business_id: str,

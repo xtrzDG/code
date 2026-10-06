@@ -73,6 +73,7 @@ modules =
     app.use_cases.feedback
     app.use_cases.handoffs
     app.use_cases.help
+    app.use_cases.idempotency
     app.use_cases.inbox
     app.use_cases.insights
     app.use_cases.jobs

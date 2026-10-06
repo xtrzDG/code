@@ -38,7 +38,10 @@ from app.use_cases.businesses.manager_contact_rules import (
     limit_manager_contacts,
     validate_manager_contact,
 )
-from app.utilities.businesses.business_revisions import build_stale_revision_error
+from app.utilities.businesses.business_revisions import (
+    build_precondition_failed_error,
+    build_stale_revision_error,
+)
 from app.utilities.businesses.business_settings_validation import (
     require_existing_timezone,
     require_valid_business_name,
@@ -72,7 +75,9 @@ class UpdateBusinessSettingsUseCase(
     `stale_revision`), and the write itself only succeeds while nobody else
     saved the business since it was read here, so a newer save (another
     owner, a manager linking the platform bot, billing) is never silently
-    overwritten.
+    overwritten. An If-Match header (`if_match_revisions`) is the same
+    check at the HTTP level: a mismatch, or a save in between, is refused
+    with PreconditionFailedError (412, reason `precondition_failed`).
     """
 
     def __init__(
@@ -124,6 +129,10 @@ class UpdateBusinessSettingsUseCase(
             )
         )
         changes: BusinessSettingsChanges = input_data.changes
+        if_match: list[BusinessRevision] | None = input_data.if_match_revisions
+        if if_match is not None and business.revision not in if_match:
+            raise build_precondition_failed_error(business.revision)
+
         if (
             changes.expected_revision is not None
             and changes.expected_revision != business.revision
@@ -174,7 +183,11 @@ class UpdateBusinessSettingsUseCase(
         if business.revision == read_revision and not (
             self._business_repo.save_if_unchanged(business)
         ):
-            raise build_stale_revision_error(None)
+            raise (
+                build_stale_revision_error(None)
+                if if_match is None
+                else build_precondition_failed_error(None)
+            )
 
         if status_switch is BusinessStatus.PAUSED:
             # Only a stored pause switches the voice agent off, so a refused

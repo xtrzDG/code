@@ -29201,7 +29201,7 @@
   "paths": {
     "/v1/admin/announcements": {
       "get": {
-        "operationId": "list_announcements_v1_admin_announcements_get",
+        "operationId": "platform_status_list_announcements",
         "parameters": [
           {
             "in": "query",
@@ -29340,7 +29340,7 @@
         ]
       },
       "post": {
-        "operationId": "create_announcement_v1_admin_announcements_post",
+        "operationId": "platform_status_create_announcement",
         "parameters": [
           {
             "in": "header",
@@ -29550,7 +29550,7 @@
     },
     "/v1/admin/announcements/{announcement_id}": {
       "patch": {
-        "operationId": "update_announcement_v1_admin_announcements__announcement_id__patch",
+        "operationId": "platform_status_update_announcement",
         "parameters": [
           {
             "in": "path",
@@ -29780,7 +29780,7 @@
     },
     "/v1/admin/clients": {
       "get": {
-        "operationId": "list_clients_v1_admin_clients_get",
+        "operationId": "admin_list_clients",
         "parameters": [
           {
             "in": "query",
@@ -30017,7 +30017,7 @@
     },
     "/v1/admin/clients/{business_id}": {
       "get": {
-        "operationId": "get_client_health_v1_admin_clients__business_id__get",
+        "operationId": "admin_get_client_health",
         "parameters": [
           {
             "in": "path",
@@ -30135,7 +30135,7 @@
     },
     "/v1/admin/clients/{business_id}/access": {
       "delete": {
-        "operationId": "close_client_cabinet_v1_admin_clients__business_id__access_delete",
+        "operationId": "admin_close_client_cabinet",
         "parameters": [
           {
             "in": "path",
@@ -30246,7 +30246,7 @@
     },
     "/v1/admin/clients/{business_id}/credits": {
       "post": {
-        "operationId": "grant_credit_v1_admin_clients__business_id__credits_post",
+        "operationId": "admin_grant_credit",
         "parameters": [
           {
             "in": "path",
@@ -30396,7 +30396,7 @@
     },
     "/v1/admin/clients/{business_id}/discount": {
       "post": {
-        "operationId": "give_discount_v1_admin_clients__business_id__discount_post",
+        "operationId": "admin_give_discount",
         "parameters": [
           {
             "in": "path",
@@ -30554,7 +30554,7 @@
     },
     "/v1/admin/clients/{business_id}/invoices/{invoice_id}/manual-payment": {
       "post": {
-        "operationId": "mark_invoice_paid_v1_admin_clients__business_id__invoices__invoice_id__manual_payment_post",
+        "operationId": "admin_mark_invoice_paid",
         "parameters": [
           {
             "in": "path",
@@ -30724,7 +30724,7 @@
     },
     "/v1/admin/clients/{business_id}/notes": {
       "get": {
-        "operationId": "list_notes_v1_admin_clients__business_id__notes_get",
+        "operationId": "admin_list_notes",
         "parameters": [
           {
             "in": "path",
@@ -30840,7 +30840,7 @@
         ]
       },
       "post": {
-        "operationId": "create_note_v1_admin_clients__business_id__notes_post",
+        "operationId": "admin_create_note",
         "parameters": [
           {
             "in": "path",
@@ -30988,7 +30988,7 @@
     },
     "/v1/admin/clients/{business_id}/notes/{note_id}": {
       "delete": {
-        "operationId": "delete_note_v1_admin_clients__business_id__notes__note_id__delete",
+        "operationId": "admin_delete_note",
         "parameters": [
           {
             "in": "path",
@@ -31106,7 +31106,7 @@
         ]
       },
       "patch": {
-        "operationId": "update_note_v1_admin_clients__business_id__notes__note_id__patch",
+        "operationId": "admin_update_note",
         "parameters": [
           {
             "in": "path",
@@ -31273,7 +31273,7 @@
     },
     "/v1/admin/clients/{business_id}/onboarding-request/done": {
       "post": {
-        "operationId": "complete_onboarding_v1_admin_clients__business_id__onboarding_request_done_post",
+        "operationId": "admin_complete_onboarding",
         "parameters": [
           {
             "in": "path",
@@ -31391,7 +31391,7 @@
     },
     "/v1/admin/clients/{business_id}/open": {
       "post": {
-        "operationId": "open_client_cabinet_v1_admin_clients__business_id__open_post",
+        "operationId": "admin_open_client_cabinet",
         "parameters": [
           {
             "in": "path",
@@ -31534,7 +31534,7 @@
     },
     "/v1/admin/clients/{business_id}/plan": {
       "post": {
-        "operationId": "override_plan_v1_admin_clients__business_id__plan_post",
+        "operationId": "admin_override_plan",
         "parameters": [
           {
             "in": "path",
@@ -31704,7 +31704,7 @@
     },
     "/v1/admin/clients/{business_id}/quality": {
       "get": {
-        "operationId": "get_client_quality_route_v1_admin_clients__business_id__quality_get",
+        "operationId": "quality_get_client_quality",
         "parameters": [
           {
             "in": "path",
@@ -31822,7 +31822,7 @@
     },
     "/v1/admin/clients/{business_id}/setup-fee-waiver": {
       "post": {
-        "operationId": "waive_setup_fee_v1_admin_clients__business_id__setup_fee_waiver_post",
+        "operationId": "admin_waive_setup_fee",
         "parameters": [
           {
             "in": "path",
@@ -31965,7 +31965,7 @@
     },
     "/v1/admin/clients/{business_id}/spend-limits": {
       "put": {
-        "operationId": "set_client_spend_limits_v1_admin_clients__business_id__spend_limits_put",
+        "operationId": "admin_set_client_spend_limits",
         "parameters": [
           {
             "in": "path",
@@ -32122,7 +32122,7 @@
     },
     "/v1/admin/clients/{business_id}/timeline": {
       "get": {
-        "operationId": "get_timeline_v1_admin_clients__business_id__timeline_get",
+        "operationId": "admin_get_timeline",
         "parameters": [
           {
             "in": "path",
@@ -32272,7 +32272,7 @@
     },
     "/v1/admin/clients/{business_id}/trial-extension": {
       "post": {
-        "operationId": "extend_trial_v1_admin_clients__business_id__trial_extension_post",
+        "operationId": "admin_extend_trial",
         "parameters": [
           {
             "in": "path",
@@ -32422,7 +32422,7 @@
     },
     "/v1/admin/incidents": {
       "get": {
-        "operationId": "list_incidents_v1_admin_incidents_get",
+        "operationId": "admin_list_incidents",
         "parameters": [
           {
             "in": "query",
@@ -32561,7 +32561,7 @@
         ]
       },
       "post": {
-        "operationId": "create_incident_v1_admin_incidents_post",
+        "operationId": "admin_create_incident",
         "parameters": [
           {
             "in": "header",
@@ -32942,7 +32942,7 @@
     },
     "/v1/admin/jobs": {
       "get": {
-        "operationId": "list_queued_jobs_v1_admin_jobs_get",
+        "operationId": "admin_list_queued_jobs",
         "parameters": [
           {
             "in": "query",
@@ -33115,7 +33115,7 @@
     },
     "/v1/admin/jobs/{job_id}/discard": {
       "post": {
-        "operationId": "discard_queued_job_v1_admin_jobs__job_id__discard_post",
+        "operationId": "admin_discard_queued_job",
         "parameters": [
           {
             "in": "path",
@@ -33233,7 +33233,7 @@
     },
     "/v1/admin/jobs/{job_id}/retry": {
       "post": {
-        "operationId": "retry_queued_job_v1_admin_jobs__job_id__retry_post",
+        "operationId": "admin_retry_queued_job",
         "parameters": [
           {
             "in": "path",
@@ -33351,7 +33351,7 @@
     },
     "/v1/admin/metrics": {
       "get": {
-        "operationId": "get_admin_metrics_v1_admin_metrics_get",
+        "operationId": "analytics_get_admin_metrics",
         "parameters": [
           {
             "in": "query",
@@ -33556,7 +33556,7 @@
     },
     "/v1/admin/partners": {
       "get": {
-        "operationId": "get_partners_v1_admin_partners_get",
+        "operationId": "admin_get_partners",
         "parameters": [
           {
             "in": "header",
@@ -33663,7 +33663,7 @@
         ]
       },
       "post": {
-        "operationId": "post_partner_v1_admin_partners_post",
+        "operationId": "admin_post_partner",
         "parameters": [
           {
             "in": "header",
@@ -33848,7 +33848,7 @@
     },
     "/v1/admin/partners/payouts": {
       "get": {
-        "operationId": "get_payouts_v1_admin_partners_payouts_get",
+        "operationId": "admin_get_payouts",
         "parameters": [
           {
             "in": "query",
@@ -33973,7 +33973,7 @@
     },
     "/v1/admin/partners/{partner_id}": {
       "patch": {
-        "operationId": "patch_partner_v1_admin_partners__partner_id__patch",
+        "operationId": "admin_patch_partner",
         "parameters": [
           {
             "in": "path",
@@ -34149,7 +34149,7 @@
     },
     "/v1/admin/partners/{partner_id}/codes": {
       "post": {
-        "operationId": "post_partner_code_v1_admin_partners__partner_id__codes_post",
+        "operationId": "admin_post_partner_code",
         "parameters": [
           {
             "in": "path",
@@ -34292,7 +34292,7 @@
     },
     "/v1/admin/partners/{partner_id}/payouts": {
       "post": {
-        "operationId": "post_payout_v1_admin_partners__partner_id__payouts_post",
+        "operationId": "admin_post_payout",
         "parameters": [
           {
             "in": "path",
@@ -34443,7 +34443,7 @@
     },
     "/v1/admin/security/encryption-keys": {
       "get": {
-        "operationId": "get_encryption_keys_v1_admin_security_encryption_keys_get",
+        "operationId": "admin_get_encryption_keys",
         "parameters": [
           {
             "in": "header",
@@ -34552,7 +34552,7 @@
     },
     "/v1/admin/security/encryption-keys/rotate": {
       "post": {
-        "operationId": "start_key_rotation_v1_admin_security_encryption_keys_rotate_post",
+        "operationId": "admin_start_key_rotation",
         "parameters": [
           {
             "in": "header",
@@ -34661,7 +34661,7 @@
     },
     "/v1/admin/spend": {
       "get": {
-        "operationId": "get_admin_spend_v1_admin_spend_get",
+        "operationId": "admin_get_admin_spend",
         "parameters": [
           {
             "in": "header",
@@ -34770,7 +34770,7 @@
     },
     "/v1/admin/system": {
       "get": {
-        "operationId": "get_admin_system_v1_admin_system_get",
+        "operationId": "admin_get_admin_system",
         "parameters": [
           {
             "in": "header",
@@ -34879,7 +34879,7 @@
     },
     "/v1/admin/system/data-tasks": {
       "get": {
-        "operationId": "get_data_tasks_v1_admin_system_data_tasks_get",
+        "operationId": "admin_get_data_tasks",
         "parameters": [
           {
             "in": "header",
@@ -34988,7 +34988,7 @@
     },
     "/v1/admin/system/data-tasks/{task_key}/retry": {
       "post": {
-        "operationId": "retry_data_task_v1_admin_system_data_tasks__task_key__retry_post",
+        "operationId": "admin_retry_data_task",
         "parameters": [
           {
             "in": "path",
@@ -35106,7 +35106,7 @@
     },
     "/v1/admin/system/error-budget": {
       "get": {
-        "operationId": "get_error_budget_v1_admin_system_error_budget_get",
+        "operationId": "admin_get_error_budget",
         "parameters": [
           {
             "in": "header",
@@ -35215,7 +35215,7 @@
     },
     "/v1/admin/team": {
       "get": {
-        "operationId": "list_platform_admins_v1_admin_team_get",
+        "operationId": "admin_list_platform_admins",
         "parameters": [
           {
             "in": "header",
@@ -35322,7 +35322,7 @@
         ]
       },
       "post": {
-        "operationId": "add_platform_admin_v1_admin_team_post",
+        "operationId": "admin_add_platform_admin",
         "parameters": [
           {
             "in": "header",
@@ -35481,7 +35481,7 @@
     },
     "/v1/admin/team/{admin_id}": {
       "delete": {
-        "operationId": "remove_platform_admin_v1_admin_team__admin_id__delete",
+        "operationId": "admin_remove_platform_admin",
         "parameters": [
           {
             "in": "path",
@@ -35590,7 +35590,7 @@
         ]
       },
       "patch": {
-        "operationId": "change_platform_admin_role_v1_admin_team__admin_id__patch",
+        "operationId": "admin_change_platform_admin_role",
         "parameters": [
           {
             "in": "path",
@@ -35736,8 +35736,26 @@
     },
     "/v1/assistants": {
       "post": {
-        "operationId": "create_assistant_v1_assistants_post",
+        "operationId": "setup_create_assistant",
         "parameters": [
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
           {
             "in": "header",
             "name": "authorization",
@@ -35992,7 +36010,7 @@
     },
     "/v1/auth/login-options": {
       "get": {
-        "operationId": "get_login_options_v1_auth_login_options_get",
+        "operationId": "auth_get_login_options",
         "parameters": [
           {
             "in": "query",
@@ -36101,7 +36119,7 @@
     },
     "/v1/auth/logout": {
       "post": {
-        "operationId": "logout_v1_auth_logout_post",
+        "operationId": "auth_logout",
         "parameters": [
           {
             "in": "header",
@@ -36203,7 +36221,7 @@
     },
     "/v1/auth/mfa/enroll": {
       "post": {
-        "operationId": "start_mfa_login_enrollment_v1_auth_mfa_enroll_post",
+        "operationId": "auth_start_mfa_login_enrollment",
         "requestBody": {
           "content": {
             "application/json": {
@@ -36317,7 +36335,7 @@
     },
     "/v1/auth/mfa/verify": {
       "post": {
-        "operationId": "verify_mfa_login_v1_auth_mfa_verify_post",
+        "operationId": "auth_verify_mfa_login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -36456,7 +36474,7 @@
     },
     "/v1/auth/otp/start": {
       "post": {
-        "operationId": "start_otp_login_v1_auth_otp_start_post",
+        "operationId": "auth_start_otp_login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -36644,7 +36662,7 @@
     },
     "/v1/auth/otp/verify": {
       "post": {
-        "operationId": "verify_otp_login_v1_auth_otp_verify_post",
+        "operationId": "auth_verify_otp_login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -36855,7 +36873,7 @@
                       "$ref": "#/components/schemas/MfaRequiredView"
                     }
                   ],
-                  "title": "Response Verify Otp Login V1 Auth Otp Verify Post"
+                  "title": "Response Auth Verify Otp Login"
                 }
               }
             },
@@ -36940,7 +36958,7 @@
     },
     "/v1/auth/step-up": {
       "post": {
-        "operationId": "start_step_up_v1_auth_step_up_post",
+        "operationId": "auth_start_step_up",
         "parameters": [
           {
             "in": "header",
@@ -37049,7 +37067,7 @@
     },
     "/v1/auth/step-up/verify": {
       "post": {
-        "operationId": "verify_step_up_v1_auth_step_up_verify_post",
+        "operationId": "auth_verify_step_up",
         "parameters": [
           {
             "in": "header",
@@ -37224,7 +37242,7 @@
     },
     "/v1/business-exports/{business_id}/{export_id}/download": {
       "get": {
-        "operationId": "download_business_export_v1_business_exports__business_id___export_id__download_get",
+        "operationId": "exports_download_business_export",
         "parameters": [
           {
             "in": "path",
@@ -37367,7 +37385,7 @@
     },
     "/v1/businesses": {
       "get": {
-        "operationId": "list_my_businesses_v1_businesses_get",
+        "operationId": "businesses_list_my_businesses",
         "parameters": [
           {
             "in": "header",
@@ -37394,7 +37412,7 @@
                   "items": {
                     "$ref": "#/components/schemas/BusinessView"
                   },
-                  "title": "Response List My Businesses V1 Businesses Get",
+                  "title": "Response Businesses List My Businesses",
                   "type": "array"
                 }
               }
@@ -37478,7 +37496,7 @@
         ]
       },
       "post": {
-        "operationId": "create_business_v1_businesses_post",
+        "operationId": "businesses_create_business",
         "parameters": [
           {
             "in": "header",
@@ -37734,7 +37752,7 @@
     },
     "/v1/businesses/{business_id}": {
       "get": {
-        "operationId": "get_business_v1_businesses__business_id__get",
+        "operationId": "businesses_get_business",
         "parameters": [
           {
             "in": "path",
@@ -37771,7 +37789,15 @@
                 }
               }
             },
-            "description": "Successful Response"
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "The business revision as a strong entity tag (`\"7\"`); send it back as If-Match with a change.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "content": {
@@ -37850,7 +37876,7 @@
         ]
       },
       "patch": {
-        "operationId": "update_business_settings_v1_businesses__business_id__patch",
+        "operationId": "businesses_update_business_settings",
         "parameters": [
           {
             "in": "path",
@@ -37859,6 +37885,24 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. The ETag of the business this change was made from (as GET returned it, e.g. `\"7\"`), or `*`. When the business was saved since, nothing changes and the answer is 412 with the reason `precondition_failed`. The body's `expected_revision` is the same check answered with 409.",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. The ETag of the business this change was made from (as GET returned it, e.g. `\"7\"`), or `*`. When the business was saved since, nothing changes and the answer is 412 with the reason `precondition_failed`. The body's `expected_revision` is the same check answered with 409.",
+              "title": "If-Match"
             }
           },
           {
@@ -38162,7 +38206,15 @@
                 }
               }
             },
-            "description": "Successful Response"
+            "description": "Successful Response",
+            "headers": {
+              "ETag": {
+                "description": "The business revision as a strong entity tag (`\"7\"`); send it back as If-Match with a change.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "content": {
@@ -38204,6 +38256,16 @@
             },
             "description": "Conflicts with the current state (stale revision, slot taken)."
           },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The If-Match precondition does not hold: the resource was saved after the ETag was read (`error` conflict, reason `precondition_failed` with the current revision)."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -38243,7 +38305,7 @@
     },
     "/v1/businesses/{business_id}/answers-to-improve": {
       "get": {
-        "operationId": "get_answers_to_improve_v1_businesses__business_id__answers_to_improve_get",
+        "operationId": "conversations_get_answers_to_improve",
         "parameters": [
           {
             "in": "path",
@@ -38377,7 +38439,7 @@
     },
     "/v1/businesses/{business_id}/assistant-settings": {
       "get": {
-        "operationId": "get_assistant_settings_v1_businesses__business_id__assistant_settings_get",
+        "operationId": "assistant_settings_get_assistant_settings",
         "parameters": [
           {
             "in": "path",
@@ -38493,7 +38555,7 @@
         ]
       },
       "put": {
-        "operationId": "update_assistant_settings_v1_businesses__business_id__assistant_settings_put",
+        "operationId": "assistant_settings_update_assistant_settings",
         "parameters": [
           {
             "in": "path",
@@ -38636,7 +38698,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions": {
       "get": {
-        "operationId": "list_assistant_versions_v1_businesses__business_id__assistant_versions_get",
+        "operationId": "assistant_list_assistant_versions",
         "parameters": [
           {
             "in": "path",
@@ -38672,7 +38734,7 @@
                   "items": {
                     "$ref": "#/components/schemas/AssistantVersionSummary"
                   },
-                  "title": "Response List Assistant Versions V1 Businesses  Business Id  Assistant Versions Get",
+                  "title": "Response Assistant List Assistant Versions",
                   "type": "array"
                 }
               }
@@ -38756,7 +38818,7 @@
         ]
       },
       "post": {
-        "operationId": "assemble_assistant_version_v1_businesses__business_id__assistant_versions_post",
+        "operationId": "assistant_assemble_assistant_version",
         "parameters": [
           {
             "in": "path",
@@ -38946,7 +39008,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}": {
       "get": {
-        "operationId": "get_assistant_version_v1_businesses__business_id__assistant_versions__version_id__get",
+        "operationId": "assistant_get_assistant_version",
         "parameters": [
           {
             "in": "path",
@@ -39073,7 +39135,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/autotest-run": {
       "get": {
-        "operationId": "get_autotest_run_v1_businesses__business_id__assistant_versions__version_id__autotest_run_get",
+        "operationId": "assistant_get_autotest_run",
         "parameters": [
           {
             "in": "path",
@@ -39200,7 +39262,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/autotests": {
       "post": {
-        "operationId": "run_autotests_v1_businesses__business_id__assistant_versions__version_id__autotests_post",
+        "operationId": "assistant_run_autotests",
         "parameters": [
           {
             "in": "path",
@@ -39394,7 +39456,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/go-live-readiness": {
       "get": {
-        "operationId": "get_go_live_readiness_v1_businesses__business_id__assistant_versions__version_id__go_live_readiness_get",
+        "operationId": "assistant_get_go_live_readiness",
         "parameters": [
           {
             "in": "path",
@@ -39521,7 +39583,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/publish": {
       "post": {
-        "operationId": "publish_assistant_version_v1_businesses__business_id__assistant_versions__version_id__publish_post",
+        "operationId": "assistant_publish_assistant_version",
         "parameters": [
           {
             "in": "path",
@@ -39668,7 +39730,7 @@
     },
     "/v1/businesses/{business_id}/assistant-versions/{version_id}/rollback": {
       "post": {
-        "operationId": "rollback_assistant_version_v1_businesses__business_id__assistant_versions__version_id__rollback_post",
+        "operationId": "assistant_rollback_assistant_version",
         "parameters": [
           {
             "in": "path",
@@ -39795,7 +39857,7 @@
     },
     "/v1/businesses/{business_id}/assistant/apply": {
       "get": {
-        "operationId": "get_apply_changes_v1_businesses__business_id__assistant_apply_get",
+        "operationId": "assistant_get_apply_changes",
         "parameters": [
           {
             "in": "path",
@@ -39927,7 +39989,7 @@
         ]
       },
       "post": {
-        "operationId": "apply_changes_v1_businesses__business_id__assistant_apply_post",
+        "operationId": "assistant_apply_changes",
         "parameters": [
           {
             "in": "path",
@@ -40045,7 +40107,7 @@
     },
     "/v1/businesses/{business_id}/assistant/drafts/{version_id}": {
       "delete": {
-        "operationId": "discard_assistant_draft_v1_businesses__business_id__assistant_drafts__version_id__delete",
+        "operationId": "assistant_discard_assistant_draft",
         "parameters": [
           {
             "in": "path",
@@ -40165,7 +40227,7 @@
     },
     "/v1/businesses/{business_id}/assistant/pending-changes": {
       "get": {
-        "operationId": "get_pending_changes_v1_businesses__business_id__assistant_pending_changes_get",
+        "operationId": "assistant_get_pending_changes",
         "parameters": [
           {
             "in": "path",
@@ -40300,7 +40362,7 @@
     "/v1/businesses/{business_id}/attention-counts": {
       "get": {
         "description": "What waits for a person (sandbox excluded): conversations that need\na person or have an open request, unassigned and mine, upcoming\nbookings to confirm and channels in error; the badges of the\ncabinet's navigation, the same numbers as …/inbox/counts. Indexed\ncounts only, no personal data, so it records no view.",
-        "operationId": "get_attention_counts_route_v1_businesses__business_id__attention_counts_get",
+        "operationId": "live_get_attention_counts",
         "parameters": [
           {
             "in": "path",
@@ -40418,7 +40480,7 @@
     },
     "/v1/businesses/{business_id}/audit-log": {
       "get": {
-        "operationId": "list_audit_log_v1_businesses__business_id__audit_log_get",
+        "operationId": "compliance_list_audit_log",
         "parameters": [
           {
             "in": "path",
@@ -40648,7 +40710,7 @@
     },
     "/v1/businesses/{business_id}/autotest-cases": {
       "get": {
-        "operationId": "list_autotest_cases_v1_businesses__business_id__autotest_cases_get",
+        "operationId": "assistants_list_autotest_cases",
         "parameters": [
           {
             "in": "path",
@@ -40780,7 +40842,7 @@
         ]
       },
       "post": {
-        "operationId": "create_autotest_case_v1_businesses__business_id__autotest_cases_post",
+        "operationId": "assistants_create_autotest_case",
         "parameters": [
           {
             "in": "path",
@@ -41011,7 +41073,7 @@
     },
     "/v1/businesses/{business_id}/autotest-cases/{case_id}": {
       "delete": {
-        "operationId": "delete_autotest_case_v1_businesses__business_id__autotest_cases__case_id__delete",
+        "operationId": "assistants_delete_autotest_case",
         "parameters": [
           {
             "in": "path",
@@ -41129,7 +41191,7 @@
         ]
       },
       "patch": {
-        "operationId": "update_autotest_case_v1_businesses__business_id__autotest_cases__case_id__patch",
+        "operationId": "assistants_update_autotest_case",
         "parameters": [
           {
             "in": "path",
@@ -41342,7 +41404,7 @@
     },
     "/v1/businesses/{business_id}/autotest-cases/{case_id}/check": {
       "post": {
-        "operationId": "check_autotest_case_now_v1_businesses__business_id__autotest_cases__case_id__check_post",
+        "operationId": "assistants_check_autotest_case_now",
         "parameters": [
           {
             "in": "path",
@@ -41485,7 +41547,7 @@
     },
     "/v1/businesses/{business_id}/availability": {
       "get": {
-        "operationId": "get_availability_v1_businesses__business_id__availability_get",
+        "operationId": "operations_get_availability",
         "parameters": [
           {
             "in": "path",
@@ -41740,7 +41802,7 @@
     },
     "/v1/businesses/{business_id}/billing": {
       "get": {
-        "operationId": "get_billing_overview_v1_businesses__business_id__billing_get",
+        "operationId": "billing_get_billing_overview",
         "parameters": [
           {
             "in": "path",
@@ -41874,7 +41936,7 @@
     },
     "/v1/businesses/{business_id}/billing/cancel": {
       "post": {
-        "operationId": "cancel_subscription_v1_businesses__business_id__billing_cancel_post",
+        "operationId": "billing_cancel_subscription",
         "parameters": [
           {
             "in": "path",
@@ -42076,7 +42138,7 @@
     },
     "/v1/businesses/{business_id}/billing/checkout": {
       "post": {
-        "operationId": "start_checkout_v1_businesses__business_id__billing_checkout_post",
+        "operationId": "billing_start_checkout",
         "parameters": [
           {
             "in": "path",
@@ -42101,6 +42163,24 @@
                 }
               ],
               "title": "Language"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -42239,7 +42319,7 @@
     },
     "/v1/businesses/{business_id}/billing/invoices/{invoice_id}/documents/{document_kind}": {
       "get": {
-        "operationId": "get_billing_document_v1_businesses__business_id__billing_invoices__invoice_id__documents__document_kind__get",
+        "operationId": "billing_get_billing_document",
         "parameters": [
           {
             "in": "path",
@@ -42392,7 +42472,7 @@
     },
     "/v1/businesses/{business_id}/billing/lifecycle": {
       "get": {
-        "operationId": "get_subscription_lifecycle_v1_businesses__business_id__billing_lifecycle_get",
+        "operationId": "billing_get_subscription_lifecycle",
         "parameters": [
           {
             "in": "path",
@@ -42526,7 +42606,7 @@
     },
     "/v1/businesses/{business_id}/billing/offers/accept": {
       "post": {
-        "operationId": "accept_retention_offer_v1_businesses__business_id__billing_offers_accept_post",
+        "operationId": "billing_accept_retention_offer",
         "parameters": [
           {
             "in": "path",
@@ -42717,7 +42797,7 @@
     },
     "/v1/businesses/{business_id}/billing/pause": {
       "post": {
-        "operationId": "pause_subscription_v1_businesses__business_id__billing_pause_post",
+        "operationId": "billing_pause_subscription",
         "parameters": [
           {
             "in": "path",
@@ -42875,7 +42955,7 @@
     },
     "/v1/businesses/{business_id}/billing/plan": {
       "post": {
-        "operationId": "change_plan_v1_businesses__business_id__billing_plan_post",
+        "operationId": "billing_change_plan",
         "parameters": [
           {
             "in": "path",
@@ -43047,7 +43127,7 @@
     },
     "/v1/businesses/{business_id}/billing/profile": {
       "get": {
-        "operationId": "get_billing_profile_v1_businesses__business_id__billing_profile_get",
+        "operationId": "billing_get_billing_profile",
         "parameters": [
           {
             "in": "path",
@@ -43163,7 +43243,7 @@
         ]
       },
       "put": {
-        "operationId": "save_billing_profile_v1_businesses__business_id__billing_profile_put",
+        "operationId": "billing_save_billing_profile",
         "parameters": [
           {
             "in": "path",
@@ -43356,7 +43436,7 @@
     },
     "/v1/businesses/{business_id}/billing/resume": {
       "post": {
-        "operationId": "resume_subscription_v1_businesses__business_id__billing_resume_post",
+        "operationId": "billing_resume_subscription",
         "parameters": [
           {
             "in": "path",
@@ -43490,7 +43570,7 @@
     },
     "/v1/businesses/{business_id}/billing/subscribe": {
       "post": {
-        "operationId": "subscribe_v1_businesses__business_id__billing_subscribe_post",
+        "operationId": "billing_subscribe",
         "parameters": [
           {
             "in": "path",
@@ -43515,6 +43595,24 @@
                 }
               ],
               "title": "Language"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -43686,7 +43784,7 @@
     },
     "/v1/businesses/{business_id}/billing/trial": {
       "post": {
-        "operationId": "start_trial_v1_businesses__business_id__billing_trial_post",
+        "operationId": "billing_start_trial",
         "parameters": [
           {
             "in": "path",
@@ -43862,7 +43960,7 @@
     },
     "/v1/businesses/{business_id}/bookings": {
       "get": {
-        "operationId": "get_bookings_v1_businesses__business_id__bookings_get",
+        "operationId": "operations_get_bookings",
         "parameters": [
           {
             "in": "path",
@@ -44106,7 +44204,7 @@
         ]
       },
       "post": {
-        "operationId": "post_booking_v1_businesses__business_id__bookings_post",
+        "operationId": "operations_post_booking",
         "parameters": [
           {
             "in": "path",
@@ -44115,6 +44213,24 @@
             "schema": {
               "title": "Business Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -44424,7 +44540,7 @@
     },
     "/v1/businesses/{business_id}/bookings/{booking_id}": {
       "patch": {
-        "operationId": "patch_booking_v1_businesses__business_id__bookings__booking_id__patch",
+        "operationId": "operations_patch_booking",
         "parameters": [
           {
             "in": "path",
@@ -44632,7 +44748,7 @@
     },
     "/v1/businesses/{business_id}/bookings/{booking_id}/cancel": {
       "post": {
-        "operationId": "post_booking_cancel_v1_businesses__business_id__bookings__booking_id__cancel_post",
+        "operationId": "operations_post_booking_cancel",
         "parameters": [
           {
             "in": "path",
@@ -44775,7 +44891,7 @@
     },
     "/v1/businesses/{business_id}/bookings/{booking_id}/reschedule": {
       "post": {
-        "operationId": "post_booking_reschedule_v1_businesses__business_id__bookings__booking_id__reschedule_post",
+        "operationId": "operations_post_booking_reschedule",
         "parameters": [
           {
             "in": "path",
@@ -44958,7 +45074,7 @@
     "/v1/businesses/{business_id}/bookings/{booking_id}/revert-status": {
       "post": {
         "description": "Undo the last status change staff made to the booking (within 10\nminutes): `status` is the status being undone. 409 with a reason\n(nothing_to_undo, status_changed, undo_expired, slot_taken,\nplace_gone) when it cannot be undone.",
-        "operationId": "post_booking_revert_status_v1_businesses__business_id__bookings__booking_id__revert_status_post",
+        "operationId": "operations_post_booking_revert_status",
         "parameters": [
           {
             "in": "path",
@@ -45115,7 +45231,7 @@
     },
     "/v1/businesses/{business_id}/business-exports": {
       "get": {
-        "operationId": "list_business_exports_v1_businesses__business_id__business_exports_get",
+        "operationId": "exports_list_business_exports",
         "parameters": [
           {
             "in": "path",
@@ -45231,7 +45347,7 @@
         ]
       },
       "post": {
-        "operationId": "start_business_export_v1_businesses__business_id__business_exports_post",
+        "operationId": "exports_start_business_export",
         "parameters": [
           {
             "in": "path",
@@ -45378,7 +45494,7 @@
     },
     "/v1/businesses/{business_id}/business-exports/{export_id}/download-link": {
       "post": {
-        "operationId": "create_business_export_download_link_v1_businesses__business_id__business_exports__export_id__download_link_post",
+        "operationId": "exports_create_business_export_download_link",
         "parameters": [
           {
             "in": "path",
@@ -45505,7 +45621,7 @@
     },
     "/v1/businesses/{business_id}/call-forwarding-instructions": {
       "get": {
-        "operationId": "get_call_forwarding_instructions_v1_businesses__business_id__call_forwarding_instructions_get",
+        "operationId": "catalog_get_call_forwarding_instructions",
         "parameters": [
           {
             "in": "path",
@@ -45631,12 +45747,15 @@
             "description": "A provider (model, messaging, payments, telephony) failed."
           }
         },
-        "summary": "Get Call Forwarding Instructions"
+        "summary": "Get Call Forwarding Instructions",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/v1/businesses/{business_id}/call-settings": {
       "get": {
-        "operationId": "get_call_settings_v1_businesses__business_id__call_settings_get",
+        "operationId": "calls_get_call_settings",
         "parameters": [
           {
             "in": "path",
@@ -45752,7 +45871,7 @@
         ]
       },
       "put": {
-        "operationId": "update_call_settings_v1_businesses__business_id__call_settings_put",
+        "operationId": "calls_update_call_settings",
         "parameters": [
           {
             "in": "path",
@@ -45914,7 +46033,7 @@
     },
     "/v1/businesses/{business_id}/calls/{call_id}/recording": {
       "get": {
-        "operationId": "get_call_recording_v1_businesses__business_id__calls__call_id__recording_get",
+        "operationId": "conversations_get_call_recording",
         "parameters": [
           {
             "in": "path",
@@ -46063,7 +46182,7 @@
     },
     "/v1/businesses/{business_id}/campaign-messages": {
       "get": {
-        "operationId": "list_campaign_messages_v1_businesses__business_id__campaign_messages_get",
+        "operationId": "return_visits_list_campaign_messages",
         "parameters": [
           {
             "in": "path",
@@ -46213,7 +46332,7 @@
     },
     "/v1/businesses/{business_id}/campaign-settings": {
       "get": {
-        "operationId": "get_campaign_settings_v1_businesses__business_id__campaign_settings_get",
+        "operationId": "return_visits_get_campaign_settings",
         "parameters": [
           {
             "in": "path",
@@ -46329,7 +46448,7 @@
         ]
       },
       "put": {
-        "operationId": "update_campaign_settings_v1_businesses__business_id__campaign_settings_put",
+        "operationId": "return_visits_update_campaign_settings",
         "parameters": [
           {
             "in": "path",
@@ -46516,7 +46635,7 @@
     },
     "/v1/businesses/{business_id}/channels": {
       "get": {
-        "operationId": "list_channels_v1_businesses__business_id__channels_get",
+        "operationId": "channels_list_channels",
         "parameters": [
           {
             "in": "path",
@@ -46552,7 +46671,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ChannelView"
                   },
-                  "title": "Response List Channels V1 Businesses  Business Id  Channels Get",
+                  "title": "Response Channels List Channels",
                   "type": "array"
                 }
               }
@@ -46638,7 +46757,7 @@
     },
     "/v1/businesses/{business_id}/channels/telegram/validate-token": {
       "post": {
-        "operationId": "validate_telegram_token_v1_businesses__business_id__channels_telegram_validate_token_post",
+        "operationId": "channels_validate_telegram_token",
         "parameters": [
           {
             "in": "path",
@@ -46778,7 +46897,7 @@
     },
     "/v1/businesses/{business_id}/channels/web/allowed-origins": {
       "get": {
-        "operationId": "get_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_get",
+        "operationId": "channels_get_widget_allowed_origins",
         "parameters": [
           {
             "in": "path",
@@ -46894,7 +47013,7 @@
         ]
       },
       "put": {
-        "operationId": "save_widget_allowed_origins_v1_businesses__business_id__channels_web_allowed_origins_put",
+        "operationId": "channels_save_widget_allowed_origins",
         "parameters": [
           {
             "in": "path",
@@ -47037,7 +47156,7 @@
     },
     "/v1/businesses/{business_id}/channels/web/snippet": {
       "get": {
-        "operationId": "get_widget_snippet_v1_businesses__business_id__channels_web_snippet_get",
+        "operationId": "channels_get_widget_snippet",
         "parameters": [
           {
             "in": "path",
@@ -47155,7 +47274,7 @@
     },
     "/v1/businesses/{business_id}/channels/whatsapp/staff-template": {
       "put": {
-        "operationId": "set_whatsapp_staff_template_v1_businesses__business_id__channels_whatsapp_staff_template_put",
+        "operationId": "channels_set_whatsapp_staff_template",
         "parameters": [
           {
             "in": "path",
@@ -47316,7 +47435,7 @@
     },
     "/v1/businesses/{business_id}/channels/whatsapp/staff-templates": {
       "put": {
-        "operationId": "set_whatsapp_staff_templates_v1_businesses__business_id__channels_whatsapp_staff_templates_put",
+        "operationId": "channels_set_whatsapp_staff_templates",
         "parameters": [
           {
             "in": "path",
@@ -47480,7 +47599,7 @@
     },
     "/v1/businesses/{business_id}/channels/{channel}": {
       "delete": {
-        "operationId": "disable_channel_v1_businesses__business_id__channels__channel__delete",
+        "operationId": "channels_disable_channel",
         "parameters": [
           {
             "in": "path",
@@ -47598,7 +47717,7 @@
         ]
       },
       "put": {
-        "operationId": "connect_channel_v1_businesses__business_id__channels__channel__put",
+        "operationId": "channels_connect_channel",
         "parameters": [
           {
             "in": "path",
@@ -47859,7 +47978,7 @@
     },
     "/v1/businesses/{business_id}/contacts": {
       "get": {
-        "operationId": "list_contacts_v1_businesses__business_id__contacts_get",
+        "operationId": "compliance_list_contacts",
         "parameters": [
           {
             "in": "path",
@@ -48057,7 +48176,7 @@
     },
     "/v1/businesses/{business_id}/contacts/{contact_id}": {
       "delete": {
-        "operationId": "delete_contact_data_v1_businesses__business_id__contacts__contact_id__delete",
+        "operationId": "compliance_delete_contact_data",
         "parameters": [
           {
             "in": "path",
@@ -48175,7 +48294,7 @@
         ]
       },
       "get": {
-        "operationId": "get_contact_v1_businesses__business_id__contacts__contact_id__get",
+        "operationId": "compliance_get_contact",
         "parameters": [
           {
             "in": "path",
@@ -48302,7 +48421,7 @@
     },
     "/v1/businesses/{business_id}/contacts/{contact_id}/blocking": {
       "put": {
-        "operationId": "change_customer_blocking_v1_businesses__business_id__contacts__contact_id__blocking_put",
+        "operationId": "customers_change_customer_blocking",
         "parameters": [
           {
             "in": "path",
@@ -48451,7 +48570,7 @@
     },
     "/v1/businesses/{business_id}/contacts/{contact_id}/card": {
       "patch": {
-        "operationId": "change_customer_card_v1_businesses__business_id__contacts__contact_id__card_patch",
+        "operationId": "customers_change_customer_card",
         "parameters": [
           {
             "in": "path",
@@ -48626,7 +48745,7 @@
     },
     "/v1/businesses/{business_id}/contacts/{contact_id}/export": {
       "get": {
-        "operationId": "export_contact_data_v1_businesses__business_id__contacts__contact_id__export_get",
+        "operationId": "compliance_export_contact_data",
         "parameters": [
           {
             "in": "path",
@@ -48753,7 +48872,7 @@
     },
     "/v1/businesses/{business_id}/contacts/{contact_id}/standing": {
       "get": {
-        "operationId": "get_contact_standing_v1_businesses__business_id__contacts__contact_id__standing_get",
+        "operationId": "customers_get_contact_standing",
         "parameters": [
           {
             "in": "path",
@@ -48880,7 +48999,7 @@
     },
     "/v1/businesses/{business_id}/conversations": {
       "get": {
-        "operationId": "list_conversations_v1_businesses__business_id__conversations_get",
+        "operationId": "conversations_list_conversations",
         "parameters": [
           {
             "in": "path",
@@ -49126,7 +49245,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}": {
       "get": {
-        "operationId": "get_conversation_v1_businesses__business_id__conversations__conversation_id__get",
+        "operationId": "conversations_get_conversation",
         "parameters": [
           {
             "in": "path",
@@ -49253,7 +49372,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/assign": {
       "post": {
-        "operationId": "assign_conversation_v1_businesses__business_id__conversations__conversation_id__assign_post",
+        "operationId": "inbox_assign_conversation",
         "parameters": [
           {
             "in": "path",
@@ -49415,7 +49534,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/messages": {
       "get": {
-        "operationId": "list_conversation_messages_v1_businesses__business_id__conversations__conversation_id__messages_get",
+        "operationId": "conversations_list_conversation_messages",
         "parameters": [
           {
             "in": "path",
@@ -49572,7 +49691,7 @@
         ]
       },
       "post": {
-        "operationId": "send_staff_message_v1_businesses__business_id__conversations__conversation_id__messages_post",
+        "operationId": "conversations_send_staff_message",
         "parameters": [
           {
             "in": "path",
@@ -49590,6 +49709,24 @@
             "schema": {
               "title": "Conversation Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
             }
           },
           {
@@ -49729,7 +49866,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/messages/{message_id}/correction": {
       "get": {
-        "operationId": "get_answer_correction_draft_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_get",
+        "operationId": "conversations_get_answer_correction_draft",
         "parameters": [
           {
             "in": "path",
@@ -49863,7 +50000,7 @@
         ]
       },
       "post": {
-        "operationId": "correct_assistant_answer_v1_businesses__business_id__conversations__conversation_id__messages__message_id__correction_post",
+        "operationId": "conversations_correct_assistant_answer",
         "parameters": [
           {
             "in": "path",
@@ -50074,7 +50211,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/notes": {
       "get": {
-        "operationId": "list_conversation_notes_v1_businesses__business_id__conversations__conversation_id__notes_get",
+        "operationId": "inbox_list_conversation_notes",
         "parameters": [
           {
             "in": "path",
@@ -50231,7 +50368,7 @@
         ]
       },
       "post": {
-        "operationId": "create_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes_post",
+        "operationId": "inbox_create_conversation_note",
         "parameters": [
           {
             "in": "path",
@@ -50383,7 +50520,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/notes/{note_id}": {
       "delete": {
-        "operationId": "delete_conversation_note_v1_businesses__business_id__conversations__conversation_id__notes__note_id__delete",
+        "operationId": "inbox_delete_conversation_note",
         "parameters": [
           {
             "in": "path",
@@ -50512,7 +50649,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/quality": {
       "get": {
-        "operationId": "get_conversation_quality_route_v1_businesses__business_id__conversations__conversation_id__quality_get",
+        "operationId": "quality_get_conversation_quality",
         "parameters": [
           {
             "in": "path",
@@ -50639,7 +50776,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/quick-replies": {
       "get": {
-        "operationId": "fill_quick_replies_v1_businesses__business_id__conversations__conversation_id__quick_replies_get",
+        "operationId": "inbox_fill_quick_replies",
         "parameters": [
           {
             "in": "path",
@@ -50766,7 +50903,7 @@
     },
     "/v1/businesses/{business_id}/conversations/{conversation_id}/rating": {
       "put": {
-        "operationId": "rate_conversation_v1_businesses__business_id__conversations__conversation_id__rating_put",
+        "operationId": "conversations_rate_conversation",
         "parameters": [
           {
             "in": "path",
@@ -50957,7 +51094,7 @@
     },
     "/v1/businesses/{business_id}/customer-segments": {
       "get": {
-        "operationId": "list_customer_segments_v1_businesses__business_id__customer_segments_get",
+        "operationId": "customers_list_customer_segments",
         "parameters": [
           {
             "in": "path",
@@ -51073,7 +51210,7 @@
         ]
       },
       "post": {
-        "operationId": "create_customer_segment_v1_businesses__business_id__customer_segments_post",
+        "operationId": "customers_create_customer_segment",
         "parameters": [
           {
             "in": "path",
@@ -51282,7 +51419,7 @@
     },
     "/v1/businesses/{business_id}/customer-segments/preview": {
       "post": {
-        "operationId": "preview_customer_segment_v1_businesses__business_id__customer_segments_preview_post",
+        "operationId": "customers_preview_customer_segment",
         "parameters": [
           {
             "in": "path",
@@ -51473,7 +51610,7 @@
     },
     "/v1/businesses/{business_id}/customer-segments/{segment_id}": {
       "delete": {
-        "operationId": "delete_customer_segment_v1_businesses__business_id__customer_segments__segment_id__delete",
+        "operationId": "customers_delete_customer_segment",
         "parameters": [
           {
             "in": "path",
@@ -51591,7 +51728,7 @@
         ]
       },
       "put": {
-        "operationId": "update_customer_segment_v1_businesses__business_id__customer_segments__segment_id__put",
+        "operationId": "customers_update_customer_segment",
         "parameters": [
           {
             "in": "path",
@@ -51809,7 +51946,7 @@
     },
     "/v1/businesses/{business_id}/customer-segments/{segment_id}/export": {
       "get": {
-        "operationId": "export_customer_segment_v1_businesses__business_id__customer_segments__segment_id__export_get",
+        "operationId": "customers_export_customer_segment",
         "parameters": [
           {
             "in": "path",
@@ -51952,7 +52089,7 @@
     },
     "/v1/businesses/{business_id}/customer-segments/{segment_id}/members": {
       "get": {
-        "operationId": "list_customer_segment_members_v1_businesses__business_id__customer_segments__segment_id__members_get",
+        "operationId": "customers_list_customer_segment_members",
         "parameters": [
           {
             "in": "path",
@@ -52111,7 +52248,7 @@
     },
     "/v1/businesses/{business_id}/customer-settings": {
       "get": {
-        "operationId": "get_customer_settings_v1_businesses__business_id__customer_settings_get",
+        "operationId": "customers_get_customer_settings",
         "parameters": [
           {
             "in": "path",
@@ -52227,7 +52364,7 @@
         ]
       },
       "put": {
-        "operationId": "update_customer_settings_v1_businesses__business_id__customer_settings_put",
+        "operationId": "customers_update_customer_settings",
         "parameters": [
           {
             "in": "path",
@@ -52366,7 +52503,7 @@
     },
     "/v1/businesses/{business_id}/dashboard": {
       "get": {
-        "operationId": "get_dashboard_v1_businesses__business_id__dashboard_get",
+        "operationId": "operations_get_dashboard",
         "parameters": [
           {
             "in": "path",
@@ -52516,7 +52653,7 @@
     },
     "/v1/businesses/{business_id}/digest-preferences": {
       "get": {
-        "operationId": "get_digest_preferences_v1_businesses__business_id__digest_preferences_get",
+        "operationId": "value_get_digest_preferences",
         "parameters": [
           {
             "in": "path",
@@ -52632,7 +52769,7 @@
         ]
       },
       "put": {
-        "operationId": "update_digest_preferences_v1_businesses__business_id__digest_preferences_put",
+        "operationId": "value_update_digest_preferences",
         "parameters": [
           {
             "in": "path",
@@ -52827,7 +52964,7 @@
     },
     "/v1/businesses/{business_id}/dpa": {
       "get": {
-        "operationId": "get_dpa_status_v1_businesses__business_id__dpa_get",
+        "operationId": "compliance_get_dpa_status",
         "parameters": [
           {
             "in": "path",
@@ -52943,7 +53080,7 @@
         ]
       },
       "post": {
-        "operationId": "accept_dpa_v1_businesses__business_id__dpa_post",
+        "operationId": "compliance_accept_dpa",
         "parameters": [
           {
             "in": "path",
@@ -53062,7 +53199,7 @@
     "/v1/businesses/{business_id}/events": {
       "get": {
         "description": "What changes in the business, as it happens (see the 200 answer).\nEvents name what changed by id; the cabinet reloads it through the\nnormal routes, which check access and audit views.",
-        "operationId": "stream_live_events_v1_businesses__business_id__events_get",
+        "operationId": "live_stream_live_events",
         "parameters": [
           {
             "in": "path",
@@ -53196,7 +53333,7 @@
     },
     "/v1/businesses/{business_id}/exports/{table}": {
       "get": {
-        "operationId": "export_table_v1_businesses__business_id__exports__table__get",
+        "operationId": "exports_export_table",
         "parameters": [
           {
             "in": "path",
@@ -53563,7 +53700,7 @@
     },
     "/v1/businesses/{business_id}/feedback-requests": {
       "get": {
-        "operationId": "list_feedback_requests_v1_businesses__business_id__feedback_requests_get",
+        "operationId": "reviews_list_feedback_requests",
         "parameters": [
           {
             "in": "path",
@@ -53713,7 +53850,7 @@
     },
     "/v1/businesses/{business_id}/handoffs": {
       "get": {
-        "operationId": "get_handoffs_v1_businesses__business_id__handoffs_get",
+        "operationId": "operations_get_handoffs",
         "parameters": [
           {
             "in": "path",
@@ -53912,7 +54049,7 @@
     "/v1/businesses/{business_id}/handoffs/{handoff_id}/reopen": {
       "post": {
         "description": "Open a resolved handoff again (the Undo of \"Resolved\"): it waits for\na person and the assistant stays silent in its conversation again.",
-        "operationId": "post_handoff_reopen_v1_businesses__business_id__handoffs__handoff_id__reopen_post",
+        "operationId": "operations_post_handoff_reopen",
         "parameters": [
           {
             "in": "path",
@@ -54039,7 +54176,7 @@
     },
     "/v1/businesses/{business_id}/handoffs/{handoff_id}/resolve": {
       "post": {
-        "operationId": "post_handoff_resolve_v1_businesses__business_id__handoffs__handoff_id__resolve_post",
+        "operationId": "operations_post_handoff_resolve",
         "parameters": [
           {
             "in": "path",
@@ -54166,7 +54303,7 @@
     },
     "/v1/businesses/{business_id}/inbox": {
       "get": {
-        "operationId": "list_inbox_v1_businesses__business_id__inbox_get",
+        "operationId": "inbox_list_inbox",
         "parameters": [
           {
             "in": "path",
@@ -54348,7 +54485,7 @@
     },
     "/v1/businesses/{business_id}/inbox/assignees": {
       "get": {
-        "operationId": "list_inbox_assignees_v1_businesses__business_id__inbox_assignees_get",
+        "operationId": "inbox_list_inbox_assignees",
         "parameters": [
           {
             "in": "path",
@@ -54466,7 +54603,7 @@
     },
     "/v1/businesses/{business_id}/inbox/counts": {
       "get": {
-        "operationId": "count_inbox_views_v1_businesses__business_id__inbox_counts_get",
+        "operationId": "inbox_count_inbox_views",
         "parameters": [
           {
             "in": "path",
@@ -54584,7 +54721,7 @@
     },
     "/v1/businesses/{business_id}/inbox/settings": {
       "get": {
-        "operationId": "get_inbox_settings_v1_businesses__business_id__inbox_settings_get",
+        "operationId": "inbox_get_inbox_settings",
         "parameters": [
           {
             "in": "path",
@@ -54700,7 +54837,7 @@
         ]
       },
       "put": {
-        "operationId": "update_inbox_settings_v1_businesses__business_id__inbox_settings_put",
+        "operationId": "inbox_update_inbox_settings",
         "parameters": [
           {
             "in": "path",
@@ -54852,7 +54989,7 @@
     },
     "/v1/businesses/{business_id}/integrations": {
       "get": {
-        "operationId": "get_business_integrations_v1_businesses__business_id__integrations_get",
+        "operationId": "integrations_get_business_integrations",
         "parameters": [
           {
             "in": "path",
@@ -54970,7 +55107,7 @@
     },
     "/v1/businesses/{business_id}/integrations/google-calendar": {
       "delete": {
-        "operationId": "delete_google_calendar_v1_businesses__business_id__integrations_google_calendar_delete",
+        "operationId": "operations_delete_google_calendar",
         "parameters": [
           {
             "in": "path",
@@ -55079,7 +55216,7 @@
         ]
       },
       "get": {
-        "operationId": "get_google_calendar_v1_businesses__business_id__integrations_google_calendar_get",
+        "operationId": "operations_get_google_calendar",
         "parameters": [
           {
             "in": "path",
@@ -55197,7 +55334,7 @@
     },
     "/v1/businesses/{business_id}/integrations/google-calendar/calendars": {
       "get": {
-        "operationId": "get_google_calendars_v1_businesses__business_id__integrations_google_calendar_calendars_get",
+        "operationId": "integrations_get_google_calendars",
         "parameters": [
           {
             "in": "path",
@@ -55315,7 +55452,7 @@
     },
     "/v1/businesses/{business_id}/integrations/google-calendar/connect-url": {
       "get": {
-        "operationId": "get_google_calendar_connect_url_v1_businesses__business_id__integrations_google_calendar_connect_url_get",
+        "operationId": "operations_get_google_calendar_connect_url",
         "parameters": [
           {
             "in": "path",
@@ -55433,7 +55570,7 @@
     },
     "/v1/businesses/{business_id}/knowledge": {
       "get": {
-        "operationId": "list_knowledge_items_v1_businesses__business_id__knowledge_get",
+        "operationId": "knowledge_list_knowledge_items",
         "parameters": [
           {
             "in": "path",
@@ -55629,7 +55766,7 @@
         ]
       },
       "post": {
-        "operationId": "create_knowledge_item_v1_businesses__business_id__knowledge_post",
+        "operationId": "knowledge_create_knowledge_item",
         "parameters": [
           {
             "in": "path",
@@ -55971,7 +56108,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/import": {
       "post": {
-        "operationId": "import_menu_v1_businesses__business_id__knowledge_import_post",
+        "operationId": "knowledge_import_menu",
         "parameters": [
           {
             "in": "path",
@@ -56140,7 +56277,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/import-website": {
       "post": {
-        "operationId": "start_website_import_v1_businesses__business_id__knowledge_import_website_post",
+        "operationId": "knowledge_start_website_import",
         "parameters": [
           {
             "in": "path",
@@ -56283,7 +56420,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/import-website/current": {
       "get": {
-        "operationId": "get_website_import_v1_businesses__business_id__knowledge_import_website_current_get",
+        "operationId": "knowledge_get_website_import",
         "parameters": [
           {
             "in": "path",
@@ -56401,7 +56538,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/import/confirm": {
       "post": {
-        "operationId": "confirm_imported_items_v1_businesses__business_id__knowledge_import_confirm_post",
+        "operationId": "knowledge_confirm_imported_items",
         "parameters": [
           {
             "in": "path",
@@ -56545,7 +56682,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/import/{batch_id}": {
       "delete": {
-        "operationId": "discard_import_batch_v1_businesses__business_id__knowledge_import__batch_id__delete",
+        "operationId": "knowledge_discard_import_batch",
         "parameters": [
           {
             "in": "path",
@@ -56665,7 +56802,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/search": {
       "post": {
-        "operationId": "search_knowledge_v1_businesses__business_id__knowledge_search_post",
+        "operationId": "knowledge_search_knowledge",
         "parameters": [
           {
             "in": "path",
@@ -56826,7 +56963,7 @@
     },
     "/v1/businesses/{business_id}/knowledge/{item_id}": {
       "delete": {
-        "operationId": "delete_knowledge_item_v1_businesses__business_id__knowledge__item_id__delete",
+        "operationId": "knowledge_delete_knowledge_item",
         "parameters": [
           {
             "in": "path",
@@ -56944,7 +57081,7 @@
         ]
       },
       "get": {
-        "operationId": "get_knowledge_item_v1_businesses__business_id__knowledge__item_id__get",
+        "operationId": "knowledge_get_knowledge_item",
         "parameters": [
           {
             "in": "path",
@@ -57085,7 +57222,7 @@
         ]
       },
       "patch": {
-        "operationId": "update_knowledge_item_v1_businesses__business_id__knowledge__item_id__patch",
+        "operationId": "knowledge_update_knowledge_item",
         "parameters": [
           {
             "in": "path",
@@ -57487,7 +57624,7 @@
     },
     "/v1/businesses/{business_id}/leads": {
       "get": {
-        "operationId": "get_leads_v1_businesses__business_id__leads_get",
+        "operationId": "operations_get_leads",
         "parameters": [
           {
             "in": "path",
@@ -57669,7 +57806,7 @@
     },
     "/v1/businesses/{business_id}/leads/{lead_id}": {
       "patch": {
-        "operationId": "patch_lead_v1_businesses__business_id__leads__lead_id__patch",
+        "operationId": "operations_patch_lead",
         "parameters": [
           {
             "in": "path",
@@ -57825,7 +57962,7 @@
     },
     "/v1/businesses/{business_id}/manager-contacts/telegram-link": {
       "post": {
-        "operationId": "create_telegram_link_v1_businesses__business_id__manager_contacts_telegram_link_post",
+        "operationId": "channels_create_telegram_link",
         "parameters": [
           {
             "in": "path",
@@ -57979,7 +58116,7 @@
     },
     "/v1/businesses/{business_id}/media/{media_id}": {
       "get": {
-        "operationId": "get_message_media_v1_businesses__business_id__media__media_id__get",
+        "operationId": "conversations_get_message_media",
         "parameters": [
           {
             "in": "path",
@@ -58114,7 +58251,7 @@
     },
     "/v1/businesses/{business_id}/members": {
       "post": {
-        "operationId": "invite_staff_v1_businesses__business_id__members_post",
+        "operationId": "businesses_invite_staff",
         "parameters": [
           {
             "in": "path",
@@ -58305,7 +58442,7 @@
     },
     "/v1/businesses/{business_id}/members/{user_id}": {
       "delete": {
-        "operationId": "remove_member_v1_businesses__business_id__members__user_id__delete",
+        "operationId": "businesses_remove_member",
         "parameters": [
           {
             "in": "path",
@@ -58423,7 +58560,7 @@
         ]
       },
       "patch": {
-        "operationId": "change_member_role_v1_businesses__business_id__members__user_id__patch",
+        "operationId": "businesses_change_member_role",
         "parameters": [
           {
             "in": "path",
@@ -58578,7 +58715,7 @@
     },
     "/v1/businesses/{business_id}/notification-contacts": {
       "get": {
-        "operationId": "list_notification_contacts_v1_businesses__business_id__notification_contacts_get",
+        "operationId": "notifications_list_notification_contacts",
         "parameters": [
           {
             "in": "path",
@@ -58696,7 +58833,7 @@
     },
     "/v1/businesses/{business_id}/notification-contacts/{contact_key}/test": {
       "post": {
-        "operationId": "check_notification_contact_v1_businesses__business_id__notification_contacts__contact_key__test_post",
+        "operationId": "notifications_check_notification_contact",
         "parameters": [
           {
             "in": "path",
@@ -58823,7 +58960,7 @@
     },
     "/v1/businesses/{business_id}/notification-links/{token}": {
       "get": {
-        "operationId": "resolve_notification_link_v1_businesses__business_id__notification_links__token__get",
+        "operationId": "notifications_resolve_notification_link",
         "parameters": [
           {
             "in": "path",
@@ -58950,7 +59087,7 @@
     },
     "/v1/businesses/{business_id}/notification-preferences": {
       "get": {
-        "operationId": "get_notification_settings_v1_businesses__business_id__notification_preferences_get",
+        "operationId": "notifications_get_notification_settings",
         "parameters": [
           {
             "in": "path",
@@ -59066,7 +59203,7 @@
         ]
       },
       "put": {
-        "operationId": "update_notification_preferences_v1_businesses__business_id__notification_preferences_put",
+        "operationId": "notifications_update_notification_preferences",
         "parameters": [
           {
             "in": "path",
@@ -59249,7 +59386,7 @@
     },
     "/v1/businesses/{business_id}/privacy-settings": {
       "get": {
-        "operationId": "get_privacy_settings_v1_businesses__business_id__privacy_settings_get",
+        "operationId": "compliance_get_privacy_settings",
         "parameters": [
           {
             "in": "path",
@@ -59365,7 +59502,7 @@
         ]
       },
       "put": {
-        "operationId": "update_privacy_settings_v1_businesses__business_id__privacy_settings_put",
+        "operationId": "compliance_update_privacy_settings",
         "parameters": [
           {
             "in": "path",
@@ -59525,7 +59662,7 @@
     },
     "/v1/businesses/{business_id}/profile": {
       "get": {
-        "operationId": "get_profile_v1_businesses__business_id__profile_get",
+        "operationId": "profile_get_profile",
         "parameters": [
           {
             "in": "path",
@@ -59641,7 +59778,7 @@
         ]
       },
       "patch": {
-        "operationId": "patch_profile_v1_businesses__business_id__profile_patch",
+        "operationId": "setup_patch_profile",
         "parameters": [
           {
             "in": "path",
@@ -60167,7 +60304,7 @@
         ]
       },
       "put": {
-        "operationId": "save_profile_v1_businesses__business_id__profile_put",
+        "operationId": "profile_save_profile",
         "parameters": [
           {
             "in": "path",
@@ -60636,7 +60773,7 @@
     },
     "/v1/businesses/{business_id}/profile/gaps": {
       "get": {
-        "operationId": "get_profile_gaps_v1_businesses__business_id__profile_gaps_get",
+        "operationId": "profile_get_profile_gaps",
         "parameters": [
           {
             "in": "path",
@@ -60770,7 +60907,7 @@
     },
     "/v1/businesses/{business_id}/profile/steps/{step}": {
       "put": {
-        "operationId": "save_profile_step_v1_businesses__business_id__profile_steps__step__put",
+        "operationId": "profile_save_profile_step",
         "parameters": [
           {
             "in": "path",
@@ -61770,7 +61907,7 @@
     },
     "/v1/businesses/{business_id}/profile/wizard": {
       "get": {
-        "operationId": "get_profile_wizard_v1_businesses__business_id__profile_wizard_get",
+        "operationId": "profile_get_profile_wizard",
         "parameters": [
           {
             "in": "path",
@@ -61904,7 +62041,7 @@
     },
     "/v1/businesses/{business_id}/public-slug": {
       "put": {
-        "operationId": "set_public_slug_v1_businesses__business_id__public_slug_put",
+        "operationId": "sharing_set_public_slug",
         "parameters": [
           {
             "in": "path",
@@ -62047,7 +62184,7 @@
     },
     "/v1/businesses/{business_id}/push-subscriptions": {
       "post": {
-        "operationId": "subscribe_push_device_v1_businesses__business_id__push_subscriptions_post",
+        "operationId": "notifications_subscribe_push_device",
         "parameters": [
           {
             "in": "path",
@@ -62225,7 +62362,7 @@
     },
     "/v1/businesses/{business_id}/push-subscriptions/{subscription_id}": {
       "delete": {
-        "operationId": "unsubscribe_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__delete",
+        "operationId": "notifications_unsubscribe_push_device",
         "parameters": [
           {
             "in": "path",
@@ -62345,7 +62482,7 @@
     },
     "/v1/businesses/{business_id}/push-subscriptions/{subscription_id}/test": {
       "post": {
-        "operationId": "check_push_device_v1_businesses__business_id__push_subscriptions__subscription_id__test_post",
+        "operationId": "notifications_check_push_device",
         "parameters": [
           {
             "in": "path",
@@ -62472,7 +62609,7 @@
     },
     "/v1/businesses/{business_id}/quick-replies": {
       "get": {
-        "operationId": "list_quick_replies_v1_businesses__business_id__quick_replies_get",
+        "operationId": "inbox_list_quick_replies",
         "parameters": [
           {
             "in": "path",
@@ -62588,7 +62725,7 @@
         ]
       },
       "post": {
-        "operationId": "create_quick_reply_v1_businesses__business_id__quick_replies_post",
+        "operationId": "inbox_create_quick_reply",
         "parameters": [
           {
             "in": "path",
@@ -62772,7 +62909,7 @@
     },
     "/v1/businesses/{business_id}/quick-replies/{quick_reply_id}": {
       "delete": {
-        "operationId": "delete_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__delete",
+        "operationId": "inbox_delete_quick_reply",
         "parameters": [
           {
             "in": "path",
@@ -62890,7 +63027,7 @@
         ]
       },
       "put": {
-        "operationId": "update_quick_reply_v1_businesses__business_id__quick_replies__quick_reply_id__put",
+        "operationId": "inbox_update_quick_reply",
         "parameters": [
           {
             "in": "path",
@@ -63083,7 +63220,7 @@
     },
     "/v1/businesses/{business_id}/referrals": {
       "get": {
-        "operationId": "get_referrals_v1_businesses__business_id__referrals_get",
+        "operationId": "referrals_get_referrals",
         "parameters": [
           {
             "in": "path",
@@ -63201,7 +63338,7 @@
     },
     "/v1/businesses/{business_id}/referrals/powered-by": {
       "put": {
-        "operationId": "put_powered_by_v1_businesses__business_id__referrals_powered_by_put",
+        "operationId": "referrals_put_powered_by",
         "parameters": [
           {
             "in": "path",
@@ -63341,7 +63478,7 @@
     },
     "/v1/businesses/{business_id}/resources": {
       "get": {
-        "operationId": "list_resources_v1_businesses__business_id__resources_get",
+        "operationId": "resources_list_resources",
         "parameters": [
           {
             "in": "path",
@@ -63473,7 +63610,7 @@
         ]
       },
       "post": {
-        "operationId": "create_resource_v1_businesses__business_id__resources_post",
+        "operationId": "resources_create_resource",
         "parameters": [
           {
             "in": "path",
@@ -63745,7 +63882,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}": {
       "patch": {
-        "operationId": "update_resource_v1_businesses__business_id__resources__resource_id__patch",
+        "operationId": "resources_update_resource",
         "parameters": [
           {
             "in": "path",
@@ -64062,7 +64199,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar": {
       "get": {
-        "operationId": "get_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_get",
+        "operationId": "resources_get_resource_calendar",
         "parameters": [
           {
             "in": "path",
@@ -64189,7 +64326,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar/booking-system": {
       "delete": {
-        "operationId": "delete_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_delete",
+        "operationId": "resources_delete_resource_booking_system",
         "parameters": [
           {
             "in": "path",
@@ -64307,7 +64444,7 @@
         ]
       },
       "put": {
-        "operationId": "put_resource_booking_system_v1_businesses__business_id__resources__resource_id__calendar_booking_system_put",
+        "operationId": "resources_put_resource_booking_system",
         "parameters": [
           {
             "in": "path",
@@ -64473,7 +64610,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar/google": {
       "delete": {
-        "operationId": "delete_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_delete",
+        "operationId": "resources_delete_resource_google_calendar",
         "parameters": [
           {
             "in": "path",
@@ -64591,7 +64728,7 @@
         ]
       },
       "put": {
-        "operationId": "put_resource_google_calendar_v1_businesses__business_id__resources__resource_id__calendar_google_put",
+        "operationId": "resources_put_resource_google_calendar",
         "parameters": [
           {
             "in": "path",
@@ -64740,7 +64877,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar/ical-export": {
       "delete": {
-        "operationId": "delete_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_delete",
+        "operationId": "resources_delete_resource_ical_export",
         "parameters": [
           {
             "in": "path",
@@ -64858,7 +64995,7 @@
         ]
       },
       "post": {
-        "operationId": "post_resource_ical_export_v1_businesses__business_id__resources__resource_id__calendar_ical_export_post",
+        "operationId": "resources_post_resource_ical_export",
         "parameters": [
           {
             "in": "path",
@@ -64985,7 +65122,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar/ical-imports": {
       "post": {
-        "operationId": "post_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports_post",
+        "operationId": "resources_post_resource_ical_import",
         "parameters": [
           {
             "in": "path",
@@ -65137,7 +65274,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar/ical-imports/{feed_id}": {
       "delete": {
-        "operationId": "delete_resource_ical_import_v1_businesses__business_id__resources__resource_id__calendar_ical_imports__feed_id__delete",
+        "operationId": "resources_delete_resource_ical_import",
         "parameters": [
           {
             "in": "path",
@@ -65266,7 +65403,7 @@
     },
     "/v1/businesses/{business_id}/resources/{resource_id}/calendar/sync": {
       "post": {
-        "operationId": "sync_resource_calendar_v1_businesses__business_id__resources__resource_id__calendar_sync_post",
+        "operationId": "resources_sync_resource_calendar",
         "parameters": [
           {
             "in": "path",
@@ -65393,7 +65530,7 @@
     },
     "/v1/businesses/{business_id}/review-settings": {
       "get": {
-        "operationId": "get_review_settings_v1_businesses__business_id__review_settings_get",
+        "operationId": "reviews_get_review_settings",
         "parameters": [
           {
             "in": "path",
@@ -65509,7 +65646,7 @@
         ]
       },
       "put": {
-        "operationId": "update_review_settings_v1_businesses__business_id__review_settings_put",
+        "operationId": "reviews_update_review_settings",
         "parameters": [
           {
             "in": "path",
@@ -65682,7 +65819,7 @@
     },
     "/v1/businesses/{business_id}/review-stats": {
       "get": {
-        "operationId": "get_review_stats_v1_businesses__business_id__review_stats_get",
+        "operationId": "reviews_get_review_stats",
         "parameters": [
           {
             "in": "path",
@@ -65800,7 +65937,7 @@
     },
     "/v1/businesses/{business_id}/schedule-exceptions": {
       "get": {
-        "operationId": "list_schedule_exceptions_v1_businesses__business_id__schedule_exceptions_get",
+        "operationId": "resources_list_schedule_exceptions",
         "parameters": [
           {
             "in": "path",
@@ -65948,7 +66085,7 @@
         ]
       },
       "post": {
-        "operationId": "create_schedule_exception_v1_businesses__business_id__schedule_exceptions_post",
+        "operationId": "resources_create_schedule_exception",
         "parameters": [
           {
             "in": "path",
@@ -66162,7 +66299,7 @@
     },
     "/v1/businesses/{business_id}/schedule-exceptions/{exception_id}": {
       "delete": {
-        "operationId": "delete_schedule_exception_v1_businesses__business_id__schedule_exceptions__exception_id__delete",
+        "operationId": "resources_delete_schedule_exception",
         "parameters": [
           {
             "in": "path",
@@ -66282,7 +66419,7 @@
     },
     "/v1/businesses/{business_id}/search": {
       "get": {
-        "operationId": "search_business_v1_businesses__business_id__search_get",
+        "operationId": "customers_search_business",
         "parameters": [
           {
             "in": "path",
@@ -66410,7 +66547,7 @@
     },
     "/v1/businesses/{business_id}/security": {
       "get": {
-        "operationId": "get_business_security_v1_businesses__business_id__security_get",
+        "operationId": "businesses_get_business_security",
         "parameters": [
           {
             "in": "path",
@@ -66526,7 +66663,7 @@
         ]
       },
       "put": {
-        "operationId": "update_business_security_v1_businesses__business_id__security_put",
+        "operationId": "businesses_update_business_security",
         "parameters": [
           {
             "in": "path",
@@ -66665,7 +66802,7 @@
     },
     "/v1/businesses/{business_id}/setup": {
       "get": {
-        "operationId": "get_setup_v1_businesses__business_id__setup_get",
+        "operationId": "setup_get_setup",
         "parameters": [
           {
             "in": "path",
@@ -66799,7 +66936,7 @@
     },
     "/v1/businesses/{business_id}/setup/guide-dismissal": {
       "delete": {
-        "operationId": "bring_guide_back_v1_businesses__business_id__setup_guide_dismissal_delete",
+        "operationId": "setup_bring_guide_back",
         "parameters": [
           {
             "in": "path",
@@ -66908,7 +67045,7 @@
         ]
       },
       "put": {
-        "operationId": "dismiss_guide_v1_businesses__business_id__setup_guide_dismissal_put",
+        "operationId": "setup_dismiss_guide",
         "parameters": [
           {
             "in": "path",
@@ -67026,7 +67163,7 @@
     },
     "/v1/businesses/{business_id}/setup/milestones/{kind}/celebrate": {
       "post": {
-        "operationId": "celebrate_milestone_v1_businesses__business_id__setup_milestones__kind__celebrate_post",
+        "operationId": "setup_celebrate_milestone",
         "parameters": [
           {
             "in": "path",
@@ -67153,7 +67290,7 @@
     },
     "/v1/businesses/{business_id}/setup/phone-check": {
       "post": {
-        "operationId": "start_phone_check_v1_businesses__business_id__setup_phone_check_post",
+        "operationId": "setup_start_phone_check",
         "parameters": [
           {
             "in": "path",
@@ -67271,7 +67408,7 @@
     },
     "/v1/businesses/{business_id}/setup/reminders": {
       "get": {
-        "operationId": "get_reminders_v1_businesses__business_id__setup_reminders_get",
+        "operationId": "setup_get_reminders",
         "parameters": [
           {
             "in": "path",
@@ -67387,7 +67524,7 @@
         ]
       },
       "put": {
-        "operationId": "update_reminders_v1_businesses__business_id__setup_reminders_put",
+        "operationId": "setup_update_reminders",
         "parameters": [
           {
             "in": "path",
@@ -67527,7 +67664,7 @@
     },
     "/v1/businesses/{business_id}/setup/share-marks/{mark}": {
       "post": {
-        "operationId": "mark_shared_v1_businesses__business_id__setup_share_marks__mark__post",
+        "operationId": "setup_mark_shared",
         "parameters": [
           {
             "in": "path",
@@ -67647,7 +67784,7 @@
     },
     "/v1/businesses/{business_id}/setup/skipped-steps/{setup_step}": {
       "delete": {
-        "operationId": "unskip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__delete",
+        "operationId": "setup_unskip_setup_step",
         "parameters": [
           {
             "in": "path",
@@ -67765,7 +67902,7 @@
         ]
       },
       "put": {
-        "operationId": "skip_setup_step_v1_businesses__business_id__setup_skipped_steps__setup_step__put",
+        "operationId": "setup_skip_setup_step",
         "parameters": [
           {
             "in": "path",
@@ -67892,7 +68029,7 @@
     },
     "/v1/businesses/{business_id}/setup/starter-answers": {
       "get": {
-        "operationId": "get_starter_answers_v1_businesses__business_id__setup_starter_answers_get",
+        "operationId": "setup_get_starter_answers",
         "parameters": [
           {
             "in": "path",
@@ -68026,7 +68163,7 @@
     },
     "/v1/businesses/{business_id}/setup/starter-answers/apply": {
       "post": {
-        "operationId": "apply_starter_answers_v1_businesses__business_id__setup_starter_answers_apply_post",
+        "operationId": "setup_apply_starter_answers",
         "parameters": [
           {
             "in": "path",
@@ -68215,7 +68352,7 @@
     },
     "/v1/businesses/{business_id}/share-links": {
       "get": {
-        "operationId": "get_share_links_v1_businesses__business_id__share_links_get",
+        "operationId": "sharing_get_share_links",
         "parameters": [
           {
             "in": "path",
@@ -68349,7 +68486,7 @@
     },
     "/v1/businesses/{business_id}/support-access": {
       "delete": {
-        "operationId": "end_support_access_v1_businesses__business_id__support_access_delete",
+        "operationId": "businesses_end_support_access",
         "parameters": [
           {
             "in": "path",
@@ -68458,7 +68595,7 @@
         ]
       },
       "get": {
-        "operationId": "get_support_access_v1_businesses__business_id__support_access_get",
+        "operationId": "businesses_get_support_access",
         "parameters": [
           {
             "in": "path",
@@ -68576,7 +68713,7 @@
     },
     "/v1/businesses/{business_id}/support-access/write-access": {
       "put": {
-        "operationId": "update_support_write_access_v1_businesses__business_id__support_access_write_access_put",
+        "operationId": "businesses_update_support_write_access",
         "parameters": [
           {
             "in": "path",
@@ -68729,7 +68866,7 @@
     },
     "/v1/businesses/{business_id}/test-chat": {
       "post": {
-        "operationId": "owner_test_chat_v1_businesses__business_id__test_chat_post",
+        "operationId": "conversations_owner_test_chat",
         "parameters": [
           {
             "in": "path",
@@ -68895,7 +69032,7 @@
     },
     "/v1/businesses/{business_id}/text-backs": {
       "get": {
-        "operationId": "list_call_text_backs_v1_businesses__business_id__text_backs_get",
+        "operationId": "calls_list_call_text_backs",
         "parameters": [
           {
             "in": "path",
@@ -69046,7 +69183,7 @@
     "/v1/businesses/{business_id}/today-queue": {
       "get": {
         "description": "Today's bookings: on, still to start, waiting for confirmation.",
-        "operationId": "get_today_queue_route_v1_businesses__business_id__today_queue_get",
+        "operationId": "value_get_today_queue",
         "parameters": [
           {
             "in": "path",
@@ -69164,7 +69301,7 @@
     },
     "/v1/businesses/{business_id}/unanswered-questions": {
       "get": {
-        "operationId": "get_unanswered_questions_v1_businesses__business_id__unanswered_questions_get",
+        "operationId": "operations_get_unanswered_questions",
         "parameters": [
           {
             "in": "path",
@@ -69346,7 +69483,7 @@
     },
     "/v1/businesses/{business_id}/unanswered-questions/{question_id}/answer": {
       "post": {
-        "operationId": "post_unanswered_question_answer_v1_businesses__business_id__unanswered_questions__question_id__answer_post",
+        "operationId": "operations_post_unanswered_question_answer",
         "parameters": [
           {
             "in": "path",
@@ -69507,7 +69644,7 @@
     "/v1/businesses/{business_id}/value": {
       "get": {
         "description": "`period`: today, 7d, 30d, 90d, last_week or last_month; or local\ndates `from` and `to`; compared with the period before.",
-        "operationId": "get_business_value_v1_businesses__business_id__value_get",
+        "operationId": "value_get_business_value",
         "parameters": [
           {
             "in": "path",
@@ -69674,7 +69811,7 @@
     "/v1/businesses/{business_id}/value-reports": {
       "get": {
         "description": "`kind`: monthly (default), weekly or daily.",
-        "operationId": "list_value_reports_v1_businesses__business_id__value_reports_get",
+        "operationId": "value_list_value_reports",
         "parameters": [
           {
             "in": "path",
@@ -69840,7 +69977,7 @@
     },
     "/v1/businesses/{business_id}/value-reports/{report_id}": {
       "get": {
-        "operationId": "get_value_report_v1_businesses__business_id__value_reports__report_id__get",
+        "operationId": "value_get_value_report",
         "parameters": [
           {
             "in": "path",
@@ -69967,7 +70104,7 @@
     },
     "/v1/businesses/{business_id}/value/settings": {
       "get": {
-        "operationId": "get_value_settings_v1_businesses__business_id__value_settings_get",
+        "operationId": "value_get_value_settings",
         "parameters": [
           {
             "in": "path",
@@ -70083,7 +70220,7 @@
         ]
       },
       "put": {
-        "operationId": "update_value_settings_v1_businesses__business_id__value_settings_put",
+        "operationId": "value_update_value_settings",
         "parameters": [
           {
             "in": "path",
@@ -70230,7 +70367,7 @@
     "/v1/businesses/{business_id}/value/sources": {
       "get": {
         "description": "Conversations, kept bookings, requests and their value per source\n(a link's tag, a QR code, an ad, the phone line). `period`: today,\n7d, 30d, 90d, last_week or last_month; or local dates `from` and\n`to`; neither: the last 30 days.",
-        "operationId": "get_customer_sources_v1_businesses__business_id__value_sources_get",
+        "operationId": "value_get_customer_sources",
         "parameters": [
           {
             "in": "path",
@@ -70397,7 +70534,7 @@
     "/v1/businesses/{business_id}/value/topics": {
       "get": {
         "description": "The topics of the last 30 days' first messages, grouped nightly,\nlabelled in `?language=` (the cabinet's; else the owner's).",
-        "operationId": "get_conversation_topics_v1_businesses__business_id__value_topics_get",
+        "operationId": "value_get_conversation_topics",
         "parameters": [
           {
             "in": "path",
@@ -70531,7 +70668,7 @@
     },
     "/v1/businesses/{business_id}/waitlist": {
       "get": {
-        "operationId": "list_waitlist_entries_v1_businesses__business_id__waitlist_get",
+        "operationId": "waitlist_list_waitlist_entries",
         "parameters": [
           {
             "in": "path",
@@ -70697,7 +70834,7 @@
     },
     "/v1/businesses/{business_id}/waitlist-settings": {
       "get": {
-        "operationId": "get_waitlist_settings_v1_businesses__business_id__waitlist_settings_get",
+        "operationId": "waitlist_get_waitlist_settings",
         "parameters": [
           {
             "in": "path",
@@ -70813,7 +70950,7 @@
         ]
       },
       "put": {
-        "operationId": "update_waitlist_settings_v1_businesses__business_id__waitlist_settings_put",
+        "operationId": "waitlist_update_waitlist_settings",
         "parameters": [
           {
             "in": "path",
@@ -70958,7 +71095,7 @@
     },
     "/v1/businesses/{business_id}/waitlist/{entry_id}": {
       "delete": {
-        "operationId": "remove_waitlist_entry_v1_businesses__business_id__waitlist__entry_id__delete",
+        "operationId": "waitlist_remove_waitlist_entry",
         "parameters": [
           {
             "in": "path",
@@ -71078,7 +71215,7 @@
     },
     "/v1/catalog/countries": {
       "get": {
-        "operationId": "list_countries_v1_catalog_countries_get",
+        "operationId": "catalog_list_countries",
         "parameters": [
           {
             "in": "query",
@@ -71173,12 +71310,15 @@
             "description": "A provider (model, messaging, payments, telephony) failed."
           }
         },
-        "summary": "List Countries"
+        "summary": "List Countries",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/v1/catalog/countries/{country_code}": {
       "get": {
-        "operationId": "get_country_profile_v1_catalog_countries__country_code__get",
+        "operationId": "catalog_get_country_profile",
         "parameters": [
           {
             "in": "path",
@@ -71282,12 +71422,15 @@
             "description": "A provider (model, messaging, payments, telephony) failed."
           }
         },
-        "summary": "Get Country Profile"
+        "summary": "Get Country Profile",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/v1/catalog/languages": {
       "get": {
-        "operationId": "list_languages_v1_catalog_languages_get",
+        "operationId": "catalog_list_languages",
         "parameters": [
           {
             "in": "query",
@@ -71382,12 +71525,15 @@
             "description": "A provider (model, messaging, payments, telephony) failed."
           }
         },
-        "summary": "List Languages"
+        "summary": "List Languages",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/v1/catalog/niches": {
       "get": {
-        "operationId": "list_niches_v1_catalog_niches_get",
+        "operationId": "profile_list_niches",
         "parameters": [
           {
             "in": "query",
@@ -71512,7 +71658,7 @@
     },
     "/v1/catalog/niches/{niche_key}": {
       "get": {
-        "operationId": "get_niche_v1_catalog_niches__niche_key__get",
+        "operationId": "profile_get_niche",
         "parameters": [
           {
             "in": "path",
@@ -71646,7 +71792,7 @@
     },
     "/v1/catalog/plans": {
       "get": {
-        "operationId": "quote_plans_v1_catalog_plans_get",
+        "operationId": "catalog_quote_plans",
         "parameters": [
           {
             "in": "query",
@@ -71750,12 +71896,15 @@
             "description": "A provider (model, messaging, payments, telephony) failed."
           }
         },
-        "summary": "Quote Plans"
+        "summary": "Quote Plans",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/v1/channels/meta/webhook": {
       "get": {
-        "operationId": "verify_meta_webhook_v1_channels_meta_webhook_get",
+        "operationId": "channels_verify_meta_webhook",
         "parameters": [
           {
             "in": "query",
@@ -71894,7 +72043,7 @@
         ]
       },
       "post": {
-        "operationId": "receive_meta_webhook_v1_channels_meta_webhook_post",
+        "operationId": "channels_receive_meta_webhook",
         "parameters": [
           {
             "in": "header",
@@ -72003,7 +72152,7 @@
     },
     "/v1/channels/telegram-platform/webhook": {
       "post": {
-        "operationId": "receive_platform_bot_webhook_v1_channels_telegram_platform_webhook_post",
+        "operationId": "channels_receive_platform_bot_webhook",
         "parameters": [
           {
             "in": "header",
@@ -72112,7 +72261,7 @@
     },
     "/v1/channels/telegram/{channel_id}/webhook": {
       "post": {
-        "operationId": "receive_telegram_webhook_v1_channels_telegram__channel_id__webhook_post",
+        "operationId": "channels_receive_telegram_webhook",
         "parameters": [
           {
             "in": "path",
@@ -72230,7 +72379,7 @@
     },
     "/v1/help/{language}": {
       "get": {
-        "operationId": "get_help_center_v1_help__language__get",
+        "operationId": "help_get_help_center",
         "parameters": [
           {
             "in": "path",
@@ -72332,7 +72481,7 @@
     },
     "/v1/help/{language}/search": {
       "get": {
-        "operationId": "search_help_v1_help__language__search_get",
+        "operationId": "help_search_help",
         "parameters": [
           {
             "in": "path",
@@ -72450,7 +72599,7 @@
     },
     "/v1/help/{language}/{slug}": {
       "get": {
-        "operationId": "get_help_article_v1_help__language___slug__get",
+        "operationId": "help_get_help_article",
         "parameters": [
           {
             "in": "path",
@@ -72561,7 +72710,7 @@
     },
     "/v1/integrations/google-calendar/callback": {
       "get": {
-        "operationId": "get_google_calendar_callback_v1_integrations_google_calendar_callback_get",
+        "operationId": "operations_get_google_calendar_callback",
         "parameters": [
           {
             "in": "query",
@@ -72696,7 +72845,7 @@
     "/v1/integrations/google-calendar/complete": {
       "post": {
         "description": "Finish connecting with Google's callback values; only the user who\nstarted connecting can (another user's state is an expired link).",
-        "operationId": "post_google_calendar_completion_v1_integrations_google_calendar_complete_post",
+        "operationId": "operations_post_google_calendar_completion",
         "parameters": [
           {
             "in": "header",
@@ -72853,7 +73002,7 @@
     },
     "/v1/legal/dpa/{version}": {
       "get": {
-        "operationId": "get_dpa_document_v1_legal_dpa__version__get",
+        "operationId": "compliance_get_dpa_document",
         "parameters": [
           {
             "in": "path",
@@ -72971,7 +73120,7 @@
     },
     "/v1/legal/overview": {
       "get": {
-        "operationId": "get_legal_overview_v1_legal_overview_get",
+        "operationId": "legal_get_legal_overview",
         "responses": {
           "200": {
             "content": {
@@ -73062,7 +73211,7 @@
     },
     "/v1/legal/subprocessors": {
       "get": {
-        "operationId": "get_subprocessors_v1_legal_subprocessors_get",
+        "operationId": "legal_get_subprocessors",
         "parameters": [
           {
             "in": "query",
@@ -73171,7 +73320,7 @@
     },
     "/v1/legal/{document}": {
       "get": {
-        "operationId": "get_legal_document_v1_legal__document__get",
+        "operationId": "legal_get_legal_document",
         "parameters": [
           {
             "in": "path",
@@ -73305,7 +73454,7 @@
     },
     "/v1/me": {
       "get": {
-        "operationId": "get_current_user_v1_me_get",
+        "operationId": "auth_get_current_user",
         "parameters": [
           {
             "in": "header",
@@ -73412,7 +73561,7 @@
         ]
       },
       "patch": {
-        "operationId": "update_current_user_v1_me_patch",
+        "operationId": "auth_update_current_user",
         "parameters": [
           {
             "in": "header",
@@ -73561,7 +73710,7 @@
     },
     "/v1/me/help": {
       "get": {
-        "operationId": "get_help_progress_v1_me_help_get",
+        "operationId": "help_get_help_progress",
         "parameters": [
           {
             "in": "header",
@@ -73670,7 +73819,7 @@
     },
     "/v1/me/help/changelog": {
       "put": {
-        "operationId": "read_changelog_v1_me_help_changelog_put",
+        "operationId": "help_read_changelog",
         "parameters": [
           {
             "in": "header",
@@ -73804,7 +73953,7 @@
     },
     "/v1/me/help/coach-marks": {
       "delete": {
-        "operationId": "reset_coach_marks_v1_me_help_coach_marks_delete",
+        "operationId": "help_reset_coach_marks",
         "parameters": [
           {
             "in": "header",
@@ -73906,7 +74055,7 @@
     },
     "/v1/me/help/coach-marks/{key}": {
       "put": {
-        "operationId": "mark_coach_mark_seen_v1_me_help_coach_marks__key__put",
+        "operationId": "help_mark_coach_mark_seen",
         "parameters": [
           {
             "in": "path",
@@ -74024,7 +74173,7 @@
     },
     "/v1/me/mfa/recovery-codes": {
       "post": {
-        "operationId": "regenerate_recovery_codes_v1_me_mfa_recovery_codes_post",
+        "operationId": "auth_regenerate_recovery_codes",
         "parameters": [
           {
             "in": "header",
@@ -74133,7 +74282,7 @@
     },
     "/v1/me/mfa/totp": {
       "delete": {
-        "operationId": "remove_totp_factor_v1_me_mfa_totp_delete",
+        "operationId": "auth_remove_totp_factor",
         "parameters": [
           {
             "in": "header",
@@ -74233,7 +74382,7 @@
         ]
       },
       "post": {
-        "operationId": "start_totp_enrollment_v1_me_mfa_totp_post",
+        "operationId": "auth_start_totp_enrollment",
         "parameters": [
           {
             "in": "header",
@@ -74342,7 +74491,7 @@
     },
     "/v1/me/mfa/totp/confirm": {
       "post": {
-        "operationId": "confirm_totp_enrollment_v1_me_mfa_totp_confirm_post",
+        "operationId": "auth_confirm_totp_enrollment",
         "parameters": [
           {
             "in": "header",
@@ -74476,7 +74625,7 @@
     },
     "/v1/me/security": {
       "get": {
-        "operationId": "get_account_security_v1_me_security_get",
+        "operationId": "auth_get_account_security",
         "parameters": [
           {
             "in": "header",
@@ -74585,7 +74734,7 @@
     },
     "/v1/me/sessions": {
       "get": {
-        "operationId": "list_my_sessions_v1_me_sessions_get",
+        "operationId": "auth_list_my_sessions",
         "parameters": [
           {
             "in": "header",
@@ -74694,7 +74843,7 @@
     },
     "/v1/me/sessions/revoke-others": {
       "post": {
-        "operationId": "revoke_other_sessions_v1_me_sessions_revoke_others_post",
+        "operationId": "auth_revoke_other_sessions",
         "parameters": [
           {
             "in": "header",
@@ -74803,7 +74952,7 @@
     },
     "/v1/me/sessions/{session_id}": {
       "delete": {
-        "operationId": "revoke_session_v1_me_sessions__session_id__delete",
+        "operationId": "auth_revoke_session",
         "parameters": [
           {
             "in": "path",
@@ -74914,7 +75063,7 @@
     },
     "/v1/partner": {
       "get": {
-        "operationId": "get_partner_v1_partner_get",
+        "operationId": "referrals_get_partner",
         "parameters": [
           {
             "in": "header",
@@ -75023,7 +75172,7 @@
     },
     "/v1/partner/commissions": {
       "get": {
-        "operationId": "get_partner_commissions_v1_partner_commissions_get",
+        "operationId": "referrals_get_partner_commissions",
         "parameters": [
           {
             "in": "query",
@@ -75164,7 +75313,7 @@
     },
     "/v1/partner/referrals": {
       "get": {
-        "operationId": "get_partner_referrals_v1_partner_referrals_get",
+        "operationId": "referrals_get_partner_referrals",
         "parameters": [
           {
             "in": "query",
@@ -75305,7 +75454,7 @@
     },
     "/v1/payments/flitt/webhook": {
       "post": {
-        "operationId": "receive_flitt_webhook_v1_payments_flitt_webhook_post",
+        "operationId": "billing_receive_flitt_webhook",
         "parameters": [
           {
             "in": "header",
@@ -75415,7 +75564,7 @@
     },
     "/v1/phone-numbers/parse": {
       "post": {
-        "operationId": "parse_phone_number_v1_phone_numbers_parse_post",
+        "operationId": "catalog_parse_phone_number",
         "requestBody": {
           "content": {
             "application/json": {
@@ -75508,12 +75657,15 @@
             "description": "A provider (model, messaging, payments, telephony) failed."
           }
         },
-        "summary": "Parse Phone Number"
+        "summary": "Parse Phone Number",
+        "tags": [
+          "catalog"
+        ]
       }
     },
     "/v1/platform/status": {
       "get": {
-        "operationId": "get_platform_status_v1_platform_status_get",
+        "operationId": "platform_status_get_platform_status",
         "parameters": [
           {
             "in": "query",
@@ -75622,7 +75774,7 @@
     },
     "/v1/public-demos": {
       "get": {
-        "operationId": "list_public_demos_v1_public_demos_get",
+        "operationId": "public_demos_list_public_demos",
         "parameters": [
           {
             "in": "query",
@@ -75731,7 +75883,7 @@
     },
     "/v1/public-demos/{business_id}/messages": {
       "post": {
-        "operationId": "send_public_demo_message_v1_public_demos__business_id__messages_post",
+        "operationId": "public_demos_send_public_demo_message",
         "parameters": [
           {
             "in": "path",
@@ -75864,7 +76016,7 @@
     },
     "/v1/public/bookings/{token}": {
       "get": {
-        "operationId": "get_managed_booking_v1_public_bookings__token__get",
+        "operationId": "bookings_get_managed_booking",
         "parameters": [
           {
             "in": "path",
@@ -75966,7 +76118,7 @@
     },
     "/v1/public/bookings/{token}/calendar.ics": {
       "get": {
-        "operationId": "get_managed_booking_calendar_v1_public_bookings__token__calendar_ics_get",
+        "operationId": "bookings_get_managed_booking_calendar",
         "parameters": [
           {
             "in": "path",
@@ -76068,7 +76220,7 @@
     },
     "/v1/public/bookings/{token}/cancel": {
       "post": {
-        "operationId": "cancel_managed_booking_v1_public_bookings__token__cancel_post",
+        "operationId": "bookings_cancel_managed_booking",
         "parameters": [
           {
             "in": "path",
@@ -76170,7 +76322,7 @@
     },
     "/v1/public/bookings/{token}/reschedule": {
       "post": {
-        "operationId": "reschedule_managed_booking_v1_public_bookings__token__reschedule_post",
+        "operationId": "bookings_reschedule_managed_booking",
         "parameters": [
           {
             "in": "path",
@@ -76311,7 +76463,7 @@
     },
     "/v1/public/bookings/{token}/slots": {
       "get": {
-        "operationId": "get_managed_booking_slots_v1_public_bookings__token__slots_get",
+        "operationId": "bookings_get_managed_booking_slots",
         "parameters": [
           {
             "in": "path",
@@ -76429,7 +76581,7 @@
     },
     "/v1/public/chat/{address}": {
       "get": {
-        "operationId": "get_hosted_chat_v1_public_chat__address__get",
+        "operationId": "widget_get_hosted_chat",
         "parameters": [
           {
             "in": "path",
@@ -76531,7 +76683,7 @@
     },
     "/v1/public/ical/{token}.ics": {
       "get": {
-        "operationId": "get_public_ical_feed_v1_public_ical__token__ics_get",
+        "operationId": "integrations_get_public_ical_feed",
         "parameters": [
           {
             "in": "path",
@@ -76634,7 +76786,7 @@
     },
     "/v1/public/reviews/{token}": {
       "get": {
-        "operationId": "open_review_v1_public_reviews__token__get",
+        "operationId": "reviews_open_review",
         "parameters": [
           {
             "in": "path",
@@ -76729,7 +76881,7 @@
     },
     "/v1/support/contacts": {
       "get": {
-        "operationId": "get_support_contacts_v1_support_contacts_get",
+        "operationId": "help_get_support_contacts",
         "responses": {
           "200": {
             "content": {
@@ -76820,7 +76972,7 @@
     },
     "/v1/telemetry/events": {
       "post": {
-        "operationId": "record_telemetry_v1_telemetry_events_post",
+        "operationId": "analytics_record_telemetry",
         "parameters": [
           {
             "in": "header",
@@ -77064,7 +77216,7 @@
     },
     "/v1/telephony/zadarma/notifications": {
       "get": {
-        "operationId": "echo_zadarma_check_v1_telephony_zadarma_notifications_get",
+        "operationId": "telephony_echo_zadarma_check",
         "parameters": [
           {
             "in": "query",
@@ -77171,7 +77323,7 @@
         ]
       },
       "post": {
-        "operationId": "receive_zadarma_notification_v1_telephony_zadarma_notifications_post",
+        "operationId": "telephony_receive_zadarma_notification",
         "parameters": [
           {
             "in": "header",
@@ -77280,7 +77432,7 @@
     },
     "/v1/voice/tools/{tool_name}": {
       "post": {
-        "operationId": "run_voice_tool_v1_voice_tools__tool_name__post",
+        "operationId": "voice_run_voice_tool",
         "parameters": [
           {
             "in": "path",
@@ -77428,7 +77580,7 @@
     },
     "/v1/voice/webhooks/conversation-initiation": {
       "post": {
-        "operationId": "start_voice_call_v1_voice_webhooks_conversation_initiation_post",
+        "operationId": "voice_start_voice_call",
         "parameters": [
           {
             "in": "header",
@@ -77485,7 +77637,7 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": true,
-                  "title": "Response Start Voice Call V1 Voice Webhooks Conversation Initiation Post",
+                  "title": "Response Voice Start Voice Call",
                   "type": "object"
                 }
               }
@@ -77571,7 +77723,7 @@
     },
     "/v1/voice/webhooks/post-call": {
       "post": {
-        "operationId": "receive_post_call_v1_voice_webhooks_post_call_post",
+        "operationId": "voice_receive_post_call",
         "parameters": [
           {
             "in": "header",
@@ -77680,7 +77832,7 @@
     },
     "/v1/widget/errors": {
       "post": {
-        "operationId": "report_widget_error_v1_widget_errors_post",
+        "operationId": "widget_report_widget_error",
         "requestBody": {
           "content": {
             "application/json": {
@@ -77869,7 +78021,7 @@
     },
     "/v1/widget/{business_id}/config": {
       "get": {
-        "operationId": "get_widget_config_v1_widget__business_id__config_get",
+        "operationId": "channels_get_widget_config",
         "parameters": [
           {
             "in": "path",
@@ -77972,7 +78124,7 @@
     "/v1/widget/{business_id}/events": {
       "get": {
         "description": "The visitor's typing and answers, as they happen (see the 200 answer).",
-        "operationId": "stream_widget_events_v1_widget__business_id__events_get",
+        "operationId": "channels_stream_widget_events",
         "parameters": [
           {
             "in": "path",
@@ -78090,7 +78242,7 @@
     },
     "/v1/widget/{business_id}/handoff": {
       "post": {
-        "operationId": "request_widget_handoff_v1_widget__business_id__handoff_post",
+        "operationId": "channels_request_widget_handoff",
         "parameters": [
           {
             "in": "path",
@@ -78253,7 +78405,7 @@
     },
     "/v1/widget/{business_id}/messages": {
       "get": {
-        "operationId": "list_widget_messages_v1_widget__business_id__messages_get",
+        "operationId": "channels_list_widget_messages",
         "parameters": [
           {
             "in": "path",
@@ -78378,7 +78530,7 @@
         ]
       },
       "post": {
-        "operationId": "send_widget_message_v1_widget__business_id__messages_post",
+        "operationId": "channels_send_widget_message",
         "parameters": [
           {
             "in": "path",
