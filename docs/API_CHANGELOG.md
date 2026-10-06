@@ -11,6 +11,35 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — waitlist and return visits
+
+Spec: `aa18f1931b37ab6f`
+
+- **Added** `GET /v1/businesses/{business_id}/waitlist` (`filter`:
+  `active`, `booked` or `ended`; paged, audited as a view) with
+  `WaitlistEntryView` rows (the wish, the place held with `offer`, how the
+  entry ended) and the business `timezone`; `DELETE …/waitlist/{entry_id}`
+  (204) takes a waiting or offered customer off the list (any member).
+- **Added** `GET`/`PUT …/waitlist-settings` (`is_enabled`, `hold_minutes`
+  15–120; the counts by status). `PUT` is for owners.
+- **Added** `GET`/`PUT …/campaign-settings` (owners change it): the
+  opt-in return-visit message (`rule_kind` `rebook`, `recall` or
+  `pre_arrival`, `delay_days`, `audience` with `segment_id`,
+  `monthly_cap`), the niche's usual rule, the month so far, the last 30
+  days by status and a preview per business language;
+  `GET …/campaign-messages` (owners, paged, audited) lists the latest
+  messages with who booked again.
+- **Changed** `ValueTotals` (the value model and stored reports) adds
+  `waitlist_booking_count`, `waitlist_value_minor`,
+  `campaign_booking_count` and `campaign_value_minor`: the kept bookings
+  the waitlist filled and those a return-visit message brought back.
+- **Changed** `BookingDocument` adds `origin` (`waitlist` or `campaign`,
+  null for every other booking); `AvailabilityResult` adds `is_waitlist_open`;
+  `AssistantToolName` adds `join_waitlist`; `ContactRecords` (a
+  customer's export) adds `waitlist_entries` and `campaign_messages`.
+- **Changed** the live event stream adds `waitlist.changed` (ids of the
+  entries that moved on).
+
 ## 2026-10-05 — wave 14 together: customers and search, booking confirmations, the spend guard, admin actions
 
 Spec: `81926dbacb20deff`
