@@ -7,7 +7,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconPlus, IconTrash } from "@/components/icons";
-import { Button, Field, Fieldset, Input, Modal, Radio, Select, useToast } from "@/components/ui";
+import { Button, DateField, Field, Fieldset, Input, Modal, Radio, Select, TimeField, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import type { ResourceView } from "@/lib/resources";
@@ -115,14 +115,14 @@ export function ExceptionEditor({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("knowledge.exceptions.date")} error={errors.date && t(errors.date)} required>
             {(control) => (
-              <Input
+              <DateField
                 {...control}
-                type="date"
                 min={today}
+                today={today}
                 value={date}
                 autoFocus
-                onChange={(event) => {
-                  setDate(event.target.value);
+                onChange={(next) => {
+                  setDate(next);
                   setErrors((current) => ({ ...current, date: undefined }));
                 }}
               />
@@ -163,24 +163,25 @@ export function ExceptionEditor({
             <div className="space-y-2 rounded-xl border border-line p-3">
               {rows.map((row, index) => (
                 <div key={row.key} className="flex flex-wrap items-center gap-2">
-                  <Input
-                    type="time"
+                  <TimeField
                     className="w-32"
                     aria-label={`${t("knowledge.exceptions.opens")} ${index + 1}`}
                     aria-invalid={errors.hours ? true : undefined}
                     value={row.opens}
-                    onChange={(event) => updateRow(row.key, { opens: event.target.value })}
+                    step={30}
+                    onChange={(opens) => updateRow(row.key, { opens })}
                   />
                   <span className="text-ink-subtle" aria-hidden>
                     –
                   </span>
-                  <Input
-                    type="time"
+                  <TimeField
                     className="w-32"
                     aria-label={`${t("knowledge.exceptions.closes")} ${index + 1}`}
                     aria-invalid={errors.hours ? true : undefined}
                     value={row.closes}
-                    onChange={(event) => updateRow(row.key, { closes: event.target.value })}
+                    step={30}
+                    defaultTime="18:00"
+                    onChange={(closes) => updateRow(row.key, { closes })}
                   />
                   {rows.length > 1 ? (
                     <Button

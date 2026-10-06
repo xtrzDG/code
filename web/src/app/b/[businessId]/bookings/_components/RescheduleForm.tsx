@@ -5,9 +5,9 @@ import { useState, type FormEvent } from "react";
 import { api } from "@/api/client";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { isLocalDate, isLocalTime } from "@/components/insights/dates";
+import { isLocalDate, isLocalTime, todayIn } from "@/components/insights/dates";
 import type { BookingResult, BookingView, RescheduleBookingBody } from "@/components/insights/types";
-import { Button, Field, Input } from "@/components/ui";
+import { Button, DateField, Field, TimeField } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -65,13 +65,11 @@ export function RescheduleForm({
     <form onSubmit={submit} noValidate className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("bookings.reschedule.newDate")} error={errors.date && t(errors.date)} required>
-          {(control) => <Input {...control} type="date" value={date} onChange={(event) => setDate(event.target.value)} />}
+          {(control) => <DateField {...control} value={date} today={todayIn(business.timezone)} onChange={setDate} />}
         </Field>
         {isStay ? null : (
           <Field label={t("bookings.reschedule.newTime")} error={errors.time && t(errors.time)} required>
-            {(control) => (
-              <Input {...control} type="time" step={300} value={time} onChange={(event) => setTime(event.target.value)} />
-            )}
+            {(control) => <TimeField {...control} value={time} step={15} onChange={setTime} />}
           </Field>
         )}
       </div>

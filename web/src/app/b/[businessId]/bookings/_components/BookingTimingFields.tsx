@@ -3,7 +3,7 @@
 import type { ComponentProps } from "react";
 
 import type { BookingUnit } from "@/components/insights/types";
-import { Field, Input } from "@/components/ui";
+import { Field, Input, TimeField } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { BookingFormErrors, BookingFormValues } from "../_lib/manualBooking";
@@ -54,13 +54,7 @@ export function BookingTimingFields({
         ) : (
           <Field label={t("bookings.form.time")} error={errors.time && t(errors.time)} required>
             {(control) => (
-              <Input
-                {...control}
-                type="time"
-                step={300}
-                value={values.time}
-                onChange={(event) => set("time", event.target.value)}
-              />
+              <TimeField {...control} value={values.time} step={15} onChange={(time) => set("time", time)} />
             )}
           </Field>
         )}

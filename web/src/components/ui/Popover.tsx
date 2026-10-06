@@ -9,7 +9,7 @@
  * it and gives the focus back).
  */
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -62,25 +62,23 @@ export function Popover({
     closeRef.current = onClose;
   });
 
-  const place = useCallback(() => {
-    const element = panel.current;
-    const target = anchor.current;
-    if (!element || !target) {
-      return;
-    }
-    const direction = getComputedStyle(target).direction === "rtl" ? "rtl" : "ltr";
-    setPlacement(
-      placePopover(
-        target.getBoundingClientRect(),
-        { width: element.offsetWidth, height: element.offsetHeight },
-        { width: window.innerWidth, height: window.innerHeight },
-        direction,
-      ),
-    );
-  }, [anchor]);
-
   useLayoutEffect(() => {
     const element = panel.current;
+    const place = () => {
+      const target = anchor.current;
+      if (!element || !target) {
+        return;
+      }
+      const direction = getComputedStyle(target).direction === "rtl" ? "rtl" : "ltr";
+      setPlacement(
+        placePopover(
+          target.getBoundingClientRect(),
+          { width: element.offsetWidth, height: element.offsetHeight },
+          { width: window.innerWidth, height: window.innerHeight },
+          direction,
+        ),
+      );
+    };
     if (element && typeof element.showPopover === "function") {
       try {
         if (!element.matches(":popover-open")) {
@@ -91,12 +89,9 @@ export function Popover({
       }
     }
     place();
-  }, [place]);
-
-  useEffect(() => {
     const onPointer = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (!panel.current?.contains(target) && !anchor.current?.contains(target)) {
+      if (!element?.contains(target) && !anchor.current?.contains(target)) {
         closeRef.current();
       }
     };
@@ -108,7 +103,7 @@ export function Popover({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [anchor, place]);
+  }, [anchor]);
 
   return (
     <div

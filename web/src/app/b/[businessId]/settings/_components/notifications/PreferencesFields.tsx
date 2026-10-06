@@ -1,6 +1,6 @@
 "use client";
 
-import { Checkbox, Field, Fieldset, Input } from "@/components/ui";
+import { Checkbox, Field, Fieldset, TimeField } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import {
@@ -62,13 +62,12 @@ export function PreferencesFields({
               error={errors.from ? t(QUIET_ERRORS[errors.from]) : undefined}
             >
               {(control) => (
-                <Input
+                <TimeField
                   {...control}
-                  type="time"
-                  dir="ltr"
                   value={value.from}
+                  step={30}
                   disabled={disabled}
-                  onChange={(change) => onChange({ ...value, from: change.target.value })}
+                  onChange={(from) => onChange({ ...value, from })}
                 />
               )}
             </Field>
@@ -77,13 +76,12 @@ export function PreferencesFields({
               error={errors.until ? t(QUIET_ERRORS[errors.until]) : undefined}
             >
               {(control) => (
-                <Input
+                <TimeField
                   {...control}
-                  type="time"
-                  dir="ltr"
                   value={value.until}
+                  step={30}
                   disabled={disabled}
-                  onChange={(change) => onChange({ ...value, until: change.target.value })}
+                  onChange={(until) => onChange({ ...value, until })}
                 />
               )}
             </Field>

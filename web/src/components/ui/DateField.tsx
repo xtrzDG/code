@@ -151,8 +151,10 @@ export function DateField({
         ref={input}
         id={id}
         type="text"
+        role="combobox"
         autoComplete="off"
         spellCheck={false}
+        aria-autocomplete="none"
         aria-label={id ? undefined : ariaLabel}
         aria-describedby={describedBy}
         aria-invalid={invalid}

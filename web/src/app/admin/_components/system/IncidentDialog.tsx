@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { Button, Field, Input, Modal, Select, Textarea } from "@/components/ui";
+import { Button, DateTimeField, Field, Input, Modal, Select, Textarea } from "@/components/ui";
 import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 
@@ -126,22 +126,12 @@ function IncidentFormBody({ onClose, onRecord, isRecording, error }: Omit<Incide
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("adminIncident.startedAt")} required error={fieldError("startedAt")}>
           {(control) => (
-            <Input
-              {...control}
-              type="datetime-local"
-              value={form.startedAt}
-              onChange={(event) => update({ startedAt: event.target.value })}
-            />
+            <DateTimeField {...control} value={form.startedAt} onChange={(startedAt) => update({ startedAt })} />
           )}
         </Field>
         <Field label={t("adminIncident.detectedAt")} optionalLabel={t("common.optional")} error={fieldError("detectedAt")}>
           {(control) => (
-            <Input
-              {...control}
-              type="datetime-local"
-              value={form.detectedAt}
-              onChange={(event) => update({ detectedAt: event.target.value })}
-            />
+            <DateTimeField {...control} value={form.detectedAt} onChange={(detectedAt) => update({ detectedAt })} />
           )}
         </Field>
       </div>

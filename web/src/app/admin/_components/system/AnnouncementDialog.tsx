@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { Button, Checkbox, Field, Fieldset, Input, Modal, Select, Textarea } from "@/components/ui";
+import { Button, Checkbox, DateTimeField, Field, Fieldset, Modal, Select, Textarea } from "@/components/ui";
 import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -154,12 +154,12 @@ function AnnouncementFormBody({
           error={problem(errors.startsAt)}
         >
           {(control) => (
-            <Input {...control} type="datetime-local" disabled={!isNew} value={form.startsAt} onChange={(event) => update({ startsAt: event.target.value })} />
+            <DateTimeField {...control} disabled={!isNew} value={form.startsAt} onChange={(startsAt) => update({ startsAt })} />
           )}
         </Field>
         <Field label={t("adminStatus.form.expectedEnd")} optionalLabel={t("common.optional")} error={problem(errors.expectedEnd)}>
           {(control) => (
-            <Input {...control} type="datetime-local" value={form.expectedEnd} onChange={(event) => update({ expectedEnd: event.target.value })} />
+            <DateTimeField {...control} value={form.expectedEnd} onChange={(expectedEnd) => update({ expectedEnd })} />
           )}
         </Field>
       </div>

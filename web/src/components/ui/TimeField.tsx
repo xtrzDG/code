@@ -134,6 +134,7 @@ export function TimeField({
       dir="ltr"
       onBlur={leave}
       data-time-field
+      data-value={value}
       className={mergeClassOverrides(
         cn(
           "inline-flex h-9 w-full min-w-0 items-center gap-0.5 rounded-lg border px-2 text-sm transition-colors",

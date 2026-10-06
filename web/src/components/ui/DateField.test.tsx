@@ -58,7 +58,7 @@ describe("DateField", () => {
     ["en", "Oct 6, 2026"],
   ])("shows the date in %s, not mm/dd/yyyy", (locale, text) => {
     renderInLocale(<Day initial={TODAY} />, { locale });
-    expect(screen.getByRole("textbox", { name: "Day" })).toHaveProperty("value", text);
+    expect(screen.getByRole("combobox", { name: "Day" })).toHaveProperty("value", text);
   });
 
   it.each<[Locale, string[]]>([
@@ -84,7 +84,7 @@ describe("DateField", () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
     renderInLocale(<Day initial={TODAY} onValue={onValue} />, { locale: "ru" });
-    const input = screen.getByRole("textbox", { name: "Day" });
+    const input = screen.getByRole("combobox", { name: "Day" });
     await user.click(input);
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement?.getAttribute("data-date")).toBe(TODAY);
@@ -137,7 +137,7 @@ describe("DateField", () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
     renderInLocale(<Day initial={TODAY} onValue={onValue} />, { locale: "ru" });
-    const input = screen.getByRole("textbox", { name: "Day" });
+    const input = screen.getByRole("combobox", { name: "Day" });
     await user.clear(input);
     expect(onValue).toHaveBeenLastCalledWith("");
     await user.type(input, "07.10.20");
@@ -154,7 +154,7 @@ describe("DateField", () => {
 
   it("opens the month instead of the keyboard on a touch", () => {
     renderInLocale(<Day initial={TODAY} />, { locale: "en" });
-    fireEvent.pointerDown(screen.getByRole("textbox", { name: "Day" }), { pointerType: "touch" });
+    fireEvent.pointerDown(screen.getByRole("combobox", { name: "Day" }), { pointerType: "touch" });
     expect(screen.getByRole("dialog", { name: "Calendar" })).toBeTruthy();
   });
 });
@@ -182,14 +182,14 @@ describe("DateTimeField", () => {
     const user = userEvent.setup();
     const onValue = vi.fn();
     renderInLocale(<Starts onValue={onValue} />, { locale: "ru" });
-    expect(screen.getByRole("textbox", { name: "Starts" })).toHaveProperty("value", "6 окт. 2026 г.");
+    expect(screen.getByRole("combobox", { name: "Starts" })).toHaveProperty("value", "6 окт. 2026 г.");
     const minutes = screen.getByRole("spinbutton", { name: "Starts Минуты" });
     await user.click(minutes);
     await user.keyboard("{ArrowUp}");
     expect(onValue).toHaveBeenLastCalledWith("2026-10-06T09:45");
     await user.keyboard("{Backspace}");
     expect(onValue).toHaveBeenLastCalledWith("2026-10-06T");
-    await user.clear(screen.getByRole("textbox", { name: "Starts" }));
+    await user.clear(screen.getByRole("combobox", { name: "Starts" }));
     expect(onValue).toHaveBeenLastCalledWith("");
   });
 });

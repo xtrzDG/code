@@ -7,15 +7,16 @@ import { queryKeys } from "@/api/queryKeys";
 import { useCursorPage } from "@/api/useCursorPage";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { RefreshFailed } from "@/components/insights/common";
+import { todayIn } from "@/components/insights/dates";
 import {
   Badge,
   Button,
   Card,
+  DateField,
   EmptyState,
   ErrorState,
   Field,
   InlineError,
-  Input,
   LoadingRegion,
   Select,
   SkeletonText,
@@ -85,6 +86,7 @@ export function AuditTab() {
   const { business } = useBusiness();
   const [filters, setFilters] = useState<AuditFilters>(EMPTY_AUDIT_FILTERS);
   const query = auditQuery(filters, (day) => zonedDayStartUs(day, format.timeZone));
+  const today = todayIn(format.timeZone);
 
   const log = useCursorPage<AuditLogEntry, AuditLogPage>(
     queryKeys.settings.audit(business.id, JSON.stringify(query)),
@@ -170,12 +172,12 @@ export function AuditTab() {
         </Field>
         <Field label={t("settings.auditFilters.from")}>
           {(control) => (
-            <Input {...control} type="date" value={filters.from} max={filters.to || undefined} onChange={(event) => update({ from: event.target.value })} />
+            <DateField {...control} clearable today={today} value={filters.from} max={filters.to || today} onChange={(from) => update({ from })} />
           )}
         </Field>
         <Field label={t("settings.auditFilters.to")}>
           {(control) => (
-            <Input {...control} type="date" value={filters.to} min={filters.from || undefined} onChange={(event) => update({ to: event.target.value })} />
+            <DateField {...control} clearable today={today} value={filters.to} min={filters.from || undefined} max={today} onChange={(to) => update({ to })} />
           )}
         </Field>
       </div>
