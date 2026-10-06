@@ -4,13 +4,14 @@ table's calendar paths, the busy times outside the platform (iCal feeds,
 Cal.com, Google) as fakes, and the free slots of a day.
 """
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
-import httpx
+from fastapi.testclient import TestClient
+from httpx2 import Response
 
 from app.containers.app import AppContainer
 from app.gateways.http.operations.google_calendar_routes import (
@@ -44,7 +45,7 @@ class CalendarShop:
     resource_id: str
 
     @property
-    def client(self) -> Any:
+    def client(self) -> TestClient:
         return self.workshop.client
 
     @property
@@ -59,16 +60,16 @@ class CalendarShop:
     def calendar(self) -> str:
         return f"{self.base}/resources/{self.resource_id}/calendar"
 
-    def get(self, path: str, **params: str) -> httpx.Response:
+    def get(self, path: str, **params: str) -> Response:
         return self.client.get(path, params=params, headers=self.headers)
 
-    def post(self, path: str, body: JsonObject | None = None) -> httpx.Response:
+    def post(self, path: str, body: JsonObject | None = None) -> Response:
         return self.client.post(path, json=body or {}, headers=self.headers)
 
-    def put(self, path: str, body: JsonObject) -> httpx.Response:
+    def put(self, path: str, body: JsonObject) -> Response:
         return self.client.put(path, json=body, headers=self.headers)
 
-    def delete(self, path: str) -> httpx.Response:
+    def delete(self, path: str) -> Response:
         return self.client.delete(path, headers=self.headers)
 
     def view(self) -> JsonObject:
@@ -81,7 +82,7 @@ class CalendarShop:
         assert response.status_code == 200, response.text
         return [str(slot["time"]) for slot in response.json()["slots"]]
 
-    def import_feed(self, url: str = FEED_URL) -> httpx.Response:
+    def import_feed(self, url: str = FEED_URL) -> Response:
         return self.post(f"{self.calendar}/ical-imports", {"url": url})
 
     def connect_google(self) -> None:
@@ -94,7 +95,7 @@ class CalendarShop:
         )
         assert completed.json()["failure"] is None, completed.text
 
-    def book(self, time: str, day: str = DAY) -> httpx.Response:
+    def book(self, time: str, day: str = DAY) -> Response:
         return self.post(
             f"{self.base}/bookings",
             {
@@ -124,7 +125,7 @@ def calendar_ics(*events: str) -> str:
 
 
 @contextmanager
-def open_calendar_shop() -> Iterator[CalendarShop]:
+def open_calendar_shop() -> Generator[CalendarShop]:
     edges = CalendarEdges()
     google = FakeGoogleCalendars()
 

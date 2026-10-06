@@ -38,8 +38,8 @@ AIRBNB_FEED: str = calendar_ics(
 )
 
 
-def utc(*parts: int) -> int:
-    return int(datetime(*parts, tzinfo=UTC).timestamp())
+def utc(year: int, month: int, day: int, hour: int = 0, minute: int = 0) -> int:
+    return int(datetime(year, month, day, hour, minute, tzinfo=UTC).timestamp())
 
 
 def window(start: int = utc(2026, 10, 1), end: int = utc(2027, 1, 1)) -> BusyWindow:
@@ -58,7 +58,9 @@ def resource(unit: BookingUnit) -> ResourceDocument:
     )
 
 
-def read(text: str, unit: BookingUnit = BookingUnit.TIME_SLOT, limit: int = 100):
+def read(
+    text: str, unit: BookingUnit = BookingUnit.TIME_SLOT, limit: int = 100
+) -> list[tuple[int, int]]:
     bounds = whole_day_bounds(resource(unit), TBILISI, STAY_TIMES)
     return [
         (int(period.starts_at), int(period.ends_at))

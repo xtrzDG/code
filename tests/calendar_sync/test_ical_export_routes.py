@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 
 import icalendar
 
+from app.schemas.typings.calendar_sync.strings import IcalExportToken
 from app.utilities.calendar_sync.calendar_sync_keys import hash_export_token
 from tests.calendar_sync.calendar_shop import FEED_URL, calendar_ics, open_calendar_shop
 from tests.calendar_sync.fake_google_calendars import TEAM_CALENDAR
@@ -26,7 +27,7 @@ def events_of(text: str) -> list[icalendar.Event]:
     calendar = icalendar.Calendar.from_ical(text.encode("utf-8"))
     return [
         component
-        for component in calendar.walk("VEVENT")
+        for component in calendar.subcomponents
         if isinstance(component, icalendar.Event)
     ]
 
@@ -70,7 +71,7 @@ def test_only_the_hash_of_the_token_is_stored() -> None:
         repo = shop.workshop.container.repositories.ical_export_feed_repo()
         storage_scope = shop.workshop.container.utilities.storage_scope()
         with storage_scope.platform_wide():
-            stored = repo.find(hash_export_token(token))
+            stored = repo.find(hash_export_token(IcalExportToken(token)))
 
     assert stored is not None
     assert token not in stored.model_dump_json()

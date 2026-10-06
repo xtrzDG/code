@@ -54,6 +54,10 @@ def free_busy(calendar_entry: object) -> Answer:
     )
 
 
+def status(code: int, body: object | None = None) -> Answer:
+    return lambda _: httpx.Response(code, json={} if body is None else body)
+
+
 def problem_of(answer: Answer) -> CalendarSyncProblem:
     google, _ = client(answer)
     with pytest.raises(BusyTimeSourceError) as raised:
@@ -95,10 +99,10 @@ def test_a_calendar_without_busy_times_is_free() -> None:
 @pytest.mark.parametrize(
     ("answer", "problem"),
     [
-        (lambda _: httpx.Response(401, json={}), CalendarSyncProblem.NEEDS_RECONNECT),
-        (lambda _: httpx.Response(403, json={}), CalendarSyncProblem.NEEDS_RECONNECT),
-        (lambda _: httpx.Response(404, json={}), CalendarSyncProblem.NOT_FOUND),
-        (lambda _: httpx.Response(500, json={}), CalendarSyncProblem.PROVIDER_ERROR),
+        (status(401), CalendarSyncProblem.NEEDS_RECONNECT),
+        (status(403), CalendarSyncProblem.NEEDS_RECONNECT),
+        (status(404), CalendarSyncProblem.NOT_FOUND),
+        (status(500), CalendarSyncProblem.PROVIDER_ERROR),
         (
             free_busy({"errors": [{"reason": "notFound"}]}),
             CalendarSyncProblem.NOT_FOUND,
@@ -107,10 +111,7 @@ def test_a_calendar_without_busy_times_is_free() -> None:
             free_busy({"errors": [{"reason": "internalError"}]}),
             CalendarSyncProblem.PROVIDER_ERROR,
         ),
-        (
-            lambda _: httpx.Response(200, json={"calendars": {}}),
-            CalendarSyncProblem.PROVIDER_ERROR,
-        ),
+        (status(200, {"calendars": {}}), CalendarSyncProblem.PROVIDER_ERROR),
     ],
 )
 def test_failures_become_the_reason_to_explain(
@@ -159,7 +160,7 @@ def test_the_calendar_list_puts_the_primary_calendar_first() -> None:
 
 
 def test_the_calendar_list_needs_the_read_permission() -> None:
-    google, _ = client(lambda _: httpx.Response(403, json={}))
+    google, _ = client(status(403))
 
     with pytest.raises(BusyTimeSourceError) as raised:
         google.list_calendars(TOKEN, TIMEOUT)
