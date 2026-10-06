@@ -10,6 +10,7 @@ from app.containers.adapters.operations_collections_container import (
 from app.repositories.client_standing_repository import ClientStandingRepository
 from app.repositories.data_task_state_repository import DataTaskStateRepository
 from app.repositories.help_progress_repository import HelpProgressRepository
+from app.repositories.idempotency_key_repository import IdempotencyKeyRepository
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.maintenance_run_repository import MaintenanceRunRepository
 from app.repositories.platform_activity_repository import PlatformActivityRepository
@@ -103,4 +104,8 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
         ServiceLevelSourceRepository,
         inbound_event_collection=health_collections.inbound_event_collection,
         message_collection=health_collections.message_collection,
+    )
+    idempotency_key_repo: Singleton[IdempotencyKeyRepository] = Singleton(
+        IdempotencyKeyRepository,
+        collection=operations_collections.idempotency_key_collection,
     )

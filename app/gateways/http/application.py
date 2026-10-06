@@ -10,6 +10,11 @@ from app.contracts.observability import ErrorReportingFacilitatorContract
 from app.contracts.service_metrics import ServiceMetricsContract
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
+from app.gateways.http.idempotency.idempotent_requests import (
+    IDEMPOTENCY_KEY_HEADER,
+    IDEMPOTENT_REPLAY_HEADER,
+)
+from app.gateways.http.idempotency.response_recorder import install_idempotency
 from app.gateways.http.middleware.anonymous_request_limit_middleware import (
     AdmitRequest,
     AnonymousRequestLimitMiddleware,
@@ -80,7 +85,8 @@ def build_http_application(
     their client network's generic limit (429 with Retry-After). Every
     request is measured (`service_metrics`, by route template) and traced
     (`span_tracer`), its trace id in its log lines, and counted for the API
-    availability SLI (`api_availability`).
+    availability SLI (`api_availability`). Creating routes with an
+    Idempotency-Key keep their answer for retries (`install_idempotency`).
     """
 
     is_production: bool = environment is DeploymentEnvironment.PRODUCTION
@@ -94,6 +100,8 @@ def build_http_application(
         generate_unique_id_function=readable_operation_id,
     )
     install_error_handlers(http_application)
+    # Innermost: keeps the answers of requests with an Idempotency-Key.
+    install_idempotency(http_application)
     # Inside CORS (added below), so a refused body still answers with CORS.
     http_application.add_middleware(BodySizeLimitMiddleware)
 
@@ -124,7 +132,14 @@ def build_http_application(
             allow_origins=[str(origin).rstrip("/") for origin in cors_allowed_origins],
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type", REQUEST_ID_HEADER],
+            allow_headers=[
+                "Authorization",
+                "Content-Type",
+                REQUEST_ID_HEADER,
+                IDEMPOTENCY_KEY_HEADER,
+                "If-Match",
+            ],
+            expose_headers=["ETag", IDEMPOTENT_REPLAY_HEADER],
         )
 
     if anonymous_request_admission is not None:

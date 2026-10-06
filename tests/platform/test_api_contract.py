@@ -140,7 +140,9 @@ def test_operation_ids_are_unique_snake_case_tag_and_function_names(
         by_key["GET /v1/admin/clients/{business_id}/quality"]["operationId"]
         == "quality_get_client_quality"
     )
-    assert by_key["GET /v1/catalog/countries"]["operationId"] == "catalog_list_countries"
+    assert (
+        by_key["GET /v1/catalog/countries"]["operationId"] == "catalog_list_countries"
+    )
 
 
 def test_framework_refusals_are_error_bodies_at_runtime() -> None:

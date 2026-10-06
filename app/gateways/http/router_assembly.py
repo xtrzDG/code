@@ -25,13 +25,14 @@ from app.gateways.http.feedback_router_assembly import build_feedback_routers
 from app.gateways.http.growth_router_assembly import build_growth_routers
 from app.gateways.http.health_routes import build_readiness_router
 from app.gateways.http.help_router_assembly import build_help_routers
+from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.inbox_router_assembly import build_inbox_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.launch_router_assembly import build_launch_routers
 from app.gateways.http.memory_router_assembly import build_memory_routers
 from app.gateways.http.menu_import_routes import build_menu_import_router
 from app.gateways.http.notification_routes import build_notification_router
-from app.gateways.http.operations_routes import build_operations_router
+from app.gateways.http.operations_router_assembly import build_operations_routers
 from app.gateways.http.privacy_router_assembly import build_privacy_routers
 from app.gateways.http.profile_routes import build_profile_router
 from app.gateways.http.public_channel_router_assembly import (
@@ -69,7 +70,6 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
     accounts = operators.accounts
     compliance = operators.compliance
     knowledge = operators.knowledge
-    operations = operators.operations
     conversations = operators.conversations
     assistants = operators.assistants
     platform = operators.platform
@@ -179,36 +179,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
                 knowledge.delete_schedule_exception_operator()
             ),
         ),
-        build_operations_router(
-            current_user=current_user,
-            authorize_business_access=business_access_operator,
-            check_availability=operations.check_availability_operator(),
-            list_bookings=operations.list_bookings_operator(),
-            create_manual_booking=operations.create_manual_booking_operator(),
-            cancel_booking=operations.cancel_booking_operator(),
-            reschedule_booking=operations.reschedule_booking_operator(),
-            update_booking=operations.update_booking_operator(),
-            revert_booking_status=operations.revert_booking_status_operator(),
-            list_leads=operations.list_leads_operator(),
-            update_lead_status=operations.update_lead_status_operator(),
-            list_handoffs=operations.list_handoffs_operator(),
-            resolve_handoff=operations.resolve_handoff_operator(),
-            reopen_handoff=operations.reopen_handoff_operator(),
-            list_unanswered_questions=operations.list_unanswered_questions_operator(),
-            answer_unanswered_question=operations.answer_unanswered_question_operator(),
-            get_dashboard_stats=operations.get_dashboard_stats_operator(),
-            start_calendar_connection=(
-                operations.start_google_calendar_connection_operator()
-            ),
-            complete_calendar_connection=(
-                operations.complete_google_calendar_connection_operator()
-            ),
-            disconnect_calendar=operations.disconnect_google_calendar_operator(),
-            get_calendar_connection=(
-                operations.get_google_calendar_connection_operator()
-            ),
-            cabinet_base_url=app_container.config.app_settings().cabinet_base_url,
-        ),
+        *build_operations_routers(app_container, current_user),
         build_events_router(
             current_user=current_user,
             authorize_business_access=business_access_operator,
@@ -228,6 +199,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
                 conversations.list_conversation_messages_operator()
             ),
             get_message_media_operator=conversations.get_message_media_operator(),
+            idempotent=idempotency_of(operators, current_user),
         ),
         build_assistant_router(
             assemble_assistant_version_operator=(

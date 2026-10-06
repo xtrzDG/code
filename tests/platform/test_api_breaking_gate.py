@@ -42,7 +42,7 @@ def test_the_gate_fails_on_errors_with_our_severity_levels() -> None:
         str(step.get("run", "")) for step in breaking_job()["steps"]
     )
 
-    assert "oasdiff\" breaking" in commands
+    assert 'oasdiff" breaking' in commands
     assert "--fail-on ERR" in commands
     assert "--severity-levels .github/oasdiff-severity-levels.txt" in commands
 

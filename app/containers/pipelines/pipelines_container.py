@@ -29,6 +29,9 @@ from app.containers.pipelines.data_task_pipelines import DataTaskPipelinesContai
 from app.containers.pipelines.demo_pipelines import DemoPipelinesContainer
 from app.containers.pipelines.feedback_pipelines import FeedbackPipelinesContainer
 from app.containers.pipelines.growth_pipelines import GrowthPipelinesContainer
+from app.containers.pipelines.idempotency_pipelines import (
+    IdempotencyPipelinesContainer,
+)
 from app.containers.pipelines.inbox_pipelines import InboxPipelinesContainer
 from app.containers.pipelines.knowledge_pipelines import KnowledgePipelinesContainer
 from app.containers.pipelines.legal_pipelines import LegalPipelinesContainer
@@ -161,6 +164,10 @@ class PipelinesContainer(containers.DeclarativeContainer):
     )
     telemetry: TelemetryPipelinesContainer = Container(  # type: ignore[assignment]
         TelemetryPipelinesContainer, telemetry_orchestrators=orchestrators.telemetry
+    )
+    idempotency: IdempotencyPipelinesContainer = Container(  # type: ignore[assignment]
+        IdempotencyPipelinesContainer,
+        idempotency=orchestrators.idempotency,
     )
     platform_ops: PlatformOpsPipelinesContainer = Container(  # type: ignore[assignment]
         PlatformOpsPipelinesContainer,

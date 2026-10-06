@@ -9,6 +9,7 @@ from app.containers.utilities import UtilitiesContainer
 from app.schemas.domain.client_standings import ClientStandingDocument
 from app.schemas.domain.data_tasks import DataTaskStateDocument
 from app.schemas.domain.help_progress import HelpProgressDocument
+from app.schemas.domain.idempotency_keys import IdempotencyKeyDocument
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
@@ -116,6 +117,15 @@ class OperationsCollectionsContainer(containers.DeclarativeContainer):
     service_level_hour_collection = document_collection(
         ServiceLevelHourDocument,
         "service_level_hours",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    # The idempotency keys of creating requests (1174).
+    idempotency_key_collection = document_collection(
+        IdempotencyKeyDocument,
+        "idempotency_keys",
         config,
         clients,
         utilities,

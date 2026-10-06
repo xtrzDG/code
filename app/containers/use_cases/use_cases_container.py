@@ -9,6 +9,9 @@ from app.containers.use_cases.core_use_cases_container import CoreUseCasesContai
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
 from app.containers.use_cases.demo_use_cases import DemoUseCasesContainer
 from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContainer
+from app.containers.use_cases.idempotency_use_cases import (
+    IdempotencyUseCasesContainer,
+)
 from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
@@ -167,6 +170,11 @@ class UseCasesContainer(BusinessUseCasesContainer):
     telemetry: TelemetryUseCasesContainer = Container(  # type: ignore[assignment]
         TelemetryUseCasesContainer,
         platform_use_cases=platform,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+    )
+    idempotency: IdempotencyUseCasesContainer = Container(  # type: ignore[assignment]
+        IdempotencyUseCasesContainer,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
     )

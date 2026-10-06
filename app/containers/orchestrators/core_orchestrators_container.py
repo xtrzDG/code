@@ -21,6 +21,9 @@ from app.containers.orchestrators.data_task_orchestrators import (
     DataTaskOrchestratorsContainer,
 )
 from app.containers.orchestrators.demo_orchestrators import DemoOrchestratorsContainer
+from app.containers.orchestrators.idempotency_orchestrators import (
+    IdempotencyOrchestratorsContainer,
+)
 from app.containers.orchestrators.legal_orchestrators import (
     LegalOrchestratorsContainer,
 )
@@ -100,6 +103,9 @@ class CoreOrchestratorsContainer(containers.DeclarativeContainer):
     )
     telemetry: TelemetryOrchestratorsContainer = Container(  # type: ignore[assignment]
         TelemetryOrchestratorsContainer, telemetry_use_cases=use_cases.telemetry
+    )
+    idempotency: IdempotencyOrchestratorsContainer = Container(  # type: ignore[assignment]
+        IdempotencyOrchestratorsContainer, idempotency_use_cases=use_cases.idempotency
     )
     platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOrchestratorsContainer,
