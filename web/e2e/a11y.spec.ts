@@ -1,8 +1,9 @@
 /**
  * Automated accessibility audit (axe-core, WCAG 2.1 A and AA rules) of the
- * cabinet's pages in both themes and on a phone: no serious or critical
- * violation is allowed. What axe cannot judge (reading order, meaning of
- * texts) is checked by hand; see web/README.md.
+ * cabinet's pages in both themes, in English and in Hebrew (right to left),
+ * and on a phone: no serious or critical violation is allowed. What axe
+ * cannot judge (reading order, meaning of texts) is checked by hand; see
+ * web/README.md.
  */
 
 import AxeBuilder from "@axe-core/playwright";
@@ -11,7 +12,7 @@ import type { Page } from "@playwright/test";
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
-import { en } from "./support/messages";
+import { en, he } from "./support/messages";
 
 const OWNER_PAGES = [
   "overview",
@@ -39,10 +40,18 @@ const OWNER_PAGES = [
 
 /** Serious and critical violations of a page, one line each. */
 async function seriousViolations(page: Page): Promise<string[]> {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
   return results.violations
-    .filter((violation) => violation.impact === "serious" || violation.impact === "critical")
-    .map((violation) => `${violation.id} (${violation.impact}): ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`);
+    .filter(
+      (violation) =>
+        violation.impact === "serious" || violation.impact === "critical",
+    )
+    .map(
+      (violation) =>
+        `${violation.id} (${violation.impact}): ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`,
+    );
 }
 
 async function audit(page: Page, path: string): Promise<void> {
@@ -52,20 +61,48 @@ async function audit(page: Page, path: string): Promise<void> {
   expect(await seriousViolations(page), path).toEqual([]);
 }
 
-for (const theme of ["dark", "light"] as const) {
-  test(`every section passes the audit in the ${theme} theme`, async ({ page, owner }) => {
-    test.setTimeout(180_000);
-    await page.context().addCookies([{ name: "aw_theme", value: theme, url: WEB_URL }]);
-    for (const path of OWNER_PAGES) {
-      await test.step(path, () => audit(page, `/b/${owner.businessId}/${path}`));
-    }
-  });
+for (const locale of ["en", "he"] as const) {
+  for (const theme of ["dark", "light"] as const) {
+    test(`every section passes the audit in the ${theme} theme, in ${locale}`, async ({
+      page,
+      owner,
+    }) => {
+      test.setTimeout(180_000);
+      await page.context().addCookies([
+        { name: "aw_theme", value: theme, url: WEB_URL },
+        { name: "aw_locale", value: locale, url: WEB_URL },
+      ]);
+      for (const path of OWNER_PAGES) {
+        await test.step(path, () =>
+          audit(page, `/b/${owner.businessId}/${path}`),
+        );
+      }
+      await expect(page.locator("html")).toHaveAttribute(
+        "dir",
+        locale === "he" ? "rtl" : "ltr",
+      );
+    });
+  }
 }
 
-test("the setup invitation, the tunnel, the businesses, sign-in and the offline page pass the audit", async ({ page, newOwner }) => {
+test("the setup invitation, the tunnel, the businesses, sign-in and the offline page pass the audit", async ({
+  page,
+  newOwner,
+}) => {
   await audit(page, `/b/${newOwner.businessId}/overview`);
-  for (const step of ["business", "place", "offer", "hours", "people", "channels", "try", "launch"]) {
-    await test.step(step, () => audit(page, `/b/${newOwner.businessId}/setup?step=${step}`));
+  for (const step of [
+    "business",
+    "place",
+    "offer",
+    "hours",
+    "people",
+    "channels",
+    "try",
+    "launch",
+  ]) {
+    await test.step(step, () =>
+      audit(page, `/b/${newOwner.businessId}/setup?step=${step}`),
+    );
   }
   await audit(page, "/create");
   await audit(page, "/businesses");
@@ -75,31 +112,83 @@ test("the setup invitation, the tunnel, the businesses, sign-in and the offline 
 });
 
 test.describe("on a phone", () => {
-  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  test.use({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
 
-  test("the main pages and the More sheet pass the audit", async ({ page, owner }) => {
+  test("the main pages and the More sheet pass the audit", async ({
+    page,
+    owner,
+  }) => {
     for (const path of ["overview", "inbox", "assistant", "settings"]) {
-      await test.step(path, () => audit(page, `/b/${owner.businessId}/${path}`));
+      await test.step(path, () =>
+        audit(page, `/b/${owner.businessId}/${path}`),
+      );
     }
     await page.getByRole("button", { name: en.navigation.more }).click();
-    await expect(page.getByRole("dialog", { name: en.navigation.more })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: en.navigation.more }),
+    ).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+
+  test("the main pages and the More sheet pass the audit in Hebrew", async ({
+    page,
+    owner,
+  }) => {
+    await page
+      .context()
+      .addCookies([{ name: "aw_locale", value: "he", url: WEB_URL }]);
+    for (const path of [
+      "overview",
+      "inbox",
+      "bookings",
+      "assistant",
+      "settings",
+    ]) {
+      await test.step(path, () =>
+        audit(page, `/b/${owner.businessId}/${path}`),
+      );
+    }
+    await page.getByRole("button", { name: he.navigation.more }).click();
+    await expect(
+      page.getByRole("dialog", { name: he.navigation.more }),
+    ).toBeVisible();
     expect(await seriousViolations(page)).toEqual([]);
   });
 
   for (const theme of ["dark", "light"] as const) {
-    test(`the front desk pages, the page's (i) and the filters pass the audit in the ${theme} theme`, async ({ page, owner }) => {
+    test(`the front desk pages, the page's (i) and the filters pass the audit in the ${theme} theme`, async ({
+      page,
+      owner,
+    }) => {
       test.setTimeout(120_000);
-      await page.context().addCookies([{ name: "aw_theme", value: theme, url: WEB_URL }]);
-      for (const path of ["bookings", "bookings?view=all", "assistant/knowledge", "assistant/channels"]) {
-        await test.step(path, () => audit(page, `/b/${owner.businessId}/${path}`));
+      await page
+        .context()
+        .addCookies([{ name: "aw_theme", value: theme, url: WEB_URL }]);
+      for (const path of [
+        "bookings",
+        "bookings?view=all",
+        "assistant/knowledge",
+        "assistant/channels",
+      ]) {
+        await test.step(path, () =>
+          audit(page, `/b/${owner.businessId}/${path}`),
+        );
       }
       await page.getByRole("button", { name: en.chrome.pageInfo }).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       expect(await seriousViolations(page), "the page's (i)").toEqual([]);
 
       await page.goto(`/b/${owner.businessId}/bookings?view=all`);
-      await page.getByRole("button", { name: en.chrome.filters.open, exact: true }).click();
-      await expect(page.getByRole("dialog", { name: en.chrome.filters.title })).toBeVisible();
+      await page
+        .getByRole("button", { name: en.chrome.filters.open, exact: true })
+        .click();
+      await expect(
+        page.getByRole("dialog", { name: en.chrome.filters.title }),
+      ).toBeVisible();
       expect(await seriousViolations(page), "the filters").toEqual([]);
     });
   }

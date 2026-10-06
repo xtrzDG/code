@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { en } from "./messages/en";
-import { PSEUDO_EXPANSION, pseudoLocalize, pseudoMessages, wantsPseudoLocale } from "./pseudo";
+import { PSEUDO_EXPANSION, pseudoLocaleDirection, pseudoLocalize, pseudoMessages, wantsPseudoLocale } from "./pseudo";
 import { createTranslator, lookupMessage } from "./translate";
 
 describe("pseudo-locale", () => {
@@ -42,5 +42,13 @@ describe("pseudo-locale", () => {
     expect(wantsPseudoLocale("en-XA", {})).toBe(false);
     expect(wantsPseudoLocale("en", { PSEUDO_LOCALE: "true" })).toBe(false);
     expect(wantsPseudoLocale(undefined, { PSEUDO_LOCALE: "true" })).toBe(false);
+  });
+
+  it("lays the bidi pseudo-locale ar-XB out right to left", () => {
+    expect(pseudoLocaleDirection("en-XA", { PSEUDO_LOCALE: "true" })).toBe("ltr");
+    expect(pseudoLocaleDirection("ar-XB", { PSEUDO_LOCALE: "true" })).toBe("rtl");
+    expect(pseudoLocaleDirection("AR_xb", { PSEUDO_LOCALE: "true" })).toBe("rtl");
+    expect(pseudoLocaleDirection("ar-XB", {})).toBeNull();
+    expect(pseudoLocaleDirection("he", { PSEUDO_LOCALE: "true" })).toBeNull();
   });
 });

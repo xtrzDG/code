@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ViewerTimeZoneProvider } from "@/components/time/ViewerTimeZone";
 import { ToastProvider } from "@/components/ui/Toast";
 import { I18nProvider } from "@/i18n/client";
-import { localeDirection } from "@/i18n/config";
 import { getI18n } from "@/i18n/server";
 import { themeColors } from "@/lib/theme";
 import { getTheme } from "@/server/theme";
@@ -34,11 +33,11 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [{ locale, messages }, theme, viewerTimeZone] = await Promise.all([getI18n(), getTheme(), getViewerTimeZone()]);
+  const [{ locale, messages, direction }, theme, viewerTimeZone] = await Promise.all([getI18n(), getTheme(), getViewerTimeZone()]);
   return (
     // data-theme and dir are rendered on the server, so the first paint already
     // has the right colours and reads in the language's direction (Hebrew: right to left).
-    <html lang={locale} dir={localeDirection(locale)} data-theme={theme} className="h-full">
+    <html lang={locale} dir={direction} data-theme={theme} className="h-full">
       <body className="min-h-full bg-canvas text-ink antialiased">
         <WebVitalsReporter />
         <I18nProvider locale={locale} messages={messages}>
