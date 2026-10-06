@@ -10,7 +10,10 @@ name: Deploy smoke test
 # SMOKE_EXPECT_REPLY). Render reports deploys to GitHub as deployments of
 # the service's name; a Render deploy webhook relayed as a repository
 # dispatch works too. Repository variable PROMOTE_AFTER_STAGING_SMOKE=false
-# turns the automatic promotion off.
+# turns the automatic promotion off. The promotion waits until production has
+# finished the post-deploy data tasks of the release it runs (repository
+# variable PRODUCTION_API_URL, scripts/check_data_tasks.sh): re-run the
+# promote job once they are done.
 on:
   deployment_status:
   repository_dispatch:
@@ -114,6 +117,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+
+      - name: Wait for production's post-deploy data tasks
+        env:
+          PRODUCTION_API_URL: ${{ vars.PRODUCTION_API_URL }}
+        run: |
+          # The next release may stop reading what production's tasks are
+          # still rewriting or filling (docs/operations/deploys.md).
+          if [ -z "$PRODUCTION_API_URL" ]; then
+            echo "Set the repository variable PRODUCTION_API_URL (the production API's address): promotion waits for its data tasks." >&2
+            exit 1
+          fi
+          scripts/check_data_tasks.sh "$PRODUCTION_API_URL"
 
       - name: Fast-forward release to the smoke-tested commit
         env:

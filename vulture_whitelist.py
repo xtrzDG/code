@@ -596,3 +596,10 @@ _.niche_delay_days  # app/schemas/dto/growth/campaign_views.py (CampaignSettings
 _.month_sent_count  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.recent_counts  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+
+# Post-deploy data tasks (W16): the columns that need no backfill are read
+# by the lookup-column policy test; the rest are response fields the
+# cabinet reads (the system page's data-task card, the lists' hint).
+_.LOOKUP_COLUMNS_WITHOUT_BACKFILL  # app/registries/maintenance/lookup_backfills.py
+_.is_indexing  # app/schemas/dto/contacts.py, knowledge_admin.py (list pages)
+_.settles_at  # app/schemas/dto/data_tasks.py (RolloutView)

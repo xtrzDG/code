@@ -12,6 +12,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.client_health_changes import AdminDigestStateDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import LlmTurnDocument
+from app.schemas.domain.data_tasks import DataTaskStateDocument
 from app.schemas.domain.exchange_rates import ExchangeRateDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.incidents import IncidentDocument
@@ -87,5 +88,7 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         ReferralDocument,
         # A sub-processor change is announced to every business at once (1124).
         SubprocessorAnnouncementDocument,
+        # The post-deploy data tasks walk every business's rows at once.
+        DataTaskStateDocument,
     }
 )

@@ -178,15 +178,14 @@ class DataTasksView(ImmutableDTO):
 
 class DataTaskSummary(ImmutableDTO):
     """
-    The data tasks in three figures and the lists they keep incomplete:
-    `open_count` is every task not done yet (failed ones included), as
-    `GET /readyz` reports it to the deploy guard.
+    The data tasks in three figures: `open_count` is every task not done
+    yet (failed ones included), as `GET /readyz` reports it to the deploy
+    guard.
     """
 
     open_count: DataTaskCount
     failed_count: DataTaskCount
     stalled_count: DataTaskCount
-    indexing_lists: list[IndexedList] = Field(default_factory=list[IndexedList])
 
 
 class RetryDataTaskCommand(ImmutableDTO):

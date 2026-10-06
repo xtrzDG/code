@@ -62,6 +62,7 @@ from app.gateways.worker.periodic.request_visit_feedback import (
     REQUEST_VISIT_FEEDBACK_JOB,
 )
 from app.gateways.worker.periodic.retention import PURGE_EXPIRED_PERSONAL_DATA_JOB
+from app.gateways.worker.periodic.run_data_tasks import RUN_DATA_TASKS_JOB
 from app.gateways.worker.periodic.send_subprocessor_notices import (
     SEND_SUBPROCESSOR_NOTICES_JOB,
 )
@@ -147,6 +148,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
+        (RUN_DATA_TASKS_JOB, 300),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run

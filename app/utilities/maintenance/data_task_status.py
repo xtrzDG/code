@@ -11,7 +11,6 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.maintenance import (
     DataTaskKind,
     DataTaskStatus,
-    IndexedList,
 )
 from app.schemas.domain.data_tasks import DataTaskStateDocument
 from app.schemas.dto.data_tasks import DataTaskDefinition, DataTaskSummary
@@ -82,16 +81,13 @@ def summarize_data_tasks(
     states: Mapping[DataTaskKey, DataTaskStateDocument],
     now: Microseconds,
 ) -> DataTaskSummary:
-    """Open (not done), failed and stalled tasks, and the lists they hold back."""
+    """Open (not done), failed and stalled tasks."""
 
     open_tasks: list[DataTaskDefinition] = [
         task
         for task in tasks
         if effective_status(task, states.get(task.key)) is not DataTaskStatus.DONE
     ]
-    indexing: set[IndexedList] = {
-        indexed_list for task in open_tasks for indexed_list in task.lists
-    }
     return DataTaskSummary(
         open_count=DataTaskCount(len(open_tasks)),
         failed_count=DataTaskCount(
@@ -104,7 +100,6 @@ def summarize_data_tasks(
         stalled_count=DataTaskCount(
             sum(1 for task in open_tasks if is_stalled(task, states.get(task.key), now))
         ),
-        indexing_lists=[item for item in IndexedList if item in indexing],
     )
 
 

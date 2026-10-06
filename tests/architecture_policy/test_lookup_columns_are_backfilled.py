@@ -51,9 +51,13 @@ def columns_added_to_existing_tables() -> set[Column]:
 
 
 def declared_columns() -> list[Column]:
-    return [
+    filled: list[Column] = [
         (str(item.collection_name), str(item.field), str(item.migration))
-        for item in (*LOOKUP_BACKFILLS, *LOOKUP_COLUMNS_WITHOUT_BACKFILL)
+        for item in LOOKUP_BACKFILLS
+    ]
+    return filled + [
+        (str(item.collection_name), str(item.field), str(item.migration))
+        for item in LOOKUP_COLUMNS_WITHOUT_BACKFILL
     ]
 
 

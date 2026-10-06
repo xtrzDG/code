@@ -134,7 +134,6 @@ def test_the_summary_counts_open_failed_and_stalled_tasks_and_their_lists() -> N
         1,
         1,
     )
-    assert summary.indexing_lists == [IndexedList.CUSTOMERS]
     assert sources_is_open(sources, states)
     assert is_list_indexing([seen], states)
     assert not is_list_indexing([knowledge], states)

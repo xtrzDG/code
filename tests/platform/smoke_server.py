@@ -24,6 +24,8 @@ class FakeDeployment:
     reply_inline: bool = True
     reply_text: str = REPLY
     is_ready: bool = True
+    # `checks.data_tasks` of /readyz; None leaves the line out (an older release).
+    data_tasks: dict[str, object] | None = None
     polls: int = 0
     posted: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
@@ -35,9 +37,17 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             if path == "/healthz":
                 self.answer(200, {"status": "ok"})
             elif path == "/readyz":
+                checks: dict[str, object] = (
+                    {}
+                    if deployment.data_tasks is None
+                    else {"data_tasks": deployment.data_tasks}
+                )
                 self.answer(
                     200 if deployment.is_ready else 503,
-                    {"status": "ready" if deployment.is_ready else "not_ready"},
+                    {
+                        "status": "ready" if deployment.is_ready else "not_ready",
+                        "checks": checks,
+                    },
                 )
             elif path == "/widget.js":
                 self.answer_text(200, deployment.widget_script, "text/javascript")
