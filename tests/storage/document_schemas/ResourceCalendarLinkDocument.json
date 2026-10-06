@@ -218,18 +218,6 @@
         ],
         "default": null
       },
-      "ical_export_id": {
-        "anyOf": [
-          {
-            "pattern": "^ical_export_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ],
-        "default": null
-      },
       "ical_export_token_hash": {
         "anyOf": [
           {

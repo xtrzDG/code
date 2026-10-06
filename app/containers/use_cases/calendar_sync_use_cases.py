@@ -10,6 +10,25 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.calendar_sync.busy_reads import GoogleCalendarList
+from app.schemas.dto.calendar_sync.calendar_commands import (
+    AddIcalImportCommand,
+    BusinessCalendarsQuery,
+    IcalExportCommand,
+    LinkBookingSystemCommand,
+    LinkGoogleCalendarCommand,
+    RemoveCalendarSourceCommand,
+    ResourceCalendarQuery,
+    SyncResourceCalendarCommand,
+)
+from app.schemas.dto.calendar_sync.ical_export import IcalExportFile, IcalExportRequest
+from app.schemas.dto.calendar_sync.integrations import IntegrationList
+from app.schemas.dto.calendar_sync.resource_calendar import (
+    IcalExportCreated,
+    ResourceCalendarView,
+)
+from app.schemas.dto.jobs import JobReport, JobTick
 from app.use_cases.calendar_sync.add_ical_import_use_case import AddIcalImportUseCase
 from app.use_cases.calendar_sync.calendar_changes import CalendarChanges
 from app.use_cases.calendar_sync.create_ical_export_use_case import (
@@ -85,44 +104,60 @@ class CalendarSyncUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
     )
 
-    get_resource_calendar_use_case = Factory(GetResourceCalendarUseCase, reader=reader)
-    sync_resource_calendar_use_case = Factory(
-        SyncResourceCalendarUseCase, changes=changes
-    )
-    link_google_calendar_use_case = Factory(LinkGoogleCalendarUseCase, changes=changes)
-    add_ical_import_use_case = Factory(
+    get_resource_calendar_use_case: Factory[
+        UseCaseContract[ResourceCalendarQuery, ResourceCalendarView]
+    ] = Factory(GetResourceCalendarUseCase, reader=reader)
+    sync_resource_calendar_use_case: Factory[
+        UseCaseContract[SyncResourceCalendarCommand, ResourceCalendarView]
+    ] = Factory(SyncResourceCalendarUseCase, changes=changes)
+    link_google_calendar_use_case: Factory[
+        UseCaseContract[LinkGoogleCalendarCommand, ResourceCalendarView]
+    ] = Factory(LinkGoogleCalendarUseCase, changes=changes)
+    add_ical_import_use_case: Factory[
+        UseCaseContract[AddIcalImportCommand, ResourceCalendarView]
+    ] = Factory(
         AddIcalImportUseCase, changes=changes, secret_cipher=adapters.secret_cipher
     )
-    link_booking_system_use_case = Factory(
+    link_booking_system_use_case: Factory[
+        UseCaseContract[LinkBookingSystemCommand, ResourceCalendarView]
+    ] = Factory(
         LinkBookingSystemUseCase, changes=changes, secret_cipher=adapters.secret_cipher
     )
-    remove_calendar_source_use_case = Factory(
-        RemoveCalendarSourceUseCase, changes=changes
-    )
-    create_ical_export_use_case = Factory(
+    remove_calendar_source_use_case: Factory[
+        UseCaseContract[RemoveCalendarSourceCommand, None]
+    ] = Factory(RemoveCalendarSourceUseCase, changes=changes)
+    create_ical_export_use_case: Factory[
+        UseCaseContract[IcalExportCommand, IcalExportCreated]
+    ] = Factory(
         CreateIcalExportUseCase,
         changes=changes,
         app_base_url=config.app_settings.provided.app_base_url,
     )
-    remove_ical_export_use_case = Factory(RemoveIcalExportUseCase, changes=changes)
-    list_google_calendars_use_case = Factory(
-        ListGoogleCalendarsUseCase, busy_time_sync=facilitators.busy_time_sync
+    remove_ical_export_use_case: Factory[UseCaseContract[IcalExportCommand, None]] = (
+        Factory(RemoveIcalExportUseCase, changes=changes)
     )
-    list_integrations_use_case = Factory(
+    list_google_calendars_use_case: Factory[
+        UseCaseContract[BusinessCalendarsQuery, GoogleCalendarList]
+    ] = Factory(ListGoogleCalendarsUseCase, busy_time_sync=facilitators.busy_time_sync)
+    list_integrations_use_case: Factory[
+        UseCaseContract[BusinessCalendarsQuery, IntegrationList]
+    ] = Factory(
         ListIntegrationsUseCase,
         link_repo=repositories.resource_calendar_link_repo,
         export_feed_repo=repositories.ical_export_feed_repo,
         connection_repo=repositories.calendar_connection_repo,
         calendar_client=clients.google_calendar_client,
     )
-    sync_due_calendars_use_case = Factory(
+    sync_due_calendars_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
         SyncDueCalendarsUseCase,
         link_repo=repositories.resource_calendar_link_repo,
         resource_repo=repositories.resource_repo,
         busy_time_sync=facilitators.busy_time_sync,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    export_resource_busy_times_use_case = Factory(
+    export_resource_busy_times_use_case: Factory[
+        UseCaseContract[IcalExportRequest, IcalExportFile]
+    ] = Factory(
         ExportResourceBusyTimesUseCase,
         export_feed_repo=repositories.ical_export_feed_repo,
         business_repo=repositories.business_repo,

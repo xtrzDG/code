@@ -94,7 +94,6 @@ class ResourceCalendarLinkDocument(BaseDocument):
     google_status: BusySourceStatus | None = None
     ical_imports: list[IcalImportFeed] = Field(default_factory=list[IcalImportFeed])
     booking_system: BookingSystemLink | None = None
-    ical_export_id: IcalExportFeedId | None = None
     ical_export_token_hash: IcalExportTokenHash | None = None
     ical_export_created_at: Microseconds | None = None
     next_sync_at: Microseconds | None = None

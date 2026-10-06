@@ -32,7 +32,6 @@ class RemoveIcalExportUseCase(UseCaseContract[IcalExportCommand, None]):
             removed.clear()
             if link.ical_export_token_hash is not None:
                 removed.append(link.ical_export_token_hash)
-            link.ical_export_id = None
             link.ical_export_token_hash = None
             link.ical_export_created_at = None
             link.updated_at = now

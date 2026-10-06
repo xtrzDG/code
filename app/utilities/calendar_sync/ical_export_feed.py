@@ -45,30 +45,36 @@ def render_busy_feed(
     """The feed's text with CRLF lines, escaped and folded by the library."""
 
     calendar = icalendar.Calendar()
-    calendar.add("prodid", PRODUCT_ID)
-    calendar.add("version", "2.0")
-    calendar.add("calscale", "GREGORIAN")
-    calendar.add("method", "PUBLISH")
-    calendar.add("x-wr-calname", calendar_name)
+    add_property(calendar, "prodid", PRODUCT_ID)
+    add_property(calendar, "version", "2.0")
+    add_property(calendar, "calscale", "GREGORIAN")
+    add_property(calendar, "method", "PUBLISH")
+    add_property(calendar, "x-wr-calname", calendar_name)
     stamp = datetime.datetime.fromtimestamp(stamped_at_seconds, tz=datetime.UTC)
     for busy_time in busy_times:
         event = icalendar.Event()
-        event.add("uid", f"{busy_time.uid_key}@{UID_DOMAIN}")
-        event.add("dtstamp", stamp)
+        add_property(event, "uid", f"{busy_time.uid_key}@{UID_DOMAIN}")
+        add_property(event, "dtstamp", stamp)
         if busy_time.dates is not None:
-            event.add("dtstart", busy_time.dates[0])
-            event.add("dtend", busy_time.dates[1])
+            add_property(event, "dtstart", busy_time.dates[0])
+            add_property(event, "dtend", busy_time.dates[1])
         elif busy_time.times is not None:
-            event.add("dtstart", utc_moment(busy_time.times[0]))
-            event.add("dtend", utc_moment(busy_time.times[1]))
+            add_property(event, "dtstart", utc_moment(busy_time.times[0]))
+            add_property(event, "dtend", utc_moment(busy_time.times[1]))
         else:
             continue
-        event.add("summary", title)
-        event.add("transp", "OPAQUE")
-        event.add("status", "CONFIRMED")
+        add_property(event, "summary", title)
+        add_property(event, "transp", "OPAQUE")
+        add_property(event, "status", "CONFIRMED")
         calendar.add_component(event)
 
     return IcalFeedText(calendar.to_ical().decode("utf-8"))
+
+
+def add_property(component: icalendar.Component, name: str, value: object) -> None:
+    """The library's `add` (its value parameter is untyped)."""
+
+    component.add(name, value)  # pyright: ignore[reportUnknownMemberType]
 
 
 def utc_moment(unix_seconds: int) -> datetime.datetime:

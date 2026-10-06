@@ -596,3 +596,8 @@ _.niche_delay_days  # app/schemas/dto/growth/campaign_views.py (CampaignSettings
 _.month_sent_count  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.recent_counts  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
 _.previews  # app/schemas/dto/growth/campaign_views.py (CampaignSettingsView)
+
+# Two-way availability (R13): response fields the cabinet reads (a resource's
+# calendars, the Google calendar list to link one).
+_.access_role  # app/schemas/dto/calendar_sync/busy_reads.py (GoogleCalendarEntry)
+_.ical_export  # app/schemas/dto/calendar_sync/resource_calendar.py

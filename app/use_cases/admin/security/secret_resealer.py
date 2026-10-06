@@ -1,6 +1,7 @@
 """
 Seal one business's stored secrets again with the current key: its
-channels' credentials and its Google Calendar tokens, each written back
+channels' credentials, its Google Calendar tokens and its resources'
+calendar secrets (iCal feed addresses, booking-system keys), each written back
 only if it did not change meanwhile; and register its Telegram bots'
 webhooks again with the secret of the current key.
 """
@@ -8,6 +9,7 @@ webhooks again with the secret of the current key.
 import logging
 from dataclasses import dataclass
 
+from app.contracts.calendar_sync import ResourceCalendarLinkRepoContract
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.operations import CalendarConnectionRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
@@ -24,6 +26,7 @@ from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import ChannelWebhookUrl
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
+from app.use_cases.admin.security.calendar_link_resealer import reseal_calendar_links
 from app.utilities.channels.channel_endpoints import (
     build_telegram_webhook_path,
     join_public_url,
@@ -55,7 +58,11 @@ class SecretResealer:
         secret_rotation: SecretRotationAdapterContract,
         telegram_client: TelegramBotApiClientContract,
         app_settings: AppSettings,
+        calendar_link_repo: ResourceCalendarLinkRepoContract | None = None,
     ) -> None:
+        self._calendar_link_repo: ResourceCalendarLinkRepoContract | None = (
+            calendar_link_repo
+        )
         self._channel_repo: ChannelRepoContract = channel_repo
         self._calendar_connection_repo: CalendarConnectionRepoContract = (
             calendar_connection_repo
@@ -85,6 +92,12 @@ class SecretResealer:
         connection = self._calendar_connection_repo.get_by_business(business_id)
         if connection is not None:
             self._reseal_calendar(connection, tally)
+        if self._calendar_link_repo is not None:
+            reseal_calendar_links(
+                self._calendar_link_repo,
+                business_id,
+                lambda encrypted: self._reseal(encrypted, tally),
+            )
 
     def _reseal(
         self, encrypted: EncryptedChannelSecret, tally: RotationTally

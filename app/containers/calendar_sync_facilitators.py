@@ -58,11 +58,16 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # The booking systems the platform speaks to, one connector each.
+    cal_com_client: Singleton[CalComClient] = Singleton(CalComClient)
     booking_system_connectors: Singleton[BookingSystemConnectorRegistry] = Singleton(
         BookingSystemConnectorRegistry,
-        connectors=List(
-            Singleton(CalComBookingSystemAdapter, client=Singleton(CalComClient)),
-        ),
+        connectors=List(Singleton(CalComBookingSystemAdapter, client=cal_com_client)),
+    )
+    # Imported iCal feeds, read through the safe fetcher.
+    ical_reader: Singleton[IcalBusyReader] = Singleton(
+        IcalBusyReader,
+        fetcher=clients.safe_http_fetcher,
+        secret_cipher=adapters.secret_cipher,
     )
     busy_time_sync: Singleton[BusyTimeSyncFacilitator] = Singleton(
         BusyTimeSyncFacilitator,
@@ -79,11 +84,7 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
             booking_repo=repositories.booking_repo,
             wall_clock=time_provider.microsecond_wall_clock,
         ),
-        ical=Singleton(
-            IcalBusyReader,
-            fetcher=clients.safe_http_fetcher,
-            secret_cipher=adapters.secret_cipher,
-        ),
+        ical=ical_reader,
         booking_systems=Singleton(
             BookingSystemBusyReader,
             registry=booking_system_connectors,

@@ -13,6 +13,9 @@ from app.containers.adapters import invoicing_collections_container as invoicing
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
+from app.containers.adapters.calendar_sync_collections_container import (
+    CalendarSyncCollectionsContainer,
+)
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
@@ -120,6 +123,8 @@ COLLECTION_CONTAINERS = (
     # The client care collections and the referral program's on top (1150).
     ReferralCollectionsContainer,
     GrowthCollectionsContainer,
+    # Two-way availability (1160).
+    CalendarSyncCollectionsContainer,
 )
 
 

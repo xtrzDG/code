@@ -72,7 +72,6 @@ class CreateIcalExportUseCase(UseCaseContract[IcalExportCommand, IcalExportCreat
             replaced.clear()
             if link.ical_export_token_hash is not None:
                 replaced.append(link.ical_export_token_hash)
-            link.ical_export_id = feed.id
             link.ical_export_token_hash = feed.token_hash
             link.ical_export_created_at = now
             link.updated_at = now

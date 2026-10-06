@@ -82,4 +82,9 @@ CLIENT_MODULES_WITHOUT_SUBPROCESSOR: dict[
         "and the files customers send through the messaging platforms listed "
         "(Meta, Telegram); sends no personal data of its own."
     ),
+    ClientModuleName("cal_com"): ClientModuleExclusionReason(
+        "Reads busy times from the Cal.com account an owner connects with the "
+        "owner's own API key (the Client's own processor); sends only time "
+        "windows and an event type number, no personal data."
+    ),
 }
