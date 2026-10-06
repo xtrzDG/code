@@ -1,0 +1,33 @@
+{
+  "kind": "calendar#event",
+  "etag": "\"3458621284960000\"",
+  "id": "7cbh8rpc10lrc0ckih9tafss99",
+  "status": "confirmed",
+  "htmlLink": "https://www.google.com/calendar/event?eid=N2NiaDhycGMxMGxyYzBja2loOXRhZnNzOTkgc3R1ZGlvQGV4YW1wbGUuY29t",
+  "created": "2026-10-01T09:12:42.000Z",
+  "updated": "2026-10-01T09:12:42.480Z",
+  "summary": "Table for 4: Nino",
+  "description": "Booked by the AI assistant on the phone.",
+  "creator": {
+    "email": "studio@example.com",
+    "self": true
+  },
+  "organizer": {
+    "email": "studio@example.com",
+    "self": true
+  },
+  "start": {
+    "dateTime": "2026-10-03T19:00:00+04:00",
+    "timeZone": "Asia/Tbilisi"
+  },
+  "end": {
+    "dateTime": "2026-10-03T20:00:00+04:00",
+    "timeZone": "Asia/Tbilisi"
+  },
+  "iCalUID": "7cbh8rpc10lrc0ckih9tafss99@google.com",
+  "sequence": 0,
+  "reminders": {
+    "useDefault": true
+  },
+  "eventType": "default"
+}

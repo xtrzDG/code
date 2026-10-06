@@ -1,3 +1,5 @@
+import logging
+
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.channels import ChannelAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
@@ -37,11 +39,15 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.message_chunks import split_message_text
+from app.utilities.channels.skipped_webhook_parts import log_skipped_parts
 from app.utilities.channels.telegram_attachments import read_telegram_attachments
+from app.utilities.channels.telegram_update_kinds import update_kind
 from app.utilities.channels.webhook_signatures import is_matching_telegram_secret
 from app.utilities.security.key_ring import key_ring
 from app.utilities.sharing.acquisition_sources import read_start_payload
 
+LOGGER: logging.Logger = logging.getLogger(__name__)
+PLATFORM_NAME: str = "Telegram"
 # Telegram counts the 4096-character limit of sendMessage in UTF-16 units.
 TELEGRAM_MESSAGE_LIMIT: int = 4096
 PRIVATE_CHAT_TYPE: str = "private"
@@ -98,6 +104,7 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             None if update is None else read_object(update, "message")
         )
         if message is None:
+            log_skipped_parts(LOGGER, PLATFORM_NAME, [update_kind(update)])
             return []
 
         chat: JsonObject = read_object(message, "chat") or {}
@@ -108,6 +115,7 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             or read_text(chat, "type") != PRIVATE_CHAT_TYPE
             or read_flag(sender, "is_bot")
         ):
+            log_skipped_parts(LOGGER, PLATFORM_NAME, ["message:not a private chat"])
             return []
 
         phone_number: E164PhoneNumber | None = self._read_own_phone_number(
@@ -124,6 +132,7 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             text = str(phone_number)
 
         if not has_content(text, attachments):
+            log_skipped_parts(LOGGER, PLATFORM_NAME, ["message:without content"])
             return []
 
         message_id: str | None = read_identifier(message, "message_id")

@@ -1,3 +1,4 @@
+import logging
 from typing import ClassVar
 
 from app.contracts.channel_clients import (
@@ -39,8 +40,16 @@ from app.utilities.channels.json_values import (
 )
 from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.meta_page_attachments import read_meta_attachments
+from app.utilities.channels.meta_page_events import (
+    ROUTINE_KINDS,
+    other_entry_kinds,
+    skipped_event_kind,
+)
+from app.utilities.channels.skipped_webhook_parts import log_skipped_parts
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
 from app.utilities.sharing.acquisition_sources import read_referral_source
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class MetaPageChannelAdapter(ChannelAdapterContract):
@@ -98,19 +107,25 @@ class MetaPageChannelAdapter(ChannelAdapterContract):
             return []
 
         messages: list[ChannelInboundMessage] = []
+        skipped: list[str] = []
         for entry in read_objects(root, "entry"):
             account_id: str | None = read_identifier(entry, "id")
             if account_id is None:
+                skipped.append("entry:without account")
                 continue
 
+            skipped.extend(other_entry_kinds(entry))
             for event in read_objects(entry, "messaging"):
                 message: ChannelInboundMessage | None = self._read_event(
                     account_id,
                     event,
                 )
-                if message is not None:
+                if message is None:
+                    skipped.append(skipped_event_kind(event, account_id))
+                else:
                     messages.append(message)
 
+        log_skipped_parts(LOGGER, self.channel_kind.value, skipped, ROUTINE_KINDS)
         return messages
 
     def split(self, text: MessageText) -> list[MessageText]:

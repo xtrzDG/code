@@ -1,0 +1,54 @@
+{
+  "data": [
+    {
+      "id": "trace-0000-0001",
+      "timestamp": "2026-10-01T09:00:00.000Z",
+      "name": "assistant_reply",
+      "input": null,
+      "output": null,
+      "sessionId": "conversation_0000-0001",
+      "release": null,
+      "version": null,
+      "userId": null,
+      "metadata": {
+        "model": "gpt-5-mini"
+      },
+      "tags": [],
+      "public": false,
+      "environment": "default",
+      "htmlPath": "/project/project-0000/traces/trace-0000-0001",
+      "latency": 1.5,
+      "totalCost": 0.0012,
+      "observations": [],
+      "scores": []
+    },
+    {
+      "id": "trace-0000-0002",
+      "timestamp": "2026-10-01T09:00:00.000Z",
+      "name": "assistant_reply",
+      "input": null,
+      "output": null,
+      "sessionId": "conversation_0000-0001",
+      "release": null,
+      "version": null,
+      "userId": null,
+      "metadata": {
+        "model": "gpt-5-mini"
+      },
+      "tags": [],
+      "public": false,
+      "environment": "default",
+      "htmlPath": "/project/project-0000/traces/trace-0000-0002",
+      "latency": 1.5,
+      "totalCost": 0.0012,
+      "observations": [],
+      "scores": []
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 100,
+    "totalItems": 2,
+    "totalPages": 1
+  }
+}

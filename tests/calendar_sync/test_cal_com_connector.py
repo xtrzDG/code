@@ -168,7 +168,8 @@ def test_a_booking_is_written_with_the_guest_name_only() -> None:
             "start": "2026-10-06T10:00:00Z",
             "eventTypeId": 1203845,
             "lengthInMinutes": 60,
-            "attendee": {"name": "Nino", "timeZone": "Asia/Tbilisi", "language": "ka"},
+            # Cal.com has no Georgian: its default (English) is left to it.
+            "attendee": {"name": "Nino", "timeZone": "Asia/Tbilisi"},
             "metadata": {"source": "assistant-workshop"},
         }
     ]

@@ -1,0 +1,24 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "104922111111111",
+      "time": 1750276000123,
+      "messaging": [
+        {
+          "sender": {
+            "id": "7034567890123456"
+          },
+          "recipient": {
+            "id": "104922111111111"
+          },
+          "timestamp": 1750276030000,
+          "message_pin": {
+            "mid": "m_AG5Hz2Uq7tuwNEhXfYYKj8mJEM_QPpz5jdCK48PnKAjSdjfipqxqMvK8ma6AC8fplwlqLP_5cgXIbu7I3rBN0P",
+            "action": "pin"
+          }
+        }
+      ]
+    }
+  ]
+}

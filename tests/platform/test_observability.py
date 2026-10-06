@@ -173,7 +173,12 @@ def test_langfuse_events_have_trace_and_generation() -> None:
     generation_body = events[1]["body"]
     assert isinstance(generation_body, dict)
     assert generation_body["traceId"] == "trace-1"
-    assert generation_body["usage"] == {"input": 120, "output": 30, "unit": "TOKENS"}
+    assert generation_body["usage"] == {
+        "input": 120,
+        "output": 30,
+        "total": 150,
+        "unit": "TOKENS",
+    }
     assert "input" not in generation_body
     assert format_timestamp(1_790_000_000_000_000) == "2026-09-21T14:13:20.000Z"
 

@@ -1,7 +1,8 @@
 import smtplib
 import ssl
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
+from email import policy
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, parseaddr
 
@@ -27,6 +28,9 @@ from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.users.constrained_strings import EmailAddress
 
 CONNECT_TIMEOUT_SECONDS: float = 15.0
+# Bodies go out base64 or quoted-printable when not plain ASCII: 8-bit data
+# needs BODY=8BITMIME (RFC 6152), which smtplib does not send by itself.
+SEVEN_BIT_POLICY = policy.default.clone(cte_type="7bit")
 
 # Opens a connection: (host, port, security, TLS context) -> connected client.
 type SmtpConnector = Callable[
@@ -64,7 +68,8 @@ class SmtpEmailClient(EmailSenderClientContract):
     name the failure kind, never the password, the recipient or the body.
     A refused login, sender or STARTTLS is a setting to fix
     (DeliveryNotConfiguredError), a refused recipient is final
-    (ProviderRejectedMessageError), anything else may pass on another try.
+    (ProviderRejectedMessageError), anything else - a 4xx refusal of the
+    sender or the recipient included - may pass on another try.
     """
 
     def __init__(
@@ -137,11 +142,19 @@ class SmtpEmailClient(EmailSenderClientContract):
                 "The SMTP server does not offer STARTTLS; set SMTP_SECURITY=ssl "
                 "(port 465)."
             ) from None
-        except smtplib.SMTPRecipientsRefused:
+        except smtplib.SMTPRecipientsRefused as error:
+            if is_transient(code for code, _ in error.recipients.values()):
+                raise ExternalServiceError(
+                    "The SMTP server put the recipient off for now (4xx)."
+                ) from None
             raise ProviderRejectedMessageError(
                 "The SMTP server refused the recipient address."
             ) from None
-        except smtplib.SMTPSenderRefused:
+        except smtplib.SMTPSenderRefused as error:
+            if is_transient([error.smtp_code]):
+                raise ExternalServiceError(
+                    "The SMTP server put the message off for now (4xx)."
+                ) from None
             raise DeliveryNotConfiguredError(
                 "The SMTP server refused the sender; check SMTP_FROM."
             ) from None
@@ -158,7 +171,7 @@ class SmtpEmailClient(EmailSenderClientContract):
         html_body: EmailBodyText | None,
     ) -> EmailMessage:
         sender_address: str = parseaddr(str(self._sender))[1]
-        message = EmailMessage()
+        message = EmailMessage(policy=SEVEN_BIT_POLICY)
         message["From"] = str(self._sender)
         message["To"] = str(recipient)
         message["Subject"] = str(subject)
@@ -171,3 +184,10 @@ class SmtpEmailClient(EmailSenderClientContract):
             message.add_alternative(str(html_body), subtype="html")
 
         return message
+
+
+def is_transient(reply_codes: Iterable[int]) -> bool:
+    """4xx replies (RFC 5321, 4.2.1): the same message may pass later."""
+
+    codes: list[int] = list(reply_codes)
+    return bool(codes) and all(400 <= code < 500 for code in codes)

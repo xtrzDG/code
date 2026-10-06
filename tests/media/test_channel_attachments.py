@@ -1,6 +1,7 @@
 """
 Every channel reads the attachments of its webhook messages: the payloads
-are shaped like each platform's documented samples (fixtures/).
+are shaped like each platform's documented samples
+(tests/contracts/<client package>/fixtures).
 """
 
 from typing import Any
@@ -9,7 +10,8 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.media import AttachmentKind
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
 from tests.channels.testbed import ChannelsTestbed
-from tests.media.recorded_payloads import as_payload, load_fixture
+from tests.contracts.contract_files import load_json_fixture
+from tests.media.recorded_payloads import as_payload
 
 
 def kinds(message: ChannelInboundMessage) -> list[AttachmentKind]:
@@ -19,7 +21,7 @@ def kinds(message: ChannelInboundMessage) -> list[AttachmentKind]:
 class TestWhatsApp:
     def parse(self) -> list[ChannelInboundMessage]:
         return ChannelsTestbed().whatsapp_adapter.parse_webhook(
-            as_payload(load_fixture("whatsapp_media_webhook.json"))
+            as_payload(load_json_fixture("meta", "whatsapp_media_webhook.json"))
         )
 
     def test_every_message_but_the_reaction_is_read(self) -> None:
@@ -82,7 +84,7 @@ class TestTelegram:
     def parse_all(self) -> list[ChannelInboundMessage]:
         adapter = ChannelsTestbed().telegram_adapter
         messages: list[ChannelInboundMessage] = []
-        for update in load_fixture("telegram_media_updates.json"):
+        for update in load_json_fixture("telegram", "telegram_media_updates.json"):
             messages.extend(adapter.parse_webhook(as_payload(update)))
         return messages
 
@@ -145,7 +147,7 @@ class TestMetaPages:
     def parse(self, adapter_name: str, fixture: str) -> list[ChannelInboundMessage]:
         adapter = getattr(ChannelsTestbed(), adapter_name)
         messages: list[ChannelInboundMessage] = adapter.parse_webhook(
-            as_payload(load_fixture(fixture))
+            as_payload(load_json_fixture("meta", fixture))
         )
         return messages
 
@@ -194,7 +196,7 @@ class TestMetaPages:
 
 
 def test_a_message_with_nothing_to_answer_is_still_skipped() -> None:
-    body: dict[str, Any] = load_fixture("instagram_media_webhook.json")
+    body: dict[str, Any] = load_json_fixture("meta", "instagram_media_webhook.json")
     body["entry"][0]["messaging"] = [
         {
             "sender": {"id": "1234567890123456"},

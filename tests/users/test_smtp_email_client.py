@@ -180,6 +180,18 @@ def test_tls_from_the_start_and_no_login() -> None:
             DeliveryNotConfiguredError,
         ),
         (
+            smtplib.SMTPRecipientsRefused(
+                {"owner@example.com": (450, b"mailbox busy")}
+            ),
+            "for now",
+            ExternalServiceError,
+        ),
+        (
+            smtplib.SMTPSenderRefused(454, b"throttled", "x"),
+            "for now",
+            ExternalServiceError,
+        ),
+        (
             smtplib.SMTPServerDisconnected("gone"),
             "SMTPServerDisconnected",
             ExternalServiceError,

@@ -85,7 +85,7 @@ class MetaMediaClient(MetaMediaClientContract):
         if url is None:
             raise MediaUnavailableError("Meta returned no URL for the media file.")
 
-        size: int | None = read_integer(body, "file_size")
+        size: int | None = read_file_size(body)
         mime_type: str | None = read_text(body, "mime_type")
         return WhatsAppMediaInfo(
             url=MediaDownloadUrl(url),
@@ -111,3 +111,20 @@ class MetaMediaClient(MetaMediaClientContract):
                 None if content_type is None else ProviderMediaType(content_type)
             ),
         )
+
+
+def read_file_size(body: JsonObject) -> int | None:
+    """
+    The media size: a number, or the string of digits Meta's reference
+    documents ("file_size": "21480").
+    """
+
+    size: int | None = read_integer(body, "file_size")
+    if size is not None:
+        return size
+
+    text: str | None = read_text(body, "file_size")
+    if text is None or not (text.isascii() and text.isdigit()):
+        return None
+
+    return int(text)

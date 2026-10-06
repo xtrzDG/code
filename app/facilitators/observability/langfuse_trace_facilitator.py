@@ -89,9 +89,11 @@ def build_generation_events(trace: LlmGenerationTrace) -> list[dict[str, object]
         "model": str(trace.model_id),
         "startTime": start_time,
         "endTime": end_time,
+        # Langfuse's Usage requires the total next to its parts.
         "usage": {
             "input": int(trace.input_tokens),
             "output": int(trace.output_tokens),
+            "total": int(trace.input_tokens) + int(trace.output_tokens),
             "unit": "TOKENS",
         },
         "metadata": metadata,

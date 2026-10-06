@@ -1,3 +1,5 @@
+import logging
+
 from app.contracts.channel_clients import (
     MetaGraphApiClientContract,
     MetaTypingClientContract,
@@ -48,13 +50,22 @@ from app.utilities.channels.json_values import (
     read_text,
 )
 from app.utilities.channels.message_chunks import split_message_text
+from app.utilities.channels.skipped_webhook_parts import log_skipped_parts
 from app.utilities.channels.webhook_signatures import is_valid_sha256_signature
 from app.utilities.channels.whatsapp_attachments import read_whatsapp_attachments
+from app.utilities.channels.whatsapp_webhook_parts import (
+    ROUTINE_KINDS,
+    other_field_kind,
+    read_message_text,
+    skipped_message_kind,
+    status_kinds,
+)
 from app.utilities.sharing.acquisition_sources import (
     read_greeting_code,
     read_referral_source,
 )
 
+LOGGER: logging.Logger = logging.getLogger(__name__)
 WEBHOOK_OBJECT: str = "whatsapp_business_account"
 MESSAGES_FIELD: str = "messages"
 # Limit of a text message body in the Cloud API.
@@ -116,14 +127,18 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
             return []
 
         messages: list[ChannelInboundMessage] = []
+        skipped: list[str] = []
         for entry in read_objects(root, "entry"):
             for change in read_objects(entry, "changes"):
                 value: JsonObject | None = read_object(change, "value")
                 if read_text(change, "field") != MESSAGES_FIELD or value is None:
+                    skipped.append(other_field_kind(change))
                     continue
 
-                messages.extend(self._read_change_messages(value))
+                skipped.extend(status_kinds(value))
+                messages.extend(self._read_change_messages(value, skipped))
 
+        log_skipped_parts(LOGGER, "WhatsApp", skipped, ROUTINE_KINDS)
         return messages
 
     def split(self, text: MessageText) -> list[MessageText]:
@@ -203,7 +218,9 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
 
         return access_token
 
-    def _read_change_messages(self, value: JsonObject) -> list[ChannelInboundMessage]:
+    def _read_change_messages(
+        self, value: JsonObject, skipped: list[str]
+    ) -> list[ChannelInboundMessage]:
         metadata: JsonObject = read_object(value, "metadata") or {}
         phone_number_id: str | None = read_identifier(metadata, "phone_number_id")
         if phone_number_id is None:
@@ -225,6 +242,7 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
             source = read_referral_source(read_object(message, "referral")) or coded
             attachments: list[InboundAttachment] = read_whatsapp_attachments(message)
             if sender is None or not has_content(text, attachments):
+                skipped.append(skipped_message_kind(message))
                 continue
 
             message_id: str | None = read_text(message, "id")
@@ -253,30 +271,6 @@ class WhatsAppChannelAdapter(ChannelAdapterContract, WhatsAppTemplateAdapterCont
             )
 
         return messages
-
-
-def read_message_text(message: JsonObject) -> str | None:
-    """
-    Text of a customer message: typed text, a tapped template button or an
-    interactive reply. Media and places are attachments
-    (`whatsapp_attachments`); reactions have neither.
-    """
-
-    message_type: str | None = read_text(message, "type")
-    if message_type == "text":
-        return read_text(read_object(message, "text") or {}, "body")
-
-    if message_type == "button":
-        return read_text(read_object(message, "button") or {}, "text")
-
-    if message_type == "interactive":
-        interactive: JsonObject = read_object(message, "interactive") or {}
-        for reply_key in ("button_reply", "list_reply"):
-            reply: JsonObject | None = read_object(interactive, reply_key)
-            if reply is not None:
-                return read_text(reply, "title")
-
-    return None
 
 
 def require_phone_number_id(account_id: ChannelExternalId | None) -> MetaObjectId:

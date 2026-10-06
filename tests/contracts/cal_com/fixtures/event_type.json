@@ -1,0 +1,43 @@
+{
+  "status": "success",
+  "data": {
+    "id": 1203845,
+    "lengthInMinutes": 30,
+    "title": "Haircut",
+    "slug": "haircut",
+    "description": "A classic cut.",
+    "locations": [
+      {
+        "type": "address",
+        "address": "Rustaveli Ave 12, Tbilisi",
+        "public": true
+      }
+    ],
+    "bookingFields": [
+      {
+        "type": "name",
+        "slug": "name",
+        "isDefault": true,
+        "required": true,
+        "label": "Your name",
+        "placeholder": "",
+        "disableOnPrefill": false
+      }
+    ],
+    "disableGuests": true,
+    "recurrence": null,
+    "metadata": {},
+    "price": 0,
+    "currency": "usd",
+    "lockTimeZoneToggleOnBookingPage": false,
+    "forwardParamsSuccessRedirect": null,
+    "successRedirectUrl": null,
+    "isInstantEvent": false,
+    "scheduleId": 501,
+    "hidden": false,
+    "bookingRequiresAuthentication": false,
+    "ownerId": 10,
+    "users": [],
+    "bookingUrl": "https://cal.com/nino/haircut"
+  }
+}
