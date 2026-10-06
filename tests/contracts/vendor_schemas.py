@@ -35,13 +35,19 @@ def spec_validator(file_name: str, root: str, closed: bool) -> Validator:
         raise KeyError(f"{file_name} has no root {root!r}: {sorted(roots)}")
 
     definitions: JsonObject = cast(JsonObject, spec["$defs"])
-    return Draft202012Validator(
+    return schema_validator(
         {
             "$schema": spec["$schema"],
             "$defs": closed_definitions(definitions) if closed else definitions,
             "$ref": "#/$defs/" + root.replace("~", "~0").replace("/", "~1"),
         }
     )
+
+
+def schema_validator(schema: JsonObject) -> Validator:
+    """A JSON Schema 2020-12 validator of any schema (one the platform wrote too)."""
+
+    return Draft202012Validator(schema)
 
 
 def validation_problems(
