@@ -26,7 +26,7 @@ def breaking_job() -> dict[str, Any]:
 
 
 def test_the_label_alone_lets_a_breaking_change_through() -> None:
-    workflow = cast(dict[str, Any], yaml.safe_load(WORKFLOW.read_text("utf-8")))
+    workflow = cast(dict[object, Any], yaml.safe_load(WORKFLOW.read_text("utf-8")))
     # PyYAML reads the bare `on:` key as True.
     triggers = cast(dict[str, Any], workflow[True])["pull_request"]["types"]
 

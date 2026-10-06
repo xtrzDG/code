@@ -48,6 +48,9 @@ from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
 from app.gateways.worker.periodic.purge_business_exports import (
     PURGE_BUSINESS_EXPORTS_JOB,
 )
+from app.gateways.worker.periodic.purge_idempotency_keys import (
+    PURGE_IDEMPOTENCY_KEYS_JOB,
+)
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
 from app.gateways.worker.periodic.quality_sampling import QUALITY_SAMPLING_JOB
 from app.gateways.worker.periodic.record_platform_status import (
@@ -154,6 +157,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (END_EXPIRED_SUPPORT_ACCESS_JOB, 600),
         (PURGE_BUSINESS_EXPORTS_JOB, 3600),
         (PURGE_EXPIRED_PERSONAL_DATA_JOB, 86_400),
+        (PURGE_IDEMPOTENCY_KEYS_JOB, 3_600),
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
@@ -182,7 +186,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ERASE_PROCESSOR_COPIES_JOB,
         OFFER_FREED_PLACE_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (36, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (37, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush and the end of the waitlist's expired holds.
     assert a_minute_later.periodic_runs == 2
@@ -193,9 +197,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     # the Meta token check, the platform status record, the service levels,
     # the end of expired support access, the purge of expired exports, the
     # waitlist's expired holds, the rebooking campaigns, the seasonal pauses,
-    # the win-back messages, the post-deploy data tasks and the calendars'
-    # busy times.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (25, 0)
+    # the win-back messages, the post-deploy data tasks, the calendars'
+    # busy times and the purge of expired idempotency keys.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (26, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 
