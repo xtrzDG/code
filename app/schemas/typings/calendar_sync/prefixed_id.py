@@ -18,6 +18,18 @@ class CalendarBusyTimesId(BasePrefixedTypedId):
     uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
 
 
+class IcalImportFeedId(BasePrefixedTypedId):
+    """
+    Identifier of one iCalendar feed a resource imports (a resource may
+    import several: Airbnb, Booking.com, Vrbo).
+
+    Example:
+        feed_id = IcalImportFeedId()
+    """
+
+    prefix = "ical_import"
+
+
 class IcalExportFeedId(BasePrefixedTypedId):
     """
     Identifier of one iCal export address of a resource (made again, the old

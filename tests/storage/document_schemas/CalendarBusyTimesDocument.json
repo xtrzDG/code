@@ -37,6 +37,18 @@
       "created_at": {
         "type": "integer"
       },
+      "feed_id": {
+        "anyOf": [
+          {
+            "pattern": "^ical_import_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "fetched_at": {
         "type": "integer"
       },

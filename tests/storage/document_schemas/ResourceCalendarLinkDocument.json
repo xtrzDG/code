@@ -38,6 +38,75 @@
                   "cal_com"
                 ],
                 "type": "string"
+              },
+              "status": {
+                "additionalProperties": false,
+                "properties": {
+                  "block_count": {
+                    "default": 0,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "last_attempt_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "last_synced_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "not_connected",
+                          "needs_reconnect",
+                          "not_found",
+                          "access_denied",
+                          "address_refused",
+                          "timeout",
+                          "unreachable",
+                          "not_a_calendar",
+                          "provider_error"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem_detail": {
+                    "anyOf": [
+                      {
+                        "maxLength": 300,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "type": "object"
               }
             },
             "required": [
@@ -60,6 +129,83 @@
       },
       "created_at": {
         "type": "integer"
+      },
+      "google_status": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "block_count": {
+                "default": 0,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "last_attempt_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "last_synced_at": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "problem": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "not_connected",
+                      "needs_reconnect",
+                      "not_found",
+                      "access_denied",
+                      "address_refused",
+                      "timeout",
+                      "unreachable",
+                      "not_a_calendar",
+                      "provider_error"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "problem_detail": {
+                "anyOf": [
+                  {
+                    "maxLength": 300,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "ical_export_created_at": {
         "anyOf": [
@@ -98,36 +244,105 @@
         ],
         "default": null
       },
-      "ical_import": {
-        "anyOf": [
-          {
-            "additionalProperties": false,
-            "properties": {
-              "added_at": {
-                "type": "integer"
-              },
-              "encrypted_url": {
-                "type": "string"
-              },
-              "host": {
-                "maxLength": 253,
-                "minLength": 1,
-                "pattern": "^[A-Za-z0-9._\\-\\[\\]:]+$",
-                "type": "string"
-              }
+      "ical_imports": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "added_at": {
+              "type": "integer"
             },
-            "required": [
-              "encrypted_url",
-              "host",
-              "added_at"
-            ],
-            "type": "object"
+            "encrypted_url": {
+              "type": "string"
+            },
+            "feed_id": {
+              "pattern": "^ical_import_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "host": {
+              "maxLength": 253,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._\\-\\[\\]:]+$",
+              "type": "string"
+            },
+            "status": {
+              "additionalProperties": false,
+              "properties": {
+                "block_count": {
+                  "default": 0,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "last_attempt_at": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "last_synced_at": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "problem": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "not_connected",
+                        "needs_reconnect",
+                        "not_found",
+                        "access_denied",
+                        "address_refused",
+                        "timeout",
+                        "unreachable",
+                        "not_a_calendar",
+                        "provider_error"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "problem_detail": {
+                  "anyOf": [
+                    {
+                      "maxLength": 300,
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "type": "object"
+            }
           },
-          {
-            "type": "null"
-          }
-        ],
-        "default": null
+          "required": [
+            "feed_id",
+            "encrypted_url",
+            "host",
+            "added_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
       },
       "id": {
         "pattern": "^resource_calendar_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -151,89 +366,6 @@
       "schema_version": {
         "default": "1",
         "type": "string"
-      },
-      "statuses": {
-        "items": {
-          "additionalProperties": false,
-          "properties": {
-            "block_count": {
-              "default": 0,
-              "minimum": 0,
-              "type": "integer"
-            },
-            "last_attempt_at": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null
-            },
-            "last_synced_at": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null
-            },
-            "problem": {
-              "anyOf": [
-                {
-                  "enum": [
-                    "not_connected",
-                    "needs_reconnect",
-                    "not_found",
-                    "access_denied",
-                    "address_refused",
-                    "timeout",
-                    "unreachable",
-                    "not_a_calendar",
-                    "provider_error"
-                  ],
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null
-            },
-            "problem_detail": {
-              "anyOf": [
-                {
-                  "maxLength": 300,
-                  "minLength": 1,
-                  "pattern": "\\S",
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "default": null
-            },
-            "source": {
-              "enum": [
-                "google",
-                "ical",
-                "booking_system"
-              ],
-              "type": "string"
-            }
-          },
-          "required": [
-            "source"
-          ],
-          "type": "object"
-        },
-        "type": "array"
       },
       "updated_at": {
         "type": "integer"

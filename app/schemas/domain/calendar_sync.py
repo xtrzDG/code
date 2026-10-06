@@ -29,35 +29,11 @@ from app.schemas.typings.calendar_sync.constrained_strings import (
 from app.schemas.typings.calendar_sync.prefixed_id import (
     CalendarBusyTimesId,
     IcalExportFeedId,
+    IcalImportFeedId,
     ResourceCalendarLinkId,
 )
 from app.schemas.typings.calendar_sync.strings import BookingSystemResourceTitle
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
-
-
-class IcalImportFeed(PersistentDocument):
-    """
-    An iCalendar feed a resource imports. The address is a secret (anyone
-    with it reads the calendar), so it is stored encrypted; the cabinet
-    shows only its host.
-    """
-
-    encrypted_url: EncryptedChannelSecret
-    host: CalendarFeedHost
-    added_at: Microseconds
-
-
-class BookingSystemLink(PersistentDocument):
-    """
-    The booking system a resource follows: which system, what the resource
-    is there (a Cal.com event type), and the business's API key, encrypted.
-    """
-
-    kind: BookingSystemKind
-    external_resource_id: BookingSystemResourceId
-    external_resource_title: BookingSystemResourceTitle | None = None
-    encrypted_api_key: EncryptedChannelSecret
-    added_at: Microseconds
 
 
 class BusySourceStatus(PersistentDocument):
@@ -67,7 +43,6 @@ class BusySourceStatus(PersistentDocument):
     failure's reason (cleared by the next success).
     """
 
-    source: BusyTimeSource
     last_attempt_at: Microseconds | None = None
     last_synced_at: Microseconds | None = None
     block_count: BusyBlockCount = BusyBlockCount(0)
@@ -75,24 +50,53 @@ class BusySourceStatus(PersistentDocument):
     problem_detail: CalendarSyncErrorSummary | None = None
 
 
+class IcalImportFeed(PersistentDocument):
+    """
+    An iCalendar feed a resource imports, and how it synced. The address is
+    a secret (anyone with it reads the calendar), so it is stored
+    encrypted; the cabinet shows only its host.
+    """
+
+    feed_id: IcalImportFeedId
+    encrypted_url: EncryptedChannelSecret
+    host: CalendarFeedHost
+    added_at: Microseconds
+    status: BusySourceStatus = Field(default_factory=BusySourceStatus)
+
+
+class BookingSystemLink(PersistentDocument):
+    """
+    The booking system a resource follows: which system, what the resource
+    is there (a Cal.com event type), the business's API key, encrypted,
+    and how it synced.
+    """
+
+    kind: BookingSystemKind
+    external_resource_id: BookingSystemResourceId
+    external_resource_title: BookingSystemResourceTitle | None = None
+    encrypted_api_key: EncryptedChannelSecret
+    added_at: Microseconds
+    status: BusySourceStatus = Field(default_factory=BusySourceStatus)
+
+
 class ResourceCalendarLinkDocument(BaseDocument):
     """
     The calendar settings of one resource (one document per resource; its
-    Google calendar is `ResourceDocument.external_calendar_id`): the iCal
-    feed it imports, the hash of its export address, the booking system it
-    follows, how each source synced, and when the sync job reads them next
-    (`next_sync_at`, None when nothing is linked).
+    Google calendar is `ResourceDocument.external_calendar_id`): how that
+    calendar synced, the iCal feeds it imports, the booking system it
+    follows, the hash of its export address, and when the sync job reads
+    its sources next (`next_sync_at`, None when nothing is linked).
     """
 
     id: ResourceCalendarLinkId
     business_id: BusinessId
     resource_id: ResourceId
-    ical_import: IcalImportFeed | None = None
+    google_status: BusySourceStatus | None = None
+    ical_imports: list[IcalImportFeed] = Field(default_factory=list[IcalImportFeed])
+    booking_system: BookingSystemLink | None = None
     ical_export_id: IcalExportFeedId | None = None
     ical_export_token_hash: IcalExportTokenHash | None = None
     ical_export_created_at: Microseconds | None = None
-    booking_system: BookingSystemLink | None = None
-    statuses: list[BusySourceStatus] = Field(default_factory=list[BusySourceStatus])
     next_sync_at: Microseconds | None = None
 
 
@@ -105,16 +109,18 @@ class BusyBlock(PersistentDocument):
 
 class CalendarBusyTimesDocument(BaseDocument):
     """
-    The cached busy times of one source of one resource, as read at
-    `fetched_at` for the window up to `covers_until`. A newer read replaces
-    the whole list; an older read never overwrites a newer one. Every
-    placement of a booking on the resource respects them.
+    The cached busy times of one source of one resource (one imported feed
+    for iCal: `feed_id`), as read at `fetched_at` for the window up to
+    `covers_until`. A newer read replaces the whole list; an older read
+    never overwrites a newer one. Every placement of a booking on the
+    resource respects them.
     """
 
     id: CalendarBusyTimesId
     business_id: BusinessId
     resource_id: ResourceId
     source: BusyTimeSource
+    feed_id: IcalImportFeedId | None = None
     blocks: list[BusyBlock] = Field(default_factory=list[BusyBlock])
     covers_until: BusyEndsAtUnixSeconds
     fetched_at: Microseconds

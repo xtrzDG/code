@@ -14,6 +14,7 @@ from app.contracts.repositories.conversation_repositories import ContactRepoCont
 from app.contracts.repositories.knowledge_repositories import ResourceRepoContract
 from app.contracts.secret_cipher import SecretCipherAdapterContract
 from app.contracts.transformer_contract import TransformerContract
+from app.facilitators.calendar.google_access_tokens import fresh_access_token
 from app.schemas.constants.bookings import BookingStatus
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -25,7 +26,6 @@ from app.schemas.dto.bookings import BookingView
 from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarEventText,
-    CalendarTokenGrant,
 )
 from app.schemas.dto.operations.message_texts import CalendarEventTextInput
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
@@ -34,9 +34,7 @@ from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSu
 from app.schemas.typings.bookings.strings import (
     CalendarAccessToken,
     CalendarEventId,
-    CalendarRefreshToken,
 )
-from app.schemas.typings.channels.strings import ChannelSecret
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
@@ -45,13 +43,10 @@ from app.schemas.typings.localization.strings import (
 from app.utilities.scheduling.availability import BLOCKING_BOOKING_STATUSES
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import (
-    MICROSECONDS_PER_SECOND,
     load_time_zone,
 )
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
-# Refresh a cached access token this long before Google expires it.
-ACCESS_TOKEN_SAFETY_SECONDS: int = 60
 UNEXPECTED_SYNC_ERROR: str = "Unexpected error while syncing a booking."
 # CalendarSyncErrorSummary holds at most this many characters.
 MAX_SYNC_ERROR_LENGTH: int = 300
@@ -242,37 +237,13 @@ class GoogleCalendarSyncFacilitator(BookingCalendarSyncFacilitatorContract):
     ) -> CalendarAccessToken:
         """Cached access token, refreshed (and re-cached) when about to expire."""
 
-        now: Microseconds = self._wall_clock.now_unix()
-        safety_margin: int = ACCESS_TOKEN_SAFETY_SECONDS * MICROSECONDS_PER_SECOND
-        if (
-            connection.encrypted_access_token is not None
-            and connection.access_token_expires_at is not None
-            and int(connection.access_token_expires_at) > int(now) + safety_margin
-        ):
-            return CalendarAccessToken(
-                str(self._secret_cipher.decrypt(connection.encrypted_access_token))
-            )
-
-        refresh_token = CalendarRefreshToken(
-            str(self._secret_cipher.decrypt(connection.encrypted_refresh_token))
+        return fresh_access_token(
+            connection,
+            self._connection_repo,
+            self._calendar_client,
+            self._secret_cipher,
+            self._wall_clock.now_unix(),
         )
-        grant: CalendarTokenGrant = self._calendar_client.refresh_access_token(
-            refresh_token
-        )
-        connection.encrypted_access_token = self._secret_cipher.encrypt(
-            ChannelSecret(str(grant.access_token))
-        )
-        connection.access_token_expires_at = Microseconds(
-            int(now) + int(grant.expires_in) * MICROSECONDS_PER_SECOND
-        )
-        if grant.refresh_token is not None:
-            connection.encrypted_refresh_token = self._secret_cipher.encrypt(
-                ChannelSecret(str(grant.refresh_token))
-            )
-
-        connection.updated_at = now
-        self._connection_repo.save(connection)
-        return grant.access_token
 
 
 def summarize_sync_failure(failure: str) -> CalendarSyncErrorSummary:

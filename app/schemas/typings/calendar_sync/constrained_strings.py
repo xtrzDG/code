@@ -18,6 +18,21 @@ class BookingSystemResourceId(BaseConstrainedTypedString):
     pattern = r"^[A-Za-z0-9][A-Za-z0-9._:\-]*$"
 
 
+class CalComApiBaseUrl(BaseConstrainedTypedString):
+    """
+    The base address of the Cal.com API v2 the platform calls (CALCOM_API_URL:
+    the cloud by default, or a self-hosted or EU instance), https without a
+    trailing slash.
+
+    Example:
+        base_url = CalComApiBaseUrl("https://api.cal.com/v2")
+    """
+
+    min_length = 12
+    max_length = 200
+    pattern = r"^https://[^\s/?#]+(/[^\s?#]*[^\s/?#])?$"
+
+
 class CalendarFeedHost(BaseConstrainedTypedString):
     """
     The host of a calendar feed a business imports (`www.airbnb.com`),

@@ -9,13 +9,27 @@ from app.clients.google.google_api_responses import (
     parse_token_grant,
     read_json_object,
 )
+from app.clients.google.google_availability import (
+    CALENDAR_LIST_PARAMS,
+    CALENDAR_LIST_URL,
+    FREE_BUSY_URL,
+    free_busy_body,
+    read_busy_periods,
+    read_calendar_entries,
+)
 from app.clients.google.google_calendar_requests import (
     bearer,
     event_body,
     event_url,
     events_url,
 )
+from app.clients.google.google_http import GoogleHttp
 from app.contracts.operations import GoogleCalendarClientContract
+from app.schemas.dto.calendar_sync.busy_reads import (
+    BusyPeriod,
+    BusyWindow,
+    GoogleCalendarEntry,
+)
 from app.schemas.dto.operations.calendar_connection import (
     CalendarEventDraft,
     CalendarTokenGrant,
@@ -34,14 +48,18 @@ from app.schemas.typings.bookings.strings import (
     CalendarRefreshToken,
     ExternalCalendarId,
 )
+from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 
 GOOGLE_AUTHORIZATION_ENDPOINT: str = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_ENDPOINT: str = "https://oauth2.googleapis.com/token"
 GOOGLE_REVOKE_ENDPOINT: str = "https://oauth2.googleapis.com/revoke"
-# Least privilege: create, change and delete events only.
-GOOGLE_CALENDAR_EVENTS_SCOPE: str = "https://www.googleapis.com/auth/calendar.events"
-REQUEST_TIMEOUT_SECONDS: float = 10.0
+# Least privilege: create, change and delete events (bookings mirrored),
+# and read calendars (the list to link a resource to, and their free/busy).
+GOOGLE_CALENDAR_SCOPES: str = (
+    "https://www.googleapis.com/auth/calendar.events "
+    "https://www.googleapis.com/auth/calendar.readonly"
+)
 GONE_STATUS_CODES: frozenset[int] = frozenset({404, 410})
 MAX_CALENDAR_NAME_LENGTH: int = 200
 
@@ -49,8 +67,9 @@ MAX_CALENDAR_NAME_LENGTH: int = 200
 class GoogleCalendarClient(GoogleCalendarClientContract):
     """
     Minimal Google client: consent URL with offline access, code exchange,
-    token refresh and revocation, the calendar's title, and event insert,
-    patch and delete.
+    token refresh and revocation, the calendar's title, event insert, patch
+    and delete, and availability: the account's calendars and a calendar's
+    free/busy (these two raise BusyTimeSourceError with the reason).
 
     Missing credentials (GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET,
     APP_BASE_URL) make every call raise ExternalServiceError, as do network
@@ -67,10 +86,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         self._client_id: PlatformIdentifier | None = client_id
         self._client_secret: PlatformSecret | None = client_secret
         self._redirect_url: CalendarRedirectUrl | None = redirect_url
-        self._http_client: httpx.Client = httpx.Client(
-            timeout=REQUEST_TIMEOUT_SECONDS,
-            transport=transport,
-        )
+        self._http: GoogleHttp = GoogleHttp(transport)
 
     def is_configured(self) -> bool:
         return (
@@ -89,7 +105,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
                 "client_id": client_id,
                 "redirect_uri": redirect_url,
                 "response_type": "code",
-                "scope": GOOGLE_CALENDAR_EVENTS_SCOPE,
+                "scope": GOOGLE_CALENDAR_SCOPES,
                 "access_type": "offline",
                 "include_granted_scopes": "true",
                 "prompt": "consent",
@@ -100,7 +116,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
 
     def exchange_code(self, code: CalendarAuthorizationCode) -> CalendarTokenGrant:
         client_id, client_secret, redirect_url = self._require_credentials()
-        payload: dict[str, object] = self._post_form(
+        payload: dict[str, object] = self._http.post_form(
             GOOGLE_TOKEN_ENDPOINT,
             {
                 "code": str(code),
@@ -118,7 +134,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         refresh_token: CalendarRefreshToken,
     ) -> CalendarTokenGrant:
         client_id, client_secret, _ = self._require_credentials()
-        payload: dict[str, object] = self._post_form(
+        payload: dict[str, object] = self._http.post_form(
             GOOGLE_TOKEN_ENDPOINT,
             {
                 "refresh_token": str(refresh_token),
@@ -131,7 +147,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         return parse_token_grant(payload)
 
     def revoke_token(self, refresh_token: CalendarRefreshToken) -> None:
-        response: httpx.Response = self._send(
+        response: httpx.Response = self._http.send(
             "POST",
             GOOGLE_REVOKE_ENDPOINT,
             "Google token revocation",
@@ -146,7 +162,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
     ) -> CalendarDisplayName | None:
         # The events scope cannot read calendar metadata, but an events list
         # carries the calendar's title ("summary"); one field, no events.
-        response: httpx.Response = self._send(
+        response: httpx.Response = self._http.send(
             "GET",
             events_url(calendar_id),
             "Google Calendar title lookup",
@@ -168,7 +184,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         calendar_id: ExternalCalendarId,
         event: CalendarEventDraft,
     ) -> CalendarEventId:
-        response: httpx.Response = self._send(
+        response: httpx.Response = self._http.send(
             "POST",
             events_url(calendar_id),
             "Google Calendar event insert",
@@ -192,7 +208,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         event_id: CalendarEventId,
         event: CalendarEventDraft,
     ) -> None:
-        response: httpx.Response = self._send(
+        response: httpx.Response = self._http.send(
             "PATCH",
             event_url(calendar_id, event_id),
             "Google Calendar event update",
@@ -207,7 +223,7 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
         calendar_id: ExternalCalendarId,
         event_id: CalendarEventId,
     ) -> None:
-        response: httpx.Response = self._send(
+        response: httpx.Response = self._http.send(
             "DELETE",
             event_url(calendar_id, event_id),
             "Google Calendar event delete",
@@ -217,6 +233,36 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
             return
 
         ensure_success(response, "Google Calendar event delete")
+
+    def query_free_busy(
+        self,
+        access_token: CalendarAccessToken,
+        calendar_id: ExternalCalendarId,
+        window: BusyWindow,
+        timeout: BusyTimeFetchSeconds,
+    ) -> list[BusyPeriod]:
+        response: httpx.Response = self._http.read_availability(
+            "POST",
+            FREE_BUSY_URL,
+            access_token,
+            timeout,
+            json=free_busy_body(calendar_id, window),
+        )
+        return read_busy_periods(response, calendar_id)
+
+    def list_calendars(
+        self,
+        access_token: CalendarAccessToken,
+        timeout: BusyTimeFetchSeconds,
+    ) -> list[GoogleCalendarEntry]:
+        response: httpx.Response = self._http.read_availability(
+            "GET",
+            CALENDAR_LIST_URL,
+            access_token,
+            timeout,
+            params=CALENDAR_LIST_PARAMS,
+        )
+        return read_calendar_entries(response)
 
     def _require_credentials(self) -> tuple[str, str, str]:
         if (
@@ -230,37 +276,3 @@ class GoogleCalendarClient(GoogleCalendarClientContract):
             )
 
         return str(self._client_id), str(self._client_secret), str(self._redirect_url)
-
-    def _post_form(
-        self,
-        url: str,
-        form: dict[str, str],
-        operation: str,
-    ) -> dict[str, object]:
-        response: httpx.Response = self._send("POST", url, operation, data=form)
-        ensure_success(response, operation)
-        return read_json_object(response, operation)
-
-    def _send(
-        self,
-        method: str,
-        url: str,
-        operation: str,
-        headers: dict[str, str] | None = None,
-        data: dict[str, str] | None = None,
-        json: dict[str, object] | None = None,
-        params: dict[str, str] | None = None,
-    ) -> httpx.Response:
-        try:
-            return self._http_client.request(
-                method,
-                url,
-                headers=headers,
-                data=data,
-                json=json,
-                params=params,
-            )
-        except httpx.HTTPError as error:
-            raise ExternalServiceError(
-                f"{operation} failed: {type(error).__name__}."
-            ) from error
