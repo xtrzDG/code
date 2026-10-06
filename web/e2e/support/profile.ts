@@ -54,7 +54,7 @@ export function saveState(page: Page) {
   return page.locator("[data-save-state]");
 }
 
-/** Monday's closing time in the week of "Hours and bookings" (the first day of the week). */
+/** Monday's closing time in the week of "Hours and bookings" (the first day of the week): a TimeField (support/timeField.ts). */
 export function firstClosingTime(page: Page, messages: Messages) {
-  return page.getByLabel(new RegExp(`: ${escapeRegExp(messages.onboarding.week.closes)}$`)).first();
+  return page.getByRole("group", { name: new RegExp(`: ${escapeRegExp(messages.onboarding.week.closes)}$`) }).first();
 }

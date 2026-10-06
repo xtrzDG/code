@@ -7,10 +7,12 @@
 
 import type { APIRequestContext } from "@playwright/test";
 
+import { nextSave, savedHint } from "./support/autosave";
 import { API_URL } from "./support/env";
 import { expect, test, type Owner } from "./support/fixtures";
 import { en } from "./support/messages";
 import { decryptPush, mockBrowserPush, newReceiver, startPushService } from "./support/push";
+import { expectTime, timeField, typeTime } from "./support/timeField";
 
 async function saveContacts(request: APIRequestContext, owner: Owner, contacts: Record<string, unknown>[]): Promise<void> {
   const response = await request.patch(`${API_URL}/v1/businesses/${owner.businessId}`, {
@@ -109,21 +111,29 @@ test("a link that was altered or is not for this account explains itself", async
   await expect(page.getByText(owner.businessName)).toBeVisible();
 });
 
-test("my events and quiet hours are saved for my devices", async ({ page, owner }) => {
+test("my events and quiet hours save themselves for my devices", async ({ page, owner }) => {
   await page.goto(`/b/${owner.businessId}/settings/notifications`);
   const card = page.getByRole("region", { name: en.notifications.mine.title });
   await expect(card.getByRole("heading", { name: en.notifications.mine.title })).toBeVisible();
+  const path = `/v1/businesses/${owner.businessId}/notification-preferences`;
 
+  // Unticking an event saves at once and offers Undo.
+  const unticked = nextSave(page, path);
   await card.getByRole("checkbox", { name: en.notifications.preferences.event.lead }).uncheck();
+  await unticked;
+  await expect(page.getByText(en.notifications.mine.eventOff.replace("{event}", en.notifications.preferences.event.lead))).toBeVisible();
+
+  // Quiet hours from 22:00 until 22:00 are not saved; the field says why.
   await card.getByRole("checkbox", { name: en.notifications.preferences.quietHoursToggle }).check();
-  await card.getByLabel(en.notifications.preferences.quietUntil).fill("22:00");
-  await card.getByRole("button", { name: en.notifications.mine.save }).click();
+  const until = timeField(card, en.notifications.preferences.quietUntil);
+  await typeTime(until, "22:00");
   await expect(card.getByText(en.notifications.preferences.errors.same)).toBeVisible();
 
-  await card.getByLabel(en.notifications.preferences.quietUntil).fill("07:30");
-  await card.getByRole("button", { name: en.notifications.mine.save }).click();
-  await expect(page.getByText(en.notifications.mine.saved)).toBeVisible();
+  const quiet = nextSave(page, path);
+  await typeTime(until, "07:30");
+  await quiet;
+  await expect(savedHint(card, en.formFields.autosave.saved)).toBeVisible();
   await page.reload();
   await expect(card.getByRole("checkbox", { name: en.notifications.preferences.event.lead })).not.toBeChecked();
-  await expect(card.getByLabel(en.notifications.preferences.quietUntil)).toHaveValue("07:30");
+  await expectTime(timeField(card, en.notifications.preferences.quietUntil), "07:30");
 });

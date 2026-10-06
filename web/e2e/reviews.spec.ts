@@ -11,6 +11,7 @@ import type { Page } from "@playwright/test";
 
 import type { Schema } from "../src/api/types";
 
+import { nextSave, savedHint } from "./support/autosave";
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
 
@@ -76,20 +77,31 @@ test("the owner turns feedback on with the review link and the settings stay", a
   await expect(page.getByText(reviews.stats.noAverage)).toBeVisible();
   await expect(page.getByText(reviews.requests.empty)).toBeVisible();
 
+  // No Save button: each choice saves itself.
+  await expect(page.getByRole("button", { name: en.common.save, exact: true })).toHaveCount(0);
+  const path = "/review-settings";
+  const switched = nextSave(page, path);
   await toggle.click();
+  await switched;
   // No WhatsApp number here: only customers who wrote within a day are asked.
   await expect(page.getByText(reviews.feedback.readiness.window)).toBeVisible();
+  const delayed = nextSave(page, path);
   await page.getByLabel(reviews.feedback.delay).selectOption("180");
+  await delayed;
+  // Values that are not valid are not saved; each field says why once it is left.
   await page.getByLabel(reviews.feedback.template).fill("Visit feedback");
   await page.getByLabel(reviews.link.label).fill("g.page/r/cafe/review");
-  await page.getByRole("button", { name: reviews.save }).click();
+  await page.getByLabel(reviews.feedback.delay).focus();
   await expect(page.getByText(reviews.feedback.templateInvalid)).toBeVisible();
   await expect(page.getByText(reviews.link.invalid)).toBeVisible();
 
+  const named = nextSave(page, path);
   await page.getByLabel(reviews.feedback.template).fill("visit_feedback");
   await page.getByLabel(reviews.link.label).fill("https://g.page/r/cafe/review");
-  await page.getByRole("button", { name: reviews.save }).click();
-  await expect(page.getByText(reviews.saved)).toBeVisible();
+  await page.getByLabel(reviews.feedback.delay).focus();
+  await named;
+  await expect(page.getByText(reviews.feedback.templateInvalid)).toBeHidden();
+  await expect(savedHint(page, en.formFields.autosave.saved)).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole("switch", { name: reviews.feedback.toggle })).toHaveAttribute("aria-checked", "true");

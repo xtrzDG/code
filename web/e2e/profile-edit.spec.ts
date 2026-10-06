@@ -23,6 +23,7 @@ import {
   templatePattern,
   type Messages,
 } from "./support/profile";
+import { expectTime, timeValue, typeTime } from "./support/timeField";
 
 const LANGUAGES: Record<string, Messages> = { ru, en, ka };
 
@@ -54,9 +55,9 @@ for (const [locale, messages] of Object.entries(LANGUAGES)) {
 
     // A new closing time on Monday saves itself.
     const closes = firstClosingTime(page, messages);
-    const original = await closes.inputValue();
+    const original = await timeValue(closes);
     const changed = original === "22:30" ? "22:15" : "22:30";
-    await closes.fill(changed);
+    await typeTime(closes, changed);
     await expect(saveState(page)).toHaveAttribute("data-save-state", "saved");
     await expect(saveState(page)).toHaveText(messages.profileEdit.status.saved);
 
@@ -71,10 +72,10 @@ for (const [locale, messages] of Object.entries(LANGUAGES)) {
 
     // Saved for real: the page opened again shows the new time.
     await page.reload();
-    await expect(firstClosingTime(page, messages)).toHaveValue(changed);
+    await expectTime(firstClosingTime(page, messages), changed);
 
     // The time put back: customers already have it, nothing is left to apply.
-    await firstClosingTime(page, messages).fill(original);
+    await typeTime(firstClosingTime(page, messages), original);
     if (before === 0) {
       await expect(banner).toBeHidden();
     } else {

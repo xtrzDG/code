@@ -5,8 +5,9 @@
  * changed instead of overwriting the newer save.
  */
 
-import type { APIRequestContext, Page } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
 
+import { nextSave, savedHint, savedPill } from "./support/autosave";
 import { API_URL, WEB_URL } from "./support/env";
 import { expect, test, type Owner } from "./support/fixtures";
 import { en, ru } from "./support/messages";
@@ -20,11 +21,6 @@ async function saveElsewhere(request: APIRequestContext, owner: Owner, changes: 
   expect(response.status(), await response.text()).toBe(200);
 }
 
-/** The line over the form that says the latest changes are saved. */
-function savedHint(page: Page, saved: string) {
-  return page.locator('[data-autosave-state="saved"]').filter({ hasText: saved });
-}
-
 test("the time zone saves itself in Russian and is still there after a reload", async ({ page, owner, context }) => {
   await context.addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL, sameSite: "Lax" }]);
   await page.goto(`/b/${owner.businessId}/settings`);
@@ -33,11 +29,13 @@ test("the time zone saves itself in Russian and is still there after a reload", 
   await expect(page.getByText(ru.formFields.autosave.hint)).toBeVisible();
   await expect(page.getByRole("button", { name: ru.common.save, exact: true })).toHaveCount(0);
 
+  const saved = nextSave(page, `/v1/businesses/${owner.businessId}`);
   await zone.selectOption("Europe/Paris");
+  await saved;
 
   // Nothing pressed: the field and the form say it is saved.
   await expect(savedHint(page, ru.formFields.autosave.saved)).toBeVisible();
-  await expect(page.locator('[data-save-status="saved"]').filter({ hasText: ru.formFields.autosave.saved })).toBeVisible();
+  await expect(savedPill(page, ru.formFields.autosave.saved)).toBeVisible();
   await page.reload();
   await expect(zone).toHaveValue("Europe/Paris");
 });

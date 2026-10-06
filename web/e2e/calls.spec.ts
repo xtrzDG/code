@@ -11,6 +11,7 @@ import type { Page } from "@playwright/test";
 
 import type { Schema } from "../src/api/types";
 
+import { nextSave, savedHint } from "./support/autosave";
 import { expect, test } from "./support/fixtures";
 import { en } from "./support/messages";
 import { CONVERSATION_ID, cardWithCalls, openCard, openDetails, serveCard } from "./support/conversation-card";
@@ -31,16 +32,22 @@ test("the owner turns text-backs on and the settings stay", async ({ page, owner
   await expect(page.getByText(calls.textBack.readiness.off)).toBeVisible();
   await expect(page.getByText(calls.history.empty)).toBeVisible();
 
+  // No Save button: each change saves itself.
+  await expect(page.getByRole("button", { name: en.common.save, exact: true })).toHaveCount(0);
+  const switched = nextSave(page, "/call-settings");
   await page.getByRole("switch", { name: calls.textBack.toggle }).click();
+  await switched;
   // No WhatsApp number and no SMS sender on this platform: nothing can go yet.
   await expect(page.getByText(calls.textBack.readiness.none)).toBeVisible();
+  // A name Meta would refuse is not saved; the field says why.
   await page.getByLabel(calls.textBack.template).fill("Missed call");
-  await page.getByRole("button", { name: calls.textBack.save }).click();
   await expect(page.getByText(calls.textBack.templateInvalid)).toBeVisible();
 
+  const named = nextSave(page, "/call-settings");
   await page.getByLabel(calls.textBack.template).fill("missed_call_text_back");
-  await page.getByRole("button", { name: calls.textBack.save }).click();
-  await expect(page.getByText(calls.textBack.saved)).toBeVisible();
+  await expect(page.getByText(calls.textBack.templateInvalid)).toBeHidden();
+  await named;
+  await expect(savedHint(page, en.formFields.autosave.saved)).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole("switch", { name: calls.textBack.toggle })).toHaveAttribute("aria-checked", "true");
@@ -59,6 +66,26 @@ test("the SMS fallback waits until messages to missed callers are on", async ({ 
   await page.getByRole("switch", { name: calls.textBack.toggle }).click();
   await expect(sms).toBeEnabled();
   await expect(sms).toHaveAccessibleDescription(calls.textBack.smsHint);
+});
+
+test("switching text-backs off saves at once and offers Undo", async ({ page, owner }) => {
+  await page.goto(`/b/${owner.businessId}/settings/calls`);
+  const toggle = page.getByRole("switch", { name: calls.textBack.toggle });
+  const switchedOn = nextSave(page, "/call-settings");
+  await toggle.click();
+  await switchedOn;
+
+  const switchedOff = nextSave(page, "/call-settings");
+  await toggle.click();
+  await switchedOff;
+  await expect(page.getByText(calls.textBack.turnedOff)).toBeVisible();
+
+  const undone = nextSave(page, "/call-settings");
+  await page.getByRole("button", { name: en.common.undo }).click();
+  await undone;
+  await expect(toggle).toHaveAttribute("aria-checked", "true");
+  await page.reload();
+  await expect(toggle).toHaveAttribute("aria-checked", "true");
 });
 
 test("the latest text-backs say what each caller got", async ({ page, owner }) => {
