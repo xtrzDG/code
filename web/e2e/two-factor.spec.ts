@@ -113,7 +113,10 @@ test("an owner sets up an authenticator app, confirms an action with it and sign
   await confirm.getByLabel(en.mfa.stepUp.code).fill(second.code);
   await expect(confirm).toBeHidden();
   await expect(page.getByText(en.mfa.stepUp.confirmed)).toBeVisible();
-  // In the team list (the toast names the new member too).
+  // The retried invitation closes its dialog (which still shows the address
+  // until the answer arrives); then the new member is in the team list (the
+  // toast names them too).
+  await expect(invite).toBeHidden();
   await expect(page.getByRole("main").getByText(staffEmail, { exact: true })).toBeVisible();
   expect(refused).toBe(true);
   // The new member has no app yet: the team card counts them.

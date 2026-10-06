@@ -1287,6 +1287,11 @@ WhatsApp, где продолжится ответ клиента; при отк
   цепочки `PipelineOperator(OrchestratorPipeline(UseCaseOrchestrator(...)))`
   строятся типизированными помощниками `app/containers/provider_chains.py`, поэтому
   вызов каждого `build_<раздел>_router` проверяется mypy и pyright.
+  Края корня (настройки, время, утилиты, клиенты, адаптеры и контейнеры коллекций
+  рядом с адаптерами) — в базовом `app/containers/app_edges.py::AppEdgesContainer`,
+  `AppContainer` наследует его и строит роли; так же контейнер use case
+  наслаивается: `CoreUseCasesContainer` → `BusinessUseCasesContainer` (работа
+  самого бизнеса) → `UseCasesContainer` (контексты платформы и роста).
 - Большие контейнеры ролей собраны из дочерних контейнеров по ограниченным
   контекстам: `app/containers/<роль>/<роль>_container.py` компонует
   `<контекст>_<роль>.py` (use case — по пакетам `app/use_cases/`, оркестраторы,

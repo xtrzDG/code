@@ -91,7 +91,7 @@ export function withPoweredByFooter(cardHtml: string, label: string, link: strin
     return cardHtml;
   }
   const footer =
-    '<p class="powered" style="margin:4mm 0 0;font-size:7.5pt;line-height:1.3;color:#6b7280;">' +
+    '<p class="powered" style="margin:4mm 0 0;font-size:7.5pt;line-height:1.3;color:#57544e;">' +
     `${escapeHtml(label)} · ${escapeHtml(printableLink(link))}</p>`;
   return `${cardHtml.slice(0, end)}${footer}${cardHtml.slice(end)}`;
 }

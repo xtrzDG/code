@@ -79,10 +79,16 @@ def insert_session_rows(
 
 
 def analyze(connection_pool: PostgresConnectionPoolClient) -> None:
-    """Fresh planner statistics (autovacuum is too slow for a test)."""
+    """
+    Fresh planner statistics and visibility map, as autovacuum leaves the
+    seeded tables (too slow to wait for in a test). Vacuuming here, not only
+    analyzing, keeps the plans the same whether or not autovacuum reached a
+    table before the test ran: on a vacuumed table index-only scans of the
+    covering indexes cost less, and a busy machine runs the test later.
+    """
 
     with connection_pool.connection() as connection:
-        connection.execute("analyze")
+        connection.execute("vacuum analyze")
 
 
 class RecordingConnection:
