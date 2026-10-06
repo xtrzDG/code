@@ -196,6 +196,11 @@ def test_the_ticket_decides_who_listens_and_the_key_is_never_in_the_address() ->
     business = enable_widget(testbed)
     other = enable_widget(testbed)
     api = WidgetStreamApi(testbed)
+    ticket = str(api.ticket(business.id, SESSION_KEY))
+    # One character of the signature changed; the one before the last always
+    # carries six bits of it (a fixed "AA" tail was a valid ticket now and
+    # then: when the signature happened to end that way).
+    tampered = ticket[:-2] + ("B" if ticket[-2] == "A" else "A") + ticket[-1]
 
     refused = [
         api.stream(business.id, None),
@@ -203,7 +208,7 @@ def test_the_ticket_decides_who_listens_and_the_key_is_never_in_the_address() ->
         api.stream(business.id, SESSION_KEY),
         api.stream(business.id, api.ticket(other.id, SESSION_KEY)),
         api.stream(business.id, api.expired_ticket(business.id, SESSION_KEY)),
-        api.stream(business.id, str(api.ticket(business.id, SESSION_KEY))[:-2] + "AA"),
+        api.stream(business.id, tampered),
     ]
 
     assert [response.status_code for response in refused] == [401] * 6
