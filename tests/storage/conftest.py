@@ -111,6 +111,12 @@ def postgres_server() -> Generator[ThrowawayPostgresServer]:
 
 @pytest.fixture(scope="session")
 def migrated_template_database(postgres_server: ThrowawayPostgresServer) -> str:
+    return create_migrated_database(postgres_server)
+
+
+def create_migrated_database(postgres_server: ThrowawayPostgresServer) -> str:
+    """A new database that ran every migration (a template for the tests)."""
+
     database_name: str = postgres_server.create_database()
     connection_pool = PostgresConnectionPoolClient(
         postgres_server.app_database_url(database_name),

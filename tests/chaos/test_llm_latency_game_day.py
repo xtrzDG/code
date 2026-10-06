@@ -25,12 +25,8 @@ from tests.chaos.chaos_world import (
     wait_for,
 )
 from tests.chaos.fake_providers import REPLY_TEXT, ProviderState, fake_providers
-from tests.chaos.llm_world import (
-    OPENAI_ONLY,
-    assistant_answers,
-    run_on_openai,
-    visitor_writes,
-)
+from tests.chaos.llm_world import OPENAI_ONLY, run_on_openai
+from tests.chaos.widget_visitors import assistant_answers, visitor_writes
 from tests.storage.postgres_server import ThrowawayPostgresServer
 from tests.storage.two_process_world import seed_restaurant
 

@@ -1,9 +1,14 @@
 # Database restart or failover
 
-**Alerts:** the external uptime monitor on `GET /readyz` (503:
-`checks.database.failure` is `unreachable` or `timeout`), `worker_down`
-and `inbound_backlog` from the API's watchdog when the outage outlasts
-five minutes, Sentry `ExternalServiceError` from the Postgres pool.
+**Alerts:** the external uptime monitor's two checks, `GET /readyz` (503:
+`checks.database.failure` is `unreachable` or `timeout`) and `GET
+/healthz/pipeline` (503, `stalled`: nothing vouches for the workers);
+Sentry `ExternalServiceError` from the Postgres pool. The API's watchdog
+needs the database too: while it is away it skips its looks (logged, `The
+pipeline watchdog skipped a look: Could not connect to the database`) and
+pages nobody; after an outage longer than five minutes it may page
+`worker_down` or `inbound_backlog` once the database is back, and
+resolves them as the workers catch up.
 
 `workshop-db` is one Render Postgres 16 (`render.yaml`). A restart
 (maintenance, a plan change, a crash) takes it away for one to a few
@@ -60,5 +65,9 @@ latest backup ([backup-restore](../backup-restore.md), path B).
 ## Afterwards
 
 - Postmortem with the minutes of the outage against both budgets.
-- Game day: `tests/chaos/test_postgres_restart_game_day.py` restarts the
-  test database under both processes and checks the recovery.
+- Game day: `tests/chaos/test_postgres_restart_game_day.py` stops the
+  test database at once under a running API and worker and starts it
+  again: both monitor checks answer 503 at once, a visitor's message is
+  refused (5xx, the widget sends it again), neither process dies; once
+  it is back both checks pass with no restart, the next visitor is
+  answered, /status is operational and the watchdog paged nobody.
