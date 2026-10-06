@@ -82,6 +82,9 @@ test("a recording the service could not give can be tried again from the keyboar
   // A retry that fails again keeps the alert and the focus on its button.
   await retry.press("Enter");
   await expect.poll(() => answers).toBe(2);
+  // The second answer is counted when it is served, before the page has read
+  // it: the button stays busy (and ignores Enter) until then.
+  await expect(retry).not.toHaveAttribute("aria-busy", "true");
   await expect(retry).toBeFocused();
   await expect(failure).toBeVisible();
 

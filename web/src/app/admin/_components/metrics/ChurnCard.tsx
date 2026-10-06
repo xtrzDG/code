@@ -15,7 +15,7 @@ import type { MetricsFormat } from "./useMetricsFormat";
 type ChurnView = Schema<"ChurnView">;
 
 /** Whether the period has anything to show. */
-export function hasChurnActivity(churn: ChurnView): boolean {
+function hasChurnActivity(churn: ChurnView): boolean {
   return (
     churn.cancellations > 0 ||
     (churn.offers ?? []).some((row) => row.accepted > 0) ||
