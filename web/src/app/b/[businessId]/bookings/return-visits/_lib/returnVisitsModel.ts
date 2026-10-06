@@ -164,11 +164,15 @@ export function isSameCampaign(form: CampaignForm, view: CampaignSettingsView): 
   );
 }
 
-/** The counts of the last 30 days, every status present (0 when none). */
+/**
+ * The counts of the last 30 days, every status present (0 when none):
+ * `sent` is every message that went out, those that led to a booking
+ * among them (as the monthly cap counts them).
+ */
 export function recentCounts(view: Pick<CampaignSettingsView, "recent_counts">): Record<CampaignMessageStatus, number> {
   const counts: Record<CampaignMessageStatus, number> = { sent: 0, booked: 0, skipped: 0 };
   for (const entry of view.recent_counts ?? []) {
     counts[entry.status] += entry.count;
   }
-  return counts;
+  return { ...counts, sent: counts.sent + counts.booked };
 }

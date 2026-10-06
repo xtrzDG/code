@@ -172,14 +172,16 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (31, 0, 0)
     assert right_after.periodic_runs == 0
-    assert a_minute_later.periodic_runs == 1  # the trace flush
+    # The trace flush and the end of the waitlist's expired holds.
+    assert a_minute_later.periodic_runs == 2
     # Trials, overage, grace periods, reminders, the trace flush, the admin
     # client list standings, the sweep of rate-limit counters, the inbox
     # sweep, the owners' value reports, the customers' topics, the feedback
     # requests, the milestones, the activation nudges, the platform alerts,
     # the Meta token check, the platform status record, the end of expired
-    # support access and the purge of expired exports.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (18, 0)
+    # support access, the purge of expired exports, the waitlist's expired
+    # holds and the rebooking campaigns.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (20, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 

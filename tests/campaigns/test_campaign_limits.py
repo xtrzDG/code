@@ -12,7 +12,7 @@ VISIT_ENDS: str = "2026-09-04T21:00:00+04:00"
 
 
 def guests_with_visits(world: CampaignWorld, count: int) -> list[ContactDocument]:
-    guests = []
+    guests: list[ContactDocument] = []
     for index in range(count):
         guest = world.guest(f"Guest {index}", "en")
         world.visit(guest, VISIT_STARTS, VISIT_ENDS)

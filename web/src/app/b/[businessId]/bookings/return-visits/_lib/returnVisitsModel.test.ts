@@ -84,7 +84,7 @@ describe("the return-visit form", () => {
     expect(suggestionKey("rebook")).toBe("returnVisits.settings.suggested");
   });
 
-  it("fills every status of the last 30 days", () => {
-    expect(recentCounts(STORED)).toEqual({ sent: 4, booked: 2, skipped: 0 });
+  it("fills every status of the last 30 days, the booked ones among those sent", () => {
+    expect(recentCounts(STORED)).toEqual({ sent: 6, booked: 2, skipped: 0 });
   });
 });

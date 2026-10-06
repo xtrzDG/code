@@ -23,6 +23,9 @@ LANGUAGE_SCENARIO_KINDS: set[AutotestScenarioKind] = {
     AutotestScenarioKind.FOREIGN_LANGUAGE,
     AutotestScenarioKind.TRANSLITERATED,
 }
+# The restaurant's fully booked Friday: a guest joins the waitlist (one
+# scenario in each base language, on top of the eight).
+WAITLIST_SCENARIO_PREFIX: str = "waitlist__"
 
 
 def load_all() -> list[EvalDataset]:
@@ -39,6 +42,7 @@ def test_eight_scenarios_per_language(dataset: EvalDataset) -> None:
         scenario.language
         for scenario in dataset.scenarios
         if scenario.kind not in LANGUAGE_SCENARIO_KINDS
+        and not scenario.id.startswith(WAITLIST_SCENARIO_PREFIX)
     )
     expected: set[str] = set(BASE_LANGUAGES)
     if dataset.niche.value in RTL_NICHES:
@@ -62,6 +66,17 @@ def test_the_restaurant_plays_the_language_scenarios() -> None:
         ("transliterated", "ka"),
         ("transliterated", "ru"),
     ]
+
+
+def test_the_restaurant_plays_the_waitlist_in_every_base_language() -> None:
+    waitlist = sorted(
+        (dataset.niche.value, scenario.language)
+        for dataset in load_all()
+        for scenario in dataset.scenarios
+        if scenario.id.startswith(WAITLIST_SCENARIO_PREFIX)
+    )
+
+    assert waitlist == [("restaurant", "en"), ("restaurant", "ka"), ("restaurant", "ru")]
 
 
 @pytest.mark.parametrize("dataset", load_all(), ids=lambda dataset: dataset.niche.value)

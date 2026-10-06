@@ -25,10 +25,13 @@ export const returnVisitsEn = {
     rule: "What to send",
     daysAfter: "Days after the last visit",
     daysBefore: "Days before arrival",
-    suggested: { one: "Usual for your kind of business: {rule}, after {count} day.", other: "Usual for your kind of business: {rule}, after {count} days." },
+    suggested: {
+      one: "Usual for your kind of business: “{rule}” after {count} day.",
+      other: "Usual for your kind of business: “{rule}” after {count} days.",
+    },
     suggestedBefore: {
-      one: "Usual for your kind of business: {rule}, {count} day before.",
-      other: "Usual for your kind of business: {rule}, {count} days before.",
+      one: "Usual for your kind of business: “{rule}” {count} day before.",
+      other: "Usual for your kind of business: “{rule}” {count} days before.",
     },
     useSuggested: "Use it",
     audience: "Who may get it",

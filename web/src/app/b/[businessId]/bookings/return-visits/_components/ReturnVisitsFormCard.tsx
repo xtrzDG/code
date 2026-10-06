@@ -80,7 +80,7 @@ export function ReturnVisitsFormCard({ stored, state }: { stored: CampaignSettin
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
+          <div className="grid items-start gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
             <Field label={t("returnVisits.settings.rule")} hint={t(RULE_HINTS[form.ruleKind])}>
               {(control) => (
                 <Select

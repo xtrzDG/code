@@ -59,15 +59,14 @@ export function ReturnVisitsScreen() {
   return (
     <>
       {header}
+      {/* On a phone the last 30 days lead; on a wide screen they stand beside the form. */}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0 space-y-6">
+        <RecentCampaignCounts view={settings.data} className="lg:col-start-2 lg:row-start-1" />
+        <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <ReturnVisitsFormCard stored={settings.data} state={state} />
           <CampaignMessagesCard messages={state.messages} />
         </div>
-        <div className="min-w-0 space-y-6">
-          <RecentCampaignCounts view={settings.data} />
-          <CampaignPreviewCard previews={settings.data.previews} />
-        </div>
+        <CampaignPreviewCard previews={settings.data.previews} className="min-w-0 lg:col-start-2 lg:row-start-2" />
       </div>
     </>
   );

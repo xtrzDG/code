@@ -7,10 +7,10 @@ import { languageName } from "@/lib/format";
 import type { CampaignSettingsView } from "../_lib/returnVisitsModel";
 
 /** The message as customers read it, in each language of the business. */
-export function CampaignPreviewCard({ previews }: { previews: CampaignSettingsView["previews"] }) {
+export function CampaignPreviewCard({ previews, className }: { previews: CampaignSettingsView["previews"]; className?: string }) {
   const { t, locale } = useI18n();
   return (
-    <Card title={t("returnVisits.preview.title")} description={t("returnVisits.preview.description")}>
+    <Card title={t("returnVisits.preview.title")} description={t("returnVisits.preview.description")} className={className}>
       <ul className="space-y-3">
         {(previews ?? []).map((preview) => (
           <li key={preview.language} className="rounded-xl border border-line p-4">
