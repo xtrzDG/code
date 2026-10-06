@@ -58,8 +58,8 @@ test("the platform admin reads the system page and records a data breach that no
   // In memory there is no old row to rewrite or column to fill: the embedded
   // worker's first tick finishes every post-deploy data task, which fold away.
   const dataTasks = admin.getByRole("region", { name: en.dataTasks.title });
-  await expect(dataTasks.getByText(en.dataTasks.allDone)).toBeVisible();
-  await expect(dataTasks.getByText(en.dataTasks.settled)).toBeVisible();
+  await expect(dataTasks.getByText(en.dataTasks.allDone, { exact: true })).toBeVisible();
+  await expect(dataTasks.getByText(en.dataTasks.settled, { exact: true })).toBeVisible();
   const showDone = dataTasks.getByRole("button", { name: /^Show \d+ done tasks$/ });
   await showDone.click();
   await expect(dataTasks.getByRole("table", { name: en.dataTasks.doneCaption }).getByText("contacts.last_seen_at")).toBeVisible();
