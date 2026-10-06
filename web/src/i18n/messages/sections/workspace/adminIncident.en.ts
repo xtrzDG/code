@@ -20,6 +20,18 @@ export const adminIncidentEn = {
   timeZone: "Times are in your device's time zone.",
   businesses: "Affected businesses",
   businessesHint: "Business ids (business_…) or links to their pages in Clients, one per line.",
+  scope: {
+    legend: "Which businesses",
+    listed: "The businesses listed below",
+    all: "Every business of the platform",
+    allHint:
+      "Recorded at once; the worker then walks every business in batches: each gets its audit entry, and for a breach its owners get the notice. The log shows how far it got.",
+  },
+  announcement: {
+    offer: "Also publish a status announcement",
+    offerHint: "Shown on the public status page and in every cabinet's banner from now on; resolve it on this page once the incident is over.",
+    title: "Status announcement",
+  },
   breach: {
     title: "Notice to owners",
     description:

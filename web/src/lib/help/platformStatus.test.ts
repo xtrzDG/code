@@ -5,6 +5,7 @@ import {
   canDismiss,
   dismissKey,
   historySummary,
+  minutesSinceCheck,
   parseDismissed,
   type Announcement,
   type PlatformStatus,
@@ -27,7 +28,7 @@ function announcement(id: string, level: Announcement["level"], updatedAt = 1): 
 }
 
 function status(announcements: Announcement[]): PlatformStatus {
-  return { level: "operational", checked_at: 1, components: [], announcements, past_announcements: [] };
+  return { level: "operational", checked_at: 1, monitoring_delayed: false, components: [], announcements, past_announcements: [] };
 }
 
 function days(levels: readonly StatusDay["level"][], start = 1): StatusDay[] {
@@ -94,5 +95,18 @@ describe("the banner", () => {
     expect(parseDismissed("{")).toEqual([]);
     expect(parseDismissed(JSON.stringify({ a: 1 }))).toEqual([]);
     expect(parseDismissed(null)).toEqual([]);
+  });
+});
+
+describe("minutesSinceCheck", () => {
+  const checkedAt = Date.UTC(2026, 9, 6, 12, 0) * 1000;
+
+  it("counts whole minutes since the last check", () => {
+    expect(minutesSinceCheck(checkedAt, Date.UTC(2026, 9, 6, 12, 17, 59))).toBe(17);
+    expect(minutesSinceCheck(checkedAt, Date.UTC(2026, 9, 6, 12, 0, 30))).toBe(0);
+  });
+
+  it("reads a browser clock behind the server's as no time at all", () => {
+    expect(minutesSinceCheck(checkedAt, Date.UTC(2026, 9, 6, 11, 58))).toBe(0);
   });
 });

@@ -3,14 +3,20 @@
  * checks, and the request body. A personal data breach carries the DPA 12.1
  * notice: the approximate numbers concerned and the five texts in English
  * (required) and in Georgian and Russian (each either complete or empty).
- * Pure functions, so the dialog and the tests share them.
+ * An incident names its businesses or concerns every business (the worker
+ * walks them), and may publish its status announcement at once. Pure
+ * functions, so the dialog and the tests share them.
  */
 
 import type { RequestBody, Schema } from "@/api/types";
 
+import { buildCreateBody, emptyAnnouncementForm, type AnnouncementErrors, type AnnouncementForm } from "./announcementForm";
+import { localInputToMicros, microsToLocalInput } from "./localTime";
+
 export type Incident = Schema<"IncidentView">;
 export type IncidentKind = Schema<"IncidentKind">;
 export type IncidentSeverity = Schema<"IncidentSeverity">;
+export type IncidentScope = Schema<"IncidentScope">;
 export type CreateIncidentBody = RequestBody<"/v1/admin/incidents", "post">;
 
 export const INCIDENT_KINDS: readonly IncidentKind[] = ["outage", "degradation", "data_breach"];
@@ -48,11 +54,16 @@ export interface IncidentForm {
   startedAt: string;
   /** Empty: when the incident is recorded. */
   detectedAt: string;
+  /** LISTED: the businesses below; ALL_BUSINESSES: every one (the worker walks them). */
+  scope: IncidentScope;
   /** Business ids or links to their client pages, one per line or separated by commas. */
   businesses: string;
   subjectCount: string;
   recordCount: string;
   notices: Record<NoticeLanguage, NoticeTexts>;
+  /** Also publish a status announcement (it starts now and is linked to the incident). */
+  announce: boolean;
+  announcement: AnnouncementForm;
 }
 
 type IncidentField = "title" | "startedAt" | "detectedAt" | "businesses" | "subjectCount" | "recordCount";
@@ -73,6 +84,8 @@ export interface IncidentFormErrors {
   notices: Partial<Record<NoticeLanguage, IncidentProblem>>;
   /** What in the businesses field is not a business id. */
   unknownBusinesses: string[];
+  /** The announcement's problems, when one is published with the incident. */
+  announcement?: AnnouncementErrors;
 }
 
 export type BuiltIncident = { ok: true; body: CreateIncidentBody } | { ok: false; errors: IncidentFormErrors };
@@ -88,40 +101,37 @@ export function emptyIncidentForm(nowMicros: number): IncidentForm {
     title: "",
     startedAt: microsToLocalInput(nowMicros),
     detectedAt: "",
+    scope: "listed",
     businesses: "",
     subjectCount: "",
     recordCount: "",
     notices: { en: emptyNotice(), ka: emptyNotice(), ru: emptyNotice() },
+    announce: false,
+    announcement: { ...emptyAnnouncementForm(), level: "outage", components: ["chat", "meta", "telegram"] },
   };
 }
 
-/** A breach is always SEV1 (docs/operations/incident.md). */
+/**
+ * A breach is always SEV1 (docs/operations/incident.md) and is told to the
+ * owners, not on the status page; an outage or a degradation is offered the
+ * announcement of its level.
+ */
 export function withKind(form: IncidentForm, kind: IncidentKind): IncidentForm {
-  return { ...form, kind, severity: kind === "data_breach" ? "sev1" : form.severity };
+  const isBreach = kind === "data_breach";
+  return {
+    ...form,
+    kind,
+    severity: isBreach ? "sev1" : form.severity,
+    announce: isBreach ? false : form.announce,
+    announcement: { ...form.announcement, level: kind === "degradation" ? "degraded" : "outage" },
+  };
 }
 
-function pad(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-/** UNIX microseconds → "2026-10-04T09:30" in the device's time zone (what datetime-local shows). */
-export function microsToLocalInput(micros: number): string {
-  const date = new Date(Math.floor(micros / 1000));
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-/** "2026-10-04T09:30" in the device's time zone → UNIX microseconds; null when it is not a time. */
-export function localInputToMicros(value: string): number | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value.trim());
-  if (!match) {
-    return null;
-  }
-  const [year, month, day, hour, minute] = match.slice(1).map(Number) as [number, number, number, number, number];
-  const date = new Date(year, month - 1, day, hour, minute);
-  if (date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-  return date.getTime() * 1000;
+/** Offering the announcement: its English text starts as the incident's title. */
+export function withAnnouncement(form: IncidentForm, announce: boolean): IncidentForm {
+  const texts = form.announcement.texts;
+  const english = texts.en.trim() ? texts.en : form.title.trim();
+  return { ...form, announce, announcement: { ...form.announcement, texts: { ...texts, en: english } } };
 }
 
 /** Business ids found in pasted text (ids or client page links), each once, and what is neither. */
@@ -221,19 +231,25 @@ export function buildIncidentBody(form: IncidentForm, nowMicros: number): BuiltI
     errors.fields.title = "title";
   }
   const { startedAt, detectedAt } = checkTimes(form, nowMicros, errors.fields);
-  const businesses = parseBusinessIds(form.businesses);
+  const isEveryBusiness = form.scope === "all_businesses";
+  const businesses = isEveryBusiness ? { ids: [], unknown: [] } : parseBusinessIds(form.businesses);
   if (businesses.unknown.length > 0) {
     errors.fields.businesses = "businessIds";
     errors.unknownBusinesses = businesses.unknown;
-  } else if (businesses.ids.length === 0) {
+  } else if (!isEveryBusiness && businesses.ids.length === 0) {
     errors.fields.businesses = "required";
   } else if (businesses.ids.length > MAX_AFFECTED_BUSINESSES) {
     errors.fields.businesses = "tooManyBusinesses";
   }
   const isBreach = form.kind === "data_breach";
   const breach = isBreach ? checkBreach(form, errors) : null;
+  const announcement = form.announce ? buildCreateBody(form.announcement, nowMicros) : null;
+  if (announcement && !announcement.ok) {
+    errors.announcement = announcement.errors;
+  }
 
-  if (Object.keys(errors.fields).length > 0 || Object.keys(errors.notices).length > 0 || startedAt === null) {
+  const hasErrors = Object.keys(errors.fields).length > 0 || Object.keys(errors.notices).length > 0 || errors.announcement;
+  if (hasErrors || startedAt === null) {
     return { ok: false, errors };
   }
   return {
@@ -244,10 +260,12 @@ export function buildIncidentBody(form: IncidentForm, nowMicros: number): BuiltI
       title,
       started_at: startedAt,
       detected_at: detectedAt,
+      scope: form.scope,
       affected_business_ids: businesses.ids,
       approximate_subject_count: breach?.subjects ?? null,
       approximate_record_count: breach?.records ?? null,
       notice_texts: breach?.noticeTexts ?? [],
+      announcement: announcement?.ok ? announcement.body : null,
     },
   };
 }

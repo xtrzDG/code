@@ -8,7 +8,7 @@
 
 import type { RequestBody, Schema } from "@/api/types";
 
-import { localInputToMicros, microsToLocalInput } from "./incidentForm";
+import { localInputToMicros, microsToLocalInput } from "./localTime";
 
 export type AdminAnnouncement = Schema<"AnnouncementAdminView">;
 export type AnnouncementLevel = Schema<"AnnouncementLevel">;

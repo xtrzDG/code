@@ -73,7 +73,7 @@ function IncidentRow({ incident }: { incident: Incident }) {
       <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
         <span>{t("adminSystem.incidents.started", { time: format.when(incident.started_at) })}</span>
         <span>{t("adminSystem.incidents.detected", { time: format.when(incident.detected_at) })}</span>
-        <span>{tp("adminSystem.incidents.businesses", incident.affected_business_ids.length)}</span>
+        <span>{businessesText(incident, tp)}</span>
         {incident.kind === "data_breach" ? (
           <span>
             {incident.notified_owner_count > 0
@@ -82,7 +82,19 @@ function IncidentRow({ incident }: { incident: Incident }) {
           </span>
         ) : null}
         {incident.notice_languages.length > 0 ? <span>{t("adminSystem.incidents.languages", { languages })}</span> : null}
+        {incident.announcement_id ? <span>{t("adminSystem.incidents.announced")}</span> : null}
       </p>
     </li>
   );
+}
+
+/** The businesses named, or for every business how far the worker's walk got. */
+function businessesText(incident: Incident, tp: ReturnType<typeof useI18n>["tp"]): string {
+  if (incident.scope === "all_businesses") {
+    return tp(
+      incident.is_expanding ? "adminSystem.incidents.everyBusinessWalking" : "adminSystem.incidents.everyBusiness",
+      incident.affected_business_count,
+    );
+  }
+  return tp("adminSystem.incidents.businesses", incident.affected_business_ids.length);
 }

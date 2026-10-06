@@ -65,6 +65,7 @@ export const adminSystemEn = {
       answer_budget_slow_burn: "Answer budget burns",
       api_budget_fast_burn: "API budget burns fast",
       api_budget_slow_burn: "API budget burns",
+      worker_down: "No worker answers",
     },
   },
   errorBudget: {
@@ -229,6 +230,15 @@ export const adminSystemEn = {
       one: "{count} business",
       other: "{count} businesses",
     },
+    everyBusiness: {
+      one: "Every business ({count})",
+      other: "Every business ({count})",
+    },
+    everyBusinessWalking: {
+      one: "Every business: {count} reached so far",
+      other: "Every business: {count} reached so far",
+    },
+    announced: "Status announcement published",
     notified: {
       one: "{count} owner notified",
       other: "{count} owners notified",

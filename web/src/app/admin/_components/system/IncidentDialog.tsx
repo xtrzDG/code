@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { Button, DateTimeField, Field, Input, Modal, Select, Textarea } from "@/components/ui";
+import { Button, Checkbox, DateTimeField, Field, Fieldset, Input, Modal, Radio, Select, Textarea } from "@/components/ui";
 import { InlineError } from "@/components/ui/InlineError";
 import { useI18n } from "@/i18n/client";
 
@@ -12,6 +12,7 @@ import {
   TITLE_MAX_LENGTH,
   buildIncidentBody,
   emptyIncidentForm,
+  withAnnouncement,
   withKind,
   type CreateIncidentBody,
   type Incident,
@@ -22,6 +23,7 @@ import {
   type IncidentSeverity,
 } from "../../_lib/incidentForm";
 import { BreachNoticeFields } from "./BreachNoticeFields";
+import { IncidentAnnouncementFields } from "./IncidentAnnouncementFields";
 
 const NO_ERRORS: IncidentFormErrors = { fields: {}, notices: {}, unknownBusinesses: [] };
 
@@ -48,6 +50,7 @@ function IncidentFormBody({ onClose, onRecord, isRecording, error }: Omit<Incide
   const [form, setForm] = useState<IncidentForm>(() => emptyIncidentForm(Date.now() * 1000));
   const [errors, setErrors] = useState<IncidentFormErrors>(NO_ERRORS);
   const isBreach = form.kind === "data_breach";
+  const isEveryBusiness = form.scope === "all_businesses";
 
   const update = (patch: Partial<IncidentForm>) => {
     setForm((current) => ({ ...current, ...patch }));
@@ -139,21 +142,60 @@ function IncidentFormBody({ onClose, onRecord, isRecording, error }: Omit<Incide
         {t("adminIncident.detectedHint")} {t("adminIncident.timeZone")}
       </p>
 
-      <Field label={t("adminIncident.businesses")} hint={t("adminIncident.businessesHint")} required error={fieldError("businesses")}>
-        {(control) => (
-          <Textarea
-            {...control}
-            dir="ltr"
-            rows={3}
-            spellCheck={false}
-            className="font-mono text-xs"
-            value={form.businesses}
-            onChange={(event) => update({ businesses: event.target.value })}
+      <Fieldset legend={t("adminIncident.scope.legend")} hint={isEveryBusiness ? t("adminIncident.scope.allHint") : undefined}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-5">
+          <Radio
+            id="incident-scope-listed"
+            name="incident-scope"
+            checked={!isEveryBusiness}
+            onChange={() => update({ scope: "listed" })}
+            label={t("adminIncident.scope.listed")}
           />
-        )}
-      </Field>
+          <Radio
+            id="incident-scope-all"
+            name="incident-scope"
+            checked={isEveryBusiness}
+            onChange={() => update({ scope: "all_businesses" })}
+            label={t("adminIncident.scope.all")}
+          />
+        </div>
+      </Fieldset>
+
+      {!isEveryBusiness ? (
+        <Field label={t("adminIncident.businesses")} hint={t("adminIncident.businessesHint")} required error={fieldError("businesses")}>
+          {(control) => (
+            <Textarea
+              {...control}
+              dir="ltr"
+              rows={3}
+              spellCheck={false}
+              className="font-mono text-xs"
+              value={form.businesses}
+              onChange={(event) => update({ businesses: event.target.value })}
+            />
+          )}
+        </Field>
+      ) : null}
 
       {isBreach ? <BreachNoticeFields form={form} errors={errors} errorText={errorText} onChange={update} /> : null}
+
+      {!isBreach ? (
+        <div className="space-y-3">
+          <Checkbox
+            label={t("adminIncident.announcement.offer")}
+            description={t("adminIncident.announcement.offerHint")}
+            checked={form.announce}
+            onChange={(event) => update(withAnnouncement(form, event.target.checked))}
+          />
+          {form.announce ? (
+            <IncidentAnnouncementFields
+              announcement={form.announcement}
+              errors={errors.announcement}
+              onChange={(announcement) => update({ announcement })}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
       <InlineError error={error} />
 

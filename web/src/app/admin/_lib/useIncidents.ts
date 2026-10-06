@@ -12,8 +12,9 @@ const INCIDENTS_PAGE_SIZE = 10;
 
 /**
  * The incident log (GET /v1/admin/incidents, newest first) and recording
- * one (POST: audit entries for the businesses, and for a data breach the
- * DPA 12.1 notice to their owners). The request needs a recent sign-in: the
+ * one (POST: audit entries for the businesses, listed or all of them, for a
+ * data breach the DPA 12.1 notice to their owners, and the status
+ * announcement when one is published with it). The request needs a recent sign-in: the
  * API client asks for the code and sends it again.
  */
 export function useIncidents() {
@@ -23,7 +24,11 @@ export function useIncidents() {
     { pageSize: INCIDENTS_PAGE_SIZE },
   );
   const { updateItems } = incidents;
-  const create = useMutation((body: CreateIncidentBody) => api.POST("/v1/admin/incidents", { body }), { errorToast: false });
+  // An incident may publish its status announcement: the announcements card loads again.
+  const create = useMutation((body: CreateIncidentBody) => api.POST("/v1/admin/incidents", { body }), {
+    errorToast: false,
+    invalidate: (_incident, body) => (body.announcement ? [queryKeys.admin.announcements()] : []),
+  });
 
   /** The recorded incident, or null (the error is in `createError`). */
   const record = async (body: CreateIncidentBody): Promise<Incident | null> => {

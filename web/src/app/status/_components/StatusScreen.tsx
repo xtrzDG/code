@@ -13,6 +13,7 @@ import { HOME_PATH } from "@/lib/navigation";
 
 import { AnnouncementCard } from "./AnnouncementCard";
 import { ComponentRow } from "./ComponentRow";
+import { MonitoringDelayedNotice } from "./MonitoringDelayedNotice";
 
 const OVERALL_FRAMES: Record<PlatformStatus["level"], string> = {
   operational: "border-success/30 bg-success-soft",
@@ -60,13 +61,15 @@ export function StatusScreen({ initial }: { initial: PlatformStatus | null }) {
               <h2 id="status-overall" className="text-lg font-semibold text-ink" aria-live="polite">
                 {t(`platformStatus.overall.${status.level}`)}
               </h2>
-              {status.checked_at ? (
+              {status.checked_at && !status.monitoring_delayed ? (
                 <p className="text-sm text-ink-muted">
                   {t("platformStatus.checkedAt", { time: viewer.dateTime(status.checked_at) })}
                 </p>
               ) : null}
             </div>
           </section>
+
+          {status.monitoring_delayed && status.checked_at ? <MonitoringDelayedNotice checkedAt={status.checked_at} /> : null}
 
           {status.announcements.length > 0 ? (
             <section aria-labelledby="status-now" className="space-y-3">

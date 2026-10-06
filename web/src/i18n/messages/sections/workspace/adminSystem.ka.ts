@@ -64,6 +64,7 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       answer_budget_slow_burn: "პასუხების ბიუჯეტი იხარჯება",
       api_budget_fast_burn: "API-ის ბიუჯეტი სწრაფად იხარჯება",
       api_budget_slow_burn: "API-ის ბიუჯეტი იხარჯება",
+      worker_down: "არცერთი დამმუშავებელი არ პასუხობს",
     },
   },
   errorBudget: {
@@ -228,6 +229,15 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       one: "{count} ბიზნესი",
       other: "{count} ბიზნესი",
     },
+    everyBusiness: {
+      one: "ყველა ბიზნესი ({count})",
+      other: "ყველა ბიზნესი ({count})",
+    },
+    everyBusinessWalking: {
+      one: "ყველა ბიზნესი: ჯერჯერობით გავლილია {count}",
+      other: "ყველა ბიზნესი: ჯერჯერობით გავლილია {count}",
+    },
+    announced: "სტატუსის განცხადება გამოქვეყნდა",
     notified: {
       one: "ეცნობა {count} მფლობელს",
       other: "ეცნობა {count} მფლობელს",

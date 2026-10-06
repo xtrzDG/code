@@ -68,6 +68,7 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       answer_budget_slow_burn: "Бюджет ответов тает",
       api_budget_fast_burn: "Бюджет API быстро тает",
       api_budget_slow_burn: "Бюджет API тает",
+      worker_down: "Ни один обработчик не отвечает",
     },
   },
   errorBudget: {
@@ -238,6 +239,19 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       many: "{count} бизнесов",
       other: "{count} бизнеса",
     },
+    everyBusiness: {
+      one: "Все бизнесы ({count})",
+      few: "Все бизнесы ({count})",
+      many: "Все бизнесы ({count})",
+      other: "Все бизнесы ({count})",
+    },
+    everyBusinessWalking: {
+      one: "Все бизнесы: пока пройден {count}",
+      few: "Все бизнесы: пока пройдено {count}",
+      many: "Все бизнесы: пока пройдено {count}",
+      other: "Все бизнесы: пока пройдено {count}",
+    },
+    announced: "Объявление о статусе опубликовано",
     notified: {
       one: "Уведомлён {count} владелец",
       few: "Уведомлены {count} владельца",

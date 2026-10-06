@@ -28,6 +28,17 @@ export const platformStatusRu: Translation<typeof platformStatusEn> = {
     cabinet: "Кабинет и вход",
   },
   checkedAt: "Проверено {time}",
+  monitoringDelayed: {
+    title: "Собственные проверки платформы запаздывают",
+    minutesAgo: {
+      one: "Последняя проверка {count} мин назад.",
+      few: "Последняя проверка {count} мин назад.",
+      many: "Последняя проверка {count} мин назад.",
+      other: "Последняя проверка {count} мин назад.",
+    },
+    at: "Последняя проверка: {time}",
+    body: "Пока проверки не наверстают, никто не может поручиться за уровни ниже, поэтому чаты показаны как замедленные.",
+  },
   componentsTitle: "Части платформы",
   historyLabel: "{component}: последние 90 дней",
   historyStart: "90 дней назад",

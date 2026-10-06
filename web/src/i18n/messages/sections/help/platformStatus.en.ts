@@ -29,6 +29,15 @@ export const platformStatusEn = {
     cabinet: "Cabinet and sign-in",
   },
   checkedAt: "Checked {time}",
+  monitoringDelayed: {
+    title: "The platform's own checks are running late",
+    minutesAgo: {
+      one: "The last check was {count} minute ago.",
+      other: "The last check was {count} minutes ago.",
+    },
+    at: "Last check: {time}",
+    body: "Until the checks catch up nobody can vouch for the levels below, so the chats are shown as slower.",
+  },
   componentsTitle: "Parts of the platform",
   historyLabel: "{component}: the last 90 days",
   historyStart: "90 days ago",
