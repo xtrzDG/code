@@ -16,6 +16,7 @@ from tests.channels.widget_polling_steps import (
     poll,
     send,
 )
+from tests.channels.widget_tickets import without_ticket
 
 
 class TestWidgetPolling:
@@ -30,7 +31,7 @@ class TestWidgetPolling:
         nothing_yet = poll(client, business.id, after=reply["cursor"])
         assert nothing_yet.status_code == 200
         assert nothing_yet.headers["Access-Control-Allow-Origin"] == "*"
-        assert nothing_yet.json() == {
+        assert without_ticket(nothing_yet.json()) == {
             "items": [],
             "cursor": reply["cursor"],
             "has_more": False,
@@ -97,15 +98,17 @@ class TestWidgetPolling:
             "Reply: And another thing",
         ]
         assert all(item["author"] == "assistant" for item in body["items"])
-        assert poll(client, business.id, session_key=OTHER_VISITOR).json() == {
+        assert without_ticket(
+            poll(client, business.id, session_key=OTHER_VISITOR).json()
+        ) == {
             "items": [],
             "cursor": str(foreign.id),
             "has_more": False,
             "is_handed_off": False,
         }
-        assert poll(
-            client, business.id, session_key="v1_nobody_has_written_yet"
-        ).json() == {
+        assert without_ticket(
+            poll(client, business.id, session_key="v1_nobody_has_written_yet").json()
+        ) == {
             "items": [],
             "cursor": None,
             "has_more": False,
@@ -118,8 +121,10 @@ class TestWidgetPolling:
         client = testbed.build_http_client()
         reply = send(testbed, business.id, "Hi")
 
-        fresh = poll(client, business.id).json()
-        erased = poll(client, business.id, after=str(MessageId())).json()
+        fresh = without_ticket(poll(client, business.id).json())
+        erased = without_ticket(
+            poll(client, business.id, after=str(MessageId())).json()
+        )
 
         # The position is the visitor's own latest message, so an answer the
         # widget missed (the page was left while it was written) comes next.

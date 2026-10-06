@@ -52,3 +52,9 @@ class SharingOrchestratorsContainer(containers.DeclarativeContainer):
             sharing_use_cases.record_widget_handoff_notice_use_case
         ),
     )
+    open_widget_stream_orchestrator = use_case_orchestrator(
+        sharing_use_cases.open_widget_stream_use_case
+    )
+    read_widget_stream_message_orchestrator = use_case_orchestrator(
+        sharing_use_cases.read_widget_stream_message_use_case
+    )

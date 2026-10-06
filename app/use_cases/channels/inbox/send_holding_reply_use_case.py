@@ -22,6 +22,7 @@ from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.channels.inbox.holding_outbox import queue_holding_reply
+from app.utilities.channels.widget_live_signals import announce_widget_reply
 from app.utilities.conversations.assistant_texts.ai_disclosure_texts import (
     AI_DISCLOSURE,
 )
@@ -140,6 +141,7 @@ class SendHoldingReplyUseCase(UseCaseContract[InboundEventDocument, MessageId | 
             (conversation.id,),
             is_sandbox=conversation.is_sandbox,
         )
+        announce_widget_reply(self._live_events, conversation, holding_id)
         return holding_id
 
     def _holding_text(

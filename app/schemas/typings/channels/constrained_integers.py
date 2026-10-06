@@ -63,4 +63,30 @@ class WebhookMessageCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class WidgetStreamsPerAddress(BaseConstrainedTypedInt):
+    """
+    Most website chat streams one client network keeps open on one API
+    process (a page per tab; an office shares one address).
+
+    Example:
+        per_address = WidgetStreamsPerAddress(20)
+    """
+
+    ge = 1
+    le = 10_000
+
+
+class WidgetStreamsPerBusiness(BaseConstrainedTypedInt):
+    """
+    Most website chat streams of one business's visitors open on one API
+    process at a time.
+
+    Example:
+        per_business = WidgetStreamsPerBusiness(500)
+    """
+
+    ge = 1
+    le = 100_000
+
+
 # Keep abc order for all non example types, if possible.

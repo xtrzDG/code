@@ -27305,11 +27305,25 @@
       },
       "WidgetMessageAcceptedView": {
         "additionalProperties": false,
-        "description": "The visitor's message is in the inbox and a worker is answering it (202\nAccepted): the widget shows that the assistant is typing and polls\nGET .../messages until the answer, or a staff message, arrives.\n`event_id` names the message in the inbox (support and logs).",
+        "description": "The visitor's message is in the inbox and a worker is answering it (202\nAccepted): the widget shows that the assistant is typing until the\nanswer, or a staff message, arrives. `event_id` names the message in\nthe inbox (support and logs). `stream_ticket` opens the visitor's live\nstream (GET .../events?ticket=...), which says when the answer is\nready; a widget without EventSource polls GET .../messages instead.",
         "properties": {
           "event_id": {
             "title": "Event Id",
             "type": "string"
+          },
+          "stream_ticket": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 40,
+                "pattern": "^[A-Za-z0-9_\\-]{40,120}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream Ticket"
           }
         },
         "required": [
@@ -27367,7 +27381,7 @@
       },
       "WidgetMessagesView": {
         "additionalProperties": false,
-        "description": "New assistant and staff messages, oldest first (at most a page; poll\nagain with `cursor` while `has_more`). `cursor` is the position to poll\nafter next time (None while the visitor has no conversation);\n`is_handed_off` tells whether staff currently handle the conversation.",
+        "description": "New assistant and staff messages, oldest first (at most a page; poll\nagain with `cursor` while `has_more`). `cursor` is the position to poll\nafter next time (None while the visitor has no conversation);\n`is_handed_off` tells whether staff currently handle the conversation;\n`stream_ticket` opens the visitor's live stream (see\n`WidgetMessageAcceptedView`).",
         "properties": {
           "cursor": {
             "anyOf": [
@@ -27396,6 +27410,20 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "stream_ticket": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 40,
+                "pattern": "^[A-Za-z0-9_\\-]{40,120}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream Ticket"
           }
         },
         "required": [
@@ -73597,6 +73625,125 @@
         ]
       }
     },
+    "/v1/widget/{business_id}/events": {
+      "get": {
+        "description": "The visitor's typing and answers, as they happen (see the 200 answer).",
+        "operationId": "stream_widget_events_v1_widget__business_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ticket",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Server-Sent Events of one visitor: `stream.ready`, then `typing_started` when a worker starts writing the visitor's answer and `answer_ready` when it (or a staff message) is stored: `message_id`, `author`, `direction` and, for a model reply the reply guard passed as CLEAN, its `text` (otherwise the widget polls GET .../messages, which replaces any draft with the stored text). `stream.resync` asks for one poll; a heartbeat comment every 20 s; the stream ends after 15 minutes and the browser reconnects with the same ticket."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Stream Widget Events",
+        "tags": [
+          "channels"
+        ]
+      }
+    },
     "/v1/widget/{business_id}/handoff": {
       "post": {
         "operationId": "request_widget_handoff_v1_widget__business_id__handoff_post",
@@ -73616,7 +73763,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "HTTP body of \"Talk to a person\": the visitor's key and the widget's\ninterface language (the language staff's notice to the visitor is in\nwhen the visitor has not written yet), and where the visitor came from\n(a conversation the request opens keeps it).",
+                "description": "HTTP body of \"Talk to a person\": the visitor's key and the widget's\ninterface language (the language staff's notice to the visitor is in\nwhen the visitor has not written yet), where the visitor came from (a\nconversation the request opens keeps it), and why (`no_answer`: the\nwidget gave up waiting for the assistant's answer).",
                 "properties": {
                   "language": {
                     "anyOf": [
@@ -73631,6 +73778,16 @@
                       }
                     ],
                     "title": "Language"
+                  },
+                  "reason": {
+                    "default": "customer_request",
+                    "description": "Why a website visitor's conversation goes to staff from the widget:\nthe visitor pressed \"Talk to a person\", or the widget waited for an\nanswer that never came (no worker answered in time), so a person\nanswers instead of the typing dots just disappearing.",
+                    "enum": [
+                      "customer_request",
+                      "no_answer"
+                    ],
+                    "title": "WidgetHandoffReason",
+                    "type": "string"
                   },
                   "session_key": {
                     "maxLength": 128,

@@ -325,6 +325,37 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 со ссылкой на карту и кнопку «Забронировать» (`HostedChatView` отдаёт
 `hours`, `address`, `maps_url`, `takes_bookings`, `booking_url`).
 
+### Живой поток посетителя
+
+Виджет слышит ответ сразу, а не со следующим опросом:
+
+- билет: `IssueWidgetStreamTicketUseCase` (в цепочке сообщения и опроса,
+  `WidgetMessageOrchestrator`, `WidgetMessagesOrchestrator`) подписывает
+  `WidgetStreamTicketSigner` (HMAC, ключ из `ENCRYPTION_KEY` с меткой
+  `assistant-workshop/widget-stream-tickets/v1`, старые ключи проверяют):
+  бизнес, `WidgetVisitorId` (sha256 ключа посетителя — сам ключ в билете не
+  лежит) и срок на час. Ключ посетителя никогда не попадает в адрес;
+  билет в адресе вымарывается из журнала доступа;
+- маршрут `GET /v1/widget/{id}/events?ticket=…`
+  (`widget_event_routes.py`, в схеме OpenAPI как `text/event-stream`, как и поток кабинета):
+  `OpenWidgetStreamOperator` → `OpenWidgetStreamUseCase` проверяет билет
+  (401 — чужой, просроченный, испорченный) и что чат сайта подключён (404),
+  затем `WidgetEventStreamFacilitator` подписывает на шину живых событий
+  только события этого посетителя (лимиты на процесс: 500 потоков бизнеса,
+  20 с одной сети, сверх — 429). Поток живёт 15 минут, сердцебиение — 20 с;
+- события: `widget.typing` публикует `CustomerWait`, когда воркер взял
+  сообщение посетителя; `widget.reply` — запись ответа помощника, сообщения
+  сотрудника, «минутку», заметки о передаче. Оба — только с id; текст
+  читает `ReadWidgetStreamMessageUseCase` и отдаёт его в `answer_ready`,
+  только если это исходящий ответ модели с вердиктом проверки CLEAN
+  (остальное — без текста: виджет дочитывает опросом). Поток кабинета и
+  буфер повтора этих событий не видят; старый выпуск их пропускает;
+- виджет (`mount_stream.js`) открывает EventSource, пока ждёт ответа, и
+  остаётся на опросе без него; через 90 секунд без ответа — заметка «Мы
+  ответим, как только сможем» и `POST …/handoff` с `reason: no_answer`
+  (`no_answer_handoffs.py`: «нестандартный запрос», высокая срочность,
+  сводка `MODEL_UNAVAILABLE` с последним вопросом).
+
 ## Подтверждение брони и страница гостя
 
 Когда `create_booking` или `reschedule_booking` помощника удаётся вне

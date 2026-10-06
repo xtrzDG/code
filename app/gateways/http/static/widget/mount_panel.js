@@ -36,17 +36,29 @@
       isRequestingPerson: false,
       personError: "",
       // "New conversation" waits for the visitor to confirm.
-      isConfirmingRestart: false
+      isConfirmingRestart: false,
+      // The live stream (mount_stream): its ticket, the EventSource, whether
+      // it is up, when a refused one may be tried again, a catch-up poll
+      // asked for while another was running.
+      streamTicket: null,
+      stream: null,
+      isStreamLive: false,
+      streamRetryAt: 0,
+      catchUpPending: false,
+      // With a live stream the dots wait for the worker's typing signal.
+      typingGated: false,
+      workerTyping: false,
+      noAnswerTimer: null
     };
     state.handoffNoticeShown = state.history.some(function (item) {
       return item.role === "notice";
     });
 
-    var accent = chooseAccent(script.getAttribute("data-color"), config.accent_color);
     var wrapper = el("div", "aw");
-    if (accent) {
-      wrapper.style.setProperty("--aw-accent", accent);
-      wrapper.style.setProperty("--aw-on-accent", readableTextColor(accent));
+    paintAccent(chooseAccent(script.getAttribute("data-color"), config.accent_color));
+    var theme = chooseTheme(script.getAttribute("data-theme"));
+    if (theme) {
+      wrapper.className += " aw-" + theme;
     }
     if (isPageMode) {
       wrapper.className += " aw-page";
@@ -248,8 +260,10 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") {
         stopPolling();
+        closeStream();
       } else {
         schedulePoll(0);
       }
     });
+    armNoAnswerTimer();
     schedulePoll(0);

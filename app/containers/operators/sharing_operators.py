@@ -30,3 +30,10 @@ class SharingOperatorsContainer(containers.DeclarativeContainer):
     widget_handoff_operator = pipeline_operator(
         sharing_pipelines.widget_handoff_pipeline, storage_scope
     )
+    # The website chat's live stream (in the scope of the business it names).
+    open_widget_stream_operator = pipeline_operator(
+        sharing_pipelines.open_widget_stream_pipeline, storage_scope
+    )
+    read_widget_stream_message_operator = pipeline_operator(
+        sharing_pipelines.read_widget_stream_message_pipeline, storage_scope
+    )

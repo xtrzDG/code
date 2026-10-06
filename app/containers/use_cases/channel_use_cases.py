@@ -43,6 +43,7 @@ from app.schemas.dto.channels.widget import (
     WidgetSnippetQuery,
     WidgetSnippetView,
 )
+from app.schemas.dto.channels.widget_streams import WidgetStreamTicketRequest
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.deliveries import RoutedInboundMessage
 from app.schemas.dto.staff_reply_templates import (
@@ -50,6 +51,7 @@ from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplatesCommand,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.channels.constrained_strings import WidgetStreamTicket
 from app.schemas.typings.channels.strings import MetaWebhookChallenge
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
@@ -87,6 +89,9 @@ from app.use_cases.channels.set_whatsapp_staff_templates_use_case import (
     SetWhatsAppStaffTemplatesUseCase,
 )
 from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhookUseCase
+from app.use_cases.channels.widget_stream.issue_widget_stream_ticket_use_case import (
+    IssueWidgetStreamTicketUseCase,
+)
 
 
 class ChannelUseCasesContainer(containers.DeclarativeContainer):
@@ -206,6 +211,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         language_detector=utilities.language_detector,
         app_settings=config.app_settings,
         referral_links=facilitators.referral_links,
+        starter_answer_registry=registries.starter_answer_registry,
     )
     # Singleton: it remembers the web chats it found open (OpenChatMemory).
     get_widget_messages_use_case: Singleton[
@@ -219,6 +225,14 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
         read_session=adapters.storage_read_session,
+    )
+    # A ticket to the visitor's live stream with each widget answer.
+    issue_widget_stream_ticket_use_case: Factory[
+        UseCaseContract[WidgetStreamTicketRequest, WidgetStreamTicket]
+    ] = Factory(
+        IssueWidgetStreamTicketUseCase,
+        ticket_signer=utilities.widget_stream_ticket_signer,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     accept_widget_message_use_case: Factory[
         UseCaseContract[WidgetMessageCommand, InboundMessage]

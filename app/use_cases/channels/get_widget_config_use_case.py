@@ -12,6 +12,7 @@ from app.contracts.repositories.business_repositories import (
 from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
 )
+from app.contracts.starter_registries import StarterAnswerRegistryContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
@@ -21,7 +22,11 @@ from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
 from app.schemas.domain.profiles import BusinessProfileDocument
-from app.schemas.dto.channels.widget import WidgetConfigView
+from app.schemas.dto.channels.widget import (
+    WidgetConfigView,
+    WidgetStarterQuestionView,
+)
+from app.schemas.dto.setup.starter_catalog import StarterAnswers
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -30,7 +35,10 @@ from app.use_cases.shared.widget_languages import (
     build_widget_greetings,
     build_widget_languages,
 )
-from app.utilities.channels.widget_starters import build_starter_questions
+from app.utilities.channels.widget_starters import (
+    add_niche_starters,
+    build_starter_questions,
+)
 from app.utilities.sharing.share_links import build_contact_links, choose_privacy_url
 
 # The first FAQ items read for starter questions: enough for three per
@@ -46,7 +54,8 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
     switched the widget on, the owner's colour and launcher corner, the
     greeting in each language the live assistant answers in (the business
     languages before a version is published), up to three starter
-    questions per language from the FAQ, the privacy notice the footer
+    questions per language from the FAQ (the niche's ready questions in a
+    language the FAQ does not cover), the privacy notice the footer
     links to with its "Powered by" link (the business's referral code), and
     the business's other channels (the hosted chat page offers them).
     Nothing personal or secret is returned.
@@ -63,8 +72,12 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
         language_detector: LanguageDetectorContract,
         app_settings: AppSettings,
         referral_links: ReferralLinksFacilitatorContract,
+        starter_answer_registry: StarterAnswerRegistryContract,
     ) -> None:
         self._referral_links: ReferralLinksFacilitatorContract = referral_links
+        self._starter_answer_registry: StarterAnswerRegistryContract = (
+            starter_answer_registry
+        )
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -110,14 +123,7 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
             ),
             accent_color=None if appearance is None else appearance.accent_color,
             position=None if appearance is None else appearance.position,
-            starter_questions=build_starter_questions(
-                self._knowledge_item_repo.list_by_kind(
-                    business.id, KnowledgeItemKind.FAQ, FAQ_ITEMS_READ_FOR_STARTERS
-                ),
-                assistant_languages,
-                business.default_language,
-                self._language_detector,
-            ),
+            starter_questions=self._starter_questions(business, assistant_languages),
             privacy_url=choose_privacy_url(
                 business, profile, self._app_settings.cabinet_base_url
             ),
@@ -126,6 +132,24 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
                 business, POWERED_BY_SOURCE_TAG
             ),
         )
+
+    def _starter_questions(
+        self, business: BusinessDocument, languages: list[LanguageTag]
+    ) -> list[WidgetStarterQuestionView]:
+        """The FAQ's questions, the niche's ready ones where a language has none."""
+
+        from_faq: list[WidgetStarterQuestionView] = build_starter_questions(
+            self._knowledge_item_repo.list_by_kind(
+                business.id, KnowledgeItemKind.FAQ, FAQ_ITEMS_READ_FOR_STARTERS
+            ),
+            languages,
+            business.default_language,
+            self._language_detector,
+        )
+        niche: StarterAnswers = self._starter_answer_registry.get(
+            business.niche_key, business.country_code
+        )
+        return add_niche_starters(from_faq, languages, niche.faq)
 
     def _assistant_languages(self, business: BusinessDocument) -> list[LanguageTag]:
         """The published version's languages, else the business languages."""

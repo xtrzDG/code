@@ -18,6 +18,7 @@ from app.schemas.dto.channels.widget_handoff import (
 )
 from app.schemas.exceptions.application_errors import UnsupportedLanguageError
 from app.schemas.typings.conversations.prefixed_id import MessageId
+from app.utilities.channels.widget_live_signals import announce_widget_reply
 
 
 class RecordWidgetHandoffNoticeUseCase(
@@ -87,6 +88,7 @@ class RecordWidgetHandoffNoticeUseCase(
             (conversation.id,),
             is_sandbox=conversation.is_sandbox,
         )
+        announce_widget_reply(self._live_events, conversation, message.id)
         return message.id
 
     def _direction(self, notice: WidgetHandoffNotice) -> TextDirection:

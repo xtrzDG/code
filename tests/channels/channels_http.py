@@ -23,9 +23,14 @@ from app.orchestrators.channels.voice_tool_webhook_orchestrator import (
 from app.orchestrators.channels.widget_message_orchestrator import (
     WidgetMessageOrchestrator,
 )
+from app.orchestrators.channels.widget_messages_orchestrator import (
+    WidgetMessagesOrchestrator,
+)
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
+from app.schemas.typings.platform.strings import PlatformSecret
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
 )
@@ -33,6 +38,9 @@ from app.use_cases.channels.get_widget_config_use_case import GetWidgetConfigUse
 from app.use_cases.channels.get_widget_messages_use_case import GetWidgetMessagesUseCase
 from app.use_cases.channels.get_widget_snippet_use_case import GetWidgetSnippetUseCase
 from app.use_cases.channels.verify_meta_webhook_use_case import VerifyMetaWebhookUseCase
+from app.use_cases.channels.widget_stream.issue_widget_stream_ticket_use_case import (
+    IssueWidgetStreamTicketUseCase,
+)
 from app.use_cases.voice.authenticate_post_call_use_case import (
     AuthenticatePostCallUseCase,
 )
@@ -41,8 +49,14 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
 )
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from app.utilities.security.widget_stream_ticket_signer import (
+    WidgetStreamTicketSigner,
+)
 from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
 from tests.referrals.referral_parts import ReferralRepositories
+
+# The widget's stream tickets are signed with this key in the channel tests.
+STREAM_TICKET_KEY: PlatformSecret = PlatformSecret("test-key-0000")
 
 
 def wrap[InputData, OutputData](
@@ -62,6 +76,9 @@ def wrap_use_case[InputData, OutputData](
 
 
 def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
+    stream_tickets = IssueWidgetStreamTicketUseCase(
+        WidgetStreamTicketSigner(STREAM_TICKET_KEY), testbed.wall_clock
+    )
     http_application = FastAPI()
     install_error_handlers(http_application)
     http_application.include_router(
@@ -93,6 +110,7 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                     testbed.language_detector,
                     testbed.settings,
                     ReferralRepositories().links(testbed.wall_clock),
+                    StarterAnswerRegistry(),
                 )
             ),
             widget_message_operator=wrap(
@@ -104,16 +122,20 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                         testbed.wall_clock,
                     ),
                     testbed.queue_widget_message,
+                    stream_tickets,
                 )
             ),
-            widget_messages_operator=wrap_use_case(
-                GetWidgetMessagesUseCase(
-                    testbed.channel_repo,
-                    testbed.conversation_repo,
-                    testbed.message_repo,
-                    testbed.language_registry,
-                    testbed.widget_rate_limits,
-                    testbed.wall_clock,
+            widget_messages_operator=wrap(
+                WidgetMessagesOrchestrator(
+                    GetWidgetMessagesUseCase(
+                        testbed.channel_repo,
+                        testbed.conversation_repo,
+                        testbed.message_repo,
+                        testbed.language_registry,
+                        testbed.widget_rate_limits,
+                        testbed.wall_clock,
+                    ),
+                    stream_tickets,
                 )
             ),
         )

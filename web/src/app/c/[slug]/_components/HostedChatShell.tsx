@@ -1,14 +1,14 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import { accentColors } from "../_lib/accentColors";
 import type { PageLanguage } from "../_lib/hostedChatRequest";
 
 import "@/styles/hostedChat.css";
 
-const ACCENT_PATTERN = /^#[0-9a-fA-F]{6}$/;
-
 /**
  * The page around the hosted chat and its notices: the visitor's language
- * and direction, the business's accent colour, the system's colours.
+ * and direction, the business's accent colour (made readable the way the
+ * widget makes it, see accentColors), the system's colours.
  */
 export function HostedChatShell({
   page,
@@ -19,7 +19,8 @@ export function HostedChatShell({
   accent?: string | null;
   children: ReactNode;
 }) {
-  const style = accent && ACCENT_PATTERN.test(accent) ? ({ "--hc-accent": accent } as CSSProperties) : undefined;
+  const colors = accent ? accentColors(accent) : null;
+  const style = colors ? ({ "--hc-accent": colors.accent, "--hc-on-accent": colors.onAccent } as CSSProperties) : undefined;
   return (
     <main className="hc-page" lang={page.language} dir={page.direction} style={style}>
       {children}

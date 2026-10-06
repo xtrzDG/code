@@ -258,6 +258,10 @@
     }
 
     function forgetConversation() {
+      // The stream and its ticket belonged to the previous visitor key.
+      closeStream();
+      state.streamTicket = null;
+      state.streamRetryAt = 0;
       state.history = [];
       state.pendingItem = null;
       state.handoffNoticeShown = false;

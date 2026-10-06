@@ -10,6 +10,7 @@ from tests.channels.channels_payloads import bearer
 from tests.channels.channels_settings import ISRAEL, POLAND, build_settings
 from tests.channels.outbox_reads import inbox
 from tests.channels.testbed import ChannelsTestbed
+from tests.channels.widget_tickets import without_ticket
 
 SESSION_KEY: str = "v1_9f2c4e1b7a3d48c6"
 
@@ -112,7 +113,7 @@ class TestWidgetMessages:
         assert response.status_code == 202
         assert response.headers["Access-Control-Allow-Origin"] == "*"
         [event] = inbox(testbed)
-        assert response.json() == {"event_id": str(event.id)}
+        assert without_ticket(response.json()) == {"event_id": str(event.id)}
         # Nothing was answered in the request: the inbox holds it for a worker.
         assert event.status is InboundEventStatus.RECEIVED
         assert testbed.pipeline.messages == []

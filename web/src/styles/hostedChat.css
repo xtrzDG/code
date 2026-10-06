@@ -11,8 +11,10 @@
 .hc-page {
   color-scheme: light dark;
   --hc-accent: #ad5732;
-  --hc-canvas: light-dark(#f3f2ee, #121110);
-  --hc-surface: light-dark(#ffffff, #1b1a18);
+  --hc-on-accent: #ffffff;
+  /* The widget's own paper and ink (widget/styles.js): no seam around it. */
+  --hc-canvas: light-dark(#f1ece4, #121110);
+  --hc-surface: light-dark(#faf7f2, #1a1816);
   --hc-ink: light-dark(#1d1c1a, #ecebe6);
   --hc-muted: light-dark(#57544e, #aca79e);
   --hc-line: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
@@ -115,7 +117,7 @@
   height: 56px;
   border-radius: 18px;
   background: var(--hc-accent);
-  color: #fff;
+  color: var(--hc-on-accent);
   box-shadow: 0 14px 30px -14px var(--hc-accent);
 }
 
@@ -129,6 +131,7 @@
   stroke-linejoin: round;
 }
 
+/* The placeholder's spinner turns in the business's colour. */
 .hc-spinner {
   width: 28px;
   height: 28px;

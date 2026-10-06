@@ -4288,6 +4288,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/widget/{business_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Widget Events
+         * @description The visitor's typing and answers, as they happen (see the 200 answer).
+         */
+        get: operations["stream_widget_events_v1_widget__business_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/widget/{business_id}/handoff": {
         parameters: {
             query?: never;
@@ -14981,13 +15001,17 @@ export interface components {
         /**
          * WidgetMessageAcceptedView
          * @description The visitor's message is in the inbox and a worker is answering it (202
-         *     Accepted): the widget shows that the assistant is typing and polls
-         *     GET .../messages until the answer, or a staff message, arrives.
-         *     `event_id` names the message in the inbox (support and logs).
+         *     Accepted): the widget shows that the assistant is typing until the
+         *     answer, or a staff message, arrives. `event_id` names the message in
+         *     the inbox (support and logs). `stream_ticket` opens the visitor's live
+         *     stream (GET .../events?ticket=...), which says when the answer is
+         *     ready; a widget without EventSource polls GET .../messages instead.
          */
         WidgetMessageAcceptedView: {
             /** Event Id */
             event_id: string;
+            /** Stream Ticket */
+            stream_ticket?: string | null;
         };
         /**
          * WidgetMessageView
@@ -15010,7 +15034,9 @@ export interface components {
          * @description New assistant and staff messages, oldest first (at most a page; poll
          *     again with `cursor` while `has_more`). `cursor` is the position to poll
          *     after next time (None while the visitor has no conversation);
-         *     `is_handed_off` tells whether staff currently handle the conversation.
+         *     `is_handed_off` tells whether staff currently handle the conversation;
+         *     `stream_ticket` opens the visitor's live stream (see
+         *     `WidgetMessageAcceptedView`).
          */
         WidgetMessagesView: {
             /** Cursor */
@@ -15027,6 +15053,8 @@ export interface components {
             is_handed_off: boolean;
             /** Items */
             items: components["schemas"]["WidgetMessageView"][];
+            /** Stream Ticket */
+            stream_ticket?: string | null;
         };
         /**
          * WidgetPosition
@@ -43535,6 +43563,93 @@ export interface operations {
             };
         };
     };
+    stream_widget_events_v1_widget__business_id__events_get: {
+        parameters: {
+            query?: {
+                ticket?: string | null;
+            };
+            header?: never;
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-Sent Events of one visitor: `stream.ready`, then `typing_started` when a worker starts writing the visitor's answer and `answer_ready` when it (or a staff message) is stored: `message_id`, `author`, `direction` and, for a model reply the reply guard passed as CLEAN, its `text` (otherwise the widget polls GET .../messages, which replaces any draft with the stored text). `stream.resync` asks for one poll; a heartbeat comment every 20 s; the stream ends after 15 minutes and the browser reconnects with the same ticket. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     request_widget_handoff_v1_widget__business_id__handoff_post: {
         parameters: {
             query?: never;
@@ -43549,6 +43664,16 @@ export interface operations {
                 "application/json": {
                     /** Language */
                     language?: string | null;
+                    /**
+                     * WidgetHandoffReason
+                     * @description Why a website visitor's conversation goes to staff from the widget:
+                     *     the visitor pressed "Talk to a person", or the widget waited for an
+                     *     answer that never came (no worker answered in time), so a person
+                     *     answers instead of the typing dots just disappearing.
+                     * @default customer_request
+                     * @enum {string}
+                     */
+                    reason?: "customer_request" | "no_answer";
                     /** Session Key */
                     session_key: string;
                     /** Source */

@@ -31,6 +31,8 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "mount_interaction.js",
     # polling for answers not shown yet and sharing state between tabs,
     "mount_polling.js",
+    # the live stream (typing, answers) and giving up on a missing answer,
+    "mount_stream.js",
     # starter questions, "Talk to a person", "New conversation", the footer,
     "mount_actions.js",
     # the cabinet's live preview (colour, corner and language on the fly),
@@ -45,6 +47,8 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "errors.js",
     # The visitor key and history in localStorage (never cookies).
     "storage.js",
+    # The accent and the text on it (WCAG AA for any colour), the theme.
+    "colors.js",
     # DOM, SVG and colour helpers, console messages; closes the closure.
     "dom.js",
 )

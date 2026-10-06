@@ -28,6 +28,19 @@ class LiveEventKind(StrEnum):
     LEAD_CREATED = "lead.created"
     # A waitlist entry joined, was offered a freed place, booked or ended.
     WAITLIST_CHANGED = "waitlist.changed"
+    # The website chat's own events, for the visitor's widget stream only
+    # (cabinet streams never carry them; ids: the visitor, then the message):
+    # a worker started writing the visitor's answer,
+    WIDGET_TYPING = "widget.typing"
+    # and an answer, a staff message or a notice is there for the visitor.
+    WIDGET_REPLY = "widget.reply"
+
+
+# The events of website chat visitors (`GET /v1/widget/{id}/events`), not
+# of the cabinet: its streams skip them and they are not kept for replay.
+WIDGET_LIVE_EVENTS: frozenset[LiveEventKind] = frozenset(
+    {LiveEventKind.WIDGET_TYPING, LiveEventKind.WIDGET_REPLY}
+)
 
 
 class LiveStreamSignal(StrEnum):

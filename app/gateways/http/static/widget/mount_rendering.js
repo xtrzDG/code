@@ -174,6 +174,7 @@
             text: item.text,
             direction: item.direction,
             key: item.key,
+            draft: item.draft === true ? true : undefined,
             pending: item.pending === true ? true : undefined,
             sentAt: item.pending === true ? item.sentAt : undefined
           };

@@ -66,6 +66,21 @@ CYRILLIC_LANGUAGE_EVIDENCE: dict[str, LanguageEvidence] = {
             "искам маса утре днес колко струва има ли може"
         ),
     ),
+    # Uzbek in its Cyrillic alphabet (Uzbekistan's older one, still common):
+    # ҳ, ў, қ and ғ (ў is also Belarusian, қ and ғ also Kazakh, whose own
+    # letters Uzbek lacks). Recorded under the tag with its script; Latin
+    # Uzbek is "uz" (latin_languages_world).
+    "uz-Cyrl": LanguageEvidence(
+        "Cyrl",
+        letters("абвгдеёжзийклмнопрстуфхцчшъьэюяўқғҳ"),
+        letters("ҳўқғ"),
+        words(
+            "ва бу бир мен сиз салом ассалому алайкум раҳмат илтимос ҳа йўқ "
+            "яхши эртага бугун қанча нархи очиқ очиқми мумкин мумкинми киши "
+            "кишилик соат кечқурун борми бор жой керак қилмоқчиман келаман "
+            "сизларда"
+        ),
+    ),
     "mk": LanguageEvidence(
         "Cyrl",
         letters("абвгдѓежзѕијклљмнњопрстќуфхцчџш"),

@@ -71,6 +71,8 @@ _.zadarma_api_secret  # app/schemas/configurations/app_settings.py
 _.LOST  # app/schemas/constants/bookings.py
 _.LEFT  # app/schemas/constants/channels.py
 _.RIGHT  # app/schemas/constants/channels.py
+_.LIGHT  # app/schemas/constants/channels.py (WidgetTheme, /widget/demo?theme=)
+_.DARK  # app/schemas/constants/channels.py (WidgetTheme, /widget/demo?theme=)
 _.BILLING  # app/schemas/constants/client_health.py
 _.BOOKINGS  # app/schemas/constants/client_health.py
 _.CONVERSATIONS  # app/schemas/constants/client_health.py
@@ -304,6 +306,7 @@ _.requested_at  # app/schemas/dto/key_rotation.py
 # (web/src/app/c), never by Python code.
 _.starter_questions  # app/schemas/dto/channels/widget.py
 _.contact_links  # app/schemas/dto/channels/widget.py
+_.stream_ticket  # app/schemas/dto/channels/widget.py, widget_turns.py (the live stream)
 _.widget_script_url  # app/schemas/dto/sharing.py
 
 _.source_page_url  # app/schemas/dto/menu_import.py

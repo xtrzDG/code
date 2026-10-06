@@ -22,6 +22,7 @@ from app.schemas.typings.channels.constrained_strings import (
     WidgetScriptUrl,
     WidgetSessionKey,
     WidgetSourceInput,
+    WidgetStreamTicket,
 )
 from app.schemas.typings.channels.strings import (
     WidgetContactNameInput,
@@ -159,13 +160,16 @@ class WidgetMessagesView(ImmutableDTO):
     New assistant and staff messages, oldest first (at most a page; poll
     again with `cursor` while `has_more`). `cursor` is the position to poll
     after next time (None while the visitor has no conversation);
-    `is_handed_off` tells whether staff currently handle the conversation.
+    `is_handed_off` tells whether staff currently handle the conversation;
+    `stream_ticket` opens the visitor's live stream (see
+    `WidgetMessageAcceptedView`).
     """
 
     items: list[WidgetMessageView]
     cursor: MessageId | None = None
     has_more: HasMoreWidgetMessages = False
     is_handed_off: IsConversationHandedOff = False
+    stream_ticket: WidgetStreamTicket | None = None
 
 
 class WidgetSnippetQuery(ImmutableDTO):

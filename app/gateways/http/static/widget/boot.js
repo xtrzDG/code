@@ -25,6 +25,8 @@
     apiBase + MESSAGES_PATH.replace("{business_id}", encodeURIComponent(businessId));
   var handoffUrl =
     apiBase + HANDOFF_PATH.replace("{business_id}", encodeURIComponent(businessId));
+  var eventsUrl =
+    apiBase + EVENTS_PATH.replace("{business_id}", encodeURIComponent(businessId));
   var isPageMode = script.getAttribute("data-mode") === PAGE_MODE;
   // The cabinet's preview: shown even while switched off, sends nothing,
   // keeps nothing in the browser and follows the owner's choices.

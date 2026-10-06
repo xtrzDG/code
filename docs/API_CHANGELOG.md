@@ -11,6 +11,29 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — the website chat's live stream
+
+Spec: `5c058fb4b7ac5ebe`
+
+- **Added** `GET /v1/widget/{business_id}/events?ticket=…`: the visitor's
+  Server-Sent Events (`stream.ready`, `typing_started` when a worker starts
+  the answer, `answer_ready` with `message_id`, `author`, `direction` and,
+  only for a model reply the reply guard passed as CLEAN, `text`;
+  `stream.resync`; a heartbeat every 20 s, 15 minutes per connection).
+  401 for a missing, foreign or expired ticket, 404 while the website chat
+  is off, 429 over the per-process stream limits.
+- **Changed** `WidgetMessageAcceptedView` (the 202 of
+  `POST …/messages`) and `WidgetMessagesView` (`GET …/messages`) add
+  `stream_ticket` (40–120 url-safe characters, an hour long; null when
+  none is issued). The visitor key still travels only in the body and the
+  `X-Widget-Session-Key` header; old widgets ignore the field and poll.
+- **Changed** `WidgetHandoffRequest` adds `reason` (`customer_request`, the
+  default, or `no_answer`: the widget waited 90 s for an answer and hands
+  the conversation to staff as a non-standard request of high urgency).
+- **Changed** `GET /v1/widget/{business_id}/config`: a language with no
+  ready FAQ question gets up to three of the niche's ready questions
+  (en, ru, ka) in `starter_questions`, never one in another language.
+
 ## 2026-10-06 — wave 15 together: worker resilience, referrals and partners, the waitlist and return visits
 
 Spec: `ce734ea095df4aa1`

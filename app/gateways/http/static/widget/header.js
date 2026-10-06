@@ -25,6 +25,8 @@
  *                          open, the business's other channels on top
  *   data-container="<id>"  page mode: the element the chat fills (default:
  *                          the whole window)
+ *   data-theme="dark"      light or dark colours (default: the visitor's
+ *                          system setting, prefers-color-scheme)
  *   data-source="qr"       where visitors of this page came from (default:
  *                          the page's ?src= or ?utm_source=); the business's
  *                          reports count conversations, bookings and value
@@ -34,15 +36,24 @@
  * session key kept in localStorage; the widget renders inside a shadow root,
  * so the host page's styles and the widget's styles never mix.
  *
- * Sending a message is accepted at once (202): a worker answers it, and the
- * widget shows the assistant typing while it polls GET .../messages for the
- * answer, every second or so, until it arrives or staff take over. It also
- * polls for answers it has not shown: while a handoff to staff is open,
- * while the panel is open within 24 hours of the visitor's last exchange
- * (staff can write to any website chat), and after a page was left while
- * an answer was being written. Every few seconds at first, slower while
- * nothing new arrives, and not at all while the page is hidden. The
- * visitor key travels in a request header, never in the URL.
+ * Sending a message is accepted at once (202) with a ticket to the
+ * visitor's live stream (GET .../events?ticket=..., EventSource): the
+ * stream says when a worker starts writing the answer (the typing dots
+ * show then) and when the answer is ready, with its text when the reply
+ * guard passed it; the widget shows that draft at once and replaces it
+ * with the stored text when it polls GET .../messages right after. The
+ * visitor key never travels in an address: the ticket stands for it.
+ * Without EventSource, or while the stream is down, the widget polls for
+ * the answer every second or so, and draws the typing dots itself. It
+ * also polls (slowly with a live stream) for answers it has not shown:
+ * while a handoff to staff is open, while the panel is open within 24
+ * hours of the visitor's last exchange (staff can write to any website
+ * chat), and after a page was left while an answer was being written;
+ * not at all while the page is hidden. The visitor key travels in a
+ * request header, never in the URL. When no answer comes for 90 seconds
+ * (no worker took the message), the visitor reads "We'll answer as soon
+ * as we can" and the conversation goes to staff (POST .../handoff with
+ * the reason no_answer) instead of the dots just disappearing.
  * When the API says "too many messages" (429), sending and Retry wait for
  * its Retry-After, and polls slow down to it.
  * Tabs of one site share one history: each tab adopts what the others saved.
@@ -60,6 +71,7 @@
   var CONFIG_PATH = "/v1/widget/{business_id}/config";
   var MESSAGES_PATH = "/v1/widget/{business_id}/messages";
   var HANDOFF_PATH = "/v1/widget/{business_id}/handoff";
+  var EVENTS_PATH = "/v1/widget/{business_id}/events";
   var ERRORS_PATH = "/v1/widget/errors";
   var SCRIPT_FILE_NAME = "/widget.js";
 
@@ -78,6 +90,18 @@
   var RTL_CHARACTER_PATTERN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFC]/;
   var SESSION_KEY_HEADER = "X-Widget-Session-Key";
   var POSITIONS = ["left", "right"];
+  var THEMES = ["light", "dark"];
+  var STREAM_TICKET_PATTERN = /^[A-Za-z0-9_-]{40,120}$/;
+  // With the live stream up, polls are only a safety net.
+  var STREAM_SAFETY_POLL_MS = 15000;
+  // A stream the API refused (an expired ticket, too many streams) is tried
+  // again after this pause, with the ticket of a later answer.
+  var STREAM_RETRY_PAUSE_MS = 30000;
+  // EventSource.CLOSED: the browser will not reconnect by itself.
+  var STREAM_CLOSED = 2;
+  // No answer this long after a message: tell the visitor and pass the
+  // conversation to staff.
+  var NO_ANSWER_AFTER_MS = 90000;
   var PAGE_MODE = "page";
   var LIVE_PREVIEW = "live";
   // Messages between the live preview and the Channels page that frames it.

@@ -14,7 +14,7 @@ the reviewers work from.
 
 | Concept (code name) | English | Russian | Georgian | Never write |
 |---|---|---|---|---|
-| The AI front-line assistant | assistant | помощник | ასისტენტი | ассистент (only the product's own name „Мастерская ассистентов“ keeps it) |
+| The AI front-line assistant | assistant | помощник | ასისტენტი | ассистент in the cabinet (the product's own name „Мастерская ассистентов“ keeps it; customers read „AI-ассистент“, see "Words customers read") |
 | The team's one list of conversations (`inbox`) | Inbox | Входящие | შემოსული (everywhere: the navigation, the page and sentences, „შემოსულში“) | Messages, Сообщения, Мессенджер, შემოსულები |
 | The inbox views (`needs_person`, `requests`, `mine`, `unassigned`, `all`) | Needs a person, Requests, Mine, Unassigned, All | Нужен человек, Заявки, Мои, Без ответственного, Все | ადამიანის დახმარება, მოთხოვნები, ჩემი, დაუნიშნავი, ყველა | Queue, Очередь, Тикеты |
 | Who handles a conversation (`assignee`, `assign`) | Handled by {name}; Assign; Take it; Unassign | Отвечает: {name}; Назначить; Взять себе; Снять назначение | პასუხისმგებელი: {name}; დანიშვნა; ჩემზე აღება; დანიშვნის მოხსნა | assignee, исполнитель, тикет |
@@ -36,6 +36,34 @@ the reviewers work from.
 | The model's system prompt (`instruction`) | shown only to platform admins | только для администраторов платформы | მხოლოდ პლატფორმის ადმინისტრატორებისთვის | — |
 | Model, tokens, AI cost per message | shown only to platform admins | только для администраторов платформы | მხოლოდ პლატფორმის ადმინისტრატორებისთვის | tokens, токены in owner pages |
 | A staff Telegram chat | `@username`, or the contact's name and "Telegram chat" | `@username` или имя и «Чат в Telegram» | `@username` ან სახელი და „Telegram-ის ჩატი“ | the numeric chat id |
+
+## Words customers read
+
+The website chat (`widget.js`, the hosted chat page `/c/{slug}`, the
+`/widget/demo` page), the assistant's first message and the platform's
+notices to customers are read by the business's customers, not by staff.
+There the assistant is an **"AI-ассистент"**, not a "помощник":
+
+| Where | English | Russian | Georgian | Never write |
+|---|---|---|---|---|
+| The header, the greeting, the footer, the AI disclosure | AI assistant | AI-ассистент | AI-ასისტენტი | помощник, бот, чат-бот, ИИ-ассистент |
+| Short form inside the chat ("…is typing") | the assistant | ассистент | ასისტენტი | помощник, бот |
+| A late answer ("We'll answer as soon as we can") | our team answers | «Мы ответим, как только сможем.» | „გიპასუხებთ, როგორც კი შევძლებთ.“ | "error", «ошибка» |
+
+Why two words: the customer must learn at once that a machine answers
+(the AI disclosure), and "помощник" alone reads as a person's assistant;
+"AI" is written in Latin letters in every language, as the disclosure says
+it (`app/utilities/conversations/assistant_texts/ai_disclosure_texts.py`).
+The owner, on the other hand, sets up and teaches *their* помощник; the
+cabinet keeps "помощник" (and "AI-помощник" where the AI must be named, as
+in "Создать AI-помощника"). The privacy notice of the chat describes the
+assistant to customers in the cabinet's words and stays as it is until the
+legal review.
+
+`web/src/i18n/widgetGlossary.test.ts` reads the widget's text bundles
+(`app/gateways/http/static/widget/texts_*.js`): every language in its own
+script, the Russian, English and Georgian header, greeting and footer
+naming the AI assistant, no "помощник", "бот" or "ИИ" in the Russian chat.
 
 ## Texts the platform writes for staff
 

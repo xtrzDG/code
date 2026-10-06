@@ -17,8 +17,10 @@ from app.utilities.conversations.language_evidence.language_evidence_table impor
     LANGUAGE_EVIDENCE,
 )
 from app.utilities.conversations.language_evidence.writing_scripts import (
+    COMPATIBLE_TAG_SCRIPTS,
     SCRIPT_RANGES,
 )
+from app.utilities.localization.language_scripts import find_likely_script_code
 from app.utilities.localization.language_tags import base_language_code
 
 KANA_SCRIPT: str = "Kana"
@@ -102,8 +104,11 @@ def find_evidence(
     language_tag: LanguageTag,
     script: str,
 ) -> LanguageEvidence | None:
+    # Evidence of a language in a script other than its usual one is
+    # recorded under the tag with that script ("uz-Cyrl").
+    code: str = evidence_code(language_tag)
     evidence: LanguageEvidence | None = LANGUAGE_EVIDENCE.get(
-        evidence_code(language_tag)
+        f"{code}-{script}", LANGUAGE_EVIDENCE.get(code)
     )
     if evidence is None or evidence.script != script:
         return None
@@ -150,4 +155,12 @@ def score_language(
         FREQUENT_WORD_WEIGHT * frequent_word_hits
         + DISTINCTIVE_LETTER_WEIGHT * distinctive_hits
         - FOREIGN_LETTER_WEIGHT * foreign_hits
+    )
+
+
+def is_written_in(language: LanguageTag, script: str) -> bool:
+    """Whether a tag's own script (CLDR likely script) is `script`."""
+
+    return find_likely_script_code(language) in COMPATIBLE_TAG_SCRIPTS.get(
+        script, frozenset({script})
     )
