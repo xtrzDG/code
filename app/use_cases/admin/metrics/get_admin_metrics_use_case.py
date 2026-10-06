@@ -10,7 +10,6 @@ from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminPermission
 from app.schemas.constants.analytics import ProductEventName, WebVitalName
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.analytics.admin_metrics_query import AdminMetricsQuery
@@ -55,9 +54,11 @@ from app.utilities.analytics.mrr_math import (
     paying_businesses_at,
 )
 from app.utilities.analytics.owner_journeys import (
+    BusinessRoster,
     build_business_journeys,
     build_owner_journeys,
     invited_member_ids,
+    roster_of,
 )
 from app.utilities.analytics.web_vital_math import bucket_starts, build_web_vitals
 
@@ -131,7 +132,10 @@ class GetAdminMetricsUseCase(UseCaseContract[AdminMetricsQuery, AdminMetricsView
             ),
             *billing,
         ]
-        businesses: list[BusinessDocument] = list(walk_businesses(self._business_repo))
+        # Only each business's roster is kept, never its whole document.
+        businesses: list[BusinessRoster] = [
+            roster_of(business) for business in walk_businesses(self._business_repo)
+        ]
         signed_up: list[UserDocument] = self._user_repo.list_created_between(
             period.start, period.end
         )
