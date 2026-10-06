@@ -12,6 +12,9 @@ from app.containers.operators.billing_operators import BillingOperatorsContainer
 from app.containers.operators.booking_link_operators import (
     BookingLinkOperatorsContainer,
 )
+from app.containers.operators.calendar_sync_operators import (
+    CalendarSyncOperatorsContainer,
+)
 from app.containers.operators.call_operators import CallOperatorsContainer
 from app.containers.operators.channel_operators import ChannelOperatorsContainer
 from app.containers.operators.compliance_operators import ComplianceOperatorsContainer
@@ -190,6 +193,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     growth: GrowthOperatorsContainer = Container(  # type: ignore[assignment]
         GrowthOperatorsContainer,
         growth_pipelines=pipelines.growth,
+        utilities=utilities,
+    )
+    calendars: CalendarSyncOperatorsContainer = Container(  # type: ignore[assignment]
+        CalendarSyncOperatorsContainer,
+        calendar_pipelines=pipelines.calendars,
         utilities=utilities,
     )
     analytics: AnalyticsOperatorsContainer = Container(  # type: ignore[assignment]

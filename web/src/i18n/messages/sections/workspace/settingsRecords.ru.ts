@@ -155,6 +155,7 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       customer_segment: "Сегмент клиентов",
       customer_settings: "Настройки клиентов",
       waitlist_entry: "Лист ожидания",
+      resource_calendar: "Календари ресурса",
       waitlist_settings: "Настройки листа ожидания",
       campaign_settings: "Настройки повторных визитов",
       campaign_message: "Сообщения о повторных визитах",

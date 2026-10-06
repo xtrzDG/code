@@ -138,6 +138,7 @@ export const settingsRecordsEn = {
       customer_segment: "Customer segment",
       customer_settings: "Customer settings",
       waitlist_entry: "Waitlist",
+      resource_calendar: "Resource calendars",
       waitlist_settings: "Waitlist settings",
       campaign_settings: "Return visit settings",
       campaign_message: "Return visit messages",

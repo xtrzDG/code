@@ -11,6 +11,7 @@ from app.gateways.worker.periodic.activation_follow_up import (
     notice_milestones_job,
     send_activation_nudges_job,
 )
+from app.gateways.worker.periodic.calendar_sync import sync_calendars_job
 from app.gateways.worker.periodic.channel_credentials import (
     check_channel_credentials_job,
 )
@@ -124,6 +125,10 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             operator=operators.operations.send_booking_reminders_operator,
             # Customers' reminders go out with the workers that answer them.
             lane=JobLane.OUTBOUND,
+        ),
+        # Busy times of resources' outside calendars, every five minutes.
+        Factory(
+            sync_calendars_job, operator=operators.calendars.sync_due_calendars_operator
         ),
         Factory(
             PeriodicJobSpec,

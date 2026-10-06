@@ -11,6 +11,7 @@ from app.gateways.http.analytics_router_assembly import build_analytics_routers
 from app.gateways.http.assistant_routes import build_assistant_router
 from app.gateways.http.billing_router_assembly import build_billing_routers
 from app.gateways.http.business_routes import build_business_router
+from app.gateways.http.calendar_sync_router_assembly import build_calendar_sync_routers
 from app.gateways.http.call_router_assembly import build_call_routers
 from app.gateways.http.catalog_routes import build_catalog_router
 from app.gateways.http.channel_setup_router_assembly import (
@@ -291,6 +292,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_teaching_routers(operators, current_user),
         *build_memory_routers(operators, current_user),
         *build_growth_routers(operators, current_user),
+        *build_calendar_sync_routers(operators, current_user),
         *build_customer_routers(operators, current_user),
         *build_spend_guard_routers(operators, current_user),
         *build_referral_routers(operators, current_user),

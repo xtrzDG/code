@@ -23,6 +23,9 @@ from app.containers.orchestrators.billing_orchestrators import (
 from app.containers.orchestrators.booking_link_orchestrators import (
     BookingLinkOrchestratorsContainer,
 )
+from app.containers.orchestrators.calendar_sync_orchestrators import (
+    CalendarSyncOrchestratorsContainer,
+)
 from app.containers.orchestrators.call_orchestrators import (
     CallOrchestratorsContainer,
 )
@@ -268,6 +271,9 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
         waitlist_use_cases=use_cases.waitlist,
         campaign_use_cases=use_cases.campaigns,
     )
+    calendars: CalendarSyncOrchestratorsContainer = Container(  # type: ignore[assignment]
+        CalendarSyncOrchestratorsContainer, calendar_use_cases=use_cases.calendars
+    )  # fmt: skip
     analytics: AnalyticsOrchestratorsContainer = Container(  # type: ignore[assignment]
         AnalyticsOrchestratorsContainer,
         analytics_use_cases=use_cases.analytics,

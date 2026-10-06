@@ -84,25 +84,6 @@ class IcalBusyReader:
             fetched.body, window, zone, day_bounds, MAX_BUSY_PERIODS
         )
 
-
-def problem_of(error: WebFetchError) -> CalendarSyncProblem:
-    """The owner-facing reason of a fetch that failed."""
-
-    if error.problem in REFUSED_FETCH_PROBLEMS:
-        return CalendarSyncProblem.ADDRESS_REFUSED
-    if error.problem in UNUSABLE_FETCH_PROBLEMS:
-        return CalendarSyncProblem.NOT_A_CALENDAR
-    if error.problem is WebFetchProblem.TIMEOUT:
-        return CalendarSyncProblem.TIMEOUT
-    if error.problem is WebFetchProblem.HTTP_STATUS:
-        status: str = str(error.detail).rpartition(":")[2]
-        if status in ACCESS_DENIED_STATUSES:
-            return CalendarSyncProblem.ACCESS_DENIED
-        if status in GONE_STATUSES:
-            return CalendarSyncProblem.NOT_FOUND
-        return CalendarSyncProblem.PROVIDER_ERROR
-    return CalendarSyncProblem.UNREACHABLE
-
     def vet(self, url: CalendarFeedUrl) -> None:
         """
         Raises:
@@ -122,3 +103,22 @@ def problem_of(error: WebFetchError) -> CalendarSyncProblem:
                     )
                 ],
             ) from error
+
+
+def problem_of(error: WebFetchError) -> CalendarSyncProblem:
+    """The owner-facing reason of a fetch that failed."""
+
+    if error.problem in REFUSED_FETCH_PROBLEMS:
+        return CalendarSyncProblem.ADDRESS_REFUSED
+    if error.problem in UNUSABLE_FETCH_PROBLEMS:
+        return CalendarSyncProblem.NOT_A_CALENDAR
+    if error.problem is WebFetchProblem.TIMEOUT:
+        return CalendarSyncProblem.TIMEOUT
+    if error.problem is WebFetchProblem.HTTP_STATUS:
+        status: str = str(error.detail).rpartition(":")[2]
+        if status in ACCESS_DENIED_STATUSES:
+            return CalendarSyncProblem.ACCESS_DENIED
+        if status in GONE_STATUSES:
+            return CalendarSyncProblem.NOT_FOUND
+        return CalendarSyncProblem.PROVIDER_ERROR
+    return CalendarSyncProblem.UNREACHABLE
