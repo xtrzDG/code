@@ -51,7 +51,9 @@ test("webhooks: refused private address, secret once, test event logged with its
   await expect(delivery.getByText(en.apiIntegrations.deliveries.statuses.failed)).toBeVisible();
   await delivery.getByRole("button", { name: en.apiIntegrations.deliveries.showBody }).click();
   await expect(log.getByLabel(en.apiIntegrations.deliveries.body)).toContainText('"type": "webhook.test"');
-  await log.getByRole("button", { name: en.apiIntegrations.deliveries.close }).last().click();
+  // The drawer's own close button (a toast over its footer has one too).
+  await log.locator("header").getByRole("button", { name: en.common.close }).click();
+  await expect(log).toBeHidden();
 
   await row.getByRole("button", { name: en.apiIntegrations.webhooks.actions.menu }).click();
   await page.getByRole("menuitem", { name: en.apiIntegrations.webhooks.actions.pause }).click();
