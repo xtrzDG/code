@@ -11,6 +11,9 @@ from app.containers.adapters.feedback_collections_container import (
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
+from app.containers.adapters.integration_collections_container import (
+    IntegrationCollectionsContainer,
+)
 from app.containers.adapters.invoicing_collections_container import (
     InvoicingCollectionsContainer,
 )
@@ -175,6 +178,14 @@ class AppEdgesContainer(containers.DeclarativeContainer):
     # The credit ledger, notes, health changes, digests (1143), referrals (1150).
     client_care_collections: ReferralCollectionsContainer = Container(  # type: ignore[assignment]
         ReferralCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    # The public API and outbound webhooks: endpoints, deliveries, keys (1181).
+    integration_collections: IntegrationCollectionsContainer = Container(  # type: ignore[assignment]
+        IntegrationCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,

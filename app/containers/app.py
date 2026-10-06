@@ -44,6 +44,7 @@ class AppContainer(AppEdgesContainer):
         referral_collections=AppEdgesContainer.client_care_collections,
         growth_collections=AppEdgesContainer.adapters.growth_collections,
         calendar_sync_collections=AppEdgesContainer.adapters.calendar_sync_collections,
+        integration_collections=AppEdgesContainer.integration_collections,
         legal_collections=AppEdgesContainer.legal_collections,
         privacy_collections=AppEdgesContainer.privacy_collections,
         retention_collections=AppEdgesContainer.adapters.collections,

@@ -14,6 +14,7 @@ from app.containers.client_care_repositories import ClientCareRepositoriesContai
 from app.containers.feedback_repositories import FeedbackRepositoriesContainer
 from app.containers.growth_repositories import GrowthRepositoriesContainer
 from app.containers.inbox_repositories import InboxRepositoriesContainer
+from app.containers.integration_repositories import IntegrationRepositoriesContainer
 from app.containers.launch_repositories import LaunchRepositoriesContainer
 from app.containers.legal_repositories import LegalRepositoriesContainer
 from app.containers.media_repositories import MediaRepositoriesContainer
@@ -112,6 +113,7 @@ class RepositoriesContainer(
     ClientCareRepositoriesContainer,
     GrowthRepositoriesContainer,
     CalendarSyncRepositoriesContainer,
+    IntegrationRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 

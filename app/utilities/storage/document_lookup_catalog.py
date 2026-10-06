@@ -20,6 +20,7 @@ from app.schemas.typings.storage.constrained_strings import DocumentCollectionNa
 from app.utilities.storage.calendar_sync_collections import CALENDAR_SYNC_LOOKUP_FIELDS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
 from app.utilities.storage.growth_collections import GROWTH_LOOKUP_FIELDS
+from app.utilities.storage.integration_collections import INTEGRATION_LOOKUP_FIELDS
 from app.utilities.storage.lookup_field_builders import (
     element_field,
     filter_field,
@@ -278,6 +279,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The waitlist and the rebooking campaigns (1151).
     **GROWTH_LOOKUP_FIELDS,
     **CALENDAR_SYNC_LOOKUP_FIELDS,  # Two-way availability (1160).
+    **INTEGRATION_LOOKUP_FIELDS,  # Webhooks and API keys (1181).
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }
