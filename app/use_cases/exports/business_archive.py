@@ -146,6 +146,15 @@ class BusinessArchiveBuilder:
     def _collections(self, business: BusinessDocument) -> dict[str, DocumentPages]:
         """Each JSON file's documents, as pages read when the file is written."""
 
+        return self._business_collections(business) | growth_pages(
+            business.id, self.waitlist_entry_repo, self.campaign_message_repo
+        )
+
+    def _business_collections(
+        self, business: BusinessDocument
+    ) -> dict[str, DocumentPages]:
+        """The business, its customers and conversations, bookings and log."""
+
         business_id = business.id
         return {
             "business": single_page([business]),
@@ -177,9 +186,6 @@ class BusinessArchiveBuilder:
             ),
             "feedback_requests": pages_in_write_order(
                 self.feedback_request_repo, business_id, lambda item: str(item.id)
-            ),
-            **growth_pages(
-                business_id, self.waitlist_entry_repo, self.campaign_message_repo
             ),
             "audit_log": pages_in_write_order(
                 self.audit_log_repo, business_id, lambda item: str(item.id)

@@ -100,6 +100,12 @@ class BookingManageTokenSigner(BookingManageTokenSignerContract):
         if len(raw) != PAYLOAD_LENGTH + SIGNATURE_LENGTH:
             return None
 
+        # Only the one spelling this signer writes: another (the spare low
+        # bits of the last character changed) is an altered link, even
+        # though it decodes to the same bytes.
+        if base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii") != text:
+            return None
+
         payload, signature = raw[:PAYLOAD_LENGTH], raw[PAYLOAD_LENGTH:]
         if not any(
             hmac.compare_digest(signature, sign_payload(key, payload))

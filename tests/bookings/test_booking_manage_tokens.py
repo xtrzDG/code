@@ -78,6 +78,24 @@ def test_an_altered_link_proves_nothing(position: int) -> None:
     assert signer.read(tampered(token, position)) is None
 
 
+def test_a_link_spelled_differently_for_the_same_bytes_proves_nothing() -> None:
+    signer = BookingManageTokenSigner(KEY)
+    text: str = str(signer.sign(claims()))
+    alphabet: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    # 71 characters carry 53 bytes: the last character's two low bits are
+    # spare, so these spellings decode to the very same bytes.
+    last: int = alphabet.index(text[-1])
+    same_bytes: list[str] = [
+        text[:-1] + alphabet[(last & ~0b11) | spare]
+        for spare in range(4)
+        if (last & ~0b11) | spare != last
+    ]
+
+    assert len(same_bytes) == 3
+    for spelling in same_bytes:
+        assert signer.read(BookingManageToken(spelling)) is None
+
+
 def test_claims_cannot_be_swapped_under_a_kept_signature() -> None:
     signer = BookingManageTokenSigner(KEY)
     business_a, business_b = BusinessId(), BusinessId()

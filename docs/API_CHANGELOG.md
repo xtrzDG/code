@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — wave 15 together: worker resilience, referrals and partners, the waitlist and return visits
+
+Spec: `ce734ea095df4aa1`
+
+No change of its own: the API description with the three entries below
+merged together (why a dead job died and which job holds a customer's
+message; invitations, the partner portal, payouts and "Powered by"; the
+waitlist, return-visit campaigns and their growth lines in value and
+reports). Each of those entries names the description of its own change
+alone.
+
 ## 2026-10-06 — waitlist and return visits
 
 Spec: `aa18f1931b37ab6f`
