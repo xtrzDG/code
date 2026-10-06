@@ -14,6 +14,7 @@ export const callSettingsEn = {
     toggle: "Send a summary after every call",
     contactsHint: "Who gets them: the staff contacts in Settings → Notifications.",
     openContacts: "Staff contacts",
+    turnedOff: "Call summaries are off",
   },
   textBack: {
     title: "Text back missed callers",
@@ -27,8 +28,8 @@ export const callSettingsEn = {
     smsHint: "From the platform's SMS sender, when the number has no WhatsApp or the template is refused.",
     smsNeedsTextBack: "Turn on messages to callers who did not get through first.",
     rules: "Each caller is texted at most once a day. Customers who opted out of messages, or who are already writing to you, are not texted.",
-    save: "Save",
-    saved: "Call settings saved",
+    turnedOff: "Messages to callers who did not get through are off",
+    smsTurnedOff: "SMS to callers who did not get through is off",
     readiness: {
       whatsapp: "Callers get your WhatsApp template.",
       sms: "Callers get an SMS.",

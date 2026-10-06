@@ -43,8 +43,7 @@ export const notificationsRu: Translation<typeof notificationsEn> = {
   mine: {
     title: "Что приходит мне",
     description: "Ваш выбор для ваших устройств в этом бизнесе. Время — по часовому поясу бизнеса, {timeZone}.",
-    save: "Сохранить",
-    saved: "Ваши настройки уведомлений сохранены",
+    eventOff: "Вам больше не приходят уведомления: {event}",
   },
   preferences: {
     events: "Сообщать о",

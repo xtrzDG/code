@@ -110,6 +110,14 @@ export function useAutosaveForm<Form extends object, Stored, Body>(options: Auto
     /** A switch, a choice, a list: saved at once. */
     update: <Field extends keyof Form>(field: Field, value: Form[Field]) =>
       engine.change({ [field]: value } as unknown as Partial<Form>, 0),
+    /** Several fields given back as one value (a group of fields): the ones that differ, saved at once. */
+    updateFields: (patch: Partial<Form>) => {
+      const current = engine.getSnapshot().form;
+      const changed = (Object.keys(patch) as (keyof Form)[]).filter((field) => !Object.is(patch[field], current[field]));
+      if (changed.length > 0) {
+        engine.change(Object.fromEntries(changed.map((field) => [field, patch[field]])) as Partial<Form>, 0);
+      }
+    },
     /** Text: saved a moment after the last key (and at once on `flush`). */
     type: <Field extends keyof Form>(field: Field, value: Form[Field]) =>
       engine.change({ [field]: value } as unknown as Partial<Form>, TYPING_DELAY_MS),

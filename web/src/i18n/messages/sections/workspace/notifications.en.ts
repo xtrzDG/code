@@ -42,8 +42,7 @@ export const notificationsEn = {
   mine: {
     title: "What reaches me",
     description: "Your choice for your own devices in this business. Times are in the business time zone, {timeZone}.",
-    save: "Save",
-    saved: "Your notification choices are saved",
+    eventOff: "You no longer get notifications about: {event}",
   },
   preferences: {
     events: "Notify about",

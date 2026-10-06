@@ -52,8 +52,6 @@ export const privacyRetentionEn = {
     anonymized_bookings: "bookings",
     anonymized_handoffs: "requests",
   },
-  save: "Save periods",
-  saved: "Retention periods saved",
   shorterTitle: "Delete older data tonight?",
   shorterDescription:
     "With shorter periods, tonight's cleanup deletes for good everything beyond them (conversations: {conversations}; AI call records: {modelRecords}). This cannot be undone.",
@@ -61,7 +59,5 @@ export const privacyRetentionEn = {
   qualitySampling: {
     label: "Quality checks of real conversations",
     hint: "Each night a small sample of finished conversations (test chats left out) is scored by the same AI provider that writes the answers, so weak answers show up in the assistant's quality. Turn it off to keep your customers' conversations out of these checks.",
-    on: "Quality checks of real conversations are on",
-    off: "Quality checks of real conversations are off",
   },
 } as const;

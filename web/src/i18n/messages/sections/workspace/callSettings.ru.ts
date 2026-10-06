@@ -14,6 +14,7 @@ export const callSettingsRu: Translation<typeof callSettingsEn> = {
     toggle: "Отправлять итог после каждого звонка",
     contactsHint: "Кто получает: контакты сотрудников в Настройки → Уведомления.",
     openContacts: "Контакты сотрудников",
+    turnedOff: "Итоги звонков выключены",
   },
   textBack: {
     title: "Сообщение тем, кто не дозвонился",
@@ -27,8 +28,8 @@ export const callSettingsRu: Translation<typeof callSettingsEn> = {
     smsHint: "С SMS-отправителя платформы, если у номера нет WhatsApp или шаблон отклонён.",
     smsNeedsTextBack: "Сначала включите сообщения тем, кто не дозвонился.",
     rules: "Каждому звонящему пишем не чаще раза в день. Клиентам, которые отказались от сообщений или уже переписываются с вами, не пишем.",
-    save: "Сохранить",
-    saved: "Настройки звонков сохранены",
+    turnedOff: "Сообщения тем, кто не дозвонился, выключены",
+    smsTurnedOff: "SMS тем, кто не дозвонился, выключены",
     readiness: {
       whatsapp: "Звонящие получат ваш шаблон WhatsApp.",
       sms: "Звонящие получат SMS.",

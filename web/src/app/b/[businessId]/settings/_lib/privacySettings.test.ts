@@ -9,15 +9,14 @@ import { daysLabel, periodLabel, periodParts } from "@/lib/retentionPeriods";
 import {
   CONVERSATION_PERIODS,
   isSameRetention,
-  isShorterRetention,
   MODEL_RECORD_PERIODS,
   NAMED_PROCESSORS,
   periodChoices,
   PURGE_COUNT_FIELDS,
   purgeSummary,
-  qualitySamplingBody,
   retentionBody,
   retentionForm,
+  shorterPeriods,
   type PrivacySettingsView,
   type RetentionPurgeCounts,
 } from "./privacySettings";
@@ -44,31 +43,28 @@ const NO_COUNTS: RetentionPurgeCounts = {
 };
 
 describe("the retention form", () => {
-  it("starts from the stored periods and saves them as the API reads them", () => {
+  it("starts from the stored settings and saves them as the API reads them", () => {
     const form = retentionForm(VIEW);
 
-    expect(form).toEqual({ conversationDays: 730, modelRecordDays: 30 });
-    expect(retentionBody({ conversationDays: 365, modelRecordDays: 14 })).toEqual({
+    expect(form).toEqual({ conversationDays: 730, modelRecordDays: 30, isQualitySamplingAllowed: true });
+    expect(retentionBody({ conversationDays: 365, modelRecordDays: 14, isQualitySamplingAllowed: false })).toEqual({
       conversation_retention_days: 365,
       llm_turn_retention_days: 14,
+      quality_sampling_allowed: false,
     });
     expect(isSameRetention(form, VIEW)).toBe(true);
     expect(isSameRetention({ ...form, modelRecordDays: 14 }, VIEW)).toBe(false);
+    expect(isSameRetention({ ...form, isQualitySamplingAllowed: false }, VIEW)).toBe(false);
   });
 
   it("asks before a shorter period, which deletes data tonight, not before a longer one", () => {
-    expect(isShorterRetention({ conversationDays: 365, modelRecordDays: 30 }, VIEW)).toBe(true);
-    expect(isShorterRetention({ conversationDays: 730, modelRecordDays: 7 }, VIEW)).toBe(true);
-    expect(isShorterRetention({ conversationDays: 1825, modelRecordDays: 30 }, VIEW)).toBe(false);
-  });
-
-  it("turns the quality sample of real conversations on or off without touching the periods", () => {
-    expect(qualitySamplingBody(VIEW, false)).toEqual({
-      conversation_retention_days: 730,
-      llm_turn_retention_days: 30,
-      quality_sampling_allowed: false,
-    });
-    expect(qualitySamplingBody({ ...VIEW, quality_sampling_allowed: false }, true).quality_sampling_allowed).toBe(true);
+    const form = retentionForm(VIEW);
+    expect(shorterPeriods({ ...form, conversationDays: 365 }, VIEW)).toEqual(["conversationDays"]);
+    expect(shorterPeriods({ ...form, conversationDays: 365, modelRecordDays: 7 }, VIEW)).toEqual([
+      "conversationDays",
+      "modelRecordDays",
+    ]);
+    expect(shorterPeriods({ ...form, conversationDays: 1825, isQualitySamplingAllowed: false }, VIEW)).toEqual([]);
   });
 
   it("offers the presets within the API's bounds and keeps a stored value set some other way", () => {

@@ -16,6 +16,7 @@ import {
   TEXT_BACK_CHANNEL_LABELS,
   TEXT_BACK_STATUS_LABELS,
   textBackReadiness,
+  turnedOffText,
   type CallSettingsView,
 } from "./calls";
 
@@ -58,6 +59,21 @@ describe("the call settings form", () => {
     expect(templateNameError({ ...form, templateName: "" })).toBeNull();
     expect(templateNameError({ ...form, templateName: "missed_call_2" })).toBeNull();
     expect(templateNameError({ ...form, templateName: "Missed call" })).toBe("callSettings.textBack.templateInvalid");
+  });
+});
+
+describe("the Undo of a save", () => {
+  const on = { isSummaryEnabled: true, isTextBackEnabled: true, templateName: "", isSmsFallbackEnabled: true };
+
+  it("is offered when something was switched off, and names it", () => {
+    expect(turnedOffText(on, { ...on, isTextBackEnabled: false })).toBe("callSettings.textBack.turnedOff");
+    expect(turnedOffText(on, { ...on, isSmsFallbackEnabled: false })).toBe("callSettings.textBack.smsTurnedOff");
+    expect(turnedOffText(on, { ...on, isSummaryEnabled: false })).toBe("callSettings.summaries.turnedOff");
+  });
+
+  it("is not offered for switching on or for a new template name", () => {
+    expect(turnedOffText({ ...on, isTextBackEnabled: false }, on)).toBeNull();
+    expect(turnedOffText(on, { ...on, templateName: "missed_call" })).toBeNull();
   });
 });
 

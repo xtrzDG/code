@@ -69,6 +69,20 @@ export function isSameCallSettings(form: CallSettingsForm, view: CallSettingsVie
   );
 }
 
+/**
+ * The Undo toast of a save that switched something off (callers stop
+ * getting a message, staff stop getting summaries), or null.
+ */
+export function turnedOffText(before: CallSettingsForm, after: CallSettingsForm): MessageKey | null {
+  if (before.isTextBackEnabled && !after.isTextBackEnabled) {
+    return "callSettings.textBack.turnedOff";
+  }
+  if (before.isSmsFallbackEnabled && !after.isSmsFallbackEnabled) {
+    return "callSettings.textBack.smsTurnedOff";
+  }
+  return before.isSummaryEnabled && !after.isSummaryEnabled ? "callSettings.summaries.turnedOff" : null;
+}
+
 export type TextBackReadiness = "off" | "whatsapp" | "sms" | "none";
 
 /**
