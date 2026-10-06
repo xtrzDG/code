@@ -102,7 +102,9 @@ def build_admin_partner_router(
         if parsed is None:
             raise ValidationFailedError("month is required (YYYY-MM).")
 
-        return get_payout_report.operate(PayoutReportQuery(user_id=user_id, month=parsed))
+        return get_payout_report.operate(
+            PayoutReportQuery(user_id=user_id, month=parsed)
+        )
 
     @router.patch(
         "/v1/admin/partners/{partner_id}",

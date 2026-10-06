@@ -14,9 +14,6 @@ from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
 from app.containers.adapters.call_adapters_container import CallAdaptersContainer
-from app.containers.adapters.referral_collections_container import (
-    ReferralCollectionsContainer,
-)
 from app.containers.adapters.document_collections_container import (
     DocumentCollectionsContainer,
 )
@@ -46,6 +43,9 @@ from app.containers.adapters.privacy_collections_container import (
 )
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
+)
+from app.containers.adapters.referral_collections_container import (
+    ReferralCollectionsContainer,
 )
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,

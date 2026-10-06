@@ -42,6 +42,7 @@ from app.use_cases.voice.authenticate_voice_tool_call_use_case import (
 from app.use_cases.voice.start_voice_call_use_case import StartVoiceCallUseCase
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.channels.channels_call_follow_ups import ChannelsCallFollowUps
+from tests.referrals.referral_parts import ReferralRepositories
 
 
 def wrap[InputData, OutputData](
@@ -91,6 +92,7 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                     testbed.language_registry,
                     testbed.language_detector,
                     testbed.settings,
+                    ReferralRepositories().links(testbed.wall_clock),
                 )
             ),
             widget_message_operator=wrap(

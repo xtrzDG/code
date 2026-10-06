@@ -184,6 +184,7 @@ class BillingUseCases(BillingInfrastructure):
             billing_notice_transformer=self.notice_transformer,
             wall_clock=wall_clock,
             product_events=self.product_events,
+            referral_earnings=self.referral_earnings,
         )
         self.end_trials = EndTrialsUseCase(
             business_repo=self.business_repo,

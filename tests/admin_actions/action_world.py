@@ -92,6 +92,7 @@ class ActionWorld:
             testbed.business_repo,
             testbed.product_events,
             clock,
+            testbed.referral_earnings,
         )
         self.override_plan = OverridePlanUseCase(
             gate,

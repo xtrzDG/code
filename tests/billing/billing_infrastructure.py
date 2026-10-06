@@ -77,6 +77,7 @@ from tests.billing.billing_settings import (
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
 from tests.billing.invoicing_parts import InvoicingParts, build_invoicing_parts
+from tests.referrals.referral_parts import ReferralRepositories
 
 
 class BillingInfrastructure:
@@ -174,3 +175,11 @@ class BillingInfrastructure:
         self.invoice_description_transformer = InvoiceDescriptionTransformer(resolver)
         self.invoice_line_texts_transformer = InvoiceLineTextsTransformer(resolver)
         self.notice_transformer = BillingNoticeTransformer(resolver)
+        self.referrals = ReferralRepositories()
+        self.referral_earnings = self.referrals.earnings(
+            billing_credit_repo=self.billing_credit_repo,
+            subscription_repo=self.subscription_repo,
+            business_repo=self.business_repo,
+            plan_registry=self.plan_registry,
+            wall_clock=self.clock.wall_clock,
+        )
