@@ -9,10 +9,16 @@ class LoginMethod(StrEnum):
 
 
 class BusinessMemberRole(StrEnum):
-    """Role of a user inside one business."""
+    """
+    Role of a user inside one business. AGENCY is an outside helper (a
+    partner's agency) the owner let in: staff's work plus building and
+    publishing the assistant, never billing, the team, channels, security
+    or copies of customers' data.
+    """
 
     OWNER = "owner"
     STAFF = "staff"
+    AGENCY = "agency"
 
 
 class LoginRiskSignal(StrEnum):

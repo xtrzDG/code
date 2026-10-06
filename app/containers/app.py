@@ -7,9 +7,6 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
-from app.containers.adapters.client_care_collections_container import (
-    ClientCareCollectionsContainer,
-)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -33,6 +30,9 @@ from app.containers.adapters.privacy_collections_container import (
 )
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
+)
+from app.containers.adapters.referral_collections_container import (
+    ReferralCollectionsContainer,
 )
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,
@@ -196,9 +196,9 @@ class AppContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
     )
-    # The admin's credit ledger, notes, health changes and digests (1143).
-    client_care_collections: ClientCareCollectionsContainer = Container(  # type: ignore[assignment]
-        ClientCareCollectionsContainer,
+    # The credit ledger, notes, health changes, digests (1143), referrals (1150).
+    client_care_collections: ReferralCollectionsContainer = Container(  # type: ignore[assignment]
+        ReferralCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,
@@ -209,6 +209,7 @@ class AppContainer(containers.DeclarativeContainer):
         spend_guard_collections=spend_guard_collections,
         usage_collections=adapters.collections,
         client_care_collections=client_care_collections,
+        referral_collections=client_care_collections,
         legal_collections=legal_collections,
         privacy_collections=privacy_collections,
         retention_collections=adapters.collections,

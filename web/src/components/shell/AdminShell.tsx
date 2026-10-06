@@ -6,9 +6,17 @@ import type { ReactNode } from "react";
 import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { canOpenAdminPage, type AdminPageKey } from "@/lib/adminPermissions";
-import { ADMIN_METRICS_PATH, ADMIN_PATH, ADMIN_SECURITY_PATH, ADMIN_SYSTEM_PATH, ADMIN_TEAM_PATH, HOME_PATH } from "@/lib/navigation";
+import {
+  ADMIN_METRICS_PATH,
+  ADMIN_PARTNERS_PATH,
+  ADMIN_PATH,
+  ADMIN_SECURITY_PATH,
+  ADMIN_SYSTEM_PATH,
+  ADMIN_TEAM_PATH,
+  HOME_PATH,
+} from "@/lib/navigation";
 
-import { IconBuilding, IconGauge, IconKey, IconPulse, IconShield, IconUsers } from "../icons";
+import { IconBuilding, IconGauge, IconKey, IconLink, IconPulse, IconShield, IconUsers } from "../icons";
 import { ShellFrame } from "./ShellFrame";
 import type { ShellNavItem } from "./types";
 
@@ -29,7 +37,9 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
   const isMetricsPage = isUnder(pathname, ADMIN_METRICS_PATH);
   const isSystemPage = isUnder(pathname, ADMIN_SYSTEM_PATH);
   const isTeamPage = isUnder(pathname, ADMIN_TEAM_PATH);
-  const isAdminPage = !isSecurityPage && !isMetricsPage && !isSystemPage && !isTeamPage && isUnder(pathname, ADMIN_PATH);
+  const isPartnersPage = isUnder(pathname, ADMIN_PARTNERS_PATH);
+  const isAdminPage =
+    !isSecurityPage && !isMetricsPage && !isSystemPage && !isTeamPage && !isPartnersPage && isUnder(pathname, ADMIN_PATH);
   const title = isSecurityPage
     ? t("adminSecurity.nav")
     : isMetricsPage
@@ -38,7 +48,9 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
         ? t("adminSystem.nav")
         : isTeamPage
           ? t("adminTeam.nav")
-          : t("nav.admin");
+          : isPartnersPage
+            ? t("adminPartners.nav")
+            : t("nav.admin");
   const pages: (ShellNavItem & { key: AdminPageKey })[] = [
     { key: "admin", href: ADMIN_PATH, label: t("nav.admin"), icon: IconShield, isActive: isAdminPage, inTabBar: true },
     // On call from a phone: the platform's health is one tap away.
@@ -47,6 +59,7 @@ export function AdminShell({ me, initialCollapsed = false, children }: { me: Cur
     { key: "metrics", href: ADMIN_METRICS_PATH, label: t("adminMetrics.nav"), icon: IconGauge, isActive: isMetricsPage, inTabBar: false },
     { key: "security", href: ADMIN_SECURITY_PATH, label: t("adminSecurity.nav"), icon: IconKey, isActive: isSecurityPage, inTabBar: false },
     { key: "team", href: ADMIN_TEAM_PATH, label: t("adminTeam.nav"), icon: IconUsers, isActive: isTeamPage, inTabBar: false },
+    { key: "partners", href: ADMIN_PARTNERS_PATH, label: t("adminPartners.nav"), icon: IconLink, isActive: isPartnersPage, inTabBar: false },
   ];
   return (
     <ShellFrame

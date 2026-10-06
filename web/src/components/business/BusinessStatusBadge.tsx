@@ -16,6 +16,7 @@ const STATUS: Record<BusinessStatus, { tone: BadgeTone; label: MessageKey }> = {
 const ROLE: Record<BusinessMemberRole, MessageKey> = {
   owner: "businesses.role.owner",
   staff: "businesses.role.staff",
+  agency: "businesses.role.agency",
 };
 
 export function BusinessStatusBadge({ status }: { status: BusinessStatus }) {

@@ -21,6 +21,12 @@ import {
   type InviteForm,
 } from "../../_lib/team";
 
+const ROLE_DESCRIPTIONS = {
+  staff: "settings.team.roleStaff",
+  agency: "settings.roles.agencyDescription",
+  owner: "settings.roles.ownerDescription",
+} as const;
+
 /** Inviting a member by phone or e-mail, as staff or an owner. */
 export function InviteModal({
   open,
@@ -169,7 +175,7 @@ function InviteForm({ onClose, onInvited }: { onClose: () => void; onInvited: (m
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-ink">{t("settings.team.role")}</legend>
         <div className="space-y-2">
-          {(["staff", "owner"] as const).map((role) => (
+          {(["staff", "agency", "owner"] as const).map((role) => (
             <Radio
               key={role}
               id={`invite-role-${role}`}
@@ -181,7 +187,7 @@ function InviteForm({ onClose, onInvited }: { onClose: () => void; onInvited: (m
                 form.role === role ? "border-accent-solid bg-accent-soft/40" : "border-line hover:bg-surface-muted/60",
               )}
               label={<span className="font-medium">{t(ROLE_NAMES[role])}</span>}
-              description={t(role === "owner" ? "settings.roles.ownerDescription" : "settings.team.roleStaff")}
+              description={t(ROLE_DESCRIPTIONS[role])}
             />
           ))}
         </div>

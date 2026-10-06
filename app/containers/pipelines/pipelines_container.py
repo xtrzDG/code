@@ -40,6 +40,7 @@ from app.containers.pipelines.privacy_pipelines import PrivacyPipelinesContainer
 from app.containers.pipelines.public_demo_pipelines import (
     PublicDemoPipelinesContainer,
 )
+from app.containers.pipelines.referral_pipelines import ReferralPipelinesContainer
 from app.containers.pipelines.security_pipelines import SecurityPipelinesContainer
 from app.containers.pipelines.setup_pipelines import SetupPipelinesContainer
 from app.containers.pipelines.sharing_pipelines import SharingPipelinesContainer
@@ -189,4 +190,8 @@ class PipelinesContainer(containers.DeclarativeContainer):
     value: ValuePipelinesContainer = Container(  # type: ignore[assignment]
         ValuePipelinesContainer,
         value=orchestrators.value,
+    )
+    referrals: ReferralPipelinesContainer = Container(  # type: ignore[assignment]
+        ReferralPipelinesContainer,
+        referrals=orchestrators.referrals,
     )

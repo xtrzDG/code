@@ -7,6 +7,7 @@ from app.containers.config import ConfigContainer
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
 from app.containers.privacy_facilitators import PrivacyFacilitatorsContainer
+from app.containers.referral_facilitators import ReferralFacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.sign_in_facilitators import SignInFacilitatorsContainer
@@ -93,13 +94,9 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Sign-in codes and the login's abuse protection.
     sign_in: SignInFacilitatorsContainer = Container(  # type: ignore[assignment]
-        SignInFacilitatorsContainer,
-        adapters=adapters,
-        clients=clients,
-        config=config,
-        time_provider=time_provider,
-        utilities=utilities,
-    )
+        SignInFacilitatorsContainer, adapters=adapters, clients=clients,
+        config=config, time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
     otp_delivery_facilitator = sign_in.otp_delivery_facilitator
     bot_check_facilitator = sign_in.bot_check_facilitator
     login_code_cap_alerts = sign_in.login_code_cap_alerts
@@ -247,12 +244,9 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Data-subject rights: the suppression list, the sub-processors' copies.
     privacy: PrivacyFacilitatorsContainer = Container(  # type: ignore[assignment]
-        PrivacyFacilitatorsContainer,
-        clients=clients,
-        config=config,
-        repositories=repositories,
-        job_queue=job_queue_facilitator,
-    )
+        PrivacyFacilitatorsContainer, clients=clients, config=config,
+        repositories=repositories, job_queue=job_queue_facilitator,
+    )  # fmt: skip
     suppression_list = privacy.suppression_list
     processor_erasure = privacy.processor_erasure
     # The claim check of the reply guard: a cheap verifier model
@@ -287,14 +281,20 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Invoice numbers, VAT and the invoice and receipt PDFs (1114).
     invoicing: InvoicingFacilitatorsContainer = Container(  # type: ignore[assignment]
-        InvoicingFacilitatorsContainer,
-        adapters=adapters,
-        config=config,
-        registries=registries,
-        repositories=repositories,
-        time_provider=time_provider,
-        transformers=transformers,
-    )
+        InvoicingFacilitatorsContainer, adapters=adapters, config=config,
+        registries=registries, repositories=repositories,
+        time_provider=time_provider, transformers=transformers,
+    )  # fmt: skip
     invoice_issuing_facilitator = invoicing.invoice_issuing_facilitator
     billing_document_facilitator = invoicing.billing_document_facilitator
     billing_email_attachments = invoicing.billing_email_attachments_facilitator
+    # The referral program (1150): "Powered by" and invitation links, who
+    # brought a business, what its paid invoices earn.
+    referrals: ReferralFacilitatorsContainer = Container(  # type: ignore[assignment]
+        ReferralFacilitatorsContainer, config=config, registries=registries,
+        repositories=repositories, time_provider=time_provider,
+        utilities=utilities,
+    )  # fmt: skip
+    referral_links = referrals.referral_links
+    referral_attribution = referrals.referral_attribution
+    referral_earnings = referrals.referral_earnings

@@ -14,8 +14,9 @@ CORRECTION: str = (
 
 # Operations only owners may use; staff get 403 (AuthorizeBusinessAccess
 # with required_role=OWNER): settings, team, billing, publishing, channels,
-# the customers' personal data (export, erasure, blocking, segments) and the
-# audit log. Staff read the customers with their phone numbers masked.
+# the customers' personal data (export, erasure, blocking, segments), the
+# owner's invitation and "Powered by" link, and the audit log. Staff read
+# the customers with their phone numbers masked.
 OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
     {
         f"PATCH {B}",
@@ -76,6 +77,8 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"PATCH {B}/profile",
         f"PUT {B}/profile/steps/{{step}}",
         f"PUT {B}/public-slug",
+        f"GET {B}/referrals",
+        f"PUT {B}/referrals/powered-by",
         f"GET {B}/review-settings",
         f"PUT {B}/review-settings",
         f"GET {B}/review-stats",

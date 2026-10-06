@@ -187,6 +187,7 @@ export const adminMetricsKa: Translation<typeof adminMetricsEn> = {
     wentLive: "გაეშვნენ",
     paying: "იხდიან",
     payingShare: "გადამხდელთა წილი",
+    referralCode: "მოწვევის კოდი",
     names: {
       direct: "პირდაპირი",
       unknown: "უცნობი",

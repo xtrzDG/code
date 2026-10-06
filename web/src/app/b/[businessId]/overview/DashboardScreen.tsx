@@ -21,6 +21,7 @@ import { guideCard } from "@/lib/setupGuide/guide";
 
 import { DashboardPeriodSkeleton } from "./_components/DashboardSkeleton";
 import { AttentionTile, NextStepCard } from "./_components/DashboardWidgets";
+import { InviteCard } from "./_components/InviteCard";
 import {
   canTakeStep,
   DASHBOARD_PERIODS,
@@ -177,7 +178,8 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
           </PhoneFold>
         ) : null}
 
-        {/* The slot for invitations (R15-REFERRALS' InviteCard): owners, after everything above, on every screen. */}
+        {/* "Invite a business — a month free", from the tenth booking (owners), after everything above, on every screen. */}
+        {isOwner ? <InviteCard /> : null}
       </div>
     </PhoneFolds>
   );

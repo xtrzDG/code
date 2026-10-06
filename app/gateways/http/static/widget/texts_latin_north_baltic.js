@@ -25,6 +25,7 @@
       suggestions: "Proponowane pytania",
       footer: "Asystent AI · może się mylić",
       privacy: "Prywatność",
+      poweredBy: "Działa dzięki Assistant Workshop",
       call: "Zadzwoń",
       otherWays: "Inne sposoby kontaktu"
     },
@@ -55,6 +56,7 @@
       suggestions: "Siūlomi klausimai",
       footer: "DI asistentas · gali klysti",
       privacy: "Privatumas",
+      poweredBy: "Veikia su Assistant Workshop",
       call: "Skambinti",
       otherWays: "Kiti būdai susisiekti"
     },
@@ -85,6 +87,7 @@
       suggestions: "Ieteiktie jautājumi",
       footer: "MI asistents · var kļūdīties",
       privacy: "Privātums",
+      poweredBy: "Darbina Assistant Workshop",
       call: "Zvanīt",
       otherWays: "Citi saziņas veidi"
     },
@@ -115,6 +118,7 @@
       suggestions: "Soovitatud küsimused",
       footer: "AI-assistent · võib eksida",
       privacy: "Privaatsus",
+      poweredBy: "Teenust pakub Assistant Workshop",
       call: "Helista",
       otherWays: "Muud võimalused meiega ühendust võtta"
     },
@@ -145,6 +149,7 @@
       suggestions: "Ehdotetut kysymykset",
       footer: "Tekoälyavustaja · voi tehdä virheitä",
       privacy: "Tietosuoja",
+      poweredBy: "Palvelun tarjoaa Assistant Workshop",
       call: "Soita",
       otherWays: "Muut yhteydenottotavat"
     },
@@ -175,6 +180,7 @@
       suggestions: "Foreslåtte spørsmål",
       footer: "KI-assistent · kan gjøre feil",
       privacy: "Personvern",
+      poweredBy: "Levert av Assistant Workshop",
       call: "Ring",
       otherWays: "Andre måter å nå oss på"
     },

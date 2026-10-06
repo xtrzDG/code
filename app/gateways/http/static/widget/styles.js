@@ -137,6 +137,8 @@
     ".aw-footer{margin:0;padding:4px 12px 10px;font-size:11.5px;line-height:1.4;color:var(--aw-muted);",
     "text-align:center;flex:none;background:var(--aw-bg);}",
     ".aw-privacy{color:inherit;text-decoration:underline;}",
+    ".aw-powered{color:inherit;text-decoration:none;opacity:.85;}",
+    ".aw-powered:hover{text-decoration:underline;}",
     "@media (max-width:480px){.aw-panel,.aw-left .aw-panel{inset:0;width:100%;max-width:none;",
     "height:100%;border-radius:0;border:0;}.aw-open .aw-launcher{display:none;}}",
     "@media (prefers-reduced-motion:reduce){.aw-launcher{transition:none;}",

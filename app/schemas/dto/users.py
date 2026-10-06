@@ -22,6 +22,7 @@ from app.schemas.typings.localization.strings import (
     RawPhoneNumberInput,
 )
 from app.schemas.typings.mfa.constrained_strings import RecoveryCode
+from app.schemas.typings.referrals.booleans import IsPartner
 from app.schemas.typings.users.booleans import (
     IsNewUser,
     IsPlatformAdmin,
@@ -169,7 +170,8 @@ class CurrentUserView(ImmutableDTO):
     The signed-in user and every business they work in, how the current
     session is signed in (None outside a signed-in request), and for a
     platform admin their role and what it permits (which admin pages and
-    actions the cabinet offers).
+    actions the cabinet offers), and whether they are a partner of the
+    referral program (the cabinet offers the partner portal).
     """
 
     user: UserView
@@ -181,6 +183,7 @@ class CurrentUserView(ImmutableDTO):
     platform_admin_permissions: list[PlatformAdminPermission] = Field(
         default_factory=list[PlatformAdminPermission]
     )
+    is_partner: IsPartner = False
 
 
 class UpdateCurrentUserRequest(ImmutableDTO):

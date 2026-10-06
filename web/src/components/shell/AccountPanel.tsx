@@ -12,14 +12,17 @@
 import Link from "next/link";
 import { useId, useState } from "react";
 
+import { useOptionalBusiness } from "@/components/business/BusinessContext";
+import { InviteDialog } from "@/components/referrals/InviteDialog";
+
 import type { CurrentUserView } from "@/api/types";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
-import { ACCOUNT_SECURITY_PATH, ADMIN_PATH, HOME_PATH } from "@/lib/navigation";
+import { ACCOUNT_SECURITY_PATH, ADMIN_PATH, HOME_PATH, PARTNER_PATH } from "@/lib/navigation";
 
 import { HelpSupportSection } from "../help/HelpSupportSection";
 import { LanguageSwitcher } from "../LanguageSwitcher";
-import { IconBuilding, IconDownload, IconKey, IconShield } from "../icons";
+import { IconBuilding, IconDownload, IconKey, IconLink, IconMegaphone, IconShield } from "../icons";
 import { ThemeSwitcher } from "../theme/ThemeSwitcher";
 import { ChimeSetting } from "./ChimeSetting";
 import { SignOutButton } from "./SignOutButton";
@@ -62,6 +65,28 @@ function InstallRow() {
   );
 }
 
+/** "Invite a business — a month free" for an owner of the business in view. */
+function InviteRow() {
+  const { t } = useI18n();
+  const business = useOptionalBusiness();
+  const [isOpen, setOpen] = useState(false);
+  if (!business?.isOwner) {
+    return null;
+  }
+  return (
+    <>
+      <button type="button" className={cn(ROW, "cursor-pointer text-start")} onClick={() => setOpen(true)}>
+        <IconMegaphone className="size-4 shrink-0" aria-hidden />
+        <span className="min-w-0">
+          <span className="block font-medium text-ink">{t("referrals.menu")}</span>
+          <span className="block text-xs text-ink-subtle">{t("referrals.menuHint")}</span>
+        </span>
+      </button>
+      <InviteDialog businessId={business.business.id} open={isOpen} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
 export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNavigate?: () => void }) {
   const { t } = useI18n();
   const name = userDisplayName(me.user);
@@ -101,6 +126,7 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
       <HelpSupportSection rowClassName={ROW} onNavigate={onNavigate} />
 
       <div className="space-y-0.5 border-t border-line pt-2">
+        <InviteRow />
         <InstallRow />
         <Link href={HOME_PATH} onClick={onNavigate} className={ROW}>
           <IconBuilding className="size-4 shrink-0" aria-hidden />
@@ -110,6 +136,12 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
           <IconKey className="size-4 shrink-0" aria-hidden />
           {t("security.menu")}
         </Link>
+        {me.is_partner ? (
+          <Link href={PARTNER_PATH} onClick={onNavigate} className={ROW}>
+            <IconLink className="size-4 shrink-0" aria-hidden />
+            {t("referrals.partnerPortal")}
+          </Link>
+        ) : null}
         {me.user.is_platform_admin ? (
           <Link href={ADMIN_PATH} onClick={onNavigate} className={ROW}>
             <IconShield className="size-4 shrink-0" aria-hidden />

@@ -28,9 +28,11 @@ from app.schemas.domain.mfa import (
     RecoveryCodeDocument,
     TotpFactorDocument,
 )
+from app.schemas.domain.partners import PartnerDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.product_events import ProductEventDocument
+from app.schemas.domain.referrals import ReferralCodeDocument, ReferralDocument
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -78,6 +80,11 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         platform_status.PlatformStatusDayDocument,
         help_progress.HelpProgressDocument,
         InvoiceCounterDocument,  # One invoice series for every business (1114).
+        # The referral program (1150): partners, codes and referrals are read
+        # across businesses (a partner's portal, a sign-up's code).
+        PartnerDocument,
+        ReferralCodeDocument,
+        ReferralDocument,
         # A sub-processor change is announced to every business at once (1124).
         SubprocessorAnnouncementDocument,
     }

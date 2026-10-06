@@ -1,6 +1,7 @@
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.constants.access import BusinessAccessMode
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
@@ -34,6 +35,12 @@ class AuthorizeBusinessAccessUseCase(
     factors of the team (`require_mfa_for_members`), a member's session
     signed in with the login code alone gets MfaRequiredError (reason
     `mfa_required`).
+
+    An AGENCY member (an outside helper the owner let in) does staff's work
+    and the owner-only changes platform support may make with consent
+    (`support_may_change`: building and publishing the assistant); every
+    other owner-only action (billing, the team, channels, security) and
+    every copy of customers' data (`access_mode` WRITE) is refused.
 
     Someone who is not a member may still be platform support with an
     open, time-boxed look into this cabinet: AuthorizeSupportAccessUseCase
@@ -80,7 +87,9 @@ class AuthorizeBusinessAccessUseCase(
             ):
                 raise mfa_required(TEAM_TWO_FACTOR_MESSAGE)
 
-            if (
+            if member.role is BusinessMemberRole.AGENCY:
+                require_agency_may(input_data)
+            elif (
                 input_data.required_role is BusinessMemberRole.OWNER
                 and member.role is not BusinessMemberRole.OWNER
             ):
@@ -98,3 +107,20 @@ class AuthorizeBusinessAccessUseCase(
             )
         )
         return business
+
+
+def require_agency_may(request: BusinessAccessRequest) -> None:
+    """
+    Raises:
+        AccessDeniedError: an owner-only action outside building and
+            publishing the assistant, or a copy of customers' data.
+    """
+
+    if request.access_mode is BusinessAccessMode.WRITE:
+        raise AccessDeniedError("An agency cannot copy customers' data out.")
+
+    if (
+        request.required_role is BusinessMemberRole.OWNER
+        and not request.support_may_change
+    ):
+        raise AccessDeniedError("Only the business owner may do this.")

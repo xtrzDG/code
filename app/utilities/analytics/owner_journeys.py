@@ -16,7 +16,10 @@ from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.users import UserDocument
-from app.schemas.typings.analytics.constrained_strings import AcquisitionSourceKey
+from app.schemas.typings.analytics.constrained_strings import (
+    AcquisitionSourceKey,
+    ReferralCode,
+)
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from app.schemas.typings.users.prefixed_id import UserId
@@ -75,8 +78,9 @@ class OwnerJourney:
     """
     An owner (a person who signed up and created, or may still create, a
     business): when they signed up, where they came from, their businesses
-    and when each step first happened to any of them, and the tunnel
-    screens they entered, completed and skipped.
+    and when each step first happened to any of them, the tunnel screens
+    they entered, completed and skipped, and the referral code they signed
+    up by (a partner's or an inviting business's, if any).
     """
 
     user_id: UserId
@@ -89,6 +93,7 @@ class OwnerJourney:
     tunnel: dict[ProductEventName, frozenset[TunnelStepKey]] = field(
         default_factory=dict[ProductEventName, frozenset[TunnelStepKey]]
     )
+    referral_code: ReferralCode | None = None
 
     def reached(self, names: Iterable[ProductEventName]) -> Microseconds | None:
         """When the earliest of these steps happened; None when none did."""
@@ -207,6 +212,11 @@ def owner_journey(
         businesses=tuple(businesses),
         first_at=first_at,
         tunnel={name: frozenset(steps) for name, steps in tunnel.items()},
+        referral_code=(
+            None
+            if user.signup_attribution is None
+            else user.signup_attribution.referral_code
+        ),
     )
 
 

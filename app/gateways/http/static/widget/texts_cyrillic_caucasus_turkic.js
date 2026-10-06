@@ -25,6 +25,7 @@
       suggestions: "Частые вопросы",
       footer: "AI-ассистент · может ошибаться",
       privacy: "Конфиденциальность",
+      poweredBy: "Работает на Assistant Workshop",
       call: "Позвонить",
       otherWays: "Другие способы связи"
     },
@@ -55,6 +56,7 @@
       suggestions: "Часті запитання",
       footer: "AI-асистент · може помилятися",
       privacy: "Конфіденційність",
+      poweredBy: "Працює на Assistant Workshop",
       call: "Зателефонувати",
       otherWays: "Інші способи зв’язку"
     },
@@ -85,6 +87,7 @@
       suggestions: "Жиі қойылатын сұрақтар",
       footer: "AI көмекшісі · қателесуі мүмкін",
       privacy: "Құпиялық",
+      poweredBy: "Assistant Workshop негізінде жұмыс істейді",
       call: "Қоңырау шалу",
       otherWays: "Байланысудың басқа жолдары"
     },
@@ -115,6 +118,7 @@
       suggestions: "ხშირი კითხვები",
       footer: "AI-ასისტენტი · შეიძლება შეცდეს",
       privacy: "კონფიდენციალურობა",
+      poweredBy: "მუშაობს Assistant Workshop-ზე",
       call: "დარეკვა",
       otherWays: "დაკავშირების სხვა გზები"
     },
@@ -145,6 +149,7 @@
       suggestions: "Առաջարկվող հարցեր",
       footer: "AI օգնական · կարող է սխալվել",
       privacy: "Գաղտնիություն",
+      poweredBy: "Աշխատում է Assistant Workshop-ով",
       call: "Զանգել",
       otherWays: "Կապի այլ եղանակներ"
     },
@@ -175,6 +180,7 @@
       suggestions: "Təklif olunan suallar",
       footer: "AI köməkçi · səhv edə bilər",
       privacy: "Məxfilik",
+      poweredBy: "Assistant Workshop ilə işləyir",
       call: "Zəng et",
       otherWays: "Bizimlə əlaqənin digər yolları"
     },
@@ -205,6 +211,7 @@
       suggestions: "Önerilen sorular",
       footer: "Yapay zekâ asistanı · hata yapabilir",
       privacy: "Gizlilik",
+      poweredBy: "Assistant Workshop ile çalışır",
       call: "Ara",
       otherWays: "Bize ulaşmanın diğer yolları"
     },
@@ -235,6 +242,7 @@
       suggestions: "Tavsiya etilgan savollar",
       footer: "AI yordamchi · xato qilishi mumkin",
       privacy: "Maxfiylik",
+      poweredBy: "Assistant Workshop asosida ishlaydi",
       call: "Qo‘ng‘iroq qilish",
       otherWays: "Biz bilan bog‘lanishning boshqa yo‘llari"
     },

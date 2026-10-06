@@ -57,6 +57,7 @@ from tests.foundation.support_access_builders import (
     build_authorize_business_access,
     in_memory_platform_admins,
 )
+from tests.referrals.referral_parts import ReferralRepositories
 from tests.users.accounts_recorders import (
     RecordingAssistantResumption,
     RecordingVoiceAgentRemoval,
@@ -75,6 +76,7 @@ class AccountsUserUseCases(AccountsRepositories):
     ) -> None:
         super().__init__(environment_variables)
         self.product_events = RecordingProductEvents()
+        self.referrals = ReferralRepositories()
         wall_clock: WallClock[Microseconds] = self.clock.build_wall_clock()
 
         user_view_transformer = UserViewTransformer()
@@ -185,6 +187,7 @@ class AccountsUserUseCases(AccountsRepositories):
             user_view_transformer=user_view_transformer,
             session_assurance=self.session_assurance,
             platform_admins=self.platform_admins,
+            partner_repo=self.referrals.partner_repo,
         )
         self.update_current_user = UpdateCurrentUserUseCase(
             user_repo=self.user_repo,
@@ -203,6 +206,9 @@ class AccountsUserUseCases(AccountsRepositories):
             app_settings=self.settings,
             wall_clock=wall_clock,
             product_events=self.product_events,
+            referral_attribution=self.referrals.attribution(
+                self.business_repo, wall_clock
+            ),
         )
         self.list_my_businesses = ListMyBusinessesUseCase(
             business_repo=self.business_repo,

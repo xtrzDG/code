@@ -160,7 +160,10 @@ def test_the_public_page_config_names_no_secret(workshop: Workshop) -> None:
         "maps_url",
         "takes_bookings",
         "booking_url",
+        "powered_by_url",
     }
+    # "Powered by" names only the platform's site and the business's code.
+    assert body["powered_by_url"].startswith(f"{CABINET_BASE_URL}/?ref=")
     # The privacy notice names the business's own periods (the defaults).
     assert (body["conversation_retention_days"], body["llm_turn_retention_days"]) == (
         730,

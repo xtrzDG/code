@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
+from app.contracts.referrals import ReferralEarningsFacilitatorContract
 from app.contracts.repositories.billing_repositories import (
     InvoiceRepoContract,
     SubscriptionRepoContract,
@@ -40,8 +41,8 @@ class MarkInvoicePaidUseCase(
     is paid now, naming the method and the reference (its receipt says so),
     and a paid service period that has started becomes the subscription's
     current one, ends the grace and brings full service back, as a card
-    payment would. The audit log keeps the admin's reason
-    (ADMIN_INVOICE_MARKED_PAID).
+    payment would, and earns a referral what a card payment would. The audit
+    log keeps the admin's reason (ADMIN_INVOICE_MARKED_PAID).
 
     Raises:
         NotFoundError: the client has no such invoice.
@@ -56,7 +57,9 @@ class MarkInvoicePaidUseCase(
         business_repo: BusinessRepoContract,
         product_events: RecordProductEventFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        referral_earnings: ReferralEarningsFacilitatorContract,
     ) -> None:
+        self._referral_earnings: ReferralEarningsFacilitatorContract = referral_earnings
         self._gate: AccountActionGate = gate
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._invoice_repo: InvoiceRepoContract = invoice_repo
@@ -112,6 +115,7 @@ class MarkInvoicePaidUseCase(
                 now,
             )
 
+        self._referral_earnings.record_paid_invoices(target.business, [invoice])
         self._product_events.record(
             *subscription_started_events(previous_status, subscription)
         )

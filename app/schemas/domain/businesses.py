@@ -8,6 +8,7 @@ from app.schemas.constants.localization import DataRegion
 from app.schemas.constants.niches import NicheKey
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.notification_preferences import StaffNotificationPreferences
+from app.schemas.domain.referrals import BusinessReferral
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.businesses.constrained_integers import (
     BusinessRevision,
@@ -25,6 +26,7 @@ from app.schemas.typings.localization.constrained_strings import (
     TimezoneName,
 )
 from app.schemas.typings.mfa.booleans import IsMfaRequiredForMembers
+from app.schemas.typings.referrals.booleans import IsPoweredByHidden
 from app.schemas.typings.sharing.constrained_strings import BusinessPublicSlug
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -74,9 +76,13 @@ class BusinessDocument(BaseDocument):
     Version 5: `dpa_version_accepted`, the data processing agreement version
     an owner accepted last (None until the first acceptance; businesses that
     accepted before version 5 are answered by their acceptance records).
+    Version 6: `referred_by`, the code its owner signed up by (None: nobody
+    referred it, as for every older row), and `hides_powered_by`, the Plus
+    owner's choice to leave the "Powered by" link off the chat and the
+    table card (False, so older rows read as they are).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("5")
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: BusinessId = Field(default_factory=BusinessId)
     name: BusinessName
     niche_key: NicheKey
@@ -98,4 +104,6 @@ class BusinessDocument(BaseDocument):
     public_slug: BusinessPublicSlug | None = None
     require_mfa_for_members: IsMfaRequiredForMembers = False
     dpa_version_accepted: DpaDocumentVersion | None = None
+    referred_by: BusinessReferral | None = None
+    hides_powered_by: IsPoweredByHidden = False
     revision: BusinessRevision = BusinessRevision(0)

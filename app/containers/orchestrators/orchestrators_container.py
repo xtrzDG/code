@@ -72,6 +72,9 @@ from app.containers.orchestrators.privacy_orchestrators import (
 from app.containers.orchestrators.public_demo_orchestrators import (
     PublicDemoOrchestratorsContainer,
 )
+from app.containers.orchestrators.referral_orchestrators import (
+    ReferralOrchestratorsContainer,
+)
 from app.containers.orchestrators.security_orchestrators import (
     SecurityOrchestratorsContainer,
 )
@@ -267,4 +270,8 @@ class OrchestratorsContainer(containers.DeclarativeContainer):
     value: ValueOrchestratorsContainer = Container(  # type: ignore[assignment]
         ValueOrchestratorsContainer,
         value_use_cases=use_cases.value,
+    )
+    referrals: ReferralOrchestratorsContainer = Container(  # type: ignore[assignment]
+        ReferralOrchestratorsContainer,
+        referral_use_cases=use_cases.referrals,
     )

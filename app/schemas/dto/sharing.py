@@ -28,6 +28,7 @@ from app.schemas.typings.privacy.constrained_integers import (
     ConversationRetentionDays,
     LlmTurnRetentionDays,
 )
+from app.schemas.typings.referrals.constrained_strings import ReferralLink
 from app.schemas.typings.sharing.booleans import TakesBookings
 from app.schemas.typings.sharing.constrained_strings import (
     BusinessPublicSlug,
@@ -66,7 +67,8 @@ class ShareLinksView(ImmutableDTO):
     Everything the owner shares: the hosted chat page's address (`slug`,
     `hosted_chat_url`: None until CABINET_BASE_URL is set) and a link per
     channel that is switched on, hosted page first. `source` is the tag the
-    links carry.
+    links carry; `powered_by_url` is the "Powered by" link the printed table
+    card carries (None when a Plus owner switched it off).
     """
 
     business_id: BusinessId
@@ -74,6 +76,7 @@ class ShareLinksView(ImmutableDTO):
     hosted_chat_url: HostedChatUrl | None = None
     source: ShareSourceTag | None = None
     links: list[ShareLinkView]
+    powered_by_url: ReferralLink | None = None
 
 
 class PublicSlugRequest(ImmutableDTO):
@@ -115,7 +118,8 @@ class HostedChatView(ImmutableDTO):
     (local minutes of the day in `timezone`), its address with a map link
     and a booking button when it takes bookings (`booking_url`: the
     owner's own booking page, else the button starts a booking in the
-    chat).
+    chat). `powered_by_url` is the platform's "Powered by" link with the
+    business's referral code (None when a Plus owner switched it off).
     """
 
     business_id: BusinessId
@@ -139,3 +143,4 @@ class HostedChatView(ImmutableDTO):
     maps_url: WebLink | None = None
     takes_bookings: TakesBookings = False
     booking_url: WebLink | None = None
+    powered_by_url: ReferralLink | None = None

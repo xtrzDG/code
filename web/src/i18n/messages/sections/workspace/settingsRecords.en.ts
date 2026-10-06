@@ -142,11 +142,17 @@ export const settingsRecordsEn = {
       invoice: "Invoice",
       billing_credit: "Billing credit",
       onboarding_request: "Setup help request",
+      partner: "Partner",
+      partner_code: "Partner code",
+      partner_payout: "Partner payout",
     },
   },
   roles: {
     owner: "Owner",
     staff: "Staff",
+    agency: "Agency",
+    agencyDescription:
+      "An outside helper you let in: staff's work plus building and publishing the assistant. Never billing, the team, channels or copies of customer data.",
     ownerDescription: "Everything staff can do, plus settings, billing, the team and customer data requests.",
     roleOf: "Role of {name}",
     lastOwner: "The business must keep at least one owner.",

@@ -53,6 +53,10 @@ export const platformQueryKeys = {
     team: () => ["admin", "team"] as const,
     /** The status page's announcements, newest first. */
     announcements: () => ["admin", "announcements"] as const,
+    /** The partners, their codes and totals. */
+    partners: () => ["admin", "partners"] as const,
+    /** One month's payout report (YYYY-MM). */
+    payouts: (month: string) => ["admin", "partners", "payouts", month] as const,
   },
 
   help: {
@@ -69,6 +73,13 @@ export const platformQueryKeys = {
   platformStatus: {
     /** The public status page in one language. */
     status: (locale: Locale) => ["platformStatus", locale] as const,
+  },
+
+  partner: {
+    /** The signed-in partner's codes, rate and totals. */
+    portal: () => ["partner", "portal"] as const,
+    referrals: () => ["partner", "referrals"] as const,
+    commissions: () => ["partner", "commissions"] as const,
   },
 
   account: {

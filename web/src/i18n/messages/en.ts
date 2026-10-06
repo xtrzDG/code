@@ -8,6 +8,7 @@ import { securityFlowEn } from "./sections/security";
 import { helpEn } from "./sections/help";
 import { siteEn } from "./sections/site";
 import { customersSectionEn } from "./sections/customers";
+import { referralsSectionEn } from "./sections/referrals";
 import { onboardingEn } from "./onboarding/en";
 import { landingEn } from "./landing/en";
 
@@ -147,6 +148,7 @@ export const en = {
     role: {
       owner: "Owner",
       staff: "Staff",
+      agency: "Agency",
     },
     status: {
       onboarding: "Filling in the profile",
@@ -210,6 +212,7 @@ export const en = {
   ...helpEn,
   ...siteEn,
   ...customersSectionEn,
+  ...referralsSectionEn,
 } as const satisfies NestedMessages;
 
 interface NestedMessages {

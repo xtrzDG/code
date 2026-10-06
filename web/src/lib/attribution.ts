@@ -12,6 +12,8 @@
  * sign-in: a value that does not fit is left out.
  */
 
+import { LOCALES } from "@/i18n/config";
+
 export const ATTRIBUTION_COOKIE = "aw_attr";
 /** The first touch counts for 90 days. */
 export const ATTRIBUTION_MAX_AGE_SECONDS = 90 * 24 * 60 * 60;
@@ -62,10 +64,12 @@ const LINK_PARAMETERS: ReadonlyArray<[string, TextField]> = [
 ];
 
 const HOSTED_CHAT_PREFIX = "/c/";
+/** The public site in each language ("/ru", "/ka/restaurants"): "/" redirects there with its query. */
+const PUBLIC_SITE_PAGE = new RegExp(`^/(${LOCALES.join("|")})(/|$)`);
 
-/** The landing page and the hosted chat pages are where visitors arrive. */
+/** The landing page, the public site and the hosted chat pages are where visitors arrive. */
 export function isAttributionPage(pathname: string): boolean {
-  return pathname === "/" || pathname.startsWith(HOSTED_CHAT_PREFIX);
+  return pathname === "/" || pathname.startsWith(HOSTED_CHAT_PREFIX) || PUBLIC_SITE_PAGE.test(pathname);
 }
 
 function cleanText(field: TextField, value: unknown): string | undefined {

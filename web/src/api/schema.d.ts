@@ -399,6 +399,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Partners */
+        get: operations["get_partners_v1_admin_partners_get"];
+        put?: never;
+        /** Post Partner */
+        post: operations["post_partner_v1_admin_partners_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/partners/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Payouts */
+        get: operations["get_payouts_v1_admin_partners_payouts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/partners/{partner_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Partner */
+        patch: operations["patch_partner_v1_admin_partners__partner_id__patch"];
+        trace?: never;
+    };
+    "/v1/admin/partners/{partner_id}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Partner Code */
+        post: operations["post_partner_code_v1_admin_partners__partner_id__codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/partners/{partner_id}/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Payout */
+        post: operations["post_payout_v1_admin_partners__partner_id__payouts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/security/encryption-keys": {
         parameters: {
             query?: never;
@@ -2616,6 +2702,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Referrals */
+        get: operations["get_referrals_v1_businesses__business_id__referrals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/referrals/powered-by": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Powered By */
+        put: operations["put_powered_by_v1_businesses__business_id__referrals_powered_by_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/resources": {
         parameters: {
             query?: never;
@@ -3684,6 +3804,57 @@ export interface paths {
         post?: never;
         /** Revoke Session */
         delete: operations["revoke_session_v1_me_sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Partner */
+        get: operations["get_partner_v1_partner_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partner/commissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Partner Commissions */
+        get: operations["get_partner_commissions_v1_partner_commissions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partner/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Partner Referrals */
+        get: operations["get_partner_referrals_v1_partner_referrals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5730,10 +5901,13 @@ export interface components {
         BusinessLinkKind: "menu" | "map" | "payment" | "booking_page" | "delivery" | "website" | "privacy" | "google_review";
         /**
          * BusinessMemberRole
-         * @description Role of a user inside one business.
+         * @description Role of a user inside one business. AGENCY is an outside helper (a
+         *     partner's agency) the owner let in: staff's work plus building and
+         *     publishing the assistant, never billing, the team, channels, security
+         *     or copies of customers' data.
          * @enum {string}
          */
-        BusinessMemberRole: "owner" | "staff";
+        BusinessMemberRole: "owner" | "staff" | "agency";
         /**
          * BusinessMemberView
          * @description Team member with the details the owner needs to recognise them.
@@ -6770,6 +6944,63 @@ export interface components {
             /** Went Live */
             went_live: number;
         };
+        /** CommissionEntryPage */
+        CommissionEntryPage: {
+            /** Items */
+            items: components["schemas"]["CommissionEntryView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * CommissionEntryView
+         * @description A commission on one paid invoice: the business, the month it belongs
+         *     to, what the invoice charged before tax, the rate and the share, and
+         *     whether it was paid out (when, with what reference).
+         */
+        CommissionEntryView: {
+            /** Accrued At */
+            accrued_at: number;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Base Minor */
+            base_minor: number;
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name?: string | null;
+            /** Currency Code */
+            currency_code: string;
+            /** Id */
+            id: string;
+            /** Month */
+            month: string;
+            /** Paid At */
+            paid_at?: number | null;
+            /** Rate Basis Points */
+            rate_basis_points: number;
+            status: components["schemas"]["CommissionStatus"];
+        };
+        /**
+         * CommissionStatus
+         * @description A partner's commission on one paid invoice: ACCRUED when the invoice
+         *     was paid, PAID once the platform team paid it out (with the month's
+         *     other commissions of that partner).
+         * @enum {string}
+         */
+        CommissionStatus: "accrued" | "paid";
+        /**
+         * CommissionTotalView
+         * @description Commissions in one currency and status: how many invoices, how much.
+         */
+        CommissionTotalView: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency Code */
+            currency_code: string;
+            /** Invoice Count */
+            invoice_count: number;
+            status: components["schemas"]["CommissionStatus"];
+        };
         /**
          * ComponentStatusView
          * @description A component's level now and its last 90 days, oldest first.
@@ -7692,10 +7923,16 @@ export interface components {
          * @description The signed-in user and every business they work in, how the current
          *     session is signed in (None outside a signed-in request), and for a
          *     platform admin their role and what it permits (which admin pages and
-         *     actions the cabinet offers).
+         *     actions the cabinet offers), and whether they are a partner of the
+         *     referral program (the cabinet offers the partner portal).
          */
         CurrentUserView: {
             auth_level?: components["schemas"]["AuthLevel"] | null;
+            /**
+             * Is Partner
+             * @default false
+             */
+            is_partner: boolean;
             /** Memberships */
             memberships?: components["schemas"]["UserMembershipView"][];
             /** Platform Admin Permissions */
@@ -8864,7 +9101,8 @@ export interface components {
          *     (local minutes of the day in `timezone`), its address with a map link
          *     and a booking button when it takes bookings (`booking_url`: the
          *     owner's own booking page, else the button starts a booking in the
-         *     chat).
+         *     chat). `powered_by_url` is the platform's "Powered by" link with the
+         *     business's referral code (None when a Plus owner switched it off).
          */
         HostedChatView: {
             /** Accent Color */
@@ -8900,6 +9138,8 @@ export interface components {
             /** Maps Url */
             maps_url?: string | null;
             position?: components["schemas"]["WidgetPosition"] | null;
+            /** Powered By Url */
+            powered_by_url?: string | null;
             /** Privacy Url */
             privacy_url?: string | null;
             /** Slug */
@@ -11131,6 +11371,112 @@ export interface components {
             raw_phone_number: string;
         };
         /**
+         * PartnerAdminView
+         * @description A partner as the platform team sees them: how they sign in, their rate
+         *     and state, their codes, how many businesses they brought and paid, and
+         *     their commissions per currency and status.
+         */
+        PartnerAdminView: {
+            /** Codes */
+            codes?: components["schemas"]["PartnerCodeView"][];
+            /** Commission Rate Basis Points */
+            commission_rate_basis_points: number;
+            /** Created At */
+            created_at: number;
+            /** Email */
+            email?: string | null;
+            login_method: components["schemas"]["LoginMethod"];
+            /** Name */
+            name: string;
+            /** Paid Businesses */
+            paid_businesses: number;
+            /** Partner Id */
+            partner_id: string;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Referred Businesses */
+            referred_businesses: number;
+            status: components["schemas"]["PartnerStatus"];
+            /** Totals */
+            totals?: components["schemas"]["CommissionTotalView"][];
+        };
+        /**
+         * PartnerCodeView
+         * @description One of the partner's codes and its link to the platform's site.
+         */
+        PartnerCodeView: {
+            /** Code */
+            code: string;
+            /** Link */
+            link?: string | null;
+        };
+        /** PartnerList */
+        PartnerList: {
+            /** Items */
+            items: components["schemas"]["PartnerAdminView"][];
+        };
+        /**
+         * PartnerPortalView
+         * @description The partner's portal: who they are to the platform, their rate, their
+         *     codes with links (the cabinet adds the landing page and `src` the
+         *     partner picks, and draws the QR code), how many businesses signed up by
+         *     them and how many paid, and their commissions to be paid and paid.
+         */
+        PartnerPortalView: {
+            /** Codes */
+            codes?: components["schemas"]["PartnerCodeView"][];
+            /** Commission Rate Basis Points */
+            commission_rate_basis_points: number;
+            /** Name */
+            name: string;
+            /** Paid Businesses */
+            paid_businesses: number;
+            /** Partner Id */
+            partner_id: string;
+            /** Referred Businesses */
+            referred_businesses: number;
+            status: components["schemas"]["PartnerStatus"];
+            /** Totals */
+            totals?: components["schemas"]["CommissionTotalView"][];
+        };
+        /** PartnerReferralPage */
+        PartnerReferralPage: {
+            /** Items */
+            items: components["schemas"]["PartnerReferralView"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
+         * PartnerReferralView
+         * @description A business the partner brought: its name, country, plan and state, the
+         *     code it signed up by, and when it signed up and first paid. Nothing
+         *     about its owner or customers.
+         */
+        PartnerReferralView: {
+            /** Business Id */
+            business_id: string;
+            /** Business Name */
+            business_name?: string | null;
+            business_status?: components["schemas"]["BusinessStatus"] | null;
+            /** Code */
+            code: string;
+            /** Country Code */
+            country_code?: string | null;
+            /** First Paid At */
+            first_paid_at?: number | null;
+            plan_key?: components["schemas"]["PlanKey"] | null;
+            /** Referred At */
+            referred_at: number;
+        };
+        /**
+         * PartnerStatus
+         * @description ACTIVE partners earn commission on every paid invoice of the businesses
+         *     they brought; a PAUSED partner keeps what was earned but earns nothing
+         *     new until resumed (their portal and links keep working).
+         * @enum {string}
+         */
+        PartnerStatus: "active" | "paused";
+        /**
          * PaymentStatus
          * @description Status of a payment as the provider reports it (Flitt `order_status`).
          *
@@ -11153,6 +11499,48 @@ export interface components {
             outcome: components["schemas"]["PaymentWebhookOutcome"];
             /** Payment Order Id */
             payment_order_id?: string | null;
+        };
+        /**
+         * PayoutReceipt
+         * @description What a payout marked paid: how many commissions and how much.
+         */
+        PayoutReceipt: {
+            /** Amounts */
+            amounts?: components["schemas"]["Money"][];
+            /** Month */
+            month: string;
+            /** Paid Invoices */
+            paid_invoices: number;
+            /** Partner Id */
+            partner_id: string;
+        };
+        /** PayoutReportView */
+        PayoutReportView: {
+            /** Month */
+            month: string;
+            /** Rows */
+            rows: components["schemas"]["PayoutRowView"][];
+        };
+        /**
+         * PayoutRowView
+         * @description One partner's commissions of the month in one currency: what is still
+         *     to be paid out and what was paid, with how many invoices each.
+         */
+        PayoutRowView: {
+            /** Accrued Invoices */
+            accrued_invoices: number;
+            /** Accrued Minor */
+            accrued_minor: number;
+            /** Currency Code */
+            currency_code: string;
+            /** Paid Invoices */
+            paid_invoices: number;
+            /** Paid Minor */
+            paid_minor: number;
+            /** Partner Id */
+            partner_id: string;
+            /** Partner Name */
+            partner_name?: string | null;
         };
         /**
          * PbxCallWebhookOutcome
@@ -11556,6 +11944,22 @@ export interface components {
             is_confirmation_sent: boolean;
             outcome?: components["schemas"]["CallOutcome"] | null;
             status: components["schemas"]["PostCallEventStatus"];
+        };
+        /**
+         * PoweredByView
+         * @description The "Powered by" link of the chat, the hosted page and the table card:
+         *     whether it is shown, whether the plan lets the owner remove it (Plus),
+         *     the owner's choice and the link itself (None while it is not shown).
+         */
+        PoweredByView: {
+            /** Is Hidden */
+            is_hidden: boolean;
+            /** Is Removable */
+            is_removable: boolean;
+            /** Is Shown */
+            is_shown: boolean;
+            /** Url */
+            url?: string | null;
         };
         /**
          * PrivacySettingsView
@@ -11974,6 +12378,31 @@ export interface components {
         RecoveryCodesView: {
             /** Recovery Codes */
             recovery_codes: string[];
+        };
+        /**
+         * ReferralProgramView
+         * @description The business's invitation ("Invite a business: a month free"): its own
+         *     code and link, how many businesses signed up by it, paid and earned
+         *     both sides their month, how many bookings the business has had (the
+         *     card appears from the tenth: `is_invite_card_due`), and the "Powered
+         *     by" link.
+         */
+        ReferralProgramView: {
+            /** Bookings Made */
+            bookings_made: number;
+            /** Code */
+            code?: string | null;
+            /** Invite Link */
+            invite_link?: string | null;
+            /** Invited */
+            invited: number;
+            /** Is Invite Card Due */
+            is_invite_card_due: boolean;
+            /** Paid */
+            paid: number;
+            powered_by: components["schemas"]["PoweredByView"];
+            /** Rewarded */
+            rewarded: number;
         };
         /**
          * ReplyGuardReason
@@ -12519,7 +12948,8 @@ export interface components {
          * @description Everything the owner shares: the hosted chat page's address (`slug`,
          *     `hosted_chat_url`: None until CABINET_BASE_URL is set) and a link per
          *     channel that is switched on, hosted page first. `source` is the tag the
-         *     links carry.
+         *     links carry; `powered_by_url` is the "Powered by" link the printed table
+         *     card carries (None when a Plus owner switched it off).
          */
         ShareLinksView: {
             /** Business Id */
@@ -12528,6 +12958,8 @@ export interface components {
             hosted_chat_url?: string | null;
             /** Links */
             links: components["schemas"]["ShareLinkView"][];
+            /** Powered By Url */
+            powered_by_url?: string | null;
             /** Slug */
             slug: string;
             /** Source */
@@ -12549,11 +12981,16 @@ export interface components {
         };
         /**
          * SourceRowView
-         * @description Owners from one acquisition source: sign-ups, live and paying today.
+         * @description Owners from one acquisition source: sign-ups, live and paying today. A
+         *     source whose links carried referral codes has a row per code
+         *     (`referral_code`: a partner's or an inviting business's), so the
+         *     founder sees which partner or invitation brought whom.
          */
         SourceRowView: {
             /** Paying */
             paying: number;
+            /** Referral Code */
+            referral_code?: string | null;
             /** Sign Ups */
             sign_ups: number;
             /** Source */
@@ -13906,7 +14343,8 @@ export interface components {
          *     `privacy_url` is the business's privacy notice (or the platform's
          *     default one for it; None without CABINET_BASE_URL), linked from the
          *     footer; `contact_links` are the other channels, offered on the hosted
-         *     chat page.
+         *     chat page. `powered_by_url` is the footer's "Powered by" link with the
+         *     business's referral code (None when a Plus owner switched it off).
          */
         WidgetConfigView: {
             /** Accent Color */
@@ -13926,6 +14364,8 @@ export interface components {
             /** Languages */
             languages: components["schemas"]["WidgetLanguageView"][];
             position?: components["schemas"]["WidgetPosition"] | null;
+            /** Powered By Url */
+            powered_by_url?: string | null;
             /** Privacy Url */
             privacy_url?: string | null;
             /** Starter Questions */
@@ -16625,6 +17065,567 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminMetricsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_partners_v1_admin_partners_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    post_partner_v1_admin_partners_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Code */
+                    code: string;
+                    /** Commission Rate Basis Points */
+                    commission_rate_basis_points: number;
+                    /** Country Hint */
+                    country_hint?: string | null;
+                    /** Email */
+                    email?: string | null;
+                    /** Name */
+                    name: string;
+                    /** Phone Number */
+                    phone_number?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerAdminView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_payouts_v1_admin_partners_payouts_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutReportView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    patch_partner_v1_admin_partners__partner_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Commission Rate Basis Points */
+                    commission_rate_basis_points?: number | null;
+                    /** Name */
+                    name?: string | null;
+                    status?: ("active" | "paused") | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerAdminView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    post_partner_code_v1_admin_partners__partner_id__codes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Code */
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerAdminView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    post_payout_v1_admin_partners__partner_id__payouts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Month */
+                    month: string;
+                    /** Reference */
+                    reference: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutReceipt"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
@@ -29862,11 +30863,14 @@ export interface operations {
                     phone_number?: string | null;
                     /**
                      * BusinessMemberRole
-                     * @description Role of a user inside one business.
+                     * @description Role of a user inside one business. AGENCY is an outside helper (a
+                     *     partner's agency) the owner let in: staff's work plus building and
+                     *     publishing the assistant, never billing, the team, channels, security
+                     *     or copies of customers' data.
                      * @default staff
                      * @enum {string}
                      */
-                    role?: "owner" | "staff";
+                    role?: "owner" | "staff" | "agency";
                 };
             };
         };
@@ -30048,10 +31052,13 @@ export interface operations {
                 "application/json": {
                     /**
                      * BusinessMemberRole
-                     * @description Role of a user inside one business.
+                     * @description Role of a user inside one business. AGENCY is an outside helper (a
+                     *     partner's agency) the owner let in: staff's work plus building and
+                     *     publishing the assistant, never billing, the team, channels, security
+                     *     or copies of customers' data.
                      * @enum {string}
                      */
-                    role: "owner" | "staff";
+                    role: "owner" | "staff" | "agency";
                 };
             };
         };
@@ -32355,6 +33362,187 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_referrals_v1_businesses__business_id__referrals_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralProgramView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    put_powered_by_v1_businesses__business_id__referrals_powered_by_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Is Hidden */
+                    is_hidden: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoweredByView"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {
@@ -38907,6 +40095,267 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_partner_v1_partner_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerPortalView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_partner_commissions_v1_partner_commissions_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissionEntryPage"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_partner_referrals_v1_partner_referrals_get: {
+        parameters: {
+            query?: {
+                limit?: string | null;
+                cursor?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerReferralPage"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

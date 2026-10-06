@@ -11,6 +11,35 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — referrals and partners: invitations, the partner portal, payouts, "Powered by"
+
+Spec: `03dea2c61e45c3e9`
+
+- **Added** `GET /v1/businesses/{business_id}/referrals` (owners): the
+  business's own invitation code and link (`?ref=…&src=invite`), how many
+  businesses signed up by it, paid and earned both sides their month of
+  credit, `bookings_made` and `is_invite_card_due` (from the tenth
+  booking), and `powered_by` (`is_shown`, `is_removable` on Plus,
+  `is_hidden`, `url`).
+- **Added** `PUT /v1/businesses/{business_id}/referrals/powered-by`
+  (owners; `{"is_hidden": true}` only on Plus, else 409 `plan_required`).
+- **Added** `GET /v1/partner`, `GET /v1/partner/referrals` and
+  `GET /v1/partner/commissions` (keyset pages): a partner's codes and
+  links, totals, the businesses their links brought and the commission of
+  each paid invoice; 404 for anyone who is not a partner.
+- **Added** `GET` and `POST /v1/admin/partners`,
+  `PATCH /v1/admin/partners/{partner_id}`,
+  `POST /v1/admin/partners/{partner_id}/codes` (409 `code_taken`),
+  `GET /v1/admin/partners/payouts?month=YYYY-MM` and
+  `POST /v1/admin/partners/{partner_id}/payouts` (mark a month paid;
+  409 when nothing is due).
+- **Changed** `GET /v1/me` adds `is_partner`; the widget config, the
+  hosted chat config and the share links add `powered_by_url` (null when a
+  Plus owner hid it); the admin metrics' source rows add `referral_code`
+  (sign-ups split by the `ref` code); the team role `agency` is accepted
+  by invitations and role changes (staff's work and building the
+  assistant; never billing, the team or exports).
+
 ## 2026-10-06 — worker resilience: why a dead job died
 
 Spec: `95672ccce196feb2`

@@ -26,6 +26,7 @@ from app.utilities.storage.lookup_field_builders import (
 )
 from app.utilities.storage.platform_lookup_catalog import PLATFORM_LOOKUP_FIELDS
 from app.utilities.storage.quality_collections import QUALITY_LOOKUP_FIELDS
+from app.utilities.storage.referral_collections import REFERRAL_LOOKUP_FIELDS
 from app.utilities.storage.spend_guard_collections import SPEND_GUARD_LOOKUP_FIELDS
 
 DOCUMENT_LOOKUP_FIELDS: Mapping[
@@ -269,6 +270,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     # The spend guard's marks of a day (1142).
     **SPEND_GUARD_LOOKUP_FIELDS,
     **CLIENT_CARE_LOOKUP_FIELDS,
+    **REFERRAL_LOOKUP_FIELDS,  # Partners, codes, referrals, commissions (1150).
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

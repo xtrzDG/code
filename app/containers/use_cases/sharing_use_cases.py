@@ -63,6 +63,7 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
         public_slug_claim_repo=repositories.public_slug_claim_repo,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        referral_links=facilitators.referral_links,
     )
     set_public_slug_use_case: Factory[
         UseCaseContract[PublicSlugCommand, ShareLinksView]
@@ -75,6 +76,7 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
         public_slug_claim_repo=repositories.public_slug_claim_repo,
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
+        referral_links=facilitators.referral_links,
     )
     resolve_hosted_chat_use_case: Factory[
         UseCaseContract[HostedChatLookup, BusinessId]
@@ -94,6 +96,7 @@ class SharingUseCasesContainer(containers.DeclarativeContainer):
             app_settings=config.app_settings,
             wall_clock=time_provider.microsecond_wall_clock,
             privacy_settings_repo=repositories.privacy_settings_repo,
+            referral_links=facilitators.referral_links,
         )
     )
     open_widget_handoff_use_case: Factory[

@@ -14,6 +14,10 @@ describe("first-touch attribution", () => {
   it("is kept on the landing page and the hosted chat pages only", () => {
     expect(isAttributionPage("/")).toBe(true);
     expect(isAttributionPage("/c/cafe-batumi")).toBe(true);
+    // "/?ref=…" redirects to the site in the reader's language with the same query.
+    expect(isAttributionPage("/ru")).toBe(true);
+    expect(isAttributionPage("/ka/restaurants")).toBe(true);
+    expect(isAttributionPage("/rules")).toBe(false);
     expect(isAttributionPage("/login")).toBe(false);
     expect(isAttributionPage("/b/biz_1/overview")).toBe(false);
   });

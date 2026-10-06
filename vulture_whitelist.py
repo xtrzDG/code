@@ -567,3 +567,16 @@ _.invoice_number  # app/schemas/dto/client_story.py (ClientTimelineEntry)
 _.payment_method  # app/schemas/dto/client_story.py (ClientTimelineEntry)
 _.health_from  # app/schemas/dto/client_story.py (ClientTimelineEntry)
 _.health_to  # app/schemas/dto/client_story.py (ClientTimelineEntry)
+
+# Referrals and partners (R15): who marked a partner's commission paid and
+# the transfer's reference are stored for the record; the rest are response
+# fields the cabinet reads (the invitation card and dialog, the "Powered by"
+# switch on Channels → Share, the account menu's partner portal link).
+_.paid_by  # app/schemas/domain/referrals.py (CommissionEntryDocument)
+_.payout_reference  # app/schemas/domain/referrals.py (CommissionEntryDocument)
+_.is_shown  # app/schemas/dto/referrals/program.py (PoweredByView)
+_.is_removable  # app/schemas/dto/referrals/program.py (PoweredByView)
+_.invite_link  # app/schemas/dto/referrals/program.py (ReferralProgramView)
+_.rewarded  # app/schemas/dto/referrals/program.py (ReferralProgramView)
+_.powered_by  # app/schemas/dto/referrals/program.py (ReferralProgramView)
+_.is_partner  # app/schemas/dto/users.py (CurrentUserView)

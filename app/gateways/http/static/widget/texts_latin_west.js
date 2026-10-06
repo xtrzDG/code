@@ -28,6 +28,7 @@
       suggestions: "Suggested questions",
       footer: "AI assistant · can make mistakes",
       privacy: "Privacy",
+      poweredBy: "Powered by Assistant Workshop",
       call: "Call",
       otherWays: "Other ways to reach us"
     },
@@ -58,6 +59,7 @@
       suggestions: "Vorgeschlagene Fragen",
       footer: "KI-Assistent · kann Fehler machen",
       privacy: "Datenschutz",
+      poweredBy: "Bereitgestellt von Assistant Workshop",
       call: "Anrufen",
       otherWays: "Weitere Kontaktwege"
     },
@@ -88,6 +90,7 @@
       suggestions: "Questions suggérées",
       footer: "Assistant IA · peut se tromper",
       privacy: "Confidentialité",
+      poweredBy: "Propulsé par Assistant Workshop",
       call: "Appeler",
       otherWays: "Autres moyens de nous joindre"
     },
@@ -118,6 +121,7 @@
       suggestions: "Preguntas sugeridas",
       footer: "Asistente de IA · puede cometer errores",
       privacy: "Privacidad",
+      poweredBy: "Con la tecnología de Assistant Workshop",
       call: "Llamar",
       otherWays: "Otras formas de contactarnos"
     },
@@ -148,6 +152,7 @@
       suggestions: "Domande suggerite",
       footer: "Assistente IA · può commettere errori",
       privacy: "Privacy",
+      poweredBy: "Realizzato con Assistant Workshop",
       call: "Chiama",
       otherWays: "Altri modi per contattarci"
     },
@@ -178,6 +183,7 @@
       suggestions: "Perguntas sugeridas",
       footer: "Assistente de IA · pode cometer erros",
       privacy: "Privacidade",
+      poweredBy: "Desenvolvido com Assistant Workshop",
       call: "Ligar",
       otherWays: "Outras formas de nos contactar"
     },

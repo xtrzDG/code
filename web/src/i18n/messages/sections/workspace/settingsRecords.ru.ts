@@ -159,11 +159,17 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       invoice: "Счёт",
       billing_credit: "Кредит на счёт",
       onboarding_request: "Заявка на помощь с настройкой",
+      partner: "Партнёр",
+      partner_code: "Код партнёра",
+      partner_payout: "Выплата партнёру",
     },
   },
   roles: {
     owner: "Владелец",
     staff: "Сотрудник",
+    agency: "Агентство",
+    agencyDescription:
+      "Сторонний специалист, которого вы пустили: работа сотрудника, а ещё настройка и публикация помощника. Без оплаты, команды, каналов и выгрузок данных клиентов.",
     ownerDescription: "Всё, что может сотрудник, а также настройки, оплата, команда и запросы клиентов по данным.",
     roleOf: "Роль: {name}",
     lastOwner: "У бизнеса должен остаться хотя бы один владелец.",

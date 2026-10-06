@@ -176,6 +176,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
             user_view_transformer=transformers.user_view_transformer,
             session_assurance=utilities.session_assurance,
             platform_admins=registries.platform_admin_registry,
+            partner_repo=repositories.partner_repo,
         )
     )
     update_current_user_use_case: Factory[
@@ -202,6 +203,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         product_events=facilitators.product_events,
+        referral_attribution=facilitators.referral_attribution,
     )
     list_my_businesses_use_case: Factory[
         UseCaseContract[UserId, list[BusinessView]]

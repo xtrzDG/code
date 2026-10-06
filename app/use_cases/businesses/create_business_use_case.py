@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
+from app.contracts.referrals import ReferralAttributionFacilitatorContract
 from app.contracts.registries import (
     CountryRegistryContract,
     LanguageRegistryContract,
@@ -56,6 +57,8 @@ class CreateBusinessUseCase(UseCaseContract[CreateBusinessCommand, BusinessView]
     the language registry (1 to 10, without repeats), the default language
     against the chosen languages. The plan defaults to the niche's first
     recommended plan and recording retention to the platform default.
+    Whoever brought the owner (the code they signed up by: a partner or
+    another business) is remembered on the business (`referred_by`).
     """
 
     def __init__(
@@ -72,7 +75,11 @@ class CreateBusinessUseCase(UseCaseContract[CreateBusinessCommand, BusinessView]
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         product_events: RecordProductEventFacilitatorContract,
+        referral_attribution: ReferralAttributionFacilitatorContract,
     ) -> None:
+        self._referral_attribution: ReferralAttributionFacilitatorContract = (
+            referral_attribution
+        )
         self._business_repo: BusinessRepoContract = business_repo
         self._user_repo: UserRepoContract = user_repo
         self._country_registry: CountryRegistryContract = country_registry
@@ -131,7 +138,11 @@ class CreateBusinessUseCase(UseCaseContract[CreateBusinessCommand, BusinessView]
             created_at=now,
             updated_at=now,
         )
+        business.referred_by = self._referral_attribution.referral_of(
+            owner, business.id, now
+        )
         self._business_repo.save(business)
+        self._referral_attribution.record(business)
         self._product_events.record(business_created_event(business, owner.id))
         return self._business_view_transformer.transform(
             BusinessViewSource(

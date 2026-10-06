@@ -35,6 +35,7 @@ from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LanguageDisplayName
+from app.schemas.typings.referrals.constrained_strings import ReferralLink
 from app.schemas.typings.sharing.constrained_strings import ShareLinkUrl
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -85,7 +86,8 @@ class WidgetConfigView(ImmutableDTO):
     `privacy_url` is the business's privacy notice (or the platform's
     default one for it; None without CABINET_BASE_URL), linked from the
     footer; `contact_links` are the other channels, offered on the hosted
-    chat page.
+    chat page. `powered_by_url` is the footer's "Powered by" link with the
+    business's referral code (None when a Plus owner switched it off).
     """
 
     business_id: BusinessId
@@ -100,6 +102,7 @@ class WidgetConfigView(ImmutableDTO):
         default_factory=list[WidgetStarterQuestionView]
     )
     privacy_url: WebLink | None = None
+    powered_by_url: ReferralLink | None = None
     contact_links: list[WidgetContactLinkView] = Field(
         default_factory=list[WidgetContactLinkView]
     )

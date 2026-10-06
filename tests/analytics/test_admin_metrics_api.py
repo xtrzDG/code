@@ -84,7 +84,13 @@ def test_the_sign_up_attribution_reaches_the_founders_sources(
     assert metrics.status_code == 200, metrics.text
     growth = metrics.json()["growth"]
     assert growth["sources"] == [
-        {"source": "instagram", "sign_ups": 1, "went_live": 1, "paying": 0}
+        {
+            "source": "instagram",
+            "referral_code": None,
+            "sign_ups": 1,
+            "went_live": 1,
+            "paying": 0,
+        }
     ]
     assert metrics.json()["choices"]["sources"] == ["instagram"]
     owners = {step["step"]: step["owners"] for step in growth["funnel"]}

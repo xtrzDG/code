@@ -36,6 +36,7 @@ from app.gateways.http.public_channel_router_assembly import (
     build_public_channel_router,
 )
 from app.gateways.http.public_site_router_assembly import build_public_site_routers
+from app.gateways.http.referral_router_assembly import build_referral_routers
 from app.gateways.http.resource_routes import build_resource_router
 from app.gateways.http.security_router_assembly import build_security_routers
 from app.gateways.http.sharing_router_assembly import build_sharing_routers
@@ -290,4 +291,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_memory_routers(operators, current_user),
         *build_customer_routers(operators, current_user),
         *build_spend_guard_routers(operators, current_user),
+        *build_referral_routers(operators, current_user),
     ]

@@ -42,6 +42,11 @@ export const queryKeys = {
     answersToImprove: (businessId: Id) => ["dashboard", businessId, "answersToImprove"] as const,
   },
 
+  referrals: {
+    /** The business's own invitation: code, link, counts and the "Powered by" choice. */
+    program: (businessId: Id) => ["referrals", businessId, "program"] as const,
+  },
+
   reports: {
     all: (businessId: Id) => ["reports", businessId] as const,
     /** Stored reports of one kind, newest first. */

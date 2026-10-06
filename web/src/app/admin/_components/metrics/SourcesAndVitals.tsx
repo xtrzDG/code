@@ -30,6 +30,7 @@ export function SourcesCard({ rows, format }: { rows: readonly SourceRowView[]; 
           <THead>
             <Tr>
               <Th>{t("adminMetrics.sources.source")}</Th>
+              <Th>{t("adminMetrics.sources.referralCode")}</Th>
               <Th align="right">{t("adminMetrics.sources.signUps")}</Th>
               <Th align="right">{t("adminMetrics.sources.wentLive")}</Th>
               <Th align="right">{t("adminMetrics.sources.paying")}</Th>
@@ -38,10 +39,11 @@ export function SourcesCard({ rows, format }: { rows: readonly SourceRowView[]; 
           </THead>
           <TBody>
             {rows.map((row) => (
-              <Tr key={row.source}>
+              <Tr key={`${row.source}:${row.referral_code ?? ""}`}>
                 <Th scope="row" className="font-normal break-all text-ink">
                   {sourceName(row.source)}
                 </Th>
+                <Td className="font-mono text-xs break-all text-ink-muted">{row.referral_code ?? "—"}</Td>
                 <Td align="right" className="tabular-nums">
                   {format.number(row.sign_ups)}
                 </Td>

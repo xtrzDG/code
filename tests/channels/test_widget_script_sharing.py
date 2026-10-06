@@ -48,6 +48,7 @@ def test_links_of_the_config_are_checked_before_they_are_shown() -> None:
     # The footer and the page's other channels only show http(s) and tel:
     # links; anything else (javascript:) never becomes an href.
     assert "WEB_LINK_PATTERN.test(config.privacy_url)" in SCRIPT_SOURCE
+    assert "WEB_LINK_PATTERN.test(config.powered_by_url)" in SCRIPT_SOURCE
     assert "CONTACT_LINK_PATTERN.test(link.url)" in SCRIPT_SOURCE
     assert 'rel = "noopener noreferrer"' in SCRIPT_SOURCE
 

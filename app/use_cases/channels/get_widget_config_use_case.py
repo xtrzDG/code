@@ -1,4 +1,5 @@
 from app.contracts.localization_utilities import LanguageDetectorContract
+from app.contracts.referrals import ReferralLinksFacilitatorContract
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
@@ -15,6 +16,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.knowledge import KnowledgeItemKind
+from app.schemas.constants.referrals import POWERED_BY_SOURCE_TAG
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument, WebChatAppearance
@@ -45,8 +47,9 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
     greeting in each language the live assistant answers in (the business
     languages before a version is published), up to three starter
     questions per language from the FAQ, the privacy notice the footer
-    links to, and the business's other channels (the hosted chat page
-    offers them). Nothing personal or secret is returned.
+    links to with its "Powered by" link (the business's referral code), and
+    the business's other channels (the hosted chat page offers them).
+    Nothing personal or secret is returned.
     """
 
     def __init__(
@@ -59,7 +62,9 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
         language_registry: LanguageRegistryContract,
         language_detector: LanguageDetectorContract,
         app_settings: AppSettings,
+        referral_links: ReferralLinksFacilitatorContract,
     ) -> None:
+        self._referral_links: ReferralLinksFacilitatorContract = referral_links
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
         self._assistant_version_repo: AssistantVersionRepoContract = (
@@ -117,6 +122,9 @@ class GetWidgetConfigUseCase(UseCaseContract[BusinessId, WidgetConfigView]):
                 business, profile, self._app_settings.cabinet_base_url
             ),
             contact_links=build_contact_links(channels, profile),
+            powered_by_url=self._referral_links.powered_by_link(
+                business, POWERED_BY_SOURCE_TAG
+            ),
         )
 
     def _assistant_languages(self, business: BusinessDocument) -> list[LanguageTag]:

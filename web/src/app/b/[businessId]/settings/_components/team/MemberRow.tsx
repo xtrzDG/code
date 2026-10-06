@@ -72,7 +72,7 @@ export function MemberRow({
               }
             }}
           >
-            {(["owner", "staff"] as const).map((role) => (
+            {(["owner", "staff", "agency"] as const).map((role) => (
               <option key={role} value={role} disabled={!allowedRoles(member, members).includes(role)}>
                 {t(ROLE_NAMES[role])}
               </option>
