@@ -174,9 +174,7 @@ class TestWidgetColours:
     def test_any_business_colour_keeps_wcag_aa_on_header_launcher_and_send(
         self,
     ) -> None:
-        painted = run_colour_script(
-            f"{json.dumps(EVERY_SHORT_HEX)}.map(accentColors)"
-        )
+        painted = run_colour_script(f"{json.dumps(EVERY_SHORT_HEX)}.map(accentColors)")
         assert isinstance(painted, list)
 
         failing = [
