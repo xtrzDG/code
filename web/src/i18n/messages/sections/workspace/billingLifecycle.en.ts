@@ -73,6 +73,7 @@ export const billingLifecycleEn = {
     resumeDescription:
       "The assistant answers customers and takes bookings again. If this pause month is already paid, full service returns when it ends; otherwise now, and the next period is due.",
     resumed: "Full service is coming back",
+    plansHint: "While paused, the plan stays as it is; resume full service to change it.",
     unavailable: {
       not_active: "A pause is possible for a paid monthly subscription.",
       not_monthly: "A yearly plan cannot be paused.",
