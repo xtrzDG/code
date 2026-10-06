@@ -16,6 +16,8 @@ class PlatformAlertCode(StrEnum):
     week before (production quality). SPEND_SPIKE: today's provider spend
     is far above the daily mean of the week before. SPEND_BUDGET: today's
     provider spend passed 80 % of the platform's daily budget.
+    BACKFILL_STALLED: a post-deploy data task has not finished within a
+    day of becoming due (docs/operations/deploys.md).
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -29,6 +31,7 @@ class PlatformAlertCode(StrEnum):
     QUALITY_DROP = "quality_drop"
     SPEND_SPIKE = "spend_spike"
     SPEND_BUDGET = "spend_budget"
+    BACKFILL_STALLED = "backfill_stalled"
 
 
 class PlatformAlertStatus(StrEnum):
