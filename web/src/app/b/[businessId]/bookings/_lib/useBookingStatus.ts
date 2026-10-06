@@ -8,7 +8,7 @@ import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { BOOKING_STATUS } from "@/components/insights/labels";
 import type { BookingPage, BookingStatus, BookingView } from "@/components/insights/types";
-import { useToast } from "@/components/ui";
+import { useToast, type ToastTitle } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { UNDO_REFUSAL_MESSAGES } from "./bookingUndo";
@@ -90,7 +90,7 @@ export function useBookingStatus(showDetails: (booking: BookingView) => void) {
   };
 
   /** Offers Undo for a change the API made (`changed` has the new status). */
-  const offerUndo = (message: string, changed: BookingView, previous: BookingStatus, onUndone?: () => void) => {
+  const offerUndo = (message: ToastTitle, changed: BookingView, previous: BookingStatus, onUndone?: () => void) => {
     toast.undoable(message, () => {
       void undo(changed, previous).then((isUndone) => {
         if (isUndone) {
@@ -101,7 +101,7 @@ export function useBookingStatus(showDetails: (booking: BookingView) => void) {
   };
 
   /** Sets the status; `message` is the toast's text (by default "Booking updated"). */
-  const run = async (booking: BookingView, status: BookingStatus, message?: string): Promise<boolean> => {
+  const run = async (booking: BookingView, status: BookingStatus, message?: ToastTitle): Promise<boolean> => {
     const result = await change.run(booking, status);
     if (result.ok) {
       replaceInLists(business.id, result.data);

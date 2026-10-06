@@ -15,7 +15,7 @@ import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconArrowRight, IconClock } from "@/components/icons";
 import { FadeIn, MagneticButton, TiltCard } from "@/components/motion";
-import { ButtonLink } from "@/components/ui";
+import { ButtonLink, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { setupPath } from "@/lib/navigation";
 import { stepStates, TUNNEL_STEPS } from "@/lib/tunnel/steps";
@@ -58,12 +58,14 @@ export function SetupHero({ canSetUp }: { canSetUp: boolean }) {
 
       <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <FadeIn tone="landing">
-          <p className="text-sm font-medium text-accent">{t("setup.eyebrow", { business: business.name })}</p>
+          <p className="text-sm font-medium text-accent">
+            <UserSentence text={t("setup.eyebrow")} values={{ business: business.name }} />
+          </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
             {canSetUp ? t("setup.title") : t("setup.staffTitle")}
           </h1>
           <p className="mt-4 max-w-xl text-base text-ink-muted">
-            {canSetUp ? t("setup.description") : t("setup.staffDescription", { business: business.name })}
+            {canSetUp ? t("setup.description") : <UserSentence text={t("setup.staffDescription")} values={{ business: business.name }} />}
           </p>
 
           {progress && hasStarted ? (

@@ -28,6 +28,7 @@ function Bubble({ line, onResend }: { line: TryLine; onResend: () => void }) {
       <span className="sr-only">{isYou ? t("tunnelLaunch.try.you") : t("tunnelLaunch.try.assistant")}:</span>
       <p
         dir="auto"
+        data-user-content
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap shadow-sm",
           isYou ? "rounded-ee-md bg-accent-solid text-on-accent" : "rounded-es-md border border-line bg-surface text-ink",

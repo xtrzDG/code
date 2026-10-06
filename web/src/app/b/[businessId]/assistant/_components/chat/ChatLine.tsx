@@ -35,6 +35,7 @@ export function ChatLine({
             entry.status === "failed" && "bg-danger-soft text-ink ring-1 ring-danger/30",
           )}
           dir="auto"
+          data-user-content
         >
           {entry.text}
         </div>
@@ -63,7 +64,7 @@ export function ChatLine({
     return (
       <div className="mx-auto max-w-[85%] rounded-xl bg-warning-soft px-4 py-2 text-sm text-ink-muted">
         <span className="mb-0.5 block text-xs font-medium">{t(`assistant.authors.${entry.author}`)}</span>
-        <span dir="auto" className="break-words whitespace-pre-wrap">
+        <span dir="auto" data-user-content className="break-words whitespace-pre-wrap">
           {entry.text}
         </span>
       </div>

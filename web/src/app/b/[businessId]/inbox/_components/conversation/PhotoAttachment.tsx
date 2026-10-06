@@ -57,7 +57,7 @@ export function PhotoAttachment({ mediaId, caption }: { mediaId: string; caption
           {/* eslint-disable-next-line @next/next/no-img-element -- the same private file, full size */}
           <img src={url} alt={alt} className="mx-auto block max-h-[70dvh] w-auto max-w-full rounded-lg object-contain" />
           {caption ? (
-            <figcaption dir="auto" className="text-sm text-ink-muted">
+            <figcaption dir="auto" data-user-content className="text-sm text-ink-muted">
               {caption}
             </figcaption>
           ) : null}

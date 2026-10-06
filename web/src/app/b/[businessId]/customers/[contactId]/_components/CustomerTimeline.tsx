@@ -85,7 +85,7 @@ function TimelineItem({ entry }: { entry: TimelineEntry }) {
         ) : null}
         {detail ? <p className="mt-0.5 text-xs text-ink-muted">{detail}</p> : null}
         {entry.summary ? (
-          <p dir="auto" className="mt-1 text-sm text-ink-muted">
+          <p dir="auto" data-user-content className="mt-1 text-sm text-ink-muted">
             {entry.summary}
           </p>
         ) : null}

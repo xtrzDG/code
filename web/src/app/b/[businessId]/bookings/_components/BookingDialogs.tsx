@@ -3,7 +3,7 @@
 import { CustomerName } from "@/components/insights/common";
 import { ConfirmDialog } from "@/components/ui";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
-import { Modal, useToast } from "@/components/ui";
+import { Modal, UserSentence, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { BookingsPage } from "../_lib/useBookingsPage";
@@ -25,6 +25,18 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
   const when = useBookingWhen();
   const { dialog, setDialog, dialogBooking, close, closeIf, isStay, replaceBooking, resources, defaultDate } = page;
   const { cancelLanguage, setCancelLanguage, runCancel, runStatus } = page;
+  // "… the booking of {name} on {when}": the customer's name is user content.
+  const aboutBooking = (key: "bookings.reschedule.description" | "bookings.confirmCancel.description" | "bookings.confirmNoShow.description") => {
+    if (!dialogBooking) {
+      return undefined;
+    }
+    const whenText = when.full(dialogBooking, isStay(dialogBooking));
+    return dialogBooking.contact_name ? (
+      <UserSentence text={t(key, { when: whenText })} values={{ name: dialogBooking.contact_name }} />
+    ) : (
+      t(key, { name: t("insights.unknownCustomer"), when: whenText })
+    );
+  };
 
   return (
     <>
@@ -61,14 +73,7 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
         open={dialog.kind === "edit"}
         onClose={closeIf("edit")}
         title={t("bookings.edit.title")}
-        description={
-          dialogBooking
-            ? t("bookings.reschedule.description", {
-                name: dialogBooking.contact_name ?? t("insights.unknownCustomer"),
-                when: when.full(dialogBooking, isStay(dialogBooking)),
-              })
-            : undefined
-        }
+        description={aboutBooking("bookings.reschedule.description")}
       >
         {dialog.kind === "edit" ? (
           <BookingEditForm
@@ -90,14 +95,7 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
         open={dialog.kind === "reschedule"}
         onClose={closeIf("reschedule")}
         title={t("bookings.reschedule.title")}
-        description={
-          dialogBooking
-            ? t("bookings.reschedule.description", {
-                name: dialogBooking.contact_name ?? t("insights.unknownCustomer"),
-                when: when.full(dialogBooking, isStay(dialogBooking)),
-              })
-            : undefined
-        }
+        description={aboutBooking("bookings.reschedule.description")}
       >
         {dialog.kind === "reschedule" ? (
           <RescheduleForm
@@ -117,14 +115,7 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
       <ConfirmDialog
         open={dialog.kind === "cancel"}
         title={t("bookings.confirmCancel.title")}
-        description={
-          dialogBooking
-            ? t("bookings.confirmCancel.description", {
-                name: dialogBooking.contact_name ?? t("insights.unknownCustomer"),
-                when: when.full(dialogBooking, isStay(dialogBooking)),
-              })
-            : undefined
-        }
+        description={aboutBooking("bookings.confirmCancel.description")}
         confirmLabel={t("bookings.confirmCancel.confirm")}
         cancelLabel={t("bookings.confirmCancel.keep")}
         isPending={page.isCancelling}
@@ -141,14 +132,7 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
       <ConfirmDialog
         open={dialog.kind === "noShow"}
         title={t("bookings.confirmNoShow.title")}
-        description={
-          dialogBooking
-            ? t("bookings.confirmNoShow.description", {
-                name: dialogBooking.contact_name ?? t("insights.unknownCustomer"),
-                when: when.full(dialogBooking, isStay(dialogBooking)),
-              })
-            : undefined
-        }
+        description={aboutBooking("bookings.confirmNoShow.description")}
         confirmLabel={t("bookings.confirmNoShow.confirm")}
         onConfirm={() => (dialogBooking ? void runStatus(dialogBooking, "no_show") : undefined)}
         onClose={() =>

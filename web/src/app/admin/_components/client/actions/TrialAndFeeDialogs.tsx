@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { RequestBody } from "@/api/types";
-import { Field, Input } from "@/components/ui";
+import { Field, Input, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { parseTrialDays, TRIAL_DAYS_MAX } from "../../../_lib/accountActions";
@@ -29,7 +29,7 @@ export function ExtendTrialDialog({ businessId, name, open, onClose }: AccountAc
     <ActionDialog
       open={open}
       onClose={onClose}
-      title={t("adminActions.extend.title", { name })}
+      title={<UserSentence text={t("adminActions.extend.title")} values={{ name }} />}
       description={t("adminActions.extend.description")}
       confirmLabel={t("adminActions.extend.confirm")}
       fieldsValid={parsed !== null}
@@ -75,7 +75,7 @@ export function WaiveSetupFeeDialog({ businessId, name, open, onClose }: Account
     <ActionDialog
       open={open}
       onClose={onClose}
-      title={t("adminActions.waive.title", { name })}
+      title={<UserSentence text={t("adminActions.waive.title")} values={{ name }} />}
       description={t("adminActions.waive.description")}
       confirmLabel={t("adminActions.waive.confirm")}
       isPending={action.isPending}

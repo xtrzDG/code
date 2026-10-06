@@ -5,7 +5,8 @@ import { useCallback, useRef, useState } from "react";
 import { BFF_BASE_PATH, api } from "@/api/client";
 import { unwrap } from "@/api/result";
 import type { Schema } from "@/api/types";
-import { fillPlaceholders } from "@/lib/bookingPage/format";
+import { UserSentence } from "@/components/ui/UserContent";
+import { interfaceSentence, type SentenceWithUserValues } from "@/i18n/userValues";
 import { bookingProblem, isPageProblem, type BookingProblem } from "@/lib/bookingPage/refusals";
 import type { BookingPageTexts } from "@/lib/bookingPage/texts";
 
@@ -50,7 +51,7 @@ export function ManagedBooking({
   language: string;
 }) {
   const [view, setView] = useState(initialView);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SentenceWithUserValues | null>(null);
   const [problem, setProblem] = useState<BookingProblem | null>(null);
   const [isMoving, setMoving] = useState(false);
   const [isCancelling, setCancelling] = useState(false);
@@ -65,7 +66,7 @@ export function ManagedBooking({
   const standing = view.is_over ? texts.overNotice : hasStarted ? texts.startedNotice : null;
   const calendarUrl = `${BFF_BASE_PATH}/v1/public/bookings/${encodeURIComponent(view.token)}/calendar.ics`;
 
-  const report = useCallback((next: string | null, failure: BookingProblem | null) => {
+  const report = useCallback((next: SentenceWithUserValues | null, failure: BookingProblem | null) => {
     setNotice(next);
     setProblem(failure);
     // Focus follows the outcome (the button that led here may be gone).
@@ -91,7 +92,7 @@ export function ManagedBooking({
       );
       setView(next);
       setMoving(false);
-      report(fillPlaceholders(texts.cancelledNotice, { business: next.business_name }), null);
+      report({ text: texts.cancelledNotice, values: { business: next.business_name } }, null);
     } catch (error) {
       report(null, bookingProblem(error));
     } finally {
@@ -105,13 +106,13 @@ export function ManagedBooking({
     setMoving(false);
     // The old link no longer opens the booking: the address takes the new one.
     window.history.replaceState(null, "", `/r/${encodeURIComponent(next.token)}`);
-    report(texts.movedNotice, null);
+    report(interfaceSentence(texts.movedNotice), null);
   }
 
   return (
     <article className="bp-card" aria-labelledby="bp-title">
       <header className="bp-head">
-        <p className="bp-business" dir="auto">
+        <p className="bp-business" dir="auto" data-user-content>
           {view.business_name}
         </p>
         <h1 id="bp-title" className="bp-title">
@@ -123,7 +124,11 @@ export function ManagedBooking({
       </header>
 
       <div ref={messages} className="bp-messages" tabIndex={-1} aria-live="polite">
-        {notice ? <p className="bp-notice">{notice}</p> : null}
+        {notice ? (
+          <p className="bp-notice">
+            <UserSentence {...notice} />
+          </p>
+        ) : null}
         {problem ? (
           <p className="bp-problem" role="alert">
             {texts[problem]}
@@ -174,7 +179,9 @@ export function ManagedBooking({
       {view.cancellation_policy ? (
         <section className="bp-section" aria-labelledby="bp-policy-title">
           <h2 id="bp-policy-title">{texts.policy}</h2>
-          <p dir="auto">{view.cancellation_policy}</p>
+          <p dir="auto" data-user-content>
+            {view.cancellation_policy}
+          </p>
         </section>
       ) : null}
 
@@ -182,7 +189,9 @@ export function ManagedBooking({
 
       <dialog ref={dialog} className="bp-dialog" aria-labelledby="bp-cancel-title" aria-describedby="bp-cancel-text">
         <h2 id="bp-cancel-title">{texts.cancelTitle}</h2>
-        <p id="bp-cancel-text">{fillPlaceholders(texts.cancelText, { business: view.business_name })}</p>
+        <p id="bp-cancel-text">
+          <UserSentence text={texts.cancelText} values={{ business: view.business_name }} />
+        </p>
         <div className="bp-dialog-actions">
           <button type="button" className="bp-button" onClick={() => dialog.current?.close()}>
             {texts.keep}

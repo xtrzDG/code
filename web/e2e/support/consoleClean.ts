@@ -7,12 +7,13 @@
  *   - reports a hydration failure, React's #418 (text) or #423 (the tree),
  *     as an error or a warning: never acceptable, `allow` cannot hide it.
  *
- * And, when `cyrillicCheck` is on (E2E_CYRILLIC_CHECK=1, or
- * `test.use({ cyrillicCheck: true })`), an English or Georgian page whose
- * interface shows Cyrillic text fails too: user content (messages, names,
- * anything marked `data-user-content`, form fields, text in another `lang`)
- * is left out. The suite turns it on everywhere once W13-DAY0-TRUE-NUMBERS
- * (topic labels in the reader's language) has merged.
+ * And, with `cyrillicCheck` (on by default; E2E_CYRILLIC_CHECK=0 or
+ * `test.use({ cyrillicCheck: false })` turns it off), an English or
+ * Georgian page whose interface shows Cyrillic text at the end of a test
+ * fails too: an untranslated text of the cabinet. User content is left
+ * out: anything marked `data-user-content` (the cabinet marks names,
+ * messages, knowledge, notes and the like, `UserContent`/`UserSentence`
+ * in the UI kit), form fields, code and text marked with another `lang`.
  */
 
 import type { BrowserContext, ConsoleMessage, Page } from "@playwright/test";

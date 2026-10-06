@@ -40,7 +40,7 @@ export function AssistantLine({
         {t("assistant.authors.assistant")}
         {entry.versionId ? ` · ${answerLabel(entry.versionId, entry.versionNumber)}` : ""}
       </p>
-      <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface-muted px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-ink" dir="auto">
+      <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-surface-muted px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-ink" dir="auto" data-user-content>
         {entry.text}
       </div>
       {badges.length > 0 ? (

@@ -9,7 +9,7 @@ import { useMutation } from "@/api/useMutation";
 import type { Schema } from "@/api/types";
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconBell, IconExternal } from "@/components/icons";
-import { Button, Card, Field, Input, Select, buttonClasses } from "@/components/ui";
+import { Button, Card, Field, Input, Select, UserSentence, buttonClasses } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
@@ -138,6 +138,7 @@ export function StaffTelegramCard({ canManage }: { canManage: boolean }) {
                   <li
                     key={`${contact.address}-${contact.name}`}
                     dir="auto"
+                    data-user-content
                     className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-ink"
                   >
                     {contact.name}
@@ -169,8 +170,8 @@ function TelegramLinkResult({ name, link, onAnother }: { name: string; link: Tel
   return (
     <div className="space-y-4 rounded-xl border border-accent/30 bg-accent-soft/40 p-4" role="status">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-ink" dir="auto">
-          {t("channels.telegramLink.resultTitle", { name })}
+        <p className="text-sm font-semibold text-ink">
+          <UserSentence text={t("channels.telegramLink.resultTitle")} values={{ name }} />
         </p>
         <p className="text-xs text-ink-muted">{t("channels.telegramLink.expires", { time: format.dateTime(link.expires_at) })}</p>
       </div>
@@ -184,8 +185,8 @@ function TelegramLinkResult({ name, link, onAnother }: { name: string; link: Tel
 
       {link.deep_link ? (
         <>
-          <p className="text-sm text-ink-muted" dir="auto">
-            {t("channels.telegramLink.instruction", { name })}
+          <p className="text-sm text-ink-muted">
+            <UserSentence text={t("channels.telegramLink.instruction")} values={{ name }} />
           </p>
           <p className="truncate rounded-lg bg-surface px-3 py-2 font-mono text-xs text-ink" dir="ltr">
             {link.deep_link}
@@ -205,10 +206,12 @@ function TelegramLinkResult({ name, link, onAnother }: { name: string; link: Tel
         </>
       ) : (
         <>
-          <p className="text-sm text-ink-muted" dir="auto">
-            {bot
-              ? t("channels.telegramLink.instructionNoLink", { name, bot })
-              : t("channels.telegramLink.instructionNoBot", { name })}
+          <p className="text-sm text-ink-muted">
+            {bot ? (
+              <UserSentence text={t("channels.telegramLink.instructionNoLink", { bot })} values={{ name }} />
+            ) : (
+              <UserSentence text={t("channels.telegramLink.instructionNoBot")} values={{ name }} />
+            )}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="rounded-lg bg-surface px-3 py-2 font-mono text-sm text-ink" dir="ltr">

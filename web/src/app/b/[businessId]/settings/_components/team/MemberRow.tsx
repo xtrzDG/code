@@ -40,12 +40,13 @@ export function MemberRow({
       <span
         className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink"
         aria-hidden
+        data-user-content
       >
         {memberInitials(member) ?? <IconUsers className="size-5" />}
       </span>
       <div className="min-w-0 flex-1 basis-40">
         <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
-          <span dir="auto" className="break-all">
+          <span dir="auto" data-user-content className="break-all">
             {name}
           </span>
           {isMe ? <Badge tone="info">{t("settings.team.you")}</Badge> : null}

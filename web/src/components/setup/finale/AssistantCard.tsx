@@ -41,7 +41,7 @@ export function AssistantCard({
           <IconSparkles className="size-6" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xl font-semibold text-ink" dir="auto">
+          <p className="truncate text-xl font-semibold text-ink" dir="auto" data-user-content>
             {name}
           </p>
           <p className="mt-1 inline-flex items-center gap-2 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success">

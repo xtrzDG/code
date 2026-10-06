@@ -18,7 +18,7 @@ import { listFormat } from "@/lib/intl/formatters";
 import { customerPath } from "@/lib/navigation";
 
 import { initialsOf } from "../../inbox/_lib/conversationModel";
-import { customerName, shownPhone, type CustomerSummary } from "../_lib/customerModel";
+import { customerNaming, shownPhone, type CustomerSummary } from "../_lib/customerModel";
 
 const SHOWN_TAGS = 3;
 
@@ -27,7 +27,7 @@ export function CustomerRow({ contact }: { contact: CustomerSummary }) {
   const { business } = useBusiness();
   const format = useBusinessFormat();
   const isErased = Boolean(contact.erased_at);
-  const name = isErased ? t("settings.customers.erasedName") : customerName(contact, t("palette.unnamed"));
+  const naming = customerNaming(contact, { unnamed: t("palette.unnamed"), erased: t("settings.customers.erasedName") });
   const phone = shownPhone(contact);
   const channels = (contact.channels ?? []).map((channel) => t(CHANNEL_NAMES[channel]));
   const tags = contact.tags ?? [];
@@ -49,14 +49,19 @@ export function CustomerRow({ contact }: { contact: CustomerSummary }) {
       >
         <span
           aria-hidden
+          data-user-content={isErased ? undefined : true}
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink"
         >
           {isErased ? "–" : initialsOf(contact.name)}
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span dir={contact.name ? "auto" : "ltr"} className={isErased ? "text-sm text-ink-muted" : "text-sm font-medium break-words text-ink"}>
-              {name}
+            <span
+              dir={contact.name ? "auto" : "ltr"}
+              data-user-content={naming.isOwn ? true : undefined}
+              className={isErased ? "text-sm text-ink-muted" : "text-sm font-medium break-words text-ink"}
+            >
+              {naming.name}
             </span>
             {contact.is_vip ? (
               <Badge tone="accent" icon={<IconStar className="size-3" aria-hidden />}>
@@ -80,7 +85,7 @@ export function CustomerRow({ contact }: { contact: CustomerSummary }) {
           {tags.length > 0 ? (
             <span className="mt-1.5 flex flex-wrap gap-1">
               {tags.slice(0, SHOWN_TAGS).map((tag) => (
-                <span key={tag} dir="auto" className="rounded-md bg-surface-muted px-1.5 py-0.5 text-[11px] text-ink-muted">
+                <span key={tag} dir="auto" data-user-content className="rounded-md bg-surface-muted px-1.5 py-0.5 text-[11px] text-ink-muted">
                   {tag}
                 </span>
               ))}

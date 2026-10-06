@@ -119,6 +119,7 @@ function BrakedBusinesses({ spend, usd }: { spend: PlatformSpend; usd: (microUsd
                 <Link
                   href={adminClientPath(mark.business_id)}
                   dir="auto"
+                  data-user-content
                   className="block truncate text-sm font-medium text-ink hover:text-accent hover:underline"
                 >
                   {mark.business_name}

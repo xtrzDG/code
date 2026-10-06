@@ -58,7 +58,9 @@ export function BusinessesScreen({ businesses }: { businesses: BusinessView[] })
                 className="group motion-lift flex h-full flex-col rounded-2xl border border-line bg-surface p-5 hover:border-line-strong hover:bg-surface-muted/40"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="min-w-0 text-base font-semibold break-words text-ink">{business.name}</h2>
+                  <h2 className="min-w-0 text-base font-semibold break-words text-ink" data-user-content>
+                    {business.name}
+                  </h2>
                   <IconChevronRight className="mt-0.5 size-5 shrink-0 text-ink-subtle group-hover:text-accent rtl:-scale-x-100" aria-hidden />
                 </div>
                 <p className="mt-1 text-sm text-ink-muted">{nicheName(business.niche_key) || " "}</p>

@@ -16,7 +16,7 @@ import { useBusiness } from "@/components/business/BusinessContext";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
 import { AnswerFixDialog } from "@/components/teaching/AnswerFixDialog";
 import { CheckDialog } from "@/components/teaching/CheckDialog";
-import { Card, ConfirmDialog, ErrorState, useToast } from "@/components/ui";
+import { Card, ConfirmDialog, ErrorState, UserSentence, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
@@ -173,9 +173,13 @@ export function ConversationView({ conversationId }: { conversationId: string })
         open={isResolveOpen}
         tone="primary"
         title={t("inboxCard.resolveConfirm.title")}
-        description={t("inboxCard.resolveConfirm.description", {
-          name: conversation.contact_name ?? t("insights.unknownCustomer"),
-        })}
+        description={
+          conversation.contact_name ? (
+            <UserSentence text={t("inboxCard.resolveConfirm.description")} values={{ name: conversation.contact_name }} />
+          ) : (
+            t("inboxCard.resolveConfirm.description", { name: t("insights.unknownCustomer") })
+          )
+        }
         confirmLabel={t("inboxCard.resolveConfirm.confirm")}
         onClose={() => setResolveOpen(false)}
         onConfirm={() => {

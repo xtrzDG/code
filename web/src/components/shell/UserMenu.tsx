@@ -69,8 +69,14 @@ export function UserMenu({ me, collapsed = false }: { me: CurrentUserView; colla
           <>
             <span className="min-w-0 flex-1">
               <span className="sr-only">{`${t("account.menu")}: `}</span>
-              <span className="block truncate text-sm font-medium text-ink">{name}</span>
-              {contact && contact !== name ? <span className="block truncate text-xs text-ink-subtle">{contact}</span> : null}
+              <span className="block truncate text-sm font-medium text-ink" data-user-content>
+                {name}
+              </span>
+              {contact && contact !== name ? (
+                <span className="block truncate text-xs text-ink-subtle" data-user-content>
+                  {contact}
+                </span>
+              ) : null}
             </span>
             <IconChevronDown className="size-4 shrink-0 rotate-180 text-ink-subtle transition-transform group-hover:-translate-y-0.5" aria-hidden />
           </>

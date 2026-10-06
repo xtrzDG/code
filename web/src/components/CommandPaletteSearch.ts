@@ -69,10 +69,12 @@ export function useCommandPaletteSearch(scope: PaletteSearchScope | null, text: 
 
   const customers: PaletteEntry[] = (data?.customers ?? []).map((customer) => {
     const phone = customer.phone_number ? formatPhone(customer.phone_number) : customer.masked_phone_number;
+    const own = customer.name ?? phone;
     return {
       id: `customer:${customer.id}`,
       group: "customers",
-      label: customer.name ?? phone ?? unnamed,
+      label: own ?? unnamed,
+      isUserLabel: Boolean(own),
       detail: customer.name ? (phone ?? undefined) : undefined,
       href: customerPath(businessId, customer.id),
     };
@@ -81,6 +83,7 @@ export function useCommandPaletteSearch(scope: PaletteSearchScope | null, text: 
     id: `conversation:${hit.id}`,
     group: "conversations",
     label: hit.contact_name ?? unnamed,
+    isUserLabel: Boolean(hit.contact_name),
     detail: t("palette.conversationDetail", { channel: t(CHANNEL_LABELS[hit.channel]), date: when(hit.last_message_at) }),
     href: conversationPath(businessId, hit.id),
   }));
@@ -88,6 +91,7 @@ export function useCommandPaletteSearch(scope: PaletteSearchScope | null, text: 
     id: `booking:${hit.id}`,
     group: "bookings",
     label: hit.contact_name ?? unnamed,
+    isUserLabel: Boolean(hit.contact_name),
     detail: t("palette.bookingDetail", {
       date: when(hit.starts_at * 1_000_000),
       guests: tp("palette.partySize", hit.party_size),

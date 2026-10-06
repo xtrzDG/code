@@ -100,7 +100,7 @@ export function useKnowledgeItems() {
     if (result.ok) {
       const deletedId = deleting.id;
       items.updateItems((list) => list.filter((item) => item.id !== deletedId));
-      toast.success(t("knowledge.items.deleted", { title: deleting.title }));
+      toast.success({ text: t("knowledge.items.deleted"), values: { title: deleting.title } });
       setDeleting(null);
     }
   };

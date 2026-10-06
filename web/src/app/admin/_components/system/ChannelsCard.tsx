@@ -72,6 +72,7 @@ function IssueRow({ issue, kind }: { issue: ChannelIssue; kind: "error" | "expir
           href={adminClientPath(issue.business_id)}
           className="min-w-0 text-sm break-words text-accent-ink underline-offset-2 hover:underline"
           dir="auto"
+          data-user-content={issue.business_name ? true : undefined}
         >
           {issue.business_name ?? t("adminSystem.channels.unnamed")}
         </Link>

@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { en } from "@/i18n/messages/en";
 import { ka } from "@/i18n/messages/ka";
 import { ru } from "@/i18n/messages/ru";
-import { createTranslator } from "@/i18n/translate";
+import { createTranslator, interpolate } from "@/i18n/translate";
+import { splitUserValues, type SentenceWithUserValues } from "@/i18n/userValues";
 
 import type { AutotestScenarioResult } from "./autotests";
 import {
@@ -23,6 +24,11 @@ const russian = createTranslator("ru", ru, en);
 const georgian = createTranslator("ka", ka, en);
 
 const DOG = "Можно прийти с собакой?";
+
+/** The sentence as the owner reads it. */
+function said(sentence: SentenceWithUserValues): string {
+  return interpolate(sentence.text, sentence.values);
+}
 
 function result(overrides: Partial<AutotestScenarioResult>): AutotestScenarioResult {
   return {
@@ -55,20 +61,26 @@ const failedDogCheck = result({
 
 describe("the owner's checks in the story of an update", () => {
   it("say what the answer must do in each language, with the words when there are any", () => {
-    expect(expectationSentence({ expectation: "must_hand_off" }, russian)).toBe("ответ должен передать человеку");
-    expect(expectationSentence({ expectation: "must_mention", expected_text: " 20 лари " }, russian)).toBe(
+    expect(said(expectationSentence({ expectation: "must_hand_off" }, russian))).toBe("ответ должен передать человеку");
+    expect(said(expectationSentence({ expectation: "must_mention", expected_text: " 20 лари " }, russian))).toBe(
       "ответ должен упомянуть «20 лари»",
     );
-    expect(expectationSentence({ expectation: "must_not_mention", expected_text: "free" }, english)).toBe(
+    expect(said(expectationSentence({ expectation: "must_not_mention", expected_text: "free" }, english))).toBe(
       "the answer must not mention “free”",
     );
-    expect(expectationSentence({ expectation: "must_create_lead" }, georgian)).toBe("პასუხმა მოთხოვნა უნდა მიიღოს");
+    expect(said(expectationSentence({ expectation: "must_create_lead" }, georgian))).toBe("პასუხმა მოთხოვნა უნდა მიიღოს");
   });
 
   it("name a failed check by its question, never as a bare “Your check”", () => {
     const [named] = onlyOwnerCheckFailures([result({}), failedDogCheck]);
     expect(named).toMatchObject({ question: DOG, checkId: "case_1", conversationId: "conv_1", answerMessageId: "msg_2", answer: "Да, конечно!" });
-    expect(failureSentence(named!, russian)).toBe(`Не прошла ваша проверка: «${DOG}» — ответ должен передать человеку`);
+    expect(said(failureSentence(named!, russian))).toBe(`Не прошла ваша проверка: «${DOG}» — ответ должен передать человеку`);
+    // The owner's own words stand apart from the interface's (user content on the page).
+    const mention = failureSentence({ question: DOG, expectation: "must_mention", expected_text: "собака" }, english);
+    expect(splitUserValues(mention.text, mention.values).filter((part) => part.kind === "value")).toEqual([
+      { kind: "value", name: "question", value: DOG },
+      { kind: "value", name: "text", value: "собака" },
+    ]);
   });
 
   it("speak for the owner's checks only when nothing else failed", () => {
@@ -106,8 +118,8 @@ describe("the owner's checks in the story of an update", () => {
 
   it("list new and changed checks among the pending changes", () => {
     const added = { autotest_case_id: "c", action: "added", question: DOG, expectation: "must_hand_off", language: "ru" } as const;
-    expect(pendingCheckLine(added, russian)).toBe(`Новая проверка: «${DOG}»`);
-    expect(pendingCheckLine({ ...added, action: "changed" }, english)).toBe(`Changed check: “${DOG}”`);
+    expect(said(pendingCheckLine(added, russian))).toBe(`Новая проверка: «${DOG}»`);
+    expect(said(pendingCheckLine({ ...added, action: "changed" }, english))).toBe(`Changed check: “${DOG}”`);
   });
 
   it("never call everything live while a change, a check or a draft is pending", () => {

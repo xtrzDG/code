@@ -63,7 +63,8 @@ export function ActionDialog({
   children,
 }: {
   open: boolean;
-  title: string;
+  /** The action and the client's name (`UserSentence`). */
+  title: ReactNode;
   description: string;
   confirmLabel: string;
   tone?: "primary" | "danger";

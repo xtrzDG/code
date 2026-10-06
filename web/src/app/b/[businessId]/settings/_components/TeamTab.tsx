@@ -3,7 +3,7 @@
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus } from "@/components/icons";
 import { Button, Card } from "@/components/ui";
-import { ConfirmDialog } from "@/components/ui";
+import { ConfirmDialog, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { memberLabel, sortMembers } from "../_lib/team";
@@ -83,7 +83,7 @@ export function TeamTab() {
         onConfirm={team.onRemove}
         isPending={team.isRemoving}
         error={team.removeError}
-        title={removing ? t("settings.team.removeTitle", { name: memberLabel(removing) }) : ""}
+        title={removing ? <UserSentence text={t("settings.team.removeTitle")} values={{ name: memberLabel(removing) }} /> : ""}
         confirmLabel={t("settings.team.remove")}
       >
         {removing ? (

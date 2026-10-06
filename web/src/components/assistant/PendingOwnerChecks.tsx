@@ -6,6 +6,7 @@
  * each answer must do. The next update asks them first.
  */
 
+import { UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { expectationSentence, pendingCheckLine, type PendingOwnerCheck } from "@/lib/assistant/ownerChecks";
 
@@ -21,10 +22,10 @@ export function PendingOwnerChecks({ checks, labelId }: { checks: readonly Pendi
           />
           <span className="min-w-0 [overflow-wrap:anywhere]">
             <span dir="auto" className="block text-ink">
-              {pendingCheckLine(check, translator)}
+              <UserSentence {...pendingCheckLine(check, translator)} />
             </span>
             <span dir="auto" className="block text-xs text-ink-subtle">
-              {expectationSentence(check, translator)}
+              <UserSentence {...expectationSentence(check, translator)} />
             </span>
           </span>
         </li>

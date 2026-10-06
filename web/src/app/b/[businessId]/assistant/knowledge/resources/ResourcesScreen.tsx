@@ -91,8 +91,8 @@ export function ResourcesScreen() {
       replaceResource(result.data);
       toast.success(
         isActive
-          ? t("knowledge.resources.switchedOn", { name: resource.name })
-          : t("knowledge.resources.switchedOff", { name: resource.name }),
+          ? { text: t("knowledge.resources.switchedOn"), values: { name: resource.name } }
+          : { text: t("knowledge.resources.switchedOff"), values: { name: resource.name } },
       );
     }
   };

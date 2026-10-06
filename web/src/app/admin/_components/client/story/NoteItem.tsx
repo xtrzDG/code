@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import type { RequestBody, Schema } from "@/api/types";
-import { Badge, Button, ConfirmDialog, Field, Textarea } from "@/components/ui";
+import { Badge, Button, ConfirmDialog, Field, Textarea, UserContent, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import { cleanNote, isNoteEdited, isNoteValid, NOTE_MAX } from "../../../_lib/clientNotes";
@@ -33,7 +33,6 @@ export function NoteItem({
   const { dateTime } = useClientFormat(timeZone);
   const [draft, setDraft] = useState<string | null>(null);
   const [isConfirming, setConfirming] = useState(false);
-  const author = note.author_name ?? t("adminStory.notes.unknownAuthor");
 
   const save = async () => {
     if (draft !== null && isNoteValid(draft) && (await onChange({ text: cleanNote(draft) }))) {
@@ -55,7 +54,7 @@ export function NoteItem({
               {t("adminStory.notes.pinned")}
             </Badge>
           ) : null}
-          {note.text}
+          <UserContent>{note.text}</UserContent>
         </p>
       ) : (
         <Field label={t("adminStory.notes.edit")} error={draft.length > NOTE_MAX ? t("adminStory.notes.tooLong") : undefined}>
@@ -64,7 +63,14 @@ export function NoteItem({
       )}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-ink-subtle">
-          <span dir="auto">{t("adminStory.notes.byline", { name: author, date: dateTime(note.created_at) })}</span>
+          <span dir="auto">
+            {/* The author's name is user content; "Unknown" is ours. */}
+            {note.author_name ? (
+              <UserSentence text={t("adminStory.notes.byline", { date: dateTime(note.created_at) })} values={{ name: note.author_name }} />
+            ) : (
+              t("adminStory.notes.byline", { name: t("adminStory.notes.unknownAuthor"), date: dateTime(note.created_at) })
+            )}
+          </span>
           {isNoteEdited(note) ? <span> · {t("adminStory.notes.edited", { date: dateTime(note.updated_at) })}</span> : null}
         </p>
         {canWrite ? (

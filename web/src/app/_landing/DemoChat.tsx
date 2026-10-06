@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import type { Schema } from "@/api/types";
 import { IconArrowRight, IconRefresh, IconSend, IconSparkles } from "@/components/icons";
-import { Button, ButtonLink } from "@/components/ui";
+import { Button, ButtonLink, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { DEMO_MESSAGE_MAX_LENGTH, messagesLeftNotice, startersFor } from "@/lib/publicSite/demoChat";
@@ -79,9 +79,11 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
           <IconSparkles className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-ink">{demo.business_name}</p>
+          <p className="truncate text-sm font-medium text-ink" data-user-content>
+            {demo.business_name}
+          </p>
           <p className="truncate text-xs text-ink-subtle">
-            {demo.city ? t("publicDemo.place", { niche: demo.niche_name, city: demo.city }) : demo.niche_name}
+            {demo.city ? <UserSentence text={t("publicDemo.place", { niche: demo.niche_name })} values={{ city: demo.city }} /> : demo.niche_name}
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-ink-muted">{t("publicDemo.badge")}</span>
@@ -92,7 +94,7 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
         ) : null}
       </div>
       <DemoTranscript
-        greeting={t("publicDemo.greeting", { business: demo.business_name })}
+        greeting={<UserSentence text={t("publicDemo.greeting")} values={{ business: demo.business_name }} />}
         entries={chat.entries}
         isSending={chat.isSending}
         failure={chat.failure}

@@ -2,11 +2,22 @@ import { describe, expect, it } from "vitest";
 
 import type { BusinessView, KnowledgeItemDetails, ProfileWizardView } from "@/api/types";
 import { en } from "@/i18n/messages/en";
-import { createTranslator } from "@/i18n/translate";
+import { createTranslator, interpolate } from "@/i18n/translate";
+import { splitUserValues, type SentenceWithUserValues } from "@/i18n/userValues";
 
 import { sectionSummary } from "./sectionSummaries";
 
 const words = createTranslator("en", en);
+
+/** The line as the owner reads it (null: still loading). */
+function said(sentence: SentenceWithUserValues | null): string | null {
+  return sentence ? interpolate(sentence.text, sentence.values) : null;
+}
+
+/** The business's own words in the line (user content on the page). */
+function userParts(sentence: SentenceWithUserValues | null): string[] {
+  return sentence ? splitUserValues(sentence.text, sentence.values).flatMap((part) => (part.kind === "value" ? [part.value] : [])) : [];
+}
 
 const business = {
   name: "Mtsvane Ezo",
@@ -39,12 +50,19 @@ describe("the cards of the business profile", () => {
   const input = { business, wizard, items };
 
   it("say what each section holds in a line", () => {
-    expect(sectionSummary("business", input, words)).toBe("Mtsvane Ezo · Restaurants and cafés");
-    expect(sectionSummary("place", input, words)).toBe("Rustaveli 12, Tbilisi · Georgian, English");
-    expect(sectionSummary("offer", input, words)).toBe("2 items · 1 with a price");
-    expect(sectionSummary("hours", input, words)).toBe("Mon–Fri 10:00–23:00 · up to 12 people per booking");
-    expect(sectionSummary("people", input, words)).toBe("Nino and David");
-    expect(sectionSummary("rules", input, words)).toBe("1 ready answer · 1 reason to call a person · 0 things never to promise");
+    expect(said(sectionSummary("business", input, words))).toBe("Mtsvane Ezo · Restaurants and cafés");
+    expect(said(sectionSummary("place", input, words))).toBe("Rustaveli 12, Tbilisi · Georgian, English");
+    expect(said(sectionSummary("offer", input, words))).toBe("2 items · 1 with a price");
+    expect(said(sectionSummary("hours", input, words))).toBe("Mon–Fri 10:00–23:00 · up to 12 people per booking");
+    expect(said(sectionSummary("people", input, words))).toBe("Nino and David");
+    expect(said(sectionSummary("rules", input, words))).toBe("1 ready answer · 1 reason to call a person · 0 things never to promise");
+  });
+
+  it("keep the business's own words apart from the interface's", () => {
+    expect(userParts(sectionSummary("business", input, words))).toEqual(["Mtsvane Ezo"]);
+    expect(userParts(sectionSummary("place", input, words))).toEqual(["Rustaveli 12, Tbilisi"]);
+    expect(userParts(sectionSummary("people", input, words))).toEqual(["Nino and David"]);
+    expect(userParts(sectionSummary("hours", input, words))).toEqual([]);
   });
 
   it("say what is missing", () => {
@@ -53,15 +71,15 @@ describe("the cards of the business profile", () => {
       wizard: { ...wizard, niche: { ...wizard.niche, takes_bookings: false }, profile: { ...wizard.profile, address: null, hours: [] } } as unknown as ProfileWizardView,
       items: [],
     };
-    expect(sectionSummary("place", empty, words)).toBe("No address yet · Georgian, English");
-    expect(sectionSummary("offer", empty, words)).toBe("Nothing on offer yet");
-    expect(sectionSummary("hours", empty, words)).toBe("Opening hours not set");
-    expect(sectionSummary("people", empty, words)).toBe("No one gets the conversations yet");
+    expect(said(sectionSummary("place", empty, words))).toBe("No address yet · Georgian, English");
+    expect(said(sectionSummary("offer", empty, words))).toBe("Nothing on offer yet");
+    expect(said(sectionSummary("hours", empty, words))).toBe("Opening hours not set");
+    expect(said(sectionSummary("people", empty, words))).toBe("No one gets the conversations yet");
   });
 
   it("wait for what a line needs", () => {
     const loading = { business, wizard: undefined, items: undefined };
-    expect(sectionSummary("business", loading, words)).toBe("Mtsvane Ezo");
+    expect(said(sectionSummary("business", loading, words))).toBe("Mtsvane Ezo");
     for (const section of ["place", "offer", "hours", "rules"] as const) {
       expect(sectionSummary(section, loading, words)).toBeNull();
     }

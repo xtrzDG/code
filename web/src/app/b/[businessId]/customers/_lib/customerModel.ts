@@ -6,6 +6,8 @@
  */
 
 import type { RequestBody, Schema } from "@/api/types";
+import { interpolate } from "@/i18n/translate";
+import { interfaceSentence, type SentenceWithUserValues } from "@/i18n/userValues";
 import { formatPhone } from "@/lib/phone";
 
 export type CustomerSummary = Schema<"ContactSummaryView">;
@@ -38,6 +40,34 @@ export function shownPhone(contact: PhoneFields): { text: string; isMasked: bool
 /** What to call the customer: their name, else the phone they may see, else `unnamed`. */
 export function customerName(contact: Pick<CustomerSummary, "name"> & PhoneFields, unnamed: string): string {
   return contact.name?.trim() || shownPhone(contact)?.text || unnamed;
+}
+
+/**
+ * What a page calls the customer: their own name or phone (`isOwn`, user
+ * content), or a label of ours ("No name", "Data erased").
+ */
+export interface CustomerNaming {
+  name: string;
+  isOwn: boolean;
+}
+
+/** The customer's own name or phone; one of `labels` (ours) for an erased or nameless customer. */
+export function customerNaming(
+  contact: Pick<CustomerSummary, "name" | "erased_at"> & PhoneFields,
+  labels: { unnamed: string; erased: string },
+): CustomerNaming {
+  if (contact.erased_at) {
+    return { name: labels.erased, isOwn: false };
+  }
+  const own = customerName(contact, "");
+  return own ? { name: own, isOwn: true } : { name: labels.unnamed, isOwn: false };
+}
+
+/** A sentence of ours naming the customer ("Block {name}?"): their own name apart, as user content. */
+export function namingSentence(template: string, naming: CustomerNaming): SentenceWithUserValues {
+  return naming.isOwn
+    ? { text: template, values: { name: naming.name } }
+    : interfaceSentence(interpolate(template, { name: naming.name }));
 }
 
 /** What the owner types to confirm an erasure: the name, else the phone, else the id. */

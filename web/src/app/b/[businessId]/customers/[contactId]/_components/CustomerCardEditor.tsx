@@ -15,7 +15,7 @@ import type { Query } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Switch } from "@/components/content/Switch";
 import { IconPlus, IconStar, IconX } from "@/components/icons";
-import { Button, Card, Input } from "@/components/ui";
+import { Button, Card, Input, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import {
@@ -100,7 +100,9 @@ export function CustomerCardEditor({ detail, knownTags }: { detail: Query<Custom
             <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t("customers.card.tags")}>
               {tags.map((tag) => (
                 <li key={tag} className="flex items-center gap-1 rounded-full bg-surface-muted py-0.5 ps-2.5 pe-1 text-sm text-ink">
-                  <span dir="auto">{tag}</span>
+                  <span dir="auto" data-user-content>
+                    {tag}
+                  </span>
                   <button
                     type="button"
                     disabled={isErased}
@@ -157,7 +159,7 @@ export function CustomerCardEditor({ detail, knownTags }: { detail: Query<Custom
                       onClick={() => addTag(tag)}
                       className="motion-press cursor-pointer rounded-full border border-line px-2.5 py-0.5 text-xs text-ink-muted hover:border-line-strong hover:text-ink"
                     >
-                      + {tag}
+                      + <UserContent>{tag}</UserContent>
                     </button>
                   ))}
                 </div>

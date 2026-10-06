@@ -53,6 +53,7 @@ export function CustomerMessageModal({
       <p className="mb-2 text-sm font-medium text-ink">{t("insights.customerMessage.title")}</p>
       <p
         dir="auto"
+        data-user-content
         className="rounded-xl border border-line bg-surface-muted px-4 py-3 text-sm whitespace-pre-wrap text-ink select-all"
       >
         {text}

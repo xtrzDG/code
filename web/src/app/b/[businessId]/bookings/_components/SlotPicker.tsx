@@ -164,7 +164,7 @@ export function SlotPicker({
                       >
                         {slot.booking_unit === "night" ? (
                           <>
-                            <span dir="auto">{slot.resource_name}</span>
+                            <span dir="auto" data-user-content>{slot.resource_name}</span>
                             <span className="text-ink-muted"> · </span>
                             <span className="font-medium">{tp("bookings.nights", slot.nights ?? 1)}</span>
                           </>
@@ -172,7 +172,7 @@ export function SlotPicker({
                           <>
                             <span className="font-medium tabular-nums">{slot.time ? formatLocalTime(slot.time, locale) : ""}</span>
                             <span className="text-ink-muted"> · </span>
-                            <span dir="auto">{slot.resource_name}</span>
+                            <span dir="auto" data-user-content>{slot.resource_name}</span>
                           </>
                         )}
                       </button>
@@ -206,7 +206,7 @@ function DaySlots({
       {byResource.map((group) => (
         <section key={group.resourceId} aria-label={group.resourceName}>
           <h4 className="mb-1.5 flex items-baseline gap-2 text-sm">
-            <span dir="auto" className="font-medium text-ink">
+            <span dir="auto" data-user-content className="font-medium text-ink">
               {group.resourceName}
             </span>
             <span className="text-xs text-ink-subtle">{tp("bookings.form.freeTimes", group.slots.length)}</span>

@@ -11,7 +11,7 @@ import { useId, useState } from "react";
 
 import type { SupportAccessView } from "@/api/types";
 import { Switch } from "@/components/content/Switch";
-import { Button, ConfirmDialog, Select, useToast } from "@/components/ui";
+import { Button, ConfirmDialog, Select, UserSentence, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { formatTime } from "@/lib/format";
 import { DEFAULT_WRITE_ACCESS_HOURS, WRITE_ACCESS_HOURS } from "@/lib/supportAccess";
@@ -61,10 +61,13 @@ export function OwnerSupportPanel({
           <ul className="space-y-1">
             {(view.sessions ?? []).map((session) => (
               <li key={session.grant_id} className="text-ink">
-                <span dir="auto">
-                  {session.admin_name
-                    ? t("supportAccess.owner.who", { name: session.admin_name, reason: session.reason })
-                    : t("supportAccess.owner.reason", { reason: session.reason })}
+                {/* The admin's name and the reason they gave are user content. */}
+                <span>
+                  {session.admin_name ? (
+                    <UserSentence text={t("supportAccess.owner.who")} values={{ name: session.admin_name, reason: session.reason }} />
+                  ) : (
+                    <UserSentence text={t("supportAccess.owner.reason")} values={{ reason: session.reason }} />
+                  )}
                 </span>{" "}
                 <span className="text-ink-muted">{t("supportAccess.owner.until", { time: time(session.expires_at) })}</span>
               </li>

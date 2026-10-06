@@ -15,11 +15,11 @@ import { queryKeys } from "@/api/queryKeys";
 import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconArrowLeft, IconUsers } from "@/components/icons";
-import { EmptyState, ErrorState, LoadingRegion, PageHeader, SkeletonCard } from "@/components/ui";
+import { EmptyState, ErrorState, LoadingRegion, PageHeader, SkeletonCard, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
-import { customerName } from "../_lib/customerModel";
+import { customerNaming } from "../_lib/customerModel";
 import { useCustomerSettings } from "../_lib/useCustomerSettings";
 import { BlockCard } from "./_components/BlockCard";
 import { CustomerCardEditor } from "./_components/CustomerCardEditor";
@@ -69,23 +69,21 @@ export function CustomerScreen({ contactId }: { contactId: string }) {
     );
   }
 
-  const name = data.contact.erased_at
-    ? t("settings.customers.erasedName")
-    : customerName(data.contact, t("palette.unnamed"));
+  const naming = customerNaming(data.contact, { unnamed: t("palette.unnamed"), erased: t("settings.customers.erasedName") });
 
   return (
     <>
-      <PageHeader title={name} eyebrow={back} />
+      <PageHeader title={naming.isOwn ? <UserContent>{naming.name}</UserContent> : naming.name} eyebrow={back} />
       <div className="space-y-6">
-        <CustomerSummaryCard detail={data} name={name} />
+        <CustomerSummaryCard detail={data} naming={naming} />
         <div className="grid items-start gap-6 lg:grid-cols-3">
           <div className="min-w-0 lg:col-span-2">
             <CustomerTimeline entries={data.timeline ?? []} />
           </div>
           <div className="min-w-0 space-y-6">
             <CustomerCardEditor detail={detail} knownTags={settings.data?.known_tags ?? []} />
-            {isOwner ? <BlockCard detail={detail} name={name} /> : null}
-            {isOwner ? <CustomerDataCard detail={detail} name={name} /> : null}
+            {isOwner ? <BlockCard detail={detail} naming={naming} /> : null}
+            {isOwner ? <CustomerDataCard detail={detail} naming={naming} /> : null}
           </div>
         </div>
       </div>

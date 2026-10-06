@@ -107,7 +107,7 @@ export function KnowledgeSearch({ onOpen }: { onOpen: (itemId: string) => void }
                     {index + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium break-words text-ink" dir="auto">
+                    <p className="text-sm font-medium break-words text-ink" dir="auto" data-user-content>
                       {item.title}
                     </p>
                     <p className="text-sm text-ink-subtle">

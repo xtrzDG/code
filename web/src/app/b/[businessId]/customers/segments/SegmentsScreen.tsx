@@ -15,7 +15,7 @@ import { useQuery } from "@/api/useQuery";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconPlus, IconUsers } from "@/components/icons";
 import { AnimatedPresenceList } from "@/components/motion";
-import { Alert, ConfirmDialog, EmptyState, ErrorState, PageHeader, SkeletonCardList, useToast } from "@/components/ui";
+import { Alert, ConfirmDialog, EmptyState, ErrorState, PageHeader, SkeletonCardList, UserSentence, useToast } from "@/components/ui";
 import { OwnerOnlyState } from "@/components/workspace/OwnerOnly";
 import { useI18n } from "@/i18n/client";
 
@@ -129,7 +129,7 @@ export function SegmentsScreen() {
         onConfirm={onDelete}
         isPending={remove.isPending}
         error={remove.error}
-        title={deleting ? t("segments.deleteTitle", { name: deleting.name }) : ""}
+        title={deleting ? <UserSentence text={t("segments.deleteTitle")} values={{ name: deleting.name }} /> : ""}
         confirmLabel={t("segments.delete")}
       >
         <p>{t("segments.deleteBody")}</p>

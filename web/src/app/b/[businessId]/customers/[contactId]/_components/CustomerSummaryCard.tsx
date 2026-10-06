@@ -19,7 +19,7 @@ import { useI18n } from "@/i18n/client";
 import { listFormat } from "@/lib/intl/formatters";
 
 import { initialsOf } from "../../../inbox/_lib/conversationModel";
-import { shownPhone, type CustomerDetail } from "../../_lib/customerModel";
+import { shownPhone, type CustomerDetail, type CustomerNaming } from "../../_lib/customerModel";
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -30,7 +30,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function CustomerSummaryCard({ detail, name }: { detail: CustomerDetail; name: string }) {
+export function CustomerSummaryCard({ detail, naming }: { detail: CustomerDetail; naming: CustomerNaming }) {
   const i18n = useI18n();
   const { t, locale } = i18n;
   const format = useBusinessFormat();
@@ -45,13 +45,14 @@ export function CustomerSummaryCard({ detail, name }: { detail: CustomerDetail; 
       <div className="flex items-start gap-4">
         <span
           aria-hidden
+          data-user-content={isErased ? undefined : true}
           className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-soft text-base font-semibold text-accent-ink"
         >
           {isErased ? "–" : initialsOf(contact.name)}
         </span>
         <div className="min-w-0 flex-1">
-          <p dir="auto" className="text-lg font-semibold break-words text-ink">
-            {name}
+          <p dir="auto" data-user-content={naming.isOwn ? true : undefined} className="text-lg font-semibold break-words text-ink">
+            {naming.name}
           </p>
           <p className="mt-1 flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-accent">{standingLine(i18n, standing, detail.visit_count ?? 0)}</span>

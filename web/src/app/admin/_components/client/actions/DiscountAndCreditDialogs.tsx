@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { RequestBody } from "@/api/types";
-import { Field, Input } from "@/components/ui";
+import { Field, Input, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { todayInTimeZone } from "@/lib/specialDays";
 
@@ -46,7 +46,7 @@ export function DiscountDialog({
     <ActionDialog
       open={open}
       onClose={onClose}
-      title={t("adminActions.discount.title", { name })}
+      title={<UserSentence text={t("adminActions.discount.title")} values={{ name }} />}
       description={t("adminActions.discount.description")}
       confirmLabel={t("adminActions.discount.confirm")}
       fieldsValid={parsedPercent !== null && isDayValid}
@@ -124,7 +124,7 @@ export function CreditDialog({
     <ActionDialog
       open={open}
       onClose={onClose}
-      title={t("adminActions.credit.title", { name })}
+      title={<UserSentence text={t("adminActions.credit.title")} values={{ name }} />}
       description={t("adminActions.credit.description")}
       confirmLabel={t("adminActions.credit.confirm")}
       fieldsValid={minor !== null}

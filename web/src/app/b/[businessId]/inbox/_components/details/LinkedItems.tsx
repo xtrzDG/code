@@ -85,7 +85,7 @@ export function LinkedItems({
                     {formatLocalDate(booking.date, locale, { weekday: "short", day: "numeric", month: "short" })}
                     {booking.time ? `, ${formatLocalTime(booking.time, locale)}` : ""}
                   </span>
-                  <span dir="auto" className="text-ink-muted">
+                  <span dir="auto" data-user-content className="text-ink-muted">
                     {booking.resource_name}
                   </span>
                   <span className="text-ink-muted">{party.count(booking.party_size, booking.resource_id)}</span>

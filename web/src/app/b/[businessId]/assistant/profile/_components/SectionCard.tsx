@@ -10,8 +10,10 @@ import Link from "next/link";
 import { useId, type ComponentType, type SVGProps } from "react";
 
 import { IconAlert, IconBook, IconBuilding, IconCheck, IconChevronRight, IconClock, IconMapPin, IconTag, IconUsers } from "@/components/icons";
-import { Badge, Skeleton } from "@/components/ui";
+import { Badge, Skeleton, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { interpolate } from "@/i18n/translate";
+import type { SentenceWithUserValues } from "@/i18n/userValues";
 import type { ProfileSection, SectionGaps } from "@/lib/profile/sections";
 
 const ICONS: Record<ProfileSection, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -45,7 +47,18 @@ function GapBadge({ gaps }: { gaps: SectionGaps | undefined }) {
   );
 }
 
-export function SectionCard({ section, href, summary, gaps }: { section: ProfileSection; href: string; summary: string | null; gaps: SectionGaps | undefined }) {
+export function SectionCard({
+  section,
+  href,
+  summary,
+  gaps,
+}: {
+  section: ProfileSection;
+  href: string;
+  /** What the section holds (null: loading); the business's own words in it are user content. */
+  summary: SentenceWithUserValues | null;
+  gaps: SectionGaps | undefined;
+}) {
   const { t } = useI18n();
   const describedBy = useId();
   const Icon = ICONS[section];
@@ -68,8 +81,8 @@ export function SectionCard({ section, href, summary, gaps }: { section: Profile
               <Skeleton className="mt-1.5 h-3.5 w-40" />
             ) : (
               // A preview of what the section holds: two lines at most, the whole of it in the tooltip and for screen readers.
-              <p data-clip="content" title={summary} className="line-clamp-2 break-words">
-                {summary}
+              <p data-clip="content" title={interpolate(summary.text, summary.values)} className="line-clamp-2 break-words">
+                <UserSentence {...summary} />
               </p>
             )}
           </div>

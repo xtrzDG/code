@@ -7,7 +7,7 @@
  */
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
-import { Field, Fieldset, Input, Radio, Select, Textarea } from "@/components/ui";
+import { Field, Fieldset, Input, Radio, Select, Textarea, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { MONEY_INPUT_MESSAGES } from "@/lib/format";
 import {
@@ -37,12 +37,12 @@ export function AnswerContext({ draft }: { draft: CorrectionDraft }) {
       <div>
         <dt className="text-xs font-medium text-ink-subtle">{t("teaching.fix.customerAsked")}</dt>
         <dd dir="auto" className="mt-0.5 text-ink">
-          {draft.question ?? <span className="text-ink-muted italic">{t("teaching.fix.noQuestion")}</span>}
+          {draft.question ? <UserContent>{draft.question}</UserContent> : <span className="text-ink-muted italic">{t("teaching.fix.noQuestion")}</span>}
         </dd>
       </div>
       <div>
         <dt className="text-xs font-medium text-ink-subtle">{t("teaching.fix.assistantAnswered")}</dt>
-        <dd dir="auto" className="mt-0.5 line-clamp-4 whitespace-pre-wrap text-ink-muted">
+        <dd dir="auto" data-user-content className="mt-0.5 line-clamp-4 whitespace-pre-wrap text-ink-muted">
           {draft.answer}
         </dd>
       </div>
@@ -50,11 +50,17 @@ export function AnswerContext({ draft }: { draft: CorrectionDraft }) {
         <div>
           <dt className="text-xs font-medium text-ink-subtle">{t("teaching.fix.currentFact")}</dt>
           <dd dir="auto" className="mt-0.5 text-ink">
-            <span className="font-medium">{fact.title}</span>
+            <span className="font-medium" data-user-content>
+              {fact.title}
+            </span>
             {fact.price_minor !== null && fact.price_minor !== undefined
               ? ` · ${format.money(fact.price_minor, fact.currency_code ?? undefined)}`
               : ""}
-            {fact.body ? <span className="mt-0.5 block text-ink-muted">{fact.body}</span> : null}
+            {fact.body ? (
+              <span className="mt-0.5 block text-ink-muted" data-user-content>
+                {fact.body}
+              </span>
+            ) : null}
           </dd>
         </div>
       ) : null}

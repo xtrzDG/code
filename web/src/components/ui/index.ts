@@ -27,5 +27,5 @@ export {
 } from "./Skeleton";
 export { LoadingBlock, Spinner } from "./Spinner";
 export { Table, TBody, Td, Th, THead, Tr } from "./Table";
-export { useToast } from "./Toast";
-
+export { useToast, type ToastTitle } from "./Toast";
+export { UserContent, UserSentence } from "./UserContent";

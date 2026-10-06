@@ -10,7 +10,7 @@ import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
 import { IconArrowLeft, IconExternal } from "@/components/icons";
-import { Button, ButtonLink, Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
+import { Button, ButtonLink, Card, ErrorState, LoadingRegion, PageHeader, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 import { ADMIN_PATH, businessPath } from "@/lib/navigation";
@@ -97,7 +97,7 @@ export function AdminClientScreen({
                 {[countryName(summary.country_code, locale), nicheName(summary.niche_key)].join(" · ")}
               </>
             }
-            title={<span dir="auto">{summary.name}</span>}
+            title={<UserContent>{summary.name}</UserContent>}
             actions={
               <div className="flex flex-wrap items-center gap-2">
                 {canManageBilling ? <AccountActionsMenu businessId={businessId} client={data} /> : null}

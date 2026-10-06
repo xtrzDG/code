@@ -1,13 +1,13 @@
 "use client";
 
-import { useId } from "react";
+import { Fragment, useId } from "react";
 
 import { IconCheck, IconPhone, IconX } from "@/components/icons";
 import { BookingStatusBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName } from "@/components/insights/common";
 import { usePartyWording } from "@/components/insights/usePartyWording";
 import type { BookingView } from "@/components/insights/types";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { formatPhone } from "@/lib/phone";
@@ -40,9 +40,8 @@ export function AgendaCard({
   const { booking, isActive, canMark } = entry;
   const when = useBookingWhen().time(booking, isStay);
   const name = booking.contact_name ?? t("insights.unknownCustomer");
-  const details = [party.count(booking.party_size, booking.resource_id), booking.resource_name, booking.service_title]
-    .filter(Boolean)
-    .join(" · ");
+  // The place and the service are the business's own names (user content).
+  const places = [booking.resource_name, booking.service_title].filter(Boolean);
 
   return (
     <article
@@ -74,11 +73,17 @@ export function AgendaCard({
               {booking.status === "pending" ? <BookingStatusBadge status={booking.status} /> : null}
               {booking.is_sandbox ? <TestBadge /> : null}
             </span>
-            <span dir="auto" className="mt-0.5 block text-sm text-ink-muted">
-              {details}
+            <span className="mt-0.5 block text-sm text-ink-muted">
+              {party.count(booking.party_size, booking.resource_id)}
+              {places.map((place, index) => (
+                <Fragment key={index}>
+                  {" · "}
+                  <UserContent>{place}</UserContent>
+                </Fragment>
+              ))}
             </span>
             {booking.notes ? (
-              <span dir="auto" className="mt-0.5 line-clamp-1 block text-sm text-ink-subtle">
+              <span dir="auto" data-user-content className="mt-0.5 line-clamp-1 block text-sm text-ink-subtle">
                 {booking.notes}
               </span>
             ) : null}

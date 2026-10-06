@@ -36,6 +36,7 @@ import { MilestoneCelebrations } from "../setupGuide/MilestoneCelebrations";
 import { SetupRing } from "../setupGuide/SetupRing";
 import { PendingChangesBanner } from "../assistant/PendingChangesBanner";
 import { BusinessSwitcher } from "../BusinessSwitcher";
+import { UserContent } from "../ui";
 import { useBusiness } from "../business/BusinessContext";
 import { IconCalendar, IconGauge, IconInbox, IconSettings, IconShield, IconSparkles, IconUsers, type IconProps } from "../icons";
 import { LiveEventsProvider, useAttentionCounts } from "./LiveEvents";
@@ -113,7 +114,7 @@ function CabinetFrame({ children, prefetch, initialCollapsed }: { children: Reac
       items={items}
       me={me}
       initialCollapsed={initialCollapsed}
-      context={business.name}
+      context={<UserContent>{business.name}</UserContent>}
       title={page ? t(pageLabel(page)) : undefined}
       showTabBar={!isConversationPath(pathname)}
       showPhoneTopBar={!isConversationPath(pathname)}
@@ -160,7 +161,7 @@ function SetupFrame({ initialCollapsed }: { initialCollapsed: boolean }) {
       items={[]}
       me={me}
       initialCollapsed={initialCollapsed}
-      context={business.name}
+      context={<UserContent>{business.name}</UserContent>}
       title={t("setup.navEntry")}
       showTabBar={false}
       sidebarReplacement={(collapsed) => <SetupEntry canSetUp={canSetUp} collapsed={collapsed} />}

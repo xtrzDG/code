@@ -4,8 +4,9 @@
  *   - the console-clean gate (support/consoleClean.ts): no page of the
  *     test's context may throw, log a console error the test did not
  *     accept (`consoleErrors.allow(/…/)`) or fail hydration (React #418,
- *     #423: never acceptable); with `cyrillicCheck` on, no English or
- *     Georgian page may show interface text in Cyrillic;
+ *     #423: never acceptable); and, with `cyrillicCheck` (on by default,
+ *     E2E_CYRILLIC_CHECK=0 turns it off), no English or Georgian page may
+ *     show interface text in Cyrillic at the end of a test;
  *   - requests counted on every page, for `waitForNetworkQuiet` (support/network.ts);
  *   - `account`: a new account created through the API, with the browser
  *     context signed in as it (interface in English);
@@ -56,7 +57,7 @@ export interface ConsoleErrors {
 }
 
 export const test = base.extend<{
-  /** Fail on Cyrillic interface text of en/ka pages (support/consoleClean.ts). */
+  /** Fail on Cyrillic interface text of en/ka pages (support/consoleClean.ts); on by default. */
   cyrillicCheck: boolean;
   consoleErrors: ConsoleErrors;
   requestTracking: void;
@@ -64,7 +65,8 @@ export const test = base.extend<{
   newOwner: Owner;
   owner: Owner;
 }>({
-  cyrillicCheck: [process.env.E2E_CYRILLIC_CHECK === "1", { option: true }],
+  // On unless E2E_CYRILLIC_CHECK=0 (or `test.use({ cyrillicCheck: false })`).
+  cyrillicCheck: [process.env.E2E_CYRILLIC_CHECK !== "0", { option: true }],
 
   consoleErrors: [
     async ({ page, context, cyrillicCheck }, use) => {

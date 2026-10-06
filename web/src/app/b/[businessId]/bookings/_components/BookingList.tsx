@@ -11,6 +11,7 @@ import { usePartyWording } from "@/components/insights/usePartyWording";
 import { useToday } from "@/components/insights/useToday";
 import { CHANNEL_LABELS } from "@/components/insights/labels";
 import type { BookingView } from "@/components/insights/types";
+import { UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { conversationPath } from "@/lib/navigation";
@@ -124,15 +125,17 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
           <span className="mt-0.5 block text-sm text-ink-muted">
             {booking.service_title ? (
               <>
-                <span dir="auto" className="font-medium text-ink">
+                <span dir="auto" data-user-content className="font-medium text-ink">
                   {booking.service_title}
                 </span>
                 {" · "}
               </>
             ) : null}
-            {[party.count(booking.party_size, booking.resource_id), booking.resource_name, t(CHANNEL_LABELS[booking.source_channel])].join(
-              " · ",
-            )}
+            {party.count(booking.party_size, booking.resource_id)}
+            {" · "}
+            <UserContent>{booking.resource_name}</UserContent>
+            {" · "}
+            {t(CHANNEL_LABELS[booking.source_channel])}
             {booking.contact_phone_number ? (
               <>
                 {" · "}
@@ -143,7 +146,7 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
             ) : null}
           </span>
           {booking.notes ? (
-            <span dir="auto" className="mt-0.5 line-clamp-1 text-sm text-ink-subtle">
+            <span dir="auto" data-user-content className="mt-0.5 line-clamp-1 text-sm text-ink-subtle">
               {booking.notes}
             </span>
           ) : null}
@@ -184,11 +187,11 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
       <dl className="divide-y divide-line">
         <DetailRow label={t("bookings.details.when")}>{when.full(booking, isStay)}</DetailRow>
         <DetailRow label={t("bookings.details.place")}>
-          <span dir="auto">{booking.resource_name}</span>
+          <UserContent>{booking.resource_name}</UserContent>
         </DetailRow>
         {booking.service_title ? (
           <DetailRow label={t("bookings.details.service")}>
-            <span dir="auto">{booking.service_title}</span>
+            <UserContent>{booking.service_title}</UserContent>
           </DetailRow>
         ) : null}
         {value ? <DetailRow label={t("bookings.details.value")}>{value}</DetailRow> : null}
@@ -210,7 +213,7 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
         <DetailRow label={t("bookings.details.created")}>{format.dateTime(booking.created_at)}</DetailRow>
         {booking.notes ? (
           <DetailRow label={t("bookings.details.notes")}>
-            <span dir="auto" className="whitespace-pre-wrap">
+            <span dir="auto" data-user-content className="whitespace-pre-wrap">
               {booking.notes}
             </span>
           </DetailRow>

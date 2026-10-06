@@ -17,7 +17,7 @@ import { useId } from "react";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCheck, IconSparkles } from "@/components/icons";
 import { LaunchProgress } from "@/components/setup/launch/LaunchProgress";
-import { Button, ButtonLink, SkeletonText, Sheet } from "@/components/ui";
+import { Button, ButtonLink, SkeletonText, Sheet, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { hasPendingWork } from "@/lib/assistant/ownerChecks";
 import { summarizeChanges } from "@/lib/assistant/pendingChanges";
@@ -57,13 +57,14 @@ function SheetBody({ onClose }: { onClose: () => void }) {
   }
 
   if (apply.phase === "live" && applied !== null && !hasPendingWork(data)) {
+    const summary = summarizeChanges(applied, translator);
     return (
       <div className="space-y-2 rounded-2xl border border-success/30 bg-success-soft/50 p-4" aria-live="polite">
         <p className="flex items-center gap-2 font-semibold text-ink">
           <IconCheck className="size-5 shrink-0 text-success" aria-hidden />
           {t("applyChanges.done.title")}
         </p>
-        <p className="text-sm text-ink-muted">{summarizeChanges(applied, translator)}</p>
+        <p className="text-sm text-ink-muted">{summary ? <UserSentence {...summary} /> : null}</p>
       </div>
     );
   }

@@ -54,7 +54,7 @@ export function ImportDraftRow({
       />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor={checkboxId} className="cursor-pointer font-medium break-words text-ink" dir="auto">
+          <label htmlFor={checkboxId} className="cursor-pointer font-medium break-words text-ink" dir="auto" data-user-content>
             {entry.item.title}
           </label>
           <Badge>{t(KIND_LABELS[entry.item.kind])}</Badge>
@@ -65,7 +65,7 @@ export function ImportDraftRow({
           </Badge>
         </div>
         {entry.item.body ? (
-          <p className="mt-1 line-clamp-2 text-sm break-words text-ink-muted" dir="auto">
+          <p className="mt-1 line-clamp-2 text-sm break-words text-ink-muted" dir="auto" data-user-content>
             {entry.item.body}
           </p>
         ) : null}

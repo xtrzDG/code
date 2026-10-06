@@ -56,7 +56,7 @@ export function CheckRow({
       data-paused={check.is_active ? undefined : ""}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p dir="auto" className="min-w-0 flex-1 text-sm font-medium break-words text-ink">
+        <p dir="auto" data-user-content className="min-w-0 flex-1 text-sm font-medium break-words text-ink">
           {check.question}
         </p>
         {check.is_active ? null : <Badge>{t("teaching.checks.paused")}</Badge>}
@@ -67,7 +67,7 @@ export function CheckRow({
         {needsExpectedText(check.expectation) && check.expected_text ? (
           <>
             {": "}
-            <span dir="auto" className="rounded bg-surface-muted px-1.5 py-0.5 font-medium break-words text-ink">
+            <span dir="auto" data-user-content className="rounded bg-surface-muted px-1.5 py-0.5 font-medium break-words text-ink">
               {check.expected_text}
             </span>
           </>
@@ -88,7 +88,7 @@ export function CheckRow({
         {result?.answer ? (
           <p className="text-sm text-ink-muted">
             <span className="text-ink-subtle">{t("teaching.checks.lastAnswer")}: </span>
-            <span dir="auto" className="break-words">
+            <span dir="auto" data-user-content className="break-words">
               {result.answer}
             </span>
           </p>

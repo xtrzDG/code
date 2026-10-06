@@ -13,6 +13,7 @@ import { formatLocalDate, formatRelative } from "@/components/insights/dates";
 import { HANDOFF_REASONS } from "@/components/insights/labels";
 import { usePartyWording } from "@/components/insights/usePartyWording";
 import type { HandoffListItem, LeadListItem, LeadStatus } from "@/components/insights/types";
+import { UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -42,12 +43,12 @@ function HandoffWork({ handoff }: { handoff: HandoffListItem }) {
         <span className="text-xs text-ink-subtle">{t("inboxCard.work.since", { time: since })}</span>
       </p>
       <p dir="auto" className="mt-1 line-clamp-3 text-sm break-words text-ink-muted">
-        {summary.text}
+        <UserSentence {...summary.text} />
       </p>
       {summary.quote ? (
         <figure className="mt-2 rounded-xl border-s-2 border-line-strong bg-surface-muted/60 px-3 py-1.5">
           <figcaption className="text-xs text-ink-subtle">{summary.quote.label}</figcaption>
-          <blockquote dir="auto" className="text-sm break-words text-ink">
+          <blockquote dir="auto" data-user-content className="text-sm break-words text-ink">
             {summary.quote.text}
           </blockquote>
         </figure>
@@ -85,7 +86,7 @@ function RequestWork({
           <LeadTypeBadge type={lead.lead_type} />
           {facts.length > 0 ? <span className="text-ink-muted">{facts.join(" · ")}</span> : null}
         </p>
-        <p dir="auto" className="mt-1 line-clamp-2 text-sm break-words text-ink">
+        <p dir="auto" data-user-content className="mt-1 line-clamp-2 text-sm break-words text-ink">
           {lead.details}
         </p>
       </div>

@@ -12,7 +12,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCheck, IconChevronDown, IconUsers } from "@/components/icons";
-import { Spinner } from "@/components/ui";
+import { Spinner, UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
@@ -41,6 +41,8 @@ export function AssignMenu({
   const assignee = team.find(assignment.assignee_user_id);
   const mayChange = canReassign(isOwner, assignment.assignee_user_id, me.user.id);
   const nameOf = (member: TeamMember) => (member.isMe ? t("inbox.assign.you") : (member.name ?? t("inbox.assign.teammate")));
+  // On the screen a teammate's own name is user content; "You" and "Team member" are the interface's.
+  const shownName = (member: TeamMember) => (!member.isMe && member.name ? <UserContent>{member.name}</UserContent> : nameOf(member));
 
   useEffect(() => {
     if (!isOpen) {
@@ -105,7 +107,7 @@ export function AssignMenu({
         )}
         {/* On phones the avatar alone: the customer's name needs the room. */}
         <span className="hidden min-w-0 truncate sm:inline" aria-hidden>
-          {assignee ? nameOf(assignee) : t("inbox.assign.open")}
+          {assignee ? shownName(assignee) : t("inbox.assign.open")}
         </span>
         <IconChevronDown className="hidden size-4 shrink-0 text-ink-subtle sm:block" aria-hidden />
       </button>
@@ -147,7 +149,7 @@ export function AssignMenu({
                   <MemberAvatar member={member} size="md" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-ink">
-                      {member.isMe ? `${t("inbox.assign.takeIt")} (${t("inbox.assign.you")})` : nameOf(member)}
+                      {member.isMe ? `${t("inbox.assign.takeIt")} (${t("inbox.assign.you")})` : shownName(member)}
                     </span>
                     <span className="block text-xs text-ink-subtle">
                       {t(member.role === "owner" ? "businesses.role.owner" : "businesses.role.staff")}

@@ -81,7 +81,7 @@ export function AllowedSitesEditor({
         <ul aria-label={t("widgetSites.listLabel")} className="divide-y divide-line rounded-xl border border-line">
           {sites.map((site) => (
             <li key={site} className="flex min-w-0 items-center justify-between gap-3 px-3 py-2">
-              <span dir="ltr" className="min-w-0 truncate font-mono text-sm text-ink" title={site}>
+              <span dir="ltr" data-user-content className="min-w-0 truncate font-mono text-sm text-ink" title={site}>
                 {siteLabel(site)}
               </span>
               {canManage ? (

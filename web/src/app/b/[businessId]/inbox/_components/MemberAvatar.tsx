@@ -12,7 +12,7 @@ const TONES = [
 
 const SIZES = { xs: "size-5 text-[0.625rem]", sm: "size-7 text-[0.6875rem]", md: "size-9 text-xs" } as const;
 
-/** A teammate's initials on their own colour (decorative: the name is always said in text). */
+/** A teammate's initials on their own colour (decorative: the name is always said in text; user content). */
 export function MemberAvatar({
   member,
   size = "sm",
@@ -25,6 +25,7 @@ export function MemberAvatar({
   return (
     <span
       aria-hidden
+      data-user-content
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.22)]",
         TONES[member.tone % TONES.length],

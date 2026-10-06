@@ -5,17 +5,26 @@ import * as m from "motion/react-m";
 import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 
+import type { SentenceWithUserValues } from "@/i18n/userValues";
 import { cn } from "@/lib/cn";
 import { springTransition, tweenTransition } from "@/lib/motion";
 
 import { IconAlert, IconCheck, IconInfo, IconX } from "../icons";
+import { UserSentence } from "./UserContent";
 
 export type ToastTone = "success" | "error" | "info";
+
+/**
+ * The interface's text, or a sentence that names user content ("Тамар
+ * handles this conversation now": `{ text: t(key), values: { name } }`),
+ * shown with `UserSentence`.
+ */
+export type ToastTitle = string | SentenceWithUserValues;
 
 export interface ToastItem {
   id: number;
   tone: ToastTone;
-  title: string;
+  title: ToastTitle;
   description?: string | null;
   action?: { label: string; onAction: () => void };
   durationMs: number;
@@ -133,7 +142,7 @@ function ToastCard({
     >
       <Icon className={cn("mt-0.5 size-5 shrink-0", className)} aria-hidden />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-ink">{item.title}</p>
+        <p className="text-sm font-medium text-ink">{typeof item.title === "string" ? item.title : <UserSentence {...item.title} />}</p>
         {item.description ? <p className="mt-1 text-sm break-words text-ink-muted">{item.description}</p> : null}
       </div>
       {item.action ? (
