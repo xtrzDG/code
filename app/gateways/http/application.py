@@ -34,6 +34,7 @@ from app.gateways.http.widget_cors_middleware import (
     WidgetCorsMiddleware,
     is_widget_path,
 )
+from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.dto.observability import LogContext
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
@@ -58,6 +59,7 @@ def build_http_application(
     anonymous_request_admission: AdmitRequest | None = None,
     service_metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
     span_tracer: SpanTracer = NO_SPAN_TRACER,
+    api_availability: ApiAvailabilityTally | None = None,
 ) -> FastAPI:
     """
     Build the HTTP application.
@@ -76,7 +78,8 @@ def build_http_application(
     `anonymous_request_admission`, requests without a token count against
     their client network's generic limit (429 with Retry-After). Every
     request is measured (`service_metrics`, by route template) and traced
-    (`span_tracer`), its trace id in its log lines.
+    (`span_tracer`), its trace id in its log lines, and counted for the API
+    availability SLI (`api_availability`).
     """
 
     is_production: bool = environment is DeploymentEnvironment.PRODUCTION
@@ -131,7 +134,10 @@ def build_http_application(
     # Inside the request id, outside everything that can refuse a request
     # (rate limits, CORS), so refusals are measured too.
     http_application.add_middleware(
-        RequestTelemetryMiddleware, metrics=service_metrics, tracer=span_tracer
+        RequestTelemetryMiddleware,
+        metrics=service_metrics,
+        tracer=span_tracer,
+        api_availability=api_availability,
     )
     # Outside every layer but the security headers, so the request id is
     # bound before anything else runs.

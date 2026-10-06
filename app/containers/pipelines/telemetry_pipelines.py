@@ -15,3 +15,12 @@ class TelemetryPipelinesContainer(containers.DeclarativeContainer):
     measure_job_queues_pipeline = orchestrator_pipeline(
         telemetry_orchestrators.measure_job_queues_orchestrator
     )
+    add_api_request_counts_pipeline = orchestrator_pipeline(
+        telemetry_orchestrators.add_api_request_counts_orchestrator
+    )
+    record_service_levels_pipeline = orchestrator_pipeline(
+        telemetry_orchestrators.record_service_levels_orchestrator
+    )
+    get_error_budget_pipeline = orchestrator_pipeline(
+        telemetry_orchestrators.get_error_budget_orchestrator
+    )

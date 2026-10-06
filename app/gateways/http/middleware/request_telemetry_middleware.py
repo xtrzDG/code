@@ -2,7 +2,8 @@
 Every HTTP request measured and traced: its duration by method, route
 template and status class (Prometheus), and a server span that continues
 the caller's trace when it sent a `traceparent`. The trace's id joins the
-log context, so the request's log lines name it.
+log context, so the request's log lines name it. Requests other than
+probes and scrapes also count for the API availability SLI.
 """
 
 import time
@@ -11,6 +12,7 @@ from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.contracts.service_metrics import ServiceMetricsContract
+from app.gateways.metrics.api_availability_tally import ApiAvailabilityTally
 from app.schemas.constants.telemetry import SpanKind
 from app.schemas.dto.telemetry import HttpRequestObservation
 from app.schemas.typings.observability.constrained_floats import ObservedSeconds
@@ -45,10 +47,12 @@ class RequestTelemetryMiddleware:
         app: ASGIApp,
         metrics: ServiceMetricsContract,
         tracer: SpanTracer,
+        api_availability: ApiAvailabilityTally | None = None,
     ) -> None:
         self._app: ASGIApp = app
         self._metrics: ServiceMetricsContract = metrics
         self._tracer: SpanTracer = tracer
+        self._api_availability: ApiAvailabilityTally | None = api_availability
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -64,8 +68,9 @@ class RequestTelemetryMiddleware:
                 status[0] = int(message["status"])
             await send(message)
 
+        is_probe: bool = scope["path"] in UNTRACED_PATHS
         try:
-            if scope["path"] in UNTRACED_PATHS:
+            if is_probe:
                 await self._app(scope, receive, send_with_status)
                 return
 
@@ -83,6 +88,8 @@ class RequestTelemetryMiddleware:
                 finally:
                     name_span(span, method, route_template(scope), status[0])
         finally:
+            if self._api_availability is not None and not is_probe:
+                self._api_availability.count(status[0])
             self._metrics.observe_http_request(
                 HttpRequestObservation(
                     method=MetricsLabel(method),

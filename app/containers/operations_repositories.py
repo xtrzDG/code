@@ -21,6 +21,11 @@ from app.repositories.platform_announcement_repository import (
 from app.repositories.platform_status_day_repository import (
     PlatformStatusDayRepository,
 )
+from app.repositories.service_level_repositories import (
+    ServiceLevelHourRepository,
+    ServiceLevelSlotRepository,
+    ServiceLevelSourceRepository,
+)
 from app.repositories.system_health_repository import SystemHealthRepository
 
 
@@ -78,4 +83,18 @@ class OperationsRepositoriesContainer(containers.DeclarativeContainer):
     help_progress_repo: Singleton[HelpProgressRepository] = Singleton(
         HelpProgressRepository,
         collection=operations_collections.help_progress_collection,
+    )
+    # The service level indicators and their platform-wide sources (1163).
+    service_level_slot_repo: Singleton[ServiceLevelSlotRepository] = Singleton(
+        ServiceLevelSlotRepository,
+        collection=operations_collections.service_level_slot_collection,
+    )
+    service_level_hour_repo: Singleton[ServiceLevelHourRepository] = Singleton(
+        ServiceLevelHourRepository,
+        collection=operations_collections.service_level_hour_collection,
+    )
+    service_level_source_repo: Singleton[ServiceLevelSourceRepository] = Singleton(
+        ServiceLevelSourceRepository,
+        inbound_event_collection=health_collections.inbound_event_collection,
+        message_collection=health_collections.message_collection,
     )

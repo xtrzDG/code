@@ -33,6 +33,10 @@ from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.referrals import ReferralCodeDocument, ReferralDocument
+from app.schemas.domain.service_levels import (
+    ServiceLevelHourDocument,
+    ServiceLevelSlotDocument,
+)
 from app.schemas.domain.users import (
     OtpChallengeDocument,
     UserDocument,
@@ -87,5 +91,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         ReferralDocument,
         # A sub-processor change is announced to every business at once (1124).
         SubprocessorAnnouncementDocument,
+        # The service level indicators count every business together (1163).
+        ServiceLevelSlotDocument,
+        ServiceLevelHourDocument,
     }
 )

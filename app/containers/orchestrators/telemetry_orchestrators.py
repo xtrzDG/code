@@ -13,3 +13,12 @@ class TelemetryOrchestratorsContainer(containers.DeclarativeContainer):
     measure_job_queues_orchestrator = use_case_orchestrator(
         telemetry_use_cases.measure_job_queues_use_case
     )
+    add_api_request_counts_orchestrator = use_case_orchestrator(
+        telemetry_use_cases.add_api_request_counts_use_case
+    )
+    record_service_levels_orchestrator = use_case_orchestrator(
+        telemetry_use_cases.record_service_levels_use_case
+    )
+    get_error_budget_orchestrator = use_case_orchestrator(
+        telemetry_use_cases.get_error_budget_use_case
+    )

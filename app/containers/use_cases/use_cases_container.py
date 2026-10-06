@@ -138,6 +138,7 @@ class UseCasesContainer(BusinessUseCasesContainer):
     )
     telemetry: TelemetryUseCasesContainer = Container(  # type: ignore[assignment]
         TelemetryUseCasesContainer,
+        platform_use_cases=platform,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
     )

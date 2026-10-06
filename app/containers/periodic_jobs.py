@@ -40,6 +40,9 @@ from app.gateways.worker.periodic.quality_sampling import quality_sampling_job
 from app.gateways.worker.periodic.record_platform_status import (
     record_platform_status_job,
 )
+from app.gateways.worker.periodic.record_service_levels import (
+    record_service_levels_job,
+)
 from app.gateways.worker.periodic.refresh_client_standings import (
     refresh_client_standings_job,
 )
@@ -215,6 +218,11 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         Factory(
             record_platform_status_job,
             operator=operators.platform_ops.record_platform_status_operator,
+        ),
+        # The service level indicators and their hourly rows (1163).
+        Factory(
+            record_service_levels_job,
+            operator=operators.telemetry.record_service_levels_operator,
         ),
         # Platform support's time-boxed access closed in the audit log.
         Factory(

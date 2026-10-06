@@ -77,7 +77,7 @@ def create_application() -> FastAPI:
     name_service(API_SERVICE_NAME)
     app_container = AppContainer()
     configure_logging(app_container.config.app_settings().log_format)
-    start_telemetry(app_container)
+    start_telemetry(app_container, is_api=True)
     return build_application(app_container)
 
 
@@ -101,6 +101,7 @@ def build_application(app_container: AppContainer) -> FastAPI:
         ),
         service_metrics=app_container.utilities.service_metrics(),
         span_tracer=app_container.utilities.span_tracer(),
+        api_availability=app_container.gateways.api_availability_tally(),
     )
 
 

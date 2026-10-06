@@ -2,8 +2,9 @@
 The start and the end of a process's telemetry: the service name its spans
 carry (the API's or a worker's, unless OTEL_SERVICE_NAME names one), the
 spans of its calls to providers (httpx, with OpenTelemetry on; Sentry's
-HttpxIntegration makes its own) and, on the way out, the spans still
-waiting in the batch, sent.
+HttpxIntegration makes its own), the API's request counts for the
+availability SLI and, on the way out, the spans still waiting in the batch
+and the counts not flushed yet, sent.
 """
 
 import logging
@@ -37,9 +38,14 @@ def name_service(service_name: str) -> None:
     os.environ.setdefault(SERVICE_NAME_VARIABLE, service_name)
 
 
-def start_telemetry(app_container: AppContainer) -> None:
-    """Spans for the process's provider calls when OpenTelemetry is on."""
+def start_telemetry(app_container: AppContainer, is_api: bool = False) -> None:
+    """
+    Spans for the process's provider calls when OpenTelemetry is on; in an
+    API process, the flush of its request counts.
+    """
 
+    if is_api:
+        app_container.gateways.api_availability_tally().start()
     provider: TracerProvider | None = app_container.utilities.tracer_provider()
     if provider is not None:
         install_http_client_spans(
@@ -48,8 +54,12 @@ def start_telemetry(app_container: AppContainer) -> None:
 
 
 def finish_telemetry(app_container: AppContainer) -> None:
-    """Send the spans still batched and stop the exporter (no-op without one)."""
+    """
+    Store the request counts not flushed yet, send the spans still batched
+    and stop the exporter (no-op without one).
+    """
 
+    app_container.gateways.api_availability_tally().close()
     provider: TracerProvider | None = app_container.utilities.tracer_provider()
     if provider is None:
         return

@@ -35,15 +35,3 @@ class TelemetrySettings(ImmutableDTO):
     otel_traces_sample_rate: TraceSampleRate = TraceSampleRate(
         DEFAULT_OTEL_TRACES_SAMPLE_RATE
     )
-
-    @property
-    def is_metrics_enabled(self) -> bool:
-        """Whether /metrics is served (METRICS_TOKEN is set)."""
-
-        return self.metrics_token is not None
-
-    @property
-    def is_tracing_enabled(self) -> bool:
-        """Whether spans are exported (OTEL_EXPORTER_OTLP_ENDPOINT is set)."""
-
-        return self.otlp_endpoint is not None
