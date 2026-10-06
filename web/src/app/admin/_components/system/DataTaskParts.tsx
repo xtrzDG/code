@@ -132,6 +132,7 @@ export function DataTaskRetry({ task, isRetrying, onRetry }: { task: DataTask; i
     <Button
       size="sm"
       variant="secondary"
+      className="whitespace-nowrap"
       leadingIcon={<IconRefresh className="size-4" aria-hidden />}
       isLoading={isRetrying}
       loadingText={t("dataTasks.retry")}
