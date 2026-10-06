@@ -139,6 +139,8 @@
     "border-radius:999px;padding:6px 12px;min-height:32px;cursor:pointer;font-size:13.5px;",
     "text-align:start;max-width:100%;overflow-wrap:anywhere;}",
     ".aw-starter:hover{background:var(--aw-bubble);}",
+    // The options of the assistant's last reply: chips in the accent.
+    ".aw-choice{border-color:var(--aw-accent);font-weight:600;}",
     ".aw-actions{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:0 12px 6px;",
     "flex:none;}",
     ".aw-person{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;",

@@ -119,8 +119,10 @@
       }
     }
 
-    // Chips before the visitor's first message, in the interface language;
-    // "Talk to a person" until staff have the conversation.
+    // Chips: the options of the assistant's last reply until the visitor
+    // writes, else starter questions before the visitor's first message (in
+    // the interface language); a tap sends the chip's text. "Talk to a
+    // person" until staff have the conversation.
     function renderActions() {
       while (starters.row.firstChild) {
         starters.row.removeChild(starters.row.firstChild);
@@ -128,9 +130,16 @@
       var hasWritten = state.history.some(function (item) {
         return item.role === "visitor";
       });
-      var questions = hasWritten || state.isSending ? [] : starterQuestions(config, state.language);
+      var choices = offeredChoices();
+      var questions = state.isSending
+        ? []
+        : choices.length
+          ? choices
+          : hasWritten
+            ? []
+            : starterQuestions(config, state.language);
       questions.forEach(function (question) {
-        var chip = el("button", "aw-starter");
+        var chip = el("button", choices.length ? "aw-starter aw-choice" : "aw-starter");
         chip.type = "button";
         chip.setAttribute("dir", "auto");
         chip.textContent = question;
@@ -148,6 +157,21 @@
       actions.person.disabled = state.isRequestingPerson;
       actions.person.setAttribute("aria-busy", state.isRequestingPerson ? "true" : "false");
       actions.error.textContent = state.personError;
+    }
+
+    // The options of the last message when it is the assistant's (none
+    // once the visitor wrote after it or staff have the conversation).
+    function offeredChoices() {
+      var last = null;
+      state.history.forEach(function (item) {
+        if (item.role !== "notice") {
+          last = item;
+        }
+      });
+      if (!last || last.role !== "assistant" || state.isHandedOff || !last.choices) {
+        return [];
+      }
+      return last.choices;
     }
 
     function requestPerson() {
