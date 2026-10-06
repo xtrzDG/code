@@ -168,14 +168,17 @@ class UseCasesContainer(BusinessUseCasesContainer):
         account_use_cases=CoreUseCasesContainer.accounts,
         billing_use_cases=BusinessUseCasesContainer.billing,
     )
-    # The pipeline seen from the API: its health check and watchdog (1173).
+    # The pipeline seen from the API (health check, watchdog) and incidents.
     reliability: ReliabilityUseCasesContainer = Container(  # type: ignore[assignment]
         ReliabilityUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        platform_use_cases=platform,
     )
     telemetry: TelemetryUseCasesContainer = Container(  # type: ignore[assignment]
         TelemetryUseCasesContainer,

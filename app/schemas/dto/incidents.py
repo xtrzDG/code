@@ -173,11 +173,10 @@ class IncidentPage(ImmutableDTO):
 class IncidentExpansionPayload(ImmutableDTO):
     """
     An `expand_incident` job: the next keyset batch of every business for
-    an all-businesses incident, after `after` (None: from the first).
+    an all-businesses incident, after the incident's `expansion_cursor`.
     """
 
     incident_id: IncidentId
-    after: BusinessId | None = None
 
 
 class LinkIncidentAnnouncementCommand(ImmutableDTO):

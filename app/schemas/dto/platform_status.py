@@ -70,9 +70,9 @@ class PlatformStatusView(ImmutableDTO):
     (the worst component), each component, the announcements shown now
     and the ones resolved in the last 90 days, newest first. `checked_at`
     is when the platform alerts last finished a check (null before the
-    first). `monitoring_delayed` says that was more than 15 minutes ago
-    (or never): the levels cannot be vouched for, so the chat components
-    count as degraded until the checks run again.
+    first). `monitoring_delayed` says that was more than 15 minutes ago:
+    the levels cannot be vouched for, so the chat components count as
+    degraded until the checks run again.
     """
 
     level: StatusLevel

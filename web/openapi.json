@@ -15111,6 +15111,15 @@
         "title": "IncidentPage",
         "type": "object"
       },
+      "IncidentScope": {
+        "description": "Which businesses an incident affected: LISTED names them (at most a\nthousand, each checked); ALL_BUSINESSES is every business of the\nplatform, walked by the worker in keyset batches after the incident\nis recorded (each business's audit entry, and for a breach its owners'\nnotices).",
+        "enum": [
+          "listed",
+          "all_businesses"
+        ],
+        "title": "IncidentScope",
+        "type": "string"
+      },
       "IncidentSeverity": {
         "description": "How bad an incident is (docs/operations/incident.md): SEV1 most or all\ncustomers get no answers, or personal data left the platform; SEV2 one\nchannel, provider or feature is down for many, or answers are slow;\nSEV3 a few businesses are affected, or there is a workaround.",
         "enum": [
@@ -15132,14 +15141,31 @@
       },
       "IncidentView": {
         "additionalProperties": false,
-        "description": "One incident of the log, as the platform admin sees it.",
+        "description": "One incident of the log, as the platform admin sees it.\n`affected_business_count` is the businesses it names, or for every\nbusiness those the worker's walk reached so far (`is_expanding` while\nit walks).",
         "properties": {
+          "affected_business_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Affected Business Count",
+            "type": "integer"
+          },
           "affected_business_ids": {
             "items": {
               "type": "string"
             },
             "title": "Affected Business Ids",
             "type": "array"
+          },
+          "announcement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Announcement Id"
           },
           "approximate_record_count": {
             "anyOf": [
@@ -15179,6 +15205,11 @@
             "title": "Id",
             "type": "string"
           },
+          "is_expanding": {
+            "default": false,
+            "title": "Is Expanding",
+            "type": "boolean"
+          },
           "kind": {
             "$ref": "#/components/schemas/IncidentKind"
           },
@@ -15211,6 +15242,10 @@
           "reported_by": {
             "title": "Reported By",
             "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/IncidentScope",
+            "default": "listed"
           },
           "severity": {
             "$ref": "#/components/schemas/IncidentSeverity"
@@ -21334,7 +21369,7 @@
         "type": "object"
       },
       "PlatformAlertCode": {
-        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).",
+        "description": "What the platform alerts job watches (ops/alerts/*.yaml has each rule's\nthreshold, window and runbook).\n\nDEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer\nmessage waits for a worker. OUTBOUND_FAILURES: replies and staff\nnotifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:\nfar more conversations go to people than usual. TOOL_ERRORS: assistant\ntools fail. STALE_WORKER: a worker of the current release stopped\nbeating. OTP_CAP_TRIPS: a platform cap refused login codes.\nQUALITY_DROP: the judge's scores of real conversations fell against the\nweek before (production quality). SPEND_SPIKE: today's provider spend\nis far above the daily mean of the week before. SPEND_BUDGET: today's\nprovider spend passed 80 % of the platform's daily budget.\nBACKFILL_STALLED: a post-deploy data task has not finished within a\nday of becoming due (docs/operations/deploys.md).\nANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of\n\"answered within 60 s\" burns 14.4 times too fast over 1 h and 5 min, or\n6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN\nthe same for API availability (docs/operations/slo.md).\nWORKER_DOWN: no background worker wrote its pulse for five minutes,\nseen from outside the workers too (the API's pipeline watchdog and\nGET /healthz/pipeline): customers' messages are not answered.",
         "enum": [
           "dead_jobs",
           "inbound_backlog",
@@ -21351,7 +21386,8 @@
           "answer_budget_fast_burn",
           "answer_budget_slow_burn",
           "api_budget_fast_burn",
-          "api_budget_slow_burn"
+          "api_budget_slow_burn",
+          "worker_down"
         ],
         "title": "PlatformAlertCode",
         "type": "string"
@@ -21463,7 +21499,7 @@
       },
       "PlatformStatusView": {
         "additionalProperties": false,
-        "description": "The platform as owners and their customers see it: the overall level\n(the worst component), each component, the announcements shown now\nand the ones resolved in the last 90 days, newest first. `checked_at`\nis the platform alerts' latest check (null before the first).",
+        "description": "The platform as owners and their customers see it: the overall level\n(the worst component), each component, the announcements shown now\nand the ones resolved in the last 90 days, newest first. `checked_at`\nis when the platform alerts last finished a check (null before the\nfirst). `monitoring_delayed` says that was more than 15 minutes ago:\nthe levels cannot be vouched for, so the chat components count as\ndegraded until the checks run again.",
         "properties": {
           "announcements": {
             "items": {
@@ -21492,6 +21528,11 @@
           },
           "level": {
             "$ref": "#/components/schemas/StatusLevel"
+          },
+          "monitoring_delayed": {
+            "default": false,
+            "title": "Monitoring Delayed",
+            "type": "boolean"
           },
           "past_announcements": {
             "items": {
@@ -32544,7 +32585,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "POST /v1/admin/incidents. `started_at` is when the incident began,\n`detected_at` when the platform became aware of it (default: now).\nA data breach needs the notice: the approximate numbers of people and\nrecords concerned and the texts in English (and in any other language\nowners read, e.g. Georgian and Russian).",
+                "description": "POST /v1/admin/incidents. `started_at` is when the incident began,\n`detected_at` when the platform became aware of it (default: now).\nThe incident affected the businesses it names (`scope` LISTED, at\nleast one) or every business of the platform (ALL_BUSINESSES, none\nnamed: the worker walks them in batches). A data breach needs the\nnotice: the approximate numbers of people and records concerned and\nthe texts in English (and in any other language owners read, e.g.\nGeorgian and Russian). `announcement`, when given, is published on the\nstatus page with the incident and linked to it.",
                 "properties": {
                   "affected_business_ids": {
                     "items": {
@@ -32552,9 +32593,109 @@
                       "type": "string"
                     },
                     "maxItems": 1000,
-                    "minItems": 1,
                     "title": "Affected Business Ids",
                     "type": "array"
+                  },
+                  "announcement": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "POST /v1/admin/announcements. `starts_at` is when it counts for its\ncomponents (default: now; later for planned maintenance), and\n`expected_end_at` when the team expects it to be over (optional).",
+                        "properties": {
+                          "components": {
+                            "items": {
+                              "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE) and the owner cabinet\nwith its sign-in (CABINET).",
+                              "enum": [
+                                "chat",
+                                "meta",
+                                "telegram",
+                                "voice",
+                                "cabinet"
+                              ],
+                              "title": "StatusComponent",
+                              "type": "string"
+                            },
+                            "maxItems": 5,
+                            "title": "Components",
+                            "type": "array"
+                          },
+                          "expected_end_at": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Expected End At"
+                          },
+                          "level": {
+                            "description": "What a platform announcement says about the components it names: a\nnotice only (INFO), planned maintenance, degraded service or an\noutage. The status page and the cabinet's banner take their colour\nand wording from it.",
+                            "enum": [
+                              "info",
+                              "maintenance",
+                              "degraded",
+                              "outage"
+                            ],
+                            "title": "AnnouncementLevel",
+                            "type": "string"
+                          },
+                          "messages": {
+                            "items": {
+                              "additionalProperties": false,
+                              "description": "An announcement's text in one language.",
+                              "properties": {
+                                "language": {
+                                  "maxLength": 16,
+                                  "minLength": 2,
+                                  "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                                  "title": "Language",
+                                  "type": "string"
+                                },
+                                "text": {
+                                  "maxLength": 600,
+                                  "minLength": 3,
+                                  "pattern": "^\\S(.*\\S)?\\Z",
+                                  "title": "Text",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "language",
+                                "text"
+                              ],
+                              "title": "AnnouncementMessageInput",
+                              "type": "object"
+                            },
+                            "maxItems": 10,
+                            "minItems": 1,
+                            "title": "Messages",
+                            "type": "array"
+                          },
+                          "starts_at": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Starts At"
+                          }
+                        },
+                        "required": [
+                          "level",
+                          "messages"
+                        ],
+                        "title": "CreateAnnouncementBody",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "approximate_record_count": {
                     "anyOf": [
@@ -32666,6 +32807,16 @@
                     "title": "Notice Texts",
                     "type": "array"
                   },
+                  "scope": {
+                    "default": "listed",
+                    "description": "Which businesses an incident affected: LISTED names them (at most a\nthousand, each checked); ALL_BUSINESSES is every business of the\nplatform, walked by the worker in keyset batches after the incident\nis recorded (each business's audit entry, and for a breach its owners'\nnotices).",
+                    "enum": [
+                      "listed",
+                      "all_businesses"
+                    ],
+                    "title": "IncidentScope",
+                    "type": "string"
+                  },
                   "severity": {
                     "description": "How bad an incident is (docs/operations/incident.md): SEV1 most or all\ncustomers get no answers, or personal data left the platform; SEV2 one\nchannel, provider or feature is down for many, or answers are slow;\nSEV3 a few businesses are affected, or there is a workaround.",
                     "enum": [
@@ -32692,8 +32843,7 @@
                   "kind",
                   "severity",
                   "title",
-                  "started_at",
-                  "affected_business_ids"
+                  "started_at"
                 ],
                 "title": "CreateIncidentBody",
                 "type": "object"

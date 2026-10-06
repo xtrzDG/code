@@ -37,9 +37,6 @@ class PlatformOpsOperatorsContainer(containers.DeclarativeContainer):
     record_maintenance_run_operator = platform_pipeline_operator(
         platform_ops_pipelines.record_maintenance_run_pipeline, storage_scope
     )
-    create_incident_operator = platform_pipeline_operator(
-        platform_ops_pipelines.create_incident_pipeline, storage_scope
-    )
     list_incidents_operator = platform_pipeline_operator(
         platform_ops_pipelines.list_incidents_pipeline, storage_scope
     )

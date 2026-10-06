@@ -15,9 +15,9 @@ from app.schemas.exceptions.application_errors import AccessDeniedError
 from app.schemas.typings.platform.constrained_integers import PageSize
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.admin.incidents.list_incidents_use_case import ListIncidentsUseCase
+from tests.platform_ops.incident_world import IncidentWorld
 from tests.platform_ops.ops_documents import HOUR, MINUTE, at
 from tests.platform_ops.ops_world import ADMIN, AdminsOnly
-from tests.platform_ops.test_incidents import IncidentWorld
 
 
 def outage(world: IncidentWorld, title: str) -> CreateIncidentCommand:

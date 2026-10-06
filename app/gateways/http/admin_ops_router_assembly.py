@@ -33,7 +33,7 @@ def build_admin_ops_routers(
         ),
         build_admin_ops_router(
             get_admin_system_operator=platform_ops.get_admin_system_operator(),
-            create_incident_operator=platform_ops.create_incident_operator(),
+            create_incident_operator=operators.reliability.record_incident_operator(),
             list_incidents_operator=platform_ops.list_incidents_operator(),
             current_user=current_user,
         ),

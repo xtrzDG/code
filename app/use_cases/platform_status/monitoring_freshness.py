@@ -3,9 +3,11 @@ Whether the status page may trust the alert levels: the workers'
 `platform_alerts` job marks every run (`platform_monitors`, ALERT_CHECKS).
 The alert states change only when an episode starts, repeats or ends, so a
 quiet platform and a platform whose checks stopped look the same in them;
-the mark tells them apart. When it is older than MONITORING_STALE_MINUTES
-(or missing), nothing vouches for the chat channels: they count as
-degraded, and the page says the monitoring is delayed.
+the mark tells them apart. When it is older than MONITORING_STALE_MINUTES,
+nothing vouches for the chat channels: they count as degraded, and the
+page says the monitoring is delayed. Before the first run of a new
+platform there is no mark and nothing to be late against: the page shows
+the alert levels as they are (and no time of the last check).
 """
 
 from collections.abc import Mapping
@@ -28,11 +30,11 @@ def last_alert_check(mark: PlatformMonitorDocument | None) -> Microseconds | Non
 
 
 def is_monitoring_delayed(last_check: Microseconds | None, now: Microseconds) -> bool:
-    """No check yet, or the last one is older than the limit."""
+    """The last check is older than the limit (never ran: not late yet)."""
 
     return (
-        last_check is None
-        or int(now) - int(last_check)
+        last_check is not None
+        and int(now) - int(last_check)
         > MONITORING_STALE_MINUTES * MICROSECONDS_PER_MINUTE
     )
 

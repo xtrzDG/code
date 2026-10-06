@@ -18,3 +18,9 @@ class ReliabilityPipelinesContainer(containers.DeclarativeContainer):
     watch_pipeline_pipeline = orchestrator_pipeline(
         reliability.watch_pipeline_orchestrator
     )
+    record_incident_pipeline = orchestrator_pipeline(
+        reliability.record_incident_orchestrator
+    )
+    expand_incident_pipeline = orchestrator_pipeline(
+        reliability.expand_incident_orchestrator
+    )

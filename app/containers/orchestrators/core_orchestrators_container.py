@@ -105,7 +105,9 @@ class CoreOrchestratorsContainer(containers.DeclarativeContainer):
         TelemetryOrchestratorsContainer, telemetry_use_cases=use_cases.telemetry
     )
     reliability: ReliabilityOrchestratorsContainer = Container(  # type: ignore[assignment]
-        ReliabilityOrchestratorsContainer, reliability_use_cases=use_cases.reliability
+        ReliabilityOrchestratorsContainer,
+        reliability_use_cases=use_cases.reliability,
+        platform_ops_use_cases=use_cases.platform_ops,
     )
     platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOrchestratorsContainer,

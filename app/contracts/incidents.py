@@ -5,10 +5,14 @@ from typing import Protocol
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.incidents import IncidentDocument
 from app.schemas.dto.paging import KeysetSlice
+from app.schemas.typings.incidents.prefixed_id import IncidentId
 
 
 class IncidentRepoContract(RepoContract, Protocol):
     def save(self, incident: IncidentDocument) -> None:
+        raise NotImplementedError
+
+    def get(self, incident_id: IncidentId) -> IncidentDocument | None:
         raise NotImplementedError
 
     def list_page(self, page: KeysetSlice) -> list[IncidentDocument]:

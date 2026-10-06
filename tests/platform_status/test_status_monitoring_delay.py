@@ -72,15 +72,15 @@ def test_checks_older_than_fifteen_minutes_degrade_the_chat_channels() -> None:
     assert levels(view)[StatusComponent.CABINET] is StatusLevel.OPERATIONAL
 
 
-def test_a_platform_whose_checks_never_ran_is_not_called_healthy() -> None:
+def test_a_new_platform_before_its_first_check_is_not_late_yet() -> None:
     world = StatusWorld()
     world.monitors.delete(world.monitors.list_all()[0].monitor.value)
 
     view = status(world)
 
-    assert view.monitoring_delayed
+    assert not view.monitoring_delayed
     assert view.checked_at is None
-    assert view.level is StatusLevel.DEGRADED
+    assert view.level is StatusLevel.OPERATIONAL
 
 
 def test_a_worse_level_than_degraded_stays_while_monitoring_is_delayed() -> None:
@@ -119,6 +119,6 @@ def test_the_history_records_delayed_hours_as_degraded() -> None:
 def test_the_freshness_rule_counts_from_the_last_check() -> None:
     now = Microseconds(100 * MINUTE)
 
-    assert is_monitoring_delayed(None, now)
+    assert not is_monitoring_delayed(None, now)
     assert not is_monitoring_delayed(Microseconds(85 * MINUTE), now)
     assert is_monitoring_delayed(Microseconds(85 * MINUTE - 1), now)

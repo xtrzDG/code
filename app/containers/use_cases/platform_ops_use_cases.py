@@ -22,10 +22,8 @@ from app.schemas.dto.admin_system import (
     MaintenanceRunView,
 )
 from app.schemas.dto.incidents import (
-    CreateIncidentCommand,
     IncidentPage,
     IncidentsQuery,
-    IncidentView,
 )
 from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.schemas.dto.maintenance_runs import RecordMaintenanceRunCommand
@@ -51,11 +49,7 @@ from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
 from app.use_cases.admin.alerts.send_platform_alert_use_case import (
     SendPlatformAlertUseCase,
 )
-from app.use_cases.admin.incidents.create_incident_use_case import (
-    CreateIncidentUseCase,
-)
 from app.use_cases.admin.incidents.list_incidents_use_case import ListIncidentsUseCase
-from app.use_cases.admin.incidents.owner_breach_notices import OwnerBreachNotices
 from app.use_cases.admin.spend.get_platform_spend_use_case import (
     GetPlatformSpendUseCase,
 )
@@ -197,24 +191,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
 
-    # --- The incident log and breach notices.
-    owner_breach_notices: Factory[OwnerBreachNotices] = Factory(
-        OwnerBreachNotices,
-        user_repo=repositories.user_repo,
-        manager_notifier=facilitators.manager_notification_facilitator,
-    )
-    create_incident_use_case: Factory[
-        UseCaseContract[CreateIncidentCommand, IncidentView]
-    ] = Factory(
-        CreateIncidentUseCase,
-        authorize_platform_admin=platform_use_cases.authorize_platform_admin_use_case,
-        business_repo=repositories.business_repo,
-        incident_repo=repositories.incident_repo,
-        audit_log_repo=repositories.audit_log_repo,
-        breach_notices=owner_breach_notices,
-        step_up=utilities.step_up_guard,
-        wall_clock=time_provider.microsecond_wall_clock,
-    )
+    # --- The incident log (recording one: reliability_use_cases.py).
     list_incidents_use_case: Factory[UseCaseContract[IncidentsQuery, IncidentPage]] = (
         Factory(
             ListIncidentsUseCase,
