@@ -96,6 +96,7 @@ export const assistantRu: Translation<typeof assistantEn> = {
     cancel_booking: { name: "Отменить бронь", description: "Отменяет бронь клиента." },
     reschedule_booking: { name: "Перенести бронь", description: "Переносит бронь на другое время." },
     list_my_bookings: { name: "Найти мои брони", description: "Называет клиенту его собственные предстоящие брони." },
+    join_waitlist: { name: "Записать в лист ожидания", description: "Когда день занят, записывает клиента в лист ожидания; освободившееся место предложат ему." },
     create_lead: { name: "Принять заявку", description: "Передаёт заявку (банкет, группа, заказ) менеджеру." },
     handoff_to_human: { name: "Позвать человека", description: "Передаёт разговор вашим сотрудникам." },
     send_link: { name: "Отправить ссылку", description: "Отправляет меню, карту, страницу оплаты или брони." },

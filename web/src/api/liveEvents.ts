@@ -25,6 +25,7 @@ const LIVE_EVENT_NAMES = [
   "autotest.progress",
   "knowledge_import.progress",
   "assistant.apply",
+  "waitlist.changed",
 ] as const;
 
 type LiveEventName = (typeof LIVE_EVENT_NAMES)[number];
@@ -155,5 +156,8 @@ export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey
     case "knowledge_import.progress":
       // The import's progress, and its drafts among the knowledge items.
       return [queryKeys.knowledge.all(businessId)];
+    case "waitlist.changed":
+      // Someone joined, a place was held, taken or given up: the lists, their counts, the value lines.
+      return [dashboard, queryKeys.bookings.waitlistAll(businessId), queryKeys.bookings.waitlistSettings(businessId)];
   }
 }

@@ -52,7 +52,10 @@ describe("the sections", () => {
   });
 
   it("name pages and their titles", () => {
-    expect(pageLabel("bookings")).toBe("navigation.sections.bookings");
+    expect(pageLabel("bookings")).toBe("navigation.pages.bookingsList");
+    expect(pageTitleKeys("bookings/waitlist")).toEqual(["navigation.pages.bookingsWaitlist", "navigation.sections.bookings"]);
+    expect(canOpenPage("bookings/waitlist", "staff")).toBe(true);
+    expect(canOpenPage("bookings/return-visits", "staff")).toBe(false);
     expect(pageLabel("inbox")).toBe("navigation.sections.inbox");
     expect(pageLabel("settings/quick-replies")).toBe("navigation.pages.settingsQuickReplies");
     expect(pageTitleKeys("overview")).toEqual(["navigation.pages.overviewDashboard", "navigation.sections.overview"]);

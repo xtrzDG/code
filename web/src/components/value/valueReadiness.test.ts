@@ -24,6 +24,8 @@ const QUIET: ValueTotals = {
   staff_minutes_saved: 0,
   estimated_revenue_minor: 0,
   valued_booking_count: 0,
+  waitlist_booking_count: 0,
+  campaign_booking_count: 0,
 };
 const BUSY: ValueTotals = { ...QUIET, conversation_count: 16, assistant_booking_count: 16, estimated_revenue_minor: 192_000 };
 

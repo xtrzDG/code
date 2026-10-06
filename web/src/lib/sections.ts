@@ -61,7 +61,11 @@ export const SECTION_PAGES: Record<BusinessSection, readonly PageEntry[]> = {
     { page: "overview/reports", label: "navigation.pages.overviewReports", roles: OWNERS },
   ],
   inbox: [{ page: "inbox", label: "navigation.sections.inbox", roles: EVERYONE }],
-  bookings: [{ page: "bookings", label: "navigation.sections.bookings", roles: EVERYONE }],
+  bookings: [
+    { page: "bookings", label: "navigation.pages.bookingsList", roles: EVERYONE },
+    { page: "bookings/waitlist", label: "navigation.pages.bookingsWaitlist", roles: EVERYONE },
+    { page: "bookings/return-visits", label: "navigation.pages.bookingsReturnVisits", roles: OWNERS },
+  ],
   customers: [
     { page: "customers", label: "navigation.pages.customersList", roles: EVERYONE },
     { page: "customers/segments", label: "navigation.pages.customersSegments", roles: OWNERS },
@@ -93,6 +97,8 @@ export const PAGE_DESCRIPTIONS: Partial<Record<BusinessPage, MessageKey>> = {
   "overview/reports": "reports.description",
   inbox: "navigation.descriptions.inbox",
   bookings: "pages.bookings.description",
+  "bookings/waitlist": "navigation.descriptions.bookingsWaitlist",
+  "bookings/return-visits": "navigation.descriptions.bookingsReturnVisits",
   customers: "navigation.descriptions.customersList",
   "customers/segments": "navigation.descriptions.customersSegments",
   assistant: "navigation.descriptions.assistantTest",

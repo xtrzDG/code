@@ -17,6 +17,8 @@ const EMPTY: ValueTotals = {
   staff_minutes_saved: 0,
   estimated_revenue_minor: null,
   valued_booking_count: 0,
+  waitlist_booking_count: 0,
+  campaign_booking_count: 0,
 };
 
 describe("a stored report", () => {
@@ -33,7 +35,19 @@ describe("a stored report", () => {
 
   it("shows the money row only with an estimate", () => {
     expect(visibleRows(EMPTY, EMPTY).some((row) => row.kind === "money")).toBe(false);
-    expect(visibleRows({ ...EMPTY, estimated_revenue_minor: 12_000 }, EMPTY)).toHaveLength(REPORT_ROWS.length);
+    expect(visibleRows({ ...EMPTY, estimated_revenue_minor: 12_000 }, EMPTY)).toHaveLength(REPORT_ROWS.length - 4);
+  });
+
+  it("shows the waitlist's and return visits' rows only when either period had such bookings", () => {
+    const fields = (current: typeof EMPTY, previous: typeof EMPTY) => visibleRows(current, previous).map((row) => row.field);
+    expect(fields(EMPTY, EMPTY)).not.toContain("waitlist_booking_count");
+    const withWaitlist = { ...EMPTY, waitlist_booking_count: 2, waitlist_value_minor: 9_000 };
+    expect(fields(withWaitlist, EMPTY)).toEqual(expect.arrayContaining(["waitlist_booking_count", "waitlist_value_minor"]));
+    expect(fields(withWaitlist, EMPTY)).not.toContain("campaign_booking_count");
+    const backAfterMessage = { ...EMPTY, campaign_booking_count: 1 };
+    // A booking without its own price: the count, no worth.
+    expect(fields(EMPTY, backAfterMessage)).toContain("campaign_booking_count");
+    expect(fields(EMPTY, backAfterMessage)).not.toContain("campaign_value_minor");
   });
 
   it("splits staff minutes into hours and minutes", () => {

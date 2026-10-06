@@ -92,6 +92,14 @@ export const queryKeys = {
         filters.includeTest,
       ] as const,
     availability: (businessId: Id, request: string) => ["bookings", businessId, "availability", request] as const,
+    /** Bookings → Waitlist: every filter's entries (live events: `waitlist.changed`). */
+    waitlistAll: (businessId: Id) => ["bookings", businessId, "waitlist"] as const,
+    waitlist: (businessId: Id, filter: string) => ["bookings", businessId, "waitlist", filter] as const,
+    /** Keep a waitlist, the hold, and the entries by status. */
+    waitlistSettings: (businessId: Id) => ["bookings", businessId, "waitlistSettings"] as const,
+    /** Bookings → Return visits (owners): the settings with previews, and the latest messages (audited). */
+    returnVisits: (businessId: Id) => ["bookings", businessId, "returnVisits"] as const,
+    returnVisitMessages: (businessId: Id) => ["bookings", businessId, "returnVisitMessages"] as const,
   },
 
   leads: {

@@ -40,7 +40,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
   return (
     <>
       <PageHeader
-        title={t("nav.bookings")}
+        title={t("navigation.pages.bookingsList")}
         description={t("pages.bookings.description")}
         status={<LiveStatus updatedAt={shown.updatedAt} isFetching={shown.isFetching && shown.items !== undefined} />}
         actions={

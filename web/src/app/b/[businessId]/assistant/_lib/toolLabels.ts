@@ -10,6 +10,7 @@ export const TOOL_LABELS: Record<AssistantToolName, { name: MessageKey; descript
   cancel_booking: { name: "assistant.tools.cancel_booking.name", description: "assistant.tools.cancel_booking.description" },
   reschedule_booking: { name: "assistant.tools.reschedule_booking.name", description: "assistant.tools.reschedule_booking.description" },
   list_my_bookings: { name: "assistant.tools.list_my_bookings.name", description: "assistant.tools.list_my_bookings.description" },
+  join_waitlist: { name: "assistant.tools.join_waitlist.name", description: "assistant.tools.join_waitlist.description" },
   create_lead: { name: "assistant.tools.create_lead.name", description: "assistant.tools.create_lead.description" },
   handoff_to_human: { name: "assistant.tools.handoff_to_human.name", description: "assistant.tools.handoff_to_human.description" },
   send_link: { name: "assistant.tools.send_link.name", description: "assistant.tools.send_link.description" },

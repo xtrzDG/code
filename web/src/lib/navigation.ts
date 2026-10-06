@@ -20,6 +20,8 @@ export const BUSINESS_PAGES = [
   "overview/reports",
   "inbox",
   "bookings",
+  "bookings/waitlist",
+  "bookings/return-visits",
   "customers",
   "customers/segments",
   "assistant",

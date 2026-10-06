@@ -62,6 +62,17 @@ describe("live events", () => {
     expect(invalidationsFor(event("knowledge_import.progress"), BUSINESS)).toEqual([queryKeys.knowledge.all(BUSINESS)]);
   });
 
+  it("reload the waitlist, its counts and the value when an entry moves on", () => {
+    const keys = invalidationsFor(event("waitlist.changed", ["waitlist_entry_1"]), BUSINESS);
+
+    expect(keys).toContainEqual(queryKeys.bookings.waitlistAll(BUSINESS));
+    expect(keys).toContainEqual(queryKeys.bookings.waitlistSettings(BUSINESS));
+    expect(keys).toContainEqual(queryKeys.dashboard.all(BUSINESS));
+    expect(keys).not.toContainEqual(queryKeys.inbox.all(BUSINESS));
+    // A freed place (a booking changed) reloads everything under Bookings, the waitlist among it.
+    expect(queryKeys.bookings.waitlist(BUSINESS, "active").slice(0, 2)).toEqual([...queryKeys.bookings.all(BUSINESS)]);
+  });
+
   it("reload the progress of Apply changes, the versions and the pending changes when it moves on", () => {
     const keys = invalidationsFor(event("assistant.apply", ["assistant_apply_1"]), BUSINESS);
 

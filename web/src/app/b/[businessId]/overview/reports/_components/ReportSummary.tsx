@@ -3,6 +3,7 @@
 import { AnimatedNumber } from "@/components/motion";
 import { DeltaChip } from "@/components/value/DeltaChip";
 import { FirstPeriodNote } from "@/components/value/FirstPeriodNote";
+import { GrowthLines } from "@/components/value/GrowthLines";
 import { earningCount, formatWholeMoney, hadNoActivity, savedTime, type ValueTotals } from "@/components/value/valueModel";
 import { useI18n } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
@@ -87,6 +88,7 @@ export function ReportSummary({
           <DeltaChip isFirstPeriod={first} current={current.conversation_count} previous={previous.conversation_count} days={days} />
         </li>
       </ul>
+      <GrowthLines current={current} previous={previous} currency={currency} days={days} isFirstPeriod={first} />
       {first ? <FirstPeriodNote /> : null}
       {hasEstimate ? null : <p className="text-sm text-ink-muted">{t("value.hero.noMoney")}</p>}
     </div>

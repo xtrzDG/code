@@ -9,8 +9,11 @@ import { businessPath } from "@/lib/navigation";
 /** How a row's numbers read: counts, staff minutes or money. */
 export type RowKind = "count" | "minutes" | "money";
 
+/** A report's numbers: the counts and estimate, and the worth of the waitlist's and return visits' bookings. */
+export type ReportField = ValueTotalsNumber | "waitlist_value_minor" | "campaign_value_minor";
+
 export interface ReportRow {
-  field: ValueTotalsNumber;
+  field: ReportField;
   label: MessageKey;
   kind: RowKind;
   polarity: Polarity;
@@ -27,15 +30,39 @@ export const REPORT_ROWS: readonly ReportRow[] = [
   { field: "assistant_reply_count", label: "reports.rows.assistantReplies", kind: "count", polarity: "more-is-better" },
   { field: "call_count", label: "reports.rows.calls", kind: "count", polarity: "more-is-better" },
   { field: "booking_count", label: "reports.rows.bookings", kind: "count", polarity: "more-is-better" },
+  { field: "waitlist_booking_count", label: "growthValue.rows.waitlistBookings", kind: "count", polarity: "more-is-better" },
+  { field: "waitlist_value_minor", label: "growthValue.rows.waitlistValue", kind: "money", polarity: "more-is-better" },
+  { field: "campaign_booking_count", label: "growthValue.rows.campaignBookings", kind: "count", polarity: "more-is-better" },
+  { field: "campaign_value_minor", label: "growthValue.rows.campaignValue", kind: "money", polarity: "more-is-better" },
   { field: "request_count", label: "reports.rows.requests", kind: "count", polarity: "more-is-better" },
   { field: "handoff_count", label: "reports.rows.handoffs", kind: "count", polarity: "neutral" },
 ];
 
-/** The rows with something to show: the money row only with an estimate in either period. */
+/** The rows of the waitlist's and the return visits' bookings, by the count that shows them. */
+const GROWTH_ROWS: Partial<Record<ReportField, "waitlist_booking_count" | "campaign_booking_count">> = {
+  waitlist_booking_count: "waitlist_booking_count",
+  waitlist_value_minor: "waitlist_booking_count",
+  campaign_booking_count: "campaign_booking_count",
+  campaign_value_minor: "campaign_booking_count",
+};
+
+function countIn(totals: Partial<ValueTotals>, field: "waitlist_booking_count" | "campaign_booking_count"): number {
+  return totals[field] ?? 0;
+}
+
+/**
+ * The rows with something to show: a money row only with a value in either
+ * period, and the waitlist's and return visits' rows only when either
+ * period had such bookings (a report stored before them has none).
+ */
 export function visibleRows(current: ValueTotals, previous: ValueTotals): readonly ReportRow[] {
-  return REPORT_ROWS.filter(
-    (row) => row.kind !== "money" || current.estimated_revenue_minor != null || previous.estimated_revenue_minor != null,
-  );
+  return REPORT_ROWS.filter((row) => {
+    const growth = GROWTH_ROWS[row.field];
+    if (growth && countIn(current, growth) === 0 && countIn(previous, growth) === 0) {
+      return false;
+    }
+    return row.kind !== "money" || current[row.field] != null || previous[row.field] != null;
+  });
 }
 
 /** A report's name: "September 2026", "Sep 21 – 27, 2026" or "Friday, October 2, 2026". */
