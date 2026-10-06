@@ -29,6 +29,7 @@ from app.orchestrators.channels.widget_messages_orchestrator import (
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
@@ -109,6 +110,7 @@ def build_channels_http_client(testbed: ChannelsCallFollowUps) -> TestClient:
                     testbed.language_detector,
                     testbed.settings,
                     ReferralRepositories().links(testbed.wall_clock),
+                    StarterAnswerRegistry(),
                 )
             ),
             widget_message_operator=wrap(

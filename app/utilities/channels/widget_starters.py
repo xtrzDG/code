@@ -2,6 +2,10 @@
 Starter questions of the website chat: one-tap chips before the visitor
 writes, taken from the business's FAQ in the owner's order (the first
 questions are the ones the owner put first), at most three per language.
+A customer language the FAQ has no question in gets the niche's own
+frequent questions that any business of the niche can answer (the
+starter registry's ready answers, in English, Russian and Georgian), so
+a visitor sees chips in their own language, not in the owner's.
 """
 
 from collections.abc import Sequence
@@ -10,6 +14,7 @@ from app.contracts.localization_utilities import LanguageDetectorContract
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.dto.channels.widget import WidgetStarterQuestionView
+from app.schemas.dto.setup.starter_catalog import StarterFaqDefinition
 from app.schemas.typings.channels.strings import WidgetStarterQuestionText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 
@@ -67,3 +72,38 @@ def build_starter_questions(
             )
 
     return starters
+
+
+def add_niche_starters(
+    starters: Sequence[WidgetStarterQuestionView],
+    languages: Sequence[LanguageTag],
+    niche_faq: Sequence[StarterFaqDefinition],
+) -> list[WidgetStarterQuestionView]:
+    """
+    `starters`, plus up to three of the niche's ready questions for each
+    language of `languages` that has none: only questions with a ready
+    answer (the assistant can answer them for any business of the niche)
+    and only in the language itself, never a translation fallback.
+    """
+
+    covered: set[str] = {str(starter.language) for starter in starters}
+    added: list[WidgetStarterQuestionView] = []
+    for language in languages:
+        if str(language) in covered:
+            continue
+
+        questions: list[str] = [
+            str(definition.questions.values[language])
+            for definition in niche_faq
+            if definition.answers is not None
+            and language in definition.questions.values
+        ]
+        added.extend(
+            WidgetStarterQuestionView(
+                language=language, text=WidgetStarterQuestionText(question)
+            )
+            for question in questions[:STARTER_QUESTIONS_PER_LANGUAGE]
+            if len(question) <= MAX_STARTER_QUESTION_LENGTH
+        )
+
+    return [*starters, *added]

@@ -211,6 +211,7 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         language_detector=utilities.language_detector,
         app_settings=config.app_settings,
         referral_links=facilitators.referral_links,
+        starter_answer_registry=registries.starter_answer_registry,
     )
     # Singleton: it remembers the web chats it found open (OpenChatMemory).
     get_widget_messages_use_case: Singleton[
