@@ -76,7 +76,11 @@ def test_the_restaurant_plays_the_waitlist_in_every_base_language() -> None:
         if scenario.id.startswith(WAITLIST_SCENARIO_PREFIX)
     )
 
-    assert waitlist == [("restaurant", "en"), ("restaurant", "ka"), ("restaurant", "ru")]
+    assert waitlist == [
+        ("restaurant", "en"),
+        ("restaurant", "ka"),
+        ("restaurant", "ru"),
+    ]
 
 
 @pytest.mark.parametrize("dataset", load_all(), ids=lambda dataset: dataset.niche.value)
