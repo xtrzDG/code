@@ -85,7 +85,9 @@ test("a laptop shows eight conversations or more; Compact and the list's width s
   expect(await rowsOnScreen(page), "whole rows on a 1440×900 screen").toBeGreaterThanOrEqual(8);
 
   const comfortable = await rowsOnScreen(page);
-  await page.getByRole("radio", { name: triage.density.compact }).check();
+  // The radio itself is visually hidden: people press its label.
+  await page.getByTitle(triage.density.compact, { exact: true }).click();
+  await expect(page.getByRole("radio", { name: triage.density.compact })).toBeChecked();
   await expect.poll(() => rowsOnScreen(page)).toBeGreaterThan(comfortable);
 
   const edge = page.getByRole("separator", { name: triage.resize.label });

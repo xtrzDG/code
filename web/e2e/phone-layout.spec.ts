@@ -19,6 +19,8 @@ import { en } from "./support/messages";
 test.describe.configure({ timeout: 120_000 });
 
 const PHONE = { width: 390, height: 844 } as const;
+/** The website chat's embed code needs APP_BASE_URL, which the suite's API does not set. */
+const SNIPPET_UNAVAILABLE = /status of 502 \(Bad Gateway\).*\/channels\/web\/snippet/;
 test.use({ viewport: PHONE, isMobile: true, hasTouch: true });
 
 /** The page's whole height, scrolled to the end. */
@@ -63,7 +65,9 @@ test("the first conversation, booking, channel card and Today start in the top h
 test("Channels opens the website chat, call forwarding and sharing as pages of their own, each with the way back", async ({
   page,
   request,
+  consoleErrors,
 }) => {
+  consoleErrors.allow(SNIPPET_UNAVAILABLE);
   const owner = await signInAsDemoOwner(request);
   await signInContext(page.context(), owner.token);
   const channels = `/b/${owner.businessId}/assistant/channels`;
