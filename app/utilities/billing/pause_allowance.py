@@ -90,22 +90,26 @@ def max_pause_months(
 ) -> int:
     """
     The longest pause from `starts_at` that keeps every `window_months`
-    window within `cap_months` paused months (0 when none fits). The
-    window that ends with the new pause is the fullest one, as pauses only
-    lie behind it.
+    window within `cap_months` paused months (0 when none fits). Earlier
+    pauses lie behind the new one, so for its first k months the fullest
+    window is the one that ends right after them: it reaches furthest back.
     """
 
     earlier: list[Microseconds] = paused_month_starts(pause_spans(events), timezone)
-    for months in range(cap_months, 0, -1):
-        new_end: Microseconds = add_calendar_months(starts_at, months, timezone)
+    longest: int = 0
+    for months in range(1, cap_months + 1):
         window_start: Microseconds = add_calendar_months(
-            new_end, -window_months, timezone
+            add_calendar_months(starts_at, months, timezone),
+            -window_months,
+            timezone,
         )
         used: int = count_paused_months(earlier, window_start, starts_at)
-        if used + months <= cap_months:
-            return months
+        if used + months > cap_months:
+            break
 
-    return 0
+        longest = months
+
+    return longest
 
 
 def months_paused_before(
