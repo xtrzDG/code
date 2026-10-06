@@ -10,6 +10,7 @@ from app.clients.email.smtp_email_client import SmtpEmailClient
 from app.clients.flitt.flitt_client import FlittClient
 from app.clients.google.google_calendar_client import GoogleCalendarClient
 from app.clients.http.safe_http_fetcher import SafeHttpFetcher
+from app.clients.http.webhook_poster import WebhookPoster
 from app.clients.langfuse.langfuse_ingestion_client import LangfuseIngestionClient
 from app.clients.meta.meta_graph_client import MetaGraphClient
 from app.clients.meta.meta_media_client import MetaMediaClient
@@ -53,6 +54,7 @@ from app.containers.notification_factories import build_web_push_client
 from app.containers.telemetry_factories import build_pool_instruments
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.channel_clients import ElevenLabsApiClientContract
+from app.contracts.integrations import WebhookPosterContract
 from app.contracts.object_storage import ObjectStorageClientContract
 from app.contracts.web_fetching import SafeHttpFetcherContract
 
@@ -154,6 +156,8 @@ class ClientsContainer(containers.DeclarativeContainer):
     # Outside web addresses (a business's website, menu links): public
     # addresses only, connected at the vetted address (the SSRF guard).
     safe_http_fetcher: Singleton[SafeHttpFetcherContract] = Singleton(SafeHttpFetcher)
+    # Outbound webhooks, through the same SSRF guard (1181).
+    webhook_poster: Singleton[WebhookPosterContract] = Singleton(WebhookPoster)
     # The central banks' daily exchange rates, read through the same guard:
     # the National Bank of Georgia (lari) and the ECB (euro reference rates).
     nbg_rates_client: Singleton[NbgRatesClient] = Singleton(

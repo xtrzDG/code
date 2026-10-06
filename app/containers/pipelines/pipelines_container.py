@@ -63,6 +63,7 @@ from app.containers.pipelines.subscription_lifecycle_pipelines import (
 )
 from app.containers.pipelines.telemetry_pipelines import TelemetryPipelinesContainer
 from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
+from app.containers.pipelines.webhook_pipelines import WebhookPipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 
@@ -234,3 +235,6 @@ class PipelinesContainer(containers.DeclarativeContainer):
         ReferralPipelinesContainer,
         referrals=orchestrators.referrals,
     )
+    webhooks: WebhookPipelinesContainer = Container(  # type: ignore[assignment]
+        WebhookPipelinesContainer, webhooks=orchestrators.webhooks
+    )  # fmt: skip

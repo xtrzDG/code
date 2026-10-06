@@ -7,7 +7,8 @@ DOCUMENT_LOOKUP_FIELDS (document_lookup_catalog.py).
   (`status`), the cabinet's list in creation order (`created_at`);
 - webhook_deliveries: an endpoint's delivery log newest first
   (`endpoint_id`, `created_at`) and, across businesses for the daily
-  purge, the deliveries past their 30 days (`expires_at`);
+  purge, the deliveries past their 30 days (`expires_at`); a customer's
+  deliveries for the erasure of their data (`contact_id`);
 - api_keys: across businesses, the key of a request by its SHA-256
   (`secret_hash`, unique), and the cabinet's list (`created_at`).
 """
@@ -43,6 +44,7 @@ INTEGRATION_LOOKUP_FIELDS: Mapping[
         text_field("endpoint_id"),
         integer_field("created_at"),
         integer_field("expires_at"),
+        text_field("contact_id"),
     ),
     API_KEYS: (text_field("secret_hash"), integer_field("created_at")),
 }

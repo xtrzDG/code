@@ -8,11 +8,12 @@ from base_typed_id import BasePrefixedTypedId
 from pydantic import ValidationError
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.integrations import BusinessEventObserverContract
 from app.contracts.live_events import (
     EventPublisherFacilitatorContract,
     LiveEventBusAdapterContract,
 )
-from app.schemas.constants.live_events import LiveEventKind
+from app.schemas.constants.live_events import OBSERVER_ONLY_EVENTS, LiveEventKind
 from app.schemas.dto.live_events import MAX_LIVE_EVENT_SUBJECTS, LiveEvent
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -33,15 +34,22 @@ class EventPublisherFacilitator(EventPublisherFacilitatorContract):
     ids) and publishes it on the bus. A failure is logged and swallowed:
     the change itself is stored already, and a cabinet that missed the
     event catches up at its next reload or reconnect.
+
+    Its `observers` hear every announced change first, in the process and
+    storage transaction of the change (the outbound webhooks,
+    `EmitBusinessEventFacilitator`); each swallows its own failures. The
+    observer-only kinds (`OBSERVER_ONLY_EVENTS`) never go on the bus.
     """
 
     def __init__(
         self,
         bus: LiveEventBusAdapterContract,
         wall_clock: WallClock[Microseconds],
+        observers: Sequence[BusinessEventObserverContract] = (),
     ) -> None:
         self._bus: LiveEventBusAdapterContract = bus
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._observers: tuple[BusinessEventObserverContract, ...] = tuple(observers)
 
     def publish(
         self,
@@ -51,6 +59,11 @@ class EventPublisherFacilitator(EventPublisherFacilitatorContract):
         is_sandbox: IsSandboxConversation = False,
     ) -> None:
         if is_sandbox:
+            return
+
+        for observer in self._observers:
+            observer.notice(business_id, event, ids)
+        if event in OBSERVER_ONLY_EVENTS:
             return
 
         try:

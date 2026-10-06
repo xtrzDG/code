@@ -18,6 +18,7 @@ from app.schemas.domain.webhooks import WebhookDeliveryDocument, WebhookEndpoint
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.dto.storage_queries import DocumentFilter
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.integrations.prefixed_id import (
     WebhookDeliveryId,
     WebhookEndpointId,
@@ -32,6 +33,7 @@ from app.schemas.typings.storage.constrained_strings import DocumentFieldPath
 STATUS_FIELD: DocumentFieldPath = DocumentFieldPath("status")
 ENDPOINT_ID_FIELD: DocumentFieldPath = DocumentFieldPath("endpoint_id")
 EXPIRES_AT_FIELD: DocumentFieldPath = DocumentFieldPath("expires_at")
+CONTACT_ID_FIELD: DocumentFieldPath = DocumentFieldPath("contact_id")
 # A business keeps a handful of endpoints (the cabinet caps them); a list
 # never reads more than this.
 ENDPOINT_LIST_LIMIT: DocumentQueryLimit = DocumentQueryLimit(100)
@@ -87,8 +89,9 @@ class WebhookDeliveryRepository(
     """
     Deliveries of events to endpoints, keyed by the id derived from the
     endpoint and the event (an insert that finds the id taken writes
-    nothing); an endpoint's log newest first, and the purge by
-    `expires_at` across businesses (both indexed, migration 1181).
+    nothing); an endpoint's log newest first, the purge by `expires_at`
+    across businesses and a contact's deliveries for an erasure (indexed,
+    migration 1181).
     """
 
     def insert_if_new(self, delivery: WebhookDeliveryDocument) -> IsDocumentInserted:
@@ -126,3 +129,13 @@ class WebhookDeliveryRepository(
         return self._collection.delete_by_range(
             time_range(EXPIRES_AT_FIELD, ending_before=moment)
         )
+
+    def delete_of_contact(
+        self, business_id: BusinessId, contact_id: ContactId
+    ) -> DocumentCount:
+        deliveries = self._list_in_business(
+            business_id, (field_equals(CONTACT_ID_FIELD, contact_id),)
+        )
+        for delivery in deliveries:
+            self._collection.delete(str(delivery.id))
+        return DocumentCount(len(deliveries))

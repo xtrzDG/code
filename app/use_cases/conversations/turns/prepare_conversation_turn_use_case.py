@@ -24,7 +24,6 @@ from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversation_engine import TurnGate
 from app.schemas.constants.conversations import MessageAuthor
-from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.constants.reply_safety import InjectionSignal
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
@@ -60,6 +59,7 @@ from app.use_cases.conversations.turns.prepared_turn_parts import (
     has_assistant_reply,
     is_business_open,
     touch_conversation,
+    turn_events,
 )
 from app.use_cases.conversations.turns.turn_gate import choose_turn_gate
 from app.use_cases.conversations.turns.turn_language import (
@@ -241,12 +241,13 @@ class PrepareConversationTurnUseCase(UseCaseContract[InboundMessage, PreparedTur
         )
         touch_conversation(conversation, language, IsAfterHours(is_open is False), now)
         self._conversation_repo.save(conversation)
-        self._live_events.publish(
-            business.id,
-            LiveEventKind.CONVERSATION_MESSAGE,
-            (conversation.id,),
-            is_sandbox=conversation.is_sandbox,
-        )
+        for event in turn_events(is_new_conversation):
+            self._live_events.publish(
+                business.id,
+                event,
+                (conversation.id,),
+                is_sandbox=conversation.is_sandbox,
+            )
         remember_contact_language(self._contact_repo, contact, detected, now)
         memory: CustomerMemory = self._recall_customer_memory.run(
             CustomerMemoryRequest(

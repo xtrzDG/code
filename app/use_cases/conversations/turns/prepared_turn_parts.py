@@ -15,6 +15,7 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.businesses import ServiceMode
 from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import ConversationDocument
@@ -159,3 +160,14 @@ def is_business_open(
     return is_open_at(
         local_now, list(profile.hours), exception_repo.list_by_business(business.id)
     )
+
+
+def turn_events(is_new_conversation: bool) -> tuple[LiveEventKind, ...]:
+    """
+    What a stored customer message announces: the message, and the start
+    of its conversation when it opened one (`conversation.started`).
+    """
+
+    if is_new_conversation:
+        return (LiveEventKind.CONVERSATION_STARTED, LiveEventKind.CONVERSATION_MESSAGE)
+    return (LiveEventKind.CONVERSATION_MESSAGE,)

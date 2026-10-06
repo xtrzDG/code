@@ -27,6 +27,7 @@ from app.containers.use_cases.subscription_lifecycle_use_cases import (
 )
 from app.containers.use_cases.telemetry_use_cases import TelemetryUseCasesContainer
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
+from app.containers.use_cases.webhook_use_cases import WebhookUseCasesContainer
 from app.use_cases.example_use_case import ExampleUseCase
 
 
@@ -193,6 +194,17 @@ class UseCasesContainer(BusinessUseCasesContainer):
         IdempotencyUseCasesContainer,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+    )
+    # Outbound webhooks: endpoints, signed deliveries and their retries (1181).
+    webhooks: WebhookUseCasesContainer = Container(  # type: ignore[assignment]
+        WebhookUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        account_use_cases=CoreUseCasesContainer.accounts,
     )
 
     # --- Template example (keeps its concrete type).

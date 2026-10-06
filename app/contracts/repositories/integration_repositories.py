@@ -15,6 +15,7 @@ from app.schemas.domain.api_keys import ApiKeyDocument
 from app.schemas.domain.webhooks import WebhookDeliveryDocument, WebhookEndpointDocument
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.integrations.constrained_strings import ApiKeySecretHash
 from app.schemas.typings.integrations.prefixed_id import (
     ApiKeyId,
@@ -94,6 +95,12 @@ class WebhookDeliveryRepoContract(RepoContract, Protocol):
 
     def delete_expired_before(self, moment: Microseconds) -> DocumentCount:
         """Across businesses: delete deliveries whose 30 days ended before then."""
+        raise NotImplementedError
+
+    def delete_of_contact(
+        self, business_id: BusinessId, contact_id: ContactId
+    ) -> DocumentCount:
+        """Delete the deliveries whose payload describes the contact (erasure)."""
         raise NotImplementedError
 
 

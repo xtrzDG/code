@@ -16,6 +16,7 @@ from app.schemas.constants.integrations import (
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
+from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.integrations.booleans import IsTestDelivery
 from app.schemas.typings.integrations.constrained_integers import (
     WebhookAttemptCount,
@@ -73,10 +74,12 @@ class WebhookDeliveryDocument(BaseDocument):
     """
     One event's delivery to one endpoint (a business collection): the
     exact body sent on every attempt (`payload`, the event as it was when
-    it happened), and how the attempts went. A PENDING delivery has its
-    next attempt at `next_attempt_at` (a queued job); attempts stop at
-    `give_up_at`, 24 hours after the event. The delivery log keeps it
-    until `expires_at` (30 days), when the daily purge deletes it.
+    it happened; `contact_id` names the customer it is about, so erasing
+    the customer erases the deliveries too), and how the attempts went. A
+    PENDING delivery has its next attempt at `next_attempt_at` (a queued
+    job); attempts stop at `give_up_at`, 24 hours after the event. The
+    delivery log keeps it until `expires_at` (30 days), when the daily
+    purge deletes it.
     """
 
     id: WebhookDeliveryId = Field(default_factory=WebhookDeliveryId)
@@ -85,6 +88,7 @@ class WebhookDeliveryDocument(BaseDocument):
     event_id: BusinessEventId
     event_type: BusinessEventType
     payload: WebhookPayloadJson
+    contact_id: ContactId | None = None
     is_test: IsTestDelivery = False
     status: WebhookDeliveryStatus = WebhookDeliveryStatus.PENDING
     attempts: WebhookAttemptCount = WebhookAttemptCount(0)

@@ -114,6 +114,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         report_brief_transformer=transformers.call_report_brief_transformer,
         phone_number_parser=utilities.phone_number_parser,
         app_settings=config.app_settings,
+        live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
     )
 

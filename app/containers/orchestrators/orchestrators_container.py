@@ -60,6 +60,9 @@ from app.containers.orchestrators.subscription_lifecycle_orchestrators import (
 from app.containers.orchestrators.value_orchestrators import (
     ValueOrchestratorsContainer,
 )
+from app.containers.orchestrators.webhook_orchestrators import (
+    WebhookOrchestratorsContainer,
+)
 
 
 class OrchestratorsContainer(CoreOrchestratorsContainer):
@@ -191,4 +194,8 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
     value: ValueOrchestratorsContainer = Container(  # type: ignore[assignment]
         ValueOrchestratorsContainer,
         value_use_cases=CoreOrchestratorsContainer.use_cases.value,
+    )
+    webhooks: WebhookOrchestratorsContainer = Container(  # type: ignore[assignment]
+        WebhookOrchestratorsContainer,
+        webhook_use_cases=CoreOrchestratorsContainer.use_cases.webhooks,
     )

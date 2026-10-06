@@ -197,6 +197,7 @@ class ComplianceUseCasesContainer(containers.DeclarativeContainer):
         feedback_request_repo=repositories.feedback_request_repo,
         processor_erasure=facilitators.processor_erasure,
         waitlist_entry_repo=repositories.waitlist_entry_repo,
+        webhook_delivery_repo=repositories.webhook_delivery_repo,
     )
     purge_expired_message_media_use_case: Factory[
         UseCaseContract[PurgeExpiredRecordingsCommand, MessageMediaPurgeResult]

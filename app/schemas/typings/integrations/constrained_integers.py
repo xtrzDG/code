@@ -3,6 +3,13 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class ApiKeyCount(BaseConstrainedTypedInt):
+    """How many API keys a business has (or may have)."""
+
+    ge = 0
+    le = 1000
+
+
 class PublicApiRequestsPerMinute(BaseConstrainedTypedInt):
     """
     How many requests one API key may make in a minute
@@ -22,6 +29,13 @@ class WebhookAttemptCount(BaseConstrainedTypedInt):
 
     ge = 0
     le = 100
+
+
+class WebhookEndpointCount(BaseConstrainedTypedInt):
+    """How many webhook endpoints a business has (or may have)."""
+
+    ge = 0
+    le = 1000
 
 
 class WebhookFailureCount(BaseConstrainedTypedInt):

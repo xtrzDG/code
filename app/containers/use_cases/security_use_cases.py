@@ -80,6 +80,7 @@ class SecurityUseCasesContainer(AccessUseCasesContainer):
         telegram_client=clients.telegram_bot_client,
         app_settings=config.app_settings,
         calendar_link_repo=repositories.resource_calendar_link_repo,
+        webhook_endpoint_repo=repositories.webhook_endpoint_repo,
     )
     totp_secret_resealer: Factory[TotpSecretResealer] = Factory(
         TotpSecretResealer,

@@ -8,6 +8,7 @@ from app.containers.calendar_sync_facilitators import (
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.growth_facilitators import GrowthFacilitatorsContainer
+from app.containers.integration_facilitators import IntegrationFacilitatorsContainer
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.live_facilitators import LiveFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
@@ -91,9 +92,16 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     otp_delivery_facilitator = sign_in.otp_delivery_facilitator
     bot_check_facilitator = sign_in.bot_check_facilitator
     login_code_cap_alerts = sign_in.login_code_cap_alerts
+    # Public records and the webhooks' observer of announced changes (1181).
+    integrations: IntegrationFacilitatorsContainer = Container(  # type: ignore[assignment]
+        IntegrationFacilitatorsContainer, adapters=adapters, repositories=repositories,
+        time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
+    public_record_reader = integrations.public_record_reader
     # Live updates of cabinets and website chats (ids only).
     live: LiveFacilitatorsContainer = Container(  # type: ignore[assignment]
         LiveFacilitatorsContainer, adapters=adapters, time_provider=time_provider,
+        integrations=integrations,
     )  # fmt: skip
     event_publisher = live.event_publisher
     live_stream_limits = live.live_stream_limits

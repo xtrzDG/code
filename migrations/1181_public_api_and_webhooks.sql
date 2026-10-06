@@ -15,6 +15,8 @@
 --   endpoint with its attempts.
 --   (business_id, doc_endpoint_id, doc_created_at)  an endpoint's delivery
 --                                           log, newest first
+--   (business_id, doc_contact_id)           a customer's deliveries (the
+--                                           erasure of their data)
 --   (doc_expires_at)                        across businesses: the daily
 --                                           purge of deliveries past 30 days
 -- api_keys (business collection): the keys of the public API.
@@ -36,9 +38,12 @@ create index if not exists webhook_endpoints_doc_created_at_idx
 select workshop.add_lookup_column('webhook_deliveries', 'endpoint_id', 'text');
 select workshop.add_lookup_column('webhook_deliveries', 'created_at', 'bigint');
 select workshop.add_lookup_column('webhook_deliveries', 'expires_at', 'bigint');
+select workshop.add_lookup_column('webhook_deliveries', 'contact_id', 'text');
 create index if not exists webhook_deliveries_doc_endpoint_id_idx
     on workshop.webhook_deliveries
     (business_id, doc_endpoint_id, doc_created_at, row_sequence);
+create index if not exists webhook_deliveries_doc_contact_id_idx
+    on workshop.webhook_deliveries (business_id, doc_contact_id);
 create index if not exists webhook_deliveries_doc_expires_at_idx
     on workshop.webhook_deliveries (doc_expires_at);
 
