@@ -68,10 +68,11 @@ export function PauseCard({
   };
 
   const percent = lifecycle?.pause.price_percent ?? 0;
+  const label = t("billingLifecycle.pause.title");
   const title = (
     <span className="inline-flex items-center gap-2">
       <IconCalendar className="size-4 text-ink-subtle" aria-hidden />
-      {t("billingLifecycle.pause.title")}
+      {label}
     </span>
   );
 
@@ -79,6 +80,7 @@ export function PauseCard({
     const isPaused = state.kind === "paused";
     return (
       <Card
+        aria-label={label}
         title={title}
         actions={<Badge tone="info">{t(isPaused ? "billing.status.paused" : "billingLifecycle.pause.scheduledTitle")}</Badge>}
         footer={
@@ -132,7 +134,7 @@ export function PauseCard({
 
   if (state.kind === "unavailable") {
     return (
-      <Card title={title} description={t("billingLifecycle.pause.description")}>
+      <Card aria-label={label} title={title} description={t("billingLifecycle.pause.description")}>
         <p className="text-sm text-ink-muted">{t(UNAVAILABLE[state.reason])}</p>
       </Card>
     );
@@ -144,6 +146,7 @@ export function PauseCard({
   const endsAt = pauseEndFor(options, chosen);
   return (
     <Card
+      aria-label={label}
       title={title}
       description={t("billingLifecycle.pause.description")}
       footer={

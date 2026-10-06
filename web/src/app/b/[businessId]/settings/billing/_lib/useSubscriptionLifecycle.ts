@@ -40,10 +40,12 @@ export function useSubscriptionLifecycle(overview: Query<BillingOverview>) {
   const lifecycle: Query<SubscriptionLifecycle> = useQuery(queryKeys.billing.lifecycle(business.id, locale), () =>
     api.GET("/v1/businesses/{business_id}/billing/lifecycle", { params: pathParams }),
   );
-  // The dashboard's package and the layout's business follow a billing change.
+  // The dashboard's package and the layout's business follow a billing change;
+  // the offers and the pause card on screen load again at once.
   const settled = {
     errorToast: false,
     stale: [queryKeys.dashboard.all(business.id), queryKeys.billing.all(business.id)],
+    invalidate: [queryKeys.billing.lifecycle(business.id, locale)],
   };
   const cancel = useMutation(
     (body: CancelBody) => api.POST("/v1/businesses/{business_id}/billing/cancel", { params: pathParams, body }),
