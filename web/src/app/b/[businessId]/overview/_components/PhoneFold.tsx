@@ -71,8 +71,8 @@ export function PhoneFold({
         onClick={() => folds.toggle(name)}
         className="flex min-h-13 w-full cursor-pointer items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-surface-muted lg:hidden"
       >
-        <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold text-ink">{title}</span>
-        {summary ? <span className="max-w-[45%] shrink-0 truncate text-sm text-ink-muted tabular-nums">{summary}</span> : null}
+        <span className="min-w-0 flex-1 text-[0.9375rem] font-semibold break-words text-ink">{title}</span>
+        {summary ? <span className="max-w-[45%] shrink-0 text-end text-sm break-words text-ink-muted tabular-nums">{summary}</span> : null}
         <IconChevronDown
           className={cn("size-4 shrink-0 text-ink-subtle transition-transform", isOpen && "rotate-180")}
           aria-hidden

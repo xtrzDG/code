@@ -57,8 +57,8 @@ function Row({ row }: { row: TodayRow }) {
           <Icon className="size-[1.125rem]" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-ink">{row.label}</span>
-          {row.hint ? <span className="block truncate text-xs text-ink-muted">{row.hint}</span> : null}
+          <span className="block text-sm font-medium break-words text-ink">{row.label}</span>
+          {row.hint ? <span className="block text-xs break-words text-ink-muted">{row.hint}</span> : null}
         </span>
         <span className={cn("text-lg font-semibold tabular-nums", isWaiting ? "text-warning" : "text-ink")}>
           {row.count === undefined ? "–" : format.number(row.count)}
