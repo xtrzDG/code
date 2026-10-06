@@ -37,7 +37,7 @@ def test_the_help_center_is_public_and_grouped_by_topic(workshop: Workshop) -> N
     assert response.headers["cache-control"] == "public, max-age=300"
     view: JsonObject = response.json()
     assert view["language"] == "ru"
-    assert view["available_languages"] == ["en", "ka", "ru"]
+    assert view["available_languages"] == ["de", "en", "he", "ka", "ru"]
     assert [topic["topic"] for topic in view["topics"]] == [
         "getting_started",
         "channels",
@@ -52,13 +52,16 @@ def test_an_article_opens_in_the_language_asked_or_english(
 ) -> None:
     georgian = workshop.client.get("/v1/help/ka/call-forwarding")
     german = workshop.client.get("/v1/help/de-AT/call-forwarding")
+    french = workshop.client.get("/v1/help/fr-FR/call-forwarding")
 
     assert georgian.status_code == 200, georgian.text
     assert georgian.json()["title"] == "ზარების გადამისამართება"
     assert "**61*" in georgian.json()["markdown"]
-    assert german.json()["language"] == "en"
-    assert german.json()["title"] == "Call forwarding"
-    assert [card["slug"] for card in german.json()["related"]] == ["channels", "inbox"]
+    assert german.json()["language"] == "de"
+    assert "**61*" in german.json()["markdown"]
+    assert french.json()["language"] == "en"
+    assert french.json()["title"] == "Call forwarding"
+    assert [card["slug"] for card in french.json()["related"]] == ["channels", "inbox"]
 
 
 @pytest.mark.parametrize(
