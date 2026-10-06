@@ -199,7 +199,12 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   Privacy, Bookings and the Inbox with their filters, the full export built
   by the worker and downloaded through one-time links (asked for per
   download, bound to the owner's session, three downloads at most), no
-  export buttons for staff (`e2e/data-exports.spec.ts`).
+  export buttons for staff (`e2e/data-exports.spec.ts`), the settings that
+  save themselves (`e2e/settings.spec.ts`: the time zone in Russian saved
+  without a button and kept after a reload, stale saves rebased), and times
+  that read "08:00" with no AM/PM in Russian and Georgian (the tunnel's
+  hours in `e2e/setup-tunnel.spec.ts`, the new booking in
+  `e2e/booking-time.spec.ts`).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -402,7 +407,11 @@ web/
                                confirmation), InlineError, Toast (with an Undo action), EmptyState,
                                ErrorState, Skeleton kit (Skeleton, SkeletonText, SkeletonRows,
                                SkeletonCard, SkeletonCardList, SkeletonPageHeader, LoadingRegion),
-                               Spinner, LoadingBlock, PageHeader, Alert
+                               Spinner, LoadingBlock, PageHeader, Alert, TimeField, DateField,
+                               DateTimeField (the cabinet's clock and calendar, see Forms)
+      forms/                   settings forms that save themselves: useAutosaveForm (the save loop in
+                               autosaveEngine.ts), SavePill (a field's "Saved"), AutosaveHint (the
+                               form's line), saveTracking (the counter SaveTracker shares)
       motion/                  motion primitives (import from "@/components/motion"): MotionProvider,
                                Reveal, FadeIn, Stagger/StaggerItem, PageTransition, TiltCard/TiltLayer,
                                AnimatedNumber, AnimatedPresenceList, MagneticButton, Parallax
@@ -1220,6 +1229,26 @@ dialog; it keeps the current page and re-renders it in the new language.
 - Phone numbers of any country are sent as typed with the country as a hint
   (`country_hint`); the API parses them. `CountrySelect` lists countries from
   `GET /v1/catalog/countries` in the interface language.
+- Times and dates never use the browser's own `<input type="time|date">`
+  (it follows the browser's language: AM/PM and mm/dd/yyyy in a Russian
+  cabinet on an English Chrome). `TimeField` has hours and minutes (and
+  AM/PM only where the cabinet's language has a 12-hour clock: English),
+  arrows step by `step` minutes, typing "0830" fills both; `DateField` shows
+  the date in the cabinet's language and opens a calendar whose week starts
+  where the language's region starts it; both store "HH:MM" and
+  "YYYY-MM-DD" (`DateTimeField`: "YYYY-MM-DDTHH:MM"). The clock and week
+  rules are in `lib/intl/localeCalendar.ts` (Georgian has its own tables),
+  the parsing in `lib/timeInput.ts`, `lib/timeSegments.ts`, `lib/dateInput.ts`.
+- A settings form saves itself (`useAutosaveForm`): choices at once, typed
+  text a moment after the last key and when the field is left, one save at
+  a time; each field says "Saved" (`SavePill` in the Field's `status`), a
+  lost connection is retried, a refusal says why in a toast, a save refused
+  as stale is rebased on what is stored (the fields someone else changed
+  show the stored value). Switching something off offers Undo (`undo`);
+  what deletes data still asks first (`needsConfirmation`: a shorter
+  retention period), and billing keeps its own buttons.
+  e2e tests wait for the save with `nextSave` (`e2e/support/autosave.ts`)
+  and type times with `typeTime` (`e2e/support/timeField.ts`).
 
 ### Styling
 
