@@ -33,7 +33,8 @@ class LlmGenerationTrace(ImmutableDTO):
     journal keeps metadata only, because conversations hold personal data.
     The business, contact and conversation the call answered (from the log
     context) tag the trace, so its copies can be found and deleted with
-    theirs.
+    theirs. The request id and the distributed trace id of the work that
+    made the call (the webhook and its job) join it to logs and spans.
     """
 
     trace_id: CorrelationId
@@ -56,6 +57,8 @@ class LlmGenerationTrace(ImmutableDTO):
     business_id: BusinessId | None = None
     contact_id: ContactId | None = None
     conversation_id: ConversationId | None = None
+    request_id: RequestId | None = None
+    request_trace_id: TraceId | None = None
 
 
 class LogContext(ImmutableDTO):

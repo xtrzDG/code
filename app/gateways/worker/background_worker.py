@@ -23,6 +23,7 @@ from app.facilitators.observability.null_job_monitor_facilitator import (
 from app.gateways.worker.heartbeat_recorder import WorkerHeartbeatRecorder
 from app.gateways.worker.held_leases import HeldLeases
 from app.gateways.worker.job_failure_reporter import JobFailureReporter
+from app.gateways.worker.job_telemetry import NO_JOB_TELEMETRY, JobTelemetry
 from app.gateways.worker.lane_threads import LaneThreads, build_lane_poll_seconds
 from app.gateways.worker.lease_heartbeat import LeaseHeartbeat
 from app.gateways.worker.periodic_job_runner import PeriodicJobRunner
@@ -109,6 +110,7 @@ class BackgroundWorker:
         inbound_poll_seconds: WorkerLanePollSeconds | None = None,
         lanes: Sequence[JobLane] = tuple(JobLane),
         stop_grace_seconds: float = STOP_GRACE_SECONDS,
+        job_telemetry: JobTelemetry = NO_JOB_TELEMETRY,
     ) -> None:
         self._poll_seconds: WorkerPollSeconds = poll_seconds
         self._stop_grace_seconds: float = stop_grace_seconds
@@ -128,6 +130,7 @@ class BackgroundWorker:
             held_leases=held_leases,
             failure_reporter=self._failure_reporter,
             lease_seconds=lease_seconds,
+            telemetry=job_telemetry,
         )
         self._periodic_runner = PeriodicJobRunner(
             periodic_jobs=[
@@ -202,10 +205,7 @@ class BackgroundWorker:
         )
 
     def run_periodic_tick(self) -> tuple[int, int]:
-        """
-        The periodic thread's tick: the reaper, then due periodic jobs, then
-        the worker's heartbeat.
-        """
+        """The periodic thread's tick: reaper, due periodic jobs, heartbeat."""
 
         maintenance_failures: int = self._release_expired_leases()
         runs, failures = self._periodic_runner.run_due()
@@ -226,7 +226,6 @@ class BackgroundWorker:
             self._run_threads(stop_event)
 
     def _run_threads(self, stop_event: threading.Event) -> None:
-
         # The lane threads and the heartbeat stop with their own event, set
         # once the periodic loop is over (also when it fails).
         stopping = threading.Event()

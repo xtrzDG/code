@@ -15,6 +15,7 @@ from app.contracts.repositories.delivery_repositories import (
 from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
 )
+from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.jobs import JobLane
@@ -35,7 +36,14 @@ from app.utilities.deliveries.delivery_jobs import (
     encode_outbound_message_payload,
 )
 from app.utilities.deliveries.delivery_keys import outbound_serial_key
+from app.utilities.deliveries.outbound_metrics_labels import (
+    outbound_attempt_outcome,
+    outbound_provider_label,
+)
 from app.utilities.deliveries.retry_policy import is_retryable, retry_delay_seconds
+from app.utilities.observability.metrics.null_service_metrics import (
+    NO_SERVICE_METRICS,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 MICROSECONDS_PER_SECOND: int = 1_000_000
@@ -57,7 +65,8 @@ class RecordOutboundAttemptUseCase(
     feedback request its message (`update_feedback_request`), a staff
     contact's or device's delivery state follows its own, open cabinets
     hear about a staff reply's state, and a missed call's text-back goes on
-    once its WhatsApp template is settled.
+    once its WhatsApp template is settled. /metrics counts the attempt by
+    provider and outcome.
     """
 
     def __init__(
@@ -71,7 +80,9 @@ class RecordOutboundAttemptUseCase(
         feedback_request_repo: FeedbackRequestRepoContract,
         # Spreads retry times only; nothing secret depends on it.
         jitter: Callable[[], float] = random.random,  # nosec B311
+        metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
     ) -> None:
+        self._metrics: ServiceMetricsContract = metrics
         self._feedback_request_repo: FeedbackRequestRepoContract = feedback_request_repo
         self._outbound_message_repo: OutboundMessageRepoContract = outbound_message_repo
         self._job_queue: JobQueueFacilitatorContract = job_queue
@@ -132,6 +143,9 @@ class RecordOutboundAttemptUseCase(
         if stored is None:
             return None
 
+        self._metrics.count_outbound_attempt(
+            outbound_provider_label(stored), outbound_attempt_outcome(stored)
+        )
         if stored.status is OutboundMessageStatus.DEAD:
             logger.warning(
                 "Outbox message %s (%s) was given up after %d attempt(s): %s",

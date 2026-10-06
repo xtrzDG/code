@@ -11,9 +11,9 @@ from app.gateways.worker.job_failure_reporter import JobFailureReporter, describ
 from app.gateways.worker.job_run_logs import (
     JobRunStart,
     log_job_finished,
-    log_pickup,
     start_job_run,
 )
+from app.gateways.worker.job_telemetry import NO_JOB_TELEMETRY, JobTelemetry
 from app.schemas.constants.jobs import JobDeathReason, JobLane, QueuedJobStatus
 from app.schemas.domain.jobs import QueuedJobDocument
 from app.schemas.dto.job_queue import ExpiredLeaseRelease, JobClaimRequest
@@ -70,7 +70,8 @@ class QueuedJobRunner:
     job's state to its new holder. A job whose worker process died with it
     twice in a row is DEAD (process_died) instead of a third attempt, and
     every job's log line says how much memory the process held before and
-    after it.
+    after it. A run continues the trace and the request id of the code that
+    queued the job (`JobTelemetry`), which also counts pickups and deaths.
     """
 
     def __init__(
@@ -82,7 +83,9 @@ class QueuedJobRunner:
         held_leases: HeldLeases,
         failure_reporter: JobFailureReporter,
         lease_seconds: JobLeaseSeconds,
+        telemetry: JobTelemetry = NO_JOB_TELEMETRY,
     ) -> None:
+        self._telemetry: JobTelemetry = telemetry
         self._queued_job_operators: dict[JobName, QueuedJobOperator] = dict(
             queued_job_operators
         )
@@ -113,7 +116,7 @@ class QueuedJobRunner:
         )
         for job in jobs:
             self._held_leases.hold_job(job.id, lease_token)
-            log_pickup(job, now)
+            self._telemetry.picked_up(job, now)
 
         return jobs, lease_token
 
@@ -125,9 +128,7 @@ class QueuedJobRunner:
         Its log lines and error reports name the job and its business.
         """
 
-        with bound_log_context(
-            job_name=job.name, job_id=job.id, business_id=job.business_id
-        ):
+        with self._telemetry.running(job) as span:
             start: JobRunStart = start_job_run()
             try:
                 outcome = self._run_and_settle(job, lease_token)
@@ -136,6 +137,9 @@ class QueuedJobRunner:
                 outcome = QueuedJobOutcome(has_run=False, has_failed=True)
             finally:
                 self._held_leases.release_job(job.id)
+            if outcome.has_failed:
+                span.mark_failed(finished_state(job))
+            self._telemetry.settled(job)
             log_job_finished(job.name, finished_state(job), start)
             return outcome
 
@@ -155,6 +159,7 @@ class QueuedJobRunner:
             )
         )
         for job in released:
+            self._telemetry.settled(job)
             if job.dead_reason is JobDeathReason.PROCESS_DIED:
                 self._report_poison_job(job)
                 continue

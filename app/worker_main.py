@@ -8,7 +8,8 @@ usage, booking reminders, purge of finished jobs, trace flush) once per
 period, and the queued jobs of every lane on their own threads, until SIGINT
 or SIGTERM. Any number of workers may run side by side (leased claims). On
 stop, running jobs get up to 25 seconds; a job cut off then runs again on
-another worker once its lease ends.
+another worker once its lease ends. With WORKER_METRICS_PORT and
+METRICS_TOKEN it serves its metrics (docs/operations/observability.md).
 """
 
 import logging
@@ -20,7 +21,14 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.containers.app import AppContainer
+from app.gateways.metrics.metrics_rendering import start_worker_metrics
+from app.gateways.metrics.worker_metrics_server import WorkerMetricsServer
 from app.gateways.startup_checks import check_processor_uses
+from app.gateways.telemetry_lifecycle import (
+    WORKER_SERVICE_NAME,
+    finish_telemetry,
+    name_service,
+)
 from app.gateways.worker.background_worker import BackgroundWorker
 from app.utilities.observability.logging_setup import configure_logging
 
@@ -44,10 +52,13 @@ def main(
     # The worker sends the nightly quality sample: it checks the providers too.
     check_processor_uses(container)
     worker: BackgroundWorker = container.gateways.background_worker()
+    metrics_server: WorkerMetricsServer | None = start_worker_metrics(container)
     LOGGER.info("Background worker started")
     try:
         worker.run_forever(stop)
     finally:
+        if metrics_server is not None:
+            metrics_server.stop()
         shut_down(container)
 
     LOGGER.info("Background worker stopped")
@@ -70,9 +81,10 @@ def install_stop_signal_handlers(stop_event: threading.Event) -> None:
 
 
 def shut_down(app_container: AppContainer) -> None:
-    """Send the remaining traces and close the Postgres pool."""
+    """Send the remaining traces and spans, close the Postgres pool."""
 
     app_container.adapters.llm_trace_facilitator().flush()
+    finish_telemetry(app_container)
     connection_pool: PostgresConnectionPoolClient | None = (
         app_container.clients.postgres_pool()
     )
@@ -83,6 +95,7 @@ def shut_down(app_container: AppContainer) -> None:
 def run_from_environment() -> int:
     """`python -m app.worker_main`: settings and logging from the environment."""
 
+    name_service(WORKER_SERVICE_NAME)
     app_container = AppContainer()
     configure_logging(app_container.config.app_settings().log_format)
     return main(app_container)

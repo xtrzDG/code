@@ -217,6 +217,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
         circuit_breaker=Singleton(
             CircuitBreakerFacilitator,
             monotonic_clock=time_provider.monotonic_clock,
+            metrics=utilities.service_metrics,
         ),
         scripted_adapter=offline_llm_adapter,
         fallback_model_id=config.app_settings.provided.reply_speed.llm_fallback_model_id,
@@ -247,6 +248,7 @@ class AdaptersContainer(containers.DeclarativeContainer):
     monitoring: MonitoringAdaptersContainer = Container(  # type: ignore[assignment]
         MonitoringAdaptersContainer, clients=clients, time_provider=time_provider,
         rate_limit_buckets=rate_limit_buckets, traced_llm_adapter=traced_llm_adapter,
+        utilities=utilities,
     )  # fmt: skip
     signal_counter, database_size = monitoring.signal_counter, monitoring.database_size
     # ... and the adapter every use case gets: routing by model id, traced,

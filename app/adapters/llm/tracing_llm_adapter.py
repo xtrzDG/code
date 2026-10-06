@@ -21,6 +21,7 @@ from app.schemas.typings.platform.constrained_integers import ElapsedMillisecond
 from app.schemas.typings.platform.strings import CorrelationId, JobErrorText
 from app.utilities.observability.log_context import current_log_context
 from app.utilities.observability.trace_redaction import redact_contact_details
+from app.utilities.observability.tracing.trace_context import current_trace_id
 
 NANOSECONDS_PER_MILLISECOND: int = 1_000_000
 
@@ -129,6 +130,8 @@ class TracingLlmAdapter(LlmAdapterContract):
             business_id=context.business_id,
             contact_id=context.contact_id,
             conversation_id=context.conversation_id,
+            request_id=context.request_id,
+            request_trace_id=current_trace_id() or context.trace_id,
         )
         self._trace_facilitator.record_generation(trace)
 

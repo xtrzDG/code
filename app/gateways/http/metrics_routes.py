@@ -1,6 +1,5 @@
 """Prometheus metrics of this API process (or instance): GET /metrics."""
 
-import hmac
 from collections.abc import Callable
 
 import anyio
@@ -13,10 +12,10 @@ from app.schemas.exceptions.application_errors import (
     NotFoundError,
 )
 from app.schemas.typings.platform.strings import PlatformSecret
+from app.utilities.observability.metrics.metrics_access import carries_metrics_token
 from app.utilities.observability.metrics.metrics_exposition import MetricsPage
 
 METRICS_PATH: str = "/metrics"
-BEARER_PREFIX: str = "Bearer "
 # A scrape reads the job queue's depth from the database: on threads of its
 # own, never on the request threads.
 METRICS_THREADS: int = 1
@@ -46,7 +45,9 @@ def build_metrics_router(
         if metrics_token is None:
             raise NotFoundError("Metrics are not enabled on this instance.")
 
-        if not is_authorized(request.headers.get("authorization"), metrics_token):
+        if not carries_metrics_token(
+            request.headers.get("authorization"), metrics_token
+        ):
             raise AuthenticationRequiredError("A valid metrics token is required.")
 
         if not limiters:
@@ -55,13 +56,3 @@ def build_metrics_router(
         return Response(content=page.body, media_type=page.content_type)
 
     return router
-
-
-def is_authorized(authorization: str | None, token: PlatformSecret) -> bool:
-    """Whether the header carries the token (compared in constant time)."""
-
-    if authorization is None or not authorization.startswith(BEARER_PREFIX):
-        return False
-
-    offered: str = authorization.removeprefix(BEARER_PREFIX).strip()
-    return hmac.compare_digest(offered.encode(), str(token).encode())
