@@ -96,7 +96,6 @@ def literal_text_lines(path: Path) -> list[int]:
             for keyword in node.keywords
             if isinstance(keyword.value, ast.Dict)
             for item in keyword.value.values
-            if item is not None
         )
         if any(is_string_literal(value) for value in values):
             lines.append(node.lineno)
@@ -127,7 +126,8 @@ def owner_text_paths() -> list[Path]:
 
 def test_owner_texts_are_read_from_the_catalog_not_written_in_code() -> None:
     customer_lines: set[tuple[str, str]] = {
-        tuple(name.rsplit(".", 1)) for name in CUSTOMER_TEXT_NAMES
+        (module, name)
+        for module, name in (text.rsplit(".", 1) for text in CUSTOMER_TEXT_NAMES)
     }
     found: list[str] = []
     for path in owner_text_paths():

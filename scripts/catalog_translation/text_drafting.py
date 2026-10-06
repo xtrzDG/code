@@ -11,6 +11,7 @@ speaker confirms them with `translate_catalogs.py backend reviewed`.
 
 import json
 from collections.abc import Iterator
+from typing import cast
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
@@ -153,7 +154,12 @@ def parse_answer(text: str | None) -> dict[str, object]:
     except json.JSONDecodeError:
         return {}
 
-    return answer if isinstance(answer, dict) else {}
+    if not isinstance(answer, dict):
+        return {}
+
+    return {
+        str(key): value for key, value in cast(dict[object, object], answer).items()
+    }
 
 
 def accepted(value: object, source: LocalizedTextValue) -> bool:

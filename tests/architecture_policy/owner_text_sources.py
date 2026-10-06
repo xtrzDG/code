@@ -10,7 +10,9 @@ next to them in the notification package and stay out of these lists.
 """
 
 import importlib
+from collections.abc import Sequence
 from types import ModuleType
+from typing import cast
 
 from pydantic import BaseModel
 
@@ -70,10 +72,10 @@ def collect_texts(value: object, found: list[LocalizedText]) -> None:
         for name in type(value).model_fields:
             collect_texts(getattr(value, name), found)
     elif isinstance(value, (list, tuple)):
-        for item in value:
+        for item in cast(Sequence[object], value):
             collect_texts(item, found)
     elif isinstance(value, dict):
-        for item in value.values():
+        for item in cast(dict[object, object], value).values():
             collect_texts(item, found)
 
 
@@ -83,8 +85,7 @@ def module_texts(module_name: str) -> list[LocalizedText]:
     for name, value in vars(module).items():
         if f"{module_name}.{name}" in CUSTOMER_TEXT_NAMES or name.startswith("_"):
             continue
-        if isinstance(value, (LocalizedText, BaseModel, list, tuple, dict)):
-            collect_texts(value, found)
+        collect_texts(value, found)
 
     return found
 

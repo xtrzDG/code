@@ -13,6 +13,7 @@ from app.schemas.dto.llm_scripts import ScriptedLlmTurn
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import OwnerTextKey
+from app.schemas.typings.localization.strings import LocalizedTextValue
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
@@ -228,7 +229,8 @@ def test_the_configured_drafter_uses_the_summary_model() -> None:
     replace_provider(container.adapters.routing_llm_adapter, model)
 
     drafted = configured_drafter(container).draft(
-        CabinetLanguage.GEORGIAN, {OwnerTextKey("plans.chat.name"): "Chat"}
+        CabinetLanguage.GEORGIAN,
+        {OwnerTextKey("plans.chat.name"): LocalizedTextValue("Chat")},
     )
 
     assert drafted.drafts == {OwnerTextKey("plans.chat.name"): "KA Chat"}
