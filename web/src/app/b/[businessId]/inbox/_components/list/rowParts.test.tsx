@@ -10,7 +10,7 @@ function row(overrides: Partial<InboxRow> = {}): InboxRow {
     id: "conversation-1",
     contactName: "Lukas Weber",
     contactPhone: null,
-    channel: "web",
+    channel: "web_chat",
     language: "en",
     status: "open",
     isAfterHours: false,
