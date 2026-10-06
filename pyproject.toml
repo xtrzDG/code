@@ -43,6 +43,7 @@ dev = [
     "flask-cors>=6.0",
     "hypothesis>=6.140",
     "import-linter>=2.15",
+    "jsonschema>=4.25",
     "moto[s3]>=5.1",
     "mypy",
     "pyright",
@@ -52,6 +53,7 @@ dev = [
     # Evaluation datasets (evals/datasets/*.yaml, scripts/run_evals.py).
     "pyyaml>=6.0.3",
     "ruff",
+    "types-jsonschema>=4.25",
     "types-pyyaml>=6.0.12",
     "vulture>=2.16",
 ]
