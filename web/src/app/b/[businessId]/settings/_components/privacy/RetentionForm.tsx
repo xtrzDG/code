@@ -62,7 +62,9 @@ export function RetentionForm({ stored, state }: { stored: PrivacySettingsView; 
 
   return (
     <div className="space-y-6">
-      <AutosaveHint state={form.state} />
+      <div className="flex justify-end">
+        <AutosaveHint state={form.state} />
+      </div>
       <div className="grid gap-5 md:grid-cols-2">
         <Field label={t("privacyRetention.conversations.label")} hint={t("privacyRetention.conversations.hint")} status={pill("conversationDays")}>
           {(control) => (

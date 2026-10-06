@@ -65,7 +65,9 @@ function MyEventsForm({ stored, mine }: { stored: MyNotificationSettings; mine: 
 
   return (
     <div className="space-y-5">
-      <AutosaveHint state={form.state} />
+      <div className="flex justify-end">
+        <AutosaveHint state={form.state} />
+      </div>
       <PreferencesFields
         value={form.values}
         errors={quietHoursErrors(form.values)}

@@ -119,8 +119,20 @@ export function Fieldset({
       className={cn("space-y-3", className)}
       aria-describedby={[error ? `${id}-error` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined}
     >
-      <legend className="text-sm font-medium text-ink">{legend}</legend>
-      {status ? <div className="-mt-2 flex justify-end">{status}</div> : null}
+      {status ? (
+        <>
+          {/* A legend cannot hold a row of its own: it names the group for screen readers, the row shows it with the status at its end. */}
+          <legend className="sr-only">{legend}</legend>
+          <div className="flex min-h-5 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <span aria-hidden className="text-sm font-medium text-ink">
+              {legend}
+            </span>
+            {status}
+          </div>
+        </>
+      ) : (
+        <legend className="text-sm font-medium text-ink">{legend}</legend>
+      )}
       {hint ? (
         <p id={`${id}-hint`} className="-mt-2 text-sm text-ink-muted">
           {hint}
