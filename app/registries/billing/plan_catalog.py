@@ -23,7 +23,7 @@ from app.schemas.typings.billing.constrained_integers import (
     TrialDays,
 )
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
-from app.utilities.localization.localized_texts import build_localized_text
+from app.utilities.localization.owner_texts import owner_text
 
 PLAN_BASE_CURRENCY: CurrencyCode = CurrencyCode("EUR")
 GEORGIAN_LARI: CurrencyCode = CurrencyCode("GEL")
@@ -75,18 +75,8 @@ def build_gel_price(amount_in_tetri: int) -> Money:
 PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
     PlanDefinition(
         key=PlanKey.CHAT,
-        names=build_localized_text(en="Chat", ru="Чат", ka="ჩატი"),
-        descriptions=build_localized_text(
-            en="Up to 1,000 dialogs a month in WhatsApp, Instagram, Messenger, "
-            "Telegram and the website chat. For cafes, salons, shops, tours "
-            "and guest houses.",
-            ru="До 1 000 диалогов в месяц в WhatsApp, Instagram, Messenger, "
-            "Telegram и чате на сайте. Для кафе, салонов, магазинов, туров и "
-            "гостевых домов.",
-            ka="თვეში 1 000-მდე დიალოგი WhatsApp-ში, Instagram-ში, Messenger-ში, "
-            "Telegram-სა და საიტის ჩატში. კაფეების, სალონების, მაღაზიების, "
-            "ტურებისა და საოჯახო სასტუმროებისთვის.",
-        ),
+        names=owner_text("plans.chat.name"),
+        descriptions=owner_text("plans.chat.description"),
         monthly_price=build_eur_price(9900),
         setup_fee=SETUP_FEE,
         included_voice_minutes=IncludedVoiceMinutes(0),
@@ -101,20 +91,8 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
     ),
     PlanDefinition(
         key=PlanKey.VOICE_AND_CHAT,
-        names=build_localized_text(
-            en="Voice + chat", ru="Голос + чат", ka="ხმა + ჩატი"
-        ),
-        descriptions=build_localized_text(
-            en="400 call minutes and 1,500 dialogs a month: phone calls plus "
-            "every messaging channel. For restaurants, hotels, clinics, "
-            "entertainment and car services.",
-            ru="400 минут звонков и 1 500 диалогов в месяц: телефон и все "
-            "мессенджеры. Для ресторанов, отелей, клиник, развлечений и "
-            "автосервисов.",
-            ka="თვეში 400 წუთი ზარი და 1 500 დიალოგი: ტელეფონი და ყველა "
-            "მესენჯერი. რესტორნების, სასტუმროების, კლინიკების, გართობისა და "
-            "ავტოსერვისებისთვის.",
-        ),
+        names=owner_text("plans.voice_and_chat.name"),
+        descriptions=owner_text("plans.voice_and_chat.description"),
         monthly_price=build_eur_price(17500),
         setup_fee=SETUP_FEE,
         included_voice_minutes=IncludedVoiceMinutes(400),
@@ -129,18 +107,8 @@ PLAN_DEFINITIONS: tuple[PlanDefinition, ...] = (
     ),
     PlanDefinition(
         key=PlanKey.PLUS,
-        names=build_localized_text(en="Plus", ru="Плюс", ka="პლუსი"),
-        descriptions=build_localized_text(
-            en="1,000 call minutes and 3,000 dialogs a month. For busy "
-            "restaurants, hotels, clinics and real estate agencies that get "
-            "many calls and messages every day.",
-            ru="1 000 минут звонков и 3 000 диалогов в месяц. Для загруженных "
-            "ресторанов, отелей, клиник и агентств недвижимости, которым "
-            "каждый день много звонят и пишут.",
-            ka="თვეში 1 000 წუთი ზარი და 3 000 დიალოგი. დატვირთული "
-            "რესტორნების, სასტუმროების, კლინიკებისა და უძრავი ქონების "
-            "სააგენტოებისთვის, რომლებსაც ყოველდღე ბევრი ურეკავს და სწერს.",
-        ),
+        names=owner_text("plans.plus.name"),
+        descriptions=owner_text("plans.plus.description"),
         monthly_price=build_eur_price(34900),
         setup_fee=SETUP_FEE,
         included_voice_minutes=IncludedVoiceMinutes(1000),

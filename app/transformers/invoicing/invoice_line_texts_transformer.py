@@ -16,17 +16,13 @@ from app.transformers.billing.billing_texts import (
     fill_placeholders,
 )
 from app.utilities.localization.babel_locales import require_babel_locale
-from app.utilities.localization.localized_texts import build_localized_text
+from app.utilities.localization.owner_texts import owner_text
 
-SERVICE_PERIOD_ITEM: LocalizedText = build_localized_text(
-    en="{service} — {plan}, {billing_period}",
-    ru="{service} — {plan}, {billing_period}",
-    ka="{service} — {plan}, {billing_period}",
+SERVICE_PERIOD_ITEM: LocalizedText = owner_text(
+    "billing.invoice_line.service_period_item"
 )
-USAGE_OVERAGE_ITEM: LocalizedText = build_localized_text(
-    en="{service} — {minutes} call minutes above the package",
-    ru="{service} — {minutes} мин. звонков сверх пакета",
-    ka="{service} — პაკეტს ზემოთ {minutes} წუთი ზარი",
+USAGE_OVERAGE_ITEM: LocalizedText = owner_text(
+    "billing.invoice_line.usage_overage_item"
 )
 
 

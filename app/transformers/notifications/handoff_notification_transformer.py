@@ -9,21 +9,14 @@ from app.transformers.notifications.message_rendering import (
     HANDOFF_REASON_LABELS,
     HANDOFF_URGENCY_LABELS,
     describe_phone,
-    localized,
     render,
     resolve_label,
     text_or_missing,
 )
+from app.utilities.localization.owner_texts import owner_text
 from app.utilities.scheduling.localized_formatting import choose_template_language
 
-HANDOFF: LocalizedText = localized(
-    en="[{urgency}] A customer needs a person · {business}\nReason: {reason}\n"
-    "{summary}\nName: {name}\nPhone: {phone}\nChannel: {channel}",
-    ru="[{urgency}] Клиенту нужен человек · {business}\nПричина: {reason}\n"
-    "{summary}\nИмя: {name}\nТелефон: {phone}\nКанал: {channel}",
-    ka="[{urgency}] კლიენტს ადამიანი სჭირდება · {business}\nმიზეზი: {reason}\n"
-    "{summary}\nსახელი: {name}\nტელეფონი: {phone}\nარხი: {channel}",
-)
+HANDOFF: LocalizedText = owner_text("notifications.handoff.handoff")
 
 
 class HandoffNotificationTransformer(

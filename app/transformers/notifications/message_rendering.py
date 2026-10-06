@@ -23,6 +23,7 @@ from app.schemas.typings.localization.strings import (
     FormattedPhoneNumber,
     LocalizedTextValue,
 )
+from app.utilities.localization.owner_texts import owner_text
 from app.utilities.scheduling.localized_formatting import (
     choose_template_language,
     format_full_date,
@@ -112,74 +113,86 @@ def text_or_missing(value: object | None) -> str:
 
 
 CHANNEL_LABELS: Mapping[str, LocalizedText] = {
-    ChannelKind.PHONE: localized(en="Phone call", ru="Звонок", ka="ზარი"),
-    ChannelKind.WHATSAPP: localized(en="WhatsApp", ru="WhatsApp", ka="WhatsApp"),
-    ChannelKind.INSTAGRAM: localized(en="Instagram", ru="Instagram", ka="Instagram"),
-    ChannelKind.MESSENGER: localized(en="Messenger", ru="Messenger", ka="Messenger"),
-    ChannelKind.TELEGRAM: localized(en="Telegram", ru="Telegram", ka="Telegram"),
-    ChannelKind.WEB_CHAT: localized(
-        en="Website chat", ru="Чат на сайте", ka="ჩატი საიტზე"
+    ChannelKind.PHONE: owner_text("notifications.staff_message.channel_labels.phone"),
+    ChannelKind.WHATSAPP: owner_text(
+        "notifications.staff_message.channel_labels.whatsapp"
     ),
-    ChannelKind.VIBER: localized(en="Viber", ru="Viber", ka="Viber"),
-    ChannelKind.OWNER_TEST: localized(
-        en="Owner test", ru="Тест владельца", ka="მფლობელის ტესტი"
+    ChannelKind.INSTAGRAM: owner_text(
+        "notifications.staff_message.channel_labels.instagram"
+    ),
+    ChannelKind.MESSENGER: owner_text(
+        "notifications.staff_message.channel_labels.messenger"
+    ),
+    ChannelKind.TELEGRAM: owner_text(
+        "notifications.staff_message.channel_labels.telegram"
+    ),
+    ChannelKind.WEB_CHAT: owner_text(
+        "notifications.staff_message.channel_labels.web_chat"
+    ),
+    ChannelKind.VIBER: owner_text("notifications.staff_message.channel_labels.viber"),
+    ChannelKind.OWNER_TEST: owner_text(
+        "notifications.staff_message.channel_labels.owner_test"
     ),
 }
 
 HANDOFF_REASON_LABELS: Mapping[str, LocalizedText] = {
-    HandoffReason.CUSTOMER_REQUEST: localized(
-        en="Customer asked for a person",
-        ru="Клиент просит человека",
-        ka="კლიენტი ითხოვს ადამიანს",
+    HandoffReason.CUSTOMER_REQUEST: owner_text(
+        "notifications.staff_message.handoff_reason_labels.customer_request"
     ),
-    HandoffReason.COMPLAINT: localized(en="Complaint", ru="Жалоба", ka="საჩივარი"),
-    HandoffReason.VIP_GUEST: localized(
-        en="VIP guest", ru="VIP-гость", ka="VIP სტუმარი"
+    HandoffReason.COMPLAINT: owner_text(
+        "notifications.staff_message.handoff_reason_labels.complaint"
     ),
-    HandoffReason.NON_STANDARD_REQUEST: localized(
-        en="Non-standard request",
-        ru="Нестандартный запрос",
-        ka="არასტანდარტული მოთხოვნა",
+    HandoffReason.VIP_GUEST: owner_text(
+        "notifications.staff_message.handoff_reason_labels.vip_guest"
     ),
-    HandoffReason.UNKNOWN_ANSWER: localized(
-        en="No answer in the knowledge base",
-        ru="Нет ответа в базе знаний",
-        ka="ცოდნის ბაზაში პასუხი არ არის",
+    HandoffReason.NON_STANDARD_REQUEST: owner_text(
+        "notifications.staff_message.handoff_reason_labels.non_standard_request"
     ),
-    HandoffReason.EMERGENCY: localized(
-        en="Emergency", ru="Экстренная ситуация", ka="საგანგებო სიტუაცია"
+    HandoffReason.UNKNOWN_ANSWER: owner_text(
+        "notifications.staff_message.handoff_reason_labels.unknown_answer"
     ),
-    HandoffReason.SENSITIVE_TOPIC: localized(
-        en="Sensitive topic", ru="Деликатная тема", ka="დელიკატური თემა"
+    HandoffReason.EMERGENCY: owner_text(
+        "notifications.staff_message.handoff_reason_labels.emergency"
     ),
-    HandoffReason.PROFILE_RULE: localized(
-        en="Owner's handoff rule",
-        ru="Правило владельца",
-        ka="მფლობელის წესი",
+    HandoffReason.SENSITIVE_TOPIC: owner_text(
+        "notifications.staff_message.handoff_reason_labels.sensitive_topic"
     ),
-    HandoffReason.UNVERIFIED_NUMBERS: localized(
-        en="Unverified prices or numbers",
-        ru="Непроверенные цены или цифры",
-        ka="გადაუმოწმებელი ფასები ან ციფრები",
+    HandoffReason.PROFILE_RULE: owner_text(
+        "notifications.staff_message.handoff_reason_labels.profile_rule"
+    ),
+    HandoffReason.UNVERIFIED_NUMBERS: owner_text(
+        "notifications.staff_message.handoff_reason_labels.unverified_numbers"
     ),
 }
 
 HANDOFF_URGENCY_LABELS: Mapping[str, LocalizedText] = {
-    HandoffUrgency.LOW: localized(en="Low", ru="Низкая", ka="დაბალი"),
-    HandoffUrgency.NORMAL: localized(en="Normal", ru="Обычная", ka="ჩვეულებრივი"),
-    HandoffUrgency.HIGH: localized(en="High", ru="Высокая", ka="მაღალი"),
-    HandoffUrgency.CRITICAL: localized(en="Critical", ru="Критическая", ka="კრიტიკული"),
+    HandoffUrgency.LOW: owner_text(
+        "notifications.staff_message.handoff_urgency_labels.low"
+    ),
+    HandoffUrgency.NORMAL: owner_text(
+        "notifications.staff_message.handoff_urgency_labels.normal"
+    ),
+    HandoffUrgency.HIGH: owner_text(
+        "notifications.staff_message.handoff_urgency_labels.high"
+    ),
+    HandoffUrgency.CRITICAL: owner_text(
+        "notifications.staff_message.handoff_urgency_labels.critical"
+    ),
 }
 
 LEAD_TYPE_LABELS: Mapping[str, LocalizedText] = {
-    LeadType.BANQUET: localized(en="Banquet", ru="Банкет", ka="ბანკეტი"),
-    LeadType.GROUP: localized(en="Group", ru="Группа", ka="ჯგუფი"),
-    LeadType.CORPORATE: localized(
-        en="Corporate event", ru="Корпоратив", ka="კორპორატივი"
+    LeadType.BANQUET: owner_text(
+        "notifications.staff_message.lead_type_labels.banquet"
     ),
-    LeadType.ORDER: localized(en="Order", ru="Заказ", ka="შეკვეთა"),
-    LeadType.VIEWING: localized(en="Viewing", ru="Просмотр", ka="დათვალიერება"),
-    LeadType.OTHER: localized(en="Other", ru="Другое", ka="სხვა"),
+    LeadType.GROUP: owner_text("notifications.staff_message.lead_type_labels.group"),
+    LeadType.CORPORATE: owner_text(
+        "notifications.staff_message.lead_type_labels.corporate"
+    ),
+    LeadType.ORDER: owner_text("notifications.staff_message.lead_type_labels.order"),
+    LeadType.VIEWING: owner_text(
+        "notifications.staff_message.lead_type_labels.viewing"
+    ),
+    LeadType.OTHER: owner_text("notifications.staff_message.lead_type_labels.other"),
 }
 
 CANCELLATION_POLICY: LocalizedText = localized(
@@ -197,20 +210,11 @@ CANCELLATION_POLICY: LocalizedText = localized(
     it="Condizioni di cancellazione: {policy}",
 )
 
-BOOKING_STAFF_DETAILS: LocalizedText = localized(
-    en="{period} · {resource}\nName: {name}\nPhone: {phone}\nGuests: {party}\n"
-    "Channel: {channel}",
-    ru="{period} · {resource}\nИмя: {name}\nТелефон: {phone}\nГостей: {party}\n"
-    "Канал: {channel}",
-    ka="{period} · {resource}\nსახელი: {name}\nტელეფონი: {phone}\n"
-    "სტუმრები: {party}\nარხი: {channel}",
+BOOKING_STAFF_DETAILS: LocalizedText = owner_text(
+    "notifications.staff_message.booking_staff_details"
 )
 
-NOTES_LINE: LocalizedText = localized(
-    en="Notes: {notes}",
-    ru="Пожелания: {notes}",
-    ka="შენიშვნა: {notes}",
-)
+NOTES_LINE: LocalizedText = owner_text("notifications.staff_message.notes_line")
 
 
 def render_booking_staff_notification(

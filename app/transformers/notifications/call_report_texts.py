@@ -10,184 +10,100 @@ from collections.abc import Mapping
 from app.schemas.constants.calls import MissedCallReason, TextBackSkipReason
 from app.schemas.constants.conversations import CallOutcome
 from app.schemas.dto.localization import LocalizedText
-from app.transformers.notifications.message_rendering import localized
+from app.utilities.localization.owner_texts import owner_text
 
-CALL_SUMMARY_TITLE: LocalizedText = localized(
-    en="Call summary · {business}",
-    ru="Итог звонка · {business}",
-    ka="ზარის შეჯამება · {business}",
+CALL_SUMMARY_TITLE: LocalizedText = owner_text(
+    "notifications.call_report.call_summary_title"
 )
-MISSED_CALL_TITLE: LocalizedText = localized(
-    en="Missed call · {business}",
-    ru="Пропущенный звонок · {business}",
-    ka="გამოტოვებული ზარი · {business}",
+MISSED_CALL_TITLE: LocalizedText = owner_text(
+    "notifications.call_report.missed_call_title"
 )
-CALLER_LINE: LocalizedText = localized(
-    en="Caller: {caller} · {when}",
-    ru="Звонил: {caller} · {when}",
-    ka="დამრეკი: {caller} · {when}",
+CALLER_LINE: LocalizedText = owner_text("notifications.call_report.caller_line")
+HIDDEN_NUMBER: LocalizedText = owner_text("notifications.call_report.hidden_number")
+RESULT_LINE: LocalizedText = owner_text("notifications.call_report.result_line")
+BOOKING_LINE: LocalizedText = owner_text("notifications.call_report.booking_line")
+UNVERIFIED_LINE: LocalizedText = owner_text("notifications.call_report.unverified_line")
+REASON_LINE: LocalizedText = owner_text("notifications.call_report.reason_line")
+TEXTED_BY_WHATSAPP: LocalizedText = owner_text(
+    "notifications.call_report.texted_by_whatsapp"
 )
-HIDDEN_NUMBER: LocalizedText = localized(
-    en="hidden number",
-    ru="скрытый номер",
-    ka="დამალული ნომერი",
+TEXTED_BY_SMS: LocalizedText = owner_text("notifications.call_report.texted_by_sms")
+NOT_TEXTED: LocalizedText = owner_text("notifications.call_report.not_texted")
+TEXT_BACK_FAILED: LocalizedText = owner_text(
+    "notifications.call_report.text_back_failed"
 )
-RESULT_LINE: LocalizedText = localized(
-    en="Result: {outcome}",
-    ru="Итог: {outcome}",
-    ka="შედეგი: {outcome}",
+MINUTES_AND_SECONDS: LocalizedText = owner_text(
+    "notifications.call_report.minutes_and_seconds"
 )
-BOOKING_LINE: LocalizedText = localized(
-    en="Booking: {when}, guests: {party}",
-    ru="Бронь: {when}, гостей: {party}",
-    ka="ჯავშანი: {when}, სტუმრები: {party}",
-)
-UNVERIFIED_LINE: LocalizedText = localized(
-    en="Please check: the assistant mentioned {values}, which is not in your "
-    "business data.",
-    ru="Проверьте: помощник назвал {values}, а в данных бизнеса этого нет.",
-    ka="გადაამოწმეთ: ასისტენტმა ახსენა {values}, თქვენი ბიზნესის მონაცემებში კი "
-    "ეს არ არის.",
-)
-REASON_LINE: LocalizedText = localized(
-    en="Why: {reason}",
-    ru="Причина: {reason}",
-    ka="მიზეზი: {reason}",
-)
-TEXTED_BY_WHATSAPP: LocalizedText = localized(
-    en="We wrote to the caller on WhatsApp; their reply will come to your inbox.",
-    ru="Мы написали звонившему в WhatsApp — его ответ придёт во входящие.",
-    ka="დამრეკს WhatsApp-ში მივწერეთ — მისი პასუხი შემოსულებში მოვა.",
-)
-TEXTED_BY_SMS: LocalizedText = localized(
-    en="We sent the caller an SMS. Please call them back if you can.",
-    ru="Мы отправили звонившему SMS. Перезвоните, если можете.",
-    ka="დამრეკს SMS გავუგზავნეთ. თუ შეგიძლიათ, გადაურეკეთ.",
-)
-NOT_TEXTED: LocalizedText = localized(
-    en="We did not write to the caller ({why}). Please call them back if you can.",
-    ru="Звонившему мы не написали ({why}). Перезвоните, если можете.",
-    ka="დამრეკს არ მივწერეთ ({why}). თუ შეგიძლიათ, გადაურეკეთ.",
-)
-TEXT_BACK_FAILED: LocalizedText = localized(
-    en="the message could not be sent",
-    ru="сообщение не удалось отправить",
-    ka="შეტყობინება ვერ გაიგზავნა",
-)
-MINUTES_AND_SECONDS: LocalizedText = localized(
-    en="{minutes} min {seconds} s",
-    ru="{minutes} мин {seconds} с",
-    ka="{minutes} წთ {seconds} წმ",
-)
-SECONDS_ONLY: LocalizedText = localized(
-    en="{seconds} s",
-    ru="{seconds} с",
-    ka="{seconds} წმ",
-)
-BRIEF_DETAIL: LocalizedText = localized(
-    en="{outcome} · {duration}",
-    ru="{outcome} · {duration}",
-    ka="{outcome} · {duration}",
-)
+SECONDS_ONLY: LocalizedText = owner_text("notifications.call_report.seconds_only")
+BRIEF_DETAIL: LocalizedText = owner_text("notifications.call_report.brief_detail")
 CALL_OUTCOME_LABELS: Mapping[str, LocalizedText] = {
-    CallOutcome.BOOKING: localized(
-        en="booking made", ru="оформлена бронь", ka="ჯავშანი გაკეთდა"
+    CallOutcome.BOOKING: owner_text(
+        "notifications.call_report.call_outcome_labels.booking"
     ),
-    CallOutcome.LEAD: localized(
-        en="request taken", ru="принята заявка", ka="მოთხოვნა მიღებულია"
+    CallOutcome.LEAD: owner_text("notifications.call_report.call_outcome_labels.lead"),
+    CallOutcome.HANDOFF: owner_text(
+        "notifications.call_report.call_outcome_labels.handoff"
     ),
-    CallOutcome.HANDOFF: localized(
-        en="passed to a colleague",
-        ru="передан сотруднику",
-        ka="გადაეცა თანამშრომელს",
+    CallOutcome.UNANSWERED_QUESTION: owner_text(
+        "notifications.call_report.call_outcome_labels.unanswered_question"
     ),
-    CallOutcome.UNANSWERED_QUESTION: localized(
-        en="a question without an answer",
-        ru="вопрос без ответа",
-        ka="უპასუხო კითხვა",
+    CallOutcome.INFORMATION: owner_text(
+        "notifications.call_report.call_outcome_labels.information"
     ),
-    CallOutcome.INFORMATION: localized(
-        en="information given", ru="дана информация", ka="ინფორმაცია მიეწოდა"
-    ),
-    CallOutcome.ABANDONED: localized(
-        en="the call ended early", ru="звонок прервался", ka="ზარი ადრე შეწყდა"
+    CallOutcome.ABANDONED: owner_text(
+        "notifications.call_report.call_outcome_labels.abandoned"
     ),
 }
 MISSED_REASON_LABELS: Mapping[str, LocalizedText] = {
-    MissedCallReason.NO_ANSWER: localized(
-        en="no one answered", ru="никто не ответил", ka="არავინ უპასუხა"
+    MissedCallReason.NO_ANSWER: owner_text(
+        "notifications.call_report.missed_reason_labels.no_answer"
     ),
-    MissedCallReason.BUSY: localized(
-        en="the line was busy", ru="линия была занята", ka="ხაზი დაკავებული იყო"
+    MissedCallReason.BUSY: owner_text(
+        "notifications.call_report.missed_reason_labels.busy"
     ),
-    MissedCallReason.ABANDONED: localized(
-        en="hung up before the assistant answered",
-        ru="положил трубку до ответа помощника",
-        ka="ასისტენტის პასუხამდე გათიშა",
+    MissedCallReason.ABANDONED: owner_text(
+        "notifications.call_report.missed_reason_labels.abandoned"
     ),
-    MissedCallReason.LINE_FAILED: localized(
-        en="the call could not be put through",
-        ru="звонок не удалось соединить",
-        ka="ზარი ვერ დაკავშირდა",
+    MissedCallReason.LINE_FAILED: owner_text(
+        "notifications.call_report.missed_reason_labels.line_failed"
     ),
-    MissedCallReason.NOT_STARTED: localized(
-        en="the assistant could not take the call",
-        ru="помощник не смог принять звонок",
-        ka="ასისტენტმა ზარი ვერ მიიღო",
+    MissedCallReason.NOT_STARTED: owner_text(
+        "notifications.call_report.missed_reason_labels.not_started"
     ),
-    MissedCallReason.NO_SPEECH: localized(
-        en="hung up without saying anything",
-        ru="положил трубку, ничего не сказав",
-        ka="ისე გათიშა, რომ არაფერი უთქვამს",
+    MissedCallReason.NO_SPEECH: owner_text(
+        "notifications.call_report.missed_reason_labels.no_speech"
     ),
-    MissedCallReason.TRANSFER_UNANSWERED: localized(
-        en="asked for a person, and no one picked up",
-        ru="просил соединить с сотрудником, но никто не взял трубку",
-        ka="თანამშრომელთან დაკავშირება ითხოვა, მაგრამ არავინ უპასუხა",
+    MissedCallReason.TRANSFER_UNANSWERED: owner_text(
+        "notifications.call_report.missed_reason_labels.transfer_unanswered"
     ),
 }
 SKIP_REASON_LABELS: Mapping[str, LocalizedText] = {
-    TextBackSkipReason.TURNED_OFF: localized(
-        en="messages after missed calls are off",
-        ru="сообщения после пропущенных звонков выключены",
-        ka="გამოტოვებული ზარების შემდეგ შეტყობინებები გამორთულია",
+    TextBackSkipReason.TURNED_OFF: owner_text(
+        "notifications.call_report.skip_reason_labels.turned_off"
     ),
-    TextBackSkipReason.OPTED_OUT: localized(
-        en="they asked not to get messages",
-        ru="клиент просил не присылать сообщения",
-        ka="კლიენტმა შეტყობინებებზე უარი თქვა",
+    TextBackSkipReason.OPTED_OUT: owner_text(
+        "notifications.call_report.skip_reason_labels.opted_out"
     ),
-    TextBackSkipReason.ALREADY_TEXTED: localized(
-        en="they already got a message today",
-        ru="сегодня ему уже писали",
-        ka="დღეს მას უკვე მივწერეთ",
+    TextBackSkipReason.ALREADY_TEXTED: owner_text(
+        "notifications.call_report.skip_reason_labels.already_texted"
     ),
-    TextBackSkipReason.DAILY_LIMIT: localized(
-        en="today's limit of messages is reached",
-        ru="исчерпан дневной лимит сообщений",
-        ka="დღიური ლიმიტი ამოიწურა",
+    TextBackSkipReason.DAILY_LIMIT: owner_text(
+        "notifications.call_report.skip_reason_labels.daily_limit"
     ),
-    TextBackSkipReason.IN_CONVERSATION: localized(
-        en="they are already writing to you",
-        ru="он уже переписывается с вами",
-        ka="ის უკვე გწერთ",
+    TextBackSkipReason.IN_CONVERSATION: owner_text(
+        "notifications.call_report.skip_reason_labels.in_conversation"
     ),
-    TextBackSkipReason.NO_CHANNEL: localized(
-        en="no WhatsApp template or SMS is set up",
-        ru="не настроены шаблон WhatsApp и SMS",
-        ka="WhatsApp-ის შაბლონი და SMS არ არის მორგებული",
+    TextBackSkipReason.NO_CHANNEL: owner_text(
+        "notifications.call_report.skip_reason_labels.no_channel"
     ),
-    TextBackSkipReason.NOT_LIVE: localized(
-        en="the assistant is not live",
-        ru="помощник не запущен",
-        ka="ასისტენტი არ არის გაშვებული",
+    TextBackSkipReason.NOT_LIVE: owner_text(
+        "notifications.call_report.skip_reason_labels.not_live"
     ),
-    TextBackSkipReason.NO_CALLER_NUMBER: localized(
-        en="the number was hidden", ru="номер был скрыт", ka="ნომერი დამალული იყო"
+    TextBackSkipReason.NO_CALLER_NUMBER: owner_text(
+        "notifications.call_report.skip_reason_labels.no_caller_number"
     ),
-    TextBackSkipReason.TOO_LATE: localized(
-        en="the call was too long ago",
-        ru="звонок был слишком давно",
-        ka="ზარი დიდი ხნის წინ იყო",
+    TextBackSkipReason.TOO_LATE: owner_text(
+        "notifications.call_report.skip_reason_labels.too_late"
     ),
 }

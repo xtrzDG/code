@@ -9,36 +9,19 @@ from app.transformers.notifications.message_rendering import (
     LEAD_TYPE_LABELS,
     describe_date,
     describe_phone,
-    localized,
     render,
     resolve_label,
     text_or_missing,
 )
+from app.utilities.localization.owner_texts import owner_text
 from app.utilities.scheduling.localized_formatting import choose_template_language
 
-NEW_LEAD: LocalizedText = localized(
-    en="New request · {business}\nType: {lead_type}\n{details}\nName: {name}\n"
-    "Phone: {phone}\nChannel: {channel}",
-    ru="Новая заявка · {business}\nТип: {lead_type}\n{details}\nИмя: {name}\n"
-    "Телефон: {phone}\nКанал: {channel}",
-    ka="ახალი მოთხოვნა · {business}\nტიპი: {lead_type}\n{details}\n"
-    "სახელი: {name}\nტელეფონი: {phone}\nარხი: {channel}",
+NEW_LEAD: LocalizedText = owner_text("notifications.new_lead.new_lead")
+REQUESTED_DATE_LINE: LocalizedText = owner_text(
+    "notifications.new_lead.requested_date_line"
 )
-REQUESTED_DATE_LINE: LocalizedText = localized(
-    en="Date: {date}",
-    ru="Дата: {date}",
-    ka="თარიღი: {date}",
-)
-PARTY_SIZE_LINE: LocalizedText = localized(
-    en="Guests: {party}",
-    ru="Гостей: {party}",
-    ka="სტუმრები: {party}",
-)
-BUDGET_LINE: LocalizedText = localized(
-    en="Budget: {budget}",
-    ru="Бюджет: {budget}",
-    ka="ბიუჯეტი: {budget}",
-)
+PARTY_SIZE_LINE: LocalizedText = owner_text("notifications.new_lead.party_size_line")
+BUDGET_LINE: LocalizedText = owner_text("notifications.new_lead.budget_line")
 
 
 class NewLeadNotificationTransformer(

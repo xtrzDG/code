@@ -1,7 +1,6 @@
 from app.registries.niches.examples.care_examples import CLINIC_EXAMPLES
 from app.registries.niches.template_parts import (
     autotest_kinds,
-    choice,
     forbidden_rules,
     handoff_rules,
     prompt_rules,
@@ -22,6 +21,8 @@ from app.schemas.typings.profiles.constrained_strings import (
 )
 from app.schemas.typings.profiles.constrained_strings import QuestionKey
 
+NICHE: NicheKey = NicheKey.CLINIC
+
 
 def build_clinic_template() -> NicheTemplate:
     """
@@ -32,26 +33,14 @@ def build_clinic_template() -> NicheTemplate:
     """
 
     return NicheTemplate(
-        key=NicheKey.CLINIC,
+        key=NICHE,
         wave=LaunchWave.B,
-        names=text(
-            en="Dental and private clinics",
-            ru="Стоматологии и частные клиники",
-            ka="სტომატოლოგიები და კერძო კლინიკები",
-        ),
-        descriptions=text(
-            en="Appointments with a doctor, prices, visit preparation and the "
-            "address. Never gives medical advice; urgent cases go to a person at "
-            "once.",
-            ru="Запись к врачу, цены, подготовка к приёму, адрес. Медицинских "
-            "советов не даёт, срочное сразу передаёт человеку.",
-            ka="ჩაწერა ექიმთან, ფასები, ვიზიტისთვის მომზადება და მისამართი. "
-            "სამედიცინო რჩევას არ იძლევა, სასწრაფოს მაშინვე ადამიანს გადასცემს.",
-        ),
+        names=text(NICHE, "name"),
+        descriptions=text(NICHE, "description"),
         recommended_plans=[PlanKey.VOICE_AND_CHAT],
         resource_kind=ResourceKind.STAFF,
         booking_unit=BookingUnit.TIME_SLOT,
-        resource_nouns=text(en="doctor", ru="врач", ka="ექიმი"),
+        resource_nouns=text(NICHE, "resource_noun"),
         knowledge_kinds=[
             KnowledgeItemKind.SERVICE,
             KnowledgeItemKind.FAQ,
@@ -59,133 +48,41 @@ def build_clinic_template() -> NicheTemplate:
         ],
         questions=[
             question(
+                NICHE,
                 QuestionKey("specialties"),
                 Step.NICHE_AND_LANGUAGES,
                 Answer.MULTIPLE_CHOICE,
-                text(
-                    en="Which specialties do you cover?",
-                    ru="Какие направления есть в клинике?",
-                    ka="რა მიმართულებებია კლინიკაში?",
-                ),
                 is_required=True,
-                choices=[
-                    choice(
-                        Choice("dentistry"),
-                        "Dentistry",
-                        "Стоматология",
-                        "სტომატოლოგია",
-                    ),
-                    choice(
-                        Choice("general_practice"),
-                        "General practice",
-                        "Терапия",
-                        "თერაპია",
-                    ),
-                    choice(
-                        Choice("pediatrics"),
-                        "Pediatrics",
-                        "Педиатрия",
-                        "პედიატრია",
-                    ),
-                    choice(
-                        Choice("gynecology"),
-                        "Gynecology",
-                        "Гинекология",
-                        "გინეკოლოგია",
-                    ),
-                    choice(
-                        Choice("dermatology"),
-                        "Dermatology",
-                        "Дерматология",
-                        "დერმატოლოგია",
-                    ),
-                    choice(
-                        Choice("ophthalmology"),
-                        "Ophthalmology",
-                        "Офтальмология",
-                        "ოფთალმოლოგია",
-                    ),
-                    choice(
-                        Choice("diagnostics"),
-                        "Diagnostics and tests",
-                        "Диагностика и анализы",
-                        "დიაგნოსტიკა და ანალიზები",
-                    ),
-                    choice(Choice("other"), "Other", "Другое", "სხვა"),
-                ],
-            ),
-            question(
-                QuestionKey("doctors"),
-                Step.OFFER,
-                Answer.LONG_TEXT,
-                text(
-                    en="Doctors and their specialties",
-                    ru="Врачи и их специализации",
-                    ka="ექიმები და მათი სპეციალიზაციები",
-                ),
-                hints=text(
-                    en="Doctors are added in What customers book; describe here "
-                    "who treats what.",
-                    ru="Врачей добавляют в разделе «Что бронируют клиенты»; здесь "
-                    "опишите, кто что лечит.",
-                    ka="ექიმებს ამატებთ გვერდზე „რას ჯავშნიან კლიენტები“; აქ "
-                    "აღწერეთ, ვინ რას მკურნალობს.",
+                choices=(
+                    Choice("dentistry"),
+                    Choice("general_practice"),
+                    Choice("pediatrics"),
+                    Choice("gynecology"),
+                    Choice("dermatology"),
+                    Choice("ophthalmology"),
+                    Choice("diagnostics"),
+                    Choice("other"),
                 ),
             ),
+            question(NICHE, QuestionKey("doctors"), Step.OFFER, Answer.LONG_TEXT),
             question(
-                QuestionKey("children_accepted"),
-                Step.OFFER,
-                Answer.YES_NO,
-                text(
-                    en="Do you treat children?",
-                    ru="Принимаете ли вы детей?",
-                    ka="იღებთ ბავშვებს?",
-                ),
+                NICHE, QuestionKey("children_accepted"), Step.OFFER, Answer.YES_NO
             ),
             question(
-                QuestionKey("insurance"),
-                Step.FAQ_AND_HANDOFF,
-                Answer.SHORT_TEXT,
-                text(
-                    en="Which insurance do you accept?",
-                    ru="Какие страховки вы принимаете?",
-                    ka="რომელ დაზღვევას იღებთ?",
-                ),
+                NICHE, QuestionKey("insurance"), Step.FAQ_AND_HANDOFF, Answer.SHORT_TEXT
             ),
             question(
+                NICHE,
                 QuestionKey("visit_preparation"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.LONG_TEXT,
-                text(
-                    en="How should patients prepare for a visit?",
-                    ru="Как пациенту подготовиться к приёму?",
-                    ka="როგორ მოემზადოს პაციენტი ვიზიტისთვის?",
-                ),
-                hints=text(
-                    en="For example: documents to bring, fasting before tests.",
-                    ru="Например: какие документы взять, натощак ли сдавать анализы.",
-                    ka="მაგალითად: რა დოკუმენტები წამოიღონ, ანალიზები უზმოზე "
-                    "ჩააბარონ თუ არა.",
-                ),
             ),
             question(
+                NICHE,
                 QuestionKey("emergency_message"),
                 Step.FAQ_AND_HANDOFF,
                 Answer.LONG_TEXT,
-                text(
-                    en="What should the assistant tell a patient in an emergency?",
-                    ru="Что помощник говорит пациенту в экстренном случае?",
-                    ka="რა უთხრას ასისტენტმა პაციენტს საგანგებო შემთხვევაში?",
-                ),
                 is_required=True,
-                hints=text(
-                    en="The assistant always adds the local emergency number and "
-                    "passes the conversation to staff.",
-                    ru="Помощник всегда добавляет местный номер экстренной службы "
-                    "и передаёт разговор сотруднику.",
-                    ka="ასისტენტი ყოველთვის ამატებს ადგილობრივი გადაუდებელი "
-                    "სამსახურის ნომერს და საუბარს თანამშრომელს გადასცემს.",
-                ),
             ),
         ],
         prompt_rules=prompt_rules(
@@ -200,41 +97,8 @@ def build_clinic_template() -> NicheTemplate:
             "Share preparation instructions only as written in the profile.",
         ),
         example_exchanges=CLINIC_EXAMPLES,
-        default_handoff_rules=handoff_rules(
-            en=[
-                "Urgent symptoms or an emergency",
-                "Question about a diagnosis, treatment, medication or test results",
-                "Complaint",
-                "Request for medical documents",
-            ],
-            ru=[
-                "Срочные симптомы или экстренная ситуация",
-                "Вопрос о диагнозе, лечении, лекарствах или результатах анализов",
-                "Жалоба",
-                "Запрос медицинских документов",
-            ],
-            ka=[
-                "სასწრაფო სიმპტომები ან საგანგებო ვითარება",
-                "კითხვა დიაგნოზზე, მკურნალობაზე, მედიკამენტებზე ან ანალიზების "
-                "შედეგებზე",
-                "საჩივარი",
-                "სამედიცინო დოკუმენტების მოთხოვნა",
-            ],
-        ),
-        default_forbidden_rules=forbidden_rules(
-            en=[
-                "Medical advice, diagnoses or medication recommendations",
-                "Asking about health details beyond what a booking needs",
-            ],
-            ru=[
-                "Медицинские советы, диагнозы и рекомендации лекарств",
-                "Расспросы о здоровье сверх нужного для записи",
-            ],
-            ka=[
-                "სამედიცინო რჩევები, დიაგნოზები და მედიკამენტების რეკომენდაციები",
-                "ჯანმრთელობის შესახებ კითხვები იმაზე მეტად, რაც ჩაწერისთვისაა საჭირო",
-            ],
-        ),
+        default_handoff_rules=handoff_rules(NICHE),
+        default_forbidden_rules=forbidden_rules(NICHE),
         autotest_kinds=autotest_kinds(AutotestScenarioKind.EMERGENCY),
         booking_variants=[BookingScenarioVariant.SPECIFIC_PERFORMER],
         integrations=[IntegrationName("Google Calendar")],

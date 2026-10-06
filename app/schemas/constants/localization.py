@@ -15,6 +15,23 @@ class CallForwardingCondition(StrEnum):
     CANCEL_ALL = "cancel_all"
 
 
+class CabinetLanguage(StrEnum):
+    """
+    The languages the owner cabinet is translated into, in the order of the
+    cabinet's language list (`web/src/i18n/config.ts`). Every owner-facing
+    catalog text exists in each of them; English is the only fallback.
+    """
+
+    GEORGIAN = "ka"
+    RUSSIAN = "ru"
+    ENGLISH = "en"
+    HEBREW = "he"
+    GERMAN = "de"
+
+
+CABINET_LANGUAGES: tuple[CabinetLanguage, ...] = tuple(CabinetLanguage)
+
+
 class CountryOnboardingStatus(StrEnum):
     """Whether businesses from a country may create an assistant."""
 
@@ -86,3 +103,14 @@ class TextDirection(StrEnum):
 
     LEFT_TO_RIGHT = "ltr"
     RIGHT_TO_LEFT = "rtl"
+
+
+class TextReviewStatus(StrEnum):
+    """
+    Whether a translation of the owner text catalog was checked by a native
+    speaker (REVIEWED) or is a draft that still waits for that check
+    (NEEDS_REVIEW, shown to owners all the same, English being worse).
+    """
+
+    REVIEWED = "reviewed"
+    NEEDS_REVIEW = "needs_review"

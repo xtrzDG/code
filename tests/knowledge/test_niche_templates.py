@@ -4,10 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
-from app.registries.niches.template_parts import (
-    BASE_AUTOTEST_KINDS,
-    COMMON_FORBIDDEN_RULES_EN,
-)
+from app.registries.niches.template_parts import BASE_AUTOTEST_KINDS
 from app.schemas.constants.assistants import AutotestScenarioKind
 from app.schemas.constants.bookings import BookingUnit
 from app.schemas.constants.knowledge import KnowledgeItemKind
@@ -21,6 +18,7 @@ from app.schemas.dto.localization import LocalizedText
 from app.schemas.dto.niches import NicheTemplate
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.knowledge.localized_texts import split_rule_lines
+from app.utilities.localization.owner_texts import owner_rule_lines
 
 ENGLISH: LanguageTag = LanguageTag("en")
 REGISTRY: NicheTemplateRegistry = NicheTemplateRegistry()
@@ -150,9 +148,11 @@ def test_platform_rules_and_autotests_are_shared_by_every_niche(
     assert 2 <= len(rule_texts) <= 6
     assert all(NON_LATIN_LETTER.search(rule) is None for rule in rule_texts)
     assert not any("AI assistant" in rule for rule in rule_texts)
-    assert forbidden_en[: len(COMMON_FORBIDDEN_RULES_EN)] == list(
-        COMMON_FORBIDDEN_RULES_EN
+    common_en: list[str] = split_rule_lines(
+        owner_rule_lines("niches.common.forbidden_rules").values[ENGLISH]
     )
+    assert len(common_en) == 2
+    assert forbidden_en[: len(common_en)] == common_en
     assert template.autotest_kinds[: len(BASE_AUTOTEST_KINDS)] == list(
         BASE_AUTOTEST_KINDS
     )
