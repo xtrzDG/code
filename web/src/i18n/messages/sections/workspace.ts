@@ -62,6 +62,9 @@ import { customerMemoryRu } from "./workspace/customerMemory.ru";
 import { dataExportsEn } from "./workspace/dataExports.en";
 import { dataExportsKa } from "./workspace/dataExports.ka";
 import { dataExportsRu } from "./workspace/dataExports.ru";
+import { formFieldsEn } from "./workspace/formFields.en";
+import { formFieldsKa } from "./workspace/formFields.ka";
+import { formFieldsRu } from "./workspace/formFields.ru";
 import { workspaceCommonEn } from "./workspace/common.en";
 import { workspaceCommonKa } from "./workspace/common.ka";
 import { workspaceCommonRu } from "./workspace/common.ru";
@@ -128,6 +131,7 @@ export const workspaceEn = {
   privacyRetention: privacyRetentionEn,
   widgetSites: widgetSitesEn,
   adminSpend: adminSpendEn,
+  formFields: formFieldsEn,
 } as const;
 
 export const workspaceRu: Translation<typeof workspaceEn> = {
@@ -159,6 +163,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   privacyRetention: privacyRetentionRu,
   widgetSites: widgetSitesRu,
   adminSpend: adminSpendRu,
+  formFields: formFieldsRu,
 };
 
 export const workspaceKa: Translation<typeof workspaceEn> = {
@@ -190,4 +195,5 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   privacyRetention: privacyRetentionKa,
   widgetSites: widgetSitesKa,
   adminSpend: adminSpendKa,
+  formFields: formFieldsKa,
 };
