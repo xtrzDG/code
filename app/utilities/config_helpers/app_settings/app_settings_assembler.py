@@ -97,6 +97,9 @@ from app.utilities.config_helpers.app_settings.spend_guard_settings_section impo
 from app.utilities.config_helpers.app_settings.support_settings_section import (
     read_support_settings,
 )
+from app.utilities.config_helpers.app_settings.telemetry_settings_section import (
+    read_telemetry_settings,
+)
 from app.utilities.config_helpers.app_settings.voice_settings_section import (
     read_voice_settings,
 )
@@ -172,4 +175,5 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_public_site_settings(environment_variables),
         **read_spend_guard_settings(environment_variables),
         **read_growth_settings(environment_variables),
+        **read_telemetry_settings(environment_variables),
     )
