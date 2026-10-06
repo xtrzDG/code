@@ -7,9 +7,6 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
-from app.containers.adapters.referral_collections_container import (
-    ReferralCollectionsContainer,
-)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -33,6 +30,9 @@ from app.containers.adapters.privacy_collections_container import (
 )
 from app.containers.adapters.rate_collections_container import (
     RateCollectionsContainer,
+)
+from app.containers.adapters.referral_collections_container import (
+    ReferralCollectionsContainer,
 )
 from app.containers.adapters.security_collections_container import (
     SecurityCollectionsContainer,

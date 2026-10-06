@@ -38,9 +38,9 @@ class CommissionEntryRepository(CommissionEntryRepoContract):
     def __init__(
         self, collection: DocumentCollectionAdapterContract[CommissionEntryDocument]
     ) -> None:
-        self._collection: DocumentCollectionAdapterContract[
-            CommissionEntryDocument
-        ] = collection
+        self._collection: DocumentCollectionAdapterContract[CommissionEntryDocument] = (
+            collection
+        )
 
     def record(self, entry: CommissionEntryDocument) -> bool:
         return bool(self._collection.insert_if_absent(str(entry.id), entry))

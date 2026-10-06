@@ -30,6 +30,7 @@ from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
+from app.containers.use_cases.referral_use_cases import ReferralUseCasesContainer
 from app.containers.use_cases.security_use_cases import SecurityUseCasesContainer
 from app.containers.use_cases.setup_use_cases import SetupUseCasesContainer
 from app.containers.use_cases.sharing_use_cases import SharingUseCasesContainer
@@ -98,21 +99,19 @@ class UseCasesContainer(CoreUseCasesContainer):
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     launch: LaunchUseCasesContainer = Container(  # type: ignore[assignment]
-        LaunchUseCasesContainer,
-        facilitators=CoreUseCasesContainer.facilitators,
+        LaunchUseCasesContainer, facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
-    )
+    )  # fmt: skip
     pending_changes: PendingChangeUseCasesContainer = Container(  # type: ignore[assignment]
-        PendingChangeUseCasesContainer,
-        registries=CoreUseCasesContainer.registries,
+        PendingChangeUseCasesContainer, registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         transformers=CoreUseCasesContainer.transformers,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
-    )
+    )  # fmt: skip
     assistants: AssistantUseCasesContainer = Container(  # type: ignore[assignment]
         AssistantUseCasesContainer,
         adapters=CoreUseCasesContainer.adapters,
@@ -129,15 +128,13 @@ class UseCasesContainer(CoreUseCasesContainer):
         pending_change_use_cases=pending_changes,
     )
     apply: ApplyUseCasesContainer = Container(  # type: ignore[assignment]
-        ApplyUseCasesContainer,
-        facilitators=CoreUseCasesContainer.facilitators,
+        ApplyUseCasesContainer, facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
-        assistant_use_cases=assistants,
-        pending_change_use_cases=pending_changes,
-    )
+        assistant_use_cases=assistants, pending_change_use_cases=pending_changes,
+    )  # fmt: skip
     setup: SetupUseCasesContainer = Container(  # type: ignore[assignment]
         SetupUseCasesContainer,
         facilitators=CoreUseCasesContainer.facilitators,
@@ -152,16 +149,13 @@ class UseCasesContainer(CoreUseCasesContainer):
         launch_use_cases=launch,
     )
     guide: GuideUseCasesContainer = Container(  # type: ignore[assignment]
-        GuideUseCasesContainer,
-        facilitators=CoreUseCasesContainer.facilitators,
+        GuideUseCasesContainer, facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
-        account_use_cases=CoreUseCasesContainer.accounts,
-        setup_use_cases=setup,
-    )
+        account_use_cases=CoreUseCasesContainer.accounts, setup_use_cases=setup,
+    )  # fmt: skip
     autotests: AutotestUseCasesContainer = Container(  # type: ignore[assignment]
-        AutotestUseCasesContainer,
-        config=CoreUseCasesContainer.config,
+        AutotestUseCasesContainer, config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
@@ -169,7 +163,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         transformers=CoreUseCasesContainer.transformers,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
-    )
+    )  # fmt: skip
     channels: ChannelUseCasesContainer = Container(  # type: ignore[assignment]
         ChannelUseCasesContainer,
         facilitators=CoreUseCasesContainer.facilitators,
@@ -184,13 +178,12 @@ class UseCasesContainer(CoreUseCasesContainer):
         voice_use_cases=voice,
     )
     deliveries: DeliveryUseCasesContainer = Container(  # type: ignore[assignment]
-        DeliveryUseCasesContainer,
-        adapters=CoreUseCasesContainer.adapters,
+        DeliveryUseCasesContainer, adapters=CoreUseCasesContainer.adapters,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
-    )
+    )  # fmt: skip
     notifications: NotificationUseCasesContainer = Container(  # type: ignore[assignment]
         NotificationUseCasesContainer,
         clients=CoreUseCasesContainer.clients,
@@ -293,6 +286,14 @@ class UseCasesContainer(CoreUseCasesContainer):
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
+    )  # fmt: skip
+    referrals: ReferralUseCasesContainer = Container(  # type: ignore[assignment]
+        ReferralUseCasesContainer, config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators, platform_use_cases=platform,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
     )  # fmt: skip
 
     # --- Template example (keeps its concrete type).

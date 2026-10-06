@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.referrals import ReferralLinksFacilitatorContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -10,6 +11,7 @@ from app.contracts.repositories.sharing_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.referrals import TABLE_CARD_SOURCE_TAG
 from app.schemas.constants.sharing import PublicSlugRefusalCode
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
@@ -54,7 +56,9 @@ class SetPublicSlugUseCase(UseCaseContract[PublicSlugCommand, ShareLinksView]):
         public_slug_claim_repo: PublicSlugClaimRepoContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        referral_links: ReferralLinksFacilitatorContract,
     ) -> None:
+        self._referral_links: ReferralLinksFacilitatorContract = referral_links
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -91,6 +95,7 @@ class SetPublicSlugUseCase(UseCaseContract[PublicSlugCommand, ShareLinksView]):
             business,
             slug,
             None,
+            self._referral_links.powered_by_link(business, TABLE_CARD_SOURCE_TAG),
         )
 
     def _take(self, business: BusinessDocument, slug: BusinessPublicSlug) -> None:

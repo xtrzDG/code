@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.referrals import ReferralLinksFacilitatorContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
     BusinessRepoContract,
@@ -10,6 +11,7 @@ from app.contracts.repositories.sharing_repositories import (
 )
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
+from app.schemas.constants.referrals import TABLE_CARD_SOURCE_TAG
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.sharing import ShareLinksQuery, ShareLinksView
@@ -42,7 +44,9 @@ class GetShareLinksUseCase(UseCaseContract[ShareLinksQuery, ShareLinksView]):
         public_slug_claim_repo: PublicSlugClaimRepoContract,
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
+        referral_links: ReferralLinksFacilitatorContract,
     ) -> None:
+        self._referral_links: ReferralLinksFacilitatorContract = referral_links
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
@@ -75,4 +79,5 @@ class GetShareLinksUseCase(UseCaseContract[ShareLinksQuery, ShareLinksView]):
             business,
             slug,
             input_data.source,
+            self._referral_links.powered_by_link(business, TABLE_CARD_SOURCE_TAG),
         )

@@ -8,6 +8,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.dto.sharing import ShareLinksView
+from app.schemas.typings.referrals.constrained_strings import ReferralLink
 from app.schemas.typings.sharing.constrained_strings import (
     BusinessPublicSlug,
     HostedChatUrl,
@@ -24,8 +25,12 @@ def build_share_links_view(
     business: BusinessDocument,
     slug: BusinessPublicSlug,
     source: ShareSourceTag | None,
+    powered_by_url: ReferralLink | None = None,
 ) -> ShareLinksView:
-    """The hosted page's address and every channel's link, tagged."""
+    """
+    The hosted page's address and every channel's link, tagged, and the
+    "Powered by" link of the printed table card.
+    """
 
     profile: BusinessProfileDocument | None = business_profile_repo.get_by_business(
         business.id
@@ -47,4 +52,5 @@ def build_share_links_view(
             source,
             business.default_language,
         ),
+        powered_by_url=powered_by_url,
     )

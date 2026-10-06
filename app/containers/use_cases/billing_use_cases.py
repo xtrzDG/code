@@ -31,10 +31,7 @@ from app.schemas.dto.billing_ledger import (
     ClientCostReport,
     DueInvoicesRequest,
 )
-from app.schemas.dto.jobs import (
-    JobReport,
-    JobTick,
-)
+from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.payments import (
     PaymentWebhookDelivery,
     PaymentWebhookReceipt,
@@ -214,6 +211,7 @@ class BillingUseCasesContainer(containers.DeclarativeContainer):
         billing_notice_transformer=transformers.billing_notice_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
         product_events=facilitators.product_events,
+        referral_earnings=facilitators.referral_earnings,
     )
     end_trials_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
         EndTrialsUseCase,

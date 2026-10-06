@@ -143,6 +143,20 @@ def settle_order_invoices(
     return changed_count
 
 
+def paid_order_invoices(
+    invoice_repo: InvoiceRepoContract, payment_order: PaymentOrderDocument
+) -> list[InvoiceDocument]:
+    """The checkout's invoices that are paid now (what its payment settled)."""
+
+    return [
+        invoice
+        for invoice_id in payment_order.invoice_ids
+        if (invoice := invoice_repo.get(payment_order.business_id, invoice_id))
+        is not None
+        and invoice.status is InvoiceStatus.PAID
+    ]
+
+
 def void_open_invoice(
     invoice_repo: InvoiceRepoContract,
     invoice: InvoiceDocument,

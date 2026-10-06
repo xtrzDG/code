@@ -37,6 +37,7 @@ from app.containers.operators.privacy_operators import PrivacyOperatorsContainer
 from app.containers.operators.public_demo_operators import (
     PublicDemoOperatorsContainer,
 )
+from app.containers.operators.referral_operators import ReferralOperatorsContainer
 from app.containers.operators.security_operators import SecurityOperatorsContainer
 from app.containers.operators.setup_operators import SetupOperatorsContainer
 from app.containers.operators.sharing_operators import SharingOperatorsContainer
@@ -198,5 +199,10 @@ class OperatorsContainer(containers.DeclarativeContainer):
     value: ValueOperatorsContainer = Container(  # type: ignore[assignment]
         ValueOperatorsContainer,
         value_pipelines=pipelines.value,
+        utilities=utilities,
+    )
+    referrals: ReferralOperatorsContainer = Container(  # type: ignore[assignment]
+        ReferralOperatorsContainer,
+        referral_pipelines=pipelines.referrals,
         utilities=utilities,
     )

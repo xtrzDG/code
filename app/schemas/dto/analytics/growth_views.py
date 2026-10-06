@@ -18,6 +18,7 @@ from app.schemas.typings.analytics.constrained_integers import (
 from app.schemas.typings.analytics.constrained_strings import (
     AcquisitionSourceKey,
     CohortMonth,
+    ReferralCode,
 )
 from app.schemas.typings.client_health.constrained_integers import ClientCount
 
@@ -87,9 +88,15 @@ class CohortRowView(ImmutableDTO):
 
 
 class SourceRowView(ImmutableDTO):
-    """Owners from one acquisition source: sign-ups, live and paying today."""
+    """
+    Owners from one acquisition source: sign-ups, live and paying today. A
+    source whose links carried referral codes has a row per code
+    (`referral_code`: a partner's or an inviting business's), so the
+    founder sees which partner or invitation brought whom.
+    """
 
     source: AcquisitionSourceKey
+    referral_code: ReferralCode | None = None
     sign_ups: OwnerCount
     went_live: OwnerCount
     paying: OwnerCount

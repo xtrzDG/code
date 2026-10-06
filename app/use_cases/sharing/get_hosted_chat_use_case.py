@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.referrals import ReferralLinksFacilitatorContract
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
@@ -14,6 +15,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.referrals import POWERED_BY_SOURCE_TAG
 from app.schemas.domain.business_privacy_settings import (
     BusinessPrivacySettingsDocument,
 )
@@ -46,7 +48,8 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
     the API live (APP_BASE_URL) and the privacy notice, with the retention
     periods the business chose in Settings → Privacy. For a "link in bio"
     page it adds the business's hours, address with a map link and whether
-    it takes bookings (and its own booking page, if any). The widget loads
+    it takes bookings (and its own booking page, if any), and the "Powered
+    by" link with the business's referral code. The widget loads
     the rest itself, with its usual limits. Nothing personal or secret is
     returned; an unknown business is not found.
 
@@ -65,7 +68,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
         app_settings: AppSettings,
         wall_clock: WallClock[Microseconds],
         privacy_settings_repo: BusinessPrivacySettingsRepoContract,
+        referral_links: ReferralLinksFacilitatorContract,
     ) -> None:
+        self._referral_links: ReferralLinksFacilitatorContract = referral_links
         self._privacy_settings_repo: BusinessPrivacySettingsRepoContract = (
             privacy_settings_repo
         )
@@ -143,6 +148,9 @@ class GetHostedChatUseCase(UseCaseContract[BusinessId, HostedChatView]):
                 None
                 if profile is None
                 else find_profile_link(profile, BusinessLinkKind.BOOKING_PAGE)
+            ),
+            powered_by_url=self._referral_links.powered_by_link(
+                business, POWERED_BY_SOURCE_TAG
             ),
         )
 

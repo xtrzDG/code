@@ -149,6 +149,7 @@ class AdminActionUseCasesContainer(containers.DeclarativeContainer):
         business_repo=repositories.business_repo,
         product_events=facilitators.product_events,
         wall_clock=wall_clock,
+        referral_earnings=facilitators.referral_earnings,
     )
     override_plan_use_case: Factory[
         UseCaseContract[OverridePlanCommand, AdminActionReceipt]

@@ -107,7 +107,9 @@ class BusinessRepository(BusinessRepoContract):
         return self._collection.get(str(business_id))
 
     def get_many(self, business_ids: list[BusinessId]) -> list[BusinessDocument]:
-        return self._collection.get_many([str(business_id) for business_id in business_ids])
+        return self._collection.get_many(
+            [str(business_id) for business_id in business_ids]
+        )
 
     def list_by_member(self, user_id: UserId) -> list[BusinessDocument]:
         return self._collection.list_by_fields(

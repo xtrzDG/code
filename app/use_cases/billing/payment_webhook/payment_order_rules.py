@@ -1,5 +1,6 @@
 """What a payment notification may do to its payment order."""
 
+from app.contracts.billing import PaymentGatewayAdapterContract
 from app.schemas.constants.billing import SubscriptionStatus
 from app.schemas.constants.payments import PaymentStatus
 from app.schemas.domain.billing import SubscriptionDocument
@@ -76,3 +77,12 @@ def build_order_reference(
     """Provider reference of the automatic charges a checkout started."""
 
     return PaymentProviderReference(str(payment_order.id))
+
+
+def stop_stray_schedule(
+    payment_gateway: PaymentGatewayAdapterContract,
+    payment_order: PaymentOrderDocument,
+) -> None:
+    """Stop the automatic charges of a schedule nothing books any more."""
+
+    payment_gateway.stop_recurring(build_order_reference(payment_order))

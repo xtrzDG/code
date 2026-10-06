@@ -14,6 +14,7 @@ from app.schemas.typings.analytics.constrained_integers import OwnerCount
 from app.schemas.typings.analytics.constrained_strings import (
     AcquisitionSourceKey,
     CohortMonth,
+    ReferralCode,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.utilities.analytics.mrr_math import paying_businesses_at
@@ -97,30 +98,40 @@ def build_cohorts(
     return rows
 
 
+# An acquisition source and the referral code of its link, if any.
+type SourceKey = tuple[AcquisitionSourceKey, ReferralCode | None]
+
+
 def build_sources(
     journeys: Sequence[OwnerJourney],
     paying_now: set[BusinessId],
 ) -> list[SourceRowView]:
-    """Per acquisition source: sign-ups, owners live and paying today."""
+    """
+    Per acquisition source and referral code: sign-ups, owners live and
+    paying today; the most sign-ups first.
+    """
 
-    sign_ups: Counter[AcquisitionSourceKey] = Counter()
-    live: Counter[AcquisitionSourceKey] = Counter()
-    paying: Counter[AcquisitionSourceKey] = Counter()
+    sign_ups: Counter[SourceKey] = Counter()
+    live: Counter[SourceKey] = Counter()
+    paying: Counter[SourceKey] = Counter()
     for journey in journeys:
-        sign_ups[journey.source] += 1
+        key: SourceKey = (journey.source, journey.referral_code)
+        sign_ups[key] += 1
         if journey.reached([ProductEventName.WENT_LIVE]) is not None:
-            live[journey.source] += 1
+            live[key] += 1
         if owns_paying_business(journey, paying_now):
-            paying[journey.source] += 1
+            paying[key] += 1
 
     return [
         SourceRowView(
-            source=source,
+            source=key[0],
+            referral_code=key[1],
             sign_ups=OwnerCount(count),
-            went_live=OwnerCount(live[source]),
-            paying=OwnerCount(paying[source]),
+            went_live=OwnerCount(live[key]),
+            paying=OwnerCount(paying[key]),
         )
-        for source, count in sorted(
-            sign_ups.items(), key=lambda item: (-item[1], str(item[0]))
+        for key, count in sorted(
+            sign_ups.items(),
+            key=lambda item: (-item[1], str(item[0][0]), str(item[0][1] or "")),
         )
     ]

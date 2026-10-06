@@ -36,7 +36,9 @@ class PartnerRepository(PartnerRepoContract):
         return self._collection.get(str(partner_id))
 
     def get_many(self, partner_ids: list[PartnerId]) -> list[PartnerDocument]:
-        return self._collection.get_many([str(partner_id) for partner_id in partner_ids])
+        return self._collection.get_many(
+            [str(partner_id) for partner_id in partner_ids]
+        )
 
     def find_by_phone_number(
         self, phone_number: E164PhoneNumber
