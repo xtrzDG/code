@@ -22,6 +22,9 @@ import { adminActionsRu } from "./workspace/adminActions.ru";
 import { adminStoryEn } from "./workspace/adminStory.en";
 import { adminStoryKa } from "./workspace/adminStory.ka";
 import { adminStoryRu } from "./workspace/adminStory.ru";
+import { adminChurnEn } from "./workspace/adminChurn.en";
+import { adminChurnKa } from "./workspace/adminChurn.ka";
+import { adminChurnRu } from "./workspace/adminChurn.ru";
 import { adminMetricsEn } from "./workspace/adminMetrics.en";
 import { adminMetricsKa } from "./workspace/adminMetrics.ka";
 import { adminMetricsRu } from "./workspace/adminMetrics.ru";
@@ -47,6 +50,9 @@ import { adminTeamRu } from "./workspace/adminTeam.ru";
 import { billingEn } from "./workspace/billing.en";
 import { billingKa } from "./workspace/billing.ka";
 import { billingRu } from "./workspace/billing.ru";
+import { billingLifecycleEn } from "./workspace/billingLifecycle.en";
+import { billingLifecycleKa } from "./workspace/billingLifecycle.ka";
+import { billingLifecycleRu } from "./workspace/billingLifecycle.ru";
 import { callSettingsEn } from "./workspace/callSettings.en";
 import { callSettingsKa } from "./workspace/callSettings.ka";
 import { callSettingsRu } from "./workspace/callSettings.ru";
@@ -112,6 +118,7 @@ export const workspaceEn = {
   channelSetup: channelSetupEn,
   loginOptions: loginOptionsEn,
   billing: billingEn,
+  billingLifecycle: billingLifecycleEn,
   settings: { ...settingsEn, ...settingsRecordsEn },
   notifications: notificationsEn,
   callSettings: callSettingsEn,
@@ -121,6 +128,7 @@ export const workspaceEn = {
   adminSecurity: adminSecurityEn,
   adminActions: adminActionsEn,
   adminMetrics: adminMetricsEn,
+  adminChurn: adminChurnEn,
   adminStory: adminStoryEn,
   adminReplySpeed: adminReplySpeedEn,
   adminReplyGuard: adminReplyGuardEn,
@@ -145,6 +153,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   channelSetup: channelSetupRu,
   loginOptions: loginOptionsRu,
   billing: billingRu,
+  billingLifecycle: billingLifecycleRu,
   settings: { ...settingsRu, ...settingsRecordsRu },
   notifications: notificationsRu,
   callSettings: callSettingsRu,
@@ -154,6 +163,7 @@ export const workspaceRu: Translation<typeof workspaceEn> = {
   adminSecurity: adminSecurityRu,
   adminActions: adminActionsRu,
   adminMetrics: adminMetricsRu,
+  adminChurn: adminChurnRu,
   adminStory: adminStoryRu,
   adminReplySpeed: adminReplySpeedRu,
   adminReplyGuard: adminReplyGuardRu,
@@ -178,6 +188,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   channelSetup: channelSetupKa,
   loginOptions: loginOptionsKa,
   billing: billingKa,
+  billingLifecycle: billingLifecycleKa,
   settings: { ...settingsKa, ...settingsRecordsKa },
   notifications: notificationsKa,
   callSettings: callSettingsKa,
@@ -187,6 +198,7 @@ export const workspaceKa: Translation<typeof workspaceEn> = {
   adminSecurity: adminSecurityKa,
   adminActions: adminActionsKa,
   adminMetrics: adminMetricsKa,
+  adminChurn: adminChurnKa,
   adminStory: adminStoryKa,
   adminReplySpeed: adminReplySpeedKa,
   adminReplyGuard: adminReplyGuardKa,

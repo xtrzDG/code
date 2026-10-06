@@ -211,6 +211,8 @@ export const queryKeys = {
     overview: (businessId: Id, locale: Locale) => ["billing", businessId, "overview", locale] as const,
     /** The billing details invoices name the business with. */
     profile: (businessId: Id) => ["billing", businessId, "profile"] as const,
+    /** The cancel dialog's offers and the seasonal pause card. */
+    lifecycle: (businessId: Id, locale: Locale) => ["billing", businessId, "lifecycle", locale] as const,
   },
 
   settings: {

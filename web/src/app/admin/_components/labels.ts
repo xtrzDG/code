@@ -47,6 +47,7 @@ export const SUBSCRIPTION_LABELS: Record<Schema<"SubscriptionStatus">, MessageKe
   active: "billing.status.active",
   past_due: "billing.status.past_due",
   cancelled: "billing.status.cancelled",
+  paused: "billing.status.paused",
 };
 
 export const BUSINESS_STATUS_LABELS: Record<Schema<"BusinessStatus">, MessageKey> = {

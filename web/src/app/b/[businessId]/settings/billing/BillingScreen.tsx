@@ -19,6 +19,7 @@ import { BillingDialogs } from "./_components/BillingDialogs";
 import { BillingNotices } from "./_components/BillingNotices";
 import { BillingSkeleton } from "./_components/BillingSkeleton";
 import { InvoicesCard } from "./_components/InvoicesCard";
+import { PauseCard } from "./_components/PauseCard";
 import { PlansSection } from "./_components/PlansSection";
 import { SetupOptionsNote } from "./_components/SetupOptionsNote";
 import { SubscriptionCard } from "./_components/SubscriptionCard";
@@ -30,13 +31,14 @@ import {
   type BillingPeriod,
 } from "./_lib/billing";
 import { useBillingActions } from "./_lib/useBillingActions";
+import { useSubscriptionLifecycle } from "./_lib/useSubscriptionLifecycle";
 
 /** How often the page asks for the payment's confirmation after checkout. */
 const CHECKOUT_RETURN_POLL_MS = 5_000;
 
 function skipReload(): void {}
 
-/** /billing: subscription, package usage, plans, invoices with their PDFs, billing details, payment (owner only). */
+/** /billing: subscription, package usage, seasonal pause, plans, invoices with their PDFs, billing details, payment, cancelling with a reason (owner only). */
 export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -57,6 +59,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
   });
 
   const actions = useBillingActions(overview);
+  const lifecycle = useSubscriptionLifecycle(overview);
   const { isPaying, onPay, openCancel, openChoice } = actions;
 
   const data = overview.data;
@@ -124,6 +127,8 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
             <UsageCard usage={data.usage} />
           </div>
 
+          <PauseCard overview={data} actions={lifecycle} canManage={isOwner} />
+
           <PlansSection
             quotes={plans.data?.quotes}
             exchangeRate={plans.data?.exchange_rate}
@@ -144,7 +149,7 @@ export function BillingScreen({ isCheckoutReturn }: { isCheckoutReturn: boolean 
         </div>
       )}
 
-      <BillingDialogs actions={actions} data={data} />
+      <BillingDialogs actions={actions} lifecycle={lifecycle} data={data} />
     </>
   );
 }

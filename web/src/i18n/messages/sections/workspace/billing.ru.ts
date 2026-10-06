@@ -16,6 +16,7 @@ export const billingRu: Translation<typeof billingEn> = {
     active: "Активна",
     past_due: "Оплата просрочена",
     cancelled: "Отменена",
+    paused: "На паузе",
   },
   periodNames: {
     monthly: "Помесячно",

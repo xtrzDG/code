@@ -20,9 +20,9 @@ import { DEFAULT_SETUP_OPTION, type SetupOption } from "./setupOptions";
 
 /**
  * What the owner does on the billing page: start a trial, subscribe (on
- * the payment page, with who sets the assistant up), switch plans,
- * cancel, and pay what is due. Each choice is confirmed in a dialog that
- * shows a refusal.
+ * the payment page, with who sets the assistant up), switch plans, open
+ * the cancel dialog (useSubscriptionLifecycle cancels), and pay what is
+ * due. Each choice is confirmed in a dialog that shows a refusal.
  */
 export function useBillingActions(overview: Query<BillingOverview>) {
   const { t, locale } = useI18n();
@@ -49,10 +49,6 @@ export function useBillingActions(overview: Query<BillingOverview>) {
       api.POST("/v1/businesses/{business_id}/billing/plan", { params: pathParams, body }),
     { errorToast: false, ...settled },
   );
-  const cancel = useMutation(() => api.POST("/v1/businesses/{business_id}/billing/cancel", { params: pathParams }), {
-    errorToast: false,
-    ...settled,
-  });
 
   const applyOverview = (data: BillingOverview, message: string) => {
     overview.setData(data);
@@ -89,16 +85,6 @@ export function useBillingActions(overview: Query<BillingOverview>) {
     if (result.ok) {
       setChoice(null);
       applyOverview(result.data, t(choice.action === "trial" ? "billing.dialogs.trialStarted" : "billing.dialogs.changed"));
-    } else {
-      setDialogError(result.error);
-    }
-  };
-
-  const onConfirmCancel = async () => {
-    const result = await cancel.run();
-    if (result.ok) {
-      setCancelling(false);
-      applyOverview(result.data, t("billing.dialogs.cancelled"));
     } else {
       setDialogError(result.error);
     }
@@ -160,8 +146,6 @@ export function useBillingActions(overview: Query<BillingOverview>) {
     isCancelling,
     closeCancel: () => setCancelling(false),
     openCancel,
-    onConfirmCancel,
-    isCancelPending: cancel.isPending,
     dialogError,
     isPaying,
     onPay,

@@ -6,11 +6,21 @@ import { useI18n } from "@/i18n/client";
 
 import { planPrice, quotedMoneyText, type BillingOverview, type BillingPeriod } from "../_lib/billing";
 import type { BillingActions } from "../_lib/useBillingActions";
+import type { SubscriptionLifecycleActions } from "../_lib/useSubscriptionLifecycle";
+import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
 import type { PlanChoice } from "./PlansSection";
 import { SetupOptionPicker } from "./SetupOptionPicker";
 
-/** Confirming a plan choice (a trial, a subscription or a switch) or a cancellation. */
-export function BillingDialogs({ actions, data }: { actions: BillingActions; data: BillingOverview | undefined }) {
+/** Confirming a plan choice (a trial, a subscription or a switch), and the cancel dialog with its offers. */
+export function BillingDialogs({
+  actions,
+  lifecycle,
+  data,
+}: {
+  actions: BillingActions;
+  lifecycle: SubscriptionLifecycleActions;
+  data: BillingOverview | undefined;
+}) {
   const { t, locale } = useI18n();
   const format = useBusinessFormat();
   const { choice, dialogError } = actions;
@@ -83,20 +93,12 @@ export function BillingDialogs({ actions, data }: { actions: BillingActions; dat
         ) : null}
       </ConfirmDialog>
 
-      <ConfirmDialog
+      <CancelSubscriptionDialog
         open={actions.isCancelling}
         onClose={actions.closeCancel}
-        onConfirm={actions.onConfirmCancel}
-        isPending={actions.isCancelPending}
-        error={dialogError}
-        title={t("billing.dialogs.cancelTitle")}
-        confirmLabel={t("billing.dialogs.cancelConfirm")}
-        cancelLabel={t("billing.dialogs.cancelKeep")}
-      >
-        {data?.subscription ? (
-          <p>{t("billing.dialogs.cancelDescription", { date: format.date(data.subscription.period_end) })}</p>
-        ) : null}
-      </ConfirmDialog>
+        overview={data}
+        actions={lifecycle}
+      />
     </>
   );
 }

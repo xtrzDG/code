@@ -21,6 +21,7 @@ const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, MessageKey> = {
   active: "billing.status.active",
   past_due: "billing.status.past_due",
   cancelled: "billing.status.cancelled",
+  paused: "billing.status.paused",
 };
 
 /** The current subscription: plan, price, dates, automatic payment and the owner's actions. */
@@ -44,6 +45,7 @@ export function SubscriptionCard({
   const { t } = useI18n();
   const format = useBusinessFormat();
   const subscription = overview.subscription;
+  const isPaused = subscription?.status === "paused";
 
   if (!subscription) {
     return (
@@ -76,9 +78,12 @@ export function SubscriptionCard({
                 {t("billing.cancel")}
               </Button>
             ) : null}
-            <a href="#billing-plans" className={buttonClasses({ variant: "secondary", size: "sm" })}>
-              {t("billing.changePlan")}
-            </a>
+            {/* A paused subscription keeps its plan until it is resumed. */}
+            {isPaused ? null : (
+              <a href="#billing-plans" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                {t("billing.changePlan")}
+              </a>
+            )}
             {canPay ? (
               <Button size="sm" onClick={onPay} isLoading={isPaying} loadingText={t("billing.paying")}>
                 {t("billing.pay")}
@@ -109,6 +114,15 @@ export function SubscriptionCard({
               ? { label: t("billing.facts.trialEnds"), value: format.date(subscription.trial_ends_at) }
               : null,
             subscription.grace_until ? { label: t("billing.facts.graceUntil"), value: format.date(subscription.grace_until) } : null,
+            subscription.pause_starts_at && subscription.pause_until
+              ? {
+                  label: t("billingLifecycle.facts.pause"),
+                  value: t("billing.dateRange", {
+                    start: format.date(subscription.pause_starts_at),
+                    end: format.date(subscription.pause_until),
+                  }),
+                }
+              : null,
             {
               label: t("billing.facts.billingPeriod"),
               value: t(subscription.billing_period === "annual" ? "billing.periodNames.annual" : "billing.periodNames.monthly"),
@@ -123,7 +137,8 @@ export function SubscriptionCard({
               : {
                   label: t("billing.facts.serviceMode"),
                   value: (
-                    <Badge tone={overview.service_mode === "full" ? "success" : "danger"}>
+                    // Requests only by the owner's choice during a pause: no alarm.
+                    <Badge tone={overview.service_mode === "full" ? "success" : isPaused ? "info" : "danger"}>
                       {t(overview.service_mode === "full" ? "billing.serviceModes.full" : "billing.serviceModes.leads_only")}
                     </Badge>
                   ),

@@ -19,6 +19,7 @@ export const billingKa: Translation<typeof billingEn> = {
     active: "აქტიური",
     past_due: "გადახდა ვადაგადაცილებულია",
     cancelled: "გაუქმებული",
+    paused: "პაუზაზეა",
   },
   periodNames: {
     monthly: "ყოველთვიურად",
