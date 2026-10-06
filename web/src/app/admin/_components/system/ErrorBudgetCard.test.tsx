@@ -72,7 +72,7 @@ describe("ErrorBudgetCard: what is left of each SLO's budget", () => {
     const { t } = textsIn("en");
     const quiet: ErrorBudget = {
       ...budget,
-      objectives: budget.objectives.map((objective) => ({ ...objective, events: 0, good_events: 0 })),
+      objectives: (budget.objectives ?? []).map((objective) => ({ ...objective, events: 0, good_events: 0 })),
       latency: { ...budget.latency, last_hour_p95_ms: null },
     };
     answerGet(() => ok(quiet));
