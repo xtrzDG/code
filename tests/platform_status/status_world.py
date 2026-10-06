@@ -12,6 +12,7 @@ from app.repositories.platform_alert_state_repository import (
 from app.repositories.platform_announcement_repository import (
     PlatformAnnouncementRepository,
 )
+from app.repositories.platform_monitor_repository import PlatformMonitorRepository
 from app.repositories.platform_status_day_repository import (
     PlatformStatusDayRepository,
 )
@@ -19,6 +20,7 @@ from app.schemas.constants.monitoring import (
     AlertUnit,
     PlatformAlertCode,
     PlatformAlertStatus,
+    PlatformMonitor,
 )
 from app.schemas.constants.platform_status import (
     AnnouncementLevel,
@@ -26,6 +28,7 @@ from app.schemas.constants.platform_status import (
 )
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.platform_status import (
     AnnouncementMessage,
     PlatformAnnouncementDocument,
@@ -107,16 +110,36 @@ class StatusWorld:
         self.announcement_repo = PlatformAnnouncementRepository(self.announcements)
         self.day_repo = PlatformStatusDayRepository(self.days)
         self.audit_repo = AuditLogRepository(self.audit)
+        self.monitors = InMemoryDocumentCollectionAdapter[PlatformMonitorDocument](
+            PlatformMonitorDocument
+        )
+        self.monitor_repo = PlatformMonitorRepository(self.monitors)
+        self.checks_ran()
 
     @property
     def now(self) -> int:
         return self.clock.now
 
+    def checks_ran(self) -> None:
+        """The workers' alert checks finished a run now (their mark)."""
+
+        now = Microseconds(self.now)
+        self.monitor_repo.save(
+            PlatformMonitorDocument(
+                monitor=PlatformMonitor.ALERT_CHECKS,
+                checked_at=now,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+
     def fire(self, code: PlatformAlertCode, figure: int) -> None:
         self.alert_repo.save(alert(code, figure, self.now))
+        self.checks_ran()
 
     def resolve(self, code: PlatformAlertCode) -> None:
         self.alert_repo.save(alert(code, 0, self.now, PlatformAlertStatus.RESOLVED))
+        self.checks_ran()
 
     def announce(
         self,

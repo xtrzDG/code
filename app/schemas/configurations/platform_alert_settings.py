@@ -1,11 +1,15 @@
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 
-from app.schemas.typings.monitoring.constrained_integers import AlertCooldownMinutes
+from app.schemas.typings.monitoring.constrained_integers import (
+    AlertCooldownMinutes,
+    PipelineWatchdogSeconds,
+)
 from app.schemas.typings.monitoring.constrained_strings import AlertChatId
 from app.schemas.typings.users.constrained_strings import EmailAddress
 
 DEFAULT_ALERT_COOLDOWN_MINUTES: int = 60
+DEFAULT_PIPELINE_WATCHDOG_SECONDS: int = 60
 
 
 class PlatformAlertSettings(ImmutableDTO):
@@ -24,4 +28,7 @@ class PlatformAlertSettings(ImmutableDTO):
     emails: list[EmailAddress] = Field(default_factory=list[EmailAddress])
     cooldown_minutes: AlertCooldownMinutes = AlertCooldownMinutes(
         DEFAULT_ALERT_COOLDOWN_MINUTES
+    )
+    watchdog_seconds: PipelineWatchdogSeconds = PipelineWatchdogSeconds(
+        DEFAULT_PIPELINE_WATCHDOG_SECONDS
     )

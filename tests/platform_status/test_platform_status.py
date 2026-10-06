@@ -32,6 +32,7 @@ def status(world: StatusWorld, language: str | None = None) -> PlatformStatusVie
         world.alert_repo,
         world.announcement_repo,
         world.day_repo,
+        world.monitor_repo,
         world.clock.wall_clock,
     ).run(
         PlatformStatusQuery(
@@ -45,6 +46,7 @@ def record(world: StatusWorld) -> int:
         world.alert_repo,
         world.announcement_repo,
         world.day_repo,
+        world.monitor_repo,
         world.clock.wall_clock,
     ).run(TICK)
     return int(report.processed_count)
@@ -58,7 +60,7 @@ def test_a_quiet_platform_is_operational_with_no_history_yet() -> None:
     view = status(StatusWorld())
 
     assert view.level is StatusLevel.OPERATIONAL
-    assert view.checked_at is None
+    assert view.checked_at is not None and not view.monitoring_delayed
     assert [item.component for item in view.components] == list(StatusComponent)
     assert all(len(item.history) == 90 for item in view.components)
     history = view.components[0].history
@@ -87,6 +89,7 @@ def test_the_job_keeps_the_worst_of_each_day() -> None:
     world.resolve(PlatformAlertCode.LLM_ERRORS)
     record(world)
     world.clock.advance(DAY)
+    world.checks_ran()
     record(world)
 
     view = status(world)

@@ -75,6 +75,10 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "platform_ops.list_incidents_operator": "platform admin's incident log",
     "platform_ops.record_maintenance_run_operator": "backup CLIs' run log",
     "platform_ops.check_channel_credentials_operator": "Meta token check job",
+    "reliability.check_pipeline_health_operator": (
+        "/healthz/pipeline: worker pulses and the inbound queue, platform-wide"
+    ),
+    "reliability.watch_pipeline_operator": "API watchdog: pulses and alert states",
     "referrals.get_partner_portal_operator": "partner: commissions of many businesses",
     "referrals.list_partner_referrals_operator": "partner: businesses they brought",
     "referrals.list_partner_commissions_operator": "partner: commission per invoice",

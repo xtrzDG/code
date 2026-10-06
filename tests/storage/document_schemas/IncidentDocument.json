@@ -1,7 +1,7 @@
 {
   "collection": "incidents",
   "document_type": "IncidentDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -11,6 +11,18 @@
           "type": "string"
         },
         "type": "array"
+      },
+      "announcement_id": {
+        "anyOf": [
+          {
+            "pattern": "^announcement_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "approximate_record_count": {
         "anyOf": [
@@ -43,6 +55,29 @@
       },
       "detected_at": {
         "type": "integer"
+      },
+      "expanded_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "expansion_cursor": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "id": {
         "pattern": "^incident_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -125,12 +160,32 @@
         "minimum": 0,
         "type": "integer"
       },
+      "reached_business_count": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "reported_by": {
         "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
+        "type": "string"
+      },
+      "scope": {
+        "default": "listed",
+        "enum": [
+          "listed",
+          "all_businesses"
+        ],
         "type": "string"
       },
       "severity": {

@@ -11,7 +11,10 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [meta-outage](meta-outage.md) | `outbound_failures`, channels in ERROR | SEV2 |
 | [telegram-outage](telegram-outage.md) | `outbound_failures` | SEV2 |
 | [voice-outage](voice-outage.md) | Sentry, owners (calls not answered) | SEV2 |
+| [worker-down](worker-down.md) | `worker_down`, `inbound_backlog` (the API's watchdog), `GET /healthz/pipeline` 503 | SEV1 |
 | [stuck-worker](stuck-worker.md) | `dead_jobs`, `inbound_backlog`, `stale_worker`, Sentry Crons | SEV1-SEV2 |
+| [database-failover](database-failover.md) | `GET /readyz` 503 (uptime monitor), `worker_down` | SEV1 |
+| [status-page-stale](status-page-stale.md) | `/status` says "monitoring delayed" | SEV2 |
 | [delivery-failures](delivery-failures.md) | `outbound_failures` | SEV2 |
 | [assistant-quality](assistant-quality.md) | `handoff_spike`, `tool_errors`, `quality_drop` | SEV2-SEV3 |
 | [sms-pumping](sms-pumping.md) | `otp_cap_trips` | SEV2 |
@@ -22,4 +25,8 @@ that link here are in `../slo.md` and `ops/alerts/`.
 | [error-budget-burn](error-budget-burn.md) | `answer_budget_fast_burn`, `answer_budget_slow_burn`, `api_budget_fast_burn`, `api_budget_slow_burn` | SEV1-SEV2 |
 
 Start every incident at `/admin/system`: firing alerts, worker pulses,
-queue lanes and dead letters, channels in ERROR, the last backup.
+queue lanes and dead letters, channels in ERROR, the last backup. Each
+likely failure has a scripted game day in `tests/chaos/` (worker killed,
+Meta black-holed, model 30 s slow, Postgres restarted) that asserts its
+alert, the status level and the recovery; run them before changing a
+runbook (`uv run pytest tests/chaos`).

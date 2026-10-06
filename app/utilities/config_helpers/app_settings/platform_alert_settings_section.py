@@ -1,13 +1,20 @@
-"""PLATFORM_ALERT_*: where the platform alerts go and how often they repeat."""
+"""
+PLATFORM_ALERT_*: where the platform alerts go and how often they repeat;
+PIPELINE_WATCHDOG_SECONDS: how often the API's pipeline watchdog looks.
+"""
 
 from collections.abc import Mapping
 from typing import TypedDict
 
 from app.schemas.configurations.platform_alert_settings import (
     DEFAULT_ALERT_COOLDOWN_MINUTES,
+    DEFAULT_PIPELINE_WATCHDOG_SECONDS,
     PlatformAlertSettings,
 )
-from app.schemas.typings.monitoring.constrained_integers import AlertCooldownMinutes
+from app.schemas.typings.monitoring.constrained_integers import (
+    AlertCooldownMinutes,
+    PipelineWatchdogSeconds,
+)
 from app.schemas.typings.monitoring.constrained_strings import AlertChatId
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
@@ -48,6 +55,15 @@ def read_platform_alert_settings(
                     DEFAULT_ALERT_COOLDOWN_MINUTES,
                 ),
                 AlertCooldownMinutes,
+            ),
+            watchdog_seconds=parse_setting(
+                "PIPELINE_WATCHDOG_SECONDS",
+                read_integer(
+                    environment_variables,
+                    "PIPELINE_WATCHDOG_SECONDS",
+                    DEFAULT_PIPELINE_WATCHDOG_SECONDS,
+                ),
+                PipelineWatchdogSeconds,
             ),
         )
     )

@@ -14,7 +14,10 @@ from app.schemas.constants.platform_status import (
     StatusLevel,
 )
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.schemas.typings.platform_status.booleans import IsAnnouncementScheduled
+from app.schemas.typings.platform_status.booleans import (
+    IsAnnouncementScheduled,
+    IsMonitoringDelayed,
+)
 from app.schemas.typings.platform_status.constrained_strings import (
     AnnouncementText,
     StatusDay,
@@ -66,11 +69,15 @@ class PlatformStatusView(ImmutableDTO):
     The platform as owners and their customers see it: the overall level
     (the worst component), each component, the announcements shown now
     and the ones resolved in the last 90 days, newest first. `checked_at`
-    is the platform alerts' latest check (null before the first).
+    is when the platform alerts last finished a check (null before the
+    first). `monitoring_delayed` says that was more than 15 minutes ago
+    (or never): the levels cannot be vouched for, so the chat components
+    count as degraded until the checks run again.
     """
 
     level: StatusLevel
     checked_at: Microseconds | None = None
+    monitoring_delayed: IsMonitoringDelayed = False
     components: list[ComponentStatusView]
     announcements: list[AnnouncementView]
     past_announcements: list[AnnouncementView]

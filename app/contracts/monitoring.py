@@ -5,17 +5,21 @@ episodes, the recorded backups and drills, and the size of the database.
 """
 
 from collections.abc import Sequence
+from contextlib import AbstractContextManager
 from typing import Protocol
 
 from typed_time_provider import Microseconds
 
 from app.contracts.adapter_contract import AdapterContract
+from app.contracts.facilitator_contract import FacilitatorContract
+from app.contracts.registry_contract import RegistryContract
 from app.contracts.repo_contract import RepoContract
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.jobs import JobLane
 from app.schemas.constants.monitoring import (
     MaintenanceRunKind,
     PlatformAlertCode,
+    PlatformMonitor,
     PlatformSignal,
 )
 from app.schemas.domain.businesses import BusinessDocument
@@ -23,6 +27,7 @@ from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.jobs import QueuedJobDocument, WorkerHeartbeatDocument
 from app.schemas.domain.maintenance_runs import MaintenanceRunDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.dto.admin_system import DeadJobTally
 from app.schemas.dto.platform_alerts import SignalTally
 from app.schemas.dto.platform_health import (
@@ -32,6 +37,8 @@ from app.schemas.dto.platform_health import (
     OutboundTally,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.monitoring.constrained_integers import NotificationCount
+from app.schemas.typings.monitoring.strings import PlatformAlertMessage
 from app.schemas.typings.storage.constrained_integers import (
     DocumentCount,
     DocumentQueryLimit,
@@ -113,6 +120,40 @@ class PlatformAlertStateRepoContract(RepoContract, Protocol):
         raise NotImplementedError
 
     def save(self, state: PlatformAlertStateDocument) -> None:
+        raise NotImplementedError
+
+
+class PlatformMonitorRepoContract(RepoContract, Protocol):
+    """The marks of the platform's watchers, one row per watcher (by key)."""
+
+    def get(self, monitor: PlatformMonitor) -> PlatformMonitorDocument | None:
+        raise NotImplementedError
+
+    def save(self, mark: PlatformMonitorDocument) -> None:
+        raise NotImplementedError
+
+
+class PlatformAlertLockRegistryContract(RegistryContract, Protocol):
+    def lock_states(self) -> AbstractContextManager[None]:
+        """
+        Held while a process reads, decides and stores alert episodes (and
+        the watchers' marks): every process sharing the storage waits for
+        it, and the block's writes commit with its release.
+
+        Raises:
+            ExternalServiceError: another process held it too long.
+        """
+        raise NotImplementedError
+
+
+class DirectPlatformAlertFacilitatorContract(FacilitatorContract, Protocol):
+    def send(self, message: PlatformAlertMessage) -> NotificationCount:
+        """
+        Send one alert message to every configured recipient of the team
+        now (the platform bot's chats, the alert e-mails), without the job
+        queue; how many recipients got it. Never raises: a recipient that
+        cannot be reached is logged.
+        """
         raise NotImplementedError
 
 

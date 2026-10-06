@@ -39,6 +39,9 @@ from app.containers.orchestrators.public_demo_orchestrators import (
 from app.containers.orchestrators.referral_orchestrators import (
     ReferralOrchestratorsContainer,
 )
+from app.containers.orchestrators.reliability_orchestrators import (
+    ReliabilityOrchestratorsContainer,
+)
 from app.containers.orchestrators.security_orchestrators import (
     SecurityOrchestratorsContainer,
 )
@@ -100,6 +103,9 @@ class CoreOrchestratorsContainer(containers.DeclarativeContainer):
     )
     telemetry: TelemetryOrchestratorsContainer = Container(  # type: ignore[assignment]
         TelemetryOrchestratorsContainer, telemetry_use_cases=use_cases.telemetry
+    )
+    reliability: ReliabilityOrchestratorsContainer = Container(  # type: ignore[assignment]
+        ReliabilityOrchestratorsContainer, reliability_use_cases=use_cases.reliability
     )
     platform_ops: PlatformOpsOrchestratorsContainer = Container(  # type: ignore[assignment]
         PlatformOpsOrchestratorsContainer,

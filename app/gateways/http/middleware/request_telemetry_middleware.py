@@ -31,7 +31,9 @@ from app.utilities.observability.tracing.trace_context import (
 # Requests no route answered: one label, whatever their paths.
 UNMATCHED_ROUTE: MetricsLabel = MetricsLabel("unmatched")
 # Probes and scrapes are measured, never traced (they would fill traces).
-UNTRACED_PATHS: frozenset[str] = frozenset({"/healthz", "/readyz", "/metrics"})
+UNTRACED_PATHS: frozenset[str] = frozenset(
+    {"/healthz", "/healthz/pipeline", "/readyz", "/metrics"}
+)
 SERVER_ERROR: int = 500
 
 

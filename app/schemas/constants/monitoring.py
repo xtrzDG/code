@@ -22,6 +22,9 @@ class PlatformAlertCode(StrEnum):
     "answered within 60 s" burns 14.4 times too fast over 1 h and 5 min, or
     6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN
     the same for API availability (docs/operations/slo.md).
+    WORKER_DOWN: no background worker wrote its pulse for five minutes,
+    seen from outside the workers too (the API's pipeline watchdog and
+    GET /healthz/pipeline): customers' messages are not answered.
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -40,6 +43,7 @@ class PlatformAlertCode(StrEnum):
     ANSWER_BUDGET_SLOW_BURN = "answer_budget_slow_burn"
     API_BUDGET_FAST_BURN = "api_budget_fast_burn"
     API_BUDGET_SLOW_BURN = "api_budget_slow_burn"
+    WORKER_DOWN = "worker_down"
 
 
 class PlatformAlertStatus(StrEnum):
@@ -97,3 +101,16 @@ class AlertNoticeKind(StrEnum):
     FIRING = "firing"
     STILL_FIRING = "still_firing"
     RESOLVED = "resolved"
+
+
+class PlatformMonitor(StrEnum):
+    """
+    Who watches the platform, each with a mark of its last look
+    (`platform_monitors`, 1173): ALERT_CHECKS is the workers'
+    `platform_alerts` job (the status page trusts its levels only while
+    this mark is fresh); PIPELINE_WATCHDOG is the API's watchdog, whose
+    mark also holds the lease of the API instance that leads it.
+    """
+
+    ALERT_CHECKS = "alert_checks"
+    PIPELINE_WATCHDOG = "pipeline_watchdog"

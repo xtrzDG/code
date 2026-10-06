@@ -595,6 +595,7 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.05`: доля запросов API, чья трассировка уходит в Sentry (от 0 до 1) |
 | `PLATFORM_ALERT_TELEGRAM_CHAT_IDS`, `PLATFORM_ALERT_EMAILS` | оповещения платформы (`docs/operations/slo.md`) только в логе и на странице «Система» админки. Чаты Telegram (id через запятую, бот платформы в группе; нужен `TELEGRAM_PLATFORM_BOT_TOKEN`) и почты (через `SMTP_*`) получают их через очередь с повторами |
 | `PLATFORM_ALERT_COOLDOWN_MINUTES` | 60: оповещение, которое всё ещё горит, приходит снова не чаще раза в час (5–1440) |
+| `PIPELINE_WATCHDOG_SECONDS` | 60: раз в минуту один процесс API смотрит пульс воркеров и очередь сообщений клиентов и, если воркеры молчат, сам шлёт оповещение `worker_down` или `inbound_backlog` получателям выше — без очереди задач (0–3600, `0` выключает; `docs/operations/runbooks/worker-down.md`) |
 | `SUPPORT_WHATSAPP`, `SUPPORT_TELEGRAM`, `SUPPORT_EMAIL` | в «Помощь и поддержка» кабинета (меню аккаунта, `GET /v1/support/contacts`) нет этого способа связаться с поддержкой платформы. WhatsApp — номер в E.164, Telegram — имя пользователя (можно с «@»), почта — адрес; справка и страница статуса работают и без них |
 | `APP_RELEASE`, `RENDER_GIT_COMMIT` | версия сборки в отчётах Sentry и в пульсе воркера; `RENDER_GIT_COMMIT` Render задаёт сам, `APP_RELEASE` — для других платформ |
 | `LOG_FORMAT` | `json` в `production` (одна строка JSON с `request_id`, `trace_id`, `business_id`, `conversation_id`, `channel`, `job_name`, `job_id`), `text` в остальных окружениях |

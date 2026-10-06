@@ -5,6 +5,7 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.facilitators import FacilitatorsContainer
+from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.data_task_use_cases import DataTaskUseCasesContainer
@@ -103,6 +104,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -122,7 +124,9 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
             alert_settings=config.app_settings.provided.platform_alerts,
             cabinet_base_url=config.app_settings.provided.cabinet_base_url,
             wall_clock=time_provider.microsecond_wall_clock,
-            unit_of_work=adapters.storage_unit_of_work,
+            locks=registries.platform_alert_lock_registry,
+            monitor_repo=repositories.platform_monitor_repo,
+            release=config.app_settings.provided.release_version,
         )
     )
     send_platform_alert_use_case: Factory[
@@ -227,6 +231,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
         alert_state_repo=repositories.platform_alert_state_repo,
         announcement_repo=repositories.platform_announcement_repo,
         status_day_repo=repositories.platform_status_day_repo,
+        monitor_repo=repositories.platform_monitor_repo,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     record_platform_status_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
@@ -235,6 +240,7 @@ class PlatformOpsUseCasesContainer(containers.DeclarativeContainer):
             alert_state_repo=repositories.platform_alert_state_repo,
             announcement_repo=repositories.platform_announcement_repo,
             status_day_repo=repositories.platform_status_day_repo,
+            monitor_repo=repositories.platform_monitor_repo,
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )

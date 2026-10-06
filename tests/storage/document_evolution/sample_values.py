@@ -42,6 +42,7 @@ CONSTRAINED_TEXT_SAMPLES: dict[str, str] = {
     "GoLiveCheckDetail": "no_opening_hours",
     "IncidentTitle": "WhatsApp replies delayed",
     "LegalDocumentVersion": "2026-10-05",
+    "MonitorHolderName": "srv-workshop-api-1:4211",
     "SegmentName": "Not back in 60 days",
     "SubprocessorChangeDate": "2026-12-01",
     "SubprocessorChangeKey": "anthropic-added-2026-12-01",

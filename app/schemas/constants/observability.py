@@ -18,6 +18,18 @@ class ReadinessState(StrEnum):
     NOT_READY = "not_ready"
 
 
+class PipelineState(StrEnum):
+    """
+    Whether customers' messages flow through the workers (GET
+    /healthz/pipeline): FLOWING while a worker pulsed within five minutes
+    and no due customer message waited more than two; STALLED otherwise,
+    or when the database cannot tell.
+    """
+
+    FLOWING = "flowing"
+    STALLED = "stalled"
+
+
 class HealthCheckStatus(StrEnum):
     """Outcome of one check of the readiness report."""
 

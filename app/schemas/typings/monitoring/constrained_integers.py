@@ -85,6 +85,16 @@ class NotificationCount(BaseConstrainedTypedInt):
     ge = 0
 
 
+class PipelineWatchdogSeconds(BaseConstrainedTypedInt):
+    """
+    How often the API's pipeline watchdog looks at the workers
+    (PIPELINE_WATCHDOG_SECONDS): 0 switches it off.
+    """
+
+    ge = 0
+    le = 3600
+
+
 class SignalEventCount(BaseConstrainedTypedInt):
     """
     How many platform signal events (model calls, failed model calls,

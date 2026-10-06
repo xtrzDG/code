@@ -36,6 +36,7 @@ ALERT_TITLES: dict[str, str] = {
     "answer_budget_slow_burn": "Answer budget burns",
     "api_budget_fast_burn": "API budget burns fast",
     "api_budget_slow_burn": "API budget burns",
+    "worker_down": "No worker answers",
 }
 
 

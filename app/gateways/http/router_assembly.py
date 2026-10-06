@@ -23,7 +23,7 @@ from app.gateways.http.customers_router_assembly import build_customer_routers
 from app.gateways.http.events_routes import build_events_router
 from app.gateways.http.feedback_router_assembly import build_feedback_routers
 from app.gateways.http.growth_router_assembly import build_growth_routers
-from app.gateways.http.health_routes import build_readiness_router
+from app.gateways.http.health_router_assembly import build_health_routers
 from app.gateways.http.help_router_assembly import build_help_routers
 from app.gateways.http.inbox_router_assembly import build_inbox_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
@@ -275,7 +275,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
             resolve_link=notifications.resolve_staff_link_operator(),
         ),
         build_widget_script_router(),
-        build_readiness_router(platform.check_readiness_operator()),
+        *build_health_routers(operators),
         build_widget_error_router(platform.report_widget_error_operator()),
         *build_launch_routers(operators, current_user),
         *build_call_routers(operators, current_user),

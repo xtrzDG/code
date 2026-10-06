@@ -32,6 +32,7 @@ from app.schemas.domain.mfa import (
 from app.schemas.domain.partners import PartnerDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.platform_alerts import PlatformAlertStateDocument
+from app.schemas.domain.platform_monitors import PlatformMonitorDocument
 from app.schemas.domain.product_events import ProductEventDocument
 from app.schemas.domain.referrals import ReferralCodeDocument, ReferralDocument
 from app.schemas.domain.service_levels import (
@@ -76,6 +77,7 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         # The platform's own operations: alerts, backups, incidents (an
         # incident names the businesses it affected, it belongs to none).
         PlatformAlertStateDocument,
+        PlatformMonitorDocument,
         MaintenanceRunDocument,
         IncidentDocument,
         # The platform admin team belongs to the platform (1103).
