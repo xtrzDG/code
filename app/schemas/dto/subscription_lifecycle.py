@@ -107,7 +107,8 @@ class PauseOptionsView(ImmutableDTO):
     """
     Whether the business can pause now and on what terms: from
     `starts_at` (the end of the paid period) for up to `max_months`
-    months at `monthly_price` a month (`price_percent` of the plan);
+    months at `monthly_price` a month (`price_percent` of the plan),
+    ending at `ends_at[n - 1]` for a pause of n months;
     `paused_months` of the `cap_months` allowed in any `window_months` are
     used. `unavailable_reason` says why not when it cannot.
     """
@@ -118,6 +119,7 @@ class PauseOptionsView(ImmutableDTO):
     price_percent: PausePricePercent
     monthly_price: QuotedMoney | None = None
     starts_at: Microseconds | None = None
+    ends_at: list[Microseconds] = Field(default_factory=list[Microseconds])
     max_months: PauseMonthsAllowed
     paused_months: PausedMonthCount
     cap_months: PauseMonthCount

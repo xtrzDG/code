@@ -123,6 +123,6 @@ class AssembleSubscriptionLifecycleUseCase(
 
         return SubscriptionLifecycleView(
             business_id=business.id,
-            pause=view_pause(inputs, policy, language),
+            pause=view_pause(inputs, policy, language, business.timezone),
             offers=offers,
         )

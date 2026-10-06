@@ -19379,13 +19379,20 @@
       },
       "PauseOptionsView": {
         "additionalProperties": false,
-        "description": "Whether the business can pause now and on what terms: from\n`starts_at` (the end of the paid period) for up to `max_months`\nmonths at `monthly_price` a month (`price_percent` of the plan);\n`paused_months` of the `cap_months` allowed in any `window_months` are\nused. `unavailable_reason` says why not when it cannot.",
+        "description": "Whether the business can pause now and on what terms: from\n`starts_at` (the end of the paid period) for up to `max_months`\nmonths at `monthly_price` a month (`price_percent` of the plan),\nending at `ends_at[n - 1]` for a pause of n months;\n`paused_months` of the `cap_months` allowed in any `window_months` are\nused. `unavailable_reason` says why not when it cannot.",
         "properties": {
           "cap_months": {
             "maximum": 4.0,
             "minimum": 1.0,
             "title": "Cap Months",
             "type": "integer"
+          },
+          "ends_at": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Ends At",
+            "type": "array"
           },
           "is_available": {
             "title": "Is Available",

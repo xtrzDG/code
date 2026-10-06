@@ -11906,13 +11906,16 @@ export interface components {
          * PauseOptionsView
          * @description Whether the business can pause now and on what terms: from
          *     `starts_at` (the end of the paid period) for up to `max_months`
-         *     months at `monthly_price` a month (`price_percent` of the plan);
+         *     months at `monthly_price` a month (`price_percent` of the plan),
+         *     ending at `ends_at[n - 1]` for a pause of n months;
          *     `paused_months` of the `cap_months` allowed in any `window_months` are
          *     used. `unavailable_reason` says why not when it cannot.
          */
         PauseOptionsView: {
             /** Cap Months */
             cap_months: number;
+            /** Ends At */
+            ends_at?: number[];
             /** Is Available */
             is_available: boolean;
             /** Is Enabled */

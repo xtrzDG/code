@@ -162,7 +162,9 @@ def test_the_lifecycle_routes_offer_pause_and_resume() -> None:
     assert too_many.status_code == 422
     paused = client.post(f"{base}/pause", headers=bearer(owner), json={"months": 2})
     assert paused.status_code == 200
-    assert paused.json()["subscription"]["pause_until"] is not None
+    # The card showed the same end for two months before the owner chose.
+    assert paused.json()["subscription"]["pause_until"] == body["pause"]["ends_at"][1]
+    assert len(body["pause"]["ends_at"]) == 4
     again = client.post(f"{base}/pause", headers=bearer(owner), json={"months": 1})
     assert again.status_code == 409
 

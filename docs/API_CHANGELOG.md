@@ -13,7 +13,7 @@ label and a migration path).
 
 ## 2026-10-06 — subscription lifecycle: cancel reasons, save offers, seasonal pause, win-back
 
-Spec: `6f80abbadb075666`
+Spec: `6765ca8037bdcb78`
 
 - **Changed** `POST /v1/businesses/{business_id}/billing/cancel` takes an
   optional body `CancelSubscriptionRequest` (`reason` — one of
@@ -23,8 +23,8 @@ Spec: `6f80abbadb075666`
   for every cancellation reason (`pause`, `downgrade` with the cheaper
   plan, or a one-time `credit` on the next invoice, at most once per
   business), and `pause` — whether a seasonal pause is possible now
-  (`unavailable_reason` otherwise), how many months, the month price and
-  the dates.
+  (`unavailable_reason` otherwise), how many months, the month price,
+  `starts_at` and `ends_at` (the end of a pause of each length).
 - **Added** `POST …/billing/pause` (`months` 1–4, at most 4 months in any
   12; 409 otherwise), `POST …/billing/resume` (calls a scheduled pause off
   or ends a running one early) and `POST …/billing/offers/accept`
