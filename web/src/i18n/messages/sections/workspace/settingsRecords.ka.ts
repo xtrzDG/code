@@ -117,6 +117,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       billing_profile: "გადახდის რეკვიზიტები",
       business_export: "მონაცემების სრული ექსპორტი",
       export_download_link: "ექსპორტის ჩამოტვირთვის ბმული",
+      idempotency_key: "განმეორებითი მოთხოვნების შენახული პასუხები",
       business_profile_contacts: "ბიზნესის კონტაქტები",
       business_profile_starter_answers: "მზა პასუხები",
       business_security: "გუნდის შესვლის უსაფრთხოება",

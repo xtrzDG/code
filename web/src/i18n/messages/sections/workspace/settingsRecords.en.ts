@@ -115,6 +115,7 @@ export const settingsRecordsEn = {
       billing_profile: "Billing details",
       business_export: "Full data export",
       export_download_link: "Export download link",
+      idempotency_key: "Saved answers to repeated requests",
       business_profile_contacts: "Business contacts",
       business_profile_starter_answers: "Starter answers",
       business_security: "Team sign-in security",
