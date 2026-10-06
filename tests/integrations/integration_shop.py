@@ -56,9 +56,7 @@ class IntegrationShop:
 
     @property
     def receivers(self) -> FakeWebhookPoster:
-        return cast(
-            FakeWebhookPoster, self.workshop.container.clients.webhook_poster()
-        )
+        return cast(FakeWebhookPoster, self.workshop.container.clients.webhook_poster())
 
     def get(self, path: str, **params: str) -> Response:
         return self.client.get(path, params=params, headers=self.headers)
@@ -174,7 +172,12 @@ def open_other_business(workshop: Workshop) -> IntegrationShop:
     business_id = str(created.json()["id"])
     table = workshop.client.post(
         f"/v1/businesses/{business_id}/resources",
-        json={"name": "Bar", "capacity": 2, "slot_minutes": 60, "schedule": OPEN_ALL_WEEK},
+        json={
+            "name": "Bar",
+            "capacity": 2,
+            "slot_minutes": 60,
+            "schedule": OPEN_ALL_WEEK,
+        },
         headers=bearer(token),
     )
     assert table.status_code == 201, table.text

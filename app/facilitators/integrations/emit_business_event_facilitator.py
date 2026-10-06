@@ -1,7 +1,7 @@
 """Announced changes become webhook deliveries (the outbox of webhooks)."""
 
 import logging
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 
 from base_typed_id import BasePrefixedTypedId
@@ -164,7 +164,7 @@ class EmitBusinessEventFacilitator(BusinessEventObserverContract):
             )
 
     @contextmanager
-    def _business_scope(self, business_id: BusinessId) -> Iterator[None]:
+    def _business_scope(self, business_id: BusinessId) -> Generator[None]:
         """The change's own scope, or the business's when it ran unscoped."""
 
         unscoped: bool = self._storage_scope.current().kind is StorageScopeKind.UNSCOPED

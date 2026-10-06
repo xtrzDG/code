@@ -60,7 +60,6 @@ def build_public_api_write_router(
     """
 
     router = APIRouter(tags=[PUBLIC_API_TAG], responses=standard_error_responses())
-    Key = Annotated[ApiKeyPrincipal, Depends(api_key)]
 
     @router.post(
         f"{PUBLIC_API_PATH}/bookings",
@@ -69,7 +68,7 @@ def build_public_api_write_router(
         openapi_extra=describe_json_body(PublicBookingRequest),
     )
     def create_booking_record(
-        principal: Key,
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
         body: Annotated[PublicBookingRequest, Depends(read_booking_body)],
     ) -> PublicBooking:
         return create_booking.operate(
@@ -83,7 +82,7 @@ def build_public_api_write_router(
         openapi_extra=describe_json_body(PublicLeadRequest),
     )
     def create_lead_record(
-        principal: Key,
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
         body: Annotated[PublicLeadRequest, Depends(read_lead_body)],
     ) -> PublicLead:
         return create_lead.operate(PublicLeadCommand(principal=principal, request=body))
@@ -95,7 +94,7 @@ def build_public_api_write_router(
         openapi_extra=describe_json_body(PublicWebhookRequest),
     )
     def subscribe_webhook_url(
-        principal: Key,
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
         body: Annotated[PublicWebhookRequest, Depends(read_webhook_body)],
     ) -> CreatedWebhookEndpoint:
         return subscribe_webhook.operate(
@@ -106,7 +105,9 @@ def build_public_api_write_router(
         f"{PUBLIC_API_PATH}/webhooks/{{webhook_id}}",
         status_code=status.HTTP_204_NO_CONTENT,
     )
-    def unsubscribe_webhook_url(webhook_id: str, principal: Key) -> None:
+    def unsubscribe_webhook_url(
+        webhook_id: str, principal: Annotated[ApiKeyPrincipal, Depends(api_key)]
+    ) -> None:
         unsubscribe_webhook.operate(
             PublicWebhookRemoval(
                 principal=principal,

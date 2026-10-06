@@ -29,7 +29,7 @@ def test_a_failed_delivery_is_retried_until_the_receiver_answers() -> None:
     assert first["attempts"] == 1
     assert first["last_status_code"] == 500
     assert first["last_problem"] == "http_status"
-    assert 24 * 1_000_000 <= first["next_attempt_at"] - first["last_attempt_at"]
+    assert first["next_attempt_at"] - first["last_attempt_at"] >= 24 * 1_000_000
     assert first["next_attempt_at"] - first["last_attempt_at"] <= 36 * 1_000_000
     assert failing["consecutive_failures"] == 1
     assert too_early == 1

@@ -60,6 +60,4 @@ class IntegrationFacilitatorsContainer(containers.DeclarativeContainer):
         storage_scope=utilities.storage_scope,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    business_event_observers: List[EmitBusinessEventFacilitator] = List(
-        emit_business_event
-    )
+    business_event_observers = List(emit_business_event)

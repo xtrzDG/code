@@ -70,6 +70,13 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       admin_plan_overridden: "Tarif von der Plattform geändert",
     },
     entities: {
+      api_key: "API-Schlüssel",
+      api_booking: "Über die API gelesene Buchungen",
+      api_lead: "Über die API gelesene Anfragen",
+      api_contact: "Über die API gelesene Kunden",
+      api_conversation: "Über die API gelesene Gespräche",
+      webhook_endpoint: "Webhook",
+      webhook_delivery: "Webhook-Zustellung",
       contact: "Kunde",
       booking: "Buchung",
       manager_contacts: "Kontakte für Benachrichtigungen",

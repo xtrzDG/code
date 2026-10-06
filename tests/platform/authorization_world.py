@@ -1,9 +1,8 @@
 """
 The world of the authorization matrix: the real application with the demo
 data (business B, the busy restaurant: its owner, a staff member and a
-record of every kind), and a second business A with its own owner and
-staff, the strangers to B. The storage scope records which scopes each
-request entered.
+record of every kind), and a second business A with its own owner and staff,
+the strangers to B. The storage scope records each request's scopes.
 """
 
 from collections.abc import Generator, Mapping
@@ -32,6 +31,7 @@ from tests.platform.authorization_billing import billing_path_values
 from tests.platform.authorization_calendars import calendar_path_values
 from tests.platform.authorization_customers import customer_path_values
 from tests.platform.authorization_inbox import inbox_path_values
+from tests.platform.authorization_integrations import integration_path_values
 from tests.platform.authorization_notifications import notification_path_values
 from tests.platform.authorization_privacy import privacy_path_values
 from tests.platform.authorization_teaching import teaching_path_values
@@ -242,6 +242,9 @@ def discover_path_values(
         calendar_path_values(
             world.workshop, world.storage_scope, world.business_b, values["resource_id"]
         )
+    )
+    values.update(
+        integration_path_values(world.workshop, world.business_b, world.owner_b)
     )
     return values
 

@@ -88,6 +88,13 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       admin_plan_overridden: "Платформа сменила тариф",
     },
     entities: {
+      api_key: "API-ключ",
+      api_booking: "Брони, прочитанные через API",
+      api_lead: "Заявки, прочитанные через API",
+      api_contact: "Клиенты, прочитанные через API",
+      api_conversation: "Разговоры, прочитанные через API",
+      webhook_endpoint: "Вебхук",
+      webhook_delivery: "Доставка вебхука",
       contact: "Клиент",
       booking: "Бронь",
       manager_contacts: "Контакты для уведомлений",

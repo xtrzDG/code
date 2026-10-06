@@ -5,10 +5,13 @@ from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.public_api_use_cases import PublicApiUseCasesContainer
+from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.integrations.create_public_records_orchestrators import (
     CreatePublicBookingOrchestrator,
     CreatePublicLeadOrchestrator,
 )
+from app.schemas.dto.public_api.commands import PublicBookingCommand, PublicLeadCommand
+from app.schemas.dto.public_api.records import PublicBooking, PublicLead
 
 
 class PublicApiOrchestratorsContainer(containers.DeclarativeContainer):
@@ -60,15 +63,17 @@ class PublicApiOrchestratorsContainer(containers.DeclarativeContainer):
     unsubscribe_public_webhook_orchestrator = use_case_orchestrator(
         cases.unsubscribe_public_webhook_use_case
     )
-    create_public_booking_orchestrator: Factory[CreatePublicBookingOrchestrator] = (
-        Factory(
-            CreatePublicBookingOrchestrator,
-            start_booking=cases.start_public_booking_use_case,
-            create_booking=booking_use_cases.create_manual_booking_use_case,
-            describe_booking=cases.describe_public_booking_use_case,
-        )
+    create_public_booking_orchestrator: Factory[
+        OrchestratorContract[PublicBookingCommand, PublicBooking]
+    ] = Factory(
+        CreatePublicBookingOrchestrator,
+        start_booking=cases.start_public_booking_use_case,
+        create_booking=booking_use_cases.create_manual_booking_use_case,
+        describe_booking=cases.describe_public_booking_use_case,
     )
-    create_public_lead_orchestrator: Factory[CreatePublicLeadOrchestrator] = Factory(
+    create_public_lead_orchestrator: Factory[
+        OrchestratorContract[PublicLeadCommand, PublicLead]
+    ] = Factory(
         CreatePublicLeadOrchestrator,
         start_lead=cases.start_public_lead_use_case,
         create_lead=follow_up_use_cases.create_lead_use_case,

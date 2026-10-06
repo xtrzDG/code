@@ -73,6 +73,13 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       admin_plan_overridden: "პლატფორმამ ტარიფი შეცვალა",
     },
     entities: {
+      api_key: "API გასაღები",
+      api_booking: "API-ით წაკითხული ჯავშნები",
+      api_lead: "API-ით წაკითხული მოთხოვნები",
+      api_contact: "API-ით წაკითხული კლიენტები",
+      api_conversation: "API-ით წაკითხული საუბრები",
+      webhook_endpoint: "ვებჰუკი",
+      webhook_delivery: "ვებჰუკის მიწოდება",
       contact: "მომხმარებელი",
       booking: "ჯავშანი",
       manager_contacts: "შეტყობინებების კონტაქტები",

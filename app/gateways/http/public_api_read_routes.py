@@ -67,7 +67,6 @@ def build_public_api_read_router(
     """
 
     router = APIRouter(tags=[PUBLIC_API_TAG], responses=standard_error_responses())
-    Key = Annotated[ApiKeyPrincipal, Depends(api_key)]
 
     def page_of(
         principal: ApiKeyPrincipal, limit: str | None, cursor: str | None
@@ -77,17 +76,23 @@ def build_public_api_read_router(
         )
 
     @router.get(f"{PUBLIC_API_PATH}/me")
-    def get_me(principal: Key) -> PublicApiIdentity:
+    def get_me(
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
+    ) -> PublicApiIdentity:
         return get_identity.operate(PublicApiCall(principal=principal))
 
     @router.get(f"{PUBLIC_API_PATH}/bookings")
     def list_bookings_page(
-        principal: Key, limit: str | None = None, cursor: str | None = None
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
+        limit: str | None = None,
+        cursor: str | None = None,
     ) -> PublicBookingPage:
         return list_bookings.operate(page_of(principal, limit, cursor))
 
     @router.get(f"{PUBLIC_API_PATH}/bookings/{{booking_id}}")
-    def get_booking_record(booking_id: str, principal: Key) -> PublicBooking:
+    def get_booking_record(
+        booking_id: str, principal: Annotated[ApiKeyPrincipal, Depends(api_key)]
+    ) -> PublicBooking:
         return get_booking.operate(
             PublicBookingQuery(
                 principal=principal,
@@ -97,12 +102,16 @@ def build_public_api_read_router(
 
     @router.get(f"{PUBLIC_API_PATH}/leads")
     def list_leads_page(
-        principal: Key, limit: str | None = None, cursor: str | None = None
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
+        limit: str | None = None,
+        cursor: str | None = None,
     ) -> PublicLeadPage:
         return list_leads.operate(page_of(principal, limit, cursor))
 
     @router.get(f"{PUBLIC_API_PATH}/leads/{{lead_id}}")
-    def get_lead_record(lead_id: str, principal: Key) -> PublicLead:
+    def get_lead_record(
+        lead_id: str, principal: Annotated[ApiKeyPrincipal, Depends(api_key)]
+    ) -> PublicLead:
         return get_lead.operate(
             PublicLeadQuery(
                 principal=principal,
@@ -112,12 +121,16 @@ def build_public_api_read_router(
 
     @router.get(f"{PUBLIC_API_PATH}/contacts")
     def list_contacts_page(
-        principal: Key, limit: str | None = None, cursor: str | None = None
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
+        limit: str | None = None,
+        cursor: str | None = None,
     ) -> PublicContactPage:
         return list_contacts.operate(page_of(principal, limit, cursor))
 
     @router.get(f"{PUBLIC_API_PATH}/contacts/{{contact_id}}")
-    def get_contact_record(contact_id: str, principal: Key) -> PublicContact:
+    def get_contact_record(
+        contact_id: str, principal: Annotated[ApiKeyPrincipal, Depends(api_key)]
+    ) -> PublicContact:
         return get_contact.operate(
             PublicContactQuery(
                 principal=principal,
@@ -127,13 +140,15 @@ def build_public_api_read_router(
 
     @router.get(f"{PUBLIC_API_PATH}/conversations")
     def list_conversations_page(
-        principal: Key, limit: str | None = None, cursor: str | None = None
+        principal: Annotated[ApiKeyPrincipal, Depends(api_key)],
+        limit: str | None = None,
+        cursor: str | None = None,
     ) -> PublicConversationPage:
         return list_conversations.operate(page_of(principal, limit, cursor))
 
     @router.get(f"{PUBLIC_API_PATH}/conversations/{{conversation_id}}")
     def get_conversation_record(
-        conversation_id: str, principal: Key
+        conversation_id: str, principal: Annotated[ApiKeyPrincipal, Depends(api_key)]
     ) -> PublicConversationDetail:
         return get_conversation.operate(
             PublicConversationQuery(

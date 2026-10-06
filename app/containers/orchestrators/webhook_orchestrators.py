@@ -3,12 +3,18 @@ from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.webhook_use_cases import WebhookUseCasesContainer
+from app.contracts.orchestrator_contract import OrchestratorContract
 from app.orchestrators.integrations.deliver_webhook_orchestrator import (
     DeliverWebhookOrchestrator,
 )
 from app.orchestrators.integrations.send_webhook_test_orchestrator import (
     SendWebhookTestOrchestrator,
 )
+from app.schemas.dto.integrations.webhook_views import (
+    WebhookDeliveryView,
+    WebhookEndpointCommand,
+)
+from app.schemas.dto.jobs import JobReport, QueuedJobInput
 
 
 class WebhookOrchestratorsContainer(containers.DeclarativeContainer):
@@ -48,12 +54,16 @@ class WebhookOrchestratorsContainer(containers.DeclarativeContainer):
     purge_webhook_deliveries_orchestrator = use_case_orchestrator(
         cases.purge_webhook_deliveries_use_case
     )
-    deliver_webhook_orchestrator: Factory[DeliverWebhookOrchestrator] = Factory(
+    deliver_webhook_orchestrator: Factory[
+        OrchestratorContract[QueuedJobInput, JobReport]
+    ] = Factory(
         DeliverWebhookOrchestrator,
         attempt_delivery=cases.attempt_webhook_delivery_use_case,
         record_attempt=cases.record_webhook_attempt_use_case,
     )
-    send_webhook_test_orchestrator: Factory[SendWebhookTestOrchestrator] = Factory(
+    send_webhook_test_orchestrator: Factory[
+        OrchestratorContract[WebhookEndpointCommand, WebhookDeliveryView]
+    ] = Factory(
         SendWebhookTestOrchestrator,
         create_test_delivery=cases.create_webhook_test_delivery_use_case,
         attempt_delivery=cases.attempt_webhook_delivery_use_case,

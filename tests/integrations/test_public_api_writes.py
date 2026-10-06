@@ -93,7 +93,10 @@ def test_zapier_subscribes_and_unsubscribes_a_rest_hook() -> None:
     assert subscribed.status_code == 201, subscribed.text
     assert subscribed.json()["signing_secret"].startswith("whsec_")
     assert hook["origin"] == "api"
-    assert posted_to == ["https://hooks.example.com/workshop", "https://hooks.zapier.com/1"]
+    assert posted_to == [
+        "https://hooks.example.com/workshop",
+        "https://hooks.zapier.com/1",
+    ]
     assert not_ours.status_code == 404
     assert removed.status_code == 204
     assert [item["id"] for item in remaining] == [cabinet_hook["id"]]
