@@ -3,7 +3,7 @@
 import type { RequestBody } from "@/api/types";
 import { isPayoutMonth, percentToBasisPoints, previousMonth, utcMonth } from "@/lib/referrals/referralLinks";
 
-export type PartnerContactBy = "phone" | "email";
+type PartnerContactBy = "phone" | "email";
 
 export interface PartnerForm {
   name: string;
