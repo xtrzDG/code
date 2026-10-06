@@ -10,6 +10,7 @@ import { siteHe } from "./sections/site";
 import { assistantFlowHe } from "./sections/assistant";
 import { contentHe } from "./sections/content";
 import { insightsHe } from "./sections/insights";
+import { workspaceHe } from "./sections/workspace";
 
 /**
  * Hebrew texts (עברית), drafted by the team and awaiting a native
@@ -27,4 +28,5 @@ export const he: PartialMessages = {
   ...assistantFlowHe,
   ...contentHe,
   ...insightsHe,
+  ...workspaceHe,
 };

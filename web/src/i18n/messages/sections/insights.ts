@@ -2,9 +2,9 @@
  * Texts of the cabinet sections: Dashboard and its setup guide, value and reports, the inbox and its conversations, bookings, leads and handoffs.
  *
  * Top-level keys are namespaces (one per section, e.g. `bookings`). They are
- * spread into en.ts, ru.ts and ka.ts, so they must not clash with the
- * namespaces of the other dictionaries. `ru` and `ka` are type-checked
- * against `en`.
+ * spread into en.ts, ru.ts, ka.ts, he.ts and de.ts, so they must not clash
+ * with the namespaces of the other dictionaries. The other languages are
+ * type-checked against `en`.
  *
  * Each namespace (a large one in a few parts) lives in its own file per
  * language under `./insights/`; this file composes them.

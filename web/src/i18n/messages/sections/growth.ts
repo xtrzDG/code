@@ -5,9 +5,9 @@
  * customers back) and their bookings as lines of the value hero and the
  * reports.
  *
- * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
- * ka.ts, so they must not clash with the namespaces of the other
- * dictionaries. `ru` and `ka` are type-checked against `en`.
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
+ * dictionaries. The other languages are type-checked against `en`.
  *
  * Each namespace lives in its own file per language under `./growth/`;
  * this file composes them.

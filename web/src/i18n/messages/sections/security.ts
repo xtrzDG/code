@@ -5,8 +5,8 @@
  * (`devices`), platform support's access to a cabinet (`supportAccess`) and
  * the terms a person accepts by signing in (`legalConsent`).
  *
- * Top-level keys are namespaces, spread into en.ts, ru.ts and ka.ts; `ru`
- * and `ka` are type-checked against `en`. Each namespace lives in its own
+ * Top-level keys are namespaces, spread into the dictionaries of every
+ * locale; the other languages are type-checked against `en`. Each namespace lives in its own
  * file per language under `./security/`.
  */
 

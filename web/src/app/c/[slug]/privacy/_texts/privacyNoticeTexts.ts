@@ -1,9 +1,9 @@
 /**
- * The privacy notice of a hosted chat in a widget language: the cabinet's
- * texts in the languages owners can choose (marked for review in those
- * still awaiting a native reviewer, NEEDS_REVIEW_LOCALES), a draft marked
- * `needs_review` in the other languages of the chat widget, English for a
- * language with neither.
+ * The privacy notice of a hosted chat in a widget language: the reviewed
+ * cabinet texts in the languages owners can choose, a draft marked
+ * `needs_review` in the other languages of the chat widget (Hebrew and
+ * German too while their cabinet texts await a native reviewer,
+ * NEEDS_REVIEW_LOCALES), English for a language with neither.
  */
 
 import { NEEDS_REVIEW_LOCALES, isCabinetLanguage } from "@/i18n/config";
@@ -39,11 +39,11 @@ export interface PrivacyNotice {
 /** The notice in a language tag ("pt-BR" reads the "pt" draft). */
 export function privacyNoticeFor(tag: string): PrivacyNotice {
   const language = primaryLanguage(tag);
-  if (isCabinetLanguage(language)) {
+  if (isCabinetLanguage(language) && !NEEDS_REVIEW_LOCALES.includes(language)) {
     const messages = getMessages(language);
     return {
       language,
-      needsReview: NEEDS_REVIEW_LOCALES.includes(language),
+      needsReview: false,
       text: (key, values) => {
         const template = lookupMessage(messages, `privacyNotice.${key}`);
         return interpolate(typeof template === "string" ? template : "", values);

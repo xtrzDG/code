@@ -4,9 +4,9 @@
  * its sheet), and teaching it from conversations ("Fix this answer", "My
  * checks", "Answers worth improving").
  *
- * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
- * ka.ts, so they must not clash with the namespaces of the other
- * dictionaries. `ru` and `ka` are type-checked against `en`.
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
+ * dictionaries. The other languages are type-checked against `en`.
  */
 
 import type { Translation } from "../../translate";

@@ -4,10 +4,10 @@
  * and when it is open, who helps and where customers write, trying it,
  * the launch and the finale.
  *
- * Top-level keys are namespaces. They are spread into en.ts, ru.ts and
- * ka.ts, so they must not clash with the namespaces of the other
+ * Top-level keys are namespaces. They are spread into the dictionaries of
+ * every locale, so they must not clash with the namespaces of the other
  * dictionaries (the frame's `setup.*` is the invitation before the
- * assistant exists, in shell.ts). `ru` and `ka` are type-checked against `en`.
+ * assistant exists, in shell.ts). The other languages are type-checked against `en`.
  */
 
 import type { Translation } from "../../translate";
