@@ -9,6 +9,7 @@ Vendor schemas as JSON Schema 2020-12, with only what validation needs.
 - OpenAPI 3.0 keywords become their JSON Schema forms: `nullable` adds
   "null" to the type; boolean `exclusiveMinimum`/`exclusiveMaximum` turn
   the bound exclusive.
+- Google discovery's free-form type "any" becomes no type at all.
 - `oneOf` becomes `anyOf`: OpenAPI picks a variant by its discriminator,
   while JSON Schema demands that exactly one variant matches, which
   overlapping open variants never satisfy.
@@ -23,6 +24,8 @@ from typing import cast
 from scripts.vendor_specs.spec_model import JsonObject, JsonValue
 
 DEFINITIONS_PREFIX: str = "#/$defs/"
+# Google discovery documents type a free-form value (any JSON) this way.
+ANY_VALUE_TYPE: str = "any"
 DROPPED_KEYWORDS: frozenset[str] = frozenset(
     {
         "$schema",
@@ -145,6 +148,9 @@ class SchemaConverter:
 
 
 def normalize_keywords(schema: JsonObject, is_nullable: bool) -> JsonObject:
+    if schema.get("type") == ANY_VALUE_TYPE:
+        del schema["type"]
+
     if "oneOf" in schema:
         schema["anyOf"] = schema.pop("oneOf")
 

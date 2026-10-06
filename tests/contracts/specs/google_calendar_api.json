@@ -722,9 +722,7 @@
      },
      "type": "object"
     },
-    "homeOffice": {
-     "type": "any"
-    },
+    "homeOffice": {},
     "officeLocation": {
      "properties": {
       "buildingId": {
