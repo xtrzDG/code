@@ -143,6 +143,29 @@ describe("DataTasksCard: the post-deploy data tasks on the system page", () => {
     expect(screen.getByRole("button", { name: t("dataTasks.hideDone") }).getAttribute("aria-expanded")).toBe("true");
   });
 
+  it("stacks the tasks as a list on a phone instead of a table that scrolls sideways", async () => {
+    const { t } = textsIn("ka");
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: query.includes("max-width: 39.98rem"),
+          media: query,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        }) as unknown as MediaQueryList,
+    );
+    answerGet(() => ok(view()));
+    renderInLocale(<DataTasksCard />, { locale: "ka" });
+
+    const list = await screen.findByRole("list", { name: t("dataTasks.openCaption") });
+    const items = within(list).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    const [failedItem] = items;
+    if (!failedItem) throw new Error("the failed task is listed first");
+    expect(within(failedItem).getByRole("button", { name: `${t("dataTasks.retry")}: contacts` })).toBeTruthy();
+    expect(screen.queryByRole("table")).toBeNull();
+  });
+
   it("shows only the toggle once every task is done", async () => {
     const { t } = textsIn("en");
     answerGet(() => ok(view({ open_count: 0, failed_count: 0, stalled_count: 0, tasks: [done] })));

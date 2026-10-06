@@ -9,7 +9,7 @@ import { useI18n } from "@/i18n/client";
 
 import { splitDataTasks, type DataTask, type DataTasksView } from "../../_lib/dataTasks";
 import { useDataTasks } from "../../_lib/useDataTasks";
-import { DataTasksTable } from "./DataTaskRows";
+import { DataTasks } from "./DataTaskRows";
 import { useSystemFormat } from "./useSystemFormat";
 
 /**
@@ -83,7 +83,7 @@ function DataTaskLists({
   return (
     <>
       {open.length > 0 ? (
-        <DataTasksTable caption={t("dataTasks.openCaption")} tasks={open} retryingKey={retryingKey} onRetry={onRetry} />
+        <DataTasks caption={t("dataTasks.openCaption")} tasks={open} retryingKey={retryingKey} onRetry={onRetry} />
       ) : null}
       {done.length > 0 ? (
         <div className={open.length > 0 ? "border-t border-line" : undefined}>
@@ -103,7 +103,7 @@ function DataTaskLists({
           </div>
           <div id={doneId} hidden={!showsDone}>
             {showsDone ? (
-              <DataTasksTable caption={t("dataTasks.doneCaption")} tasks={done} retryingKey={retryingKey} onRetry={onRetry} />
+              <DataTasks caption={t("dataTasks.doneCaption")} tasks={done} retryingKey={retryingKey} onRetry={onRetry} />
             ) : null}
           </div>
         </div>
