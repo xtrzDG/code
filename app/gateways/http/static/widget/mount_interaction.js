@@ -110,6 +110,9 @@
       stopPolling();
       state.isSending = true;
       state.pendingItem = item;
+      // A live stream shows the dots when the worker starts on the answer.
+      state.typingGated = state.isStreamLive;
+      state.workerTyping = false;
       item.failed = false;
       item.error = "";
       // Stored before sending: if the visitor leaves while the answer is
@@ -119,7 +122,7 @@
       saveHistory();
       updateSendButton();
       renderLog();
-      showTyping(true);
+      syncTyping();
       requestJson(
         messagesUrl,
         withVisitSource({
@@ -131,6 +134,7 @@
           state.isSending = false;
           state.pendingItem = null;
           if (result.status === 202) {
+            receiveTicket(result.body && result.body.stream_ticket);
             awaitAnswer(item);
             return;
           }
@@ -173,6 +177,7 @@
       saveHistory();
       updateSendButton();
       renderLog();
+      armNoAnswerTimer();
       state.pollDelay = POLL_AWAIT_DELAY_MS;
       schedulePoll(POLL_AWAIT_DELAY_MS);
     }

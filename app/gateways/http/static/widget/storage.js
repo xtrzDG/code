@@ -53,6 +53,8 @@
             text: item.text,
             direction: item.direction === "rtl" ? "rtl" : "ltr",
             key: item.key,
+            // A stream's text the next poll replaces with the stored one.
+            draft: item.draft === true,
             pending: item.pending === true,
             sentAt: typeof item.sentAt === "number" ? item.sentAt : 0,
             failed: false

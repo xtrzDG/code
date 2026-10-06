@@ -12,8 +12,15 @@ def test_starter_questions_come_from_the_faq_in_their_language(
 
     config = workshop.client.get(f"/v1/widget/{restaurant.business_id}/config").json()
 
-    # The published FAQ (wizard step faq_and_handoff) is in Russian.
-    assert config["starter_questions"] == [{"language": "ru", "text": "Есть парковка?"}]
+    starters: dict[str, list[str]] = {}
+    for starter in config["starter_questions"]:
+        starters.setdefault(starter["language"], []).append(starter["text"])
+    # The published FAQ (wizard step faq_and_handoff) is in Russian; the
+    # chat's other languages get the niche's ready questions, never the
+    # Russian one.
+    assert starters["ru"] == ["Есть парковка?"]
+    assert set(starters) == {"ru", "ka", "en"}
+    assert all(1 <= len(texts) <= 3 for texts in starters.values())
 
 
 def test_the_footer_links_to_the_default_notice_until_the_owner_adds_one(

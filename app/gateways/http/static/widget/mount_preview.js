@@ -1,7 +1,7 @@
     // --- the cabinet's live preview (data-preview="live") -------------------
 
     // The Channels page frames the hosted chat page of its own origin and
-    // sends the colour, corner and language the owner is choosing, before
+    // sends the colour, corner, language and theme the owner is choosing, before
     // anything is saved; the preview says when it is ready for them. Typing
     // is shown but goes nowhere (the Try tab is for test conversations).
     function showAsPreview() {
@@ -26,10 +26,11 @@
     }
 
     function applyPreviewLook(look) {
-      var accent = chooseAccent(look.color, config.accent_color);
-      if (accent) {
-        wrapper.style.setProperty("--aw-accent", accent);
-        wrapper.style.setProperty("--aw-on-accent", readableTextColor(accent));
+      paintAccent(chooseAccent(look.color, config.accent_color));
+      var theme = chooseTheme(look.theme);
+      if (theme) {
+        wrapper.classList.toggle("aw-light", theme === "light");
+        wrapper.classList.toggle("aw-dark", theme === "dark");
       }
       var isLeft = choosePosition(look.position, config.position) === "left";
       wrapper.classList.toggle("aw-left", isLeft && !isPageMode);
@@ -46,3 +47,13 @@
       }
     }
 
+    // The business's colour on the header, launcher and send button, made
+    // readable (accentColors); none chosen: the widget's own clay.
+    function paintAccent(accent) {
+      if (!accent) {
+        return;
+      }
+      var colors = accentColors(accent);
+      wrapper.style.setProperty("--aw-accent", colors.accent);
+      wrapper.style.setProperty("--aw-on-accent", colors.onAccent);
+    }

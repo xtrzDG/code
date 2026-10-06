@@ -91,31 +91,109 @@ class TestWidgetTexts:
             ), language
 
 
+def run_colour_script(call: str) -> object:
+    """Run the script's colour helpers (colors.js) in node; JSON of the call."""
+
+    node = shutil.which("node")
+    assert node is not None
+    start = SCRIPT_SOURCE.index("  // --- colours:")
+    end = SCRIPT_SOURCE.index("  // ---", start + 1)
+    program = (
+        'var THEMES = ["light", "dark"];\n'
+        f"{SCRIPT_SOURCE[start:end]}\nconsole.log(JSON.stringify({call}));"
+    )
+    result = subprocess.run(
+        [node, "-e", program],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def wcag_contrast(first: str, second: str) -> float:
+    """The WCAG 2 contrast ratio of two #rrggbb colours, computed here."""
+
+    def luminance(colour: str) -> float:
+        linear = []
+        for offset in (1, 3, 5):
+            value = int(colour[offset : offset + 2], 16) / 255
+            linear.append(
+                value / 12.92 if value <= 0.03928 else ((value + 0.055) / 1.055) ** 2.4
+            )
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+    lighter, darker = sorted((luminance(first), luminance(second)), reverse=True)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+# Every #rgb colour: 4096 accents from black to white through every hue.
+EVERY_SHORT_HEX: list[str] = [
+    f"#{red:x}{green:x}{blue:x}"
+    for red in range(16)
+    for green in range(16)
+    for blue in range(16)
+]
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
 class TestWidgetColours:
     @pytest.mark.parametrize(
-        ("accent", "text_colour"),
+        ("accent", "painted", "text_colour"),
         [
-            # Mid-tone brand colours: dark text reads better than white.
-            ("#f59e0b", "#111827"),
-            ("#22c55e", "#111827"),
-            ("#06b6d4", "#111827"),
-            ("#f97316", "#111827"),
-            ("#fde047", "#111827"),
-            # Dark colours and the cabinet's presets keep white text.
-            ("#4f46e5", "#ffffff"),
-            ("#111827", "#ffffff"),
-            ("#1d4ed8", "#ffffff"),
-            ("#15803d", "#ffffff"),
+            # The widget's own clay and dark brand colours keep white text.
+            ("#ad5732", "#ad5732", "#ffffff"),
+            ("#1d4ed8", "#1d4ed8", "#ffffff"),
+            ("#000", "#000000", "#ffffff"),
+            # Light colours keep the owner's colour with ink text.
+            ("#f59e0b", "#f59e0b", "#1a1816"),
+            ("#fde047", "#fde047", "#1a1816"),
+            ("#ffffff", "#ffffff", "#1a1816"),
         ],
     )
-    def test_text_on_the_accent_takes_the_higher_contrast(
-        self, accent: str, text_colour: str
+    def test_text_on_the_accent_is_white_else_ink(
+        self, accent: str, painted: str, text_colour: str
     ) -> None:
-        assert (
-            run_script_function("readableTextColor", f'readableTextColor("{accent}")')
-            == text_colour
+        assert run_colour_script(f'accentColors("{accent}")') == {
+            "accent": painted,
+            "onAccent": text_colour,
+        }
+
+    def test_a_mid_tone_neither_text_reads_on_is_darkened_until_white_does(
+        self,
+    ) -> None:
+        colours = run_colour_script('accentColors("#808080")')
+        assert isinstance(colours, dict)
+
+        assert colours["onAccent"] == "#ffffff"
+        assert colours["accent"] != "#808080"
+        assert wcag_contrast(colours["accent"], "#ffffff") >= 4.5
+
+    def test_any_business_colour_keeps_wcag_aa_on_header_launcher_and_send(
+        self,
+    ) -> None:
+        painted = run_colour_script(
+            f"{json.dumps(EVERY_SHORT_HEX)}.map(accentColors)"
         )
+        assert isinstance(painted, list)
+
+        failing = [
+            (accent, colours)
+            for accent, colours in zip(EVERY_SHORT_HEX, painted, strict=True)
+            if wcag_contrast(colours["accent"], colours["onAccent"]) < 4.5
+        ]
+        assert failing == []
+
+    @pytest.mark.parametrize(
+        ("attribute", "theme"),
+        [("dark", "dark"), (" Light ", "light"), ("sepia", ""), ("", "")],
+    )
+    def test_the_script_tag_may_ask_for_a_theme(
+        self, attribute: str, theme: str
+    ) -> None:
+        assert run_colour_script(f'chooseTheme("{attribute}")') == theme
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")

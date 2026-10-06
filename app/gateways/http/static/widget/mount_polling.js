@@ -72,11 +72,16 @@
       );
     }
 
-    // The typing dots show while a message is on its way and while the
-    // answer to an accepted one is being written (not once staff took over:
-    // the assistant stays silent then).
+    // The typing dots show while the answer to a message is being written
+    // (not once staff took over: the assistant stays silent then). With a
+    // live stream they wait for the worker's own signal (typing_started);
+    // without one they show from the moment the message is sent.
     function syncTyping() {
-      var isTyping = state.isSending || (awaitingAnswer() && !state.isHandedOff);
+      var isTyping =
+        (state.isSending && !state.typingGated) ||
+        (awaitingAnswer() &&
+          !state.isHandedOff &&
+          (!state.typingGated || state.workerTyping));
       if (isTyping !== (typingRow !== null)) {
         showTyping(isTyping);
       }
@@ -85,6 +90,7 @@
     function schedulePoll(delay) {
       stopPolling();
       syncTyping();
+      syncStream();
       if (!shouldPoll() || state.isSending) {
         return;
       }
@@ -104,6 +110,11 @@
     }
 
     function nextDelay() {
+      if (state.isStreamLive) {
+        // The stream brings answers; a slow poll is only the safety net.
+        state.pollDelay = Math.max(state.pollDelay, STREAM_SAFETY_POLL_MS);
+        return state.pollDelay;
+      }
       if (awaitingAnswer() && !state.isHandedOff) {
         var awaitDelay = Math.max(state.pollDelay, POLL_AWAIT_DELAY_MS) * POLL_AWAIT_BACKOFF_FACTOR;
         state.pollDelay = Math.min(Math.round(awaitDelay), POLL_AWAIT_MAX_DELAY_MS);
@@ -137,13 +148,17 @@
           if (result.status === 404) {
             // The chat was switched off: stop asking.
             state.pollStopped = true;
+            closeStream();
             return;
           }
           if (!result.ok || !result.body || !Array.isArray(result.body.items)) {
+            afterPoll();
             schedulePoll(Math.max(nextDelay(), waitAfter(result)));
             return;
           }
           var added = receiveMessages(result.body);
+          receiveTicket(result.body.stream_ticket);
+          afterPoll();
           if (result.body.has_more === true || (!hadCursor && state.cursor && awaitingAnswer())) {
             // More to read, or the first position of a new visitor: the
             // answer comes right after it.
@@ -157,22 +172,41 @@
         }),
         function () {
           state.isPolling = false;
+          afterPoll();
           schedulePoll(nextDelay());
         }
       );
+    }
+
+    // After every poll: give up on an answer past its deadline, and run the
+    // catch-up the stream asked for meanwhile.
+    function afterPoll() {
+      checkNoAnswer();
+      if (state.catchUpPending) {
+        state.catchUpPending = false;
+        window.setTimeout(guarded("poll", catchUp), 0);
+      }
     }
 
     function receiveMessages(page) {
       var known = {};
       state.history.forEach(function (item) {
         if (item.id) {
-          known[item.id] = true;
+          known[item.id] = item;
         }
       });
       var added = 0;
+      var replaced = 0;
       var lastText = "";
       page.items.forEach(function (message) {
         if (!message || typeof message.id !== "string" || typeof message.text !== "string") {
+          return;
+        }
+        if (known[message.id] && known[message.id].draft) {
+          // The stored text replaces the stream's draft.
+          known[message.id].text = message.text;
+          delete known[message.id].draft;
+          replaced += 1;
           return;
         }
         if (known[message.id] || !message.text) {
@@ -205,6 +239,9 @@
         saveHistory();
         renderLog();
         noteReply(lastText);
+      } else if (replaced > 0) {
+        saveHistory();
+        renderLog();
       }
       return added;
     }

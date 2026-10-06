@@ -156,21 +156,6 @@
     return svgIcon(["M4 12l16-8-6 16-2.5-6.5L4 12z", "M11.5 13.5L20 4"]);
   }
 
-  function readableTextColor(hexColor) {
-    var hex = hexColor.slice(1);
-    if (hex.length === 3) {
-      hex = hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
-    }
-    var channels = [0, 2, 4].map(function (offset) {
-      var value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
-      return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
-    });
-    var luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-    // The higher WCAG contrast: with white 1.05/(L+0.05), with #111827
-    // (L about 0.0093) (L+0.05)/0.0593.
-    return 1.05 / (luminance + 0.05) >= (luminance + 0.05) / 0.0593 ? "#ffffff" : "#111827";
-  }
-
   function warn(message) {
     if (window.console && window.console.warn) {
       window.console.warn("[Assistant Workshop chat] " + message);
