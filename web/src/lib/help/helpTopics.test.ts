@@ -18,7 +18,7 @@ import {
 } from "./helpTopics";
 
 const HELP_DIRECTORY = fileURLToPath(new URL("../../../../docs/help/", import.meta.url));
-const LANGUAGES = ["en", "ru", "ka"] as const;
+const LANGUAGES = ["en", "ru", "ka", "he", "de"] as const;
 
 function articleFiles(language: string): string[] {
   return readdirSync(`${HELP_DIRECTORY}${language}`)
