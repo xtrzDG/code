@@ -6,11 +6,14 @@ import { createTranslator } from "@/i18n/translate";
 
 import {
   bookingSystemErrors,
+  busyRange,
   CALENDAR_REFUSAL_MESSAGES,
-  calendarName,
   feedAddressError,
+  googleChoiceValue,
+  linkedGoogleEntry,
   PROBLEM_KEYS,
   sourceCount,
+  sortGoogleCalendars,
   sourceHealth,
   summaryLine,
   type ResourceCalendarView,
@@ -58,10 +61,27 @@ describe("resource calendars", () => {
     expect(bookingSystemErrors(" 1203845 ", "cal_live_x")).toEqual({});
   });
 
-  it("names a linked calendar from the account's list", () => {
-    const entries = [{ calendar_id: "a@group", name: "Room 1", access_role: "reader", is_primary: false }];
-    expect(calendarName("a@group", entries)).toBe("Room 1");
-    expect(calendarName("gone@group", entries)).toBe("gone@group");
+  it("finds a linked calendar in the account's list, its own calendar as primary", () => {
+    const own = { calendar_id: "owner@example.com", name: "Owner", access_role: "owner", is_primary: true };
+    const room = { calendar_id: "a@group", name: "Room 1", access_role: "reader", is_primary: false };
+    expect(googleChoiceValue(own)).toBe("primary");
+    expect(googleChoiceValue(room)).toBe("a@group");
+    expect(linkedGoogleEntry("primary", [room, own])).toBe(own);
+    expect(linkedGoogleEntry("owner@example.com", [room, own])).toBe(own);
+    expect(linkedGoogleEntry("a@group", [room, own])).toBe(room);
+    expect(linkedGoogleEntry("gone@group", [room, own])).toBeUndefined();
+    const zed = { ...room, calendar_id: "z@group", name: "Zed" };
+    expect(sortGoogleCalendars([zed, room, own], "en").map((entry) => entry.name)).toEqual(["Owner", "Room 1", "Zed"]);
+  });
+
+  it("writes a busy time as one line, the end's date only on another day", () => {
+    const format = {
+      date: (value: number) => `d${Math.floor(value / 100)}`,
+      dateTime: (value: number) => `dt${value}`,
+      time: (value: number) => `t${value}`,
+    };
+    expect(busyRange({ starts_at: 101, ends_at: 150 }, format)).toBe("dt101 – t150");
+    expect(busyRange({ starts_at: 101, ends_at: 250 }, format)).toBe("dt101 – dt250");
   });
 
   it("counts the sources that block a resource", () => {

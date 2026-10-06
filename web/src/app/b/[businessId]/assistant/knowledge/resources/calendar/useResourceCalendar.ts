@@ -75,13 +75,3 @@ export function useGoogleCalendars(enabled: boolean) {
     { enabled },
   );
 }
-
-/** Settings → Integrations, and each resource's calendars at a glance. */
-export function useIntegrations(enabled = true) {
-  const { business } = useBusiness();
-  return useQuery(
-    queryKeys.integrations.list(business.id),
-    () => api.GET("/v1/businesses/{business_id}/integrations", { params: { path: { business_id: business.id } } }),
-    { enabled },
-  );
-}
