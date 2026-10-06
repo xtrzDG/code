@@ -31,6 +31,7 @@ from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
 from app.contracts.repositories.media_repositories import MessageMediaRepoContract
+from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
@@ -130,6 +131,7 @@ class DeleteContactDataUseCase(
         inbound_event_repo: InboundEventRepoContract,
         feedback_request_repo: FeedbackRequestRepoContract,
         processor_erasure: ProcessorErasureFacilitatorContract,
+        waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
     ) -> None:
         self._processor_erasure: ProcessorErasureFacilitatorContract = processor_erasure
         self._step_up: StepUpGuardContract = step_up
@@ -161,6 +163,7 @@ class DeleteContactDataUseCase(
             outbound_message_repo,
             inbound_event_repo,
             feedback_request_repo,
+            waitlist_entry_repo,
         )
 
     def run(self, input_data: ContactDataCommand) -> ContactErasureResult:
@@ -238,6 +241,7 @@ class DeleteContactDataUseCase(
             redacted_outbound_messages=traces.outbound_messages,
             redacted_inbound_events=traces.inbound_events,
             anonymized_feedback_requests=traces.feedback_requests,
+            anonymized_waitlist_entries=traces.waitlist_entries,
             queued_processor_erasures=queued,
         )
 

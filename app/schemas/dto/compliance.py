@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
+from app.schemas.domain.campaigns import CampaignMessageDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversation_notes import ConversationNoteDocument
 from app.schemas.domain.conversations import (
@@ -17,6 +18,7 @@ from app.schemas.domain.handoffs import HandoffDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
 from app.schemas.domain.outbound_messages import OutboundMessageDocument
+from app.schemas.domain.waitlist import WaitlistEntryDocument
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.booleans import (
@@ -188,7 +190,8 @@ class ContactRecords(ImmutableDTO):
     queued to them (`outbound_messages`: replies, reminders, text-backs) by
     their account in each of the business's channels, the webhook events
     they sent (`inbound_events`) by their accounts and conversations, and
-    the requests for feedback after their visits by the contact.
+    the requests for feedback after their visits, their places on the
+    waitlist and the rebooking campaign's messages by the contact.
     """
 
     contact: ContactDocument
@@ -214,6 +217,12 @@ class ContactRecords(ImmutableDTO):
     )
     feedback_requests: list[FeedbackRequestDocument] = Field(
         default_factory=list[FeedbackRequestDocument]
+    )
+    waitlist_entries: list[WaitlistEntryDocument] = Field(
+        default_factory=list[WaitlistEntryDocument]
+    )
+    campaign_messages: list[CampaignMessageDocument] = Field(
+        default_factory=list[CampaignMessageDocument]
     )
 
 
@@ -269,6 +278,7 @@ class ContactErasureResult(ImmutableDTO):
     redacted_outbound_messages: ErasedRecordCount = ErasedRecordCount(0)
     redacted_inbound_events: ErasedRecordCount = ErasedRecordCount(0)
     anonymized_feedback_requests: ErasedRecordCount = ErasedRecordCount(0)
+    anonymized_waitlist_entries: ErasedRecordCount = ErasedRecordCount(0)
     queued_processor_erasures: ProcessorErasureJobCount = ProcessorErasureJobCount(0)
 
 

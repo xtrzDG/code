@@ -9,7 +9,7 @@ review link tokens are dropped).
 import io
 import json
 import zipfile
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from zoneinfo import ZoneInfo
 
@@ -25,6 +25,9 @@ from app.contracts.repositories.booking_repositories import (
 from app.contracts.repositories.call_follow_up_repositories import (
     MissedCallRepoContract,
 )
+from app.contracts.repositories.campaign_repositories import (
+    CampaignMessageRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import (
     CallRepoContract,
@@ -39,35 +42,33 @@ from app.contracts.repositories.knowledge_repositories import (
     KnowledgeItemRepoContract,
     ResourceRepoContract,
 )
+from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.schemas.constants.privacy import CsvExportKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.contacts import ContactDocument
 from app.schemas.domain.conversations import MessageDocument
 from app.schemas.domain.feedback import FeedbackRequestDocument
 from app.schemas.domain.missed_calls import MissedCallDocument
-from app.schemas.dto.paging import KeysetSlice, PageRequest
 from app.schemas.dto.privacy.csv_exports import CsvRow
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.localization.constrained_strings import LanguageTag
-from app.schemas.typings.platform.constrained_integers import PageSize
-from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.schemas.typings.privacy.constrained_integers import ExportedRecordCount
+from app.use_cases.exports.archive_paging import read_all
 from app.use_cases.exports.business_rows import booking_row, is_erased, lead_row
+from app.use_cases.exports.growth_archive import growth_documents
 from app.use_cases.exports.people_rows import (
     audit_row,
     contact_row,
     conversation_rows,
     is_test_only,
 )
-from app.utilities.paging.keyset_paging import finish_page, read_slice
 from app.utilities.privacy.csv_cells import moment_cell
 from app.utilities.privacy.csv_columns import CSV_COLUMNS
 from app.utilities.privacy.csv_writing import csv_text
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import load_time_zone
 
-PAGE: PageSize = PageSize(200)
 README: str = """Full export of {business}, made {made_at} ({timezone}).
 
 JSON: one file per kind of record, as the platform keeps them (times are
@@ -99,6 +100,8 @@ class BusinessArchiveBuilder:
     feedback_request_repo: FeedbackRequestRepoContract
     audit_log_repo: AuditLogRepoContract
     text_resolver: LocalizedTextResolverContract
+    waitlist_entry_repo: WaitlistEntryRepoContract | None = None
+    campaign_message_repo: CampaignMessageRepoContract | None = None
 
     def build(
         self, business: BusinessDocument, language: LanguageTag, now: Microseconds
@@ -148,6 +151,9 @@ class BusinessArchiveBuilder:
             "knowledge_items": services,
             "missed_calls": missed_calls,
             "feedback_requests": feedback_requests,
+            **growth_documents(
+                business_id, self.waitlist_entry_repo, self.campaign_message_repo
+            ),
             "audit_log": audit_log,
         }
         by_conversation: dict[ConversationId, list[MessageDocument]] = {}
@@ -243,24 +249,3 @@ def documents_json(documents: Sequence[BaseDocument]) -> str:
         ensure_ascii=False,
         indent=2,
     )
-
-
-def read_all[Document: BaseDocument](
-    read_page: Callable[[KeysetSlice], list[Document]],
-    sort_key: Callable[[Document], int],
-) -> list[Document]:
-    """Every document of a keyset-paged collection, a page at a time."""
-
-    documents: list[Document] = []
-    cursor: PageCursor | None = None
-    while True:
-        page = PageRequest(size=PAGE, cursor=cursor)
-        items, cursor = finish_page(
-            read_page(read_slice(page)),
-            page,
-            sort_key=sort_key,
-            item_id=lambda document: str(document.id),  # type: ignore[attr-defined]
-        )
-        documents.extend(items)
-        if cursor is None:
-            return documents

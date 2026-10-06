@@ -6310,6 +6310,62 @@ export interface components {
          * @enum {string}
          */
         CampaignAudience: "all_customers" | "segment";
+        /**
+         * CampaignMessageDocument
+         * @description One message of a business's campaign to one customer, about one booking
+         *     (`anchor_booking_id`: the last visit an invitation back follows, or the
+         *     booking a pre-arrival note is about); the id derives from the business,
+         *     the rule and that booking, so it is written once.
+         *
+         *     A SENT message went into the outbox in `channel` and `language` and
+         *     counts against the cap of its `month`; when the customer books again
+         *     within a week of it, it becomes BOOKED (`booking_id`, `booked_at`) and
+         *     the booking is marked as a campaign booking. A SKIPPED one keeps why.
+         */
+        CampaignMessageDocument: {
+            /** Anchor Booking Id */
+            anchor_booking_id: string;
+            /** Booked At */
+            booked_at?: number | null;
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Business Id */
+            business_id: string;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            /** Id */
+            id: string;
+            /** Language */
+            language: string;
+            /** Month */
+            month: string;
+            /** Outbound Message Id */
+            outbound_message_id?: string | null;
+            rule_kind: components["schemas"]["RebookingRuleKind"];
+            /**
+             * Schema Version
+             * @description Persistence schema version. This is not the package version or application release version.
+             * @default 1
+             */
+            schema_version: string;
+            /** Sent At */
+            sent_at?: number | null;
+            skip_reason?: components["schemas"]["CampaignSkipReason"] | null;
+            status: components["schemas"]["CampaignMessageStatus"];
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+        };
         /** CampaignMessagePage */
         CampaignMessagePage: {
             /** Items */
@@ -7217,13 +7273,16 @@ export interface components {
          *     queued to them (`outbound_messages`: replies, reminders, text-backs) by
          *     their account in each of the business's channels, the webhook events
          *     they sent (`inbound_events`) by their accounts and conversations, and
-         *     the requests for feedback after their visits by the contact.
+         *     the requests for feedback after their visits, their places on the
+         *     waitlist and the rebooking campaign's messages by the contact.
          */
         ContactRecords: {
             /** Bookings */
             bookings?: components["schemas"]["BookingDocument"][];
             /** Calls */
             calls?: components["schemas"]["CallDocument"][];
+            /** Campaign Messages */
+            campaign_messages?: components["schemas"]["CampaignMessageDocument"][];
             contact: components["schemas"]["ContactDocument"];
             /** Conversations */
             conversations?: components["schemas"]["ConversationDocument"][];
@@ -7243,6 +7302,8 @@ export interface components {
             notes?: components["schemas"]["ConversationNoteDocument"][];
             /** Outbound Messages */
             outbound_messages?: components["schemas"]["OutboundMessageDocument"][];
+            /** Waitlist Entries */
+            waitlist_entries?: components["schemas"]["WaitlistEntryDocument"][];
         };
         /**
          * ContactStandingView
@@ -13997,6 +14058,97 @@ export interface components {
          * @enum {string}
          */
         WaitlistEndReason: "declined" | "no_answer" | "date_passed" | "unreachable" | "removed";
+        /**
+         * WaitlistEntryDocument
+         * @description A customer's place on a business's waitlist: nothing was free when they
+         *     asked, so the assistant noted what they want (the local `date`, a time
+         *     window `time_from`–`time_to` or any time, the party, nights of a stay,
+         *     a service, a named master or room, a kind of resource) in the chat
+         *     where they asked (`conversation_id`, `source_channel`, `language`).
+         *
+         *     When a cancellation or a move frees a place that fits, the first
+         *     waiting entry (oldest first) is OFFERED it: the place is held for them
+         *     until `offer_expires_at` (the business's hold) and the offer goes to
+         *     their chat. A "yes" makes the place their booking (BOOKED,
+         *     `booking_id`); a "no", silence past the hold, the day passing
+         *     (`waits_until`, the end of that day in UTC) or staff ending it make it
+         *     EXPIRED with its `end_reason`. Test chats' entries (`is_sandbox`) are
+         *     never offered anything.
+         */
+        WaitlistEntryDocument: {
+            /** Booked At */
+            booked_at?: number | null;
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Contact Id */
+            contact_id: string;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Created At
+             * @description Creation wall-clock UNIX timestamp in microseconds.
+             */
+            created_at?: number;
+            /** Date */
+            date: string;
+            end_reason?: components["schemas"]["WaitlistEndReason"] | null;
+            /** Ended At */
+            ended_at?: number | null;
+            /** Ended By */
+            ended_by?: string | null;
+            /** Id */
+            id?: string;
+            /**
+             * Is Sandbox
+             * @default false
+             */
+            is_sandbox: boolean;
+            /** Language */
+            language: string;
+            /** Nights */
+            nights?: number | null;
+            /** Notes */
+            notes?: string | null;
+            offer?: components["schemas"]["WaitlistOffer"] | null;
+            /**
+             * Offer Count
+             * @default 0
+             */
+            offer_count: number;
+            /** Offer Expires At */
+            offer_expires_at?: number | null;
+            /** Party Size */
+            party_size: number;
+            /** Resource Id */
+            resource_id?: string | null;
+            resource_kind?: components["schemas"]["ResourceKind"] | null;
+            /**
+             * Schema Version
+             * @description Persistence schema version. This is not the package version or application release version.
+             * @default 1
+             */
+            schema_version: string;
+            /** Service Item Id */
+            service_item_id?: string | null;
+            source_channel: components["schemas"]["ChannelKind"];
+            /** @default waiting */
+            status: components["schemas"]["WaitlistStatus"];
+            /** Time From */
+            time_from?: string | null;
+            /** Time To */
+            time_to?: string | null;
+            /**
+             * Updated At
+             * @description Last update wall-clock UNIX timestamp in microseconds.
+             */
+            updated_at?: number;
+            /** Waits Until */
+            waits_until: number;
+        };
         /** WaitlistEntryPage */
         WaitlistEntryPage: {
             /** Items */
@@ -14058,6 +14210,40 @@ export interface components {
             time_from?: string | null;
             /** Time To */
             time_to?: string | null;
+        };
+        /**
+         * WaitlistOffer
+         * @description The freed place held for a waiting customer: the resource and the time
+         *     the cancelled (or moved) booking `freed_booking_id` gave up, with what
+         *     that booking was (its service, the resource's rest after it, its
+         *     value), so a "yes" books exactly that. Where the offer went:
+         *     `channel`, the conversation that shows it and its outbox message
+         *     (None for the website chat, where the conversation carries it).
+         */
+        WaitlistOffer: {
+            /** Buffer Minutes */
+            buffer_minutes?: number | null;
+            channel?: components["schemas"]["ChannelKind"] | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Currency Code */
+            currency_code?: string | null;
+            /** Ends At */
+            ends_at: number;
+            /** Freed Booking Id */
+            freed_booking_id: string;
+            /** Offered At */
+            offered_at: number;
+            /** Outbound Message Id */
+            outbound_message_id?: string | null;
+            /** Resource Id */
+            resource_id: string;
+            /** Service Item Id */
+            service_item_id?: string | null;
+            /** Starts At */
+            starts_at: number;
+            /** Value Minor */
+            value_minor?: number | null;
         };
         /**
          * WaitlistOfferView

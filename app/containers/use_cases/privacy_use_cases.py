@@ -126,6 +126,8 @@ class PrivacyUseCasesContainer(containers.DeclarativeContainer):
         feedback_request_repo=repositories.feedback_request_repo,
         audit_log_repo=repositories.audit_log_repo,
         text_resolver=utilities.localized_text_resolver,
+        waitlist_entry_repo=repositories.waitlist_entry_repo,
+        campaign_message_repo=repositories.campaign_message_repo,
     )
     start_business_export_use_case: Factory[
         UseCaseContract[StartBusinessExportCommand, BusinessExportView]

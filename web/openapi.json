@@ -5934,6 +5934,151 @@
         "title": "CampaignAudience",
         "type": "string"
       },
+      "CampaignMessageDocument": {
+        "additionalProperties": false,
+        "description": "One message of a business's campaign to one customer, about one booking\n(`anchor_booking_id`: the last visit an invitation back follows, or the\nbooking a pre-arrival note is about); the id derives from the business,\nthe rule and that booking, so it is written once.\n\nA SENT message went into the outbox in `channel` and `language` and\ncounts against the cap of its `month`; when the customer books again\nwithin a week of it, it becomes BOOKED (`booking_id`, `booked_at`) and\nthe booking is marked as a campaign booking. A SKIPPED one keeps why.",
+        "properties": {
+          "anchor_booking_id": {
+            "title": "Anchor Booking Id",
+            "type": "string"
+          },
+          "booked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booked At"
+          },
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "month": {
+            "maxLength": 7,
+            "minLength": 7,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])$",
+            "title": "Month",
+            "type": "string"
+          },
+          "outbound_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outbound Message Id"
+          },
+          "rule_kind": {
+            "$ref": "#/components/schemas/RebookingRuleKind"
+          },
+          "schema_version": {
+            "default": "1",
+            "description": "Persistence schema version. This is not the package version or application release version.",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CampaignSkipReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/CampaignMessageStatus"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "business_id",
+          "contact_id",
+          "rule_kind",
+          "anchor_booking_id",
+          "status",
+          "month",
+          "language"
+        ],
+        "title": "CampaignMessageDocument",
+        "type": "object"
+      },
       "CampaignMessagePage": {
         "additionalProperties": false,
         "properties": {
@@ -8141,7 +8286,7 @@
       },
       "ContactRecords": {
         "additionalProperties": false,
-        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted. Missed calls are found by the visitor's numbers, the messages\nqueued to them (`outbound_messages`: replies, reminders, text-backs) by\ntheir account in each of the business's channels, the webhook events\nthey sent (`inbound_events`) by their accounts and conversations, and\nthe requests for feedback after their visits by the contact.",
+        "description": "Every stored record that describes one visitor of one business.\n\nCalls belong to the visitor through one of their conversations or their\nphone number; `notes` are the team's internal notes on their\nconversations. Raw language-model turns repeat the messages and are not\nlisted. Missed calls are found by the visitor's numbers, the messages\nqueued to them (`outbound_messages`: replies, reminders, text-backs) by\ntheir account in each of the business's channels, the webhook events\nthey sent (`inbound_events`) by their accounts and conversations, and\nthe requests for feedback after their visits, their places on the\nwaitlist and the rebooking campaign's messages by the contact.",
         "properties": {
           "bookings": {
             "items": {
@@ -8155,6 +8300,13 @@
               "$ref": "#/components/schemas/CallDocument"
             },
             "title": "Calls",
+            "type": "array"
+          },
+          "campaign_messages": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignMessageDocument"
+            },
+            "title": "Campaign Messages",
             "type": "array"
           },
           "contact": {
@@ -8221,6 +8373,13 @@
               "$ref": "#/components/schemas/OutboundMessageDocument"
             },
             "title": "Outbound Messages",
+            "type": "array"
+          },
+          "waitlist_entries": {
+            "items": {
+              "$ref": "#/components/schemas/WaitlistEntryDocument"
+            },
+            "title": "Waitlist Entries",
             "type": "array"
           }
         },
@@ -24995,6 +25154,274 @@
         "title": "WaitlistEndReason",
         "type": "string"
       },
+      "WaitlistEntryDocument": {
+        "additionalProperties": false,
+        "description": "A customer's place on a business's waitlist: nothing was free when they\nasked, so the assistant noted what they want (the local `date`, a time\nwindow `time_from`–`time_to` or any time, the party, nights of a stay,\na service, a named master or room, a kind of resource) in the chat\nwhere they asked (`conversation_id`, `source_channel`, `language`).\n\nWhen a cancellation or a move frees a place that fits, the first\nwaiting entry (oldest first) is OFFERED it: the place is held for them\nuntil `offer_expires_at` (the business's hold) and the offer goes to\ntheir chat. A \"yes\" makes the place their booking (BOOKED,\n`booking_id`); a \"no\", silence past the hold, the day passing\n(`waits_until`, the end of that day in UTC) or staff ending it make it\nEXPIRED with its `end_reason`. Test chats' entries (`is_sandbox`) are\nnever offered anything.",
+        "properties": {
+          "booked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booked At"
+          },
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "Creation wall-clock UNIX timestamp in microseconds.",
+            "title": "Created At",
+            "type": "integer"
+          },
+          "date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date",
+            "type": "string"
+          },
+          "end_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistEndReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "ended_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended By"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_sandbox": {
+            "default": false,
+            "title": "Is Sandbox",
+            "type": "boolean"
+          },
+          "language": {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "nights": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nights"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistOffer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offer_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Offer Count",
+            "type": "integer"
+          },
+          "offer_expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Expires At"
+          },
+          "party_size": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Party Size",
+            "type": "integer"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "resource_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schema_version": {
+            "default": "1",
+            "description": "Persistence schema version. This is not the package version or application release version.",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Item Id"
+          },
+          "source_channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WaitlistStatus",
+            "default": "waiting"
+          },
+          "time_from": {
+            "anyOf": [
+              {
+                "maxLength": 5,
+                "minLength": 5,
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time From"
+          },
+          "time_to": {
+            "anyOf": [
+              {
+                "maxLength": 5,
+                "minLength": 5,
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time To"
+          },
+          "updated_at": {
+            "description": "Last update wall-clock UNIX timestamp in microseconds.",
+            "title": "Updated At",
+            "type": "integer"
+          },
+          "waits_until": {
+            "title": "Waits Until",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_id",
+          "contact_id",
+          "source_channel",
+          "language",
+          "date",
+          "party_size",
+          "waits_until"
+        ],
+        "title": "WaitlistEntryDocument",
+        "type": "object"
+      },
       "WaitlistEntryPage": {
         "additionalProperties": false,
         "properties": {
@@ -25275,6 +25702,125 @@
           "created_at"
         ],
         "title": "WaitlistEntryView",
+        "type": "object"
+      },
+      "WaitlistOffer": {
+        "additionalProperties": false,
+        "description": "The freed place held for a waiting customer: the resource and the time\nthe cancelled (or moved) booking `freed_booking_id` gave up, with what\nthat booking was (its service, the resource's rest after it, its\nvalue), so a \"yes\" books exactly that. Where the offer went:\n`channel`, the conversation that shows it and its outbox message\n(None for the website chat, where the conversation carries it).",
+        "properties": {
+          "buffer_minutes": {
+            "anyOf": [
+              {
+                "maximum": 240.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buffer Minutes"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "currency_code": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency Code"
+          },
+          "ends_at": {
+            "minimum": 0.0,
+            "title": "Ends At",
+            "type": "integer"
+          },
+          "freed_booking_id": {
+            "title": "Freed Booking Id",
+            "type": "string"
+          },
+          "offered_at": {
+            "title": "Offered At",
+            "type": "integer"
+          },
+          "outbound_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outbound Message Id"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "service_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Item Id"
+          },
+          "starts_at": {
+            "minimum": 0.0,
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "value_minor": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Minor"
+          }
+        },
+        "required": [
+          "freed_booking_id",
+          "resource_id",
+          "starts_at",
+          "ends_at",
+          "offered_at"
+        ],
+        "title": "WaitlistOffer",
         "type": "object"
       },
       "WaitlistOfferView": {
