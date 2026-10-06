@@ -41,7 +41,7 @@ INSTAGRAM: dict[str, Any] = {
 
 @dataclass(frozen=True)
 class MetaCase:
-    """A fixture, the messages it gives (id prefix, text, kinds) or the kinds skipped."""
+    """A fixture and the messages it gives, or the kinds it skips."""
 
     fixture: str
     messages: tuple[dict[str, Any], ...] = ()
