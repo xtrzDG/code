@@ -50,3 +50,6 @@
 - If a template was rejected or paused, fix it in WhatsApp Manager and in
   `WHATSAPP_NOTIFICATION_TEMPLATE` / `WHATSAPP_REMINDER_TEMPLATE`.
 - Postmortem for SEV2 if owners noticed.
+- Game day: `tests/chaos/test_meta_blackhole_game_day.py` (Meta's host
+  takes requests and never answers; see
+  [delivery-failures](delivery-failures.md)).

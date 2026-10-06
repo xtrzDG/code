@@ -42,13 +42,16 @@ MINUTE: float = 60.0
 
 
 def wait_for(
-    is_done: Callable[[], bool], seconds: float = 30.0, what: str = "the world"
+    is_done: Callable[[], bool],
+    seconds: float = 30.0,
+    what: str = "the world",
+    every: float = 0.2,
 ) -> None:
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         if is_done():
             return
-        time.sleep(0.2)
+        time.sleep(every)
 
     raise AssertionError(f"Timed out after {seconds:.0f} s waiting for {what}.")
 
@@ -203,9 +206,12 @@ def chaos_world(
             clock=ChaosClock(directory / "clock-offset"),
             provider_url=provider_url,
         )
-        # The seeding workshop ran its jobs once and left a pulse: it is no
-        # worker of this world (after a clock jump it would look stuck).
+        # The seeding workshop ran its jobs once and left a pulse, and its
+        # model calls (the autotests of the publication) in the platform
+        # signals: neither is this world's (after a clock jump the pulse
+        # would look stuck, the calls would dilute the error rates).
         world.execute("delete from workshop.worker_heartbeats")
+        world.execute("delete from workshop.rate_limit_buckets")
         try:
             yield world
         finally:

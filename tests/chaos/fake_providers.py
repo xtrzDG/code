@@ -21,7 +21,8 @@ from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-REPLY_TEXT: str = "Да, столик на четверых есть. Во сколько вас ждать?"
+# No number, price or promise: the reply guard lets it through as it is.
+REPLY_TEXT: str = "Здравствуйте! Сейчас уточню у администратора и сразу отвечу."
 # A black-holed request is held at most this long (the client left by then).
 HOLD_SECONDS: float = 60.0
 
@@ -89,9 +90,9 @@ def build_handler(state: ProviderState) -> type[BaseHTTPRequestHandler]:
             length = int(self.headers.get("Content-Length") or 0)
             self.rfile.read(length)
             if self.path.startswith("/openai/"):
-                number = state.count("llm")
+                state.count("llm")
                 state.released.wait(timeout=state.llm_delay_seconds)
-                self._answer(openai_body(f"{REPLY_TEXT} ({number})"))
+                self._answer(openai_body(REPLY_TEXT))
                 return
 
             if state.is_meta_black_holed:

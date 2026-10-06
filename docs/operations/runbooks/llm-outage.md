@@ -16,13 +16,21 @@ decides (success closes it, failure opens it again). The routing adapter
 with both keys set a one-provider outage costs customers a few slower
 answers, not lost ones.
 
-- `LLM_FALLBACK_MODEL_ID=off` turns the failover off: an open circuit then
-  fails the turn, the queue retries it with backoff and finally keeps it
-  as a dead letter. Use `off` only when the other provider must not see
-  customer messages (a contract, a data-residency promise).
-- The fallback is tried only when its provider has its key
-  (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY`); without it the failover is
-  silently absent.
+- `LLM_FALLBACK_MODEL_ID=off` turns the failover off, and with it the
+  short cut: with nothing to fail over to, every call still waits up to
+  `LLM_CALL_TIMEOUT_SECONDS` (25 s, retried once) before it fails. Use
+  `off` only when the other provider must not see customer messages (a
+  contract, a data-residency promise).
+- Without the fallback's key (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`)
+  every fallback call fails at once (`Anthropic is not configured: set
+  ANTHROPIC_API_KEY.`); the fallback's circuit opens, and once the
+  primary's opens too, turns fail at once (`... and its fallback ... are
+  both unavailable`).
+- A turn whose model calls fail is not lost: the customer gets the
+  handoff notice in their language ("your question went to a colleague",
+  with the opening hours when closed), the conversation waits in the
+  owner's inbox and staff are notified. Expect `handoff_spike` to fire
+  with `llm_errors`.
 
 ## How it shows
 
@@ -32,8 +40,9 @@ answers, not lost ones.
 - Grafana "Resilience" row and `/metrics`: `workshop_circuit_breaker_state`
   per circuit (0 closed, 1 half-open, 2 open), per process.
 - Customers get "one moment" replies after `CHAT_TURN_DEADLINE_SECONDS`
-  (20 s) while a turn waits; the inbound lane's oldest wait grows on
-  `/admin/system` only when the fallback fails too.
+  (20 s) while a turn waits, then the handoff notice when it fails;
+  `handoff_spike` fires next to `llm_errors`; /status shows the chat
+  channels degraded (from 50% failed calls: outage).
 
 ## Check (5 minutes)
 
@@ -68,11 +77,12 @@ answers, not lost ones.
 
 - Circuits close by themselves after a successful trial call: no restart
   is needed when the provider recovers.
-- Messages that failed are retried by the queue with backoff; those that
-  ran out of attempts are dead letters. Once calls succeed again, retry
-  them on `/admin/system` (Dead letters → Retry): customers get their
-  answer late rather than never. Discard only messages older than a day
-  (the customer has moved on; the conversation is in the owner's inbox).
+- Turns that failed were handed off: the conversations wait in the
+  owners' inboxes ("needs a person"). Nothing is replayed by itself; a
+  job that died for another reason (a crash mid-turn) is a dead letter on
+  `/admin/system` (Dead letters → Retry) and answers late rather than
+  never. Discard only messages older than a day (the customer has moved
+  on; the conversation is in the owner's inbox).
 - The alert resolves by itself once the error rate drops; the RESOLVED
   message closes the episode. If you switched `LLM_PROVIDER` by hand,
   switch back in daylight once the provider is stable for an hour.
@@ -82,4 +92,10 @@ answers, not lost ones.
 - Owners told per `../incident.md` (SEV1: within the hour).
 - Postmortem: did the failover carry the load (minutes with both circuits
   open)? Note the minutes of answers lost against the "answered in time"
-  budget. Game day: `tests/chaos/test_llm_latency_game_day.py`.
+  budget.
+- Game day: `tests/chaos/test_llm_latency_game_day.py` (a 30-second
+  provider with `LLM_CALL_TIMEOUT_SECONDS=2` and the failover off: every
+  visitor gets the handoff notice, `llm_errors` fires at the next
+  five-minute check, /status shows the chat channels down; a fast
+  provider answers the next visitor, the circuit closes and the alert
+  resolves).
