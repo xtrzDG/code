@@ -49,7 +49,7 @@ def test_a_retried_create_with_the_same_key_makes_one_booking() -> None:
             "time": "14:00",
             "party_size": 2,
         }
-        retry = {"Idempotency-Key": "c7a1d9b2-0f3e-4a8c-9d6b-2e5f1a7c3b90"}
+        retry = {"Idempotency-Key": "retry-0000"}  # gitleaks:allow
         first = shop.api("POST", "/bookings", key, body, retry)
         again = shop.api("POST", "/bookings", key, body, retry)
         listed = shop.api("GET", "/bookings", key).json()["items"]

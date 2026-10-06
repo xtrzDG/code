@@ -36,17 +36,15 @@ def test_the_customer_message_and_the_answer_are_both_announced() -> None:
     conversation = world.conversations()[0]
     world.send("Test", is_sandbox=True)
 
-    assert (
-        world.live_events.events
-        == [
-            PublishedLiveEvent(
-                world.business.id,
-                LiveEventKind.CONVERSATION_MESSAGE,
-                (str(conversation.id),),
-            ),
-        ]
-        * 2
+    # A new conversation is also announced as started (for webhooks; the
+    # cabinet's live stream does not carry it).
+    started = PublishedLiveEvent(
+        world.business.id, LiveEventKind.CONVERSATION_STARTED, (str(conversation.id),)
     )
+    message = PublishedLiveEvent(
+        world.business.id, LiveEventKind.CONVERSATION_MESSAGE, (str(conversation.id),)
+    )
+    assert world.live_events.events == [started, message, message]
 
 
 def test_channel_health_changes_are_announced_and_unchanged_health_is_not() -> None:
