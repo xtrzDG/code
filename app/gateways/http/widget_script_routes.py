@@ -17,7 +17,7 @@ from app.gateways.http.widget_demo_page import (
     render_embed_code,
 )
 from app.gateways.http.widget_script_assembly import assemble_widget_script
-from app.schemas.constants.channels import WidgetPosition
+from app.schemas.constants.channels import WidgetPosition, WidgetTheme
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import WidgetAccentColor
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -61,10 +61,13 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
         GET /widget.js                       the chat widget (any site may load
                                              it; HEAD too)
         GET /widget/demo?business_id=...     a page that embeds the widget;
-                                             optional `language` forces the
-                                             interface language, `color`
-                                             (hex) and `position` (left or
-                                             right) preview unsaved choices
+                                             optional `lang` (or `language`)
+                                             forces the interface language,
+                                             any of the widget's text
+                                             bundles; `color` (hex),
+                                             `position` (left or right) and
+                                             `theme` (light or dark) preview
+                                             unsaved choices
 
     The script is assembled from its parts once, when the router is built,
     and served with an ETag over the assembled text; the demo page shows the
@@ -101,11 +104,15 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
     def get_widget_demo(
         business_id: Annotated[str | None, Query()] = None,
         language: Annotated[str | None, Query()] = None,
+        lang: Annotated[str | None, Query()] = None,
         color: Annotated[str | None, Query()] = None,
         position: Annotated[str | None, Query()] = None,
+        theme: Annotated[str | None, Query()] = None,
         accept_language: Annotated[str | None, Header()] = None,
     ) -> HTMLResponse:
-        forced_language: LanguageTag | None = parse_language(language)
+        forced_language: LanguageTag | None = parse_language(
+            lang if language is None else language
+        )
         page_language: str = demo_page_language(forced_language, accept_language)
         fields: dict[str, str]
         if business_id is None or business_id.strip() == "":
@@ -128,6 +135,7 @@ def build_widget_script_router(static_directory: Path = STATIC_DIRECTORY) -> API
                     forced_language,
                     parse_accent_color(color),
                     parse_position(position),
+                    parse_theme(theme),
                 ),
             )
 
@@ -184,11 +192,24 @@ def parse_position(raw_position: str | None) -> WidgetPosition | None:
         return None
 
 
+def parse_theme(raw_theme: str | None) -> WidgetTheme | None:
+    """A previewed light or dark widget; anything else follows the system."""
+
+    if raw_theme is None:
+        return None
+
+    try:
+        return WidgetTheme(raw_theme.strip().lower())
+    except ValueError:
+        return None
+
+
 def render_widget_tag(
     business_id: BusinessId,
     language: LanguageTag | None,
     color: WidgetAccentColor | None = None,
     position: WidgetPosition | None = None,
+    theme: WidgetTheme | None = None,
 ) -> str:
     """The embed tag of the cabinet snippet, plus the demo's preview options."""
 
@@ -206,5 +227,8 @@ def render_widget_tag(
 
     if position is not None:
         attributes.append(f'data-position="{position.value}"')
+
+    if theme is not None:
+        attributes.append(f'data-theme="{theme.value}"')
 
     return f"<script {' '.join(attributes)} async></script>"

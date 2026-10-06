@@ -51,6 +51,16 @@ class WidgetPosition(StrEnum):
     RIGHT = "right"
 
 
+class WidgetTheme(StrEnum):
+    """
+    The website chat's colours when the script tag asks for them
+    (`data-theme`); without it the widget follows the visitor's system.
+    """
+
+    LIGHT = "light"
+    DARK = "dark"
+
+
 class WidgetHandoffReason(StrEnum):
     """
     Why a website visitor's conversation goes to staff from the widget:
