@@ -192,7 +192,7 @@ export const adminMetricsHe: Translation<typeof adminMetricsEn> = {
     empty: "עדיין אין מקורות.",
   },
   vitals: {
-    title: "Web Vitals",
+    title: "מדדי מהירות העמודים (Web Vitals)",
     description: "האחוזון ה-75 של עמודי לוח הבקרה לאנשים מחוברים בתקופה, מדורג לפי הספים של Google.",
     page: "עמוד",
     device: "מכשיר",

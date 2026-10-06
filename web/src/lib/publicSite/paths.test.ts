@@ -41,11 +41,13 @@ describe("public site paths", () => {
   });
 
   it("links every language of a page with an x-default", () => {
-    expect(languageAlternates("")).toEqual({ ka: "/ka", ru: "/ru", en: "/en", "x-default": "/" });
+    expect(languageAlternates("")).toEqual({ ka: "/ka", ru: "/ru", en: "/en", he: "/he", de: "/de", "x-default": "/" });
     expect(languageAlternates("/for/hotel")).toEqual({
       ka: "/ka/for/hotel",
       ru: "/ru/for/hotel",
       en: "/en/for/hotel",
+      he: "/he/for/hotel",
+      de: "/de/for/hotel",
       "x-default": "/en/for/hotel",
     });
   });

@@ -47,7 +47,7 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
     },
     notSent: "לא נשלחה: לא הוגדרו נמעני התראות",
     figure: "כעת {figure}, מופעלת מעל {threshold}",
-    runbook: "Runbook",
+    runbook: "מדריך תפעול",
     codes: {
       dead_jobs: "משימות מתות",
       inbound_backlog: "הודעות לקוחות ממתינות",
@@ -107,7 +107,7 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
     period: "שורות שעתיות מ-{since} עד {until}",
   },
   workers: {
-    title: "Workers",
+    title: "תהליכי רקע",
     description: "כל תהליך worker מדווח כל כמה שניות. worker מיושן הפסיק לדווח.",
     none: "אף worker לא דיווח",
     noneDescription: "בלי worker אף משימה לא רצה ואף התראה לא נבדקת. בדקו קודם את שירות ה-worker.",

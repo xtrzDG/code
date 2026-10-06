@@ -15,11 +15,11 @@ import { landingEn } from "./landing/en";
 
 /**
  * English texts: the reference dictionary. Every key added here must be
- * added to ru.ts and ka.ts too (the type checker enforces it).
+ * added to ru.ts, ka.ts, he.ts and de.ts too (the type checker enforces it).
  *
  * Placeholders look like {name}. Plural texts are objects with the
- * Intl.PluralRules categories of the language (`one`, `few`, `many`,
- * `other`); `other` is required.
+ * Intl.PluralRules categories of the language (`one`, `two`, `few`,
+ * `many`, `other`); `other` is required.
  */
 export const en = {
   common: {

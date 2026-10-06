@@ -5,6 +5,7 @@ import { IconBell, IconPlus } from "@/components/icons";
 import { Button, ButtonLink, Card, EmptyState, Modal } from "@/components/ui";
 import { ConfirmDialog, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
+import { CABINET_LANGUAGES } from "@/i18n/config";
 import { businessPath } from "@/lib/navigation";
 
 import { MAX_MANAGER_CONTACTS, type ManagerContact } from "../_lib/contacts";
@@ -108,7 +109,7 @@ export function NotificationsTab() {
             key={editing.original ? contactId(editing.original) : "new"}
             initial={editing.original ?? undefined}
             others={contacts.filter((contact) => !editing.original || contactId(contact) !== contactId(editing.original))}
-            languages={languageChoices([business.owner_language], business.languages, ["ka", "ru", "en"])}
+            languages={languageChoices([business.owner_language], business.languages, CABINET_LANGUAGES)}
             isPending={list.isBusy}
             error={list.dialogError}
             onCancel={list.stopEditing}

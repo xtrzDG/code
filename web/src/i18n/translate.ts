@@ -35,17 +35,6 @@ export type Messages = Stringify<typeof en>;
 /** The translation of one section dictionary (see messages/sections/). */
 export type Translation<T> = Stringify<T>;
 
-type DeepPartial<T> = {
-  [Key in keyof T]?: T[Key] extends string ? string : DeepPartial<T[Key]>;
-};
-
-/**
- * A dictionary still being translated: any text may be missing (English
- * shows in its place). A language with one is not offered to owners
- * (config.ts, CABINET_LANGUAGES) until it is complete and typed `Messages`.
- */
-export type PartialMessages = DeepPartial<Messages>;
-
 type LeafPaths<T, Prefix extends string = ""> = {
   [Key in keyof T & string]: T[Key] extends string
     ? `${Prefix}${Key}`

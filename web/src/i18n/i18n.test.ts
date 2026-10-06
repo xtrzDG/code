@@ -16,14 +16,18 @@ describe("locale negotiation", () => {
     expect(matchLocale("ru-RU")).toBe("ru");
     expect(matchLocale("ka")).toBe("ka");
     expect(matchLocale("EN_us")).toBe("en");
-    expect(matchLocale("de-DE")).toBeNull();
+    expect(matchLocale("de-DE")).toBe("de");
+    expect(matchLocale("he-IL")).toBe("he");
+    expect(matchLocale("iw")).toBe("he");
+    expect(matchLocale("fr-FR")).toBeNull();
     expect(matchLocale(undefined)).toBeNull();
   });
 
   it("honours Accept-Language quality values", () => {
-    expect(negotiateLocale("de-DE,ru;q=0.8,en;q=0.5")).toBe("ru");
+    expect(negotiateLocale("fr-FR,ru;q=0.8,en;q=0.5")).toBe("ru");
     expect(negotiateLocale("en;q=0.4, ka;q=0.9")).toBe("ka");
-    expect(negotiateLocale("fr, de")).toBeNull();
+    expect(negotiateLocale("fr, de;q=0.7")).toBe("de");
+    expect(negotiateLocale("fr, it")).toBeNull();
     expect(negotiateLocale("*")).toBeNull();
   });
 

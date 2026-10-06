@@ -20,7 +20,7 @@ export const DEFAULT_LOCALE: Locale = "en";
  * is there. The backend keeps the same list
  * (app/schemas/constants/localization.py, CABINET_LANGUAGES).
  */
-export const CABINET_LANGUAGES: readonly Locale[] = ["ka", "ru", "en"];
+export const CABINET_LANGUAGES: readonly Locale[] = ["ka", "ru", "en", "he", "de"];
 
 /**
  * Languages whose cabinet texts are drafts awaiting a native speaker's

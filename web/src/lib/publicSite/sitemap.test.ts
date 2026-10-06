@@ -15,16 +15,22 @@ describe("sitemap", () => {
       "https://app.example.com/ka",
       "https://app.example.com/ru",
       "https://app.example.com/en",
+      "https://app.example.com/he",
+      "https://app.example.com/de",
       "https://app.example.com/ka/for/hotel",
       "https://app.example.com/ru/for/hotel",
       "https://app.example.com/en/for/hotel",
+      "https://app.example.com/he/for/hotel",
+      "https://app.example.com/de/for/hotel",
     ]);
-    expect(entries[4]?.alternates.languages).toEqual({
+    expect(entries[6]?.alternates.languages).toEqual({
       ka: "https://app.example.com/ka/for/hotel",
       ru: "https://app.example.com/ru/for/hotel",
       en: "https://app.example.com/en/for/hotel",
+      he: "https://app.example.com/he/for/hotel",
+      de: "https://app.example.com/de/for/hotel",
     });
     expect(entries[0]?.priority).toBe(1);
-    expect(entries[3]?.priority).toBe(0.8);
+    expect(entries[5]?.priority).toBe(0.8);
   });
 });

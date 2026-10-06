@@ -3,9 +3,10 @@
  * screenshot tour's lint-texts step; a dictionary test catches the same
  * mistakes before anything is rendered):
  *
- * - every text is in its own language's script: no Cyrillic in English or
- *   Georgian, no Georgian in English or Russian, and no Russian or Georgian
- *   text that is mostly Latin words (brands and codes aside);
+ * - every text is in its own language's script: no Cyrillic in English,
+ *   Georgian, Hebrew or German, no Georgian or Hebrew in the others, and no
+ *   Russian, Georgian or Hebrew text that is mostly Latin words (brands and
+ *   codes aside);
  * - the Russian glossary: the assistant is "помощник", never "ассистент"
  *   (the brand name aside), and versions and autotests are words of the
  *   Assistant's "Дополнительно" pages (and the platform admin) only;
@@ -17,7 +18,9 @@
 
 import { describe, expect, it } from "vitest";
 
+import { de } from "./messages/de";
 import { en } from "./messages/en";
+import { he } from "./messages/he";
 import { ka } from "./messages/ka";
 import { ru } from "./messages/ru";
 import type { MessageTree } from "./translate";
@@ -72,6 +75,7 @@ function mostlyLatin(text: string): boolean {
 
 const CYRILLIC = /[А-Яа-яЁё]{3,}/;
 const GEORGIAN = /[Ⴀ-ჿ]{3,}/;
+const HEBREW = /[\u0590-\u05FF]{3,}/;
 
 function offenders(tree: MessageTree, isWrong: (text: string) => boolean): string[] {
   return cabinetLeaves(tree)
@@ -80,18 +84,27 @@ function offenders(tree: MessageTree, isWrong: (text: string) => boolean): strin
 }
 
 describe("texts are in their own language", () => {
-  it("English has no Russian or Georgian", () => {
-    expect(offenders(en, (text) => CYRILLIC.test(text) || GEORGIAN.test(text))).toEqual([]);
+  it("English has no Russian, Georgian or Hebrew", () => {
+    expect(offenders(en, (text) => CYRILLIC.test(text) || GEORGIAN.test(text) || HEBREW.test(text))).toEqual([]);
   });
 
-  it("Russian has no Georgian and no text that is mostly Latin words", () => {
-    expect(offenders(ru, (text) => GEORGIAN.test(text))).toEqual([]);
+  it("Russian has no Georgian or Hebrew and no text that is mostly Latin words", () => {
+    expect(offenders(ru, (text) => GEORGIAN.test(text) || HEBREW.test(text))).toEqual([]);
     expect(offenders(ru, mostlyLatin)).toEqual([]);
   });
 
-  it("Georgian has no Russian and no text that is mostly Latin words", () => {
-    expect(offenders(ka, (text) => CYRILLIC.test(text))).toEqual([]);
+  it("Georgian has no Russian or Hebrew and no text that is mostly Latin words", () => {
+    expect(offenders(ka, (text) => CYRILLIC.test(text) || HEBREW.test(text))).toEqual([]);
     expect(offenders(ka, mostlyLatin)).toEqual([]);
+  });
+
+  it("Hebrew has no Russian or Georgian and no text that is mostly Latin words", () => {
+    expect(offenders(he, (text) => CYRILLIC.test(text) || GEORGIAN.test(text))).toEqual([]);
+    expect(offenders(he, mostlyLatin)).toEqual([]);
+  });
+
+  it("German has no Russian, Georgian or Hebrew", () => {
+    expect(offenders(de, (text) => CYRILLIC.test(text) || GEORGIAN.test(text) || HEBREW.test(text))).toEqual([]);
   });
 });
 
