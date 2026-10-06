@@ -1829,3 +1829,6 @@ f702f7ca2e4c78b68d8fbfbac9cb147e2adc77cb:tests/storage/golden/queued_jobs/v2.jso
 # Reviewed 2026-10-06 (R16-OWNER-TEXT-CATALOG): `NICHE: NicheKey = NicheKey.B2B_SUPPLY`,
 # an enum member of the niche template, not a secret.
 56f9e170b7df55fc7211cd17e196062b728374a1:app/registries/niches/templates/b2b_supply_template.py:generic-api-key:22
+# Reviewed 2026-10-06 (W17 integration): the review comment above quotes the
+# same enum member line of the b2b_supply niche template; not a secret.
+0d2c2e8dcf82c8927ad278c66efbcf6c9a033757:.gitleaksignore:generic-api-key:1829
