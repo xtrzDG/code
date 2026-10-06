@@ -105,16 +105,20 @@ def retype_property(definitions: JsonObject, patch: RetypeProperty) -> None:
 
         for schema in composed_schemas(cast(JsonObject, definition)):
             properties: object = schema.get("properties")
-            target: object = (
-                cast(JsonObject, properties).get(patch.property_name)
-                if isinstance(properties, dict)
-                else None
-            )
-            if isinstance(target, dict) and target.get("type") == patch.wrong_type:
-                cast(JsonObject, properties)[patch.property_name] = {
-                    **{k: v for k, v in target.items() if k != "type"},
-                    **patch.schema,
+            if not isinstance(properties, dict):
+                continue
+
+            fields: JsonObject = cast(JsonObject, properties)
+            target: object = fields.get(patch.property_name)
+            if not isinstance(target, dict):
+                continue
+
+            mistyped: JsonObject = cast(JsonObject, target)
+            if mistyped.get("type") == patch.wrong_type:
+                kept: JsonObject = {
+                    key: value for key, value in mistyped.items() if key != "type"
                 }
+                fields[patch.property_name] = {**kept, **patch.schema}
                 retyped += 1
 
     if retyped == 0:
