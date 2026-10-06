@@ -1,26 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 
 import { api } from "@/api/client";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
-import { useToast } from "@/components/ui";
+import { useAutosaveForm } from "@/components/forms/useAutosaveForm";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
 import {
   buildGeneralChanges,
+  generalFormErrors,
   generalFormFrom,
   hasChanges,
+  parseRetentionDays,
   type BusinessView,
   type GeneralError,
   type GeneralField,
   type GeneralForm,
   type SettingsChanges,
 } from "./general";
-import { afterStatusSwitch, changesFromRevision, isStaleRevision, rebaseGeneralForm } from "./revision";
+import { changesFromRevision, isStaleRevision, rebaseGeneralForm } from "./revision";
 
 const GENERAL_ERRORS: Record<GeneralError, MessageKey> = {
   required: "settings.general.errors.required",
@@ -30,150 +32,69 @@ const GENERAL_ERRORS: Record<GeneralError, MessageKey> = {
 };
 
 /**
- * The General form's values and its save. Saves carry the business revision
- * they were made from; a save refused because someone saved since is put on
- * top of what is stored now and saved again at once when nobody else changed
- * the same fields.
+ * The General form, saved by itself (useAutosaveForm): every change goes
+ * with the business revision it was made from; a save refused because
+ * someone saved since is put on top of what is stored now, and what nobody
+ * else changed is saved again at once. A shorter recording retention
+ * deletes recordings, so it asks first. `switched` is the business as the
+ * status switch on the same page last saved it (a newer revision only).
  */
 export function useGeneralSettings(initial: BusinessView, switched: BusinessView | null) {
   const { t } = useI18n();
-  const toast = useToast();
   const router = useRouter();
   const { business, isOwner } = useBusiness();
-  const [loaded, setLoaded] = useState<BusinessView>(initial);
-  const [form, setForm] = useState<GeneralForm>(() => generalFormFrom(initial));
-  const [errors, setErrors] = useState<Partial<Record<GeneralField, GeneralError>>>({});
-  const [isStale, setStale] = useState(false);
-  // Refused as stale, but what is stored now could not be loaded either.
-  const [isReloadFailed, setReloadFailed] = useState(false);
-  // The status switch changes no field of this form, only the revision.
-  const baseline = afterStatusSwitch(loaded, switched);
-
+  const [dismissedConflicts, setDismissedConflicts] = useState("");
   const save = useMutation(
     (changes: SettingsChanges) =>
       api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: changes }),
     { errorToast: false },
   );
-  // Both a refused answer and a network failure come back as a result.
   const reload = useMutation(
     () => api.GET("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } } }),
     { errorToast: false },
   );
 
-  const result = buildGeneralChanges(baseline, form);
-  const isDirty = !result.ok || hasChanges(result.changes);
-  const disabled = !isOwner || save.isPending || reload.isPending;
+  const autosave = useAutosaveForm<GeneralForm, BusinessView, SettingsChanges>({
+    stored: switched && switched.revision > initial.revision ? switched : initial,
+    toForm: generalFormFrom,
+    invalidFields: (form) => Object.keys(generalFormErrors(form)) as GeneralField[],
+    toBody: (form, base) => {
+      const built = buildGeneralChanges(base, form);
+      return built.ok && hasChanges(built.changes) ? changesFromRevision(built.changes, base) : null;
+    },
+    save: (changes) => save.run(changes),
+    isNewer: (candidate, base) => candidate.revision > base.revision,
+    conflict: { isConflict: isStaleRevision, reload: () => reload.run(), rebase: rebaseGeneralForm },
+    needsConfirmation: (form, base) => {
+      const days = parseRetentionDays(form.retentionDays);
+      return days !== null && days < base.recording_retention_days ? ["retentionDays"] : [];
+    },
+    onSaved: () => router.refresh(),
+  });
 
-  const update = <Field extends GeneralField>(field: Field, value: GeneralForm[Field]) => {
-    setForm((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: undefined }));
-  };
-
-  const saved = (stored: BusinessView) => {
-    setLoaded(stored);
-    setForm(generalFormFrom(stored));
-    router.refresh();
-    toast.success(t("settings.general.saved"));
-  };
-
-  /**
-   * Save `typed` (made from `base`). Refused because someone saved since:
-   * put it on top of what is stored now, and save once more when nobody
-   * else changed the same fields.
-   */
-  const store = async (base: BusinessView, typed: GeneralForm, mayRetry: boolean): Promise<void> => {
-    const built = buildGeneralChanges(base, typed);
-    if (!built.ok) {
-      setErrors(built.errors);
-      return;
-    }
-    if (!hasChanges(built.changes)) {
-      // What was typed is what is stored now.
-      saved(base);
-      return;
-    }
-    const answer = await save.run(changesFromRevision(built.changes, base));
-    if (answer.ok) {
-      saved(answer.data);
-      return;
-    }
-    if (!isStaleRevision(answer.error)) {
-      toast.error(answer.error);
-      return;
-    }
-    const latest = await reload.run();
-    router.refresh();
-    if (!latest.ok) {
-      // Do not claim the form shows what is stored: it still shows the
-      // owner's own (refused) changes.
-      setReloadFailed(true);
-      toast.show({ tone: "error", title: t("settings.general.staleTitle") });
-      return;
-    }
-    const rebased = rebaseGeneralForm(base, latest.data, typed);
-    setLoaded(latest.data);
-    setForm(rebased.form);
-    setErrors({});
-    if (rebased.conflicts.length === 0 && mayRetry) {
-      await store(latest.data, rebased.form, false);
-      return;
-    }
-    setStale(true);
-    toast.show({ tone: "error", title: t("settings.general.staleTitle") });
-  };
-
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!result.ok) {
-      setErrors(result.errors);
-      return;
-    }
-    if (!hasChanges(result.changes)) {
-      toast.info(t("settings.general.noChanges"));
-      return;
-    }
-    setStale(false);
-    setReloadFailed(false);
-    await store(baseline, form, true);
-  };
-
-  const loadCurrent = async () => {
-    const latest = await reload.run();
-    if (!latest.ok) {
-      toast.error(latest.error);
-      return;
-    }
-    const rebased = rebaseGeneralForm(baseline, latest.data, form);
-    setLoaded(latest.data);
-    setForm(rebased.form);
-    setErrors({});
-    setReloadFailed(false);
-    setStale(true);
-    router.refresh();
-  };
-
-  const discard = () => {
-    setForm(generalFormFrom(baseline));
-    setErrors({});
-  };
-
-  const errorText = (field: GeneralField) => (errors[field] ? t(GENERAL_ERRORS[errors[field]]) : undefined);
+  const errors = generalFormErrors(autosave.values);
+  const conflictKey = autosave.conflicts.join(",");
 
   return {
-    baseline,
-    form,
-    update,
-    errorText,
-    isDirty,
-    disabled,
-    isSaving: save.isPending,
+    baseline: autosave.stored,
+    form: autosave.values,
+    state: autosave.state,
+    disabled: !isOwner,
+    /** Choices save at once; typed text a moment after the last key. */
+    update: autosave.update,
+    type: autosave.type,
+    flush: autosave.flush,
+    fieldState: autosave.fieldState,
+    retry: autosave.retry,
+    errorText: (field: GeneralField) => (errors[field] ? t(GENERAL_ERRORS[errors[field]]) : undefined),
+    isStale: conflictKey !== "" && conflictKey !== dismissedConflicts,
+    closeStale: () => setDismissedConflicts(conflictKey),
+    isReloadFailed: autosave.isReloadFailed,
     isReloading: reload.isPending,
-    isStale,
-    closeStale: () => setStale(false),
-    isReloadFailed,
-    onSubmit,
-    loadCurrent,
-    discard,
+    loadCurrent: () => void autosave.reloadStored(),
+    confirming: autosave.confirming.length > 0,
+    confirm: () => void autosave.confirm(),
+    cancelConfirmation: autosave.cancelConfirmation,
   };
 }
 

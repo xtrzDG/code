@@ -101,12 +101,15 @@ export function Fieldset({
   legend,
   hint,
   error,
+  status,
   className,
   children,
 }: {
   legend: ReactNode;
   hint?: ReactNode;
   error?: ReactNode;
+  /** Beside the legend, outside it (whether the group's last change is saved). */
+  status?: ReactNode;
   className?: string;
   children: ReactNode;
 }) {
@@ -117,6 +120,7 @@ export function Fieldset({
       aria-describedby={[error ? `${id}-error` : null, hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined}
     >
       <legend className="text-sm font-medium text-ink">{legend}</legend>
+      {status ? <div className="-mt-2 flex justify-end">{status}</div> : null}
       {hint ? (
         <p id={`${id}-hint`} className="-mt-2 text-sm text-ink-muted">
           {hint}

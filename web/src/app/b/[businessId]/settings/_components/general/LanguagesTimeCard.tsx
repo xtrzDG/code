@@ -1,5 +1,6 @@
 "use client";
 
+import { SavePill } from "@/components/forms/SavePill";
 import { Card, Checkbox, Field, Fieldset, Select } from "@/components/ui";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useI18n } from "@/i18n/client";
@@ -14,12 +15,13 @@ import type { GeneralSettings } from "../../_lib/useGeneralSettings";
 export function LanguagesTimeCard({ settings, options }: { settings: GeneralSettings; options: GeneralChoices }) {
   const { t, locale } = useI18n();
   const { isOwner } = useBusiness();
-  const { form, disabled, update, errorText } = settings;
+  const { form, disabled, update, errorText, fieldState, retry } = settings;
+  const pill = (field: Parameters<typeof fieldState>[0]) => <SavePill state={fieldState(field)} onRetry={retry} />;
   const { labelOf, choices, addable, ownerLanguages, countryZones, otherZones } = options;
   return (
     <Card title={t("settings.general.languagesTitle")}>
       <div className="space-y-6">
-        <Field label={t("settings.general.timezone")} hint={t("settings.general.timezoneHint")}>
+        <Field label={t("settings.general.timezone")} hint={t("settings.general.timezoneHint")} status={pill("timezone")}>
           {(control) => (
             <Select {...control} value={form.timezone} disabled={disabled} onChange={(event) => update("timezone", event.target.value)}>
               {countryZones.length > 0 ? (
@@ -47,7 +49,12 @@ export function LanguagesTimeCard({ settings, options }: { settings: GeneralSett
           )}
         </Field>
 
-        <Fieldset legend={t("settings.general.languages")} hint={t("settings.general.languagesHint")} error={errorText("languages")}>
+        <Fieldset
+          legend={t("settings.general.languages")}
+          hint={t("settings.general.languagesHint")}
+          error={errorText("languages")}
+          status={pill("languages")}
+        >
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {choices.map((tag) => (
               <Checkbox
@@ -88,7 +95,7 @@ export function LanguagesTimeCard({ settings, options }: { settings: GeneralSett
         </Fieldset>
 
         <div className="grid gap-6 sm:grid-cols-2">
-          <Field label={t("settings.general.defaultLanguage")} hint={t("settings.general.defaultLanguageHint")}>
+          <Field label={t("settings.general.defaultLanguage")} hint={t("settings.general.defaultLanguageHint")} status={pill("defaultLanguage")}>
             {(control) => (
               <Select
                 {...control}
@@ -104,7 +111,7 @@ export function LanguagesTimeCard({ settings, options }: { settings: GeneralSett
               </Select>
             )}
           </Field>
-          <Field label={t("settings.general.ownerLanguage")}>
+          <Field label={t("settings.general.ownerLanguage")} status={pill("ownerLanguage")}>
             {(control) => (
               <Select {...control} value={form.ownerLanguage} disabled={disabled} onChange={(event) => update("ownerLanguage", event.target.value)}>
                 {ownerLanguages.map((tag) => (

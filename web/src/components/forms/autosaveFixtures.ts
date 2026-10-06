@@ -64,7 +64,7 @@ export function apiError(code: ApiErrorCode, status: number, reason?: string): A
   return new ApiError({
     status,
     code,
-    reasons: reason ? [{ code: reason, message: reason, details: {} }] : [],
+    reasons: reason ? [{ code: reason, message: reason, details: [] }] : [],
   });
 }
 

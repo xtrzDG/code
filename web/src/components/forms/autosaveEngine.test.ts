@@ -135,7 +135,7 @@ describe("AutosaveEngine: when a save fails", () => {
     expect(engine.getSnapshot().fields.days?.status).toBe("saved");
   });
 
-  it("says so when what is stored cannot be loaded after a stale refusal, and loads it on request", async () => {
+  it("says so when what is stored cannot be loaded after a stale refusal, and loads it and saves the rest on request", async () => {
     const saves = heldSaves<Partial<Values>, Stored>();
     const reload = vi
       .fn()
@@ -145,14 +145,21 @@ describe("AutosaveEngine: when a save fails", () => {
       save: saves.save,
       conflict: { isConflict: () => true, reload, rebase: (_shown, stored, form) => ({ form: { ...form, name: stored.name }, conflicts: ["name"] }) },
     });
-    engine.change({ name: "Potsdam" }, 0);
+    engine.change({ name: "Potsdam", days: 30 }, 0);
     void engine.flush();
     saves.next().settle({ ok: false, error: apiError("conflict", 409) });
     await settled();
     expect(engine.getSnapshot().isReloadFailed).toBe(true);
     expect(engine.getSnapshot().form.name).toBe("Potsdam");
-    await expect(engine.reloadStored()).resolves.toBe(true);
-    expect(engine.getSnapshot()).toMatchObject({ isReloadFailed: false, conflicts: ["name"], form: { name: "Hamburg" } });
+    expect(engine.getSnapshot().fields.days?.status).toBe("failed");
+    const reloading = engine.reloadStored();
+    await settled();
+    expect(engine.getSnapshot()).toMatchObject({ isReloadFailed: false, conflicts: ["name"], form: { name: "Hamburg", days: 30 } });
+    const rest = saves.next();
+    expect([rest.body, rest.base.revision]).toEqual([{ days: 30 }, 3]);
+    rest.settle({ ok: true, data: { ...STORED, revision: 4, name: "Hamburg", days: 30 } });
+    await expect(reloading).resolves.toBe(true);
+    expect(engine.getSnapshot().fields.days?.status).toBe("saved");
   });
 });
 

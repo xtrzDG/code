@@ -110,7 +110,7 @@ export class AutosaveEngine<Form extends object, Stored, Body> {
     this.update({ form, confirming: [] });
   }
 
-  /** Load what is stored now after a reload failed, and keep the owner's other changes. */
+  /** Load what is stored now after a reload failed, and save the owner's other changes on top. */
   async reloadStored(): Promise<boolean> {
     const conflict = this.config().conflict;
     if (!conflict) {
@@ -122,6 +122,7 @@ export class AutosaveEngine<Form extends object, Stored, Body> {
       return false;
     }
     this.rebaseOn(latest.data);
+    await this.flush();
     return true;
   }
 

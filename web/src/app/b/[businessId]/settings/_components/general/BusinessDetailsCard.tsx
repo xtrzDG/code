@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { SavePill } from "@/components/forms/SavePill";
 import { Card, Field, Input } from "@/components/ui";
 import { Facts } from "@/components/workspace/Facts";
 import { useI18n } from "@/i18n/client";
@@ -21,12 +22,17 @@ const PLAN_NAMES: Record<BusinessView["plan_key"], MessageKey> = {
 /** The business's name and city, and what cannot be changed here (country, currency, data region, plan). */
 export function BusinessDetailsCard({ settings }: { settings: GeneralSettings }) {
   const { t, locale } = useI18n();
-  const { form, baseline, disabled, update, errorText } = settings;
+  const { form, baseline, disabled, type, flush, errorText, fieldState, retry } = settings;
   return (
     <Card title={t("settings.general.businessTitle")}>
       <div className="space-y-6">
         <div className="grid gap-6 sm:grid-cols-2">
-          <Field label={t("settings.general.name")} required error={errorText("name")}>
+          <Field
+            label={t("settings.general.name")}
+            required
+            error={errorText("name")}
+            status={<SavePill state={fieldState("name")} onRetry={retry} />}
+          >
             {(control) => (
               <Input
                 {...control}
@@ -35,11 +41,17 @@ export function BusinessDetailsCard({ settings }: { settings: GeneralSettings })
                 dir="auto"
                 autoComplete="organization"
                 disabled={disabled}
-                onChange={(event) => update("name", event.target.value)}
+                onChange={(event) => type("name", event.target.value)}
+                onBlur={flush}
               />
             )}
           </Field>
-          <Field label={t("settings.general.city")} optionalLabel={t("common.optional")} error={errorText("city")}>
+          <Field
+            label={t("settings.general.city")}
+            optionalLabel={t("common.optional")}
+            error={errorText("city")}
+            status={<SavePill state={fieldState("city")} onRetry={retry} />}
+          >
             {(control) => (
               <Input
                 {...control}
@@ -48,7 +60,8 @@ export function BusinessDetailsCard({ settings }: { settings: GeneralSettings })
                 dir="auto"
                 autoComplete="address-level2"
                 disabled={disabled}
-                onChange={(event) => update("city", event.target.value)}
+                onChange={(event) => type("city", event.target.value)}
+                onBlur={flush}
               />
             )}
           </Field>
