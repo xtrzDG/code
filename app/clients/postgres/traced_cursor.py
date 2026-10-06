@@ -97,7 +97,7 @@ def traced_cursor_class(tracer: SpanTracer) -> TracedCursorClass:
 def span_attributes(label: StatementLabel) -> dict[str, Any]:
     return {
         "db.system": DATABASE_SYSTEM,
-        "db.operation.name": label.operation,
+        "db.operation.name": label.operation.upper(),
         "db.collection.name": label.collection,
         "sentry.op": "db",
     }
