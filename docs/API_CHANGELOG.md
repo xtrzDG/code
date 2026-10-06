@@ -11,6 +11,29 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — SDK-ready operation names
+
+Spec: `2edf0e3a095994af`
+
+- **Breaking** (`api-breaking`) every `operationId` is now
+  `<tag>_<route function name>` in snake_case instead of FastAPI's
+  `<function>_<path>_<method>`: `GET /v1/admin/clients` is
+  `admin_list_clients` (was `list_clients_v1_admin_clients_get`),
+  `POST /v1/businesses/{business_id}/bookings` is
+  `operations_post_booking`. Paths, methods, parameters, bodies and status
+  codes are unchanged; only generated client code that names operations
+  changes. The ids are unique and stable from now on: the oasdiff gate
+  treats a changed operationId as an error
+  (`.github/oasdiff-severity-levels.txt`).
+  Migration: regenerate the client (`cd web && npm run gen:api` for the
+  cabinet, which calls operations by path and needs no other change) and
+  rename calls of `operations["…"]` types to the new ids; the old id is the
+  route function name plus the path, so the new one is the tag plus the
+  same function name.
+- **Changed** the catalog routes (`/v1/catalog/*`, `/v1/phone-numbers/parse`
+  and `…/call-forwarding-instructions`) carry the tag `catalog`; every
+  operation has a tag now.
+
 ## 2026-10-06 — wave 16 together: the live widget, the subscription lifecycle, data tasks, service levels, calendars
 
 Spec: `d055b5c7ca2f4a76`

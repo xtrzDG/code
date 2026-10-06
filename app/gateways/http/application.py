@@ -24,6 +24,7 @@ from app.gateways.http.middleware.security_headers_middleware import (
     SecurityHeadersMiddleware,
     with_security_headers,
 )
+from app.gateways.http.operation_ids import readable_operation_id
 from app.gateways.http.request_context_middleware import (
     REQUEST_ID_HEADER,
     RequestContextMiddleware,
@@ -90,6 +91,7 @@ def build_http_application(
         docs_url=None if is_production else "/docs",
         redoc_url=None if is_production else "/redoc",
         openapi_url=None if is_production else "/openapi.json",
+        generate_unique_id_function=readable_operation_id,
     )
     install_error_handlers(http_application)
     # Inside CORS (added below), so a refused body still answers with CORS.

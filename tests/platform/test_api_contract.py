@@ -4,9 +4,12 @@ operation documents is an `ErrorBody`, FastAPI's own validation schemas are
 gone from the description, every DELETE answers 204 No Content, and paged
 lists answer `{"items": [...], "next_cursor": ...}`. At runtime the
 framework's refusals (a missing query parameter or header, an unknown route
-or method) are `ErrorBody` answers too.
+or method) are `ErrorBody` answers too. Every operation has a tag and a
+readable operationId, `<tag>_<route function name>` in snake_case, unique
+across the description (what an SDK generator turns into method names).
 """
 
+import re
 from collections.abc import Iterator
 from typing import Any, cast
 
@@ -20,6 +23,7 @@ type JsonObject = dict[str, Any]
 ERROR_BODY_REFERENCE: str = "#/components/schemas/ErrorBody"
 STANDARD_ERROR_STATUSES: set[str] = {"401", "403", "404", "409", "422", "429", "502"}
 HTTP_METHODS: tuple[str, ...] = ("get", "post", "put", "patch", "delete")
+SNAKE_CASE_ID: re.Pattern[str] = re.compile(r"^[a-z][a-z0-9]*(_[a-z0-9]+)+$")
 
 
 @pytest.fixture(scope="module")
@@ -109,6 +113,34 @@ def test_paged_lists_answer_items_and_next_cursor(description: JsonObject) -> No
 
     assert len(paged) >= 9
     assert {key: gaps for key, gaps in paged.items() if gaps} == {}
+
+
+def test_operation_ids_are_unique_snake_case_tag_and_function_names(
+    description: JsonObject,
+) -> None:
+    ids: dict[str, list[str]] = {}
+    for key, operation in operations(description):
+        ids.setdefault(str(operation["operationId"]), []).append(key)
+    untagged: list[str] = [
+        key for key, operation in operations(description) if not operation.get("tags")
+    ]
+    by_key: dict[str, JsonObject] = dict(operations(description))
+
+    assert len(ids) >= 300
+    assert {name: keys for name, keys in ids.items() if len(keys) > 1} == {}
+    assert [name for name in ids if not SNAKE_CASE_ID.match(name)] == []
+    assert [name for name in ids if name.endswith("_route")] == []
+    assert untagged == []
+    assert by_key["GET /v1/admin/clients"]["operationId"] == "admin_list_clients"
+    assert (
+        by_key["POST /v1/businesses/{business_id}/bookings"]["operationId"]
+        == "operations_post_booking"
+    )
+    assert (
+        by_key["GET /v1/admin/clients/{business_id}/quality"]["operationId"]
+        == "quality_get_client_quality"
+    )
+    assert by_key["GET /v1/catalog/countries"]["operationId"] == "catalog_list_countries"
 
 
 def test_framework_refusals_are_error_bodies_at_runtime() -> None:

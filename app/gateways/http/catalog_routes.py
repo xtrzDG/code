@@ -79,7 +79,7 @@ def build_catalog_router(
     English, the forwarding route to the owner language of the business.
     """
 
-    router = APIRouter(responses=standard_error_responses())
+    router = APIRouter(tags=["catalog"], responses=standard_error_responses())
 
     @router.get("/v1/catalog/countries")
     def list_countries(
