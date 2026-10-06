@@ -202,7 +202,10 @@ class ChannelsInfrastructure:
             self.telegram_client, self.phone_number_parser, self.settings
         )
         self.whatsapp_adapter = WhatsAppChannelAdapter(
-            self.meta_client, self.phone_number_parser, self.settings
+            self.meta_client,
+            self.phone_number_parser,
+            self.settings,
+            text_resolver=self.text_resolver,
         )
         self.messenger_adapter = MessengerChannelAdapter(
             self.meta_client, self.settings

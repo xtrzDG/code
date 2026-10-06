@@ -146,7 +146,26 @@
     {
      "properties": {
       "message": {
-       "properties": {"text": {"maxLength": 2000, "type": "string"}},
+       "properties": {
+        "quick_replies": {
+         "items": {
+          "properties": {
+           "content_type": {
+            "enum": ["text", "user_phone_number", "user_email"],
+            "type": "string"
+           },
+           "image_url": {"type": "string"},
+           "payload": {"maxLength": 1000, "type": "string"},
+           "title": {"maxLength": 20, "type": "string"}
+          },
+          "required": ["content_type"],
+          "type": "object"
+         },
+         "maxItems": 13,
+         "type": "array"
+        },
+        "text": {"maxLength": 2000, "type": "string"}
+       },
        "required": ["text"],
        "type": "object"
       },
@@ -185,7 +204,7 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "x-roots": {
   "WebhookPayload": "Messenger and Instagram messaging webhooks",
-  "request:messages.send": "POST /me/messages (Send API: a text or a sender action)",
+  "request:messages.send": "POST /me/messages (Send API: a text with optional quick replies, or a sender action)",
   "response:messages.send": "the Send API's answer"
  },
  "x-vendor": {
@@ -195,6 +214,7 @@
    "https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/message-reads",
    "https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/messaging_postbacks",
    "https://developers.facebook.com/docs/messenger-platform/reference/send-api/",
+   "https://developers.facebook.com/docs/messenger-platform/send-messages/quick-replies",
    "https://developers.facebook.com/docs/instagram-platform/webhooks/examples"
   ],
   "kind": "documented",

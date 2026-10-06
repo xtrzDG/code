@@ -15,10 +15,7 @@ falls back to when the platform refuses the buttons.
 
 from app.schemas.domain.reply_choices import ReplyChoices
 from app.utilities.channels.json_values import JsonObject
-from app.utilities.conversations.reply_choices_text import (
-    PARAGRAPH_BREAK,
-    number_the_options,
-)
+from app.utilities.conversations.reply_choices_text import number_the_options
 
 WHATSAPP_BUTTON_LIMIT: int = 3
 WHATSAPP_BUTTON_BODY_LIMIT: int = 1024
@@ -37,7 +34,8 @@ def fallback_room(choices: ReplyChoices | None) -> int:
     if choices is None:
         return 0
 
-    return len(number_the_options("", choices)) + len(PARAGRAPH_BREAK)
+    # The list and the paragraph break before it ("\n\n1. 18:00\n2. ...").
+    return len(number_the_options("", choices))
 
 
 def whatsapp_body_limit(choices: ReplyChoices) -> int:

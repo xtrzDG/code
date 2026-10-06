@@ -9,6 +9,7 @@ from app.schemas.domain.outbound_messages import (
     OutboundMessageDocument,
     OutboundTemplate,
 )
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.typings.channels.constrained_strings import (
     WhatsAppTemplateLanguageCode,
     WhatsAppTemplateName,
@@ -38,6 +39,7 @@ def queue_customer_message(
     kind: OutboundMessageKind,
     text: str = "See you at 19:00.",
     message_template: OutboundTemplate | None = None,
+    choices: ReplyChoices | None = None,
 ) -> OutboundMessageDocument:
     """One message to a customer in the outbox, with its delivery job."""
 
@@ -60,6 +62,7 @@ def queue_customer_message(
             ),
             text=MessageText(text),
             template=message_template,
+            choices=choices,
             created_at=now,
             updated_at=now,
         ),

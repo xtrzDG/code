@@ -57,11 +57,15 @@ class TelegramTapUpdates:
 
     def _enable(self, bot_token: ChannelSecret) -> bool:
         info: TelegramWebhookInfo = self._telegram_client.get_webhook_info(bot_token)
+        if info.url is None:
+            # No webhook: nothing the bot is sent reaches the platform.
+            return False
+
         if info.receives_taps:
             return True
 
         encryption_key: PlatformSecret | None = self._app_settings.encryption_key
-        if info.url is None or encryption_key is None:
+        if encryption_key is None:
             return False
 
         self._telegram_client.set_webhook(
