@@ -60,7 +60,18 @@ def test_payment_failed_notice_names_amount_and_deadline_per_language() -> None:
         "ასისტენტი სრულ რეჟიმში იმუშავებს ამ თარიღამდე: 8 ნოემბერი, 2026; "
         "შემდეგ კი მხოლოდ მოთხოვნებს მიიღებს."
     )
-    assert render("he") == render("en")
+    assert render("he") == (
+        "Funicular VR: התשלום של \u200f517.00\xa0\u200fGEL עבור העוזר לא עבר. "
+        "בדקו את הכרטיס ושלמו שוב ב„מסלול וחיוב”. העוזר ימשיך בשירות מלא עד "
+        "8 בנובמבר 2026; אחר כך הוא רק יקבל פניות."
+    )
+    assert render("de") == (
+        "Funicular VR: Die Zahlung von 517,00\xa0GEL für den Assistenten ist "
+        "nicht durchgegangen. Bitte prüfen Sie die Karte und zahlen Sie erneut "
+        "unter „Tarif und Abrechnung“. Der Assistent arbeitet bis zum 8. November "
+        "2026 im vollen Betrieb; danach nimmt er nur noch Anfragen auf."
+    )
+    assert render("fr") == render("en")
 
 
 def test_notice_dates_are_local_to_the_business() -> None:

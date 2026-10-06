@@ -4,7 +4,10 @@ from app.registries.localization.call_forwarding_guide_registry import (
     CallForwardingGuideRegistry,
 )
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
-from app.schemas.constants.localization import CallForwardingCondition
+from app.schemas.constants.localization import (
+    CABINET_LANGUAGES,
+    CallForwardingCondition,
+)
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingInstructions,
@@ -100,8 +103,8 @@ def test_georgian_owner_gets_codes_and_carriers_in_georgian() -> None:
     [
         ("ru", "Наберите **61*+995322123456#"),
         ("en", "Dial **61*+995322123456#"),
-        # German texts do not exist yet: English is the fallback.
-        ("de", "Dial **61*+995322123456#"),
+        ("de", "Wählen Sie **61*+995322123456#"),
+        ("he", "חייגו **61*+995322123456#"),
         ("ru-GE", "Наберите **61*+995322123456#"),
     ],
 )
@@ -151,7 +154,7 @@ def test_other_countries_get_standard_gsm_codes_without_carriers() -> None:
     assert any("other codes" in note for note in instructions.notes)
 
 
-def test_hebrew_owner_falls_back_to_english_texts() -> None:
+def test_hebrew_owner_reads_hebrew_steps() -> None:
     world = build_cabinet_world()
     owner_id = UserId()
     business = build_business(owner_id, "IL", "he")
@@ -162,7 +165,7 @@ def test_hebrew_owner_falls_back_to_english_texts() -> None:
 
     assert instructions.display_language == "he"
     assert instructions.codes[0].dial_code == "**61*+97221234567#"
-    assert instructions.steps[0].startswith("Take the phone")
+    assert instructions.steps[0].startswith("קחו את הטלפון")
 
 
 def test_business_without_assistant_number_is_told_to_connect_the_phone() -> None:
@@ -227,8 +230,10 @@ def test_invalid_stored_number_is_reported_without_parser_wording() -> None:
     assert "Reconnect the phone channel" in str(error_info.value)
 
 
-@pytest.mark.parametrize("country_code", ["GE", "US", "AM", "IL", "KZ", "PL", "JP"])
-@pytest.mark.parametrize("language", ["en", "ru", "ka", "he"])
+@pytest.mark.parametrize(
+    "country_code", ["GE", "US", "AM", "AZ", "UA", "TR", "DE", "IL", "KZ", "PL", "JP"]
+)
+@pytest.mark.parametrize("language", [language.value for language in CABINET_LANGUAGES])
 def test_every_guide_text_renders_with_all_placeholders(
     country_code: str,
     language: str,
@@ -251,7 +256,7 @@ def test_every_guide_text_renders_with_all_placeholders(
         carrier.notes for carrier in guide.carriers if carrier.notes is not None
     )
     for text in texts:
-        for value_language in ("en", "ru", "ka"):
-            assert LanguageTag(value_language) in text.values
+        for value_language in CABINET_LANGUAGES:
+            assert LanguageTag(value_language.value) in text.values
         rendered = str(resolver.resolve(text, LanguageTag(language))).format_map(values)
         assert "{" not in rendered
