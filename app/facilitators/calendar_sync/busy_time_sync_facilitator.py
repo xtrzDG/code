@@ -48,6 +48,7 @@ from app.schemas.dto.calendar_sync.busy_reads import (
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
+from app.schemas.typings.calendar_sync.constrained_strings import CalendarFeedUrl
 from app.schemas.typings.calendar_sync.prefixed_id import IcalImportFeedId
 from app.utilities.calendar_sync.busy_windows import (
     STALE_AFTER_SECONDS,
@@ -147,6 +148,9 @@ class BusyTimeSyncFacilitator(BusyTimeSyncFacilitatorContract):
         timeout: BusyTimeFetchSeconds,
     ) -> BookingSystemResource:
         return self._reads.booking_systems.describe(kind, credentials, timeout)
+
+    def vet_feed_address(self, url: CalendarFeedUrl) -> None:
+        self._reads.ical.vet(url)
 
     def _read(
         self,

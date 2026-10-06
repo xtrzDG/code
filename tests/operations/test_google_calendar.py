@@ -47,7 +47,7 @@ ACCESS = CalendarAccessToken("access-xyz")
 
 
 class TestGoogleCalendarClient:
-    def test_authorization_url_asks_for_offline_calendar_events_access(self) -> None:
+    def test_authorization_url_asks_for_offline_events_and_read_access(self) -> None:
         url = (
             FakeGoogle()
             .client()
@@ -63,7 +63,12 @@ class TestGoogleCalendarClient:
             "client_id": "client-123.apps.googleusercontent.com",
             "redirect_uri": str(REDIRECT_URL),
             "response_type": "code",
-            "scope": "https://www.googleapis.com/auth/calendar.events",
+            # Events to mirror bookings; read to list calendars and their
+            # free/busy (two-way availability).
+            "scope": (
+                "https://www.googleapis.com/auth/calendar.events "
+                "https://www.googleapis.com/auth/calendar.readonly"
+            ),
             "access_type": "offline",
             "include_granted_scopes": "true",
             "prompt": "consent",

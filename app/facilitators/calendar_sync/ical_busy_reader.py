@@ -10,10 +10,15 @@ from app.schemas.constants.web_fetching import (
 )
 from app.schemas.domain.calendar_sync import IcalImportFeed
 from app.schemas.dto.calendar_sync.busy_reads import BusyPeriod, BusyWindow
+from app.schemas.dto.errors import ErrorReason
 from app.schemas.dto.web_fetching import FetchedWebResource, WebFetchRequest
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
 from app.schemas.exceptions.web_fetch_errors import WebFetchError
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
+from app.schemas.typings.calendar_sync.constrained_strings import CalendarFeedUrl
+from app.schemas.typings.platform.constrained_strings import ErrorReasonCode
+from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.web_fetching.constrained_floats import WebFetchTimeoutSeconds
 from app.utilities.calendar_sync.busy_windows import MAX_BUSY_PERIODS, DayBounds
 from app.utilities.calendar_sync.feed_addresses import (
@@ -23,6 +28,9 @@ from app.utilities.calendar_sync.feed_addresses import (
 )
 from app.utilities.calendar_sync.ical_busy_times import read_feed_busy_periods
 
+ADDRESS_REFUSED_MESSAGE: str = (
+    "This address cannot be imported: use the public https link of the calendar."
+)
 ACCESS_DENIED_STATUSES: frozenset[str] = frozenset({"401", "403"})
 GONE_STATUSES: frozenset[str] = frozenset({"404", "410"})
 
@@ -94,3 +102,23 @@ def problem_of(error: WebFetchError) -> CalendarSyncProblem:
             return CalendarSyncProblem.NOT_FOUND
         return CalendarSyncProblem.PROVIDER_ERROR
     return CalendarSyncProblem.UNREACHABLE
+
+    def vet(self, url: CalendarFeedUrl) -> None:
+        """
+        Raises:
+            ValidationFailedError: the address must never be read
+                (`address_refused`).
+        """
+
+        try:
+            self._fetcher.vet(fetchable_feed_url(str(url)))
+        except (WebFetchError, ValueError) as error:
+            raise ValidationFailedError(
+                ADDRESS_REFUSED_MESSAGE,
+                reasons=[
+                    ErrorReason(
+                        code=ErrorReasonCode(CalendarSyncProblem.ADDRESS_REFUSED.value),
+                        message=ErrorReasonMessage(ADDRESS_REFUSED_MESSAGE),
+                    )
+                ],
+            ) from error

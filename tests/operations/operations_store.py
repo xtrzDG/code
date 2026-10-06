@@ -31,6 +31,7 @@ from app.repositories.business_repositories import (
     BusinessProfileRepository,
     BusinessRepository,
 )
+from app.repositories.calendar_sync_repositories import CalendarBusyTimesRepository
 from app.repositories.campaign_repositories import CampaignMessageRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import (
@@ -54,6 +55,7 @@ from app.repositories.waitlist_repositories import (
 from app.schemas.domain.billing import SubscriptionDocument, UsageEventDocument
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.calendar_sync import CalendarBusyTimesDocument
 from app.schemas.domain.campaigns import CampaignMessageDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -67,6 +69,7 @@ from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocu
 from app.schemas.domain.setup import ActivationEventDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.domain.waitlist import WaitlistEntryDocument, WaitlistSettingsDocument
+from tests.calendar_sync.recording_busy_time_sync import RecordingBusyTimeSync
 from tests.channels.outbox_fakes import RecordingJobQueue
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.notifications.staff_alert_fakes import RecordingPushQueue, build_staff_alerts
@@ -186,6 +189,11 @@ class OperationsStore:
             InMemoryDocumentCollectionAdapter(CampaignMessageDocument)
         )
         self.job_queue = RecordingJobQueue()
+        # Times linked calendars made busy (two-way availability, 1160).
+        self.busy_times_repo = CalendarBusyTimesRepository(
+            InMemoryDocumentCollectionAdapter(CalendarBusyTimesDocument)
+        )
+        self.busy_time_sync = RecordingBusyTimeSync()
         self.growth = GrowthBookingsFacilitator(
             waitlist_entry_repo=self.waitlist_entry_repo,
             waitlist_settings_repo=self.waitlist_settings_repo,

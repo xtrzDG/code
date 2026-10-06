@@ -28,4 +28,10 @@ class BusyStartsAtUnixSeconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class LinkedResourceCount(BaseConstrainedTypedInt):
+    """How many resources of a business use an integration."""
+
+    ge = 0
+
+
 # Keep abc order for all non example types, if possible.

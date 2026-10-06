@@ -32,7 +32,10 @@ from app.schemas.dto.calendar_sync.busy_reads import (
 from app.schemas.typings.bookings.prefixed_id import ResourceId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
-from app.schemas.typings.calendar_sync.constrained_strings import IcalExportTokenHash
+from app.schemas.typings.calendar_sync.constrained_strings import (
+    CalendarFeedUrl,
+    IcalExportTokenHash,
+)
 from app.schemas.typings.calendar_sync.strings import BookingSystemBookingId
 from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 
@@ -212,5 +215,15 @@ class BusyTimeSyncFacilitatorContract(FacilitatorContract, Protocol):
         Raises:
             BusyTimeSourceError: the key was refused, the resource is not
                 there, or the system did not answer.
+        """
+        raise NotImplementedError
+
+    def vet_feed_address(self, url: CalendarFeedUrl) -> None:
+        """
+        Refuse an iCal feed address the platform must never read (not public
+        http(s) on ports 80 and 443, credentials in it, an intranet host).
+
+        Raises:
+            ValidationFailedError: with the reason `address_refused`.
         """
         raise NotImplementedError

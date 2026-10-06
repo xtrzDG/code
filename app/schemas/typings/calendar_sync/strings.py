@@ -35,4 +35,11 @@ class IcalExportToken(BaseTypedString):
     """
 
 
+class IcalFeedText(BaseTypedString):
+    """
+    A resource's busy times as iCalendar text (RFC 5545): one VCALENDAR,
+    CRLF lines, folded at 75 octets.
+    """
+
+
 # Keep abc order for all non example types, if possible.
