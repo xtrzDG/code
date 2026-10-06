@@ -10,7 +10,9 @@
  * Voice messages, photos and places a customer sent are shown above the
  * words they came with (MessageAttachments); a staff reply sent through a
  * messenger says under it how it travels (DeliveryChip); under an answer
- * of the assistant, what the reply guard did and, for owners, "Fix answer".
+ * of the assistant, the options it offered to tap, what the reply guard did
+ * and, for owners, "Fix answer". A reply to the business's story says so
+ * above the customer's words (MessageContext).
  */
 
 import { describeError } from "@/api/errors";
@@ -28,6 +30,7 @@ import { messageAttachments } from "../../_lib/messageMedia";
 import type { EarlierMessages } from "../../_lib/useEarlierMessages";
 import { DeliveryChip } from "./DeliveryChip";
 import { MessageAttachments } from "./MessageAttachments";
+import { OfferedChoices, StoryContextLine } from "./MessageContext";
 import { AnswerTools } from "./AnswerTools";
 import { hasTechnicalDetails, MessageTechnicalDetails } from "./TechnicalDetails";
 
@@ -149,6 +152,7 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
           {" · "}
           <time dateTime={new Date(message.created_at / 1000).toISOString()}>{format.time(message.created_at)}</time>
         </p>
+        {message.context_note ? <StoryContextLine note={message.context_note} alignEnd={side === "end"} /> : null}
         {attachments.length > 0 ? (
           <MessageAttachments attachments={attachments} caption={message.text.trim() || null} alignEnd={side === "end"} />
         ) : null}
@@ -165,6 +169,9 @@ function MessageBubble({ message, onFix }: { message: MessageView; onFix: ((mess
             {message.text}
           </div>
         )}
+        {message.choices && message.choices.length > 0 ? (
+          <OfferedChoices choices={message.choices} alignEnd={side === "end"} />
+        ) : null}
         {message.delivery ? <DeliveryChip delivery={message.delivery} className="mt-1" /> : null}
         {message.author === "assistant" ? (
           <AnswerTools message={message} onFix={onFix} alignEnd={side === "end"} />

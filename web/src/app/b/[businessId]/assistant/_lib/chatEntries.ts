@@ -15,6 +15,8 @@ export type ChatEntry =
       text: string;
       reply?: AssistantReply;
       toolCalls?: ToolCallView[];
+      /** The options the answer offered to tap (offer_choices), as the customer sees them. */
+      choices?: readonly string[];
       /** The version that answered (from the reply, or the restored conversation). */
       versionId: string | null;
       versionNumber?: number | null;
@@ -31,8 +33,28 @@ export function entriesFromMessages(messages: readonly MessageView[], versionId:
         return { kind: "customer", key: message.id, text: message.text, status: "sent" };
       }
       if (message.author === "assistant") {
-        return { kind: "assistant", key: message.id, text: message.text, toolCalls: message.tool_calls ?? [], versionId };
+        return {
+          kind: "assistant",
+          key: message.id,
+          text: message.text,
+          toolCalls: message.tool_calls ?? [],
+          choices: message.choices ?? [],
+          versionId,
+        };
       }
       return { kind: "note", key: message.id, author: message.author, text: message.text };
     });
+}
+
+/**
+ * The options to tap now: those of the last answer, while nothing came
+ * after it. Once the customer writes (or taps), the earlier options are
+ * history, as on a phone.
+ */
+export function tappableChoices(entries: readonly ChatEntry[]): { key: string; choices: readonly string[] } | null {
+  const last = entries.at(-1);
+  if (last?.kind !== "assistant" || (last.choices ?? []).length === 0) {
+    return null;
+  }
+  return { key: last.key, choices: last.choices ?? [] };
 }

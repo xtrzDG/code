@@ -16,6 +16,7 @@ export const assistantChatEn = {
       human: "Can I talk to a person?",
     },
     typing: "The assistant is writing…",
+    choicesLabel: "Answers to tap",
     inputLabel: "Message",
     placeholder: "Write a message…",
     inputHint: {

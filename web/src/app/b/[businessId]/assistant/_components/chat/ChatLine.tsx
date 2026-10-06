@@ -14,11 +14,14 @@ export function ChatLine({
   entry,
   answerLabel,
   onRetry,
+  onChoose,
   isSending,
 }: {
   entry: ChatEntry;
   answerLabel: (versionId: string | null, number?: number | null) => string;
   onRetry: (message: string, key: string) => void;
+  /** Only for the last answer: a tap on one of its options. */
+  onChoose?: ((label: string) => void) | null;
   isSending: boolean;
 }) {
   const { t } = useI18n();
@@ -71,5 +74,5 @@ export function ChatLine({
     );
   }
 
-  return <AssistantLine entry={entry} answerLabel={answerLabel} />;
+  return <AssistantLine entry={entry} answerLabel={answerLabel} onChoose={onChoose} isSending={isSending} />;
 }

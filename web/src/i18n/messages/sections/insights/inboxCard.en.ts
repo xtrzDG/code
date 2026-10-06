@@ -17,6 +17,11 @@ export const inboxCardEn = {
   },
   panelLabel: "About this conversation",
   panelTabs: "Panel",
+  messageContext: {
+    story_reply: "Reply to your story",
+    story_mention: "Mention in the customer's story",
+  },
+  offeredChoices: "Options offered",
   actions: {
     label: "Quick actions",
     resolve: "Resolve",

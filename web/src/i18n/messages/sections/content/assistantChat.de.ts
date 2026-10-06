@@ -16,6 +16,7 @@ export const assistantChatDe: Translation<typeof assistantChatEn> = {
       human: "Kann ich mit einer Person sprechen?",
     },
     typing: "Der Assistent schreibt…",
+    choicesLabel: "Antworten zum Antippen",
     inputLabel: "Nachricht",
     placeholder: "Nachricht schreiben…",
     inputHint: {

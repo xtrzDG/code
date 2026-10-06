@@ -155,6 +155,7 @@ export function useTestChat(versions: AssistantVersionSummary[], initialVersionI
             text: reply.text,
             reply,
             toolCalls: reply.tool_calls ?? [],
+            choices: reply.choices?.options ?? [],
             versionId: answeredBy,
             versionNumber: reply.assistant_version_number ?? null,
           },

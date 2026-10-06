@@ -16,6 +16,7 @@ export const assistantChatRu: Translation<typeof assistantChatEn> = {
       human: "Можно поговорить с человеком?",
     },
     typing: "Помощник пишет…",
+    choicesLabel: "Варианты ответа",
     inputLabel: "Сообщение",
     placeholder: "Напишите сообщение…",
     inputHint: {
