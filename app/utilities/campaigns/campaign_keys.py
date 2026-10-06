@@ -3,17 +3,23 @@ Identities of the rebooking campaigns: the settings of a business, one
 message per rule and booking, and the outbox message that carries it.
 """
 
+from datetime import datetime
 from uuid import UUID, uuid5
+from zoneinfo import ZoneInfo
+
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.campaigns import RebookingRuleKind
 from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.campaigns.constrained_strings import CampaignMonthKey
 from app.schemas.typings.campaigns.prefixed_id import (
     CampaignMessageId,
     CampaignSettingsId,
 )
 from app.schemas.typings.deliveries.constrained_strings import OutboundIdempotencyKey
 
+MICROSECONDS_PER_SECOND: int = 1_000_000
 # Fixed namespaces of derived ids (never change them: stored ids depend on
 # them).
 CAMPAIGN_SETTINGS_NAMESPACE: UUID = UUID("e3a9b1c5-2d6f-4e80-9b7a-4c1d8f2e6b35")
@@ -45,3 +51,10 @@ def campaign_idempotency_key(message_id: CampaignMessageId) -> OutboundIdempoten
     """One outbox message per campaign message."""
 
     return OutboundIdempotencyKey(f"campaign:{message_id}")
+
+
+def campaign_month_of(now: Microseconds, zone: ZoneInfo) -> CampaignMonthKey:
+    """The calendar month of the business a message counts against (its cap)."""
+
+    moment: datetime = datetime.fromtimestamp(int(now) / MICROSECONDS_PER_SECOND, zone)
+    return CampaignMonthKey(f"{moment.year:04d}-{moment.month:02d}")

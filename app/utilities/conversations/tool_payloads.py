@@ -134,6 +134,9 @@ def render_availability(
             render_offer(offer) for offer in result.services
         ]
 
+    if result.is_waitlist_open:
+        payload["waitlist_open"] = True
+
     return render(with_business_today(payload, business_today))
 
 

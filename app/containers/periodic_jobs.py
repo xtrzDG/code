@@ -27,6 +27,10 @@ from app.gateways.worker.periodic.growth_analytics import (
     purge_web_vitals_job,
     reconcile_product_events_job,
 )
+from app.gateways.worker.periodic.growth_jobs import (
+    expire_waitlist_offers_job,
+    run_rebooking_campaigns_job,
+)
 from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_business_exports import (
     purge_business_exports_job,
@@ -225,5 +229,14 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         Factory(  # Sub-processor changes told 30 days ahead (DPA 8.3).
             send_subprocessor_notices_job,
             operator=operators.legal.send_subprocessor_notices_operator,
+        ),
+        # The waitlist's lapsed holds offered on; the rebooking campaigns.
+        Factory(
+            expire_waitlist_offers_job,
+            operator=operators.growth.expire_waitlist_offers_operator,
+        ),
+        Factory(
+            run_rebooking_campaigns_job,
+            operator=operators.growth.run_rebooking_campaigns_operator,
         ),
     )

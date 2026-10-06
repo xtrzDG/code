@@ -79,7 +79,12 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
             PreparedTurn, CustomerSignalReply | None
         ],
         check_spend: SpendCheck | None = None,
+        answer_waitlist_offer: UseCaseContract[PreparedTurn, CustomerSignalReply | None]
+        | None = None,
     ) -> None:
+        self._answer_waitlist_offer: (
+            UseCaseContract[PreparedTurn, CustomerSignalReply | None] | None
+        ) = answer_waitlist_offer
         self._check_spend: SpendCheck | None = check_spend
         self._answer_customer_signal: UseCaseContract[
             PreparedTurn, CustomerSignalReply | None
@@ -128,6 +133,9 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
 
         is_phone: bool = turn.conversation.channel is ChannelKind.PHONE
         signal: CustomerSignalReply | None = self._answer_customer_signal.run(turn)
+        if signal is None and self._answer_waitlist_offer is not None:
+            # A yes or no to a place the waitlist offered (books under lock).
+            signal = self._answer_waitlist_offer.run(turn)
         if signal is not None:
             return self._build_signal_record(turn, signal)
 
@@ -223,6 +231,9 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
             turn=turn,
             text=signal.text,
             created_handoff_ids=handoff_ids,
+            created_booking_ids=[]
+            if signal.booking_id is None
+            else [signal.booking_id],
             is_handed_off=bool(handoff_ids),
         )
 

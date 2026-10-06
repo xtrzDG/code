@@ -4,6 +4,7 @@ from dependency_injector.providers import Container, DependenciesContainer, Sing
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
+from app.containers.growth_facilitators import GrowthFacilitatorsContainer
 from app.containers.invoicing_facilitators import InvoicingFacilitatorsContainer
 from app.containers.notification_factories import build_staff_link_signer
 from app.containers.privacy_facilitators import PrivacyFacilitatorsContainer
@@ -17,12 +18,8 @@ from app.contracts.observability import JobMonitorFacilitatorContract
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
 )
-from app.facilitators.channels.typing_signal_facilitator import (
-    TypingSignalFacilitator,
-)
-from app.facilitators.claim_check.claim_check_facilitator import (
-    ClaimCheckFacilitator,
-)
+from app.facilitators.channels.typing_signal_facilitator import TypingSignalFacilitator
+from app.facilitators.claim_check.claim_check_facilitator import ClaimCheckFacilitator
 from app.facilitators.events.event_publisher_facilitator import (
     EventPublisherFacilitator,
 )
@@ -177,8 +174,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         build_staff_link_signer,
         settings=config.app_settings,
     )
-    # Handoffs, requests and bookings to every contact and device of a
-    # business, with preferences, quiet hours and links.
+    # Handoffs, requests, bookings to each contact and device (quiet hours).
     staff_alert_facilitator: Singleton[StaffAlertFacilitator] = Singleton(
         StaffAlertFacilitator,
         manager_notifier=manager_notification_facilitator,
@@ -190,8 +186,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
-    # The owners' digests and monthly reports: e-mail and devices, once per
-    # report and recipient, through the same outbox.
+    # Owners' digests and monthly reports: e-mail, devices, once per recipient.
     owner_digest_facilitator: Singleton[OwnerDigestFacilitator] = Singleton(
         OwnerDigestFacilitator,
         user_repo=repositories.user_repo,
@@ -231,8 +226,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
             wall_clock=time_provider.microsecond_wall_clock,
         )
     )
-    # Activation nudges: e-mail, Telegram and devices, once per nudge and
-    # recipient, through the same outbox.
+    # Activation nudges: e-mail, Telegram, devices, once per nudge and recipient.
     owner_nudge_facilitator: Singleton[OwnerNudgeFacilitator] = Singleton(
         OwnerNudgeFacilitator,
         user_repo=repositories.user_repo,
@@ -255,8 +249,14 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     suppression_list = privacy.suppression_list
     processor_erasure = privacy.processor_erasure
-    # The claim check of the reply guard: a cheap verifier model
-    # (LLM_VERIFIER_MODEL_ID; none: the check is off).
+    # The waitlist's held places and freed places, campaign bookings (1151).
+    growth: GrowthFacilitatorsContainer = Container(  # type: ignore[assignment]
+        GrowthFacilitatorsContainer,
+        repositories=repositories,
+        job_queue=job_queue_facilitator,
+    )
+    growth_bookings = growth.growth_bookings
+    # The reply guard's claim check: a cheap verifier (LLM_VERIFIER_MODEL_ID).
     claim_check: Singleton[ClaimCheckFacilitator] = Singleton(
         ClaimCheckFacilitator,
         llm_adapter=adapters.chat_llm_adapter,

@@ -74,6 +74,7 @@ def run_check_availability(
             nights=tool_input.nights,
             is_sandbox=context.is_sandbox,
             conversation_id=context.conversation_id,
+            contact_id=context.contact_id,
         )
     )
     return success_outcome(call, render_availability(result, today_text(today)))

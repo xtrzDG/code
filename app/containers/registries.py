@@ -39,6 +39,7 @@ from app.registries.locks.login_code_send_lock_registry import (
 )
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
+from app.registries.niches.rebooking_rule_registry import RebookingRuleRegistry
 from app.registries.niches.starter_answer_registry import StarterAnswerRegistry
 from app.registries.public_site.public_demo_directory_registry import (
     PublicDemoDirectoryRegistry,
@@ -78,6 +79,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     )
     niche_template_registry: Singleton[NicheTemplateRegistry] = Singleton(
         NicheTemplateRegistry
+    )
+    # Each niche's default rebooking rule (Bookings → Return visits).
+    rebooking_rule_registry: Singleton[RebookingRuleRegistry] = Singleton(
+        RebookingRuleRegistry
     )
     starter_answer_registry: Singleton[StarterAnswerRegistry] = Singleton(
         StarterAnswerRegistry

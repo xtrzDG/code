@@ -60,6 +60,7 @@ class UseCasesContainer(CoreUseCasesContainer):
         knowledge_use_cases=CoreUseCasesContainer.knowledge,
         booking_use_cases=CoreUseCasesContainer.bookings,
         follow_up_use_cases=CoreUseCasesContainer.follow_ups,
+        waitlist_use_cases=CoreUseCasesContainer.waitlist,
     )
     conversation_feed: ConversationFeedUseCasesContainer = Container(  # type: ignore[assignment]
         ConversationFeedUseCasesContainer,

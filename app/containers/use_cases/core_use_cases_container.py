@@ -14,6 +14,7 @@ from app.containers.use_cases.booking_link_use_cases import (
     BookingLinkUseCasesContainer,
 )
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
+from app.containers.use_cases.campaign_use_cases import CampaignUseCasesContainer
 from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.compliance_use_cases import ComplianceUseCasesContainer
 from app.containers.use_cases.customer_use_cases import CustomerUseCasesContainer
@@ -33,6 +34,7 @@ from app.containers.use_cases.public_demo_use_cases import (
 from app.containers.use_cases.reply_speed_use_cases import ReplySpeedUseCasesContainer
 from app.containers.use_cases.scheduling_use_cases import SchedulingUseCasesContainer
 from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesContainer
+from app.containers.use_cases.waitlist_use_cases import WaitlistUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 
 
@@ -193,6 +195,31 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         time_provider=time_provider,
         utilities=utilities,
         booking_use_cases=bookings,
+    )
+    # The waitlist: the join tool, freed-place offers, holds (1151).
+    waitlist: WaitlistUseCasesContainer = Container(  # type: ignore[assignment]
+        WaitlistUseCasesContainer,
+        adapters=adapters,
+        config=config,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
+        booking_use_cases=bookings,
+    )
+    # The rebooking campaigns: the hourly job, Return visits (1151).
+    campaigns: CampaignUseCasesContainer = Container(  # type: ignore[assignment]
+        CampaignUseCasesContainer,
+        adapters=adapters,
+        config=config,
+        facilitators=facilitators,
+        registries=registries,
+        repositories=repositories,
+        time_provider=time_provider,
+        utilities=utilities,
+        account_use_cases=accounts,
     )
     inbox: InboxUseCasesContainer = Container(  # type: ignore[assignment]
         InboxUseCasesContainer,

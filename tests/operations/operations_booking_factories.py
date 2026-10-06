@@ -48,6 +48,7 @@ class OperationsBookingFactories(OperationsSeeding):
             schedule_exception_repo=self.exception_repo,
             booking_repo=self.booking_repo,
             knowledge_item_repo=self.knowledge_repo,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -74,6 +75,7 @@ class OperationsBookingFactories(OperationsSeeding):
             staff_alerts=self.staff_alerts,
             calendar_sync=calendar_sync or self.calendar_sync,
             live_events=self.live_events,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -95,6 +97,7 @@ class OperationsBookingFactories(OperationsSeeding):
             staff_alerts=self.staff_alerts,
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -117,6 +120,7 @@ class OperationsBookingFactories(OperationsSeeding):
             staff_alerts=self.staff_alerts,
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -147,6 +151,7 @@ class OperationsBookingFactories(OperationsSeeding):
             confirmation_transformer=BookingConfirmationTransformer(self.resolver),
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -162,6 +167,7 @@ class OperationsBookingFactories(OperationsSeeding):
             lock_registry=self.lock_registry,
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )
 
@@ -177,5 +183,6 @@ class OperationsBookingFactories(OperationsSeeding):
             lock_registry=self.lock_registry,
             calendar_sync=self.calendar_sync,
             live_events=self.live_events,
+            growth=self.growth,
             wall_clock=self.clock.wall_clock,
         )

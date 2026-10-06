@@ -25,10 +25,7 @@ from app.schemas.dto.bookings import (
     RescheduleBookingCommand,
 )
 from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBookingsQuery
-from app.schemas.dto.jobs import (
-    JobReport,
-    JobTick,
-)
+from app.schemas.dto.jobs import JobReport, JobTick
 from app.schemas.dto.operations.bookings import (
     BookingPage,
     ListBookingsQuery,
@@ -68,8 +65,7 @@ from app.use_cases.bookings.update_booking_use_case import UpdateBookingUseCase
 
 class BookingUseCasesContainer(containers.DeclarativeContainer):
     """
-    Bookings made by the assistant and by staff, and their reminders. The
-    booking tools share the business lock registry.
+    Bookings by the assistant and by staff, and their reminders (one lock).
     """
 
     adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
@@ -91,6 +87,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         schedule_exception_repo=repositories.schedule_exception_repo,
         booking_repo=repositories.booking_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     create_booking_use_case: Factory[
@@ -113,6 +110,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     cancel_booking_use_case: Factory[
@@ -133,6 +131,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     reschedule_booking_use_case: Factory[
@@ -154,6 +153,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         staff_alerts=facilitators.staff_alert_facilitator,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     # The customer's own bookings to come (model tool list_my_bookings).
@@ -198,6 +198,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         confirmation_transformer=transformers.booking_confirmation_transformer,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     update_booking_use_case: Factory[
@@ -214,6 +215,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         lock_registry=registries.business_lock_registry,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     revert_booking_status_use_case: Factory[
@@ -230,6 +232,7 @@ class BookingUseCasesContainer(containers.DeclarativeContainer):
         lock_registry=registries.business_lock_registry,
         calendar_sync=facilitators.calendar_sync_facilitator,
         live_events=facilitators.event_publisher,
+        growth=facilitators.growth_bookings,
         wall_clock=time_provider.microsecond_wall_clock,
     )
     send_booking_reminders_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (

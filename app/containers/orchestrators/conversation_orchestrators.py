@@ -18,6 +18,7 @@ from app.containers.use_cases.feedback_use_cases import FeedbackUseCasesContaine
 from app.containers.use_cases.follow_up_use_cases import FollowUpUseCasesContainer
 from app.containers.use_cases.spend_guard_use_cases import SpendGuardUseCasesContainer
 from app.containers.use_cases.voice_use_cases import VoiceUseCasesContainer
+from app.containers.use_cases.waitlist_use_cases import WaitlistUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.conversation_flow import (
     ConversationTurnOrchestratorContract,
@@ -76,6 +77,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
     call_orchestrators: CallOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
     feedback_use_cases: FeedbackUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     spend_guard_use_cases: SpendGuardUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    waitlist_use_cases: WaitlistUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Conversation engine: one customer message, one voice tool call.
     conversation_turn_orchestrator: Factory[ConversationTurnOrchestratorContract] = (
@@ -89,6 +91,7 @@ class ConversationOrchestratorsContainer(containers.DeclarativeContainer):
             storage_scope=utilities.storage_scope,
             answer_customer_signal=feedback_use_cases.answer_customer_signal_use_case,
             check_spend=spend_guard_use_cases.check_business_spend_use_case,
+            answer_waitlist_offer=waitlist_use_cases.answer_waitlist_offer_use_case,
         )
     )
     # Autotests play the same turns without the spend guard: a check must

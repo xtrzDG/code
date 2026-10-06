@@ -28,6 +28,10 @@ from app.schemas.dto.bookings import (
 )
 from app.schemas.dto.conversations import LlmToolCall
 from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBookingsQuery
+from app.schemas.dto.growth.waitlist_joining import (
+    JoinWaitlistCommand,
+    WaitlistJoinReceipt,
+)
 from app.schemas.dto.handoffs import (
     HandoffCommand,
     HandoffResult,
@@ -64,6 +68,7 @@ from app.use_cases.conversations.tools.request_tool_handlers import (
     run_record_unanswered_question,
 )
 from app.use_cases.conversations.tools.tool_outcomes import error_outcome
+from app.use_cases.conversations.tools.waitlist_tool_handlers import run_join_waitlist
 from app.utilities.conversations.business_today import (
     SCHEDULING_TOOLS,
     BusinessToday,
@@ -130,7 +135,12 @@ class RunAssistantToolUseCase(
             BookingConfirmationRequest, BookingConfirmationReceipt
         ]
         | None = None,
+        join_waitlist: UseCaseContract[JoinWaitlistCommand, WaitlistJoinReceipt]
+        | None = None,
     ) -> None:
+        self._join_waitlist: (
+            UseCaseContract[JoinWaitlistCommand, WaitlistJoinReceipt] | None
+        ) = join_waitlist
         self._confirmation_hook: BookingConfirmationHook | None = (
             None
             if send_booking_confirmation is None
@@ -210,6 +220,7 @@ class RunAssistantToolUseCase(
                     self._list_my_bookings, call, context, self._today(context)
                 )
             ),
+            AssistantToolName.JOIN_WAITLIST: self._run_join_waitlist,
             AssistantToolName.CREATE_LEAD: lambda call, context: run_create_lead(
                 self._create_lead, self._phone_number_parser, call, context
             ),
@@ -255,6 +266,16 @@ class RunAssistantToolUseCase(
         if self._confirmation_hook is not None:
             self._confirmation_hook.after(outcome, context)
         return outcome
+
+    def _run_join_waitlist(
+        self, call: LlmToolCall, context: AssistantToolContext
+    ) -> AssistantToolOutcome:
+        if self._join_waitlist is None:
+            return error_outcome(call, "This business keeps no waitlist.")
+
+        return run_join_waitlist(
+            self._join_waitlist, call, context, self._today(context)
+        )
 
     def _today(self, context: AssistantToolContext) -> BusinessToday | None:
         """Today at the business, when its time zone is known."""

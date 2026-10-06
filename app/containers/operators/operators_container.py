@@ -21,6 +21,7 @@ from app.containers.operators.conversation_operators import (
 from app.containers.operators.customer_operators import CustomerOperatorsContainer
 from app.containers.operators.demo_operators import DemoOperatorsContainer
 from app.containers.operators.feedback_operators import FeedbackOperatorsContainer
+from app.containers.operators.growth_operators import GrowthOperatorsContainer
 from app.containers.operators.inbox_operators import InboxOperatorsContainer
 from app.containers.operators.knowledge_operators import KnowledgeOperatorsContainer
 from app.containers.operators.legal_operators import LegalOperatorsContainer
@@ -183,6 +184,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     feedback: FeedbackOperatorsContainer = Container(  # type: ignore[assignment]
         FeedbackOperatorsContainer,
         feedback_pipelines=pipelines.feedback,
+        utilities=utilities,
+    )
+    growth: GrowthOperatorsContainer = Container(  # type: ignore[assignment]
+        GrowthOperatorsContainer,
+        growth_pipelines=pipelines.growth,
         utilities=utilities,
     )
     analytics: AnalyticsOperatorsContainer = Container(  # type: ignore[assignment]

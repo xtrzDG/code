@@ -13,6 +13,7 @@ BOOKING_TOOLS: frozenset[AssistantToolName] = frozenset(
         AssistantToolName.CANCEL_BOOKING,
         AssistantToolName.RESCHEDULE_BOOKING,
         AssistantToolName.LIST_MY_BOOKINGS,
+        AssistantToolName.JOIN_WAITLIST,
     }
 )
 

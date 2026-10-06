@@ -12,8 +12,25 @@ DTOs, which return errors the model can act on.
 
 import json
 
+from app.registries.tools.join_waitlist_specification import (
+    JOIN_WAITLIST_SPECIFICATION,
+)
+from app.registries.tools.tool_schema_parts import (
+    DATE_HINT,
+    PHONE_HINT,
+    RESOURCE_ID,
+    RESOURCE_TYPE,
+    SERVICE_ID,
+    TIME_HINT,
+    JsonSchema,
+    enum_property,
+    integer_property,
+    nullable,
+    object_schema,
+    string_property,
+)
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.bookings import LeadType, ResourceKind
+from app.schemas.constants.bookings import LeadType
 from app.schemas.constants.businesses import BusinessLinkKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.dto.conversations import LlmToolDefinition
@@ -22,73 +39,11 @@ from app.schemas.typings.assistants.strings import (
     LlmToolInputSchemaJson,
 )
 
-type JsonSchema = dict[str, object]
-
 # Reasons the engine sets itself are not offered to the model.
 MODEL_HANDOFF_REASONS: tuple[HandoffReason, ...] = tuple(
     reason for reason in HandoffReason if reason is not HandoffReason.UNVERIFIED_NUMBERS
 )
 
-
-def string_property(description: str) -> JsonSchema:
-    return {"type": "string", "description": description}
-
-
-def integer_property(description: str) -> JsonSchema:
-    return {"type": "integer", "description": description}
-
-
-def enum_property(values: list[str], description: str) -> JsonSchema:
-    return {"type": "string", "enum": values, "description": description}
-
-
-def nullable(schema: JsonSchema) -> JsonSchema:
-    """The same value or null; the description stays on the outer schema."""
-
-    inner_schema: JsonSchema = {
-        key: value for key, value in schema.items() if key != "description"
-    }
-    return {
-        "anyOf": [inner_schema, {"type": "null"}],
-        "description": schema["description"],
-    }
-
-
-def object_schema(properties: dict[str, JsonSchema]) -> JsonSchema:
-    return {
-        "type": "object",
-        "properties": properties,
-        "required": list(properties),
-        "additionalProperties": False,
-    }
-
-
-DATE_HINT: str = "Local date of the business, YYYY-MM-DD."
-TIME_HINT: str = "Local time of the business, HH:MM in 24-hour format."
-PHONE_HINT: str = (
-    "Phone number as the customer gave it, ideally with the country code; "
-    "null to use the number the customer contacted us from."
-)
-RESOURCE_TYPE: JsonSchema = nullable(
-    enum_property(
-        [kind.value for kind in ResourceKind],
-        "What is booked; null for the business's usual resource.",
-    )
-)
-SERVICE_ID: JsonSchema = nullable(
-    string_property(
-        "The service, package or room type to book: its id from the facts or "
-        "a tool result, or its name as the customer said it; null when the "
-        "customer names none (restaurant tables)."
-    )
-)
-RESOURCE_ID: JsonSchema = nullable(
-    string_property(
-        "A specific master, doctor, room or table the customer asked for: its "
-        "id or its name as the customer wrote it, in any script; null for "
-        "whoever is free."
-    )
-)
 
 TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
     AssistantToolName.SEARCH_KNOWLEDGE: (
@@ -207,6 +162,7 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
         "were found that way.",
         object_schema({}),
     ),
+    AssistantToolName.JOIN_WAITLIST: JOIN_WAITLIST_SPECIFICATION,
     AssistantToolName.CREATE_LEAD: (
         "Pass a request that is not a simple booking to a manager: banquets, "
         "groups, corporate events, orders, viewings and anything non-standard.",

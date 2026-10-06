@@ -17,18 +17,31 @@ LEADS_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(
     }
 )
 
+# The booking tools join_waitlist follows in a version's list.
+BOOKING_TOOL_ORDER: frozenset[AssistantToolName] = frozenset(
+    {
+        AssistantToolName.CHECK_AVAILABILITY,
+        AssistantToolName.CREATE_BOOKING,
+        AssistantToolName.CANCEL_BOOKING,
+        AssistantToolName.RESCHEDULE_BOOKING,
+        AssistantToolName.LIST_MY_BOOKINGS,
+    }
+)
+
 
 def select_available_tools(
     version: AssistantVersionDocument,
     business: BusinessDocument,
 ) -> list[AssistantToolName]:
     """
-    The version's tools in its order (with list_my_bookings for a version
-    assembled before it existed); in LEADS_ONLY mode only the tools of
-    LEADS_ONLY_TOOLS remain.
+    The version's tools in its order (with list_my_bookings and
+    join_waitlist for a version assembled before they existed); in
+    LEADS_ONLY mode only the tools of LEADS_ONLY_TOOLS remain.
     """
 
-    tools: list[AssistantToolName] = with_list_my_bookings(list(version.tools))
+    tools: list[AssistantToolName] = with_join_waitlist(
+        with_list_my_bookings(list(version.tools))
+    )
     if business.service_mode is ServiceMode.LEADS_ONLY:
         return [tool for tool in tools if tool in LEADS_ONLY_TOOLS]
 
@@ -58,3 +71,24 @@ def with_list_my_bookings(
     )
     position: int = tools.index(anchor) + 1
     return [*tools[:position], AssistantToolName.LIST_MY_BOOKINGS, *tools[position:]]
+
+
+def with_join_waitlist(tools: list[AssistantToolName]) -> list[AssistantToolName]:
+    """
+    A version that checks availability can also put a customer on the
+    waitlist: one assembled before join_waitlist existed gets it right after
+    its booking tools, where a new version has it, so a business that turns
+    its waitlist on needs no new version (the tool answers that the list is
+    off otherwise, and availability offers it only when it is on).
+    """
+
+    if (
+        AssistantToolName.CHECK_AVAILABILITY not in tools
+        or AssistantToolName.JOIN_WAITLIST in tools
+    ):
+        return tools
+
+    position: int = 1 + max(
+        tools.index(tool) for tool in tools if tool in BOOKING_TOOL_ORDER
+    )
+    return [*tools[:position], AssistantToolName.JOIN_WAITLIST, *tools[position:]]
