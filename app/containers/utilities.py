@@ -1,9 +1,13 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Singleton
+from dependency_injector.providers import Callable, DependenciesContainer, Singleton
+from opentelemetry.sdk.trace import TracerProvider
+from prometheus_client import CollectorRegistry
 
 from app.containers.config import ConfigContainer
+from app.containers.telemetry_factories import is_sentry_tracing_enabled
 from app.containers.time_provider import TimeProviderContainer
 from app.contracts.health import ReadinessMemoryContract
+from app.contracts.service_metrics import ServiceMetricsContract
 from app.contracts.session_assurance import (
     SessionAssuranceContract,
     StepUpGuardContract,
@@ -12,7 +16,18 @@ from app.contracts.storage import StorageScopeContract
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
 from app.utilities.localization.phone_number_parser import PhoneNumberParser
+from app.utilities.observability.metrics.metrics_exposition import (
+    build_metrics_registry,
+)
+from app.utilities.observability.metrics.prometheus_service_metrics import (
+    PrometheusServiceMetrics,
+)
 from app.utilities.observability.readiness_memory import ReadinessMemory
+from app.utilities.observability.tracing.open_telemetry_setup import (
+    build_tracer_provider,
+)
+from app.utilities.observability.tracing.span_tracer import SpanTracer
+from app.utilities.observability.tracing.span_tracer_factory import build_span_tracer
 from app.utilities.security.booking_manage_token_signer import (
     BookingManageTokenSigner,
 )
@@ -54,4 +69,29 @@ class UtilitiesContainer(containers.DeclarativeContainer):
         BookingManageTokenSigner,
         encryption_key=config.app_settings.provided.encryption_key,
         previous_keys=config.app_settings.provided.previous_encryption_keys,
+    )
+    # This process's Prometheus series (GET /metrics, WORKER_METRICS_PORT)
+    # and its spans: OpenTelemetry with OTEL_EXPORTER_OTLP_ENDPOINT, Sentry's
+    # performance traces with SENTRY_DSN (docs/operations/observability.md).
+    metrics_registry: Singleton[CollectorRegistry] = Singleton(
+        build_metrics_registry,
+        multiproc_directory=(
+            config.app_settings.provided.telemetry.prometheus_multiproc_directory
+        ),
+    )
+    service_metrics: Singleton[ServiceMetricsContract] = Singleton(
+        PrometheusServiceMetrics, registry=metrics_registry
+    )
+    tracer_provider: Singleton[TracerProvider | None] = Singleton(
+        build_tracer_provider,
+        settings=config.app_settings.provided.telemetry,
+        environment=config.app_settings.provided.environment,
+        release=config.app_settings.provided.release_version,
+    )
+    span_tracer: Singleton[SpanTracer] = Singleton(
+        build_span_tracer,
+        tracer_provider=tracer_provider,
+        is_sentry_tracing_enabled=Callable(
+            is_sentry_tracing_enabled, settings=config.app_settings
+        ),
     )

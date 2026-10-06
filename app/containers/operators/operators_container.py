@@ -45,6 +45,7 @@ from app.containers.operators.sharing_operators import SharingOperatorsContainer
 from app.containers.operators.spend_guard_operators import (
     SpendGuardOperatorsContainer,
 )
+from app.containers.operators.telemetry_operators import TelemetryOperatorsContainer
 from app.containers.operators.value_operators import ValueOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -150,6 +151,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     platform: PlatformOperatorsContainer = Container(  # type: ignore[assignment]
         PlatformOperatorsContainer,
         platform_pipelines=pipelines.platform,
+        utilities=utilities,
+    )
+    telemetry: TelemetryOperatorsContainer = Container(  # type: ignore[assignment]
+        TelemetryOperatorsContainer,
+        telemetry_pipelines=pipelines.telemetry,
         utilities=utilities,
     )
     platform_ops: PlatformOpsOperatorsContainer = Container(  # type: ignore[assignment]

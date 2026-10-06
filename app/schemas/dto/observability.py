@@ -11,6 +11,7 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.constrained_integers import LlmTokenCount
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.conversations.strings import MessageText
+from app.schemas.typings.observability.constrained_strings import TraceId
 from app.schemas.typings.platform.constrained_integers import (
     ElapsedMilliseconds,
     JobIntervalSeconds,
@@ -59,12 +60,14 @@ class LlmGenerationTrace(ImmutableDTO):
 
 class LogContext(ImmutableDTO):
     """
-    What one log line, error report or trace was about: the HTTP request,
-    the business, the conversation and its channel, the background job.
-    Ids and names only, never texts or contact data.
+    What one log line, error report or trace was about: the HTTP request
+    and its distributed trace, the business, the conversation and its
+    channel, the background job. Ids and names only, never texts or
+    contact data.
     """
 
     request_id: RequestId | None = None
+    trace_id: TraceId | None = None
     business_id: BusinessId | None = None
     conversation_id: ConversationId | None = None
     contact_id: ContactId | None = None

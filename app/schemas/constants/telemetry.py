@@ -43,3 +43,15 @@ class ServiceLevelSeries(StrEnum):
 
     INBOUND_ANSWERED = "inbound_answered"
     API_AVAILABILITY = "api_availability"
+
+
+class SpanKind(StrEnum):
+    """What a span of a distributed trace stands for (OpenTelemetry's kinds)."""
+
+    # An HTTP request this API answers.
+    SERVER = "server"
+    # A call out: the database, a provider's HTTP API, a language model.
+    CLIENT = "client"
+    # A queued job a worker runs (it continues the trace that queued it).
+    CONSUMER = "consumer"
+    INTERNAL = "internal"

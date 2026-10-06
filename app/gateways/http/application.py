@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.types import Lifespan
 
 from app.contracts.observability import ErrorReportingFacilitatorContract
+from app.contracts.service_metrics import ServiceMetricsContract
 from app.gateways.http.cabinet_cors_middleware import CabinetCorsMiddleware
 from app.gateways.http.error_responses import install_error_handlers
 from app.gateways.http.middleware.anonymous_request_limit_middleware import (
@@ -15,6 +16,9 @@ from app.gateways.http.middleware.anonymous_request_limit_middleware import (
 )
 from app.gateways.http.middleware.body_size_limit_middleware import (
     BodySizeLimitMiddleware,
+)
+from app.gateways.http.middleware.request_telemetry_middleware import (
+    RequestTelemetryMiddleware,
 )
 from app.gateways.http.middleware.security_headers_middleware import (
     SecurityHeadersMiddleware,
@@ -34,6 +38,10 @@ from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.dto.observability import LogContext
 from app.schemas.typings.channels.constrained_strings import PublicBaseUrl
 from app.utilities.observability.log_context import log_context_of_error
+from app.utilities.observability.metrics.null_service_metrics import (
+    NO_SERVICE_METRICS,
+)
+from app.utilities.observability.tracing.span_tracer import NO_SPAN_TRACER, SpanTracer
 
 __all__ = ["REQUEST_ID_HEADER", "build_http_application", "sanitize_request_id"]
 
@@ -48,6 +56,8 @@ def build_http_application(
     lifespan: Lifespan[FastAPI] | None = None,
     environment: DeploymentEnvironment = DeploymentEnvironment.DEVELOPMENT,
     anonymous_request_admission: AdmitRequest | None = None,
+    service_metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
+    span_tracer: SpanTracer = NO_SPAN_TRACER,
 ) -> FastAPI:
     """
     Build the HTTP application.
@@ -64,7 +74,9 @@ def build_http_application(
     carries the security headers, and in production the API description
     (/docs, /openapi.json) is not served and HSTS is sent. With
     `anonymous_request_admission`, requests without a token count against
-    their client network's generic limit (429 with Retry-After).
+    their client network's generic limit (429 with Retry-After). Every
+    request is measured (`service_metrics`, by route template) and traced
+    (`span_tracer`), its trace id in its log lines.
     """
 
     is_production: bool = environment is DeploymentEnvironment.PRODUCTION
@@ -116,6 +128,11 @@ def build_http_application(
         )
 
     http_application.add_middleware(WidgetCorsMiddleware)
+    # Inside the request id, outside everything that can refuse a request
+    # (rate limits, CORS), so refusals are measured too.
+    http_application.add_middleware(
+        RequestTelemetryMiddleware, metrics=service_metrics, tracer=span_tracer
+    )
     # Outside every layer but the security headers, so the request id is
     # bound before anything else runs.
     http_application.add_middleware(RequestContextMiddleware)

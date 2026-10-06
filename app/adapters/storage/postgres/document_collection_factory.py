@@ -22,6 +22,7 @@ from app.adapters.storage.in_memory_document_collection import (
 from app.adapters.storage.postgres.postgres_document_collection_adapter import (
     PostgresDocumentCollectionAdapter,
 )
+from app.clients.postgres.pool_instruments import NO_POOL_INSTRUMENTS, PoolInstruments
 from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
@@ -43,13 +44,14 @@ IDLE_IN_TRANSACTION_TIMEOUT_SECONDS: int = 30
 
 def build_postgres_connection_pool(
     settings: AppSettings,
+    instruments: PoolInstruments = NO_POOL_INSTRUMENTS,
 ) -> PostgresConnectionPoolClient | None:
     """
     The process-wide pool when `DATABASE_URL` is set, otherwise None: up to
     DB_POOL_SIZE connections, each with the statement and idle-transaction
     timeouts above (the migration commands use their own, longer ones);
     connections idle for DB_POOL_MAX_IDLE_SECONDS close down to
-    DB_POOL_MIN_SIZE.
+    DB_POOL_MIN_SIZE. `instruments` measure it and trace its statements.
     """
 
     if settings.database_url is None:
@@ -62,6 +64,7 @@ def build_postgres_connection_pool(
         idle_in_transaction_timeout_seconds=IDLE_IN_TRANSACTION_TIMEOUT_SECONDS,
         min_size=int(settings.db_pool_min_size),
         max_idle_seconds=float(int(settings.db_pool_max_idle_seconds)),
+        instruments=instruments,
     )
 
 

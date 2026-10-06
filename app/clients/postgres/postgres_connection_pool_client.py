@@ -16,6 +16,7 @@ from app.clients.postgres.pinned_connections import (
     build_session_options,
     reset_for_reuse,
 )
+from app.clients.postgres.pool_instruments import NO_POOL_INSTRUMENTS, PoolInstruments
 from app.contracts.client_contract import ClientContract
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.platform.strings import DatabaseUrl
@@ -60,7 +61,8 @@ class PostgresConnectionPoolClient(ClientContract):
     `pinned_connection()` keeps one connection for a block of a thread
     (a session advisory lock, a unit of work): inside it, `connection()`
     and `transaction()` of that thread use the pinned connection, and a
-    nested `transaction()` becomes a savepoint.
+    nested `transaction()` becomes a savepoint. `instruments` measure waits
+    and connections in use, and trace statements.
     """
 
     def __init__(
@@ -76,11 +78,10 @@ class PostgresConnectionPoolClient(ClientContract):
         idle_in_transaction_timeout_seconds: int | None = None,
         min_size: int = DEFAULT_MIN_POOL_SIZE,
         max_idle_seconds: float | None = None,
+        instruments: PoolInstruments = NO_POOL_INSTRUMENTS,
     ) -> None:
         if max_size < 1:
-            raise ValueError(
-                "A connection pool needs room for at least one connection."
-            )
+            raise ValueError("A pool needs room for at least one connection.")
 
         # A floor above the ceiling would only keep every connection.
         self._min_size: int = max(0, min(min_size, max_size))
@@ -102,6 +103,7 @@ class PostgresConnectionPoolClient(ClientContract):
         self._open_connection_count: int = 0
         self._is_closed: bool = False
         self._pins: PinnedConnections = PinnedConnections()
+        self._instruments: PoolInstruments = instruments
 
     @property
     def max_size(self) -> int:
@@ -124,8 +126,7 @@ class PostgresConnectionPoolClient(ClientContract):
 
     @contextmanager
     def connection(
-        self,
-        acquire_timeout_seconds: float | None = None,
+        self, acquire_timeout_seconds: float | None = None
     ) -> Generator[PostgresConnection]:
         """
         Borrow one connection (autocommit) for the duration of the block,
@@ -138,15 +139,18 @@ class PostgresConnectionPoolClient(ClientContract):
             yield pinned_connection
             return
 
+        started: float = time.monotonic()
         connection: PostgresConnection = self._acquire(
             self._acquire_timeout_seconds
             if acquire_timeout_seconds is None
             else acquire_timeout_seconds
         )
+        self._instruments.connection_taken(time.monotonic() - started)
         try:
             yield connection
         finally:
             self._release(connection)
+            self._instruments.connection_returned()
 
     @contextmanager
     def transaction(self) -> Generator[PostgresConnection]:
@@ -187,8 +191,7 @@ class PostgresConnectionPoolClient(ClientContract):
         for idle_connection in idle_connections:
             idle_connection.connection.close()
 
-    def __del__(self) -> None:
-        # Safety net for pools dropped without close(): no open sockets left.
+    def __del__(self) -> None:  # pools dropped without close(): no sockets left
         try:
             self.close()
         except Exception:  # noqa: BLE001 - never raise from a finalizer
@@ -251,6 +254,7 @@ class PostgresConnectionPoolClient(ClientContract):
                 application_name=self._application_name,
                 # None leaves the server's defaults (psycopg drops it).
                 options=self._session_options or None,
+                cursor_factory=self._instruments.cursor_class,
             )
         except psycopg.Error as error:
             self._forget_slot()

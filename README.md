@@ -565,7 +565,13 @@ e2e). В кабинете «Каналы → Поделиться»: ссылк�
 | `PLATFORM_ALERT_COOLDOWN_MINUTES` | 60: оповещение, которое всё ещё горит, приходит снова не чаще раза в час (5–1440) |
 | `SUPPORT_WHATSAPP`, `SUPPORT_TELEGRAM`, `SUPPORT_EMAIL` | в «Помощь и поддержка» кабинета (меню аккаунта, `GET /v1/support/contacts`) нет этого способа связаться с поддержкой платформы. WhatsApp — номер в E.164, Telegram — имя пользователя (можно с «@»), почта — адрес; справка и страница статуса работают и без них |
 | `APP_RELEASE`, `RENDER_GIT_COMMIT` | версия сборки в отчётах Sentry и в пульсе воркера; `RENDER_GIT_COMMIT` Render задаёт сам, `APP_RELEASE` — для других платформ |
-| `LOG_FORMAT` | `json` в `production` (одна строка JSON с `request_id`, `business_id`, `conversation_id`, `channel`, `job_name`, `job_id`), `text` в остальных окружениях |
+| `LOG_FORMAT` | `json` в `production` (одна строка JSON с `request_id`, `trace_id`, `business_id`, `conversation_id`, `channel`, `job_name`, `job_id`), `text` в остальных окружениях |
+| `METRICS_TOKEN` | метрики Prometheus не отдаются. С токеном `GET /metrics` API и порт воркера отвечают только на `Authorization: Bearer <токен>` (иначе 401), `docs/operations/observability.md` |
+| `WORKER_METRICS_PORT` | воркер метрики не отдаёт; с портом (например, 9464) и `METRICS_TOKEN` — свой `/metrics`: задержка подбора задач, очереди и их возраст, «мёртвые» задачи, вызовы модели, пул соединений |
+| `PROMETHEUS_MULTIPROC_DIR` | один процесс uvicorn ведёт свои ряды в памяти; каталог для нескольких процессов (`WEB_CONCURRENCY` > 1), `workshop api` создаёт его сам |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS` | трассы OpenTelemetry не отправляются. С адресом коллектора OTLP/HTTP (EU) и его заголовками авторизации — спаны запросов, задач, SQL-операторов (имя и таблица, без параметров), вызовов провайдеров и модели |
+| `OTEL_SERVICE_NAME` | `workshop-backend`; задайте `workshop-api` и `workshop-worker`, чтобы различать процессы |
+| `OTEL_TRACES_SAMPLE_RATE` | `0.1`: доля трасс, начатых этим процессом, которая сохраняется (от 0 до 1); продолжение чужой трассы следует её решению |
 | `THREADPOOL_SIZE` | 64 обработчика запросов API одновременно (потоки AnyIO); держите больше `DB_POOL_SIZE`: запрос держит соединение мгновение, и подождать его лучше, чем получить отказ |
 | `DB_POOL_SIZE` | половина `THREADPOOL_SIZE`: столько соединений с Postgres держит один процесс (поток держит не больше одного соединения). Во время деплоя старые и новые экземпляры работают вместе: удвоенная сумма (пул + 1 `LISTEN`) по экземплярам API и воркерам, плюс резервная копия и миграция, должна быть меньше лимита базы (`tests/platform/test_connection_budget.py`, `docs/operations/capacity.md`) |
 | `DB_POOL_MIN_SIZE` | 2: столько соединений процесс держит открытыми без нагрузки; остальные закрываются после `DB_POOL_MAX_IDLE_SECONDS` |

@@ -29,10 +29,12 @@ from app.gateways.http.background_threads import (
     stop_embedded_worker,
 )
 from app.gateways.http.live_events.exit_signals import end_streams_on_exit_signals
+from app.gateways.http.metrics_routes import build_metrics_router
 from app.gateways.http.router_assembly import build_application_routers
 from app.gateways.http.spend_guard_router_assembly import (
     anonymous_request_admission_of,
 )
+from app.gateways.metrics.metrics_rendering import metrics_renderer
 from app.gateways.startup_checks import check_processor_uses
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
@@ -76,7 +78,12 @@ def build_application(app_container: AppContainer) -> FastAPI:
 
     settings: AppSettings = app_container.config.app_settings()
     return build_http_application(
-        routers=build_application_routers(app_container),
+        routers=[
+            *build_application_routers(app_container),
+            build_metrics_router(
+                settings.telemetry.metrics_token, metrics_renderer(app_container)
+            ),
+        ],
         error_reporter=app_container.facilitators.error_reporter(),
         cors_allowed_origins=settings.cors_allowed_origins,
         lifespan=build_lifespan(app_container),
@@ -84,6 +91,8 @@ def build_application(app_container: AppContainer) -> FastAPI:
         anonymous_request_admission=anonymous_request_admission_of(
             app_container.operators
         ),
+        service_metrics=app_container.utilities.service_metrics(),
+        span_tracer=app_container.utilities.span_tracer(),
     )
 
 
