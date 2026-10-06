@@ -127,7 +127,7 @@ subscribe to it by name). Anything else is `/v2/public-api`, run next to
 SHA-256 hash with its prefix. Its scopes (`bookings:read`, `bookings:write`,
 `leads:read`, `leads:write`, `contacts:read`, `conversations:read`,
 `webhooks:manage`) decide what it may do: a missing scope is 403
-`forbidden` with reason `missing_scope`; a record of another business is
+`access_denied` with the reason `missing_scope`; a record of another business is
 404. A key makes at most `PUBLIC_API_REQUESTS_PER_MINUTE` requests a minute
 (429 with `Retry-After`); every read and write is audited under the key.
 
