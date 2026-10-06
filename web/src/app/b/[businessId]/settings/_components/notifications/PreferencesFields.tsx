@@ -1,6 +1,8 @@
 "use client";
 
-import { Checkbox, Field, Fieldset, Input } from "@/components/ui";
+import type { ReactNode } from "react";
+
+import { Checkbox, Field, Fieldset, TimeField } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import {
@@ -16,16 +18,22 @@ const QUIET_ERRORS = {
   same: "notifications.preferences.errors.same",
 } as const satisfies Record<QuietHoursError, string>;
 
-/** Which events reach someone, and their quiet hours (a staff contact's, or my own). */
+/**
+ * Which events reach someone, and their quiet hours (a staff contact's, or
+ * my own). `status` puts a field's "Saved" beside it in a form that saves
+ * itself.
+ */
 export function PreferencesFields({
   value,
   errors,
   disabled = false,
+  status,
   onChange,
 }: {
   value: PreferencesForm;
   errors: { from?: QuietHoursError; until?: QuietHoursError };
   disabled?: boolean;
+  status?: (field: keyof PreferencesForm) => ReactNode;
   onChange: (next: PreferencesForm) => void;
 }) {
   const { t } = useI18n();
@@ -34,6 +42,7 @@ export function PreferencesFields({
       <Fieldset
         legend={t("notifications.preferences.events")}
         error={value.events.length === 0 ? t("notifications.preferences.noEvents") : undefined}
+        status={status?.("events")}
       >
         <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-2.5">
           {ALL_EVENTS.map((event) => (
@@ -48,7 +57,11 @@ export function PreferencesFields({
           ))}
         </div>
       </Fieldset>
-      <Fieldset legend={t("notifications.preferences.quietHours")} hint={t("notifications.preferences.quietHoursHint")}>
+      <Fieldset
+        legend={t("notifications.preferences.quietHours")}
+        hint={t("notifications.preferences.quietHoursHint")}
+        status={status?.("hasQuietHours")}
+      >
         <Checkbox
           label={t("notifications.preferences.quietHoursToggle")}
           checked={value.hasQuietHours}
@@ -60,30 +73,30 @@ export function PreferencesFields({
             <Field
               label={t("notifications.preferences.quietFrom")}
               error={errors.from ? t(QUIET_ERRORS[errors.from]) : undefined}
+              status={status?.("from")}
             >
               {(control) => (
-                <Input
+                <TimeField
                   {...control}
-                  type="time"
-                  dir="ltr"
                   value={value.from}
+                  step={30}
                   disabled={disabled}
-                  onChange={(change) => onChange({ ...value, from: change.target.value })}
+                  onChange={(from) => onChange({ ...value, from })}
                 />
               )}
             </Field>
             <Field
               label={t("notifications.preferences.quietUntil")}
               error={errors.until ? t(QUIET_ERRORS[errors.until]) : undefined}
+              status={status?.("until")}
             >
               {(control) => (
-                <Input
+                <TimeField
                   {...control}
-                  type="time"
-                  dir="ltr"
                   value={value.until}
+                  step={30}
                   disabled={disabled}
-                  onChange={(change) => onChange({ ...value, until: change.target.value })}
+                  onChange={(until) => onChange({ ...value, until })}
                 />
               )}
             </Field>

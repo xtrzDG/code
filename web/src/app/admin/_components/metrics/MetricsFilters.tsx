@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Button, Field, Input, Select } from "@/components/ui";
+import { Button, DateField, Field, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
 
@@ -109,24 +109,24 @@ export function MetricsFilters({
         <>
           <Field label={t("adminMetrics.filters.from")}>
             {(control) => (
-              <Input
+              <DateField
                 {...control}
-                type="date"
+                today={today}
                 value={filters.from}
                 max={filters.to || today}
-                onChange={(event) => setFilters({ ...filters, from: event.target.value })}
+                onChange={(from) => setFilters({ ...filters, from })}
               />
             )}
           </Field>
           <Field label={t("adminMetrics.filters.to")}>
             {(control) => (
-              <Input
+              <DateField
                 {...control}
-                type="date"
+                today={today}
                 value={filters.to}
                 min={filters.from}
                 max={today}
-                onChange={(event) => setFilters({ ...filters, to: event.target.value })}
+                onChange={(to) => setFilters({ ...filters, to })}
               />
             )}
           </Field>

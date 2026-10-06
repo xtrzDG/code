@@ -5,6 +5,7 @@
  * customers the period the business chose.
  */
 
+import { nextSave, savedHint } from "./support/autosave";
 import { expect, test } from "./support/fixtures";
 import { openChatBusiness } from "./support/hosted-chat";
 import { en } from "./support/messages";
@@ -26,14 +27,21 @@ test("the owner shortens how long conversations are kept, and the privacy notice
   await expect(page.getByText(texts.noCleanupYet)).toBeVisible();
   await expect(page.getByText(texts.messagingApps)).toBeVisible();
 
+  // A shorter period deletes data: it asks first, and goes back when not confirmed.
   await conversations.selectOption("365");
-  await page.getByRole("button", { name: texts.save }).click();
   const dialog = page.getByRole("dialog", { name: texts.shorterTitle });
   await expect(dialog).toContainText("conversations: 1 year");
+  await dialog.getByRole("button", { name: en.common.cancel }).click();
+  await expect(dialog).toBeHidden();
+  await expect(conversations).toHaveValue("730");
+
+  await conversations.selectOption("365");
+  const saved = nextSave(page, "/privacy-settings");
   await dialog.getByRole("button", { name: texts.shorterConfirm }).click();
-  await expect(page.getByText(texts.saved)).toBeVisible();
+  await saved;
+  await expect(savedHint(page, en.formFields.autosave.saved)).toBeVisible();
+  await page.reload();
   await expect(conversations).toHaveValue("365");
-  await expect(page.getByRole("button", { name: texts.save })).toBeDisabled();
 
   await page.goto(`/c/${business.slug}/privacy`);
   await expect(page.getByText(`${business.name} keeps conversations for 1 year after their last message`)).toBeVisible();

@@ -2,10 +2,11 @@
 
 import type { OpeningInterval, Weekday } from "@/api/types";
 import { IconPlus, IconTrash } from "@/components/icons";
-import { Button, Checkbox, Input } from "@/components/ui";
+import { Button, Checkbox, TimeField } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 import { formatMinutesOfDay, parseTimeOfDay, weekdayName } from "@/lib/format";
+import { timeText } from "@/lib/timeInput";
 import {
   intervalsToWeek,
   isOvernight,
@@ -137,15 +138,15 @@ export function HoursEditor({
                     const interval = opens !== null && closes !== null ? { opens, closes } : null;
                     return (
                       <div key={row.key} className="flex flex-wrap items-center gap-2">
-                        <Input
-                          type="time"
+                        <TimeField
                           aria-label={`${dayName}: ${t("onboarding.week.opens")}`}
                           aria-invalid={error ? true : undefined}
                           value={row.opens}
-                          onChange={(event) =>
+                          step={30}
+                          onChange={(opens) =>
                             updateDay(
                               day.weekday,
-                              day.rows.map((item) => (item.key === row.key ? { ...item, opens: event.target.value } : item)),
+                              day.rows.map((item) => (item.key === row.key ? { ...item, opens } : item)),
                             )
                           }
                           className="w-32"
@@ -153,15 +154,16 @@ export function HoursEditor({
                         <span className="text-ink-subtle" aria-hidden>
                           –
                         </span>
-                        <Input
-                          type="time"
+                        <TimeField
                           aria-label={`${dayName}: ${t("onboarding.week.closes")}`}
                           aria-invalid={error ? true : undefined}
                           value={row.closes}
-                          onChange={(event) =>
+                          step={30}
+                          defaultTime={DEFAULT_CLOSES}
+                          onChange={(closes) =>
                             updateDay(
                               day.weekday,
-                              day.rows.map((item) => (item.key === row.key ? { ...item, closes: event.target.value } : item)),
+                              day.rows.map((item) => (item.key === row.key ? { ...item, closes } : item)),
                             )
                           }
                           className="w-32"
@@ -170,7 +172,7 @@ export function HoursEditor({
                           <span className="text-sm text-ink-muted">{t("onboarding.week.roundTheClock")}</span>
                         ) : interval && isOvernight(interval) ? (
                           <span className="text-sm text-ink-muted">
-                            {t("onboarding.week.overnight", { time: row.closes })}
+                            {t("onboarding.week.overnight", { time: timeText(interval.closes, locale) })}
                           </span>
                         ) : null}
                         <div className="ml-auto flex gap-1">

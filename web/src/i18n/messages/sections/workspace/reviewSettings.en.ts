@@ -28,6 +28,7 @@ export const reviewSettingsEn = {
     description:
       "After a completed visit we ask the customer to rate it from 1 to 5, in the messenger they used and in their language. The platform answers the rating itself: it thanks them and sends your review link.",
     toggle: "Ask customers how their visit went",
+    turnedOff: "Customers are no longer asked about their visit",
     delay: "When to ask",
     delayHint: "Counted from the end of the booking.",
     delayMinutes: { one: "{count} minute after the visit", other: "{count} minutes after the visit" },
@@ -57,8 +58,6 @@ export const reviewSettingsEn = {
     tracked: "We send it through the platform's short address to count how many customers open it.",
     missing: "Without a link, customers are only thanked.",
   },
-  save: "Save",
-  saved: "Review settings saved",
   template: {
     title: "Template text",
     description:

@@ -43,8 +43,7 @@ export const notificationsKa: Translation<typeof notificationsEn> = {
   mine: {
     title: "რა მოდის ჩემთან",
     description: "თქვენი არჩევანი თქვენი მოწყობილობებისთვის ამ ბიზნესში. დრო ბიზნესის სასაათო სარტყლითაა, {timeZone}.",
-    save: "შენახვა",
-    saved: "შეტყობინებების არჩევანი შენახულია",
+    eventOff: "თქვენ აღარ მიიღებთ შეტყობინებებს: {event}",
   },
   preferences: {
     events: "შემატყობინე",

@@ -2,8 +2,9 @@
 
 import type { KnowledgeItemDetails } from "@/api/types";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
+import { todayIn } from "@/components/insights/dates";
 import type { ResourceView } from "@/components/insights/types";
-import { Alert, Field, Input, Select } from "@/components/ui";
+import { Alert, DateField, Field, Input, Select } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { BOOKABLE_KINDS } from "@/lib/offers";
 
@@ -83,7 +84,9 @@ export function BookingOfferFields({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={t("bookings.form.date")} error={errors.date && t(errors.date)} required>
-          {(control) => <Input {...control} type="date" value={values.date} onChange={(event) => set("date", event.target.value)} />}
+          {(control) => (
+            <DateField {...control} value={values.date} today={todayIn(format.timeZone)} onChange={(date) => set("date", date)} />
+          )}
         </Field>
         <Field label={partyLabel} error={errors.partySize && t(errors.partySize)} required>
           {(control) => (

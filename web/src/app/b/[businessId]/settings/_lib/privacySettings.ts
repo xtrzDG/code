@@ -21,12 +21,15 @@ export const MODEL_RECORD_PERIODS: readonly number[] = [7, 14, 30];
 export interface RetentionForm {
   conversationDays: number;
   modelRecordDays: number;
+  /** Whether the nightly quality sample may read a few real conversations. */
+  isQualitySamplingAllowed: boolean;
 }
 
 export function retentionForm(view: PrivacySettingsView): RetentionForm {
   return {
     conversationDays: view.conversation_retention_days,
     modelRecordDays: view.llm_turn_retention_days,
+    isQualitySamplingAllowed: view.quality_sampling_allowed,
   };
 }
 
@@ -34,27 +37,24 @@ export function retentionBody(form: RetentionForm): PrivacySettingsBody {
   return {
     conversation_retention_days: form.conversationDays,
     llm_turn_retention_days: form.modelRecordDays,
-  };
-}
-
-/** Turning the nightly quality sample of real conversations on or off: the stored periods unchanged. */
-export function qualitySamplingBody(view: PrivacySettingsView, allowed: boolean): PrivacySettingsBody {
-  return {
-    conversation_retention_days: view.conversation_retention_days,
-    llm_turn_retention_days: view.llm_turn_retention_days,
-    quality_sampling_allowed: allowed,
+    quality_sampling_allowed: form.isQualitySamplingAllowed,
   };
 }
 
 export function isSameRetention(form: RetentionForm, view: PrivacySettingsView): boolean {
   return (
-    form.conversationDays === view.conversation_retention_days && form.modelRecordDays === view.llm_turn_retention_days
+    form.conversationDays === view.conversation_retention_days &&
+    form.modelRecordDays === view.llm_turn_retention_days &&
+    form.isQualitySamplingAllowed === view.quality_sampling_allowed
   );
 }
 
-/** A shorter period deletes data at the next cleanup: the owner confirms it first. */
-export function isShorterRetention(form: RetentionForm, view: PrivacySettingsView): boolean {
-  return form.conversationDays < view.conversation_retention_days || form.modelRecordDays < view.llm_turn_retention_days;
+/** The periods made shorter: they delete data at the next cleanup, so the owner confirms them first. */
+export function shorterPeriods(form: RetentionForm, view: PrivacySettingsView): ("conversationDays" | "modelRecordDays")[] {
+  return [
+    ...(form.conversationDays < view.conversation_retention_days ? (["conversationDays"] as const) : []),
+    ...(form.modelRecordDays < view.llm_turn_retention_days ? (["modelRecordDays"] as const) : []),
+  ];
 }
 
 /** The choices of a select: the presets and the stored value (set some other way) in order. */

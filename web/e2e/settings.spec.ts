@@ -1,14 +1,16 @@
 /**
- * Business settings saved by two people at once: a save made from an older
- * revision is refused by the API, and the Settings tabs reload and say so
- * instead of overwriting the newer save.
+ * Business settings save themselves (no Save button), and a save made from
+ * an older revision is refused by the API: the General tab reloads, puts
+ * the owner's other changes on top and says which fields someone else
+ * changed instead of overwriting the newer save.
  */
 
 import type { APIRequestContext } from "@playwright/test";
 
-import { API_URL } from "./support/env";
+import { nextSave, savedHint, savedPill } from "./support/autosave";
+import { API_URL, WEB_URL } from "./support/env";
 import { expect, test, type Owner } from "./support/fixtures";
-import { en } from "./support/messages";
+import { en, ru } from "./support/messages";
 
 /** Another owner (or the platform's Telegram bot) saves the business meanwhile. */
 async function saveElsewhere(request: APIRequestContext, owner: Owner, changes: Record<string, unknown>): Promise<void> {
@@ -19,7 +21,26 @@ async function saveElsewhere(request: APIRequestContext, owner: Owner, changes: 
   expect(response.status(), await response.text()).toBe(200);
 }
 
-test("a general settings save after someone else's is refused, reloaded and explained", async ({
+test("the time zone saves itself in Russian and is still there after a reload", async ({ page, owner, context }) => {
+  await context.addCookies([{ name: "aw_locale", value: "ru", url: WEB_URL, sameSite: "Lax" }]);
+  await page.goto(`/b/${owner.businessId}/settings`);
+  const zone = page.getByRole("combobox", { name: new RegExp(`^${ru.settings.general.timezone}`) });
+  await expect(zone).toHaveValue("Europe/Berlin");
+  await expect(page.getByText(ru.formFields.autosave.hint)).toBeVisible();
+  await expect(page.getByRole("button", { name: ru.common.save, exact: true })).toHaveCount(0);
+
+  const saved = nextSave(page, `/v1/businesses/${owner.businessId}`);
+  await zone.selectOption("Europe/Paris");
+  await saved;
+
+  // Nothing pressed: the field and the form say it is saved.
+  await expect(savedHint(page, ru.formFields.autosave.saved)).toBeVisible();
+  await expect(savedPill(page, ru.formFields.autosave.saved)).toBeVisible();
+  await page.reload();
+  await expect(zone).toHaveValue("Europe/Paris");
+});
+
+test("a city typed after someone else saved it shows the stored one and says so", async ({
   page,
   owner,
   request,
@@ -30,16 +51,16 @@ test("a general settings save after someone else's is refused, reloaded and expl
   const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
   await expect(city).toHaveValue("Berlin");
 
-  await city.fill("Potsdam");
   await saveElsewhere(request, owner, { city: "Hamburg" });
-  await page.getByRole("button", { name: en.settings.general.save }).click();
+  await city.fill("Potsdam");
 
   await expect(page.getByText(en.settings.general.staleDescription)).toBeVisible();
   await expect(city).toHaveValue("Hamburg");
 
+  // Typing it again saves it on top of the newer business.
   await city.fill("Potsdam");
-  await page.getByRole("button", { name: en.settings.general.save }).click();
-  await expect(page.getByText(en.settings.general.saved)).toBeVisible();
+  await city.blur();
+  await expect(savedHint(page, en.formFields.autosave.saved)).toBeVisible();
   await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();
   await page.reload();
   await expect(city).toHaveValue("Potsdam");
@@ -59,14 +80,13 @@ test("general settings opened after a save made elsewhere earlier still save", a
   await expect(city).toHaveValue("Berlin");
 
   await city.fill("Potsdam");
-  await page.getByRole("button", { name: en.settings.general.save }).click();
 
-  await expect(page.getByText(en.settings.general.saved)).toBeVisible();
+  await expect(savedHint(page, en.formFields.autosave.saved)).toBeVisible();
   await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();
   await expect(city).toHaveValue("Potsdam");
 });
 
-test("a general settings save after an unrelated save elsewhere keeps what was typed", async ({
+test("a general settings change after an unrelated save elsewhere keeps what was typed", async ({
   page,
   owner,
   request,
@@ -78,14 +98,14 @@ test("a general settings save after an unrelated save elsewhere keeps what was t
   const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
   await expect(city).toHaveValue("Berlin");
 
+  await saveElsewhere(request, owner, { manager_contacts: [{ name: "Levan", channel: "telegram", address: "777000111" }] });
   await name.fill("Renamed Bistro");
   await city.fill("Potsdam");
-  await saveElsewhere(request, owner, { manager_contacts: [{ name: "Levan", channel: "telegram", address: "777000111" }] });
-  await page.getByRole("button", { name: en.settings.general.save }).click();
+  await city.blur();
 
   // Nobody else changed these fields: they are saved on top of the newer
   // business, which keeps its new contact.
-  await expect(page.getByText(en.settings.general.saved)).toBeVisible();
+  await expect(savedHint(page, en.formFields.autosave.saved)).toBeVisible();
   await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();
   await page.reload();
   await expect(name).toHaveValue("Renamed Bistro");
@@ -108,7 +128,6 @@ test("a stale save whose reload fails does not claim the current settings are sh
   const city = page.getByRole("textbox", { name: new RegExp(`^${en.settings.general.city}`) });
   await expect(city).toHaveValue("Berlin");
 
-  await city.fill("Potsdam");
   await saveElsewhere(request, owner, { city: "Hamburg" });
   // The reload after the refused save fails once (the save itself and later
   // reloads reach the API).
@@ -120,7 +139,7 @@ test("a stale save whose reload fails does not claim the current settings are sh
     failedReloads += 1;
     return route.fulfill({ status: 503, json: { error: "external_service_error", message: "Try later." } });
   });
-  await page.getByRole("button", { name: en.settings.general.save }).click();
+  await city.fill("Potsdam");
 
   await expect(page.getByText(en.settings.general.staleReloadFailed)).toBeVisible();
   await expect(page.getByText(en.settings.general.staleDescription)).toBeHidden();

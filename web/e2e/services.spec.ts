@@ -13,6 +13,7 @@ import { signInAsDemoOwner } from "./support/demo";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en, ru } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
+import { timeField, typeTime } from "./support/timeField";
 
 test.describe.configure({ timeout: 120_000 });
 
@@ -71,7 +72,7 @@ test("a 45-minute service performed by Nino is booked by hand and its value show
   await expect(form.getByText(en.bookings.form.performersOnly)).toBeVisible();
   await expect(form.getByLabel(en.bookings.partyLabel.clients)).toHaveValue("1");
   await form.getByLabel(en.bookings.form.date).fill(tomorrowInBerlin());
-  await form.getByLabel(new RegExp(`^${en.bookings.form.time}\\*?$`)).fill("10:00");
+  await typeTime(timeField(form, new RegExp(`^${en.bookings.form.time}\\*?$`)), "10:00");
   await expect(form.getByText("€35.00", { exact: true })).toBeVisible();
   await form.getByRole("button", { name: en.bookings.form.submit }).click();
 

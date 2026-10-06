@@ -4,46 +4,46 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/api/client";
-import type { ApiError } from "@/api/errors";
 import { useMutation } from "@/api/useMutation";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Alert, Badge, Button, ButtonLink, Card, useToast } from "@/components/ui";
-import { ConfirmDialog } from "@/components/ui";
 import { IconPause, IconPlay } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
 import { businessPath } from "@/lib/navigation";
 
 import type { BusinessView } from "../../_lib/general";
 
-/** The assistant's live/paused switch (only the status is sent) and the service mode. */
+/**
+ * The assistant's live/paused switch (only the status is sent) and the
+ * service mode. Pausing takes effect at once and offers Undo for a few
+ * seconds, like every other setting on the page; resuming is one press.
+ */
 export function AssistantStatusCard({ onSaved }: { onSaved: (business: BusinessView) => void }) {
   const { t } = useI18n();
   const toast = useToast();
   const router = useRouter();
   const { business, isOwner } = useBusiness();
-  const [isConfirmingPause, setConfirmingPause] = useState(false);
-  const [pauseError, setPauseError] = useState<ApiError | null>(null);
   const [status, setStatus] = useState(business.status);
   const switchStatus = useMutation(
     (next: "live" | "paused") =>
       api.PATCH("/v1/businesses/{business_id}", { params: { path: { business_id: business.id } }, body: { status: next } }),
-    { errorToast: false },
   );
 
-  const run = async (next: "live" | "paused") => {
+  const run = async (next: "live" | "paused", offerUndo: boolean) => {
     // Only the status is sent: pausing or resuming overwrites no other setting.
     const result = await switchStatus.run(next);
-    if (result.ok) {
-      setStatus(result.data.status);
-      onSaved(result.data);
-      setConfirmingPause(false);
-      router.refresh();
-      toast.success(t(next === "paused" ? "settings.status.pausedToast" : "settings.status.resumedToast"));
-    } else if (next === "paused") {
-      setPauseError(result.error);
+    if (!result.ok) {
+      return;
+    }
+    setStatus(result.data.status);
+    onSaved(result.data);
+    router.refresh();
+    const title = t(next === "paused" ? "settings.status.pausedToast" : "settings.status.resumedToast");
+    if (offerUndo) {
+      toast.undoable(title, () => void run(next === "paused" ? "live" : "paused", false));
     } else {
-      toast.error(result.error);
+      toast.success(title);
     }
   };
 
@@ -60,15 +60,17 @@ export function AssistantStatusCard({ onSaved }: { onSaved: (business: BusinessV
             <Button
               variant="secondary"
               leadingIcon={<IconPause className="size-4" aria-hidden />}
-              onClick={() => {
-                setPauseError(null);
-                setConfirmingPause(true);
-              }}
+              isLoading={switchStatus.isPending}
+              onClick={() => void run("paused", true)}
             >
               {t("settings.status.pause")}
             </Button>
           ) : (
-            <Button leadingIcon={<IconPlay className="size-4" aria-hidden />} isLoading={switchStatus.isPending} onClick={() => run("live")}>
+            <Button
+              leadingIcon={<IconPlay className="size-4" aria-hidden />}
+              isLoading={switchStatus.isPending}
+              onClick={() => void run("live", false)}
+            >
               {t("settings.status.resume")}
             </Button>
           )
@@ -96,16 +98,6 @@ export function AssistantStatusCard({ onSaved }: { onSaved: (business: BusinessV
           </Alert>
         ) : null}
       </div>
-      <ConfirmDialog
-        open={isConfirmingPause}
-        onClose={() => setConfirmingPause(false)}
-        onConfirm={() => run("paused")}
-        isPending={switchStatus.isPending}
-        error={pauseError}
-        title={t("settings.status.pauseTitle")}
-        description={t("settings.status.pauseDescription")}
-        confirmLabel={t("settings.status.pause")}
-      />
     </Card>
   );
 }

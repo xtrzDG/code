@@ -57,29 +57,36 @@ export type GeneralResult =
   | { ok: true; changes: SettingsChanges }
   | { ok: false; errors: Partial<Record<GeneralField, GeneralError>> };
 
-/**
- * The PATCH body with only the fields that changed, or the fields to fix.
- * A default language that dropped out of the list falls back to the first one.
- */
-export function buildGeneralChanges(business: BusinessView, form: GeneralForm): GeneralResult {
+/** What keeps fields of the form from being saved as they are. */
+export function generalFormErrors(form: GeneralForm): Partial<Record<GeneralField, GeneralError>> {
   const errors: Partial<Record<GeneralField, GeneralError>> = {};
   const name = form.name.trim();
-  const city = form.city.trim();
   if (name === "") {
     errors.name = "required";
   } else if (name.length > MAX_BUSINESS_NAME_LENGTH) {
     errors.name = "tooLong";
   }
-  if (city.length > MAX_CITY_LENGTH) {
+  if (form.city.trim().length > MAX_CITY_LENGTH) {
     errors.city = "tooLong";
   }
   if (form.languages.length === 0) {
     errors.languages = "languages";
   }
-  const retention = parseRetentionDays(form.retentionDays);
-  if (retention === null) {
+  if (parseRetentionDays(form.retentionDays) === null) {
     errors.retentionDays = "retention";
   }
+  return errors;
+}
+
+/**
+ * The PATCH body with only the fields that changed, or the fields to fix.
+ * A default language that dropped out of the list falls back to the first one.
+ */
+export function buildGeneralChanges(business: BusinessView, form: GeneralForm): GeneralResult {
+  const errors = generalFormErrors(form);
+  const name = form.name.trim();
+  const city = form.city.trim();
+  const retention = parseRetentionDays(form.retentionDays);
   if (Object.keys(errors).length > 0 || retention === null) {
     return { ok: false, errors };
   }

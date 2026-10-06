@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { api } from "@/api/client";
 import type { RequestBody } from "@/api/types";
-import { Field, Input, UserSentence } from "@/components/ui";
+import { DateField, Field, Input, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { todayInTimeZone } from "@/lib/specialDays";
 
@@ -84,13 +84,13 @@ export function DiscountDialog({
           required
         >
           {(control) => (
-            <Input
+            <DateField
               {...control}
-              type="date"
+              today={today}
               min={today}
               max={lastDiscountDay(today)}
               value={lastDay}
-              onChange={(event) => setLastDay(event.target.value)}
+              onChange={setLastDay}
               onBlur={() => setTouched((current) => ({ ...current, lastDay: true }))}
             />
           )}

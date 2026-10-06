@@ -16,7 +16,7 @@ import type { Page } from "@playwright/test";
 
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { en, ru } from "./support/messages";
+import { en, ka, ru } from "./support/messages";
 import {
   answerBusiness,
   expectBackdropBehind,
@@ -31,6 +31,7 @@ import {
   launch,
   playLaunch,
 } from "./support/tunnel";
+import { expectTime, shownTime, timeField, typeTime } from "./support/timeField";
 
 async function walkToLaunch(page: Page, email: string, onEachStep: () => Promise<void> = async () => {}): Promise<string> {
   await page.goto("/businesses");
@@ -181,6 +182,24 @@ test.describe("the rail and the offer step", () => {
     await expect(page.getByText(ru.tunnelOffer.offer.suggestion, { exact: true })).toHaveCount(0);
   });
 });
+
+for (const [locale, texts] of Object.entries({ ru, ka })) {
+  test(`the hours read 08:00 on a 24-hour clock, never AM/PM (${locale})`, async ({ page, newOwner }) => {
+    await page.context().addCookies([{ name: "aw_locale", value: locale, url: WEB_URL }]);
+    await page.goto(`/b/${newOwner.businessId}/setup?step=hours`);
+    await expectStep(page, texts.tunnelOffer.hours.title);
+    const opens = timeField(page, new RegExp(`: ${texts.onboarding.week.opens}$`)).first();
+    await expect(opens.getByRole("spinbutton")).toHaveCount(2);
+    await typeTime(opens, "08:00");
+    await expectTime(opens, "08:00");
+    expect(await shownTime(opens)).toBe("08:00");
+    await expect(page.locator("[data-save-slot]").getByText(texts.tunnel.saved, { exact: true })).toBeVisible();
+
+    await page.reload();
+    await expectTime(opens, "08:00");
+    expect(await shownTime(opens)).toBe("08:00");
+  });
+}
 
 function priceOf(page: Page, row: number) {
   return page.getByRole("textbox", { name: `${en.tunnelOffer.offer.price.replace("{currency}", "EUR")} ${row}` });

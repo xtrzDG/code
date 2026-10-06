@@ -33,6 +33,7 @@ export const reviewSettingsRu: Translation<typeof reviewSettingsEn> = {
     description:
       "После визита мы просим клиента оценить его от 1 до 5 в том мессенджере, где он писал, и на его языке. На оценку отвечает сама платформа: благодарит и присылает вашу ссылку для отзыва.",
     toggle: "Спрашивать клиентов, как прошёл визит",
+    turnedOff: "Клиентов больше не спрашивают о визите",
     delay: "Когда спрашивать",
     delayHint: "Считается от конца брони.",
     delayMinutes: {
@@ -77,8 +78,6 @@ export const reviewSettingsRu: Translation<typeof reviewSettingsEn> = {
     tracked: "Мы отправляем её через короткий адрес платформы, чтобы считать, сколько клиентов её открыли.",
     missing: "Без ссылки клиентов только поблагодарим.",
   },
-  save: "Сохранить",
-  saved: "Настройки отзывов сохранены",
   template: {
     title: "Текст шаблона",
     description:
