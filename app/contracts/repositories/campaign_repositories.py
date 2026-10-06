@@ -70,13 +70,7 @@ class CampaignMessageRepoContract(RepoContract, Protocol):
     def count_sent_in_month(
         self, business_id: BusinessId, month: CampaignMonthKey
     ) -> CampaignMessageCount:
-        """The month's messages that went out (SENT or since BOOKED): the cap's count."""
-        raise NotImplementedError
-
-    def list_awaiting_booking(
-        self, business_id: BusinessId, sent_from: Microseconds
-    ) -> list[CampaignMessageDocument]:
-        """SENT messages sent from `sent_from` on that no booking followed yet."""
+        """The month's messages that went out (SENT or since BOOKED): the cap."""
         raise NotImplementedError
 
     def page_latest(

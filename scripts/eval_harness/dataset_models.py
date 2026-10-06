@@ -49,6 +49,8 @@ class BusinessSpec(StrictModel):
     address: str = ""
     prices: dict[str, str] = Field(default_factory=dict[str, str])
     answers: dict[str, str] = Field(default_factory=dict[str, str])
+    # Local days (YYYY-MM-DD) with every place taken: the waitlist's days.
+    booked_up: list[str] = Field(default_factory=list[str])
 
 
 class PersonaSpec(StrictModel):

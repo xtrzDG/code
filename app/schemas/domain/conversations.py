@@ -189,10 +189,11 @@ class MessageDocument(BaseDocument):
     read as they are.
 
     Version 5: `tool_calls` may name the tool list_my_bookings (a new
-    value; version 4 rows read as they are).
+    value; version 4 rows read as they are). Version 6: they may name the
+    tool join_waitlist (a new value; version 5 rows read as they are).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("5")
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId

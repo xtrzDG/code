@@ -178,9 +178,10 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             input_data,
             StayPricing(offer=choice.offer, items=items, currency_code=currency),
         )
+        is_open: bool = is_open_for(local_date, choice.candidates, inputs)
         return AvailabilityResult(
             timezone=inputs.business.timezone,
-            is_open_on_date=is_open_for(local_date, choice.candidates, inputs),
+            is_open_on_date=is_open,
             slots=slots,
             service=(
                 None
@@ -194,6 +195,7 @@ class CheckAvailabilityUseCase(UseCaseContract[AvailabilityQuery, AvailabilityRe
             ),
             is_waitlist_open=(
                 not slots
+                and is_open
                 and not input_data.full_day
                 and self._growth.is_waitlist_open(input_data.business_id)
             ),

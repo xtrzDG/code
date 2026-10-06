@@ -13,7 +13,7 @@ pull request (offline, from recorded model answers) and every night
 
 `evals/datasets/<niche>.yaml` holds one business and its scenarios: 16
 niches, eight scenarios in each of ka, ru and en, plus he and ar for
-restaurant, hotel, beauty_salon and clinic (448 scenarios). Each scenario
+restaurant, hotel, beauty_salon and clinic (454 scenarios: the restaurant also has a fully booked Friday whose guests join the waitlist). Each scenario
 is played against a fresh business through the real conversation engine
 (`ConversationTurnOrchestrator`), in an in-memory `AppContainer` with a
 fixed clock (Monday 5 October 2026, 12:00 in Tbilisi). Only the model is

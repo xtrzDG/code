@@ -30,7 +30,9 @@ def render_waitlist_join(
         "entry_id": str(receipt.entry_id),
         "date": str(receipt.date),
         "party_size": int(receipt.party_size),
-        "hold_minutes": int(receipt.hold_minutes),
+        # A string: the reply guard reads `"key":30` as the minutes of a time,
+        # and the model repeats this number to the customer.
+        "hold_minutes": str(int(receipt.hold_minutes)),
         "timezone": str(receipt.timezone),
         "note": ALREADY_WAITING_NOTE if receipt.is_already_waiting else JOINED_NOTE,
     }

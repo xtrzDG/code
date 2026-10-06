@@ -103,7 +103,8 @@ class AssistantVersionDocument(BaseDocument):
     # 5: `facts[].is_imported` (optional: older facts read as written by
     #    the owner).
     # 6: the tool list_my_bookings in `tools` (a new value, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("6")
+    # 7: the tool join_waitlist in `tools` (a new value, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

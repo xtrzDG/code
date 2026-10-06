@@ -21,7 +21,7 @@ def test_restaurant_with_tables_rules_and_links_gets_every_tool() -> None:
     version = testbed.assemble(business.id)
 
     assert version.tools == list(AssistantToolName)
-    assert len(version.tools) == 11
+    assert len(version.tools) == 12
 
 
 def test_clinic_books_doctors_but_has_no_links() -> None:
@@ -30,7 +30,7 @@ def test_clinic_books_doctors_but_has_no_links() -> None:
 
     assert AssistantToolName.CREATE_BOOKING in version.tools
     assert AssistantToolName.SEND_LINK not in version.tools
-    assert len(version.tools) == 10
+    assert len(version.tools) == 11
 
 
 def test_online_shop_takes_orders_as_leads() -> None:

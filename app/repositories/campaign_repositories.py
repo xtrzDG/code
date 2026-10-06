@@ -118,15 +118,6 @@ class CampaignMessageRepository(
         )
         return CampaignMessageCount(sum(int(group.count) for group in groups))
 
-    def list_awaiting_booking(
-        self, business_id: BusinessId, sent_from: Microseconds
-    ) -> list[CampaignMessageDocument]:
-        return self._list_in_range(
-            business_id,
-            time_range(SENT_AT_FIELD, starting_at=sent_from),
-            [field_equals(STATUS_FIELD, CampaignMessageStatus.SENT)],
-        )
-
     def page_latest(
         self, business_id: BusinessId, window: KeysetSlice
     ) -> list[CampaignMessageDocument]:

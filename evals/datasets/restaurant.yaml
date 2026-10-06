@@ -2,12 +2,13 @@
 # The restaurant lists ka, ru and en; its Hebrew and Arabic guests write
 # languages it does not list (the platform reads any language), and the last
 # scenarios are a German guest and guests typing Georgian and Russian in
-# Latin letters. Eight scenarios per language. `customer` and `assistant` are the reference
+# Latin letters. Eight scenarios per language, and in ka, ru and en a
+# guest asking for the fully booked Friday who joins the waitlist. `customer` and `assistant` are the reference
 # conversation the scripted model plays (the seeded cassettes); a live model
 # improvises from the persona and goal and is scored by `expect`
 # (evals/README.md describes every field).
 niche: restaurant
-business: {seed: demo_tbilisi_restaurant}
+business: {seed: demo_tbilisi_restaurant, booked_up: ['2026-10-09']}
 scenarios:
 - id: price__ka
   language: ka
@@ -605,4 +606,67 @@ scenarios:
   - {say: 'Хачапури по-аджарски стоит 22 лари. Чем ещё могу помочь?'}
   expect:
     prices: ['22']
+    handoff: false
+- id: waitlist__ka
+  language: ka
+  kind: booking_out_of_hours
+  persona: {name: ნინო, phone: '+995555100201'}
+  goal: Ask for a table for 2 on Friday at 20:00. Friday is fully booked; agree to join the waitlist for any time from 19:00 to 21:00 and give your name.
+  customer: ['გამარჯობა! პარასკევს 20:00-ზე ორი ადამიანისთვის მაგიდა გაქვთ?', 'დიახ, ჩამწერეთ მოლოდინის სიაში, 19:00-დან 21:00-მდე ნებისმიერი დრო მაწყობს. მე ვარ ნინო.']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-09', time: '20:00', party_size: 2, nights: null, resource_type: null, duration_minutes: null}
+  - {say: 'სამწუხაროდ, პარასკევს ყველა მაგიდა დაკავებულია. შემიძლია ჩაგწეროთ მოლოდინის სიაში: თუ მაგიდა გათავისუფლდება, აქ მოგწერთ და თქვენთვის შევინახავთ. ჩაგწეროთ?'}
+  - call:
+      join_waitlist: {name: ნინო, service_id: null, resource_id: null, resource_type: null, date: '2026-10-09', time_from: '19:00', time_to: '21:00', party_size: 2, nights: null, notes: null}
+  - {say: 'მზადაა, ნინო! პარასკევს, 19:00-დან 21:00-მდე, ორი ადამიანისთვის მოლოდინის სიაში ხართ. თუ მაგიდა გათავისუფლდება, აქ მოგწერთ და 30 წუთით შევინახავთ. ჯერ არაფერია დაჯავშნილი.'}
+  expect:
+    tools:
+    - check_availability
+    - join_waitlist:
+        date: '2026-10-09'
+        party_size: 2
+    forbidden_tools: [create_booking]
+    handoff: false
+- id: waitlist__ru
+  language: ru
+  kind: booking_out_of_hours
+  persona: {name: Анна, phone: '+995555100202'}
+  goal: Ask for a table for 2 on Friday at 20:00. Friday is fully booked; agree to join the waitlist for any time from 19:00 to 21:00 and give your name.
+  customer: ['Здравствуйте! Есть столик на двоих в пятницу на 20:00?', 'Да, запишите меня в лист ожидания, подойдёт любое время с 19:00 до 21:00. Меня зовут Анна.']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-09', time: '20:00', party_size: 2, nights: null, resource_type: null, duration_minutes: null}
+  - {say: 'К сожалению, на пятницу все столики заняты. Могу записать вас в лист ожидания: если столик освободится, мы напишем вам здесь и придержим его для вас. Записать?'}
+  - call:
+      join_waitlist: {name: Анна, service_id: null, resource_id: null, resource_type: null, date: '2026-10-09', time_from: '19:00', time_to: '21:00', party_size: 2, nights: null, notes: null}
+  - {say: 'Готово, Анна! Вы в листе ожидания на пятницу, с 19:00 до 21:00, на двоих. Если столик освободится, мы напишем вам здесь и придержим его на 30 минут. Пока ничего не забронировано.'}
+  expect:
+    tools:
+    - check_availability
+    - join_waitlist:
+        date: '2026-10-09'
+        party_size: 2
+    forbidden_tools: [create_booking]
+    handoff: false
+- id: waitlist__en
+  language: en
+  kind: booking_out_of_hours
+  persona: {name: Emma, phone: '+447911123456'}
+  goal: Ask for a table for 2 on Friday at 20:00. Friday is fully booked; agree to join the waitlist for any time from 19:00 to 21:00 and give your name.
+  customer: ['Hi! Do you have a table for 2 on Friday at 20:00?', 'Yes, please put me on the waitlist, any time from 19:00 to 21:00 works. I am Emma.']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-09', time: '20:00', party_size: 2, nights: null, resource_type: null, duration_minutes: null}
+  - {say: 'I am sorry, Friday is fully booked. I can put you on the waitlist: if a table frees up, we will write to you here and hold it for you. Shall I?'}
+  - call:
+      join_waitlist: {name: Emma, service_id: null, resource_id: null, resource_type: null, date: '2026-10-09', time_from: '19:00', time_to: '21:00', party_size: 2, nights: null, notes: null}
+  - {say: 'Done, Emma! You are on the waitlist for Friday from 19:00 to 21:00 for 2. If a table frees up, we will write to you here and hold it for 30 minutes. Nothing is booked yet.'}
+  expect:
+    tools:
+    - check_availability
+    - join_waitlist:
+        date: '2026-10-09'
+        party_size: 2
+    forbidden_tools: [create_booking]
     handoff: false
