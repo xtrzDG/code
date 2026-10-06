@@ -7,7 +7,8 @@ Sources of truth:
   table of `README.md` for people;
 - `web/src` (the cabinet's server code) for the cabinet; `web/.env.example`
   and the "Environment" table of `web/README.md` for people;
-- `docker-compose.yml` and `render.yaml` for the deployments.
+- `docker-compose.yml` and `render.yaml` for the deployments;
+- the workflows' repository variables (`vars.NAME`) for CI and promotion.
 
 The owner's launch guide (`docs/LAUNCH.md`) may name only variables, API
 routes and files that exist.
@@ -105,6 +106,23 @@ def cabinet_variables() -> set[str]:
             names.update(re.findall(r"\benv\.([A-Z][A-Z0-9_]*)", source))
 
     return names - NEXT_JS_VARIABLES
+
+
+def workflow_variables() -> set[str]:
+    """
+    GitHub repository variables the workflows read (`vars.NAME` in
+    `.github/workflows/`), e.g. the production address the promotion's
+    data-task guard asks: set in the repository's settings, not in an
+    environment, so the guides may name them too.
+    """
+
+    return {
+        name
+        for path in sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+        for name in re.findall(
+            r"\bvars\.([A-Z][A-Z0-9_]*)", path.read_text(encoding="utf-8")
+        )
+    }
 
 
 README: str = "README.md"
