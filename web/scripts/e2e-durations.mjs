@@ -26,24 +26,26 @@ const DURATIONS_PATH = path.join(E2E_DIRECTORY, "durations.json");
 const REPORT_PATH = path.join(E2E_DIRECTORY, ".artifacts", "durations-report.json");
 const SPEC_SUFFIX = ".spec.ts";
 
-/** Seconds per spec file of a Playwright JSON report: every test, project and attempt. */
+/**
+ * Seconds per spec file of a Playwright JSON report: every test, project and
+ * attempt. A test counts for the spec file that was run (the report's
+ * top-level suite), also when a helper module declared it.
+ */
 export function secondsBySpec(report) {
   const totals = new Map();
-  const visit = (suite, file) => {
-    const suiteFile = suite.file ?? file;
+  const visit = (suite, name) => {
     for (const spec of suite.specs ?? []) {
-      const name = path.basename(spec.file ?? suiteFile);
       const milliseconds = (spec.tests ?? [])
         .flatMap((test) => test.results ?? [])
         .reduce((sum, result) => sum + (result.duration ?? 0), 0);
       totals.set(name, (totals.get(name) ?? 0) + milliseconds);
     }
     for (const child of suite.suites ?? []) {
-      visit(child, suiteFile);
+      visit(child, name);
     }
   };
   for (const suite of report.suites ?? []) {
-    visit(suite, suite.file);
+    visit(suite, path.basename(suite.file ?? suite.title));
   }
   return Object.fromEntries([...totals].map(([name, milliseconds]) => [name, milliseconds / 1000]));
 }

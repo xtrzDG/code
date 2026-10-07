@@ -45,12 +45,23 @@ const REPORT = {
       specs: [{ title: "the public pages", file: "tour-routes.spec.ts", tests: [{ projectName: "tz-tbilisi", results: [{ duration: 17900 }] }] }],
     },
     { title: "skipped.spec.ts", file: "skipped.spec.ts", specs: [{ title: "later", file: "skipped.spec.ts", tests: [{ results: [] }] }] },
+    // Tests a helper module declares (support/axe.ts) count for the spec file that ran them.
+    {
+      title: "a11y-sections-en.spec.ts",
+      file: "a11y-sections-en.spec.ts",
+      specs: [{ title: "every section", file: "support/axe.ts", tests: [{ projectName: "chromium", results: [{ duration: 30000 }] }] }],
+    },
   ],
 };
 
 describe("secondsBySpec", () => {
-  it("adds every test, nested group, project and attempt of a spec file", () => {
-    expect(secondsBySpec(REPORT)).toEqual({ "inbox.spec.ts": 4.5, "tour-routes.spec.ts": 17.9, "skipped.spec.ts": 0 });
+  it("adds every test, nested group, project and attempt of the spec file that ran it", () => {
+    expect(secondsBySpec(REPORT)).toEqual({
+      "inbox.spec.ts": 4.5,
+      "tour-routes.spec.ts": 17.9,
+      "skipped.spec.ts": 0,
+      "a11y-sections-en.spec.ts": 30,
+    });
   });
 
   it("reads an empty report as nothing measured", () => {
