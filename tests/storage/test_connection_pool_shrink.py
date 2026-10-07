@@ -12,6 +12,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
     PostgresConnectionPoolClient,
 )
 from app.schemas.typings.platform.strings import DatabaseUrl
+from tests.storage.live_event_buses import wait_until
 from tests.storage.postgres_server import ThrowawayPostgresServer
 
 IDLE_SECONDS: float = 0.2
@@ -66,9 +67,12 @@ def test_idle_connections_close_down_to_the_minimum(
         with pool.connection() as connection:
             connection.execute("select 1")
 
-        # The minimum stays open for the next request; the rest are gone.
+        # The minimum stays open for the next request; the rest are gone (a
+        # closed connection's server process ends a moment after the close).
         assert pool.open_connection_count() == 1
-        assert server_sessions(postgres_server, database_name) == 1
+        assert wait_until(
+            lambda: server_sessions(postgres_server, database_name) == 1
+        ), server_sessions(postgres_server, database_name)
     finally:
         pool.close()
 
