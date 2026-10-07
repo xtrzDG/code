@@ -11,9 +11,11 @@
 
 @theme {
   --animate-rise: aw-rise 0.9s var(--ease-emphasized) backwards;
-  /* The hero's headline and lead: they move but never fade, so the largest
-     text is painted with the first frame (Largest Contentful Paint). */
+  /* The hero's lead: it moves but never fades, so the largest text is
+     painted with the first frame (Largest Contentful Paint). */
   --animate-lift: aw-lift 0.9s var(--ease-emphasized) backwards;
+  /* A headline in gradient text: a light sweeps across it (see below). */
+  --animate-sheen: aw-sheen 1.6s var(--ease-emphasized) backwards;
   --animate-float: aw-float 7s ease-in-out infinite;
   --animate-drift: aw-drift 26s ease-in-out infinite alternate;
   --animate-spin-slow: aw-spin 22s linear infinite;
@@ -27,6 +29,14 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+  @keyframes aw-sheen {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0 0;
     }
   }
   @keyframes aw-lift {
@@ -148,6 +158,18 @@
   transform-origin: 50% 100%;
 }
 
+/*
+ * Blocks below a hero: the browser styles, lays out and paints them only
+ * when they come near the screen (content-visibility), so the first frame
+ * is the hero's alone and appears sooner. Until then a block takes an
+ * estimated height, and the real one once it has been shown (`auto`); it
+ * stays in the accessibility tree and in find-in-page.
+ */
+.landing-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 40rem;
+}
+
 /* Film grain over the whole page: a fixed SVG noise, barely there. */
 .landing-grain {
   position: fixed;
@@ -158,9 +180,25 @@
   mix-blend-mode: overlay;
 }
 
-/* Gradient text for one phrase of a heading. */
+/*
+ * Gradient text for a headline: ink warming into the accent. The gradient is
+ * twice as wide as the text, so `animate-sheen` can sweep a light across it
+ * from the right half (warm) to the left (the resting colours). It never
+ * moves or fades the text: text clipped to a moving background counts as
+ * painted only once that motion ends (Largest Contentful Paint).
+ */
 .landing-gradient-text {
-  background: linear-gradient(100deg, var(--ink) 20%, color-mix(in oklab, var(--accent) 80%, var(--tone-sand)) 60%, var(--accent) 90%);
+  background: linear-gradient(
+    100deg,
+    var(--ink) 10%,
+    color-mix(in oklab, var(--accent) 80%, var(--tone-sand)) 30%,
+    var(--accent) 45%,
+    var(--tone-sand) 62%,
+    var(--accent) 80%,
+    var(--ink) 100%
+  );
+  background-size: 200% 100%;
+  background-position: 0 0;
   background-clip: text;
   color: transparent;
 }

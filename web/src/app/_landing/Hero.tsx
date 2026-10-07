@@ -19,8 +19,9 @@ type DemoList = Schema<"PublicDemoList">;
  * a CSS poster from the server, and on a capable wide screen the 3D scene
  * once the page is idle (HeroVisual); on a phone the poster rises above the
  * chat. The text moves in with CSS from the first paint, before any
- * script; the headline and the lead only lift (never fade), so the largest
- * text is painted with the first frame.
+ * script; the lead only lifts and the headline's gradient
+ * sweeps (neither fades), so the largest text is painted with the first
+ * frame.
  */
 export function Hero({
   t,
@@ -45,7 +46,7 @@ export function Hero({
           </p>
           <h1
             id="hero-title"
-            className="landing-gradient-text animate-lift text-4xl font-semibold tracking-tight text-balance [animation-delay:80ms] sm:text-5xl lg:max-w-[34rem] lg:leading-[1.08]"
+            className="landing-gradient-text animate-sheen text-4xl font-semibold tracking-tight text-balance [animation-delay:80ms] sm:text-5xl lg:max-w-[34rem] lg:leading-[1.08]"
           >
             {t("landing.hero.title")}
           </h1>

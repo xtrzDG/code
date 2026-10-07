@@ -3,23 +3,23 @@
 import Form from "next/form";
 import { useId } from "react";
 
-import type { CountryListItem } from "@/api/types";
 import { Button, Select } from "@/components/ui";
 import { useIsClient } from "@/components/workspace/useIsClient";
 import { useI18n } from "@/i18n/client";
-import { countryFlag, isCountryAvailable } from "@/lib/countries";
+import type { CountryChoice } from "@/lib/publicSite/countryChoices";
 
 /**
  * Whose prices to show: a GET form to the page itself (?country=XX). With JavaScript it
  * navigates as soon as a country is picked and keeps the scroll position;
- * without, the "Show" button submits it.
+ * without, the "Show" button submits it. The countries come ready-made from
+ * the server (countryChoices).
  */
 export function CountryPicker({
   countries,
   value,
   action,
 }: {
-  countries: readonly CountryListItem[];
+  countries: readonly CountryChoice[];
   value: string | null;
   action: string;
 }) {
@@ -42,8 +42,8 @@ export function CountryPicker({
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
       >
         {countries.map((country) => (
-          <option key={country.country_code} value={country.country_code} disabled={!isCountryAvailable(country)}>
-            {`${countryFlag(country.country_code)} ${country.display_name}`}
+          <option key={country.code} value={country.code} disabled={!country.isAvailable}>
+            {country.label}
           </option>
         ))}
       </Select>

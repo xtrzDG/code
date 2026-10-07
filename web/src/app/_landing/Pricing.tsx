@@ -1,6 +1,7 @@
 import type { CountryListItem, Schema } from "@/api/types";
 import { Stagger } from "@/components/motion";
 import type { Translator } from "@/i18n/translate";
+import { countryChoices } from "@/lib/publicSite/countryChoices";
 import { hasConversion, rateDayLabel, rateSourceKey } from "@/lib/publicSite/prices";
 
 import { CountryPicker } from "./CountryPicker";
@@ -36,7 +37,7 @@ export function Pricing({
     <Section id="pricing" title={t("landing.pricing.title")} subtitle={t("landing.pricing.subtitle")} glow="right">
       {countries.length > 0 ? (
         <div className="mb-8">
-          <CountryPicker countries={countries} value={countryCode} action={formAction} />
+          <CountryPicker countries={countryChoices(countries)} value={countryCode} action={formAction} />
         </div>
       ) : null}
       {quotes === null ? (

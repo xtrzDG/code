@@ -7,6 +7,7 @@ import { PATH_LOCALE_HEADER } from "@/lib/publicSite/paths";
 import { LOCALE_COOKIE, localeDirection, matchLocale, resolveLocale, type Locale, type LocaleDirection } from "./config";
 import { FALLBACK_MESSAGES, getMessages } from "./messages";
 import { pseudoLocaleDirection, pseudoMessages } from "./pseudo";
+import { publicClientMessages, type TextScope } from "./publicScope";
 import { createTranslator, type MessageTree, type Translator } from "./translate";
 
 let pseudoDictionary: MessageTree | undefined;
@@ -55,4 +56,16 @@ export async function getI18n(): Promise<Translator & { messages: MessageTree; d
   const locale = await getLocale();
   const { messages, direction } = await getRequestTexts(locale);
   return { ...createTranslator(locale, messages, FALLBACK_MESSAGES), messages, direction };
+}
+
+/**
+ * What the browser gets of the dictionary: the public site's pages (the
+ * proxy marks them with their path's language) only the texts of their
+ * client components (./publicScope.ts), every other page all of it.
+ */
+export async function getClientTexts(messages: MessageTree): Promise<{ messages: MessageTree; scope: TextScope }> {
+  const headerList = await headers();
+  return matchLocale(headerList.get(PATH_LOCALE_HEADER))
+    ? { messages: publicClientMessages(messages), scope: "public" }
+    : { messages, scope: "full" };
 }

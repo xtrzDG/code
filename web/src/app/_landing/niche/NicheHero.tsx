@@ -12,9 +12,9 @@ import { HeroBackdrop } from "../HeroBackdrop";
 /**
  * The top of a niche's page: where it sits, what the assistant does for
  * it and the calls to action, beside a demo business of this kind to talk
- * to (`demo`) when one is configured. The headline and the description
- * only lift into place (never fade): the largest text is painted with the
- * first frame.
+ * to (`demo`) when one is configured. The description only lifts into
+ * place and the headline's gradient sweeps (neither fades): the largest
+ * text is painted with the first frame.
  */
 export function NicheHero({
   t,
@@ -49,7 +49,7 @@ export function NicheHero({
           <p className="animate-rise text-sm font-medium text-accent [animation-delay:60ms]">{t("nichePage.eyebrow")}</p>
           <h1
             id="niche-title"
-            className="landing-gradient-text max-w-3xl animate-lift text-4xl font-semibold tracking-tight text-balance [animation-delay:120ms] sm:text-5xl"
+            className="landing-gradient-text max-w-3xl animate-sheen text-4xl font-semibold tracking-tight text-balance [animation-delay:120ms] sm:text-5xl"
           >
             {t("nichePage.title", { niche: niche.name })}
           </h1>
