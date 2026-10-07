@@ -9,7 +9,6 @@ import type { insightsCommonEn } from "./common.en";
 export const insightsCommonRu: Translation<typeof insightsCommonEn> = {
   loadingMore: "Загрузка…",
   showMore: "Показать ещё",
-  shownOf: "Показано {shown} из {total}",
   includeTest: "Показывать тестовые",
   includeTestHint: "Из тестового чата и проверок",
   testBadge: "Тест",
@@ -17,8 +16,6 @@ export const insightsCommonRu: Translation<typeof insightsCommonEn> = {
   unknownCustomer: "Клиент без имени",
   callPhone: "Позвонить {phone}",
   openConversation: "Открыть разговор",
-  all: "Все",
-  clearFilters: "Сбросить фильтры",
   noMatchesTitle: "Под фильтры ничего не подходит",
   noMatchesDescription: "Измените или сбросьте фильтры, чтобы увидеть больше.",
   copy: "Скопировать",

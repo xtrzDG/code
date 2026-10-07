@@ -52,7 +52,6 @@ export const settingsHe: Translation<typeof settingsEn> = {
   },
   status: {
     title: "סטטוס העוזר",
-    current: "עכשיו",
     live: "העוזר עונה ללקוחות בכל הערוצים המחוברים.",
     paused: "העוזר מושהה: הלקוחות לא מקבלים ממנו תשובות.",
     notLive: "העוזר מתחיל לענות ללקוחות אחרי שתפרסמו אותו באזור העוזר.",

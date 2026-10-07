@@ -24,7 +24,6 @@ export const liveEn = {
   reconnect: "Try now",
   needsPersonTitle: "A customer needs a person",
   needsPersonOpen: "Open",
-  needsPersonAnnouncement: "A customer needs a person. {count} waiting.",
   sound: "Chime when someone needs a person",
   soundHint: "A short sound on this device when a conversation is handed to your team.",
 } as const;

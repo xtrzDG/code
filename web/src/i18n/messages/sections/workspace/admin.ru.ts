@@ -87,8 +87,6 @@ export const adminRu: Translation<typeof adminEn> = {
     issuesTitle: "Что требует внимания",
     noIssues: "Всё в порядке.",
     facts: {
-      country: "Страна",
-      niche: "Ниша",
       status: "Статус бизнеса",
       serviceMode: "Помощник",
       plan: "Тариф",

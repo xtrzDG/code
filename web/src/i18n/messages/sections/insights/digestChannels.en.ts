@@ -26,7 +26,6 @@ export const digestChannelsEn = {
   whatsappNumberHint: "With the country code. Choosing WhatsApp is your consent to these messages.",
   whatsappNotReady: "WhatsApp summaries are not set up on this platform yet.",
   save: "Save",
-  saved: "Saved",
   invalidNumber: "Enter the number with its country code, e.g. +995 555 12 34 56.",
   refusals: {
     telegramNotAvailable: "Telegram summaries are not set up on this platform yet.",

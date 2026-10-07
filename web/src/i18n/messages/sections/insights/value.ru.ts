@@ -102,7 +102,6 @@ export const valueRu: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "первый период",
-    firstPeriodHint: "В предыдущем периоде активности не было: сравнивать пока не с чем",
     firstPeriodNote: "Первый период — сравнивать пока не с чем",
     up: "Рост на {change} к {against}",
     down: "Снижение на {change} к {against}",

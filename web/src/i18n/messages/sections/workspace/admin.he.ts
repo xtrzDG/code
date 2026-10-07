@@ -78,8 +78,6 @@ export const adminHe: Translation<typeof adminEn> = {
     issuesTitle: "מה דורש תשומת לב",
     noIssues: "שום דבר לא דורש תשומת לב.",
     facts: {
-      country: "מדינה",
-      niche: "תחום",
       status: "סטטוס העסק",
       serviceMode: "עוזר",
       plan: "מסלול",

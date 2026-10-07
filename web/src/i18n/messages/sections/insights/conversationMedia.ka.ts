@@ -14,10 +14,7 @@ export const conversationMediaKa: Translation<typeof conversationMediaEn> = {
     file: "ფაილი",
   },
   voice: {
-    title: "ხმოვანი შეტყობინება",
-    duration: "ხმოვანი შეტყობინება, {duration}",
     transcript: "ტრანსკრიფცია",
-    noTranscript: "ტრანსკრიფცია არ არის.",
     play: "მოსმენა",
     playLabel: "ხმოვანი შეტყობინების მოსმენა",
     playerLabel: "კლიენტის ხმოვანი შეტყობინება",
@@ -48,5 +45,4 @@ export const conversationMediaKa: Translation<typeof conversationMediaEn> = {
     unrecognized_format: "ფორმატი, რომელსაც ასისტენტი ვერ კითხულობს: კლიენტს სთხოვეს, ტექსტით მოწეროს.",
     not_understood: "სიტყვების გარჩევა ვერ მოხერხდა: კლიენტს სთხოვეს, ტექსტით მოწეროს.",
   },
-  auditNote: "ხმოვანი შეტყობინებების მოსმენა და ფოტოების ნახვა აუდიტის ჟურნალში იწერება.",
 };

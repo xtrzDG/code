@@ -31,5 +31,4 @@ export const setupHe: Translation<typeof setupEn> = {
   },
   staffTitle: "העוזר בתהליך יצירה",
   staffDescription: "הבעלים של {business} מגדירים אותו. שיחות, הזמנות ופניות יופיעו כאן ברגע שהוא יהיה מוכן.",
-  create: "יצירת העוזר שלי",
 };

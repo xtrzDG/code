@@ -25,11 +25,9 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
   moveHint: "גררו הזמנה לשעה או למקום אחרים. או בחרו אותה והזיזו בעזרת החצים: Enter מעביר, Escape מבטל.",
   day: {
     label: "הזמנות ליום {date} לפי מקום",
-    time: "שעה",
     closed: "סגור",
     closedDay: "סגור כל היום",
     newAt: "הזמנה חדשה: {place}",
-    newAtTime: "הזמנה חדשה: {place}, {time}",
     booked: "{percent} תפוס",
     now: "עכשיו {time}",
     noPlacesTitle: "אין מקומות שמוזמנים לפי שעה",
@@ -39,7 +37,6 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "בדיקה",
-    moving: "מעבירים…",
   },
   move: {
     pending: "להעביר אל {place}, {time}? Enter מעביר, Escape מבטל.",

@@ -29,16 +29,10 @@ export const partnerPortalEn = {
     paying: "Already paid",
     accrued: "To be paid",
     paid: "Paid out",
-    invoices: "{count} invoices",
-    none: "No commissions yet.",
   },
   businesses: {
     title: "Businesses you brought",
     empty: "No businesses yet. Share your link to bring the first one.",
-    business: "Business",
-    country: "Country",
-    plan: "Plan",
-    status: "Status",
     signedUp: "Signed up",
     firstPaid: "First payment",
     notYet: "Not yet",
@@ -47,10 +41,7 @@ export const partnerPortalEn = {
   commissions: {
     title: "Commission by invoice",
     empty: "No commissions yet: they appear when a business you brought pays.",
-    month: "Month",
-    business: "Business",
     base: "Invoice before tax",
-    amount: "Commission",
     status: "Status",
     statuses: {
       accrued: "To be paid",

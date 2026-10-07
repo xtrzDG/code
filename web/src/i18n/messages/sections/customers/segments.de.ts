@@ -11,7 +11,6 @@ export const segmentsDe: Translation<typeof segmentsEn> = {
   limit: "Ein Unternehmen hat höchstens 50 Segmente. Löschen Sie eines, um ein weiteres zu speichern.",
   members: "Kunden",
   noMembers: "Gerade passt niemand zu diesem Segment.",
-  showMore: "Mehr Kunden anzeigen",
   export: "CSV herunterladen",
   exportHint: "Die Kunden des Segments mit Telefon, Kanälen, Tags und Buchungen, für eine Kampagne anderswo.",
   edit: "Bearbeiten",

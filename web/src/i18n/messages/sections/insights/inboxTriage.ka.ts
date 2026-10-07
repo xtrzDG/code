@@ -57,7 +57,6 @@ export const inboxTriageKa: Translation<typeof inboxTriageEn> = {
     days: "{count} დღ",
   },
   details: {
-    label: "საუბრის შესახებ",
     source: "საიდან",
     assignee: "პასუხისმგებელი",
     lastMessage: "ბოლო შეტყობინება",

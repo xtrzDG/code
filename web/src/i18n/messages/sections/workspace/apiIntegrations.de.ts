@@ -27,7 +27,7 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
       other: "Eine Adresse, die {failures}-mal hintereinander scheitert, wird abgeschaltet.",
     },
     statuses: { active: "Aktiv", paused: "Pausiert", disabled: "Abgeschaltet" },
-    origins: { cabinet: "Hier hinzugefügt", api: "Von Zapier oder der API hinzugefügt" },
+    origins: { api: "Von Zapier oder der API hinzugefügt" },
     eventCount: { one: "{count} Ereignis", other: "{count} Ereignisse" },
     lastSuccess: "Zuletzt zugestellt {time}",
     neverDelivered: "Noch nichts zugestellt",
@@ -46,7 +46,6 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
       delete: "Löschen",
     },
     toasts: {
-      saved: "Webhook gespeichert",
       paused: "Webhook pausiert",
       resumed: "Webhook ist aktiv",
       testDelivered: "Testereignis zugestellt",

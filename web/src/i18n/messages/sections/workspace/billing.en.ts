@@ -31,7 +31,6 @@ export const billingEn = {
     annual: "per year",
   },
   facts: {
-    price: "Price",
     billingPeriod: "Billing",
     currentPeriod: "Current period",
     trialEnds: "Trial ends",

@@ -50,7 +50,6 @@ export const profileEditHe: Translation<typeof profileEditEn> = {
     priced: { one: "{count} עם מחיר", other: "{count} עם מחיר" },
     noHours: "שעות הפתיחה לא הוגדרו",
     roundTheClock: "24 שעות",
-    noBookings: "ללא הזמנות",
     partySize: { one: "עד אדם אחד בהזמנה", two: "עד שני אנשים בהזמנה", other: "עד {count} אנשים בהזמנה" },
     noPeople: "עדיין אף אחד לא מקבל את השיחות",
     answers: { one: "תשובה מוכנה אחת", two: "שתי תשובות מוכנות", other: "{count} תשובות מוכנות" },

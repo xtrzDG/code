@@ -49,7 +49,6 @@ export const profileEditKa: Translation<typeof profileEditEn> = {
     priced: { one: "{count} ფასით", other: "{count} ფასით" },
     noHours: "სამუშაო საათები მითითებული არ არის",
     roundTheClock: "24 საათი",
-    noBookings: "ჯავშნების გარეშე",
     partySize: { one: "ერთ ჯავშანში {count} ადამიანამდე", other: "ერთ ჯავშანში {count} ადამიანამდე" },
     noPeople: "საუბრებს ჯერ არავინ იღებს",
     answers: { one: "{count} მზა პასუხი", other: "{count} მზა პასუხი" },

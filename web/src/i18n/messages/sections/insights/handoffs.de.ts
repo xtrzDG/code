@@ -4,13 +4,6 @@ import type { Translation } from "../../../translate";
 import type { handoffsEn } from "./handoffs.en";
 
 export const handoffsDe: Translation<typeof handoffsEn> = {
-  loading: "Wird geladen…",
-  tabsLabel: "Anzeigen",
-  tabs: {
-    open: "Wartend",
-    resolved: "Erledigt",
-    all: "Alle",
-  },
   urgency: {
     critical: "Kritisch",
     high: "Dringend",
@@ -35,17 +28,6 @@ export const handoffsDe: Translation<typeof handoffsEn> = {
     resolved: "Erledigt",
   },
   notificationFailedHint: "Das Team hat die Benachrichtigung nicht bekommen. Rufen Sie den Kunden zurück und prüfen Sie die Kontakte in den Einstellungen.",
-  resolvedAt: "Erledigt {date}",
-  resolve: "Erledigen",
-  confirmResolve: {
-    title: "Als erledigt markieren?",
-    description: "{name}: Der Assistent antwortet diesem Kunden wieder.",
-    confirm: "Erledigen",
-  },
-  resolved: "Als erledigt markiert",
-  emptyOpenTitle: "Niemand wartet auf eine Person",
-  emptyOpenDescription: "Wenn der Assistent ein Gespräch an eine Person übergibt, wartet es hier mit einer kurzen Zusammenfassung.",
-  emptyTitle: "Hier ist noch nichts",
   summaryCodes: {
     model_declined: "Der Assistent wollte diese Nachricht nicht beantworten.",
     model_unavailable: "Der Assistent war kurz nicht verfügbar und konnte nicht antworten.",

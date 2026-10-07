@@ -24,7 +24,7 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
     limits: { one: "וובהוק אחד לכל היותר.", other: "עד {count} וובהוקים." },
     disableAfter: { one: "כתובת שנכשלת פעם אחת מושבתת.", other: "כתובת שנכשלת {failures} פעמים ברציפות מושבתת." },
     statuses: { active: "פעיל", paused: "מושהה", disabled: "מושבת" },
-    origins: { cabinet: "נוסף כאן", api: "נוסף על ידי Zapier או ה-API" },
+    origins: { api: "נוסף על ידי Zapier או ה-API" },
     eventCount: { one: "אירוע אחד", other: "{count} אירועים" },
     lastSuccess: "נמסר לאחרונה {time}",
     neverDelivered: "עדיין לא נמסר דבר",
@@ -43,7 +43,6 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
       delete: "מחיקה",
     },
     toasts: {
-      saved: "הוובהוק נשמר",
       paused: "הוובהוק הושהה",
       resumed: "הוובהוק פעיל",
       testDelivered: "אירוע הבדיקה נמסר",

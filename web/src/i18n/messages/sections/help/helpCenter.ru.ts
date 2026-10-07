@@ -23,7 +23,6 @@ export const helpCenterRu: Translation<typeof helpCenterEn> = {
     daily_work: "Каждый день",
     account: "Аккаунт и оплата",
   },
-  loadFailed: "Не удалось загрузить справку. Проверьте связь и попробуйте ещё раз.",
   allArticles: "Все статьи",
   related: "Читать дальше",
   otherLanguage: "Эта статья ещё не переведена, поэтому показана на языке: {language}.",

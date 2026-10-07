@@ -82,7 +82,6 @@ export const channelSetupDe: Translation<typeof channelSetupEn> = {
     },
   },
   preview: {
-    title: "Live-Vorschau",
     frameTitle: "Vorschau des Chats auf Ihrer Website",
     loading: "Vorschau wird geladen…",
     languages: "Sprache der Vorschau",

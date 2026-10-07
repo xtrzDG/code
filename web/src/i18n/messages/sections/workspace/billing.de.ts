@@ -31,7 +31,6 @@ export const billingDe: Translation<typeof billingEn> = {
     annual: "pro Jahr",
   },
   facts: {
-    price: "Preis",
     billingPeriod: "Abrechnung",
     currentPeriod: "Aktueller Zeitraum",
     trialEnds: "Testphase endet",

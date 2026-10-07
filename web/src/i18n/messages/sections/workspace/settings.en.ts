@@ -52,7 +52,6 @@ export const settingsEn = {
   },
   status: {
     title: "Assistant status",
-    current: "Now",
     live: "The assistant answers customers in all connected channels.",
     paused: "The assistant is paused: customers get no answers from it.",
     notLive: "The assistant starts answering customers after you publish it in the Assistant section.",

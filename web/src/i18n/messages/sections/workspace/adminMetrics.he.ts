@@ -7,7 +7,6 @@ export const adminMetricsHe: Translation<typeof adminMetricsEn> = {
   nav: "מדדים",
   title: "מדדי צמיחה",
   description: "איך בעלים מגיעים מהרשמה לתשלום, מה הם מכניסים כל חודש וכמה מהיר לוח הבקרה מרגיש. מהאירועים של המוצר עצמו; בלי מעקב חיצוני.",
-  generated: "חושב {time}",
   filters: {
     label: "מסנני מדדים",
     period: "הרשמות",

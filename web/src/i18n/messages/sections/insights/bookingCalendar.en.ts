@@ -25,11 +25,9 @@ export const bookingCalendarEn = {
   moveHint: "Drag a booking to another time or place. Or focus it and use the arrow keys: Enter moves it, Escape cancels.",
   day: {
     label: "Bookings of {date} by place",
-    time: "Time",
     closed: "Closed",
     closedDay: "Closed all day",
     newAt: "New booking: {place}",
-    newAtTime: "New booking: {place}, {time}",
     booked: "{percent} booked",
     now: "Now {time}",
     noPlacesTitle: "No places booked by time",
@@ -39,7 +37,6 @@ export const bookingCalendarEn = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "Test",
-    moving: "Moving…",
   },
   move: {
     pending: "Move to {place}, {time}? Enter moves it, Escape cancels.",

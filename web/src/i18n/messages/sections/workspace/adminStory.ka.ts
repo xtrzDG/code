@@ -28,7 +28,6 @@ export const adminStoryKa: Translation<typeof adminStoryEn> = {
     byline: "{name} · {date}",
     edited: "შეიცვალა {date}",
     unknownAuthor: "ყოფილი ადმინისტრატორი",
-    actions: "ჩანაწერის მოქმედებები",
   },
   timeline: {
     title: "ისტორია",
@@ -36,8 +35,6 @@ export const adminStoryKa: Translation<typeof adminStoryEn> = {
     empty: "ამ ანგარიშზე ჯერ არაფერი მომხდარა.",
     loadMore: "ადრინდელის ჩვენება",
     system: "სისტემა",
-    platformStaff: "პლატფორმის თანამშრომელი",
-    owner: "მფლობელი",
     by: "{name}",
     reason: "მიზეზი: {reason}",
     kinds: {

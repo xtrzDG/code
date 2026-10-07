@@ -41,7 +41,6 @@ export const quickRepliesEn = {
     insert: "Insert",
     insertLabel: "Insert {variable} into the text in {language}",
     preview: "Preview",
-    previewHint: "With an example customer and booking.",
     sample: {
       name: "Nino",
       bookingTime: "Sat, 19:30",

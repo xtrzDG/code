@@ -95,6 +95,5 @@ export const adminActionsRu: Translation<typeof adminActionsEn> = {
     description: "{date} владелец попросил команду платформы настроить бизнес ({plan}).",
     markDone: "Отметить выполненной",
     marked: "Настройка под ключ отмечена выполненной",
-    doneTitle: "Настройка под ключ выполнена",
   },
 };

@@ -40,7 +40,6 @@ export const quickRepliesDe: Translation<typeof quickRepliesEn> = {
     insert: "Einfügen",
     insertLabel: "{variable} in den Text auf {language} einfügen",
     preview: "Vorschau",
-    previewHint: "Mit einem Beispielkunden und einer Beispielbuchung.",
     sample: {
       name: "Lena",
       bookingTime: "Sa., 19:30",

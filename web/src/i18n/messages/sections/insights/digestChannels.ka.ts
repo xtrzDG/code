@@ -28,7 +28,6 @@ export const digestChannelsKa: Translation<typeof digestChannelsEn> = {
   whatsappNumberHint: "ქვეყნის კოდით. WhatsApp-ის არჩევით თანხმდებით ამ შეტყობინებების მიღებაზე.",
   whatsappNotReady: "WhatsApp-ში შეჯამებები ამ პლატფორმაზე ჯერ არ არის მორგებული.",
   save: "შენახვა",
-  saved: "შენახულია",
   invalidNumber: "შეიყვანეთ ნომერი ქვეყნის კოდით, მაგალითად +995 555 12 34 56.",
   refusals: {
     telegramNotAvailable: "Telegram-ში შეჯამებები ამ პლატფორმაზე ჯერ არ არის მორგებული.",

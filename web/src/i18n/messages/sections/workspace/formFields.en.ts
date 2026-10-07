@@ -28,8 +28,5 @@ export const formFieldsEn = {
     saved: "Saved",
     failed: "Not saved",
     retry: "Try again",
-    retryLater: "Not saved: no connection. We will try again in a moment.",
-    stale: "Someone else changed this meanwhile. The field now shows what is stored.",
-    leaveWarning: "A change is still being saved.",
   },
 } as const;

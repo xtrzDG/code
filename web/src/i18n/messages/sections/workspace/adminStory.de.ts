@@ -28,7 +28,6 @@ export const adminStoryDe: Translation<typeof adminStoryEn> = {
     byline: "{name} · {date}",
     edited: "bearbeitet {date}",
     unknownAuthor: "Ein ehemaliger Admin",
-    actions: "Aktionen der Notiz",
   },
   timeline: {
     title: "Zeitachse",
@@ -36,8 +35,6 @@ export const adminStoryDe: Translation<typeof adminStoryEn> = {
     empty: "Auf diesem Konto ist noch nichts passiert.",
     loadMore: "Ältere anzeigen",
     system: "System",
-    platformStaff: "Plattform-Team",
-    owner: "Der Inhaber",
     by: "von {name}",
     reason: "Warum: {reason}",
     kinds: {

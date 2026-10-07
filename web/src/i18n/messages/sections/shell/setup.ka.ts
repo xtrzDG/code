@@ -32,5 +32,4 @@ export const setupKa: Translation<typeof setupEn> = {
   staffTitle: "ასისტენტი იქმნება",
   staffDescription:
     "„{business}“-ის მფლობელი მას აწყობს. საუბრები, ჯავშნები და მოთხოვნები აქ გამოჩნდება, როგორც კი ასისტენტი მზად იქნება.",
-  create: "ჩემი ასისტენტის შექმნა",
 };

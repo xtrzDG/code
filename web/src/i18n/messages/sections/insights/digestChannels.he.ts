@@ -25,7 +25,6 @@ export const digestChannelsHe: Translation<typeof digestChannelsEn> = {
   whatsappNumberHint: "עם קידומת המדינה. בחירה ב-WhatsApp היא ההסכמה שלכם להודעות האלה.",
   whatsappNotReady: "סיכומים ב-WhatsApp עדיין לא מוגדרים בפלטפורמה הזו.",
   save: "שמירה",
-  saved: "נשמר",
   invalidNumber: "הזינו את המספר עם קידומת המדינה, למשל ‎+972 50 123 4567.",
   refusals: {
     telegramNotAvailable: "סיכומים ב-Telegram עדיין לא מוגדרים בפלטפורמה הזו.",

@@ -146,7 +146,6 @@ export const channelsEn = {
     },
     dial: "Dial",
     dialLabel: "Dial {code}",
-    unavailable: "Forwarding instructions appear after the phone channel is connected.",
   },
   calendar: {
     title: "Google Calendar",

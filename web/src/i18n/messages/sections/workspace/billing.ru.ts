@@ -31,7 +31,6 @@ export const billingRu: Translation<typeof billingEn> = {
     annual: "в год",
   },
   facts: {
-    price: "Цена",
     billingPeriod: "Оплата",
     currentPeriod: "Текущий период",
     trialEnds: "Пробный период до",

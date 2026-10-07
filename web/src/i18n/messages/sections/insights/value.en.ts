@@ -67,7 +67,6 @@ export const valueEn = {
   },
   delta: {
     firstPeriod: "first period",
-    firstPeriodHint: "No activity in the period before: nothing to compare with yet",
     firstPeriodNote: "First period: nothing to compare with yet",
     up: "Up {change} vs {against}",
     down: "Down {change} vs {against}",

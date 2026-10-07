@@ -31,5 +31,4 @@ export const customerMemoryRu: Translation<typeof customerMemoryEn> = {
   turnedOff: "Память о клиентах выключена",
   notesShared: "Теперь помощник читает заметки команды",
   notesHidden: "Заметки команды остаются внутри команды",
-  loadError: "Не удалось загрузить настройки памяти о клиентах.",
 };

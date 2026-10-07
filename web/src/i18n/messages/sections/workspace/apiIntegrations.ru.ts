@@ -34,7 +34,7 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
       other: "Адрес, который не принял {failures} запроса подряд, отключается.",
     },
     statuses: { active: "Включён", paused: "На паузе", disabled: "Отключён" },
-    origins: { cabinet: "Добавлен здесь", api: "Добавлен Zapier или через API" },
+    origins: { api: "Добавлен Zapier или через API" },
     eventCount: { one: "{count} событие", few: "{count} события", many: "{count} событий", other: "{count} события" },
     lastSuccess: "Последняя доставка {time}",
     neverDelivered: "Пока ничего не доставлено",
@@ -58,7 +58,6 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
       delete: "Удалить",
     },
     toasts: {
-      saved: "Вебхук сохранён",
       paused: "Вебхук на паузе",
       resumed: "Вебхук включён",
       testDelivered: "Тестовое событие доставлено",

@@ -36,5 +36,4 @@ export const sourcesEn = {
   tagHint: "Give each link and QR code its own tag in Channels → Share, and it shows up here as its own row.",
   tagLink: "Tag your links",
   loading: "Loading the sources…",
-  chip: "From: {source}",
 } as const;

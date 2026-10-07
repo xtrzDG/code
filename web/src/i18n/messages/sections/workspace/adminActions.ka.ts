@@ -95,6 +95,5 @@ export const adminActionsKa: Translation<typeof adminActionsEn> = {
     description: "{date} მფლობელმა სთხოვა პლატფორმის გუნდს ბიზნესის დაყენება ({plan}).",
     markDone: "შესრულებულად მონიშვნა",
     marked: "დაყენება გასაღებით შესრულებულად მოინიშნა",
-    doneTitle: "დაყენება გასაღებით შესრულდა",
   },
 };

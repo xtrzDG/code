@@ -27,11 +27,9 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
     "Ziehen Sie eine Buchung auf eine andere Zeit oder einen anderen Platz. Oder wählen Sie sie aus und nutzen Sie die Pfeiltasten: Enter verschiebt, Escape bricht ab.",
   day: {
     label: "Buchungen am {date} nach Platz",
-    time: "Uhrzeit",
     closed: "Geschlossen",
     closedDay: "Ganztägig geschlossen",
     newAt: "Neue Buchung: {place}",
-    newAtTime: "Neue Buchung: {place}, {time}",
     booked: "{percent} belegt",
     now: "Jetzt {time}",
     noPlacesTitle: "Keine Plätze, die nach Zeit gebucht werden",
@@ -42,7 +40,6 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "Test",
-    moving: "Wird verschoben…",
   },
   move: {
     pending: "Nach {place}, {time} verschieben? Enter verschiebt, Escape bricht ab.",

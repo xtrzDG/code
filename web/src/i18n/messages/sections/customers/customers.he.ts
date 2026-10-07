@@ -20,8 +20,6 @@ export const customersHe: Translation<typeof customersEn> = {
     emptyDescription: "כל מי שכותב, מתקשר או מזמין מופיע כאן, עם ההיסטוריה שלו בכל הערוצים.",
     noMatches: "אין לקוחות שמתאימים למסננים האלה.",
     clearFilters: "להציג את כולם",
-    showMore: "להציג עוד לקוחות",
-    open: "פתיחת {name}",
   },
   row: {
     phoneMasked: "הטלפון מוסתר מהצוות",
@@ -75,7 +73,6 @@ export const customersHe: Translation<typeof customersEn> = {
     tooMany: "ללקוח יש לכל היותר 20 תגיות.",
     vip: "לקוח VIP",
     vipHint: "סמנו את הלקוחות החשובים ביותר; סננו את הרשימה ובנו פלחים לפי הסימון.",
-    saved: "הכרטיס נשמר",
   },
   block: {
     title: "חסימה",
@@ -87,7 +84,6 @@ export const customersHe: Translation<typeof customersEn> = {
     confirm: "חסימה",
     blocked: "{name} נחסם",
     unblocked: "החסימה של {name} בוטלה",
-    ownerOnly: "רק בעלים חוסמים לקוחות.",
   },
   data: {
     title: "בקשות מידע",

@@ -94,6 +94,5 @@ export const adminActionsDe: Translation<typeof adminActionsEn> = {
     description: "Am {date} hat der Inhaber das Plattform-Team gebeten, das Unternehmen einzurichten ({plan}).",
     markDone: "Als erledigt markieren",
     marked: "Die Einrichtung durch uns ist als erledigt markiert",
-    doneTitle: "Einrichtung durch uns abgeschlossen",
   },
 };

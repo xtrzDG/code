@@ -22,7 +22,6 @@ export const liveDe: Translation<typeof liveEn> = {
   reconnect: "Jetzt versuchen",
   needsPersonTitle: "Ein Kunde braucht eine Person",
   needsPersonOpen: "Öffnen",
-  needsPersonAnnouncement: "Ein Kunde braucht eine Person. Wartend: {count}.",
   sound: "Signalton, wenn jemand eine Person braucht",
   soundHint: "Ein kurzer Ton auf diesem Gerät, wenn ein Gespräch an Ihr Team übergeben wird.",
 };

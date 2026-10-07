@@ -20,8 +20,6 @@ export const customersDe: Translation<typeof customersEn> = {
     emptyDescription: "Alle, die schreiben, anrufen oder buchen, erscheinen hier mit ihrem Verlauf über alle Kanäle.",
     noMatches: "Keine Kunden passen zu diesen Filtern.",
     clearFilters: "Alle anzeigen",
-    showMore: "Mehr Kunden anzeigen",
-    open: "{name} öffnen",
   },
   row: {
     phoneMasked: "Telefon für das Team verborgen",
@@ -75,7 +73,6 @@ export const customersDe: Translation<typeof customersEn> = {
     tooMany: "Ein Kunde hat höchstens 20 Tags.",
     vip: "VIP-Kunde",
     vipHint: "Markieren Sie die wichtigsten Kunden; filtern Sie die Liste und bilden Sie Segmente danach.",
-    saved: "Die Karte ist gespeichert",
   },
   block: {
     title: "Blockieren",
@@ -87,7 +84,6 @@ export const customersDe: Translation<typeof customersEn> = {
     confirm: "Blockieren",
     blocked: "{name} ist blockiert",
     unblocked: "Die Blockierung von {name} ist aufgehoben",
-    ownerOnly: "Nur Inhaber blockieren Kunden.",
   },
   data: {
     title: "Datenanfragen",

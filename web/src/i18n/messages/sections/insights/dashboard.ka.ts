@@ -35,10 +35,6 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
       title: "შეავსეთ ბიზნესის ანკეტა",
       description: "ასისტენტი ანკეტის პასუხებიდან იქმნება. კლიენტები პასუხებს მისი გამოქვეყნების შემდეგ მიიღებენ.",
       action: "ანკეტის შევსება",
-      missing: {
-        one: "აკლია {count} სავალდებულო პასუხი",
-        other: "აკლია {count} სავალდებულო პასუხი",
-      },
     },
     testing: {
       title: "შეამოწმეთ და გამოაქვეყნეთ ასისტენტი",
@@ -102,9 +98,7 @@ export const dashboardKa: Translation<typeof dashboardEn> = {
     noPlanTitle: "აქტიური ტარიფი არ არის",
     noPlanDescription: "აირჩიეთ ტარიფი, რომ ასისტენტმა კლიენტებს უპასუხოს.",
     toBilling: "გადახდის გახსნა",
-    staffNote: "პერიოდში გამოყენებული ხმოვანი წუთები",
     minutes: { one: "{count} წთ", other: "{count} წთ" },
-    loadFailed: "პაკეტის ხარჯის ჩატვირთვა ვერ მოხერხდა.",
   },
   breakdown: {
     languages: "ენები",

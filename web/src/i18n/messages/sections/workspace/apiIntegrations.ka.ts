@@ -27,7 +27,7 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
       other: "მისამართი, რომელმაც ზედიზედ {failures} მოთხოვნა ვერ მიიღო, ითიშება.",
     },
     statuses: { active: "ჩართულია", paused: "შეჩერებულია", disabled: "გამორთულია" },
-    origins: { cabinet: "დამატებულია აქ", api: "დამატებულია Zapier-ით ან API-ით" },
+    origins: { api: "დამატებულია Zapier-ით ან API-ით" },
     eventCount: { one: "{count} მოვლენა", other: "{count} მოვლენა" },
     lastSuccess: "ბოლო მიწოდება {time}",
     neverDelivered: "ჯერ არაფერი მიწოდებულა",
@@ -46,7 +46,6 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
       delete: "წაშლა",
     },
     toasts: {
-      saved: "ვებჰუკი შენახულია",
       paused: "ვებჰუკი შეჩერებულია",
       resumed: "ვებჰუკი ჩართულია",
       testDelivered: "სატესტო მოვლენა მიწოდებულია",

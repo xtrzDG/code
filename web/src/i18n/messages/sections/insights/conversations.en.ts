@@ -4,10 +4,6 @@
  */
 
 export const conversationsEn = {
-  customerMessages: {
-    one: "{count} customer message",
-    other: "{count} customer messages",
-  },
   rating: {
     label: "Assistant's work",
     good: "Good",
@@ -54,11 +50,7 @@ export const conversationsEn = {
     },
   },
   reply: {
-    title: "Reply to the customer",
     label: "Message to the customer",
-    placeholder: "Write a message… (Ctrl+Enter sends)",
-    send: "Send",
-    sending: "Sending…",
     sent: "Sending to {channel}: the delivery shows under the message",
     stored: "The message waits in the website chat",
     refused: "The message cannot be sent now.",
@@ -94,9 +86,7 @@ export const conversationsEn = {
   },
   loading: "Loading conversations…",
   loadingOne: "Loading the conversation…",
-  listLabel: "Conversation list",
   search: "Search",
-  searchPlaceholder: "Name, phone or text",
   channel: "Channel",
   allChannels: "All channels",
   statusFilter: "Status",
@@ -113,14 +103,8 @@ export const conversationsEn = {
     handoff: "With a person",
     closed: "Closed",
   },
-  emptyTitle: "No conversations yet",
-  emptyDescription: "Conversations appear here as soon as customers write or call the assistant.",
   selectTitle: "Choose a conversation",
   selectDescription: "The transcript, the assistant's actions and the linked bookings open here.",
-  back: "All conversations",
-  messages: { one: "{count} message", other: "{count} messages" },
-  started: "Started",
-  lastMessage: "Last message",
   noPhone: "No phone number",
   transcript: "Transcript",
   emptyTranscript: "There are no messages in this conversation.",
@@ -129,7 +113,6 @@ export const conversationsEn = {
   searchOlder: "Search older conversations",
   searchOlderDescription: "Nothing matched among the latest conversations.",
   handoffNotice: "A person is handling this conversation: the assistant stays silent until it is marked as resolved.",
-  toHandoffs: "Open “Needs a person”",
   author: {
     you: "you",
     customer: "Customer",
@@ -138,7 +121,6 @@ export const conversationsEn = {
     system: "System",
     voiceAgent: "Voice agent",
   },
-  actions: { one: "{count} action", other: "{count} actions" },
   toolInput: "Request",
   toolResult: "Result",
   toolError: "Error",
@@ -161,7 +143,6 @@ export const conversationsEn = {
   usage: {
     tokens: "Tokens",
     tokensValue: "{input} in · {output} out",
-    cost: "Cost",
   },
   linked: {
     book: "Book",

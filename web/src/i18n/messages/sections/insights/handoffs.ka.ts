@@ -4,13 +4,6 @@ import type { Translation } from "../../../translate";
 import type { handoffsEn } from "./handoffs.en";
 
 export const handoffsKa: Translation<typeof handoffsEn> = {
-  loading: "იტვირთება…",
-  tabsLabel: "ჩვენება",
-  tabs: {
-    open: "ელოდება",
-    resolved: "მოგვარებული",
-    all: "ყველა",
-  },
   urgency: {
     critical: "კრიტიკული",
     high: "სასწრაფო",
@@ -35,17 +28,6 @@ export const handoffsKa: Translation<typeof handoffsEn> = {
     resolved: "მოგვარდა",
   },
   notificationFailedHint: "თანამშრომლებმა შეტყობინება ვერ მიიღეს. გადაურეკეთ კლიენტს და შეამოწმეთ კონტაქტები პარამეტრებში.",
-  resolvedAt: "მოგვარდა {date}",
-  resolve: "მოგვარდა",
-  confirmResolve: {
-    title: "მოინიშნოს მოგვარებულად?",
-    description: "{name}: ასისტენტი ამ კლიენტს ისევ უპასუხებს.",
-    confirm: "მოგვარდა",
-  },
-  resolved: "მოინიშნა მოგვარებულად",
-  emptyOpenTitle: "ახლა ადამიანს არავინ ელოდება",
-  emptyOpenDescription: "როცა ასისტენტი საუბარს თანამშრომელთან გადაამისამართებს, საუბარი აქ მოკლე შეჯამებით ელოდება.",
-  emptyTitle: "აქ ჯერ ცარიელია",
   summaryCodes: {
     model_declined: "ასისტენტმა ამ შეტყობინებას პასუხი არ გასცა.",
     model_unavailable: "ასისტენტი დროებით მიუწვდომელი იყო და პასუხი ვერ გასცა.",

@@ -32,5 +32,4 @@ export const setupDe: Translation<typeof setupEn> = {
   staffTitle: "Der Assistent wird gerade erstellt",
   staffDescription:
     "Der Inhaber von {business} richtet ihn ein. Gespräche, Buchungen und Anfragen erscheinen hier, sobald er bereit ist.",
-  create: "Meinen Assistenten erstellen",
 };

@@ -69,7 +69,6 @@ export const waitlistRu: Translation<typeof waitlistEn> = {
   removeBody: "Освободившееся место ему не предложат. Место, придержанное для него сейчас, перейдёт следующему в очереди.",
   removeConfirm: "Убрать из листа",
   removed: "Убран из листа ожидания",
-  showMore: "Показать ещё",
   timeZone: "Время указано по часовому поясу {timezone}.",
   settings: {
     title: "Настройки листа ожидания",

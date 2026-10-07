@@ -21,7 +21,6 @@ export const helpCenterKa: Translation<typeof helpCenterEn> = {
     daily_work: "ყოველდღიური სამუშაო",
     account: "ანგარიში და გადახდა",
   },
-  loadFailed: "დახმარება ვერ ჩაიტვირთა. შეამოწმეთ კავშირი და სცადეთ თავიდან.",
   allArticles: "ყველა სტატია",
   related: "წაიკითხეთ შემდეგ",
   otherLanguage: "ეს სტატია ჯერ არ არის თარგმნილი, ამიტომ ნაჩვენებია ენაზე: {language}.",

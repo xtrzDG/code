@@ -159,7 +159,6 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
     noneDescription: "Каждая задача выполнена или ещё выполняется.",
     tally: "{name}: {count}",
     job: "Задача",
-    lane: "Очередь",
     business: "Бизнес",
     platform: "Платформа",
     attempts: "Попыток",

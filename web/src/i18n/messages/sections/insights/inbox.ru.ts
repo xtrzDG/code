@@ -55,13 +55,10 @@ export const inboxRu: Translation<typeof inboxEn> = {
     description: "Период, статус и тестовые разговоры действуют на все разговоры и на поиск.",
     show: "Показать разговоры",
     clear: "Сбросить фильтры",
-    includeTest: "Показывать тестовые разговоры",
   },
-  results: "Найдено по запросу «{search}»",
   clearSearch: "Очистить поиск",
   row: {
     unassigned: "Никто не назначен",
-    assignedTo: "Отвечает: {name}",
     you: "Вы",
     notes: {
       one: "{count} заметка",
@@ -70,7 +67,6 @@ export const inboxRu: Translation<typeof inboxEn> = {
       other: "{count} заметки",
     },
     request: "Заявка: {type}",
-    waiting: "Ждёт с {time}",
   },
   assign: {
     open: "Назначить",

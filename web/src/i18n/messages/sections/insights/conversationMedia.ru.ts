@@ -14,10 +14,7 @@ export const conversationMediaRu: Translation<typeof conversationMediaEn> = {
     file: "Файл",
   },
   voice: {
-    title: "Голосовое сообщение",
-    duration: "Голосовое сообщение, {duration}",
     transcript: "Расшифровка",
-    noTranscript: "Расшифровки нет.",
     play: "Слушать",
     playLabel: "Прослушать голосовое сообщение",
     playerLabel: "Голосовое сообщение клиента",
@@ -48,5 +45,4 @@ export const conversationMediaRu: Translation<typeof conversationMediaEn> = {
     unrecognized_format: "Формат, который помощник не читает: клиента попросили написать текстом.",
     not_understood: "Слов разобрать не удалось: клиента попросили написать текстом.",
   },
-  auditNote: "Прослушивание голосовых сообщений и просмотр фото записываются в журнал аудита.",
 };

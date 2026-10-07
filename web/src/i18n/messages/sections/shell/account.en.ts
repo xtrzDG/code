@@ -14,5 +14,4 @@ export const accountEn = {
   installHint: "Open the cabinet from your home screen or dock, like an app.",
   installIosTitle: "Install the app on iPhone or iPad",
   installIosSteps: "In Safari, tap Share at the bottom of the screen, then “Add to Home Screen”.",
-  installed: "The app is installed",
 } as const;

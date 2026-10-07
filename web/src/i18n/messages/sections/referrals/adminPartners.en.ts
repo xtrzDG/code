@@ -13,13 +13,11 @@ export const adminPartnersEn = {
   empty: "No partners yet.",
   loading: "Loading partners…",
   columns: {
-    partner: "Partner",
     rate: "Rate",
     codes: "Codes",
     businesses: "Businesses",
     accrued: "To be paid",
     paid: "Paid out",
-    status: "Status",
   },
   statuses: {
     active: "Active",
@@ -70,7 +68,6 @@ export const adminPartnersEn = {
     markDescription: "Every commission of this month still to be paid is marked paid, with the transfer's reference, in the audit log.",
     reference: "Transfer reference",
     referenceHint: "The bank transfer's number or note.",
-    referenceRequired: "Enter the transfer's reference.",
     markedPaid: "Month marked paid",
     nothingDue: "Nothing is due for this month.",
   },

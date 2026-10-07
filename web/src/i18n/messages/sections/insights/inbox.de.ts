@@ -53,20 +53,16 @@ export const inboxDe: Translation<typeof inboxEn> = {
     description: "Zeitraum, Status und Testgespräche gelten für alle Gespräche und für die Suche.",
     show: "Gespräche anzeigen",
     clear: "Filter zurücksetzen",
-    includeTest: "Testgespräche einbeziehen",
   },
-  results: "Ergebnisse für „{search}“",
   clearSearch: "Suche löschen",
   row: {
     unassigned: "Niemand zugewiesen",
-    assignedTo: "Bearbeitet von {name}",
     you: "Sie",
     notes: {
       one: "{count} Notiz",
       other: "{count} Notizen",
     },
     request: "Anfrage: {type}",
-    waiting: "Wartet seit {time}",
   },
   assign: {
     open: "Zuweisen",

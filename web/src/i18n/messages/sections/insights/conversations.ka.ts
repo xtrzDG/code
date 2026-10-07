@@ -4,10 +4,6 @@ import type { Translation } from "../../../translate";
 import type { conversationsEn } from "./conversations.en";
 
 export const conversationsKa: Translation<typeof conversationsEn> = {
-  customerMessages: {
-    one: "კლიენტის {count} შეტყობინება",
-    other: "კლიენტის {count} შეტყობინება",
-  },
   rating: {
     label: "ასისტენტის მუშაობა",
     good: "კარგი",
@@ -54,11 +50,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     },
   },
   reply: {
-    title: "პასუხი კლიენტს",
     label: "შეტყობინება კლიენტს",
-    placeholder: "დაწერეთ შეტყობინება… (Ctrl+Enter — გაგზავნა)",
-    send: "გაგზავნა",
-    sending: "იგზავნება…",
     sent: "იგზავნება: {channel}. მიწოდების სტატუსი შეტყობინების ქვემოთ ჩანს",
     stored: "შეტყობინება საიტის ჩატში ელოდება",
     refused: "ამ შეტყობინების გაგზავნა ახლა შეუძლებელია.",
@@ -94,9 +86,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
   },
   loading: "საუბრები იტვირთება…",
   loadingOne: "საუბარი იტვირთება…",
-  listLabel: "საუბრების სია",
   search: "ძიება",
-  searchPlaceholder: "სახელი, ტელეფონი ან ტექსტი",
   channel: "არხი",
   allChannels: "ყველა არხი",
   statusFilter: "სტატუსი",
@@ -113,14 +103,8 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     handoff: "ადამიანთან",
     closed: "დახურული",
   },
-  emptyTitle: "საუბრები ჯერ არ არის",
-  emptyDescription: "საუბრები აქ გამოჩნდება, როგორც კი კლიენტები ასისტენტს მისწერენ ან დაურეკავენ.",
   selectTitle: "აირჩიეთ საუბარი",
   selectDescription: "აქ გაიხსნება ტრანსკრიფცია, ასისტენტის მოქმედებები და დაკავშირებული ჯავშნები.",
-  back: "ყველა საუბარი",
-  messages: { one: "{count} შეტყობინება", other: "{count} შეტყობინება" },
-  started: "დაიწყო",
-  lastMessage: "ბოლო შეტყობინება",
   noPhone: "ტელეფონი არ არის",
   transcript: "ტრანსკრიფცია",
   emptyTranscript: "ამ საუბარში შეტყობინებები არ არის.",
@@ -129,7 +113,6 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
   searchOlder: "ძველ საუბრებში ძებნა",
   searchOlderDescription: "ბოლო საუბრებში დამთხვევა არ მოიძებნა.",
   handoffNotice: "საუბარს ადამიანი უძღვება: ასისტენტი დუმს, სანამ საუბარი მოგვარებულად არ მოინიშნება.",
-  toHandoffs: "ადამიანის დახმარების გახსნა",
   author: {
     you: "თქვენ",
     customer: "კლიენტი",
@@ -138,7 +121,6 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     system: "სისტემა",
     voiceAgent: "ხმოვანი აგენტი",
   },
-  actions: { one: "{count} მოქმედება", other: "{count} მოქმედება" },
   toolInput: "მოთხოვნა",
   toolResult: "შედეგი",
   toolError: "შეცდომა",
@@ -161,7 +143,6 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
   usage: {
     tokens: "ტოკენები",
     tokensValue: "{input} შემავალი · {output} გამავალი",
-    cost: "ღირებულება",
   },
   linked: {
     book: "დაჯავშნა",

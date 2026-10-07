@@ -80,7 +80,6 @@ export const teachingEn = {
     saveCheck: "Save as a check",
   },
   checks: {
-    title: "My checks",
     description:
       "Questions with what the answer must do. Every “Apply changes” asks them, and an update that fails one does not reach customers.",
     add: "Add a check",

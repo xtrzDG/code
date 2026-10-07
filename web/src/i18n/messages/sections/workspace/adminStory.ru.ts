@@ -28,7 +28,6 @@ export const adminStoryRu: Translation<typeof adminStoryEn> = {
     byline: "{name} · {date}",
     edited: "изменена {date}",
     unknownAuthor: "Бывший админ",
-    actions: "Действия с заметкой",
   },
   timeline: {
     title: "История",
@@ -36,8 +35,6 @@ export const adminStoryRu: Translation<typeof adminStoryEn> = {
     empty: "В этом аккаунте пока ничего не происходило.",
     loadMore: "Показать раньше",
     system: "Система",
-    platformStaff: "Сотрудник платформы",
-    owner: "Владелец",
     by: "{name}",
     reason: "Причина: {reason}",
     kinds: {

@@ -37,5 +37,4 @@ export const setupRu: Translation<typeof setupEn> = {
   staffTitle: "Помощника создают",
   staffDescription:
     "Владелец «{business}» его настраивает. Разговоры, брони и заявки появятся здесь, как только помощник будет готов.",
-  create: "Создать моего помощника",
 };

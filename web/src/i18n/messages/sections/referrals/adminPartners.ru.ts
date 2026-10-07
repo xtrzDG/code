@@ -12,13 +12,11 @@ export const adminPartnersRu: Translation<typeof adminPartnersEn> = {
   empty: "Партнёров пока нет.",
   loading: "Загружаем партнёров…",
   columns: {
-    partner: "Партнёр",
     rate: "Ставка",
     codes: "Коды",
     businesses: "Бизнесы",
     accrued: "К выплате",
     paid: "Выплачено",
-    status: "Статус",
   },
   statuses: {
     active: "Активен",
@@ -69,7 +67,6 @@ export const adminPartnersRu: Translation<typeof adminPartnersEn> = {
     markDescription: "Все невыплаченные комиссии этого месяца будут отмечены выплаченными, с номером перевода в журнале аудита.",
     reference: "Номер перевода",
     referenceHint: "Номер банковского перевода или пометка.",
-    referenceRequired: "Введите номер перевода.",
     markedPaid: "Месяц отмечен оплаченным",
     nothingDue: "За этот месяц выплачивать нечего.",
   },

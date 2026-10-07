@@ -78,7 +78,6 @@ export const teachingDe: Translation<typeof teachingEn> = {
     saveCheck: "Als Prüfung speichern",
   },
   checks: {
-    title: "Meine Prüfungen",
     description:
       "Fragen mit dem, was die Antwort leisten muss. Jedes „Änderungen übernehmen“ stellt sie, und ein Update, das eine davon nicht besteht, erreicht keine Kunden.",
     add: "Prüfung hinzufügen",

@@ -11,7 +11,6 @@ export const segmentsHe: Translation<typeof segmentsEn> = {
   limit: "עסק שומר לכל היותר 50 פלחים. מחקו אחד כדי לשמור אחר.",
   members: "לקוחות",
   noMembers: "כרגע אף אחד לא מתאים לפלח הזה.",
-  showMore: "להציג עוד לקוחות",
   export: "הורדת CSV",
   exportHint: "הלקוחות של הפלח עם הטלפונים, הערוצים, התגיות וההזמנות שלהם, לקמפיין במקום אחר.",
   edit: "עריכה",

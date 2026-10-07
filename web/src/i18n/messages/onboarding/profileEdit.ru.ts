@@ -49,7 +49,6 @@ export const profileEditRu: Translation<typeof profileEditEn> = {
     priced: { one: "{count} с ценой", few: "{count} с ценой", many: "{count} с ценой", other: "{count} с ценой" },
     noHours: "Часы работы не указаны",
     roundTheClock: "круглосуточно",
-    noBookings: "Без броней",
     partySize: {
       one: "до {count} человека в брони",
       few: "до {count} человек в брони",

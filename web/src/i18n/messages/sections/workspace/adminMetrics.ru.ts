@@ -8,7 +8,6 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
   title: "Метрики роста",
   description:
     "Как владельцы проходят путь от регистрации до оплаты, сколько приносят в месяц и насколько быстро работает кабинет. По собственным событиям продукта, без сторонних трекеров.",
-  generated: "Посчитано {time}",
   filters: {
     label: "Фильтры метрик",
     period: "Регистрации",

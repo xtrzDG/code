@@ -25,11 +25,9 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
   moveHint: "გადაათრიეთ ჯავშანი სხვა დროზე ან ადგილზე. ან აირჩიეთ და გადაიტანეთ ისრებით: Enter — გადატანა, Escape — გაუქმება.",
   day: {
     label: "{date}-ის ჯავშნები ადგილების მიხედვით",
-    time: "დრო",
     closed: "დაკეტილია",
     closedDay: "მთელი დღე დაკეტილია",
     newAt: "ახალი ჯავშანი: {place}",
-    newAtTime: "ახალი ჯავშანი: {place}, {time}",
     booked: "დაკავებულია {percent}",
     now: "ახლა {time}",
     noPlacesTitle: "დროით დასაჯავშნი ადგილები არ არის",
@@ -39,7 +37,6 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "ტესტი",
-    moving: "გადაგვაქვს…",
   },
   move: {
     pending: "გადავიტანოთ: {place}, {time}? Enter — გადატანა, Escape — გაუქმება.",

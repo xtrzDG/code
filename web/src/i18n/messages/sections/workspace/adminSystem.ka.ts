@@ -149,7 +149,6 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
     noneDescription: "ყველა ამოცანა შესრულდა ან ჯერ კიდევ სრულდება.",
     tally: "{name}: {count}",
     job: "ამოცანა",
-    lane: "რიგი",
     business: "ბიზნესი",
     platform: "პლატფორმა",
     attempts: "მცდელობები",

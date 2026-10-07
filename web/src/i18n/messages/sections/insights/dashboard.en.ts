@@ -35,7 +35,6 @@ export const dashboardEn = {
       title: "Finish the business profile",
       description: "The assistant is assembled from the profile answers. Customers get answers after it is published.",
       action: "Fill in the profile",
-      missing: { one: "{count} required answer is missing", other: "{count} required answers are missing" },
     },
     testing: {
       title: "Test and publish the assistant",
@@ -99,9 +98,7 @@ export const dashboardEn = {
     noPlanTitle: "No active plan",
     noPlanDescription: "Choose a plan so the assistant can answer customers.",
     toBilling: "Open billing",
-    staffNote: "Voice minutes used in the period",
     minutes: { one: "{count} min", other: "{count} min" },
-    loadFailed: "Could not load the package usage.",
   },
   breakdown: {
     languages: "Languages",

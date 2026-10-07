@@ -35,7 +35,6 @@ export const dashboardHe: Translation<typeof dashboardEn> = {
       title: "השלימו את פרופיל העסק",
       description: "העוזר נבנה מהתשובות בפרופיל. הלקוחות מקבלים תשובות אחרי שהוא מתפרסם.",
       action: "מילוי הפרופיל",
-      missing: { one: "חסרה תשובת חובה אחת", other: "חסרות {count} תשובות חובה" },
     },
     testing: {
       title: "נסו ופרסמו את העוזר",
@@ -99,9 +98,7 @@ export const dashboardHe: Translation<typeof dashboardEn> = {
     noPlanTitle: "אין מסלול פעיל",
     noPlanDescription: "בחרו מסלול כדי שהעוזר יוכל לענות ללקוחות.",
     toBilling: "פתיחת החיוב",
-    staffNote: "דקות קול שנוצלו בתקופה",
     minutes: { one: "דקה אחת", other: "{count} דק׳" },
-    loadFailed: "לא הצלחנו לטעון את ניצול החבילה.",
   },
   breakdown: {
     languages: "שפות",

@@ -20,8 +20,6 @@ export const customersRu: Translation<typeof customersEn> = {
     emptyDescription: "Здесь появится каждый, кто напишет, позвонит или забронирует, с историей по всем каналам.",
     noMatches: "Под эти фильтры никто не подходит.",
     clearFilters: "Показать всех",
-    showMore: "Показать ещё клиентов",
-    open: "Открыть: {name}",
   },
   row: {
     phoneMasked: "Телефон скрыт от команды",
@@ -75,7 +73,6 @@ export const customersRu: Translation<typeof customersEn> = {
     tooMany: "У клиента может быть не больше 20 меток.",
     vip: "VIP-клиент",
     vipHint: "Отметьте самых важных клиентов; по отметке можно фильтровать список и строить сегменты.",
-    saved: "Карточка сохранена",
   },
   block: {
     title: "Блокировка",
@@ -87,7 +84,6 @@ export const customersRu: Translation<typeof customersEn> = {
     confirm: "Заблокировать",
     blocked: "{name}: заблокирован",
     unblocked: "{name}: разблокирован",
-    ownerOnly: "Блокировать клиентов могут только владельцы.",
   },
   data: {
     title: "Запросы на данные",

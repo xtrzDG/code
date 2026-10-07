@@ -59,7 +59,6 @@ export const inboxTriageEn = {
     days: "{count} d",
   },
   details: {
-    label: "About this conversation",
     source: "Came from",
     assignee: "Handled by",
     lastMessage: "Last message",

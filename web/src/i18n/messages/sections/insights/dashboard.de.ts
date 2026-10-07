@@ -35,7 +35,6 @@ export const dashboardDe: Translation<typeof dashboardEn> = {
       title: "Vervollständigen Sie das Unternehmensprofil",
       description: "Der Assistent entsteht aus den Antworten im Profil. Kunden bekommen Antworten, sobald er veröffentlicht ist.",
       action: "Profil ausfüllen",
-      missing: { one: "{count} Pflichtantwort fehlt", other: "{count} Pflichtantworten fehlen" },
     },
     testing: {
       title: "Testen und veröffentlichen Sie den Assistenten",
@@ -99,9 +98,7 @@ export const dashboardDe: Translation<typeof dashboardEn> = {
     noPlanTitle: "Kein aktiver Tarif",
     noPlanDescription: "Wählen Sie einen Tarif, damit der Assistent Kunden antworten kann.",
     toBilling: "Abrechnung öffnen",
-    staffNote: "Im Zeitraum verbrauchte Sprachminuten",
     minutes: { one: "{count} Min.", other: "{count} Min." },
-    loadFailed: "Der Paketverbrauch konnte nicht geladen werden.",
   },
   breakdown: {
     languages: "Sprachen",

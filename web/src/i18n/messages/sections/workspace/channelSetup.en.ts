@@ -84,7 +84,6 @@ export const channelSetupEn = {
     },
   },
   preview: {
-    title: "Live preview",
     frameTitle: "Preview of the chat on your website",
     loading: "Loading the preview…",
     languages: "Language of the preview",

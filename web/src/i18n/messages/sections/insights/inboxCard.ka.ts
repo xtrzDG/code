@@ -34,38 +34,28 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
     since: "{time}-დან",
   },
   details: {
-    title: "დეტალები",
     customer: "კლიენტი",
     channel: "არხი",
     language: "ენა",
     started: "დაიწყო",
     lastMessage: "ბოლო შეტყობინება",
-    assignment: "პასუხისმგებელი",
   },
   technical: {
     title: "ტექნიკური დეტალები",
     hint: "რა დგას პასუხების უკან: ასისტენტის განახლება, რომელმაც ისინი გასცა, და მისი ზუსტი მოთხოვნები თქვენს მონაცემებზე.",
-    model: "მოდელი",
-    models: "მოდელები",
     tokens: "ტოკენები",
     cost: "ხელოვნური ინტელექტის ღირებულება",
     version: "ასისტენტის განახლება",
-    toolCalls: {
-      one: "{count} მოთხოვნა თქვენს მონაცემებზე",
-      other: "{count} მოთხოვნა თქვენს მონაცემებზე",
-    },
     message: "შეტყობინების ტექნიკური დეტალები",
   },
   notes: {
     title: "შენიშვნები",
     hint: "ამას მხოლოდ თქვენი გუნდი ხედავს",
     description: "შენიშვნები გუნდში რჩება: მათ ვერც კლიენტი ხედავს და ვერც ასისტენტი.",
-    label: "შენიშვნა გუნდისთვის",
     placeholder: "რა დავპირდით, ვინ გადარეკავს, რა უნდა გვახსოვდეს…",
     add: "შენიშვნის დამატება",
     adding: "ინახება…",
     added: "შენიშვნა შენახულია. მას მხოლოდ თქვენი გუნდი ხედავს.",
-    by: "{name}, {time}",
     unknownAuthor: "გუნდის ყოფილი წევრი",
     delete: "შენიშვნის წაშლა",
     confirmDelete: {
@@ -76,7 +66,6 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
     deleted: "შენიშვნა წაიშალა",
     empty: "შენიშვნები ჯერ არ არის. შენიშვნა შემდეგ ადამიანს დაეხმარება: რა დავპირდით, ვინ გადარეკავს.",
     loading: "შენიშვნები იტვირთება…",
-    older: "ადრინდელი შენიშვნების ჩვენება",
     length: "{count} / {max}",
   },
   quickReplies: {
@@ -88,7 +77,6 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
     emptyOwner: "ხშირად გაგზავნილი პასუხები შექმენით აქ: პარამეტრები → სწრაფი პასუხები.",
     manage: "სწრაფი პასუხების მართვა",
     noMatch: "სწრაფი პასუხი „/{query}“ არ მოიძებნა.",
-    language: "ენა: {language}",
     missing: "გაგზავნამდე შეავსეთ:",
     fillLabel: "მნიშვნელობა: {variable}",
     fill: "ჩასმა",
@@ -102,7 +90,6 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
   composer: {
     placeholder: "მისწერეთ კლიენტს…",
     sendLabel: "გაგზავნა",
-    unavailable: "აქედან ახლა ვერ მისწერთ",
   },
   request: {
     updated: "მოთხოვნა: {status}",

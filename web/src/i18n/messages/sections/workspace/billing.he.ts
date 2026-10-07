@@ -31,7 +31,6 @@ export const billingHe: Translation<typeof billingEn> = {
     annual: "לשנה",
   },
   facts: {
-    price: "מחיר",
     billingPeriod: "חיוב",
     currentPeriod: "התקופה הנוכחית",
     trialEnds: "תקופת הניסיון מסתיימת",

@@ -78,8 +78,6 @@ export const adminDe: Translation<typeof adminEn> = {
     issuesTitle: "Was Aufmerksamkeit braucht",
     noIssues: "Nichts braucht Aufmerksamkeit.",
     facts: {
-      country: "Land",
-      niche: "Branche",
       status: "Status des Unternehmens",
       serviceMode: "Assistent",
       plan: "Tarif",

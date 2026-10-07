@@ -52,7 +52,6 @@ export const profileEditEn = {
     priced: { one: "{count} with a price", other: "{count} with a price" },
     noHours: "Opening hours not set",
     roundTheClock: "24 hours",
-    noBookings: "No bookings",
     partySize: { one: "up to {count} person per booking", other: "up to {count} people per booking" },
     noPeople: "No one gets the conversations yet",
     answers: { one: "{count} ready answer", other: "{count} ready answers" },

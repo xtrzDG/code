@@ -34,7 +34,6 @@ export const billingKa: Translation<typeof billingEn> = {
     annual: "წელიწადში",
   },
   facts: {
-    price: "ფასი",
     billingPeriod: "გადახდა",
     currentPeriod: "მიმდინარე პერიოდი",
     trialEnds: "საცდელი პერიოდი სრულდება",

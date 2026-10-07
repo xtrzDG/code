@@ -12,13 +12,11 @@ export const adminPartnersKa: Translation<typeof adminPartnersEn> = {
   empty: "პარტნიორები ჯერ არ არის.",
   loading: "პარტნიორები იტვირთება…",
   columns: {
-    partner: "პარტნიორი",
     rate: "განაკვეთი",
     codes: "კოდები",
     businesses: "ბიზნესები",
     accrued: "გადასახდელი",
     paid: "გადახდილი",
-    status: "სტატუსი",
   },
   statuses: {
     active: "აქტიური",
@@ -69,7 +67,6 @@ export const adminPartnersKa: Translation<typeof adminPartnersEn> = {
     markDescription: "ამ თვის ყველა გადაუხდელი საკომისიო მოინიშნება გადახდილად, გადარიცხვის ნომრით აუდიტის ჟურნალში.",
     reference: "გადარიცხვის ნომერი",
     referenceHint: "საბანკო გადარიცხვის ნომერი ან შენიშვნა.",
-    referenceRequired: "შეიყვანეთ გადარიცხვის ნომერი.",
     markedPaid: "თვე მონიშნულია გადახდილად",
     nothingDue: "ამ თვისთვის გადასახდელი არაფერია.",
   },

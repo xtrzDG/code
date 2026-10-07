@@ -23,7 +23,6 @@ export const liveHe: Translation<typeof liveEn> = {
   reconnect: "לנסות עכשיו",
   needsPersonTitle: "לקוח צריך נציג",
   needsPersonOpen: "פתיחה",
-  needsPersonAnnouncement: "לקוח צריך נציג. ממתינים: {count}.",
   sound: "צליל כשמישהו צריך נציג",
   soundHint: "צליל קצר במכשיר הזה כששיחה מועברת לצוות שלכם.",
 };

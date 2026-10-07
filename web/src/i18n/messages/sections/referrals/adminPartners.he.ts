@@ -12,13 +12,11 @@ export const adminPartnersHe: Translation<typeof adminPartnersEn> = {
   empty: "עדיין אין שותפים.",
   loading: "טוענים שותפים…",
   columns: {
-    partner: "שותף",
     rate: "תעריף",
     codes: "קודים",
     businesses: "עסקים",
     accrued: "לתשלום",
     paid: "שולם",
-    status: "סטטוס",
   },
   statuses: {
     active: "פעיל",
@@ -69,7 +67,6 @@ export const adminPartnersHe: Translation<typeof adminPartnersEn> = {
     markDescription: "כל עמלה של החודש הזה שעדיין לא שולמה תסומן כמשולמת, עם אסמכתת ההעברה, ביומן הפעולות.",
     reference: "אסמכתת ההעברה",
     referenceHint: "המספר או ההערה של ההעברה הבנקאית.",
-    referenceRequired: "הזינו את אסמכתת ההעברה.",
     markedPaid: "החודש סומן כמשולם",
     nothingDue: "אין מה לשלם עבור החודש הזה.",
   },

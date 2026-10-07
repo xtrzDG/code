@@ -53,20 +53,16 @@ export const inboxHe: Translation<typeof inboxEn> = {
     description: "תקופה, סטטוס ושיחות ניסיון חלים על כל השיחות ועל החיפוש.",
     show: "הצגת שיחות",
     clear: "ניקוי המסננים",
-    includeTest: "לכלול שיחות ניסיון",
   },
-  results: "תוצאות עבור „{search}”",
   clearSearch: "ניקוי החיפוש",
   row: {
     unassigned: "אף אחד לא משויך",
-    assignedTo: "בטיפול של {name}",
     you: "אתם",
     notes: {
       one: "הערה אחת",
       other: "{count} הערות",
     },
     request: "פנייה: {type}",
-    waiting: "ממתין מאז {time}",
   },
   assign: {
     open: "שיוך",

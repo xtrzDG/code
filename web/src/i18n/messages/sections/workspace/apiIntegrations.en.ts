@@ -29,7 +29,7 @@ export const apiIntegrationsEn = {
       other: "An address that fails {failures} times in a row is switched off.",
     },
     statuses: { active: "On", paused: "Paused", disabled: "Switched off" },
-    origins: { cabinet: "Added here", api: "Added by Zapier or the API" },
+    origins: { api: "Added by Zapier or the API" },
     eventCount: { one: "{count} event", other: "{count} events" },
     lastSuccess: "Last delivered {time}",
     neverDelivered: "Nothing delivered yet",
@@ -48,7 +48,6 @@ export const apiIntegrationsEn = {
       delete: "Delete",
     },
     toasts: {
-      saved: "Webhook saved",
       paused: "Webhook paused",
       resumed: "Webhook is on",
       testDelivered: "Test event delivered",

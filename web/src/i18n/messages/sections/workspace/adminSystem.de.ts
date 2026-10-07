@@ -148,7 +148,6 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
     noneDescription: "Jeder Job ist fertig oder wird noch versucht.",
     tally: "{name}: {count}",
     job: "Job",
-    lane: "Spur",
     business: "Unternehmen",
     platform: "Plattform",
     attempts: "Versuche",

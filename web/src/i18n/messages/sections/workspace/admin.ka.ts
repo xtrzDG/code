@@ -77,8 +77,6 @@ export const adminKa: Translation<typeof adminEn> = {
     issuesTitle: "რა საჭიროებს ყურადღებას",
     noIssues: "ყველაფერი წესრიგშია.",
     facts: {
-      country: "ქვეყანა",
-      niche: "ნიშა",
       status: "ბიზნესის სტატუსი",
       serviceMode: "ასისტენტი",
       plan: "ტარიფი",

@@ -50,7 +50,6 @@ export const profileEditDe: Translation<typeof profileEditEn> = {
     priced: { one: "{count} mit Preis", other: "{count} mit Preis" },
     noHours: "Öffnungszeiten nicht festgelegt",
     roundTheClock: "24 Stunden",
-    noBookings: "Keine Buchungen",
     partySize: { one: "bis zu {count} Person pro Buchung", other: "bis zu {count} Personen pro Buchung" },
     noPeople: "Noch bekommt niemand die Gespräche",
     answers: { one: "{count} fertige Antwort", other: "{count} fertige Antworten" },

@@ -25,11 +25,9 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
   moveHint: "Перетащите бронь на другое время или место. Или выберите её и двигайте стрелками: Enter — перенести, Escape — отменить.",
   day: {
     label: "Брони на {date} по местам",
-    time: "Время",
     closed: "Закрыто",
     closedDay: "Закрыто весь день",
     newAt: "Новая бронь: {place}",
-    newAtTime: "Новая бронь: {place}, {time}",
     booked: "занято {percent}",
     now: "Сейчас {time}",
     noPlacesTitle: "Нет мест с бронированием по времени",
@@ -39,7 +37,6 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "Тест",
-    moving: "Переносим…",
   },
   move: {
     pending: "Перенести: {place}, {time}? Enter — перенести, Escape — отменить.",

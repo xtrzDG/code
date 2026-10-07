@@ -13,5 +13,4 @@ export const accountHe: Translation<typeof accountEn> = {
   installHint: "פתחו את לוח הבקרה ממסך הבית או מסרגל היישומים, כמו אפליקציה.",
   installIosTitle: "התקנת האפליקציה ב-iPhone או ב-iPad",
   installIosSteps: "ב-Safari, הקישו על „שיתוף” בתחתית המסך ואז על „הוספה למסך הבית”.",
-  installed: "האפליקציה מותקנת",
 };

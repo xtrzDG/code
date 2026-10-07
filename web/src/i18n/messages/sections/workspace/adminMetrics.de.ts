@@ -8,7 +8,6 @@ export const adminMetricsDe: Translation<typeof adminMetricsEn> = {
   title: "Wachstumskennzahlen",
   description:
     "Wie Inhaber von der Registrierung zum Bezahlen kommen, was sie jeden Monat einbringen und wie schnell sich das Dashboard anfühlt. Aus den eigenen Ereignissen des Produkts; kein externes Tracking.",
-  generated: "Berechnet {time}",
   filters: {
     label: "Filter der Kennzahlen",
     period: "Registrierungen",

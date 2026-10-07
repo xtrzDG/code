@@ -15,7 +15,6 @@ export const devicesKa: Translation<typeof devicesEn> = {
     tablet: "პლანშეტი",
     unknown: "მოწყობილობა",
   },
-  unknownBrowser: "უცნობი ბრაუზერი",
   on: "{browser}, {system}",
   signedIn: "შესვლა {date}",
   lastUsed: "ბოლოს {date}",

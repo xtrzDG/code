@@ -77,8 +77,6 @@ export const adminEn = {
     issuesTitle: "What needs attention",
     noIssues: "Nothing needs attention.",
     facts: {
-      country: "Country",
-      niche: "Niche",
       status: "Business status",
       serviceMode: "Assistant",
       plan: "Plan",

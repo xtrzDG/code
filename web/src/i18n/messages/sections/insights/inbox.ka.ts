@@ -53,20 +53,16 @@ export const inboxKa: Translation<typeof inboxEn> = {
     description: "პერიოდი, სტატუსი და სატესტო საუბრები ვრცელდება ყველა საუბარზე და ძიებაზე.",
     show: "საუბრების ჩვენება",
     clear: "ფილტრების გასუფთავება",
-    includeTest: "სატესტო საუბრების ჩვენება",
   },
-  results: "ნაპოვნია მოთხოვნით „{search}“",
   clearSearch: "ძიების გასუფთავება",
   row: {
     unassigned: "არავინაა დანიშნული",
-    assignedTo: "პასუხისმგებელი: {name}",
     you: "თქვენ",
     notes: {
       one: "{count} შენიშვნა",
       other: "{count} შენიშვნა",
     },
     request: "მოთხოვნა: {type}",
-    waiting: "ელოდება {time}-დან",
   },
   assign: {
     open: "დანიშვნა",

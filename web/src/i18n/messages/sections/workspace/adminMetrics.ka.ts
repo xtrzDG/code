@@ -8,7 +8,6 @@ export const adminMetricsKa: Translation<typeof adminMetricsEn> = {
   title: "ზრდის მეტრიკები",
   description:
     "როგორ გადიან მფლობელები გზას რეგისტრაციიდან გადახდამდე, რამდენი შემოაქვთ თვეში და რამდენად სწრაფია კაბინეტი. პროდუქტის საკუთარი მოვლენებით, გარე ტრეკერის გარეშე.",
-  generated: "დათვლილია {time}",
   filters: {
     label: "მეტრიკების ფილტრები",
     period: "რეგისტრაციები",

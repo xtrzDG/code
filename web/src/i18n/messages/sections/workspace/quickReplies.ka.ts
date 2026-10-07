@@ -40,7 +40,6 @@ export const quickRepliesKa: Translation<typeof quickRepliesEn> = {
     insert: "ჩასმა",
     insertLabel: "„{variable}“ ჩასმა ტექსტში ({language})",
     preview: "როგორ დაინახავს კლიენტი",
-    previewHint: "კლიენტისა და ჯავშნის მაგალითით.",
     sample: {
       name: "ნინო",
       bookingTime: "შაბ, 19:30",

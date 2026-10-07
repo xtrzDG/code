@@ -65,7 +65,6 @@ export const valueKa: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "პირველი პერიოდი",
-    firstPeriodHint: "წინა პერიოდში აქტივობა არ ყოფილა: შესადარებელი ჯერ არაფერია",
     firstPeriodNote: "პირველი პერიოდი — შესადარებელი ჯერ არაფერია",
     up: "ზრდა {change} — {against}",
     down: "კლება {change} — {against}",

@@ -144,7 +144,6 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
     noneDescription: "כל משימה הסתיימה או עדיין בניסיונות.",
     tally: "{name}: {count}",
     job: "משימה",
-    lane: "מסלול",
     business: "עסק",
     platform: "פלטפורמה",
     attempts: "ניסיונות",

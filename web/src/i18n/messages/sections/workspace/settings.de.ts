@@ -52,7 +52,6 @@ export const settingsDe: Translation<typeof settingsEn> = {
   },
   status: {
     title: "Status des Assistenten",
-    current: "Jetzt",
     live: "Der Assistent antwortet Kunden in allen verbundenen Kanälen.",
     paused: "Der Assistent ist pausiert: Kunden bekommen keine Antworten von ihm.",
     notLive: "Der Assistent antwortet Kunden, nachdem Sie ihn im Bereich Assistent veröffentlicht haben.",

@@ -145,7 +145,6 @@ export const channelsHe: Translation<typeof channelsEn> = {
     },
     dial: "חיוג",
     dialLabel: "חיוג {code}",
-    unavailable: "הוראות ההפניה יופיעו אחרי שערוץ הטלפון יחובר.",
   },
   calendar: {
     title: "Google Calendar",

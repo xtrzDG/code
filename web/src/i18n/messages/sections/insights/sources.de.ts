@@ -35,5 +35,4 @@ export const sourcesDe: Translation<typeof sourcesEn> = {
   tagHint: "Geben Sie jedem Link und QR-Code unter Kanäle → Teilen ein eigenes Tag, dann erscheint er hier als eigene Zeile.",
   tagLink: "Ihre Links taggen",
   loading: "Die Quellen werden geladen…",
-  chip: "Von: {source}",
 };

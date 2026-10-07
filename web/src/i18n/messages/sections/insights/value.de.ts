@@ -65,7 +65,6 @@ export const valueDe: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "erster Zeitraum",
-    firstPeriodHint: "Keine Aktivität im Vorzeitraum: noch nichts zum Vergleichen",
     firstPeriodNote: "Erster Zeitraum: noch nichts zum Vergleichen",
     up: "Plus {change} gegenüber {against}",
     down: "Minus {change} gegenüber {against}",

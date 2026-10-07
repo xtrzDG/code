@@ -77,7 +77,6 @@ export const teachingHe: Translation<typeof teachingEn> = {
     saveCheck: "שמירה כבדיקה",
   },
   checks: {
-    title: "הבדיקות שלי",
     description: "שאלות עם מה שהתשובה חייבת לעשות. כל „החלת שינויים” שואלת אותן, ועדכון שנכשל באחת לא מגיע ללקוחות.",
     add: "הוספת בדיקה",
     loading: "טוענים בדיקות…",

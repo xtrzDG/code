@@ -25,7 +25,6 @@ export const digestChannelsDe: Translation<typeof digestChannelsEn> = {
   whatsappNumberHint: "Mit Ländervorwahl. Mit der Wahl von WhatsApp stimmen Sie diesen Nachrichten zu.",
   whatsappNotReady: "WhatsApp-Zusammenfassungen sind auf dieser Plattform noch nicht eingerichtet.",
   save: "Speichern",
-  saved: "Gespeichert",
   invalidNumber: "Geben Sie die Nummer mit Ländervorwahl ein, z. B. +49 151 23456789.",
   refusals: {
     telegramNotAvailable: "Telegram-Zusammenfassungen sind auf dieser Plattform noch nicht eingerichtet.",

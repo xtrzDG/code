@@ -10,7 +10,6 @@ export const adminMetricsEn = {
   title: "Growth metrics",
   description:
     "How owners get from sign-up to paying, what they bring each month and how fast the cabinet feels. From the product's own events; no outside tracker.",
-  generated: "Calculated {time}",
   filters: {
     label: "Metric filters",
     period: "Sign-ups",

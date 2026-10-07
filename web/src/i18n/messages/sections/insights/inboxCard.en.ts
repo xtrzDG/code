@@ -37,38 +37,28 @@ export const inboxCardEn = {
     since: "since {time}",
   },
   details: {
-    title: "Details",
     customer: "Customer",
     channel: "Channel",
     language: "Language",
     started: "Started",
     lastMessage: "Last message",
-    assignment: "Handled by",
   },
   technical: {
     title: "Technical details",
     hint: "What is behind the answers: the update of the assistant that gave them and its exact requests to your data.",
-    model: "Model",
-    models: "Models",
     tokens: "Tokens",
     cost: "AI cost",
     version: "Assistant version",
-    toolCalls: {
-      one: "{count} request to your data",
-      other: "{count} requests to your data",
-    },
     message: "Technical details of this message",
   },
   notes: {
     title: "Notes",
     hint: "Only your team sees this",
     description: "Notes stay inside your team: the customer and the assistant never see them.",
-    label: "Note for the team",
     placeholder: "What was promised, who calls back, what to remember…",
     add: "Add note",
     adding: "Saving…",
     added: "Note saved. Only your team sees it.",
-    by: "{name}, {time}",
     unknownAuthor: "Former team member",
     delete: "Delete note",
     confirmDelete: {
@@ -79,7 +69,6 @@ export const inboxCardEn = {
     deleted: "Note deleted",
     empty: "No notes yet. A note helps the next person: what was promised, who calls back.",
     loading: "Loading notes…",
-    older: "Show older notes",
     length: "{count} / {max}",
   },
   quickReplies: {
@@ -91,7 +80,6 @@ export const inboxCardEn = {
     emptyOwner: "Create replies you send often in Settings → Quick replies.",
     manage: "Manage quick replies",
     noMatch: "No quick reply matches “/{query}”.",
-    language: "In {language}",
     missing: "Fill in before sending:",
     fillLabel: "Value for {variable}",
     fill: "Fill in",
@@ -105,7 +93,6 @@ export const inboxCardEn = {
   composer: {
     placeholder: "Write to the customer…",
     sendLabel: "Send",
-    unavailable: "You cannot write from here now",
   },
   request: {
     updated: "Request: {status}",

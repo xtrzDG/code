@@ -150,7 +150,6 @@ export const adminSystemEn = {
     noneDescription: "Every job finished or is still being tried.",
     tally: "{name}: {count}",
     job: "Job",
-    lane: "Lane",
     business: "Business",
     platform: "Platform",
     attempts: "Attempts",

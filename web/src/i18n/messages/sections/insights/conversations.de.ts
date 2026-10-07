@@ -4,10 +4,6 @@ import type { Translation } from "../../../translate";
 import type { conversationsEn } from "./conversations.en";
 
 export const conversationsDe: Translation<typeof conversationsEn> = {
-  customerMessages: {
-    one: "{count} Nachricht des Kunden",
-    other: "{count} Nachrichten des Kunden",
-  },
   rating: {
     label: "Arbeit des Assistenten",
     good: "Gut",
@@ -55,11 +51,7 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     },
   },
   reply: {
-    title: "Dem Kunden antworten",
     label: "Nachricht an den Kunden",
-    placeholder: "Nachricht schreiben… (Strg+Enter sendet)",
-    send: "Senden",
-    sending: "Wird gesendet…",
     sent: "Wird an {channel} gesendet: Die Zustellung erscheint unter der Nachricht",
     stored: "Die Nachricht wartet im Website-Chat",
     refused: "Die Nachricht kann gerade nicht gesendet werden.",
@@ -98,9 +90,7 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
   },
   loading: "Gespräche werden geladen…",
   loadingOne: "Das Gespräch wird geladen…",
-  listLabel: "Liste der Gespräche",
   search: "Suchen",
-  searchPlaceholder: "Name, Telefon oder Text",
   channel: "Kanal",
   allChannels: "Alle Kanäle",
   statusFilter: "Status",
@@ -117,14 +107,8 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     handoff: "Bei einer Person",
     closed: "Geschlossen",
   },
-  emptyTitle: "Noch keine Gespräche",
-  emptyDescription: "Gespräche erscheinen hier, sobald Kunden dem Assistenten schreiben oder ihn anrufen.",
   selectTitle: "Wählen Sie ein Gespräch",
   selectDescription: "Hier öffnen sich das Transkript, die Aktionen des Assistenten und die verknüpften Buchungen.",
-  back: "Alle Gespräche",
-  messages: { one: "{count} Nachricht", other: "{count} Nachrichten" },
-  started: "Begonnen",
-  lastMessage: "Letzte Nachricht",
   noPhone: "Keine Telefonnummer",
   transcript: "Transkript",
   emptyTranscript: "In diesem Gespräch gibt es keine Nachrichten.",
@@ -133,7 +117,6 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
   searchOlder: "Ältere Gespräche durchsuchen",
   searchOlderDescription: "Unter den neuesten Gesprächen passte nichts.",
   handoffNotice: "Eine Person kümmert sich um dieses Gespräch: Der Assistent schweigt, bis es als erledigt markiert ist.",
-  toHandoffs: "„Braucht eine Person“ öffnen",
   author: {
     you: "Sie",
     customer: "Kunde",
@@ -142,7 +125,6 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     system: "System",
     voiceAgent: "Sprachagent",
   },
-  actions: { one: "{count} Aktion", other: "{count} Aktionen" },
   toolInput: "Anfrage",
   toolResult: "Ergebnis",
   toolError: "Fehler",
@@ -165,7 +147,6 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
   usage: {
     tokens: "Tokens",
     tokensValue: "{input} ein · {output} aus",
-    cost: "Kosten",
   },
   linked: {
     book: "Buchen",

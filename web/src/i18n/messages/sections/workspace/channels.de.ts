@@ -145,7 +145,6 @@ export const channelsDe: Translation<typeof channelsEn> = {
     },
     dial: "Wählen",
     dialLabel: "{code} wählen",
-    unavailable: "Die Anleitung zur Umleitung erscheint, sobald der Telefonkanal verbunden ist.",
   },
   calendar: {
     title: "Google Kalender",

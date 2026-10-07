@@ -45,12 +45,6 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
       title: "Заполните анкету бизнеса",
       description: "Помощник собирается из ответов анкеты. Клиенты получат ответы после его публикации.",
       action: "Заполнить анкету",
-      missing: {
-        one: "Не хватает {count} обязательного ответа",
-        few: "Не хватает {count} обязательных ответов",
-        many: "Не хватает {count} обязательных ответов",
-        other: "Не хватает {count} обязательного ответа",
-      },
     },
     testing: {
       title: "Проверьте и опубликуйте помощника",
@@ -124,9 +118,7 @@ export const dashboardRu: Translation<typeof dashboardEn> = {
     noPlanTitle: "Нет активного тарифа",
     noPlanDescription: "Выберите тариф, чтобы помощник мог отвечать клиентам.",
     toBilling: "Открыть оплату",
-    staffNote: "Минуты голоса за период",
     minutes: { one: "{count} мин", few: "{count} мин", many: "{count} мин", other: "{count} мин" },
-    loadFailed: "Не удалось загрузить расход пакета.",
   },
   breakdown: {
     languages: "Языки",

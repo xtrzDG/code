@@ -54,20 +54,16 @@ export const inboxEn = {
     description: "Period, status and test conversations apply to all conversations and to search.",
     show: "Show conversations",
     clear: "Clear filters",
-    includeTest: "Include test conversations",
   },
-  results: "Results for “{search}”",
   clearSearch: "Clear search",
   row: {
     unassigned: "Nobody assigned",
-    assignedTo: "Handled by {name}",
     you: "You",
     notes: {
       one: "{count} note",
       other: "{count} notes",
     },
     request: "Request: {type}",
-    waiting: "Waiting since {time}",
   },
   assign: {
     open: "Assign",

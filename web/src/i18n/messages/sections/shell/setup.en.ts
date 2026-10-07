@@ -33,5 +33,4 @@ export const setupEn = {
   staffTitle: "The assistant is being created",
   staffDescription:
     "The owner of {business} is setting it up. Conversations, bookings and requests will appear here as soon as it is ready.",
-  create: "Create my assistant",
 } as const;

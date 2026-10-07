@@ -13,5 +13,4 @@ export const accountDe: Translation<typeof accountEn> = {
   installHint: "Öffnen Sie das Dashboard wie eine App über den Startbildschirm oder das Dock.",
   installIosTitle: "App auf iPhone oder iPad installieren",
   installIosSteps: "Tippen Sie in Safari unten auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
-  installed: "Die App ist installiert",
 };

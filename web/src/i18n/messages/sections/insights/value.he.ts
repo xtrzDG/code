@@ -65,7 +65,6 @@ export const valueHe: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "תקופה ראשונה",
-    firstPeriodHint: "לא הייתה פעילות בתקופה הקודמת: עדיין אין למה להשוות",
     firstPeriodNote: "תקופה ראשונה: עדיין אין למה להשוות",
     up: "עלייה של {change} לעומת {against}",
     down: "ירידה של {change} לעומת {against}",
