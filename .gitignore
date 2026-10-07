@@ -31,6 +31,8 @@ eggs/
 lib/
 # The k6 scenarios' shared helpers are source, not a Python build folder.
 !perf/k6/lib/
+# The Zapier app's helpers are source too.
+!integrations/zapier/lib/
 lib64/
 parts/
 sdist/
