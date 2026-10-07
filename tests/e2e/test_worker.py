@@ -101,6 +101,9 @@ from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
+from app.utilities.calendar_sync.booking_system_jobs import (
+    WRITE_BOOKING_SYSTEM_BOOKING_JOB,
+)
 from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
@@ -193,6 +196,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         OFFER_FREED_PLACE_JOB,
         EXPAND_INCIDENT_JOB,
         DELIVER_WEBHOOK_JOB,
+        WRITE_BOOKING_SYSTEM_BOOKING_JOB,
     ]
     assert (first.periodic_runs, first.queued_runs, first.failures) == (38, 0, 0)
     assert right_after.periodic_runs == 0

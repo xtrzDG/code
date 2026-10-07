@@ -9,10 +9,16 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import RecordingStoragePath
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.privacy.strings import ExportArchivePath
-from app.utilities.security.export_encryption import SALT_SIZE
+from app.utilities.security.export_encryption import SALT_SIZE, open_archive
 from app.utilities.security.export_stream_encryption import (
     NONCE_PREFIX_SIZE,
-    open_sealed_archive,
+    SEGMENT_SIZE,
+    STREAM_HEADER_SIZE,
+    STREAM_MAGIC,
+    TAG_SIZE,
+    SegmentOpener,
+    open_pieces,
+    read_stream_header,
     seal_stream,
 )
 from app.utilities.security.recording_encryption import master_key_id
@@ -20,6 +26,9 @@ from app.utilities.security.recording_encryption import master_key_id
 # Larger than any archive: a read asks for the whole object (the client
 # returns fewer bytes at its end).
 WHOLE_OBJECT_LAST_BYTE: int = 2**40
+# A download reads the sealed archive in ranges of four segments: one range
+# and one opened segment in memory at a time.
+READ_WINDOW_BYTES: int = 4 * (SEGMENT_SIZE + TAG_SIZE)
 # Sealed segments go up in parts of 8 MiB (S3 wants at least 5 MiB a part):
 # one part and one segment in memory at a time.
 UPLOAD_PART_SIZE: int = 8 * 1024 * 1024
@@ -67,17 +76,58 @@ class EncryptedObjectExportArchiveStorageAdapter(ExportArchiveStorageContract):
         )
         self._client.put_object_parts(key, upload_parts(segments, UPLOAD_PART_SIZE))
 
-    def read(self, business_id: BusinessId, path: ExportArchivePath) -> bytes | None:
-        sealed: bytes | None = self._client.get_object_range(
-            object_key(path), 0, WHOLE_OBJECT_LAST_BYTE
+    def stream(
+        self, business_id: BusinessId, path: ExportArchivePath
+    ) -> Iterable[bytes] | None:
+        key: RecordingStoragePath = object_key(path)
+        first: bytes | None = self._client.get_object_range(
+            key, 0, READ_WINDOW_BYTES - 1
         )
-        if sealed is None:
+        if first is None:
             return None
 
-        return open_sealed_archive(self._secrets_by_key_id, business_id, path, sealed)
+        if not first.startswith(STREAM_MAGIC):
+            # Sealed whole (AWX1), before archives were sealed in segments.
+            sealed: bytes = first + self._rest(key, len(first))
+            return [open_archive(self._secrets_by_key_id, business_id, path, sealed)]
+
+        opener: SegmentOpener = read_stream_header(
+            self._secrets_by_key_id, business_id, path, first
+        )
+        return open_pieces(opener, self._windows(key, first), skip=STREAM_HEADER_SIZE)
 
     def delete(self, business_id: BusinessId, path: ExportArchivePath) -> None:
         self._client.delete_object(object_key(path))
+
+    def _windows(self, key: RecordingStoragePath, first: bytes) -> Iterator[bytes]:
+        """
+        The first range, then the ranges after it as they are asked for, to
+        the end of the object (each let go before the next is read).
+        """
+
+        offset: int = len(first)
+        has_more: bool = offset == READ_WINDOW_BYTES
+        yield first
+        del first
+        while has_more:
+            window: bytes = (
+                self._client.get_object_range(
+                    key, offset, offset + READ_WINDOW_BYTES - 1
+                )
+                or b""
+            )
+            offset += len(window)
+            has_more = len(window) == READ_WINDOW_BYTES
+            yield window
+            del window
+
+    def _rest(self, key: RecordingStoragePath, offset: int) -> bytes:
+        """The object after `offset` (an archive sealed whole is read whole)."""
+
+        if offset < READ_WINDOW_BYTES:
+            return b""
+
+        return self._client.get_object_range(key, offset, WHOLE_OBJECT_LAST_BYTE) or b""
 
 
 def object_key(path: ExportArchivePath) -> RecordingStoragePath:

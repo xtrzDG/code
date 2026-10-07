@@ -28,7 +28,7 @@ from app.schemas.dto.calendar_sync.resource_calendar import (
     IcalExportCreated,
     ResourceCalendarView,
 )
-from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.use_cases.calendar_sync.add_ical_import_use_case import AddIcalImportUseCase
 from app.use_cases.calendar_sync.calendar_changes import CalendarChanges
 from app.use_cases.calendar_sync.create_ical_export_use_case import (
@@ -66,6 +66,9 @@ from app.use_cases.calendar_sync.sync_due_calendars_use_case import (
 )
 from app.use_cases.calendar_sync.sync_resource_calendar_use_case import (
     SyncResourceCalendarUseCase,
+)
+from app.use_cases.calendar_sync.write_booking_system_booking_use_case import (
+    WriteBookingSystemBookingUseCase,
 )
 
 
@@ -167,5 +170,19 @@ class CalendarSyncUseCasesContainer(containers.DeclarativeContainer):
         text_resolver=utilities.localized_text_resolver,
         rate_limits=registries.request_rate_limit_registry,
         storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The queued write of a booking to its resource's booking system.
+    write_booking_system_booking_use_case: Factory[
+        UseCaseContract[QueuedJobInput, JobReport]
+    ] = Factory(
+        WriteBookingSystemBookingUseCase,
+        booking_repo=repositories.booking_repo,
+        link_repo=repositories.resource_calendar_link_repo,
+        contact_repo=repositories.contact_repo,
+        business_repo=repositories.business_repo,
+        connectors=facilitators.booking_system_connectors,
+        secret_cipher=adapters.secret_cipher,
+        text_resolver=utilities.localized_text_resolver,
         wall_clock=time_provider.microsecond_wall_clock,
     )

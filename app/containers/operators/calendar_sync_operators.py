@@ -60,3 +60,7 @@ class CalendarSyncOperatorsContainer(containers.DeclarativeContainer):
     export_resource_busy_times_operator = pipeline_operator(
         calendar_pipelines.export_resource_busy_times_pipeline, storage_scope
     )
+    # The `write_booking_system_booking` job, in its booking's business.
+    write_booking_system_booking_operator = pipeline_operator(
+        calendar_pipelines.write_booking_system_booking_pipeline, storage_scope
+    )

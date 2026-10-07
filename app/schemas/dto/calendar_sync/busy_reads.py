@@ -7,6 +7,7 @@ and the new bookings the platform writes there.
 from base_pydantic_schemas import ImmutableDTO
 
 from app.schemas.constants.calendar_sync import CalendarSyncProblem
+from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.bookings.strings import (
     CalendarDisplayName,
     ExternalCalendarId,
@@ -87,7 +88,9 @@ class BookingSystemBookingDraft(ImmutableDTO):
     """
     A booking the platform writes to the booking system so the time is
     taken there too. Only the guest's name and, when known, e-mail go
-    along; the time is UTC seconds.
+    along; the time is UTC seconds. `platform_booking_id` marks it there
+    as the platform's (its own bookings never block the resource twice,
+    and a write repeated after a crash finds the one written before).
     """
 
     starts_at: BusyStartsAtUnixSeconds
@@ -96,6 +99,7 @@ class BookingSystemBookingDraft(ImmutableDTO):
     guest_email: EmailAddress | None = None
     time_zone: TimezoneName
     language: LanguageTag
+    platform_booking_id: BookingId | None = None
 
 
 class BookingSystemRead(ImmutableDTO):

@@ -65,13 +65,14 @@ def test_the_owner_asks_once_and_the_worker_writes_the_archive() -> None:
     download = bed.download(str(bed.link(ready.id).download_path))
 
     assert str(download.file_name).startswith("business-export-")
-    files = read_zip(download.content)
+    archive = b"".join(download.pieces)
+    files = read_zip(archive)
     assert {"README.txt", "contacts.json", "messages.json", "csv/bookings.csv"} <= set(
         files
     )
     contacts = json.loads(files["contacts.json"])
     assert {contact["name"] for contact in contacts} == {"Giorgi", "Nino"}
-    assert "Noa" not in download.content.decode("latin-1")
+    assert "Noa" not in archive.decode("latin-1")
     assert files["csv/bookings.csv"].startswith(UTF8_BOM + "Booking ID,")
     assert all(
         "review_token" not in request
@@ -102,7 +103,9 @@ def test_an_erased_customer_is_not_in_the_archive() -> None:
     bed.run_job()
     [ready] = bed.list.run(_list_query(bed)).items
 
-    files = read_zip(bed.download(str(bed.link(ready.id).download_path)).content)
+    files = read_zip(
+        b"".join(bed.download(str(bed.link(ready.id).download_path)).pieces)
+    )
 
     contacts = json.loads(files["contacts.json"])
     assert [contact["name"] for contact in contacts] == ["Nino"]
@@ -136,7 +139,7 @@ def test_a_failure_is_retried_then_left_failed() -> None:
         ) -> None:
             raise OSError("disk full")
 
-        def read(self, business_id: BusinessId, path: ExportArchivePath) -> None:
+        def stream(self, business_id: BusinessId, path: ExportArchivePath) -> None:
             return None
 
         def delete(self, business_id: BusinessId, path: ExportArchivePath) -> None:

@@ -25,6 +25,7 @@ from tests.compliance.moto_object_storage import (
     RecordingTransport,
     moto_storage,
 )
+from tests.exports.archive_reading import read_whole
 
 KEY: PlatformSecret = PlatformSecret("export-upload-key-0000")
 BUSINESS: BusinessId = BusinessId()
@@ -54,7 +55,7 @@ def test_a_big_archive_goes_up_in_parts(storage: MotoStorage) -> None:
     assert "uploads" in requests[0][1]
     assert [params["partNumber"] for _, params in requests[1:4]] == ["1", "2", "3"]
     assert "uploadId" in requests[-1][1]
-    assert adapter.read(BUSINESS, path) == archive
+    assert read_whole(adapter, BUSINESS, path) == archive
     raw = storage.raw_object(str(path))
     assert raw.startswith(b"AWX2") and archive[:64] not in raw
 
@@ -66,7 +67,7 @@ def test_a_small_archive_is_one_put(storage: MotoStorage) -> None:
     adapter.store(BUSINESS, path_of("small"), io.BytesIO(b"PK tiny"))
 
     assert [request.method for request in transport.requests] == ["PUT"]
-    assert adapter.read(BUSINESS, path_of("small")) == b"PK tiny"
+    assert read_whole(adapter, BUSINESS, path_of("small")) == b"PK tiny"
 
 
 class FailingSecondPart(RecordingTransport):

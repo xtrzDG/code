@@ -83,8 +83,10 @@ CLIENT_MODULES_WITHOUT_SUBPROCESSOR: dict[
         "(Meta, Telegram); sends no personal data of its own."
     ),
     ClientModuleName("cal_com"): ClientModuleExclusionReason(
-        "Reads busy times from the Cal.com account an owner connects with the "
-        "owner's own API key (the Client's own processor); sends only time "
-        "windows and an event type number, no personal data."
+        "Reads busy times from, and writes the bookings of a resource to, the "
+        "Cal.com account an owner connects with the owner's own API key: the "
+        "Client's own processor, reached on the Client's instruction. A "
+        "written booking carries its time, the guest's name, the business's "
+        "time zone and the guest's language."
     ),
 }

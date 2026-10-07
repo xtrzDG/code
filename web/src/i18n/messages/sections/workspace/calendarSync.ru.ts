@@ -105,7 +105,7 @@ export const calendarSyncRu: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "Система бронирования",
-    description: "Брони из вашей системы бронирования закрывают этот ресурс.",
+    description: "Брони из вашей системы бронирования закрывают этот ресурс, а брони, принятые здесь, записываются туда.",
     system: "Система",
     eventType: "Номер типа события",
     eventTypeHint: "Число в конце ссылки на тип события в Cal.com.",
@@ -119,6 +119,11 @@ export const calendarSyncRu: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "Укажите номер типа события.",
     eventTypeInvalid: "Укажите номер так, как его показывает Cal.com: буквы, цифры, точки, дефисы.",
     apiKeyRequired: "Укажите API-ключ.",
+    writes: {
+      waiting: "Новые брони этого ресурса тоже будут записываться туда.",
+      done: "Брони записываются туда · последняя {time}",
+      failed: "Бронь не удалось записать туда ({time}): {reason}",
+    },
   },
   busy: {
     title: "Ближайшее занятое время",
@@ -150,7 +155,7 @@ export const calendarSyncRu: Translation<typeof calendarSyncEn> = {
       google_calendar: "Брони появляются в вашем календаре Google, а его занятое время закрывает ресурсы.",
       ical_import: "Занятые дни из Airbnb, Booking.com и других календарей закрывают ваши ресурсы.",
       ical_export: "Брони ваших ресурсов, открытые как адреса календарей для других сайтов.",
-      cal_com: "Брони из Cal.com закрывают ваши ресурсы.",
+      cal_com: "Брони из Cal.com закрывают ваши ресурсы, а брони, принятые здесь, записываются туда.",
     },
     states: { off: "Выключено", on: "Включено", attention: "Требует внимания", unavailable: "Недоступно" },
     resources: { one: "{count} ресурс", few: "{count} ресурса", many: "{count} ресурсов", other: "{count} ресурса" },

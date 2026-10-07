@@ -90,7 +90,7 @@ export const calendarSyncKa: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "დაჯავშნის სისტემა",
-    description: "თქვენს დაჯავშნის სისტემაში გაკეთებული ჯავშნები ამ რესურსს ხურავს.",
+    description: "თქვენს დაჯავშნის სისტემაში გაკეთებული ჯავშნები ამ რესურსს ხურავს, აქ მიღებული ჯავშნები კი იქ იწერება.",
     system: "სისტემა",
     eventType: "ღონისძიების ტიპის ნომერი",
     eventTypeHint: "რიცხვი Cal.com-ში ღონისძიების ტიპის ბმულის ბოლოს.",
@@ -104,6 +104,11 @@ export const calendarSyncKa: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "მიუთითეთ ღონისძიების ტიპის ნომერი.",
     eventTypeInvalid: "მიუთითეთ ნომერი ისე, როგორც Cal.com აჩვენებს: ასოები, ციფრები, წერტილები, ტირეები.",
     apiKeyRequired: "მიუთითეთ API გასაღები.",
+    writes: {
+      waiting: "ამ რესურსის ახალი ჯავშნებიც იქ ჩაიწერება.",
+      done: "ჯავშნები იქ იწერება · ბოლოს {time}",
+      failed: "ჯავშნის იქ ჩაწერა ვერ მოხერხდა ({time}): {reason}",
+    },
   },
   busy: {
     title: "უახლოესი დაკავებული დრო",
@@ -135,7 +140,7 @@ export const calendarSyncKa: Translation<typeof calendarSyncEn> = {
       google_calendar: "ჯავშნები ჩნდება თქვენს Google კალენდარში, მისი დაკავებული დრო კი თქვენს რესურსებს ხურავს.",
       ical_import: "Airbnb-ის, Booking.com-ის და სხვა კალენდრების დაკავებული დღეები თქვენს რესურსებს ხურავს.",
       ical_export: "თქვენი რესურსების ჯავშნები, გაზიარებული კალენდრის მისამართებად სხვა საიტებისთვის.",
-      cal_com: "Cal.com-ში გაკეთებული ჯავშნები თქვენს რესურსებს ხურავს.",
+      cal_com: "Cal.com-ში გაკეთებული ჯავშნები თქვენს რესურსებს ხურავს, აქ მიღებული ჯავშნები კი იქ ჩაიწერება.",
     },
     states: { off: "გამორთული", on: "ჩართული", attention: "ყურადღება სჭირდება", unavailable: "მიუწვდომელია" },
     resources: { one: "{count} რესურსი", other: "{count} რესურსი" },

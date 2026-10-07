@@ -22,6 +22,9 @@ from app.use_cases.shared.business_export_queue import BUILD_BUSINESS_EXPORT_JOB
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
+from app.utilities.calendar_sync.booking_system_jobs import (
+    WRITE_BOOKING_SYSTEM_BOOKING_JOB,
+)
 from app.utilities.calls.text_back_jobs import SEND_TEXT_BACK_JOB
 from app.utilities.deliveries.delivery_jobs import (
     DELIVER_OUTBOUND_JOB,
@@ -78,5 +81,9 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             EXPAND_INCIDENT_JOB: operators.reliability.expand_incident_operator,
             # An outbound webhook's signed POST, retried up to a day (1181).
             DELIVER_WEBHOOK_JOB: operators.webhooks.deliver_webhook_operator,
+            # A booking written to (or cancelled in) its resource's Cal.com.
+            WRITE_BOOKING_SYSTEM_BOOKING_JOB: (
+                operators.calendars.write_booking_system_booking_operator
+            ),
         }
     )

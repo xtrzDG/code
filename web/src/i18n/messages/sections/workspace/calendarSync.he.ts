@@ -87,7 +87,7 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "מערכת הזמנות",
-    description: "הזמנות שנעשו במערכת ההזמנות שלכם חוסמות את המשאב הזה.",
+    description: "הזמנות שנעשו במערכת ההזמנות שלכם חוסמות את המשאב הזה, וההזמנות שמתקבלות כאן נרשמות שם.",
     system: "מערכת",
     eventType: "מזהה סוג האירוע",
     eventTypeHint: "המספר בסוף הקישור של סוג האירוע ב-Cal.com.",
@@ -101,6 +101,11 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "הזינו את מזהה סוג האירוע.",
     eventTypeInvalid: "השתמשו במזהה כפי ש-Cal.com מציג אותו: אותיות, ספרות, נקודות, מקפים.",
     apiKeyRequired: "הזינו את מפתח ה-API.",
+    writes: {
+      waiting: "גם ההזמנות החדשות של המשאב הזה יירשמו שם.",
+      done: "ההזמנות נרשמות שם · לאחרונה {time}",
+      failed: "לא ניתן היה לרשום שם הזמנה ({time}): {reason}",
+    },
   },
   busy: {
     title: "זמנים תפוסים קדימה",
@@ -132,7 +137,7 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
       google_calendar: "ההזמנות מופיעות בלוח השנה שלכם ב-Google, והזמנים התפוסים בו חוסמים את המשאבים שלכם.",
       ical_import: "ימים תפוסים של Airbnb, Booking.com ולוחות שנה אחרים חוסמים את המשאבים שלכם.",
       ical_export: "ההזמנות של המשאבים שלכם, משותפות ככתובות לוח שנה לאתרים אחרים.",
-      cal_com: "הזמנות שנעשו ב-Cal.com חוסמות את המשאבים שלכם.",
+      cal_com: "הזמנות שנעשו ב-Cal.com חוסמות את המשאבים שלכם, וההזמנות שמתקבלות כאן נרשמות שם.",
     },
     states: { off: "כבוי", on: "פעיל", attention: "דורש תשומת לב", unavailable: "לא זמין" },
     resources: { one: "משאב אחד", other: "{count} משאבים" },

@@ -119,6 +119,8 @@ class WaitlistUseCasesContainer(containers.DeclarativeContainer):
             lock_registry=registries.business_lock_registry,
             delivery=offer_delivery,
             live_events=facilitators.event_publisher,
+            busy_times_repo=repositories.calendar_busy_times_repo,
+            busy_time_sync=facilitators.busy_time_sync,
             wall_clock=wall_clock,
         )
     )

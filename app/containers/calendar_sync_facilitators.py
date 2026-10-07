@@ -14,14 +14,19 @@ from app.containers.utilities import UtilitiesContainer
 from app.facilitators.calendar.google_calendar_sync_facilitator import (
     GoogleCalendarSyncFacilitator,
 )
+from app.facilitators.calendar_sync.booking_mirrors import BookingMirrors
 from app.facilitators.calendar_sync.booking_system_busy_reader import (
     BookingSystemBusyReader,
+)
+from app.facilitators.calendar_sync.booking_system_write_queue import (
+    BookingSystemWriteQueue,
 )
 from app.facilitators.calendar_sync.busy_time_sync_facilitator import (
     BusyTimeSyncFacilitator,
 )
 from app.facilitators.calendar_sync.google_busy_reader import GoogleBusyReader
 from app.facilitators.calendar_sync.ical_busy_reader import IcalBusyReader
+from app.facilitators.jobs.job_queue_facilitator import JobQueueFacilitator
 from app.registries.booking_systems.booking_system_connector_registry import (
     BookingSystemConnectorRegistry,
 )
@@ -30,7 +35,8 @@ from app.registries.booking_systems.booking_system_connector_registry import (
 class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
     """
     The calendars on both sides of a booking: bookings mirrored into the
-    business's Google Calendar, and the busy times of the calendars outside
+    business's Google Calendar and written to their resources' booking
+    systems (queued), and the busy times of the calendars outside
     the platform that block resources (Google free/busy, iCal feeds, the
     booking systems behind their connector registry: Cal.com). A child of
     FacilitatorsContainer, which names its facilitators flat
@@ -44,7 +50,7 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
     transformers: TransformersContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
-    calendar_sync_facilitator: Singleton[GoogleCalendarSyncFacilitator] = Singleton(
+    google_calendar_mirror: Singleton[GoogleCalendarSyncFacilitator] = Singleton(
         GoogleCalendarSyncFacilitator,
         connection_repo=repositories.calendar_connection_repo,
         event_link_repo=repositories.calendar_event_link_repo,
@@ -56,6 +62,23 @@ class CalendarSyncFacilitatorsContainer(containers.DeclarativeContainer):
         phone_number_parser=utilities.phone_number_parser,
         event_text_transformer=transformers.calendar_event_text_transformer,
         wall_clock=time_provider.microsecond_wall_clock,
+    )
+    # The bookings' writes to their resources' booking systems, queued.
+    booking_system_write_queue: Singleton[BookingSystemWriteQueue] = Singleton(
+        BookingSystemWriteQueue,
+        link_repo=repositories.resource_calendar_link_repo,
+        job_queue=Singleton(
+            JobQueueFacilitator,
+            job_repo=repositories.queued_job_repo,
+            job_wakeup=adapters.job_wakeup,
+            unit_of_work=adapters.storage_unit_of_work,
+            wall_clock=time_provider.microsecond_wall_clock,
+        ),
+    )
+    # Every mirror of a booking, after each of its changes.
+    calendar_sync_facilitator: Singleton[BookingMirrors] = Singleton(
+        BookingMirrors,
+        mirrors=List(booking_system_write_queue, google_calendar_mirror),
     )
     # The booking systems the platform speaks to, one connector each.
     cal_com_client: Singleton[CalComClient] = Singleton(CalComClient)

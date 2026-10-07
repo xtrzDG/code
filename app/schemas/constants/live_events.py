@@ -28,6 +28,9 @@ class LiveEventKind(StrEnum):
     LEAD_CREATED = "lead.created"
     # A waitlist entry joined, was offered a freed place, booked or ended.
     WAITLIST_CHANGED = "waitlist.changed"
+    # An outbound webhook endpoint changed on its own: switched off after
+    # failures in a row or an answer of 410 Gone (ids: the endpoint).
+    WEBHOOK_CHANGED = "webhook.changed"
     # For webhooks only (the bus never carries them, cabinets never see
     # them): a customer's first message opened a conversation,
     CONVERSATION_STARTED = "conversation.started"

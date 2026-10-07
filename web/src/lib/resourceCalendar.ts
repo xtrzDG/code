@@ -11,6 +11,7 @@ import type { MessageKey, PluralKey } from "@/i18n/translate";
 
 export type ResourceCalendarView = Schema<"ResourceCalendarView">;
 export type BusySourceStatusView = Schema<"BusySourceStatusView">;
+export type BookingSystemWriteStatusView = Schema<"BookingSystemWriteStatusView">;
 export type CalendarSyncProblem = Schema<"CalendarSyncProblem">;
 export type BusyTimeView = Schema<"BusyTimeView">;
 export type GoogleCalendarEntry = Schema<"GoogleCalendarEntry">;

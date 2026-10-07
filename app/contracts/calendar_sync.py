@@ -135,7 +135,11 @@ class BookingSystemConnectorContract(AdapterContract, Protocol):
         raise NotImplementedError
 
     def list_busy(self, read: BookingSystemRead) -> list[BusyPeriod]:
-        """The resource's active bookings in the window, as busy periods."""
+        """
+        The resource's active bookings in the window, as busy periods; the
+        bookings the platform wrote there are left out (the platform's own
+        booking already takes its place).
+        """
         raise NotImplementedError
 
     def create_booking(
@@ -145,6 +149,20 @@ class BookingSystemConnectorContract(AdapterContract, Protocol):
         timeout: BusyTimeFetchSeconds,
     ) -> BookingSystemBookingCreated:
         """Write a booking the platform took, so the time is taken there too."""
+        raise NotImplementedError
+
+    def find_booking(
+        self,
+        credentials: BookingSystemCredentials,
+        draft: BookingSystemBookingDraft,
+        timeout: BusyTimeFetchSeconds,
+    ) -> BookingSystemBookingId | None:
+        """
+        The active booking the platform wrote there for the draft's platform
+        booking at the draft's time, if there is one (a write repeated after
+        it succeeded but before its id was kept finds it instead of writing
+        a second one).
+        """
         raise NotImplementedError
 
     def cancel_booking(

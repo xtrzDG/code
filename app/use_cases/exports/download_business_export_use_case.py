@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
@@ -63,7 +64,9 @@ class DownloadBusinessExportUseCase(
     downloaded three times is 409.
 
     The link is used up before the archive is read, and the export's count
-    goes up in one atomic step (at most three downloads). Each download is
+    goes up in one atomic step (at most three downloads). The archive is
+    opened here (a missing one is 404) and its bytes are read, opened and
+    sent a piece at a time as the response streams them. Each download is
     audited (EXPORT of "business_export", the address, which download it
     was) and every owner hears of it, with the address and the browser.
     """
@@ -104,12 +107,12 @@ class DownloadBusinessExportUseCase(
         now: Microseconds = self._wall_clock.now_unix()
         link: ExportDownloadLinkDocument = self._use_link(business, input_data, now)
         export: BusinessExportDocument = self._count_download(business, link, now)
-        content: bytes | None = (
+        pieces: Iterable[bytes] | None = (
             None
             if export.archive_path is None
-            else self._archive_storage.read(business.id, export.archive_path)
+            else self._archive_storage.stream(business.id, export.archive_path)
         )
-        if content is None:
+        if pieces is None:
             raise not_found()
 
         self._audit_log_repo.append(
@@ -140,7 +143,7 @@ class DownloadBusinessExportUseCase(
             file_name=archive_file_name(
                 export.created_at, load_time_zone(business.timezone)
             ),
-            content=content,
+            pieces=pieces,
         )
 
     def _use_link(

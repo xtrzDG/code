@@ -16,13 +16,13 @@ from app.schemas.dto.integrations.webhook_views import (
     CreateWebhookEndpointCommand,
 )
 from app.use_cases.integrations.webhook_records import (
-    WEBHOOK_ENDPOINT_ENTITY,
     endpoint_view,
     new_endpoint,
     refuse_address,
     refuse_when_full,
 )
 from app.use_cases.shared.operations_support import build_audit_entry
+from app.utilities.integrations.webhook_endpoints import WEBHOOK_ENDPOINT_ENTITY
 
 
 class CreateWebhookEndpointUseCase(

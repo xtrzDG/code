@@ -45,6 +45,19 @@ class BusySourceStatusView(ImmutableDTO):
     problem_detail: CalendarSyncErrorSummary | None = None
 
 
+class BookingSystemWriteStatusView(ImmutableDTO):
+    """
+    How the platform's bookings were written to the booking system: the
+    last one written (or cancelled) there, and the last failure with its
+    reason (`problem`), cleared by the next success.
+    """
+
+    last_written_at: Microseconds | None = None
+    last_failed_at: Microseconds | None = None
+    problem: CalendarSyncProblem | None = None
+    problem_detail: CalendarSyncErrorSummary | None = None
+
+
 class GoogleCalendarSourceView(ImmutableDTO):
     """
     The Google calendar that blocks the resource. `is_available`: this
@@ -75,13 +88,18 @@ class IcalExportView(ImmutableDTO):
 
 
 class BookingSystemView(ImmutableDTO):
-    """The booking system the resource follows (its key is never shown)."""
+    """
+    The booking system the resource follows (its key is never shown): how
+    its bookings were read (`status`) and how the platform's bookings were
+    written there (`write_status`).
+    """
 
     kind: BookingSystemKind
     external_resource_id: BookingSystemResourceId
     external_resource_title: BookingSystemResourceTitle | None = None
     added_at: Microseconds
     status: BusySourceStatusView
+    write_status: BookingSystemWriteStatusView = BookingSystemWriteStatusView()
 
 
 class BusyTimeView(ImmutableDTO):

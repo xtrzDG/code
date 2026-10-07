@@ -19,11 +19,14 @@ from app.utilities.security.export_encryption import (
     HEADER_FORMAT,
     MAGIC,
     derive_archive_key,
+    open_archive,
 )
 from app.utilities.security.export_stream_encryption import (
     STREAM_HEADER_SIZE,
+    STREAM_MAGIC,
     TAG_SIZE,
-    open_sealed_archive,
+    open_pieces,
+    read_stream_header,
     seal_stream,
 )
 from app.utilities.security.recording_encryption import master_key_id
@@ -48,6 +51,21 @@ def sealed(archive: bytes, segment_size: int = SEGMENT) -> bytes:
             segment_size,
         )
     )
+
+
+def open_sealed_archive(
+    ring: dict[bytes, PlatformSecret],
+    business: BusinessId,
+    path: ExportArchivePath,
+    sealed: bytes,
+) -> bytes:
+    """An archive opened as a download opens it: in segments, or whole (AWX1)."""
+
+    if not sealed.startswith(STREAM_MAGIC):
+        return open_archive(ring, business, path, sealed)
+
+    opener = read_stream_header(ring, business, path, sealed)
+    return b"".join(open_pieces(opener, [sealed], skip=STREAM_HEADER_SIZE))
 
 
 def open_(data: bytes) -> bytes:

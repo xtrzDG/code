@@ -1,5 +1,6 @@
 """Storage of the archives of full business exports, encrypted at rest."""
 
+from collections.abc import Iterable
 from typing import BinaryIO, Protocol
 
 from app.contracts.adapter_contract import AdapterContract
@@ -20,10 +21,16 @@ class ExportArchiveStorageContract(AdapterContract, Protocol):
         """
         raise NotImplementedError
 
-    def read(self, business_id: BusinessId, path: ExportArchivePath) -> bytes | None:
+    def stream(
+        self, business_id: BusinessId, path: ExportArchivePath
+    ) -> Iterable[bytes] | None:
         """
-        The archive's bytes; None when it is gone (expired and purged).
-        Raises ExternalServiceError when it does not open.
+        The archive's bytes in pieces of about a megabyte, read and opened
+        a piece at a time as they are consumed, so a download never holds
+        the archive whole; None when it is gone (expired and purged). The
+        storage is reached and the archive's key checked before this
+        returns. Raises ExternalServiceError when it does not open; a piece
+        found changed or cut off later raises it from the iteration.
         """
         raise NotImplementedError
 

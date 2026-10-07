@@ -62,7 +62,7 @@ def test_a_link_opens_once_for_ten_minutes() -> None:
     link = bed.link(ready.id)
     first = bed.download(str(link.download_path))
 
-    assert first.content.startswith(b"PK")
+    assert b"".join(first.pieces).startswith(b"PK")
     assert int(link.expires_at) == bed.clock.now_microseconds() + 10 * MINUTE * 10**6
     with pytest.raises(NotFoundError):
         bed.download(str(link.download_path))
@@ -87,7 +87,7 @@ def test_a_link_works_only_for_the_owner_who_asked() -> None:
     with pytest.raises(AccessDeniedError):
         bed.link(ready.id, user_id=tenants.staff_id)
 
-    assert bed.download(path).content.startswith(b"PK")
+    assert b"".join(bed.download(path).pieces).startswith(b"PK")
     assert bed.download(str(bed.link(ready.id, co_owner).download_path), co_owner)
 
 

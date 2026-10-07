@@ -1,7 +1,7 @@
 {
   "collection": "resource_calendar_links",
   "document_type": "ResourceCalendarLinkDocument",
-  "schema_version": 1,
+  "schema_version": 2,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -59,6 +59,70 @@
                     "default": null
                   },
                   "last_synced_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "not_connected",
+                          "needs_reconnect",
+                          "not_found",
+                          "access_denied",
+                          "address_refused",
+                          "timeout",
+                          "unreachable",
+                          "not_a_calendar",
+                          "provider_error"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "problem_detail": {
+                    "anyOf": [
+                      {
+                        "maxLength": 300,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "type": "object"
+              },
+              "write_status": {
+                "additionalProperties": false,
+                "properties": {
+                  "last_failed_at": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "last_written_at": {
                     "anyOf": [
                       {
                         "type": "integer"
@@ -352,7 +416,7 @@
         "type": "string"
       },
       "schema_version": {
-        "default": "1",
+        "default": "2",
         "type": "string"
       },
       "updated_at": {

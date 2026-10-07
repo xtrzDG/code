@@ -5,6 +5,8 @@ encrypted export storage for a day, and an owner downloads it at most three
 times, each through a one-time link of their own that works for minutes.
 """
 
+from collections.abc import Iterable
+
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
@@ -137,8 +139,14 @@ class ExportDownloadNotice(ImmutableDTO):
 
 
 class BusinessExportDownload(ImmutableDTO):
+    """
+    A download of an archive: its file name and its bytes in pieces, read
+    and opened from the storage as the response sends them (never whole in
+    the API's memory).
+    """
+
     file_name: ExportFileName
-    content: bytes = Field(repr=False)
+    pieces: Iterable[bytes] = Field(repr=False)
 
 
 class BusinessExportJobPayload(ImmutableDTO):

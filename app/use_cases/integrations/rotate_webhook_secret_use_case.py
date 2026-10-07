@@ -17,11 +17,11 @@ from app.schemas.dto.integrations.webhook_views import (
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.channels.strings import ChannelSecret
 from app.use_cases.integrations.webhook_records import (
-    WEBHOOK_ENDPOINT_ENTITY,
     endpoint_view,
 )
 from app.use_cases.shared.operations_support import build_audit_entry
 from app.utilities.integrations.integration_secrets import new_signing_secret
+from app.utilities.integrations.webhook_endpoints import WEBHOOK_ENDPOINT_ENTITY
 
 
 class RotateWebhookSecretUseCase(

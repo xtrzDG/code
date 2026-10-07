@@ -479,6 +479,12 @@ customers:
   8 MiB parts (S3 multipart). Exporting 50,000 messages peaks at about
   14 MB of Python allocations (`tests/exports/test_bounded_export.py`
   fails above 64 MB).
+- **Their download** (in the API) never holds the archive either: the
+  sealed archive is read from the bucket in ranges of four segments as
+  the response asks for pieces, each segment opened and checked on its
+  own and sent as a 1 MiB piece (a streamed response). Downloading a
+  48 MiB archive peaks at about 8 MB of Python allocations
+  (`tests/exports/test_bounded_download.py` fails above 12 MB).
 - **Admin metrics** walk every business in batches of 200 and keep only
   each one's roster (members, country, niche, start), not its profile.
 - **Topic grouping** reads at most 200 conversations and 100 unanswered
@@ -636,9 +642,6 @@ Blueprint and the test together:
   go through the outbox), so on the customer workers: bounded by one
   invoice, but a slow WeasyPrint run holds an outbound thread. Moving
   billing documents to a batch lane is the next step.
-- The download of a full export still reads the whole archive into the
-  API process to decrypt it (streamed to the owner, but held once);
-  fine for archives of tens of megabytes.
 - Periodic job runs are not counted like queued jobs: a periodic job
   that kills its worker runs again in its next period.
 - The customer list and the knowledge list page in the database

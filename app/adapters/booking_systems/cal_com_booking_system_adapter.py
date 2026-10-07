@@ -4,6 +4,7 @@ from app.clients.cal_com.cal_com_client import CalComClient, iso_instant
 from app.clients.cal_com.cal_com_responses import (
     is_busy_booking,
     read_instant,
+    read_object,
     read_text,
 )
 from app.contracts.calendar_sync import BookingSystemConnectorContract
@@ -15,9 +16,14 @@ from app.schemas.dto.calendar_sync.busy_reads import (
     BookingSystemRead,
     BookingSystemResource,
     BusyPeriod,
+    BusyWindow,
 )
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
+from app.schemas.typings.calendar_sync.constrained_integers import (
+    BusyEndsAtUnixSeconds,
+    BusyStartsAtUnixSeconds,
+)
 from app.schemas.typings.calendar_sync.strings import (
     BookingSystemBookingId,
     BookingSystemResourceTitle,
@@ -29,6 +35,11 @@ from app.utilities.calendar_sync.busy_periods import (
 )
 
 MAX_TITLE_LENGTH: int = 120
+# The metadata that marks a booking the platform wrote (Cal.com keeps it).
+PLATFORM_SOURCE: str = "assistant-workshop"
+SOURCE_KEY: str = "source"
+BOOKING_KEY: str = "booking_id"
+FIND_MARGIN_SECONDS: int = 60 * 60
 SECONDS_PER_MINUTE: int = 60
 # The attendee languages Cal.com accepts (API v2, 2024-08-13); it refuses a
 # booking with any other, so another language (Georgian) is left out and
@@ -46,9 +57,11 @@ CAL_COM_LANGUAGES: frozenset[str] = frozenset(
 class CalComBookingSystemAdapter(BookingSystemConnectorContract):
     """
     Cal.com (API v2): a resource is an event type (its id); its accepted
-    and pending bookings make the resource busy; a booking the platform
-    takes is written there with the guest's name, e-mail when known, zone
-    and language, so the time is taken on the business's Cal.com page too.
+    and pending bookings make the resource busy, except the ones the
+    platform wrote (marked in their metadata: the platform's own booking
+    already takes the place); a booking the platform takes is written there
+    with the guest's name, e-mail when known, zone and language, so the time
+    is taken on the business's Cal.com page too.
     """
 
     kind: BookingSystemKind = BookingSystemKind.CAL_COM
@@ -82,7 +95,12 @@ class CalComBookingSystemAdapter(BookingSystemConnectorContract):
         ):
             start: int | None = read_instant(fields, "start")
             end: int | None = read_instant(fields, "end")
-            if not is_busy_booking(fields) or start is None or end is None:
+            if (
+                not is_busy_booking(fields)
+                or is_platform_booking(fields)
+                or start is None
+                or end is None
+            ):
                 continue
 
             period: BusyPeriod | None = new_period(start, end)
@@ -117,7 +135,7 @@ class CalComBookingSystemAdapter(BookingSystemConnectorContract):
                 "lengthInMinutes": (int(draft.ends_at) - int(draft.starts_at))
                 // SECONDS_PER_MINUTE,
                 "attendee": attendee,
-                "metadata": {"source": "assistant-workshop"},
+                "metadata": platform_metadata(draft),
             },
             timeout,
         )
@@ -130,6 +148,39 @@ class CalComBookingSystemAdapter(BookingSystemConnectorContract):
 
         return BookingSystemBookingCreated(booking_id=BookingSystemBookingId(uid))
 
+    def find_booking(
+        self,
+        credentials: BookingSystemCredentials,
+        draft: BookingSystemBookingDraft,
+        timeout: BusyTimeFetchSeconds,
+    ) -> BookingSystemBookingId | None:
+        if draft.platform_booking_id is None:
+            return None
+
+        marker: str = str(draft.platform_booking_id)
+        for fields in self._client.list_bookings(
+            credentials.api_key,
+            credentials.external_resource_id,
+            # A margin around the booking, whatever edges the filter keeps.
+            BusyWindow(
+                starts_at=BusyStartsAtUnixSeconds(
+                    max(int(draft.starts_at) - FIND_MARGIN_SECONDS, 0)
+                ),
+                ends_at=BusyEndsAtUnixSeconds(int(draft.ends_at) + FIND_MARGIN_SECONDS),
+            ),
+            timeout,
+        ):
+            uid: str | None = read_text(fields, "uid")
+            metadata: dict[str, object] = read_object(fields.get("metadata"))
+            if (
+                uid is not None
+                and is_busy_booking(fields)
+                and read_text(metadata, BOOKING_KEY) == marker
+            ):
+                return BookingSystemBookingId(uid)
+
+        return None
+
     def cancel_booking(
         self,
         credentials: BookingSystemCredentials,
@@ -141,6 +192,21 @@ class CalComBookingSystemAdapter(BookingSystemConnectorContract):
         except BusyTimeSourceError as error:
             if error.problem is not CalendarSyncProblem.NOT_FOUND:
                 raise
+
+
+def platform_metadata(draft: BookingSystemBookingDraft) -> dict[str, object]:
+    """The marks of a booking the platform writes (Cal.com wants strings)."""
+
+    metadata: dict[str, object] = {SOURCE_KEY: PLATFORM_SOURCE}
+    if draft.platform_booking_id is not None:
+        metadata[BOOKING_KEY] = str(draft.platform_booking_id)
+    return metadata
+
+
+def is_platform_booking(fields: dict[str, object]) -> bool:
+    """A booking the platform wrote (its metadata names the platform)."""
+
+    return read_text(read_object(fields.get("metadata")), SOURCE_KEY) == PLATFORM_SOURCE
 
 
 def event_type_number(credentials: BookingSystemCredentials) -> int | str:

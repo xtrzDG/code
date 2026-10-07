@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Factory, Singleton
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.clients import ClientsContainer
@@ -10,7 +10,11 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
+from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.facilitators.integrations.webhook_disabled_notice_facilitator import (
+    WebhookDisabledNoticeFacilitator,
+)
 from app.schemas.domain.webhooks import WebhookDeliveryDocument
 from app.schemas.dto.integrations.webhook_attempts import (
     WebhookAttempt,
@@ -83,6 +87,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     authorize = account_use_cases.authorize_business_access_use_case
@@ -189,6 +194,15 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         poster=clients.webhook_poster,
         wall_clock=wall_clock,
     )
+    # An endpoint switched off on its own: alert, audit entry, live event.
+    webhook_disabled_notices: Singleton[WebhookDisabledNoticeFacilitator] = Singleton(
+        WebhookDisabledNoticeFacilitator,
+        business_repo=repositories.business_repo,
+        staff_alerts=facilitators.staff_alert_facilitator,
+        audit_log_repo=repositories.audit_log_repo,
+        live_events=facilitators.event_publisher,
+        localized_text_resolver=utilities.localized_text_resolver,
+    )
     record_webhook_attempt_use_case: Factory[
         UseCaseContract[WebhookAttempt, WebhookDeliveryDocument | None]
     ] = Factory(
@@ -198,6 +212,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         job_queue=facilitators.job_queue_facilitator,
         unit_of_work=adapters.storage_unit_of_work,
         failures_before_disable=failures_before_disable,
+        notices=webhook_disabled_notices,
     )
     # The daily `purge_webhook_deliveries` job.
     purge_webhook_deliveries_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (

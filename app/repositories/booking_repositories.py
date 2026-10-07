@@ -36,6 +36,14 @@ class BookingRepository(
     ) -> BookingDocument | None:
         return self._load(business_id, str(booking_id))
 
+    def update(
+        self,
+        business_id: BusinessId,
+        booking_id: BookingId,
+        change: Callable[[BookingDocument], BookingDocument | None],
+    ) -> BookingDocument | None:
+        return self._modify_in_business(business_id, str(booking_id), change)
+
     def list_by_business(self, business_id: BusinessId) -> list[BookingDocument]:
         return sorted(
             self._list_in_business(business_id), key=lambda booking: booking.starts_at

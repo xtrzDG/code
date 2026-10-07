@@ -23,13 +23,13 @@ from app.schemas.exceptions.application_errors import (
 )
 from app.schemas.typings.integrations.constrained_integers import WebhookFailureCount
 from app.use_cases.integrations.webhook_records import (
-    WEBHOOK_ENDPOINT_ENTITY,
     endpoint_view,
     refuse_address,
     require_endpoint,
     subscribed_types,
 )
 from app.use_cases.shared.operations_support import build_audit_entry
+from app.utilities.integrations.webhook_endpoints import WEBHOOK_ENDPOINT_ENTITY
 
 
 class UpdateWebhookEndpointUseCase(

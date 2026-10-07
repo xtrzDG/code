@@ -3757,8 +3757,18 @@
       },
       "BookingDocument": {
         "additionalProperties": false,
-        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).\n\n`last_status_change` is the last status change staff made in the\ncabinet, which they may undo for a short while; any other change of\nthe status (the customer cancelling, an undo) clears it.\n\n`origin` marks a booking the waitlist filled (a freed place a waiting\ncustomer took) or one a rebooking campaign brought back, for the\nrevenue lines of the value report; None for every other booking.",
+        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).\n\n`last_status_change` is the last status change staff made in the\ncabinet, which they may undo for a short while; any other change of\nthe status (the customer cancelling, an undo) clears it.\n\n`origin` marks a booking the waitlist filled (a freed place a waiting\ncustomer took) or one a rebooking campaign brought back, for the\nrevenue lines of the value report; None for every other booking.\n\n`booking_system_booking` is the booking as the platform wrote it to the\nbooking system its resource follows (Cal.com), None until written.",
         "properties": {
+          "booking_system_booking": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingSystemBookingRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "buffer_minutes": {
             "anyOf": [
               {
@@ -3891,7 +3901,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "4",
+            "default": "5",
             "title": "Schema Version",
             "type": "string"
           },
@@ -4511,6 +4521,47 @@
         "title": "BookingStatusCount",
         "type": "object"
       },
+      "BookingSystemBookingRef": {
+        "additionalProperties": false,
+        "description": "A platform booking written to a booking system: which system, for which\nresource (whose link holds the key), the system's id of it, and the\ntimes written, so a booking moved or cancelled later is followed there.",
+        "properties": {
+          "booking_id": {
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "ends_at": {
+            "minimum": 0.0,
+            "title": "Ends At",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/BookingSystemKind"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "minimum": 0.0,
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "written_at": {
+            "title": "Written At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "resource_id",
+          "booking_id",
+          "starts_at",
+          "ends_at",
+          "written_at"
+        ],
+        "title": "BookingSystemBookingRef",
+        "type": "object"
+      },
       "BookingSystemKind": {
         "description": "The booking systems the platform reads busy times from and writes its\nbookings to (one adapter each, in the connector registry).",
         "enum": [
@@ -4521,7 +4572,7 @@
       },
       "BookingSystemView": {
         "additionalProperties": false,
-        "description": "The booking system the resource follows (its key is never shown).",
+        "description": "The booking system the resource follows (its key is never shown): how\nits bookings were read (`status`) and how the platform's bookings were\nwritten there (`write_status`).",
         "properties": {
           "added_at": {
             "title": "Added At",
@@ -4550,6 +4601,10 @@
           },
           "status": {
             "$ref": "#/components/schemas/BusySourceStatusView"
+          },
+          "write_status": {
+            "$ref": "#/components/schemas/BookingSystemWriteStatusView",
+            "default": {}
           }
         },
         "required": [
@@ -4559,6 +4614,60 @@
           "status"
         ],
         "title": "BookingSystemView",
+        "type": "object"
+      },
+      "BookingSystemWriteStatusView": {
+        "additionalProperties": false,
+        "description": "How the platform's bookings were written to the booking system: the\nlast one written (or cancelled) there, and the last failure with its\nreason (`problem`), cleared by the next success.",
+        "properties": {
+          "last_failed_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Failed At"
+          },
+          "last_written_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Written At"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarSyncProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem_detail": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem Detail"
+          }
+        },
+        "title": "BookingSystemWriteStatusView",
         "type": "object"
       },
       "BookingUnit": {
@@ -25942,7 +26051,7 @@
         "type": "object"
       },
       "StaffLinkTarget": {
-        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device);\nPRIVACY is Settings → Privacy (a full export was downloaded).\nLink targets live only in signed links, never in stored documents.",
+        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device);\nPRIVACY is Settings → Privacy (a full export was downloaded);\nINTEGRATIONS is Settings → Integrations (a webhook was switched off).\nLink targets live only in signed links, never in stored documents.",
         "enum": [
           "conversation",
           "lead",
@@ -25955,7 +26064,8 @@
           "share",
           "billing",
           "account_security",
-          "privacy"
+          "privacy",
+          "integrations"
         ],
         "title": "StaffLinkTarget",
         "type": "string"

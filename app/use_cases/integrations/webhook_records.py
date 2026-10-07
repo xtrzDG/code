@@ -50,7 +50,6 @@ from app.utilities.integrations.integration_secrets import new_signing_secret
 # A business keeps at most this many endpoints (a CRM, a sheet, an
 # accounting tool and a few Zaps).
 MAX_WEBHOOK_ENDPOINTS: WebhookEndpointCount = WebhookEndpointCount(10)
-WEBHOOK_ENDPOINT_ENTITY: AuditEntityName = AuditEntityName("webhook_endpoint")
 WEBHOOK_DELIVERY_ENTITY: AuditEntityName = AuditEntityName("webhook_delivery")
 NOT_PUBLIC_MESSAGE: str = "The webhook address must be a public https address."
 TOO_MANY_MESSAGE: str = "This business has as many webhooks as it may have."
