@@ -86,6 +86,17 @@ def build_api_key_authentication(
     return resolve_api_key, resolve_key_owner
 
 
+def api_key_partition(request: Request) -> str:
+    """
+    The key a request was authenticated with: its Idempotency-Keys and
+    their stored answers are its own, not shared with the owner's other
+    keys (the public API's paths name no business).
+    """
+
+    known: object = getattr(request.state, PRINCIPAL_STATE, None)
+    return str(known.api_key_id) if isinstance(known, ApiKeyPrincipal) else ""
+
+
 def parse_api_key(authorization: str | None) -> ApiKeyToken:
     """The key of an Authorization header; 401 when there is none."""
 

@@ -38,6 +38,7 @@ from app.schemas.typings.platform.strings import ErrorReasonMessage
 from app.schemas.typings.users.prefixed_id import UserId
 
 type IdempotencyDependency = Callable[..., Coroutine[Any, Any, None]]
+type RequestPartition = Callable[[Request], str]
 type ClaimIdempotencyKeyOperator = OperatorContract[
     IdempotencyClaim, IdempotencyClaimDecision
 ]
@@ -61,6 +62,7 @@ def build_idempotency_dependency(
     current_user: CurrentUserDependency,
     claim_operator: ClaimIdempotencyKeyOperator,
     finish_operator: FinishIdempotentRequestOperator,
+    partition: RequestPartition | None = None,
 ) -> IdempotencyDependency:
     """
     A dependency for creating routes, one line each:
@@ -72,7 +74,9 @@ def build_idempotency_dependency(
     checked): a new key lets the route run and the response recorder keeps
     its answer; a retry of a request that succeeded gets that answer back;
     the 409 refusals come from the claim. The recorder
-    (`install_idempotency`) must wrap the application.
+    (`install_idempotency`) must wrap the application. `partition` names
+    what else a request's answer belongs to besides its user (the public
+    API: the key it came with), read after `current_user` ran.
     """
 
     finish: FinishIdempotentRequest = finish_operator.operate
@@ -103,6 +107,7 @@ def build_idempotency_dependency(
                 request.url.path,
                 request.url.query,
                 await request.body(),
+                "" if partition is None else partition(request),
             ),
         )
         decision: IdempotencyClaimDecision = await run_in_threadpool(
