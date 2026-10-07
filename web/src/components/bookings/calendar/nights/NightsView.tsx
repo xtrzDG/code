@@ -62,6 +62,7 @@ export function NightsView({
     places: rooms.map((room) => ({ id: room.id, name: room.name })),
     bounds: { firstMinute: 0, lastMinute: 0, firstDate: from, lastDate: grid.date_to },
     forwardKey: localeDirection(locale) === "rtl" ? "ArrowLeft" : "ArrowRight",
+    scroller: () => scrollRef.current,
     moves: "nights",
   });
   const announcement = useMoveAnnouncement(gestures.preview, gestures.isCancelled);

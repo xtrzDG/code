@@ -6,6 +6,8 @@ import type { BookingView } from "@/components/insights/types";
 
 import { isSameSpot, keyboardTarget, placeOf, type MovePlace } from "./_lib/calendarMoves";
 import type { MoveTarget } from "./_lib/calendarTypes";
+import type { Point } from "./_lib/edgeScroll";
+import { useEdgeAutoScroll } from "./useEdgeAutoScroll";
 
 /** A mouse or pen drags once it moved this far (px); less is a click. */
 const DRAG_THRESHOLD = 4;
@@ -44,7 +46,9 @@ function focusBooking(id: string) {
 
 /**
  * Moving bookings on a grid by pointer and by keyboard. A mouse drags at
- * once, a finger after a long press; the drop calls `onMove`. With the
+ * once, a finger after a long press; the drop calls `onMove`. Near an edge
+ * of the grid (`scroller`) a drag scrolls it that way (useEdgeAutoScroll),
+ * and the drop target follows what comes under the pointer. With the
  * keyboard, the arrows move the focused booking's preview a step at a time
  * (`keyboardTarget`), Enter moves it there and Escape (or leaving it)
  * cancels. Escape also cancels a drag. A drag never ends in a click.
@@ -54,9 +58,12 @@ export function useMoveGestures({
   places,
   bounds,
   forwardKey,
+  scroller,
   moves = "time",
 }: {
   onMove: (booking: BookingView, target: MoveTarget) => Promise<boolean>;
+  /** The grid's scrolling box, scrolled while a booking is dragged near its edges. */
+  scroller: () => HTMLElement | null;
   /** "time": a booking moves by quarters of an hour; "nights": a stay moves by nights. */
   moves?: "time" | "nights";
   places: readonly MovePlace[];
@@ -69,7 +76,27 @@ export function useMoveGestures({
   const [isCancelled, setCancelled] = useState(false);
   const session = useRef<Session | null>(null);
   const suppressClick = useRef(false);
+  const pointer = useRef<Point | null>(null);
   const isDragging = preview?.source === "drag";
+
+  /** The drop target under the pointer at (x, y), as the preview shows it. */
+  const follow = (current: Session, x: number, y: number) => {
+    const target = current.locate(x, y) ?? origin(current.booking);
+    setPreview((shown) =>
+      shown?.source === "drag" && sameTarget(shown.target, target) ? shown : { booking: current.booking, target, source: "drag" },
+    );
+  };
+
+  useEdgeAutoScroll({
+    active: isDragging,
+    scroller,
+    pointer,
+    onScrolled: (at) => {
+      if (session.current?.isActive) {
+        follow(session.current, at.x, at.y);
+      }
+    },
+  });
 
   // While dragging: a finger does not scroll the page, and Escape drops nothing.
   useEffect(() => {
@@ -102,6 +129,7 @@ export function useMoveGestures({
 
   const activate = (current: Session, x: number, y: number) => {
     current.isActive = true;
+    pointer.current = { x, y };
     suppressClick.current = true;
     setCancelled(false);
     setPreview({ booking: current.booking, target: current.locate(x, y) ?? origin(current.booking), source: "drag" });
@@ -163,10 +191,8 @@ export function useMoveGestures({
         }
         return;
       }
-      const target = current.locate(event.clientX, event.clientY) ?? origin(current.booking);
-      setPreview((shown) =>
-        shown?.source === "drag" && sameTarget(shown.target, target) ? shown : { booking: current.booking, target, source: "drag" },
-      );
+      pointer.current = { x: event.clientX, y: event.clientY };
+      follow(current, event.clientX, event.clientY);
     },
     onPointerUp: (event: PointerEvent<HTMLElement>) => {
       const current = session.current;
