@@ -92,6 +92,21 @@ def test_client_reports_refusals_without_request_data() -> None:
     )
 
 
+def test_client_names_the_shape_of_a_refusal_without_a_message() -> None:
+    sandbox = FlittSandbox(
+        refusal={"response_status": "failure", "order_id": "o-4", "amount": 100}
+    )
+
+    with pytest.raises(ExternalServiceError) as raised:
+        build_client(sandbox).create_checkout_url({"order_id": "o-4"})
+
+    assert str(raised.value) == (
+        "Flitt refused the request: no error message, status 'failure', "
+        "fields amount, order_id, response_status."
+    )
+    assert "o-4" not in str(raised.value)
+
+
 def test_client_turns_transport_and_http_errors_into_service_errors() -> None:
     def fail(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("down", request=request)

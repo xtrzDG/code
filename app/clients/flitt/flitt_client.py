@@ -190,12 +190,26 @@ class FlittClient(ClientContract):
 
 
 def describe_flitt_error(result: Mapping[str, object]) -> str:
-    """Flitt's error code, message and request id, without request data."""
+    """
+    Flitt's error code, message and request id, without request data.
 
-    error_message: str = str(result.get("error_message", "unknown error"))
+    An answer without an error message names its status and its field
+    names instead (never their values), so an answer of an unexpected
+    shape can be read from the error alone.
+    """
+
     error_code: object = result.get("error_code")
     request_id: object = result.get("request_id")
-    details: list[str] = [error_message[:MAX_REPORTED_ERROR_LENGTH]]
+    error_message: object = result.get("error_message")
+    reported: str = (
+        str(error_message)
+        if error_message is not None
+        else (
+            f"no error message, status {result.get('response_status')!r}, "
+            f"fields {', '.join(sorted(str(name) for name in result)) or 'none'}"
+        )
+    )
+    details: list[str] = [reported[:MAX_REPORTED_ERROR_LENGTH]]
     if error_code is not None:
         details.append(f"code {error_code}")
 
