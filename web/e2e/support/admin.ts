@@ -9,6 +9,11 @@
  * PLATFORM_ADMIN_EMAILS names only the run's first admin (it bootstraps the
  * first SUPER admin); every other test admin is added to the team by that
  * admin before signing in, as on the Team page.
+ *
+ * A worker keeps each admin's sign-in for a few minutes and hands the same
+ * token to every spec file that asks: a fresh sign-in of the same address
+ * would wait out both cooldowns (about 30 seconds), and a spec's duration
+ * would depend on which spec ran before it on its shard (support/shards.ts).
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -23,6 +28,12 @@ import { freshTotpCode } from "./totp";
 /** The admins' authenticator keys in this run, by e-mail. */
 const AUTHENTICATORS_PATH = path.join(ARTIFACTS_DIRECTORY, "authenticators.json");
 const LOGIN_CODE_COOLDOWN_MS = 31_000;
+/**
+ * How long a worker reuses an admin's sign-in: well inside the API's step-up
+ * window (STEP_UP_MAX_AGE_SECONDS, ten minutes), so a reused token still
+ * passes the checks of the admin team and the support actions.
+ */
+const SIGN_IN_REUSE_MS = 4 * 60_000;
 
 export interface Authenticator {
   secret: string;
@@ -76,7 +87,8 @@ async function passLoginCode(request: APIRequestContext, email: string): Promise
   }
 }
 
-let rootToken: Promise<string> | null = null;
+/** This worker's sign-ins by e-mail, with the moment each started. */
+const signIns = new Map<string, { token: Promise<string>; startedAt: number }>();
 
 /**
  * The run's first admin adds this person to the admin team as a SUPER admin
@@ -88,24 +100,44 @@ export async function ensureOnAdminTeam(request: APIRequestContext, email: strin
     return;
   }
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    rootToken ??= signInAsPlatformAdmin(request, PLATFORM_ADMIN_EMAIL);
+    const rootToken = await signInAsPlatformAdmin(request, PLATFORM_ADMIN_EMAIL);
     const added = await request.post(`${API_URL}/v1/admin/team`, {
-      headers: { Authorization: `Bearer ${await rootToken}` },
+      headers: { Authorization: `Bearer ${rootToken}` },
       data: { email, role: "super" },
     });
     if (added.status() === 200 || added.status() === 409) {
       return;
     }
     if (added.status() === 401 && attempt === 0) {
-      rootToken = null;
+      signIns.delete(PLATFORM_ADMIN_EMAIL);
       continue;
     }
     expect(added.status(), await added.text()).toBe(200);
   }
 }
 
+/**
+ * A bearer token of this platform admin, signed in with both factors (the
+ * app is set up at the first sign-in of the run); a sign-in this worker
+ * made in the last few minutes is reused.
+ */
+export function signInAsPlatformAdmin(request: APIRequestContext, email: string): Promise<string> {
+  const known = signIns.get(email);
+  if (known && Date.now() - known.startedAt < SIGN_IN_REUSE_MS) {
+    return known.token;
+  }
+  const token = signInWithBothFactors(request, email);
+  signIns.set(email, { token, startedAt: Date.now() });
+  token.catch(() => {
+    if (signIns.get(email)?.token === token) {
+      signIns.delete(email);
+    }
+  });
+  return token;
+}
+
 /** Signs a platform admin in with both factors (setting the app up the first time); the bearer token. */
-export async function signInAsPlatformAdmin(request: APIRequestContext, email: string): Promise<string> {
+async function signInWithBothFactors(request: APIRequestContext, email: string): Promise<string> {
   await ensureOnAdminTeam(request, email);
   const answer = await passLoginCode(request, email);
   expect(answer.mfa_required, "platform admins take the second step").toBe(true);

@@ -16,6 +16,7 @@
     "test:coverage": "vitest run --coverage",
     "knip": "knip --no-progress",
     "e2e": "playwright test --config e2e/playwright.config.ts",
+    "e2e:durations": "node scripts/e2e-durations.mjs",
     "check:intl": "node scripts/check-intl.mjs",
     "measure:first-load": "node scripts/measure-first-load.mjs",
     "gen:icons": "node scripts/render-app-icons.mjs",

@@ -1,8 +1,9 @@
 """CI stays fast and its dependency updates stay safe.
 
-The backend tests run in two parts whose coverage is combined, the
-end-to-end suite in four shards that start the web job's build, a last job
-reports every duration; Dependabot's toolchain majors wait for a quarterly
+The backend tests run in parts balanced by measured duration whose coverage
+is combined, the cabinet's checks run next to its build, the end-to-end
+suite in shards that start that build, a last job reports every duration
+(docs/operations/ci.md); Dependabot's toolchain majors wait for a quarterly
 issue and only grouped patch or minor updates merge themselves.
 """
 
@@ -44,20 +45,35 @@ CI: dict[Any, Any] = load(WORKFLOWS / "ci.yml")
 JOBS: dict[str, Any] = CI["jobs"]
 
 
-def test_the_backend_tests_run_in_two_parts_within_twenty_minutes() -> None:
+def test_the_backend_tests_run_in_parts_of_each_group() -> None:
     tests = JOBS["backend-tests"]
+    parts: list[dict[str, Any]] = tests["strategy"]["matrix"]["include"]
+    groups: dict[str, list[dict[str, Any]]] = {
+        group: [part for part in parts if part["group"] == group]
+        for group in ("postgres", "rest")
+    }
 
-    assert tests["strategy"]["matrix"]["part"] == ["postgres", "rest"]
-    assert tests["timeout-minutes"] == 20
+    assert {part["group"] for part in parts} == {"postgres", "rest"}
+    for group_parts in groups.values():
+        total: int = group_parts[0]["parts"]
+        assert [part["part"] for part in group_parts] == list(range(1, total + 1))
+        assert {part["parts"] for part in group_parts} == {total}
+    assert len(groups["rest"]) > 1
+    assert tests["timeout-minutes"] <= 15
     assert "postgres and not perf" in tests["env"]["MARKERS"]
     assert "not postgres and not perf" in tests["env"]["MARKERS"]
+    assert tests["env"]["TEST_PART"] == "${{ matrix.part }}/${{ matrix.parts }}"
+    assert tests["env"]["COVERAGE_FILE"] == ".coverage.${{ matrix.group }}-${{ matrix.part }}"
     run = steps_text(tests)
     assert '-m "$MARKERS"' in run
     assert "--cov-fail-under=0" in run
     assert "include-hidden-files: true" in run
+    assert "name: coverage-${{ matrix.group }}-${{ matrix.part }}" in run
+    assert "${{ env.TEST_DURATIONS_REPORT }}" in run
+    assert "enable-cache: true" in run
 
 
-def test_both_parts_coverage_is_combined_and_holds_the_floor() -> None:
+def test_every_parts_coverage_is_combined_and_holds_the_floor() -> None:
     coverage = JOBS["coverage"]
     pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
@@ -66,23 +82,55 @@ def test_both_parts_coverage_is_combined_and_holds_the_floor() -> None:
     assert "pattern: coverage-*" in run
     assert "coverage combine coverage-parts" in run
     assert "coverage report" in run
+    assert "scripts.backend_test_durations coverage-parts/durations-*.json" in run
     assert "relative_files = true" in pyproject
     assert re.search(r"^fail_under = 95$", pyproject, re.MULTILINE)
 
 
-def test_the_end_to_end_shards_start_the_web_jobs_build() -> None:
-    web, e2e = JOBS["web"], JOBS["e2e"]
+def test_the_cabinet_checks_run_next_to_the_build_the_shards_start() -> None:
+    build, checks, e2e = JOBS["web-build"], JOBS["web-checks"], JOBS["e2e"]
+    build_run, checks_run = steps_text(build), steps_text(checks)
 
-    assert "name: cabinet-build" in steps_text(web)
-    assert "npm run knip" in steps_text(web)
-    assert e2e["needs"] == "web"
-    assert e2e["strategy"]["matrix"]["shard"] == [1, 2, 3, 4]
+    assert "needs" not in build and "needs" not in checks
+    assert "npm run build" in build_run
+    assert "name: cabinet-build" in build_run
+    assert "path: web/.next/cache" in build_run
+    assert "hashFiles('web/package-lock.json')" in build_run
+    assert "hashFiles('web/src/**'" in build_run
+    for check in (
+        "npm run check:intl",
+        "npm run lint",
+        "npm run knip",
+        "npm run typecheck",
+        "npm run test:coverage",
+        "npm run gen:api:types",
+    ):
+        assert check in checks_run, check
+        assert check not in build_run, check
+    # The Sentry token never reaches the build the shards download.
+    assert "SENTRY_AUTH_TOKEN" not in yaml.safe_dump(build)
+    assert "cache: npm" in build_run and "cache: npm" in checks_run
+
+    assert e2e["needs"] == "web-build"
     run = steps_text(e2e)
     assert "name: cabinet-build" in run
     assert "path: web/.next" in run
-    tests = next(step for step in e2e["steps"] if step.get("run") == "npm run e2e")
-    assert tests["env"] == {"E2E_SKIP_BUILD": "1", "E2E_SHARD": "${{ matrix.shard }}/4"}
     assert "web/e2e/flaky.json" in run
+    assert "web/e2e/.artifacts/report.json" in run
+
+
+def test_the_end_to_end_shards_follow_the_shard_plan() -> None:
+    e2e = JOBS["e2e"]
+    shards: list[int] = e2e["strategy"]["matrix"]["shard"]
+    total: int = len(shards)
+
+    assert shards == list(range(1, total + 1))
+    assert total >= 6
+    assert e2e["name"] == f"End-to-end (${{{{ matrix.shard }}}}/{total})"
+    tests = next(step for step in e2e["steps"] if step.get("run") == "npm run e2e")
+    assert tests["env"] == {"E2E_SKIP_BUILD": "1", "E2E_SHARD": f"${{{{ matrix.shard }}}}/{total}"}
+    # web/e2e/support/shards.test.ts reads the same count to check the budget.
+    assert (PROJECT_ROOT / "web" / "e2e" / "durations.json").exists()
 
 
 def test_the_last_job_reports_every_jobs_duration() -> None:

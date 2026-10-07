@@ -3,7 +3,8 @@
  *
  *   npm run e2e                      # builds the cabinet, starts both servers
  *   E2E_SKIP_BUILD=1 npm run e2e     # reuse the last `next build`
- *   E2E_SHARD=2/4 npm run e2e        # one CI shard's spec files (support/shards.ts)
+ *   E2E_SHARD=2/8 npm run e2e        # one CI shard's spec files (support/shards.ts)
+ *   npm run e2e:durations            # measure every spec again (e2e/durations.json)
  *
  * The API runs in development mode with in-memory storage, so each run starts
  * with only the demo businesses (SEED_DEMO_DATA, used by live.spec.ts; every
@@ -32,7 +33,7 @@ import {
   WEB_PORT,
   WEB_URL,
 } from "./support/env";
-import { matchSpecs, parseShard, readSpecFiles, specsOfShard } from "./support/shards";
+import { matchSpecs, parseShard, readDurations, readSpecNames, specsOfShard, weighSpecs } from "./support/shards";
 
 mkdirSync(ARTIFACTS_DIRECTORY, { recursive: true });
 
@@ -41,11 +42,27 @@ const skipBuild = process.env.E2E_SKIP_BUILD === "1";
 const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
 
 const E2E_DIRECTORY = path.join(WEB_DIRECTORY, "e2e");
-const TOUR_SPEC = "tour-routes.spec.ts";
-/** CI runs the suite in shards, each against its own API (support/shards.ts). */
+/** The route tour's spec files run in the Tbilisi project (support/tour.ts). */
+const isTourSpec = (name: string) => name.startsWith("tour-");
+/**
+ * CI runs the suite in shards, each against its own API, balanced by the
+ * measured durations (support/shards.ts).
+ */
 const shard = parseShard(process.env.E2E_SHARD);
-const shardSpecs = shard ? specsOfShard(readSpecFiles(E2E_DIRECTORY), shard) : null;
-const runsTour = shardSpecs === null || shardSpecs.includes(TOUR_SPEC);
+const suite = weighSpecs(readSpecNames(E2E_DIRECTORY), readDurations(path.join(E2E_DIRECTORY, "durations.json")));
+const shardSpecs = shard ? specsOfShard(suite, shard) : null;
+const tourSpecs = (shardSpecs ?? suite.map((spec) => spec.name)).filter(isTourSpec);
+const allTourSpecs = suite.map((spec) => spec.name).filter(isTourSpec);
+if (shard && process.env.TEST_WORKER_INDEX === undefined) {
+  const unmeasured = suite.filter((spec) => !spec.measured).map((spec) => spec.name);
+  if (unmeasured.length > 0) {
+    // A GitHub annotation on CI: the plan counts these as the mean.
+    console.warn(
+      `${isCI ? "::warning::" : ""}e2e/durations.json has no duration for ${unmeasured.join(", ")}: ` +
+        "measure them with `npm run e2e:durations -- <files>` (web/README.md).",
+    );
+  }
+}
 const flakyReporter = [
   "./reporters/flakyReporter.ts",
   { outputFile: path.join(E2E_DIRECTORY, "flaky.json"), knownFile: path.join(E2E_DIRECTORY, "flaky-known.json") },
@@ -86,8 +103,15 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  // On CI the JSON report gives each spec's duration on CI's own machines
+  // (`npm run e2e:durations -- --from report.json`, web/README.md).
   reporter: isCI
-    ? [["list"], ["html", { outputFolder: path.join(ARTIFACTS_DIRECTORY, "report"), open: "never" }], flakyReporter]
+    ? [
+        ["list"],
+        ["html", { outputFolder: path.join(ARTIFACTS_DIRECTORY, "report"), open: "never" }],
+        ["json", { outputFile: path.join(ARTIFACTS_DIRECTORY, "report.json") }],
+        flakyReporter,
+      ]
     : [["list"], flakyReporter],
   use: {
     baseURL: WEB_URL,
@@ -114,10 +138,10 @@ export default defineConfig({
       name: "chromium",
       // Spec files only: e2e/**/*.test.ts are the suite's own unit tests (Vitest).
       testMatch: shardSpecs ? matchSpecs(shardSpecs) : /\.spec\.ts$/,
-      testIgnore: matchSpecs([TOUR_SPEC]),
+      testIgnore: matchSpecs(allTourSpecs),
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
     },
-    ...(runsTour
+    ...(tourSpecs.length > 0
       ? [
           {
             // Every route of the screenshot tour read from Tbilisi (UTC+4) while
@@ -125,7 +149,7 @@ export default defineConfig({
             // renders differently on the two, and the console-clean gate fails
             // on React's hydration error (#418).
             name: "tz-tbilisi",
-            testMatch: matchSpecs([TOUR_SPEC]),
+            testMatch: matchSpecs(tourSpecs),
             use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 }, timezoneId: "Asia/Tbilisi" },
           },
         ]

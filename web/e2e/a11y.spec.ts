@@ -1,89 +1,15 @@
 /**
  * Automated accessibility audit (axe-core, WCAG 2.1 A and AA rules) of the
- * cabinet's pages in both themes, in English and in Hebrew (right to left),
- * and on a phone: no serious or critical violation is allowed. What axe
- * cannot judge (reading order, meaning of texts) is checked by hand; see
- * web/README.md.
+ * setup, the businesses, sign-in, the offline page and the phone layout in
+ * both themes and in Hebrew (right to left): no serious or critical
+ * violation is allowed. Every section of a business is audited in
+ * a11y-sections-en.spec.ts and a11y-sections-he.spec.ts (support/axe.ts).
  */
 
-import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-
+import { audit, seriousViolations } from "./support/axe";
 import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
-import { waitForNetworkQuiet } from "./support/network";
 import { en, he } from "./support/messages";
-
-const OWNER_PAGES = [
-  "overview",
-  "inbox",
-  "inbox?view=all",
-  "bookings",
-  "customers",
-  "customers/segments",
-  "assistant",
-  "assistant/knowledge",
-  "assistant/profile",
-  "assistant/channels",
-  "assistant/versions",
-  "settings",
-  "settings/team",
-  "settings/notifications",
-  "settings/quick-replies",
-  "settings/calls",
-  "settings/reviews",
-  "settings/integrations",
-  "settings/billing",
-  "settings/privacy",
-  "settings/audit",
-];
-
-/** Serious and critical violations of a page, one line each. */
-async function seriousViolations(page: Page): Promise<string[]> {
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-    .analyze();
-  return results.violations
-    .filter(
-      (violation) =>
-        violation.impact === "serious" || violation.impact === "critical",
-    )
-    .map(
-      (violation) =>
-        `${violation.id} (${violation.impact}): ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`,
-    );
-}
-
-async function audit(page: Page, path: string): Promise<void> {
-  await page.goto(path);
-  await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
-  await waitForNetworkQuiet(page);
-  expect(await seriousViolations(page), path).toEqual([]);
-}
-
-for (const locale of ["en", "he"] as const) {
-  for (const theme of ["dark", "light"] as const) {
-    test(`every section passes the audit in the ${theme} theme, in ${locale}`, async ({
-      page,
-      owner,
-    }) => {
-      test.setTimeout(180_000);
-      await page.context().addCookies([
-        { name: "aw_theme", value: theme, url: WEB_URL },
-        { name: "aw_locale", value: locale, url: WEB_URL },
-      ]);
-      for (const path of OWNER_PAGES) {
-        await test.step(path, () =>
-          audit(page, `/b/${owner.businessId}/${path}`),
-        );
-      }
-      await expect(page.locator("html")).toHaveAttribute(
-        "dir",
-        locale === "he" ? "rtl" : "ltr",
-      );
-    });
-  }
-}
 
 test("the setup invitation, the tunnel, the businesses, sign-in and the offline page pass the audit", async ({
   page,

@@ -121,8 +121,9 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   as a title), so the sentence itself is still checked. Never mark the
   interface's own text.
 - The cabinet's server runs with `TZ=UTC` while the browser reads in
-  Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-routes.spec.ts`, run by
-  `npm run e2e` like the rest) opens every route of the screenshot tour from
+  Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-*.spec.ts` with
+  `e2e/support/tour.ts`, run by `npm run e2e` like the rest) opens every
+  route of the screenshot tour from
   Asia/Tbilisi, first without and then with the remembered reader's zone, so
   a date formatted without its zone fails on the hydration error.
 - A business page keeps its live event stream open, so
@@ -172,7 +173,7 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   (`e2e/roles.spec.ts`), old addresses redirected with their query
   (`e2e/redirects.spec.ts`), the manifest, icons, service worker and offline
   page (`e2e/pwa.spec.ts`), an axe audit of every page in both themes and on
-  a phone (`e2e/a11y.spec.ts`), switching the interface language ru/ka/en
+  a phone (`e2e/a11y*.spec.ts`), switching the interface language ru/ka/en
   from the user menu, the website chat demo page of the API, going back to a
   section showing its data from the cache (no skeleton, no spinner), a
   request's status changing at once on its conversation, rolling back on a
@@ -948,8 +949,10 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
 
 ### Accessibility
 
-- `e2e/a11y.spec.ts` runs axe-core (WCAG 2.1 A and AA rules) on every page of
-  a business in the dark and the light theme, on the setup invitation, every
+- `e2e/a11y-sections-en.spec.ts` and `e2e/a11y-sections-he.spec.ts`
+  (`e2e/support/axe.ts`) run axe-core (WCAG 2.1 A and AA rules) on every page
+  of a business in the dark and the light theme; `e2e/a11y.spec.ts` on the
+  setup invitation, every
   screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
 - Landmarks: one `<h1>` per page (the section's, inside a section frame),
