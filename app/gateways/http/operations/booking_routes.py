@@ -226,6 +226,9 @@ def build_booking_routes(
                 new_time=body.new_time,
                 language=parse_optional_text(language, LanguageTag, "language")
                 or business.default_language,
+                resource_id=body.new_resource_id,
+                expected_date=body.expected_date,
+                expected_time=body.expected_time,
             )
         )
 

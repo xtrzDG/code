@@ -1,8 +1,12 @@
-"""The operations router (bookings, leads, handoffs, dashboard, Google Calendar)."""
+"""
+The operations routers (bookings, leads, handoffs, dashboard, Google
+Calendar) and the bookings calendar.
+"""
 
 from fastapi import APIRouter
 
 from app.containers.app import AppContainer
+from app.gateways.http.booking_calendar_routes import build_booking_calendar_router
 from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.operations_routes import build_operations_router
 from app.gateways.http.user_authentication import CurrentUserDependency
@@ -48,5 +52,12 @@ def build_operations_routers(
             ),
             cabinet_base_url=app_container.config.app_settings().cabinet_base_url,
             idempotent=idempotency_of(operators, current_user),
-        )
+        ),
+        build_booking_calendar_router(
+            current_user=current_user,
+            authorize_business_access=(
+                operators.accounts.authorize_business_access_operator()
+            ),
+            booking_grid=operations.get_booking_grid_operator(),
+        ),
     ]

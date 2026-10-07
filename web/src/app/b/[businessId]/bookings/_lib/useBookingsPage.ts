@@ -7,6 +7,8 @@ import { queryKeys } from "@/api/queryKeys";
 import { useCursorPage } from "@/api/useCursorPage";
 import { useMutation } from "@/api/useMutation";
 import { useQuery } from "@/api/useQuery";
+import type { CalendarView } from "@/components/bookings/calendar/_lib/calendarTypes";
+import type { CalendarDraft } from "@/components/bookings/calendar/BookingCalendar";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { useToday } from "@/components/insights/useToday";
 import type { BookingPage, BookingView } from "@/components/insights/types";
@@ -16,12 +18,13 @@ import { COMPACT_SCREEN_QUERY, useMediaQuery, WIDE_SCREEN_QUERY } from "@/lib/us
 
 import { bookingApiQuery, bookingFiltersQuery, isRangeValid, rangeDates, type BookingFilters, type PhoneBookingsView } from "./bookingFilters";
 import { customerLanguage, nightsOf } from "./bookingList";
+import type { BookingFormValues } from "./manualBooking";
 import { replaceInLists, useBookingStatus } from "./useBookingStatus";
 import { useTodayBookings } from "./useTodayBookings";
 
 export type BookingDialog =
   | { kind: "none" }
-  | { kind: "create" }
+  | { kind: "create"; initial?: Partial<BookingFormValues> }
   | { kind: "details" | "edit" | "reschedule" | "cancel" | "noShow"; booking: BookingView }
   | { kind: "message"; title: string; text: string };
 
@@ -62,9 +65,12 @@ export function useBookingsPage(initialFilters: BookingFilters) {
           query: { ...bookingApiQuery(filters, range), limit: String(limit), cursor: cursor ?? undefined },
         },
       }),
-    { enabled: rangeValid && (isWide || filters.phoneView === "all") },
+    { enabled: rangeValid && filters.calendar === null && (isWide || filters.phoneView === "all") },
   );
-  const agenda = useTodayBookings({ enabled: isCompact && filters.phoneView === "today", includeTest: filters.includeTest });
+  const agenda = useTodayBookings({
+    enabled: isCompact && filters.calendar === null && filters.phoneView === "today",
+    includeTest: filters.includeTest,
+  });
   const resources = useQuery(queryKeys.resources.list(businessId), () =>
     api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: businessId } } }),
   );
@@ -93,7 +99,18 @@ export function useBookingsPage(initialFilters: BookingFilters) {
     setFiltersState(next);
     replaceUrlQuery(bookingFiltersQuery(next));
   };
-  const setPhoneView = (phoneView: PhoneBookingsView) => setFilters({ ...filters, phoneView });
+  const setPhoneView = (phoneView: PhoneBookingsView) => setFilters({ ...filters, phoneView, calendar: null });
+  /** Opens the calendar (a view, a date, test bookings or not); `view: null` goes back to the list. */
+  const showCalendar = (change: { view?: CalendarView | null; anchor?: string; includeTest?: boolean }) =>
+    setFilters({
+      ...filters,
+      calendar: change.view === undefined ? filters.calendar : change.view,
+      date: change.anchor ?? filters.date,
+      includeTest: change.includeTest ?? filters.includeTest,
+    });
+  /** A new booking started on the calendar: its date, time and place filled in. */
+  const createAt = (draft: CalendarDraft) =>
+    setDialog({ kind: "create", initial: { date: draft.date, time: draft.time ?? "", resourceId: draft.resourceId } });
 
   const replaceBooking = (updated: BookingView) => replaceInLists(businessId, updated);
 
@@ -128,6 +145,8 @@ export function useBookingsPage(initialFilters: BookingFilters) {
     filters,
     setFilters,
     setPhoneView,
+    showCalendar,
+    createAt,
     range,
     rangeValid,
     today,

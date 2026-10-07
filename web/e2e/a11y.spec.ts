@@ -171,6 +171,7 @@ test.describe("on a phone", () => {
       for (const path of [
         "bookings",
         "bookings?view=all",
+        "bookings?view=week",
         "assistant/knowledge",
         "assistant/channels",
       ]) {

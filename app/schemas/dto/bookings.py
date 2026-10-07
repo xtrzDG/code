@@ -165,7 +165,10 @@ class RescheduleBookingCommand(ImmutableDTO):
     the same sandbox mode: owner tests never touch real bookings and real
     customers never touch test bookings. `is_sandbox` None (cabinet) does
     not filter. `expected_starts_at` (a guest's manage link) moves the
-    booking only while it still starts then (checked under the lock).
+    booking only while it still starts then (checked under the lock), as
+    do `expected_date` and `expected_time`, the local start the cabinet
+    showed. `resource_id` (the calendar's drag) moves it to that place
+    only, instead of its own place first and then another free one.
     """
 
     business_id: BusinessId
@@ -178,6 +181,9 @@ class RescheduleBookingCommand(ImmutableDTO):
     language: LanguageTag
     is_sandbox: IsSandboxConversation | None = None
     expected_starts_at: BookingStartsAtUnixSeconds | None = None
+    resource_id: ResourceId | None = None
+    expected_date: LocalDate | None = None
+    expected_time: LocalTimeOfDay | None = None
 
 
 class CancelBookingCommand(ImmutableDTO):

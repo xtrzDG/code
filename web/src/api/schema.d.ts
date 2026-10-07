@@ -1422,6 +1422,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/bookings/grid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Booking Grid
+         * @description The calendar from the local `date` for `days` days (1 to 31, one by
+         *     default) in the business time zone: every place with its opening
+         *     ranges and load per day (unit-minutes for time slots, rooms for
+         *     nights) and the bookings that overlap the window, cancelled ones
+         *     left out. `include_bookings=false` returns the load alone (the
+         *     week's heatmap, not audited); with the bookings the call is
+         *     audited as a view of customers' data.
+         */
+        get: operations["operations_get_booking_grid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/bookings/{booking_id}": {
         parameters: {
             query?: never;
@@ -6401,6 +6427,94 @@ export interface components {
             value_minor?: number | null;
         };
         /**
+         * BookingGrid
+         * @description The calendar window `date_from`..`date_to` (inclusive local dates) in
+         *     the business time zone. `is_truncated`: the window holds more bookings
+         *     than one calendar reads, so the counts and the bookings are incomplete.
+         */
+        BookingGrid: {
+            /** Bookings */
+            bookings?: components["schemas"]["BookingView"][];
+            /** Date From */
+            date_from: string;
+            /** Date To */
+            date_to: string;
+            /** Days */
+            days?: components["schemas"]["BookingGridDay"][];
+            /**
+             * Is Truncated
+             * @default false
+             */
+            is_truncated: boolean;
+            /** Places */
+            places?: components["schemas"]["BookingGridPlace"][];
+            /** Timezone */
+            timezone: string;
+        };
+        /**
+         * BookingGridDay
+         * @description A local day: the business's own opening ranges and every place on it.
+         */
+        BookingGridDay: {
+            /** Business Ranges */
+            business_ranges?: components["schemas"]["GridOpenRange"][];
+            /** Date */
+            date: string;
+            /** Places */
+            places?: components["schemas"]["BookingGridPlaceDay"][];
+        };
+        /**
+         * BookingGridPlace
+         * @description A place of the calendar (a column of the day, a row of the week and of
+         *     the nights): how it is booked and how many it holds. An inactive place
+         *     shows only while it still has bookings in the window.
+         */
+        BookingGridPlace: {
+            booking_unit: components["schemas"]["BookingUnit"];
+            /** Capacity */
+            capacity: number;
+            /** Id */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            kind: components["schemas"]["ResourceKind"];
+            /** Name */
+            name: string;
+            /** Serves Item Ids */
+            serves_item_ids?: string[];
+            /** Slot Minutes */
+            slot_minutes?: number | null;
+            /** Unit Count */
+            unit_count: number;
+        };
+        /**
+         * BookingGridPlaceDay
+         * @description One place on one day. A place booked by time slots has its opening
+         *     ranges and its load in unit-minutes (`open_unit_minutes` it could
+         *     fill, `booked_unit_minutes` its bookings fill within its hours); a
+         *     place booked by the night has rooms (`open_units` for sale that
+         *     night, `booked_units` taken). `booking_count` counts the bookings on
+         *     the day (the stays over the night).
+         */
+        BookingGridPlaceDay: {
+            /** Booked Unit Minutes */
+            booked_unit_minutes?: number | null;
+            /** Booked Units */
+            booked_units?: number | null;
+            /** Booking Count */
+            booking_count: number;
+            /** Is Open */
+            is_open: boolean;
+            /** Open Ranges */
+            open_ranges?: components["schemas"]["GridOpenRange"][];
+            /** Open Unit Minutes */
+            open_unit_minutes?: number | null;
+            /** Open Units */
+            open_units?: number | null;
+            /** Resource Id */
+            resource_id: string;
+        };
+        /**
          * BookingHit
          * @description A booking of a customer the search found (or named by its id).
          */
@@ -10126,6 +10240,16 @@ export interface components {
             /** Is Connected */
             is_connected: boolean;
             status?: components["schemas"]["BusySourceStatusView"] | null;
+        };
+        /**
+         * GridOpenRange
+         * @description An opening range within one local day (minutes from its midnight).
+         */
+        GridOpenRange: {
+            /** Closes At */
+            closes_at: number;
+            /** Opens At */
+            opens_at: number;
         };
         /**
          * GrowthView
@@ -26391,6 +26515,98 @@ export interface operations {
             };
         };
     };
+    operations_get_booking_grid: {
+        parameters: {
+            query: {
+                date: string;
+                days?: string | null;
+                include_sandbox?: string | null;
+                include_bookings?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingGrid"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     operations_patch_booking: {
         parameters: {
             query?: never;
@@ -26600,8 +26816,14 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Expected Date */
+                    expected_date?: string | null;
+                    /** Expected Time */
+                    expected_time?: string | null;
                     /** New Date */
                     new_date: string;
+                    /** New Resource Id */
+                    new_resource_id?: string | null;
                     /** New Time */
                     new_time?: string | null;
                 };

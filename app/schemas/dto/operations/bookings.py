@@ -119,10 +119,20 @@ class ManualBookingCommand(ImmutableDTO):
 
 
 class RescheduleBookingRequest(ImmutableDTO):
-    """Body of a cabinet reschedule: new local date and (for slots) time."""
+    """
+    Body of a cabinet reschedule: new local date and (for slots) time.
+    `new_resource_id` (a booking dragged on the calendar) moves it to that
+    place only; without it the booked place comes first, then another
+    free one. `expected_date` and `expected_time`, the local start the
+    cabinet showed, refuse the move (409 `booking_changed`) when someone
+    moved the booking since.
+    """
 
     new_date: LocalDate
     new_time: LocalTimeOfDay | None = None
+    new_resource_id: ResourceId | None = None
+    expected_date: LocalDate | None = None
+    expected_time: LocalTimeOfDay | None = None
 
 
 class UpdateBookingRequest(ImmutableDTO):

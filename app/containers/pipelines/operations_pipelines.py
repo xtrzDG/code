@@ -22,6 +22,9 @@ class OperationsPipelinesContainer(containers.DeclarativeContainer):
     list_bookings_pipeline = orchestrator_pipeline(
         operations_orchestrators.list_bookings_orchestrator
     )
+    get_booking_grid_pipeline = orchestrator_pipeline(
+        operations_orchestrators.get_booking_grid_orchestrator
+    )
     create_manual_booking_pipeline = orchestrator_pipeline(
         operations_orchestrators.create_manual_booking_orchestrator
     )

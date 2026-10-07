@@ -97,6 +97,11 @@ export const queryKeys = {
         filters.includeTest,
       ] as const,
     availability: (businessId: Id, request: string) => ["bookings", businessId, "availability", request] as const,
+    /** Bookings → Day, Week, Nights: every window of the calendar (moves update them in place). */
+    grids: (businessId: Id) => ["bookings", businessId, "grid"] as const,
+    /** One window: `days` local days from `from`, with the bookings or only the load (the week's heatmap). */
+    grid: (businessId: Id, window: { from: string; days: number; includeTest: boolean; withBookings: boolean }) =>
+      ["bookings", businessId, "grid", window.from, window.days, window.includeTest, window.withBookings] as const,
     /** Bookings → Waitlist: every filter's entries (live events: `waitlist.changed`). */
     waitlistAll: (businessId: Id) => ["bookings", businessId, "waitlist"] as const,
     waitlist: (businessId: Id, filter: string) => ["bookings", businessId, "waitlist", filter] as const,

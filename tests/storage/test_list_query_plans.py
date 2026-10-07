@@ -30,6 +30,7 @@ from app.schemas.typings.platform.constrained_integers import KeysetReadLimit
 from app.schemas.typings.platform.strings import DatabaseUrl
 from app.utilities.paging.keyset_paging import single_value_position
 from app.utilities.storage.storage_scope_context import StorageScopeContext
+from tests.storage.calendar_window_query_plans import CALENDAR_WINDOW_QUERIES
 from tests.storage.conftest import CollectionFactory
 from tests.storage.hot_path_queries import INDEX_NODE_TYPES
 from tests.storage.hot_path_seeding import (
@@ -72,7 +73,9 @@ def list_database_url(
 
 
 @pytest.mark.parametrize(
-    "query", LIST_QUERIES + LOOKUP_LIST_QUERIES, ids=lambda query: query.name
+    "query",
+    LIST_QUERIES + LOOKUP_LIST_QUERIES + CALENDAR_WINDOW_QUERIES,
+    ids=lambda query: query.name,
 )
 def test_list_query_uses_its_index(
     list_database_url: DatabaseUrl, query: ListQuery

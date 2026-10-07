@@ -2,9 +2,12 @@
  * Filters of the bookings page: date ranges in the business time zone, the
  * filters kept in the URL and the list query sent to the API. On phones the
  * page opens on today's agenda unless the address asks for the list (a
- * filter, or `view=all`); `view` only matters there.
+ * filter, or `view=all`); `view` only matters there. `view=day|week|nights`
+ * (with `date=`, the day shown or within the week) opens the calendar on
+ * any screen instead of the list.
  */
 
+import { isCalendarView, type CalendarView } from "@/components/bookings/calendar/_lib/calendarTypes";
 import { addDays, isLocalDate, type LocalDateText } from "@/components/insights/dates";
 import { BOOKING_STATUSES } from "@/components/insights/labels";
 import type { BookingStatus } from "@/components/insights/types";
@@ -24,9 +27,15 @@ export interface BookingFilters {
   status: BookingStatus | null;
   resourceId: string | null;
   includeTest: boolean;
+  /** The calendar instead of the list (null: the list, or a phone's agenda). */
+  calendar: CalendarView | null;
+  /** The calendar's date (null: today). */
+  date: LocalDateText | null;
 }
 
 export const DEFAULT_BOOKING_FILTERS: BookingFilters = {
+  calendar: null,
+  date: null,
   phoneView: "today",
   range: "upcoming",
   from: null,
@@ -49,7 +58,7 @@ export function parseBookingFilters(params: SearchParams): BookingFilters {
   const status = single(params, "status");
   const from = single(params, "from");
   const to = single(params, "to");
-  const filters: Omit<BookingFilters, "phoneView"> = {
+  const filters: Omit<BookingFilters, "phoneView" | "calendar" | "date"> = {
     range: (BOOKING_RANGES as readonly string[]).includes(range ?? "") ? (range as BookingRange) : "upcoming",
     from: from && isLocalDate(from) ? from : null,
     to: to && isLocalDate(to) ? to : null,
@@ -60,11 +69,17 @@ export function parseBookingFilters(params: SearchParams): BookingFilters {
   const view = single(params, "view");
   const phoneView: PhoneBookingsView =
     view === "today" || view === "all" ? view : hasListFilters(filters) ? "all" : "today";
-  return { phoneView, ...filters };
+  const date = single(params, "date");
+  return {
+    phoneView,
+    ...filters,
+    calendar: isCalendarView(view) ? view : null,
+    date: date && isLocalDate(date) ? date : null,
+  };
 }
 
 /** Whether anything but the defaults is chosen for the list (a phone then opens on it). */
-function hasListFilters(filters: Omit<BookingFilters, "phoneView">): boolean {
+function hasListFilters(filters: Omit<BookingFilters, "phoneView" | "calendar" | "date">): boolean {
   return (
     filters.range !== "upcoming" ||
     filters.status !== null ||
@@ -92,7 +107,12 @@ export function bookingFiltersQuery(filters: BookingFilters): string {
   if (filters.resourceId) params.set("resource", filters.resourceId);
   if (filters.includeTest) params.set("test", "1");
   const impliedView: PhoneBookingsView = hasListFilters(filters) ? "all" : "today";
-  if (filters.phoneView !== impliedView) params.set("view", filters.phoneView);
+  if (filters.calendar) {
+    params.set("view", filters.calendar);
+    if (filters.date) params.set("date", filters.date);
+  } else if (filters.phoneView !== impliedView) {
+    params.set("view", filters.phoneView);
+  }
   return params.toString();
 }
 

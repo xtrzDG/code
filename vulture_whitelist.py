@@ -656,3 +656,11 @@ _.max_keys  # app/schemas/dto/integrations/api_key_views.py
 _.max_endpoints  # app/schemas/dto/integrations/webhook_views.py
 _.signing_secret  # app/schemas/dto/integrations/webhook_views.py
 _.revoked_by  # app/schemas/domain/api_keys.py
+
+# The bookings calendar (R12-BOOKINGS-CALENDAR): response fields the day,
+# week and nights grids of the cabinet read (GET …/bookings/grid).
+_.open_ranges  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.booked_unit_minutes  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.open_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.booked_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.business_ranges  # app/schemas/dto/booking_grid.py (BookingGridDay)
