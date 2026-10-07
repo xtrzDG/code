@@ -189,7 +189,8 @@ npm run e2e:durations             # measure every spec again (e2e/durations.json
   its badge, the tab title count and a toast elsewhere (`e2e/live.spec.ts`:
   the demo restaurant's real widget API and event stream), every page in
   the pseudo-locale at 1440 and 390 px without sideways scrolling or a cut
-  control (`e2e/pseudo-locale.spec.ts`; the suite starts the cabinet with
+  control (`e2e/pseudo-locale-ltr.spec.ts` and `-rtl.spec.ts`, both from
+  `e2e/support/long-texts.ts`; the suite starts the cabinet with
   `PSEUDO_LOCALE=true`), a 45-minute service performed by one master added
   in the knowledge base, booked by hand and listed with its value, and the
   demo salon counting clients, not guests (`e2e/services.spec.ts`), a
@@ -1324,11 +1325,12 @@ the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser
 (`document.cookie = "aw_locale=en-XA; path=/"`): every text becomes
 `[Šáṽé ẋẋ]`, accented, 40 % longer and in brackets, so a cut text (no closing
 bracket), a hard-coded string (no accents) and an overflowing layout stand
-out. `e2e/pseudo-locale.spec.ts` opens every page this way at 1440 and 390 px
+out. `e2e/pseudo-locale-ltr.spec.ts` opens every page this way at 1440 and 390 px
 and fails on a page that scrolls sideways or a button, tab or link whose
 text does not fit. Dates and numbers stay English. Its right-to-left twin
 `ar-XB` (the usual tag of the bidi pseudo-locale) has the same texts on pages
-laid out right to left, as for Hebrew; the spec runs every page in both.
+laid out right to left, as for Hebrew; `e2e/pseudo-locale-rtl.spec.ts` runs
+every page in it (both from `e2e/support/long-texts.ts`).
 
 The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from

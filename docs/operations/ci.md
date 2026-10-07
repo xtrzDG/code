@@ -82,12 +82,15 @@ would depend on its neighbours.
 
 `web/e2e/support/shards.test.ts` (part of `npm test`) fails while a spec
 has no duration, an entry names a spec that is gone, or a shard of the plan
-for the matrix in `ci.yml` holds more than its budget (190 measured
-seconds, about four minutes on CI). A spec file that alone exceeds it is
-split: the route tour runs as `tour-routes*.spec.ts` (all in the Tbilisi
-project, `e2e/support/tour.ts`), the audit of every section as
-`a11y-sections-en.spec.ts` and `a11y-sections-he.spec.ts`
-(`e2e/support/axe.ts`).
+for the matrix in `ci.yml` holds more than its budget: 225 seconds of specs,
+which with the 15 seconds that start the API and the cabinet keep a
+shard's test step within four minutes. A long spec file is split so that
+no file holds more than about half a shard: the route tour runs as
+`tour-routes*.spec.ts` (all in the Tbilisi project, `e2e/support/tour.ts`),
+the audit of every section as `a11y-sections-en.spec.ts` and
+`a11y-sections-he.spec.ts` (`e2e/support/axe.ts`), the long texts as
+`pseudo-locale-ltr.spec.ts` and `pseudo-locale-rtl.spec.ts`
+(`e2e/support/long-texts.ts`).
 
 ## Refreshing the durations files
 

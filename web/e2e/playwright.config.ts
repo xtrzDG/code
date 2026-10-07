@@ -218,7 +218,7 @@ export default defineConfig({
         BACKEND_URL: API_URL,
         COOKIE_SECURE: "false",
         NEXT_TELEMETRY_DISABLED: "1",
-        // The aw_locale cookie en-XA turns the texts long and accented (pseudo-locale.spec.ts).
+        // The aw_locale cookie en-XA turns the texts long and accented (pseudo-locale-*.spec.ts).
         PSEUDO_LOCALE: "true",
       },
       stdout: isCI ? "pipe" : "ignore",

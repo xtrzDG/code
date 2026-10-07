@@ -19,12 +19,12 @@ const E2E_DIRECTORY = path.resolve(__dirname, "..");
 const DURATIONS_PATH = path.join(E2E_DIRECTORY, "durations.json");
 const CI_WORKFLOW = path.resolve(E2E_DIRECTORY, "..", "..", ".github", "workflows", "ci.yml");
 /**
- * The most measured seconds of specs one CI shard may run. CI's machines
- * ran this suite about 1.1 times slower than a developer's (run 37537772194
- * against a local run of the same commit), and every shard also starts the
- * API and the cabinet: 190 local seconds come to about four minutes there.
+ * The most seconds of specs one CI shard may run. e2e/durations.json holds
+ * seconds on CI's runners (their own reports, or a local run scaled to them:
+ * docs/operations/ci.md); a shard's test step also starts the API and the
+ * cabinet, about 15 seconds, and should stay within four minutes.
  */
-const SHARD_BUDGET_SECONDS = 190;
+const SHARD_BUDGET_SECONDS = 225;
 
 function spec(name: string, seconds: number, measured = true): WeighedSpec {
   return { name, seconds, measured };
@@ -138,7 +138,7 @@ describe("the suite's own specs", () => {
     expect(shards.every((shard) => shard.length > 0)).toBe(true);
   });
 
-  it(`keep every CI shard within ${SHARD_BUDGET_SECONDS} measured seconds (split a long spec or add a shard)`, () => {
+  it(`keep every CI shard within ${SHARD_BUDGET_SECONDS} seconds (split a long spec or add a shard)`, () => {
     const overBudget = planShards(suite, shardTotal)
       .map((shard, index) => ({ shard: index + 1, seconds: Math.round(shard.seconds), specs: shard.names }))
       .filter((shard) => shard.seconds > SHARD_BUDGET_SECONDS);
