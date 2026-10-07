@@ -1,7 +1,8 @@
-import { ButtonLink } from "@/components/ui";
 import { TopBar } from "@/components/shell/TopBar";
 import type { Translator } from "@/i18n/translate";
 import { LOGIN_PATH } from "@/lib/navigation";
+
+import { CabinetButtonLink } from "./CabinetLink";
 
 /**
  * The shared top bar with anchors to the landing page's sections (wide
@@ -25,9 +26,9 @@ export function LandingHeader({ t, home = "" }: { t: Translator["t"]; home?: str
               {t("landing.nav.faq")}
             </a>
           </nav>
-          <ButtonLink href={LOGIN_PATH} size="sm" variant="secondary" className="max-[359px]:hidden">
+          <CabinetButtonLink href={LOGIN_PATH} size="sm" variant="secondary" className="max-[359px]:hidden">
             {t("landing.nav.signIn")}
-          </ButtonLink>
+          </CabinetButtonLink>
         </>
       }
     />

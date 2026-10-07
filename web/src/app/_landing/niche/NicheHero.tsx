@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
 import { CREATE_PATH } from "@/lib/navigation";
 
+import { CabinetButtonLink } from "../CabinetLink";
 import { HeroBackdrop } from "../HeroBackdrop";
 
 /**
@@ -58,9 +59,9 @@ export function NicheHero({
             <p className="text-base">{t("nichePage.lead")}</p>
           </div>
           <div className="flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row">
-            <ButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
+            <CabinetButtonLink href={CREATE_PATH} size="lg" trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
               {t("nichePage.primary")}
-            </ButtonLink>
+            </CabinetButtonLink>
             {demo ? (
               <ButtonLink href="#demo" size="lg" variant="secondary">
                 {t("nichePage.secondary")}

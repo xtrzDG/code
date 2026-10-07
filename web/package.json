@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "sideEffects": [
-    "*.css"
+    "*.css",
+    "./src/lib/zod.ts"
   ],
   "engines": {
     "node": ">=22.12.0"

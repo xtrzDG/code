@@ -4,12 +4,13 @@ import { useState } from "react";
 
 import type { Schema } from "@/api/types";
 import { IconArrowRight, IconRefresh, IconSend, IconSparkles } from "@/components/icons";
-import { Button, ButtonLink, UserSentence } from "@/components/ui";
+import { Button, UserSentence } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { DEMO_MESSAGE_MAX_LENGTH, messagesLeftNotice, startersFor } from "@/lib/publicSite/demoChat";
 import { CREATE_PATH } from "@/lib/navigation";
 
+import { CabinetButtonLink } from "./CabinetLink";
 import { DemoTranscript } from "./DemoTranscript";
 import { useDemoChat } from "./useDemoChat";
 
@@ -118,9 +119,9 @@ function DemoConversation({ demo, messagesPerHour }: { demo: DemoCard; messagesP
       ) : null}
       {isOut ? (
         <div className="border-t border-line px-4 py-3">
-          <ButtonLink href={CREATE_PATH} size="sm" fullWidth trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
+          <CabinetButtonLink href={CREATE_PATH} size="sm" fullWidth trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}>
             {t("publicDemo.cta")}
-          </ButtonLink>
+          </CabinetButtonLink>
         </div>
       ) : (
         <form

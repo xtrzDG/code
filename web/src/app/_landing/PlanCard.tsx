@@ -1,11 +1,12 @@
 import { IconCheck } from "@/components/icons";
 import { StaggerItem, TiltCard } from "@/components/siteMotion";
-import { ButtonLink } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import type { Translator } from "@/i18n/translate";
 import { listFormat, numberFormat } from "@/lib/intl/formatters";
 import { CREATE_PATH } from "@/lib/navigation";
 import { planPriceLines, type PlanQuote } from "@/lib/publicSite/prices";
+
+import { CabinetButtonLink } from "./CabinetLink";
 
 /**
  * One plan: the monthly price it is billed at first (the price book's lari
@@ -66,9 +67,9 @@ export function PlanCard({ quote, translator }: { quote: PlanQuote; translator: 
         </ul>
         <p className="mt-4 text-xs text-ink-subtle">{t("landing.pricing.channels", { list: channels })}</p>
         <div className="mt-auto pt-6">
-          <ButtonLink href={CREATE_PATH} variant="secondary" fullWidth>
+          <CabinetButtonLink href={CREATE_PATH} variant="secondary" fullWidth>
             {t("landing.pricing.choose", { plan: quote.name })}
-          </ButtonLink>
+          </CabinetButtonLink>
         </div>
       </TiltCard>
     </StaggerItem>

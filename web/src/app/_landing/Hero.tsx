@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
 import { CREATE_PATH } from "@/lib/navigation";
 
+import { CabinetButtonLink } from "./CabinetLink";
 import { DemoChat } from "./DemoChat";
 import { DemoSample } from "./DemoSample";
 import { HeroBackdrop } from "./HeroBackdrop";
@@ -55,14 +56,14 @@ export function Hero({
           </p>
           <div className="flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row">
             <MagneticButton className="sm:w-auto">
-              <ButtonLink
+              <CabinetButtonLink
                 href={CREATE_PATH}
                 size="lg"
                 fullWidth
                 trailingIcon={<IconArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />}
               >
                 {t("landing.hero.primary")}
-              </ButtonLink>
+              </CabinetButtonLink>
             </MagneticButton>
             <ButtonLink href="#pricing" size="lg" variant="secondary">
               {t("landing.hero.secondary")}

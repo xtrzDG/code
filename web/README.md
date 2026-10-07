@@ -1260,8 +1260,10 @@ as `reasonMessages` to `useMutation`); never match the English message.
   dictionary (`PUBLIC_CLIENT_TEXTS`, `src/i18n/publicScope.ts`), not the
   cabinet's 280 KB. `publicScope.test.ts` walks the imports of the public
   pages' client modules and fails when the list misses a key they name or
-  keeps one nobody reads; a link from the public site to a cabinet page
-  loads that page in full, with its whole dictionary (`I18nProvider`).
+  keeps one nobody reads. A link from the public site to a cabinet page is
+  a plain anchor (`CabinetButtonLink` in `src/app/_landing/CabinetLink.tsx`,
+  or `<a>`), so the browser loads that page in full, with its whole
+  dictionary and the motion library.
 - Keys are checked by TypeScript (`MessageKey`); for keys built at runtime
   keep a `Record<EnumValue, MessageKey>` map (see `BusinessStatusBadge.tsx`).
 - Add a section's texts under its own namespace (`bookings.*`, `leads.*`) in
@@ -1487,14 +1489,23 @@ motion.
   switch back when reduced motion is turned on, the reveals, and that
   three.js is never downloaded there nor on a niche page, a legal page or
   `/login`.
-Budgets, measured with `npm run build && npm run measure:first-load`
-(gzipped JavaScript a first visit downloads; the 3D chunk excluded):
+First load, measured with `npm run build && npm run measure:first-load`
+(gzipped JavaScript a first visit downloads, with the API running for the
+niche pages):
 
-| Page | Before | Now | Budget |
-| --- | --- | --- | --- |
-| `/` (landing) | 168.7 KB | 204.9 KB (+36.2) | +40 KB |
-| `/login` (any cabinet page carries the same motion code) | 272.5 KB | 293.0 KB (+20.5) | — |
-| 3D chunk (three.js 0.182 + react-three-fiber + the scene), loaded later on capable devices only | — | 235.6 KB | — |
+| Page | First load |
+| --- | --- |
+| `/en` (landing) | 189.0 KB |
+| `/ru/for/restaurant`, `/ka/for/hotel` (niche pages) | 186.6 KB |
+| `/ka/terms` (legal pages) | 177.3 KB |
+| `/login` (the cabinet: its pages carry the motion library) | 312.8 KB |
+| 3D chunk (three.js 0.182 + react-three-fiber + the scene), fetched later on capable wide screens only | 241.1 KB |
+
+Lighthouse on `/en` (phone profile, three runs; `lighthouserc.json`):
+performance 0.96–0.99, LCP 2.1–2.7 s, blocking time 84–115 ms, CLS 0,
+196 KB of script and 285 KB in all; before the poster, the CSS motion and
+the slimmer public bundle it was 0.49–0.67, LCP 5.8 s, 414–454 ms, CLS 0.36,
+527 KB and 705 KB.
 
 No layout shift (the e2e test asserts CLS = 0 with the scene). The scene is
 one draw call per object (orb, shell, halo, six bubbles, six message
@@ -1550,11 +1561,13 @@ National Bank of Georgia, the ECB, or the platform's planning rate).
   `src/content/testimonials.ts` (only real ones, with consent; the section is
   hidden while a language has none).
 - **Lighthouse**: `.github/workflows/lighthouse.yml` runs Lighthouse CI
-  (`lighthouserc.json`) on `/en` and two niche pages of a production build:
-  SEO and accessibility (≥ 0.95), layout shift (≤ 0.1), hreflang, canonical,
-  title and description fail the job everywhere; performance ≥ 0.7 with
-  ≤ 350 KB of JavaScript on niche pages, ≥ 0.6 with ≤ 600 KB on the landing
-  page (its 3D hero scene loads once the page is idle, about 240 KB).
+  (`lighthouserc.json`) on `/en` and two niche pages of a production build,
+  three runs each on a phone profile: SEO and accessibility (≥ 0.95), layout
+  shift (≤ 0.1), hreflang, canonical, title and description fail the job
+  everywhere; so do performance below 0.85 and more than 350 KB of
+  JavaScript or 600 KB in all, and on the landing page an LCP over 2.5 s or
+  a blocking time over 300 ms (elsewhere those two warn). The phone profile
+  gets the hero's poster, so the 3D scene never counts.
 
 Its motion and 3D hero: see [Motion](#motion).
 

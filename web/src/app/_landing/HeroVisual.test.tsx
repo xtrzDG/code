@@ -139,10 +139,14 @@ describe("the hero's picture", () => {
     await screen.findByTestId("scene");
     act(() => control.scene?.onReady());
 
+    const leaving = control.scene;
     flipMedia("(prefers-reduced-motion: reduce)", true);
     expect(hero.getAttribute("data-scene")).toBe("static");
     expect(hero.getAttribute("data-scene-reason")).toBe("reduced-motion");
     expect(screen.queryByTestId("scene")).toBeNull();
+    // The scene loses its WebGL context as it goes: that is no reason of its own.
+    act(() => leaving?.onFallback());
+    expect(hero.getAttribute("data-scene-reason")).toBe("reduced-motion");
   });
 
   it("stops waiting when the window narrows to the phone layout", () => {

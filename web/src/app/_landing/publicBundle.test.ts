@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -76,5 +76,17 @@ describe("the 3D engine", () => {
       .filter((file) => importsOf(file).static.some((specifier) => /(^|\/)scene\//.test(specifier)))
       .map(fromSrc);
     expect(staticSceneImporters).toEqual([]);
+  });
+});
+
+describe("a link from the public site into the cabinet", () => {
+  it("is a plain anchor, so the cabinet page loads whole and not inside the public site's layout", () => {
+    // next/link (Link, ButtonLink) would navigate on the client, keeping the
+    // public page's slim dictionary and leaving out the motion library.
+    const clientLink = /<(Link|ButtonLink)\b[^>]*\bhref=\{(LOGIN_PATH|CREATE_PATH)\b/;
+    const offenders = sourceFiles(path.join(SRC, "app", "_landing"))
+      .filter((file) => clientLink.test(readFileSync(file, "utf8")))
+      .map(fromSrc);
+    expect(offenders).toEqual([]);
   });
 });

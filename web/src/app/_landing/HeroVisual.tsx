@@ -88,7 +88,12 @@ function useSceneStage(box: RefObject<HTMLDivElement | null>) {
   return {
     stage,
     onReady: () => setStage((current) => (current.kind === "loading" ? { kind: "live" } : current)),
-    onFallback: () => setStage({ kind: "poster", reason: "gave-up" }),
+    // Only a scene that is on its way or showing gives up: one that was sent
+    // away (reduced motion, narrow window) loses its WebGL context as it goes.
+    onFallback: () =>
+      setStage((current) =>
+        current.kind === "loading" || current.kind === "live" ? { kind: "poster", reason: "gave-up" } : current,
+      ),
   };
 }
 
