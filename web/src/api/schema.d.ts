@@ -10199,6 +10199,10 @@ export interface components {
          *     (optional). The queue runs a job in one place at a time, so a later
          *     attempt of that same job (its worker died) takes the event over at
          *     once instead of waiting out the processing lease.
+         *
+         *     Version 7: `queue_to_claim_ms`, how long the message waited from being
+         *     queued to a worker taking it to answer (optional, kept from the first
+         *     take).
          */
         InboundEventDocument: {
             /**
@@ -10242,11 +10246,13 @@ export interface components {
             processed_at?: number | null;
             /** Provider Message Id */
             provider_message_id: string;
+            /** Queue To Claim Ms */
+            queue_to_claim_ms?: number | null;
             /** Reply Message Id */
             reply_message_id?: string;
             /**
              * Schema Version
-             * @default 6
+             * @default 7
              */
             schema_version: string;
             /** @default received */

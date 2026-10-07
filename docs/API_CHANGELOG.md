@@ -11,6 +11,17 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-07 — inbox messages record how long they waited for a worker
+
+Spec: `227b9d723be5ebb8`
+
+- **Changed** (additive) `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`:
+  each inbox event of the customer's data export (`InboundEventDocument`,
+  schema version 7) may carry `queue_to_claim_ms`, the milliseconds from
+  the message being stored and queued to a worker taking it to answer
+  (the pickup, and the wait for the rest of a burst of quick messages).
+  Older events have none.
+
 ## 2026-10-06 — wave 17 together: operation names, idempotency keys, ETags, the pipeline watchdog
 
 Spec: `a7fd87bc6c9d6bb9`
