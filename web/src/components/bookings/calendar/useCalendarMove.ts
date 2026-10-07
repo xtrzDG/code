@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import type { ReasonMessages } from "@/api/errors";
 import { api } from "@/api/client";
 import { queryKeys } from "@/api/queryKeys";
@@ -22,18 +24,28 @@ const MOVE_REFUSAL_MESSAGES: ReasonMessages = {
   booking_changed: () => ({ key: "bookingCalendar.move.changed" }),
 };
 
+/** A move the customer has not been told about: the text the API wrote for them, in their language. */
+export interface MoveMessage {
+  booking: BookingView;
+  text: string;
+}
+
 /**
  * Moving a booking on the calendar (POST …/reschedule with the place it was
  * dropped on and the start the calendar showed): it shows at its new place
  * at once, everywhere it is listed, and goes back if the API refuses (then
  * the windows on screen load again, as someone else changed it). A toast
  * says where it went, with Undo: the same move back, from where it is now.
+ * As the list's reschedule form does, the calendar then offers the message
+ * about the new time for the customer (`message`) until it is dismissed,
+ * another booking moves or the move is undone.
  */
 export function useCalendarMove() {
   const { t, locale } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
   const businessId = business.id;
+  const [message, setMessage] = useState<MoveMessage | null>(null);
 
   const reschedule = useMutation(
     (booking: BookingView, target: MoveTarget) =>
@@ -66,6 +78,8 @@ export function useCalendarMove() {
     const result = await reschedule.run(moved, placeOf(original, asStay));
     if (result.ok) {
       replaceInLists(businessId, result.data.booking);
+      // Back where the customer knows it: nothing to tell them.
+      setMessage((current) => (current?.booking.id === moved.id ? null : current));
       toast.success(t("bookingCalendar.move.undone"));
     }
   };
@@ -81,9 +95,10 @@ export function useCalendarMove() {
     }
     const moved = result.data.booking;
     replaceInLists(businessId, moved);
+    setMessage({ booking: moved, text: result.data.confirmation_text });
     toast.undoable(movedTitle(moved, target.time === null), () => void moveBack(moved, booking, target.time === null));
     return true;
   };
 
-  return { move, isMoving: reschedule.isPending };
+  return { move, isMoving: reschedule.isPending, message, dismissMessage: () => setMessage(null) };
 }

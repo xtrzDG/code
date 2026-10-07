@@ -46,6 +46,12 @@ export const bookingCalendarEn = {
     undone: "The booking is back where it was",
     changed: "Someone changed this booking a moment ago: the calendar now shows it as it is.",
     cancelled: "Move cancelled",
+    tell: {
+      title: "Let {name} know the new time",
+      titleAnonymous: "Let the customer know the new time",
+      hint: "The assistant does not message customers about moves made in the calendar. Copy the text and send it in the channel you talk in.",
+      show: "Show the message",
+    },
   },
   week: {
     label: "How full each place is, {range}",

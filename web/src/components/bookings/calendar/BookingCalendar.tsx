@@ -16,6 +16,7 @@ import { filledGrid, type CalendarView } from "./_lib/calendarTypes";
 import { minuteOfTime } from "./_lib/dayLayout";
 import { CalendarToolbar } from "./CalendarToolbar";
 import { DayView } from "./day/DayView";
+import { MoveMessageOffer } from "./MoveMessageOffer";
 import { NightsView } from "./nights/NightsView";
 import { useBookingGrid } from "./useBookingGrid";
 import { useCalendarMove } from "./useCalendarMove";
@@ -33,7 +34,8 @@ export interface CalendarDraft {
  * time zone: the toolbar's dates, then one day by place, the week's
  * heatmap or the rooms by night, loaded in one call per window
  * (GET …/bookings/grid; the week reads the load alone). The previous
- * window stays, dimmed, while the next one loads.
+ * window stays, dimmed, while the next one loads. After a move, the
+ * message about the new time for the customer is offered above the grid.
  */
 export function BookingCalendar({
   view,
@@ -56,7 +58,7 @@ export function BookingCalendar({
   const today = now.slice(0, 10);
   const window = calendarWindow(view, anchor, firstDayOfWeek(locale));
   const grid = useBookingGrid(window, { includeTest, withBookings: view !== "week" });
-  const { move } = useCalendarMove();
+  const { move, message, dismissMessage } = useCalendarMove();
   const headingId = useId();
   const data = grid.data ? filledGrid(grid.data) : undefined;
 
@@ -74,6 +76,7 @@ export function BookingCalendar({
       />
       {grid.error && data ? <RefreshFailed error={grid.error} onRetry={grid.reload} /> : null}
       {data?.is_truncated ? <Alert tone="warning">{t("bookingCalendar.truncated")}</Alert> : null}
+      <MoveMessageOffer message={message} onDismiss={dismissMessage} />
       {data === undefined ? (
         grid.error ? (
           <Card>

@@ -49,6 +49,12 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
     undone: "Die Buchung ist wieder an ihrem Platz",
     changed: "Jemand hat diese Buchung gerade geändert: Der Kalender zeigt sie jetzt so, wie sie ist.",
     cancelled: "Verschieben abgebrochen",
+    tell: {
+      title: "Neue Zeit an {name} mitteilen",
+      titleAnonymous: "Neue Zeit dem Kunden mitteilen",
+      hint: "Der Assistent schreibt Kunden nicht von selbst, wenn Sie eine Buchung im Kalender verschieben. Kopieren Sie den Text und senden Sie ihn im Kanal, in dem Sie schreiben.",
+      show: "Nachricht anzeigen",
+    },
   },
   week: {
     label: "Auslastung der Plätze, {range}",

@@ -46,6 +46,12 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
     undone: "ההזמנה חזרה למקומה",
     changed: "מישהו שינה את ההזמנה הזו לפני רגע: היומן מציג אותה כפי שהיא עכשיו.",
     cancelled: "ההעברה בוטלה",
+    tell: {
+      title: "יש לעדכן את {name} בשעה החדשה",
+      titleAnonymous: "יש לעדכן את הלקוח בשעה החדשה",
+      hint: "העוזר לא שולח ללקוחות הודעה על העברות שנעשו בלוח השנה. אפשר להעתיק את הטקסט ולשלוח אותו בערוץ שבו אתם מדברים.",
+      show: "הצגת ההודעה",
+    },
   },
   week: {
     label: "עד כמה כל מקום מלא, {range}",
