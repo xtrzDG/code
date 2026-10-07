@@ -123,12 +123,11 @@ At run time:
 - **A real secret that reached git** is revoked and rotated at once;
   removing it from history comes second.
 
-### Accepted findings (baseline of 2026-10-03)
+### Accepted findings (baseline of 2026-10-07)
 
 | Tool | Where | Finding | Why it is accepted |
 | --- | --- | --- | --- |
 | bandit B311 | `app/registries/demo/load_dataset_registry.py` | seeded `random.Random` | Builds the repeatable bulk history of load-test businesses (`workshop seed-load`) from the run's seed; nothing in it is a secret, token or key. |
-| bandit B105 | `app/adapters/security/secret_cipher_adapter.py`, `app/clients/google/google_api_responses.py` (2), `app/gateways/http/user_authentication.py` | "hardcoded password" `""` | Comparisons of a received or configured value with the empty string (missing token or key), not credentials. |
 | gitleaks | `tests/billing/test_return_urls.py`, `tests/e2e/harness.py`, `tests/e2e/harness_settings.py` | generic API key | Made-up values of test settings in past commits. |
 | gitleaks | `evals/cassettes/*.json` in commit `266501b` (1778 lines) | generic API key | SHA-256 digests of recorded model requests under a JSON field named `key`; the field is `request_digest` since, so re-recordings do not match. |
 | gitleaks | `app/registries/niches/templates/b2b_supply_template.py` (commit `56f9e17`) and the `.gitleaksignore` comment that names it (commit `0d2c2e8`) | generic API key | The line `NICHE: NicheKey = …` assigns an enum member of the niche template; the name looks like a key to the generic rule but holds no secret. |

@@ -126,6 +126,25 @@ def test_the_previous_window_fades_out(buckets: RateLimitBucketAdapterContract) 
     assert registry.try_acquire_all([limit], MINUTE, at(78)) is None
 
 
+def test_a_look_ahead_counts_nothing_and_agrees_with_counting(
+    buckets: RateLimitBucketAdapterContract,
+) -> None:
+    registry = RequestRateLimitRegistry(buckets)
+    visitor = counter(VISITOR, 2)
+
+    before = registry.has_room(visitor, MINUTE, at(1))
+    counted = [registry.try_acquire_all([visitor], MINUTE, at(2)) for _ in range(2)]
+    full = registry.has_room(visitor, MINUTE, at(3))
+    refused = registry.try_acquire_all([visitor], MINUTE, at(3))
+
+    assert before is True
+    assert counted == [None, None]
+    assert full is False
+    assert refused == VISITOR
+    # In the second window after it, the first one has faded out entirely.
+    assert registry.has_room(visitor, MINUTE, at(121)) is True
+
+
 def test_the_sweep_drops_only_counters_no_window_needs(
     buckets: RateLimitBucketAdapterContract,
 ) -> None:

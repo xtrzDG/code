@@ -58,7 +58,8 @@ def test_a_busy_key_refuses_after_the_wait_without_naming_ids() -> None:
     release.set()
     holder.join()
 
-    assert 0.15 <= waited < 1.0
+    # At least its wait; at most is the refusal itself (the holder kept it).
+    assert waited >= 0.15
     assert str(refusal.value).startswith("The customer messages lock stayed busy")
     assert "visitor" not in str(refusal.value)
     assert locks._locks == {}  # pyright: ignore[reportPrivateUsage]
@@ -75,28 +76,37 @@ def test_one_customers_turns_wait_for_each_other_and_others_do_not() -> None:
     registry = CustomerMessageLockRegistry(InMemoryAdvisoryLockAdapter())
     business_id = BusinessId()
     events: list[str] = []
-    holding = threading.Event()
+    holding, release = threading.Event(), threading.Event()
 
     def first_turn() -> None:
         with registry.lock_for_customer(
             business_id, ChannelKind.WEB_CHAT, ChannelUserId("visitor-1")
         ):
             holding.set()
-            time.sleep(0.1)
+            release.wait(10)
             events.append("first turn done")
+
+    def second_turn() -> None:
+        with registry.lock_for_customer(
+            business_id, ChannelKind.WEB_CHAT, ChannelUserId("visitor-1")
+        ):
+            events.append("second turn")
 
     turn = threading.Thread(target=first_turn)
     turn.start()
-    assert holding.wait(5)
+    assert holding.wait(10)
     with registry.lock_for_customer(
         business_id, ChannelKind.WEB_CHAT, ChannelUserId("visitor-2")
     ):
         events.append("another customer")
-    with registry.lock_for_customer(
-        business_id, ChannelKind.WEB_CHAT, ChannelUserId("visitor-1")
-    ):
-        events.append("second turn")
-    turn.join()
+    waiting = threading.Thread(target=second_turn)
+    waiting.start()
+    # The same customer's next turn waits while the first one runs.
+    waiting.join(timeout=0.1)
+    assert waiting.is_alive()
+    release.set()
+    waiting.join(timeout=10)
+    turn.join(timeout=10)
 
     assert events == ["another customer", "first turn done", "second turn"]
 

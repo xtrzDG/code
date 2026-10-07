@@ -35,10 +35,9 @@ def terminate_backend(
     pid: int,
 ) -> None:
     with postgres_server.admin_connection(database_name) as connection:
-        connection.execute("select pg_terminate_backend(%s)", (pid,))
-
-    # Give the backend a moment to exit and close the socket.
-    time.sleep(0.2)
+        # With a timeout the call returns once the backend has exited (and
+        # closed its socket), not after a guessed moment.
+        connection.execute("select pg_terminate_backend(%s, 10000)", (pid,))
 
 
 def test_connections_are_reused(database_url: DatabaseUrl) -> None:

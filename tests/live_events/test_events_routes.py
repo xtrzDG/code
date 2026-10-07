@@ -1,7 +1,5 @@
 """GET /v1/businesses/{id}/events: who may listen, what a stream carries."""
 
-import threading
-
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.typings.users.prefixed_id import UserId
 from tests.live_events.live_api import (
@@ -106,10 +104,8 @@ def test_finished_streams_give_their_places_back() -> None:
 
 def test_shutting_down_ends_open_streams_at_once() -> None:
     api = LiveApi()
-    closing = threading.Timer(0.1, api.bus.close)
-    closing.start()
 
-    messages = parse_stream(api.stream().text)
-    closing.join()
+    # The bus closes once the stream has subscribed: an open stream ends.
+    messages = parse_stream(api.stream(meanwhile=api.bus.close).text)
 
     assert [message.event for message in messages] == ["stream.ready"]

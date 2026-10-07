@@ -11,6 +11,17 @@ import type { Page, Request } from "@playwright/test";
 
 const EVENT_STREAM = /\/api\/backend\/v1\/businesses\/[^/]+\/events(\?|$)/;
 const POLL_INTERVAL_MS = 50;
+/** Headers of Next.js's prefetches of the routes the page's links lead to. */
+const PREFETCH_HEADERS = ["next-router-prefetch", "next-router-segment-prefetch"];
+
+/**
+ * A prefetch of another route changes nothing on this page; a busy server
+ * may answer it long after the page has settled (or drop it without the
+ * browser reporting it), so it never holds the wait up.
+ */
+export function isRoutePrefetch(headers: Record<string, string>): boolean {
+  return PREFETCH_HEADERS.some((name) => headers[name] !== undefined);
+}
 
 const inFlight = new WeakMap<Page, Set<Request>>();
 
@@ -31,7 +42,7 @@ export function trackRequests(page: Page): void {
     if (isNavigation && request.frame() === page.mainFrame()) {
       isLoadingDocument = true;
     }
-    if (EVENT_STREAM.test(request.url())) {
+    if (EVENT_STREAM.test(request.url()) || isRoutePrefetch(request.headers())) {
       return;
     }
     // A request the old document made just before the new one took over can

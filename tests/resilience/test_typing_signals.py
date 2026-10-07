@@ -1,11 +1,10 @@
 """Customers see "typing…" in their messenger while the reply is written."""
 
-import time
-
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.channels.typing_signals import TypingRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import ChannelUserId
+from tests.platform.lane_fakes import wait_until
 from tests.resilience.typing_world import BOT_TOKEN, PAGE_TOKEN, TypingWorld
 
 
@@ -72,16 +71,12 @@ def test_typing_is_shown_again_until_the_reply_is_ready() -> None:
     bot = world.connect(ChannelKind.TELEGRAM, "my_bot", BOT_TOKEN)
 
     with world.facilitator.keep_typing(world.request(bot)):
-        deadline = time.monotonic() + 2.0
-        while len(world.telegram.requests) < 3 and time.monotonic() < deadline:
-            time.sleep(0.01)
+        assert wait_until(lambda: len(world.telegram.requests) >= 3)
 
-    shown: int = len(world.telegram.requests)
-    time.sleep(0.1)
-
-    assert shown >= 3
-    # Nothing more once the reply is written.
-    assert len(world.telegram.requests) == shown
+    # Leaving the block stops the signals: their thread ends, so nothing
+    # more comes once the reply is written.
+    assert wait_until(world.facilitator_threads_stopped)
+    assert len(world.telegram.requests) >= 3
 
 
 def test_a_refused_signal_ends_the_typing_quietly() -> None:
@@ -95,7 +90,9 @@ def test_a_refused_signal_ends_the_typing_quietly() -> None:
     bot = world.connect(ChannelKind.TELEGRAM, "my_bot", BOT_TOKEN)
 
     with world.facilitator.keep_typing(world.request(bot)):
-        time.sleep(0.15)
+        # The first signal is refused; no second one follows it.
+        assert wait_until(lambda: len(world.telegram.requests) >= 1)
+        assert wait_until(world.facilitator_threads_stopped)
 
     assert len(world.telegram.requests) == 1
 

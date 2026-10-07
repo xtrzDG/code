@@ -203,6 +203,7 @@ class UseCasesContainer(BusinessUseCasesContainer):
         clients=CoreUseCasesContainer.clients,
         config=CoreUseCasesContainer.config,
         facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
         account_use_cases=CoreUseCasesContainer.accounts,

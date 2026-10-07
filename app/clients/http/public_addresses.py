@@ -7,8 +7,11 @@ Refused: loopback, private (RFC 1918, unique-local IPv6), link-local
 NAT (100.64.0.0/10), "this network", benchmarking, documentation,
 reserved, multicast and broadcast ranges, plus IPv6 forms that carry an
 IPv4 address inside (IPv4-mapped, 6to4, NAT64), which are judged by that
-IPv4 address. Host names that only make sense inside a network
-(localhost, *.local, *.internal, ...) are refused before any lookup.
+IPv4 address; the deprecated IPv4-compatible (::a.b.c.d) and
+IPv4-translated (::ffff:0:a.b.c.d) forms are refused outright, since a
+host's tunnel or translator could carry them to an inside address. Host
+names that only make sense inside a network (localhost, *.local,
+*.internal, ...) are refused before any lookup.
 """
 
 import ipaddress
@@ -49,8 +52,8 @@ BLOCKED_NETWORKS: Final[tuple[IpNetwork, ...]] = tuple(
         "203.0.113.0/24",  # documentation
         "224.0.0.0/4",  # multicast
         "240.0.0.0/4",  # reserved and broadcast
-        "::/128",  # unspecified
-        "::1/128",  # loopback
+        "::/96",  # unspecified, loopback and IPv4-compatible (RFC 4291)
+        "::ffff:0:0:0/96",  # IPv4-translated (RFC 2765)
         "fc00::/7",  # unique local (AWS metadata fd00:ec2::254)
         "fe80::/10",  # link-local
         "ff00::/8",  # multicast

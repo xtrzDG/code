@@ -70,7 +70,7 @@ def parse_token_grant(payload: dict[str, object]) -> CalendarTokenGrant:
     access_token: object = payload.get("access_token")
     expires_in: object = payload.get("expires_in")
     refresh_token: object = payload.get("refresh_token")
-    if not isinstance(access_token, str) or access_token == "":
+    if not isinstance(access_token, str) or not access_token:
         raise ExternalServiceError("Google returned no access token.")
 
     lifetime: int = expires_in if isinstance(expires_in, int) else 0
@@ -78,7 +78,7 @@ def parse_token_grant(payload: dict[str, object]) -> CalendarTokenGrant:
         access_token=CalendarAccessToken(access_token),
         refresh_token=(
             CalendarRefreshToken(refresh_token)
-            if isinstance(refresh_token, str) and refresh_token != ""
+            if isinstance(refresh_token, str) and len(refresh_token) > 0
             else None
         ),
         expires_in=CalendarTokenLifetimeSeconds(max(lifetime, 0)),

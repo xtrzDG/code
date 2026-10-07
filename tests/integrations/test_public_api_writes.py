@@ -62,6 +62,24 @@ def test_a_retried_create_with_the_same_key_makes_one_booking() -> None:
     assert first.json()["source_channel"] == "phone"
 
 
+def test_another_key_never_gets_this_keys_answer() -> None:
+    """One owner's two keys: an Idempotency-Key is the key's own."""
+
+    with open_integration_shop() as shop:
+        writer = shop.add_api_key(name="Writer")
+        reader = shop.add_api_key(["leads:read"], name="Reader")
+        retry = {"Idempotency-Key": "shared-0000"}  # gitleaks:allow
+        first = shop.api("POST", "/leads", writer, LEAD, retry)
+        other = shop.api("POST", "/leads", reader, LEAD, retry)
+        again = shop.api("POST", "/leads", writer, LEAD, retry)
+
+    assert first.status_code == 201, first.text
+    assert other.status_code == 409
+    assert "Idempotent-Replayed" not in other.headers
+    assert str(first.json()["id"]) not in other.text
+    assert again.headers.get("Idempotent-Replayed") == "true"
+
+
 def test_a_bad_phone_is_refused() -> None:
     with open_integration_shop() as shop:
         key = shop.add_api_key()

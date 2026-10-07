@@ -213,6 +213,12 @@ def test_an_unknown_host_is_reported_as_such() -> None:
         ("192.0.0.192", False),
         ("198.18.0.1", False),
         ("255.255.255.255", False),
+        ("::1", False),
+        ("::7f00:1", False),  # IPv4-compatible 127.0.0.1
+        ("::a9fe:a9fe", False),  # IPv4-compatible 169.254.169.254
+        ("::808:808", False),  # IPv4-compatible, deprecated even when public
+        ("::ffff:0:7f00:1", False),  # IPv4-translated 127.0.0.1
+        ("64:ff9b::7f00:1", False),  # NAT64 of 127.0.0.1
         ("not an address", False),
     ],
 )

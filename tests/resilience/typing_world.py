@@ -1,5 +1,6 @@
 """Real channel adapters and clients over recorded HTTP, for typing tests."""
 
+import threading
 from dataclasses import dataclass, field
 
 from app.adapters.channels.instagram_channel_adapter import InstagramChannelAdapter
@@ -73,6 +74,15 @@ class TypingWorld:
                 meta_client, settings, typing_client
             ),
             refresh_seconds=FAST_REFRESH,
+        )
+        self._threads_before: set[threading.Thread] = set(threading.enumerate())
+
+    def facilitator_threads_stopped(self) -> bool:
+        """No typing thread started since this world was made still runs."""
+
+        return not any(
+            thread.name.startswith("typing-") and thread.is_alive()
+            for thread in set(threading.enumerate()) - self._threads_before
         )
 
     def connect(

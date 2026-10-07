@@ -38,7 +38,10 @@ API_CAPACITY: dict[str, str] = {
     "SCRIPTED_LLM_LATENCY_MS": "20000",
 }
 CABINET_BUDGET_MS: float = 200.0
-SAMPLES: int = 25
+# Enough samples for a 95th percentile that is not simply the slowest two
+# (of 25 it was: a busy machine pausing the test twice failed it).
+SAMPLES: int = 100
+SAMPLE_INTERVAL_SECONDS: float = 0.05
 
 
 @dataclass(frozen=True)
@@ -114,7 +117,7 @@ def sample_cabinet(world: BurstWorld) -> tuple[list[int], list[float]]:
             me = client.get("/v1/me", headers=world.restaurant.headers)
             timings.append((time.perf_counter() - started) * 1000)
             assert me.status_code == 200, me.text
-            time.sleep(0.2)
+            time.sleep(SAMPLE_INTERVAL_SECONDS)
 
     return statuses, timings
 
@@ -136,5 +139,6 @@ def test_a_burst_of_slow_turns_leaves_the_api_ready_and_fast(
 
     assert set(statuses) == {200}
     p95 = statistics.quantiles(timings, n=20)[-1]
-    assert p95 < CABINET_BUDGET_MS, sorted(timings)
-    assert statistics.median(timings) < CABINET_BUDGET_MS / 2, sorted(timings)
+    described = ", ".join(f"{timing:.0f}" for timing in sorted(timings))
+    assert p95 < CABINET_BUDGET_MS, described
+    assert statistics.median(timings) < CABINET_BUDGET_MS / 2, described

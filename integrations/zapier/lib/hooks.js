@@ -34,14 +34,23 @@ async function unsubscribe(z, bundle) {
   return {};
 }
 
+// Fails closed: an event without a signature that checks out against the
+// subscription's secret (no secret, no raw body, a wrong or stale
+// signature) is refused, never passed on unchecked.
 function receive(z, bundle, nowSeconds = Math.floor(Date.now() / 1000)) {
   const secret = (bundle.subscribeData || {}).signing_secret;
-  const raw = bundle.rawRequest;
-  if (secret && raw && typeof raw.content === 'string') {
-    const header = readHeader(raw.headers, 'Workshop-Signature');
-    if (!isValidSignature(secret, header, raw.content, nowSeconds)) {
-      throw new z.errors.Error('The webhook signature is not valid.', 'bad_signature', 401);
-    }
+  if (!secret) {
+    throw new z.errors.Error(
+      'This subscription has no signing secret; turn the Zap off and on again.',
+      'missing_secret',
+      401
+    );
+  }
+  const raw = bundle.rawRequest || {};
+  const content = typeof raw.content === 'string' ? raw.content : null;
+  const header = readHeader(raw.headers, 'Workshop-Signature');
+  if (content === null || !isValidSignature(secret, header, content, nowSeconds)) {
+    throw new z.errors.Error('The webhook signature is not valid.', 'bad_signature', 401);
   }
   const event = bundle.cleanedRequest || {};
   if (!event.data) {

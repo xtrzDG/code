@@ -22,6 +22,9 @@ from app.utilities.channels.choice_payloads import (
     whatsapp_body_limit,
 )
 from app.utilities.channels.meta_story_context import read_story_note
+from app.utilities.conversations.assistant_texts.choice_texts import (
+    CHOICE_LIST_BUTTON,
+)
 from app.utilities.conversations.reply_choices_text import (
     close_with_prompt,
     number_the_options,
@@ -149,3 +152,19 @@ class TestStoryContext:
         assert read_story_note(reply) is InboundContextNote.STORY_REPLY
         assert read_story_note(mention) is InboundContextNote.STORY_MENTION
         assert read_story_note(plain) is None
+
+
+# WhatsApp refuses a reply button title or a list's button text over 20
+# characters (a refusal falls back to the numbered list, but should not be
+# the rule); Messenger cuts quick replies there.
+PLATFORM_LABEL_LIMIT: int = 20
+
+
+def test_every_label_fits_the_platforms_buttons() -> None:
+    assert ChoiceLabel.max_length == PLATFORM_LABEL_LIMIT
+    too_long = {
+        str(language): str(text)
+        for language, text in CHOICE_LIST_BUTTON.values.items()
+        if len(str(text)) > PLATFORM_LABEL_LIMIT
+    }
+    assert too_long == {}

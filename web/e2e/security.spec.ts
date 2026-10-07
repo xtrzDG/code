@@ -79,8 +79,10 @@ test.describe("Content Security Policy", () => {
       await watchPolicyViolations(page);
 
       await openAndCheck(page, "/");
-      // Give the scene time to load its chunk and draw.
-      await page.waitForTimeout(1500);
+      // The scene has loaded its chunk and drawn once the hero says so.
+      const hero = page.getByRole("img", { name: en.landing.hero.sceneLabel });
+      await expect(hero).toHaveAttribute("data-scene", "3d", { timeout: 30_000 });
+      await expect(hero.locator("canvas")).toHaveCount(1);
       expect(await policyViolations(page)).toEqual([]);
     });
   });

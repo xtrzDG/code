@@ -63,6 +63,30 @@ test('an event with a wrong signature is refused', () => {
   assert.throws(() => receive(fakeZapier(), bundle, NOW), /signature is not valid/);
 });
 
+test('an event that cannot be checked is refused, never passed on', () => {
+  const content = JSON.stringify(EVENT);
+  const signed = { 'Http-Workshop-Signature': sign(SECRET, NOW, content) };
+  const unchecked = [
+    { subscribeData: {}, rawRequest: { headers: signed, content }, cleanedRequest: EVENT },
+    { subscribeData: { signing_secret: SECRET }, cleanedRequest: EVENT },
+    { subscribeData: { signing_secret: SECRET }, rawRequest: { headers: signed }, cleanedRequest: EVENT },
+    { subscribeData: { signing_secret: SECRET }, rawRequest: { headers: {}, content }, cleanedRequest: EVENT },
+  ];
+  for (const bundle of unchecked) {
+    assert.throws(() => receive(fakeZapier(), bundle, NOW), /signing secret|signature is not valid/);
+  }
+});
+
+test('a replayed event older than five minutes is refused', () => {
+  const content = JSON.stringify(EVENT);
+  const bundle = {
+    subscribeData: { signing_secret: SECRET },
+    rawRequest: { headers: { 'Http-Workshop-Signature': sign(SECRET, NOW, content) }, content },
+    cleanedRequest: EVENT,
+  };
+  assert.throws(() => receive(fakeZapier(), bundle, NOW + 301), /signature is not valid/);
+});
+
 test('the editor\'s test step lists recent records', async () => {
   const z = fakeZapier([{ items: [{ id: 'booking_2', created_at: '2026-10-06T10:00:00+04:00' }] }]);
   const records = await app.triggers.new_booking.operation.performList(z, {});

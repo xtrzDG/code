@@ -1,13 +1,16 @@
 """
 Connections only to vetted public addresses, made to the very address
-that was vetted (DNS rebinding cannot swap it between check and use).
+that was vetted (DNS rebinding cannot swap it between check and use),
+and, with a deadline, nothing on them outlasts it.
 """
 
 import socket
+import time
 from collections.abc import Callable, Iterable
 
 import httpcore
 
+from app.clients.http.deadline_network_stream import DeadlineNetworkStream, time_left
 from app.clients.http.fetch_errors import fetch_error
 from app.clients.http.public_addresses import is_public_address
 from app.schemas.constants.web_fetching import WebFetchProblem
@@ -42,12 +45,22 @@ class VettingNetworkBackend(httpcore.NetworkBackend):
     resolves the host once, refuses the host when any address it resolves
     to is not public, and connects to those vetted addresses only. TLS is
     then negotiated by httpcore with the host name (SNI and certificate
-    checks are unchanged).
+    checks are unchanged). With a `deadline` (of `clock`), the connection
+    and every read and write on it end by then, however slowly the server
+    answers (`DeadlineNetworkStream`).
     """
 
-    def __init__(self, resolver: HostResolver, connector: TcpConnector) -> None:
+    def __init__(
+        self,
+        resolver: HostResolver,
+        connector: TcpConnector,
+        deadline: float | None = None,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
         self._resolver: HostResolver = resolver
         self._connector: TcpConnector = connector
+        self._deadline: float | None = deadline
+        self._clock: Callable[[], float] = clock
 
     def connect_tcp(
         self,
@@ -72,7 +85,7 @@ class VettingNetworkBackend(httpcore.NetworkBackend):
         last_error: Exception | None = None
         for address in addresses:
             try:
-                return self._connector(address, port, timeout)
+                return self._bounded(self._connect(address, port, timeout))
             except (OSError, httpcore.ConnectError) as error:
                 last_error = error
 
@@ -89,6 +102,22 @@ class VettingNetworkBackend(httpcore.NetworkBackend):
         raise fetch_error(
             WebFetchProblem.NOT_HTTP, "Only http and https addresses can be read."
         )
+
+    def _connect(
+        self, address: str, port: int, timeout: float | None
+    ) -> httpcore.NetworkStream:
+        if self._deadline is None:
+            return self._connector(address, port, timeout)
+
+        return self._connector(
+            address, port, time_left(self._deadline, self._clock, timeout)
+        )
+
+    def _bounded(self, stream: httpcore.NetworkStream) -> httpcore.NetworkStream:
+        if self._deadline is None:
+            return stream
+
+        return DeadlineNetworkStream(stream, self._deadline, self._clock)
 
     def _resolve(self, host: str) -> list[str]:
         try:

@@ -1,7 +1,6 @@
 """At most LLM_MAX_CONCURRENCY model calls of one process at once."""
 
 import threading
-import time
 
 import pytest
 
@@ -21,14 +20,23 @@ from app.schemas.typings.conversations.strings import (
     MessageText,
 )
 from tests.brain.openai_adapter_helpers import build_request
+from tests.platform.lane_fakes import wait_until
+
+# Longer than any test holds a call: a call held this long is a broken test.
+HELD_CALL_SECONDS: float = 10.0
 
 
-class SlowModel(ScriptedLlmAdapter):
-    """Answers after `seconds`, counting the calls running at once."""
+class GatedModel(ScriptedLlmAdapter):
+    """
+    Holds every call until the test opens the gate, counting the calls
+    running at once; an open gate answers at once.
+    """
 
-    def __init__(self, seconds: float) -> None:
+    def __init__(self, is_open: bool = False) -> None:
         super().__init__(lambda _request: ScriptedLlmTurn(text=MessageText("Hi")))
-        self._seconds: float = seconds
+        self.gate: threading.Event = threading.Event()
+        if is_open:
+            self.gate.set()
         self._guard: threading.Lock = threading.Lock()
         self.running: int = 0
         self.most_at_once: int = 0
@@ -38,14 +46,14 @@ class SlowModel(ScriptedLlmAdapter):
             self.running += 1
             self.most_at_once = max(self.most_at_once, self.running)
         try:
-            time.sleep(self._seconds)
+            self.gate.wait(timeout=HELD_CALL_SECONDS)
             return super().complete(request)
         finally:
             with self._guard:
                 self.running -= 1
 
 
-def limited(model: SlowModel, places: int, wait: int) -> ConcurrencyLimitedLlmAdapter:
+def limited(model: GatedModel, places: int, wait: int) -> ConcurrencyLimitedLlmAdapter:
     return ConcurrencyLimitedLlmAdapter(
         inner_adapter=model,
         max_concurrency=LlmConcurrencyLimit(places),
@@ -58,8 +66,8 @@ def request_for(adapter: ConcurrencyLimitedLlmAdapter) -> LlmRequest:
 
 
 def test_calls_beyond_the_limit_wait_for_a_free_place() -> None:
-    model = SlowModel(0.1)
-    adapter = limited(model, places=2, wait=5)
+    model = GatedModel()
+    adapter = limited(model, places=2, wait=int(HELD_CALL_SECONDS))
     replies: list[LlmResponse] = []
     callers = [
         threading.Thread(
@@ -70,6 +78,9 @@ def test_calls_beyond_the_limit_wait_for_a_free_place() -> None:
 
     for caller in callers:
         caller.start()
+    # Two calls hold both places; the other four wait for one.
+    assert wait_until(lambda: model.running == 2)
+    model.gate.set()
     for caller in callers:
         caller.join()
 
@@ -78,22 +89,24 @@ def test_calls_beyond_the_limit_wait_for_a_free_place() -> None:
 
 
 def test_a_call_that_finds_no_place_in_time_fails_like_a_provider_error() -> None:
-    model = SlowModel(1.6)
+    model = GatedModel()
     adapter = limited(model, places=1, wait=1)
     holder = threading.Thread(target=lambda: adapter.complete(request_for(adapter)))
     holder.start()
-    time.sleep(0.1)
+    assert wait_until(lambda: model.running == 1)
 
+    # The holder keeps its place until the gate opens, after this call failed.
     with pytest.raises(ExternalServiceError, match="LLM_MAX_CONCURRENCY"):
         adapter.complete(request_for(adapter))
 
+    model.gate.set()
     holder.join()
     # The place came back: the next call runs.
     assert adapter.complete(request_for(adapter)) is not None
 
 
 def test_building_turns_takes_no_place() -> None:
-    model = SlowModel(0.0)
+    model = GatedModel(is_open=True)
     adapter = limited(model, places=1, wait=1)
     results: list[LlmToolResult] = []
 

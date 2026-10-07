@@ -20,7 +20,9 @@ top of the public API (`/v1/public-api/*`, frozen; see
   when a Zap is turned on (the key needs `webhooks:manage`) and remove it
   with `DELETE /v1/public-api/webhooks/{id}` when it is turned off. Every
   request is checked against the subscription's signing secret
-  (`Workshop-Signature`, `lib/signature.js`). The editor's test step reads
+  (`Workshop-Signature`, `lib/signature.js`, at most five minutes old); one
+  that cannot be checked (no secret, no raw body, no signature) is refused,
+  never passed on. The editor's test step reads
   recent records through the list routes where there is one (it needs the
   read scope); handoffs and calls use the built-in sample.
 - **Actions** send an `Idempotency-Key` made from the Zap and its input,
@@ -50,6 +52,9 @@ zapier push
 ```
 
 `platformVersion` follows the pinned `zapier-platform-core` in
-`package.json`; raise both together. A new trigger or field is fine at any
+`package.json`; raise both together. `overrides` holds `form-data` at
+4.0.6: core 19.1.0 pins 4.0.5, which has a CRLF injection in multipart
+field names (GHSA-hmw2-7cc7-3qxx); drop the override once the core's own
+pin is 4.0.6 or later (`npm audit --omit=dev` after `npm install`). A new trigger or field is fine at any
 time; renaming a key breaks existing Zaps (it is the same rule as the
 public API's).

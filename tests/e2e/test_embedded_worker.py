@@ -22,33 +22,40 @@ EMBEDDED_ENVIRONMENT: dict[str, str] = {
 WAIT_SECONDS: float = 30.0
 
 
-def embedded_worker_threads() -> list[threading.Thread]:
+def embedded_worker_threads(
+    since: set[threading.Thread] | None = None,
+) -> list[threading.Thread]:
+    """The live embedded worker threads, only those started after `since`."""
+
     return [
         thread
-        for thread in threading.enumerate()
-        if thread.name == EMBEDDED_WORKER_THREAD_NAME
+        for thread in set(threading.enumerate()) - (since or set())
+        if thread.name == EMBEDDED_WORKER_THREAD_NAME and thread.is_alive()
     ]
 
 
 def test_the_lifespan_starts_the_worker_and_stops_it_on_shutdown() -> None:
     workshop = start_workshop(EMBEDDED_ENVIRONMENT)
-    assert embedded_worker_threads() == []
+    # Only this API's worker is watched (another test's could still end).
+    before: set[threading.Thread] = set(threading.enumerate())
+    assert embedded_worker_threads(since=before) == []
 
     with workshop.client:
-        running = embedded_worker_threads()
+        running = embedded_worker_threads(since=before)
         assert len(running) == 1
         assert running[0].is_alive()
         assert running[0].daemon
 
     assert not running[0].is_alive()
-    assert embedded_worker_threads() == []
+    assert embedded_worker_threads(since=before) == []
 
 
 def test_without_the_setting_the_api_starts_no_worker() -> None:
     workshop = start_workshop()
+    before: set[threading.Thread] = set(threading.enumerate())
 
     with workshop.client:
-        assert embedded_worker_threads() == []
+        assert embedded_worker_threads(since=before) == []
 
 
 def wait_for_finished_run(

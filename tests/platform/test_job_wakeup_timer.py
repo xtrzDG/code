@@ -98,6 +98,8 @@ def test_too_many_pending_wakeups_are_left_to_the_polls(
 def test_the_thread_wakes_a_sooner_lane_scheduled_while_it_sleeps() -> None:
     wakes = RecordedWakes()
     timer = JobWakeupTimer(wakes)
+    # Only this timer's thread is watched: other tests' timers may run on.
+    threads_before: set[threading.Thread] = set(threading.enumerate())
     timer.start()
     try:
         # The thread sleeps toward a wake-up a minute away ...
@@ -115,8 +117,8 @@ def test_the_thread_wakes_a_sooner_lane_scheduled_while_it_sleeps() -> None:
     assert timer.pending_count() == 0
     assert not wakes.woken[JobLane.AUTOTESTS].is_set()
     assert all(
-        thread.name != job_wakeup_timer.TIMER_THREAD_NAME
-        for thread in threading.enumerate()
+        thread.name != job_wakeup_timer.TIMER_THREAD_NAME or not thread.is_alive()
+        for thread in set(threading.enumerate()) - threads_before
     )
 
 

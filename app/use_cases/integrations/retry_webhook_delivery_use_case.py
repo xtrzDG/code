@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.integration_repositories import (
     WebhookDeliveryRepoContract,
 )
@@ -17,6 +18,7 @@ from app.schemas.dto.integrations.webhook_views import (
     WebhookDeliveryView,
 )
 from app.schemas.exceptions.application_errors import ConflictError, NotFoundError
+from app.use_cases.integrations.manual_webhook_sends import count_manual_send
 from app.use_cases.integrations.webhook_records import delivery_view
 from app.use_cases.shared.storage_transaction import in_unit_of_work
 from app.utilities.integrations.webhook_jobs import (
@@ -33,7 +35,8 @@ class RetryWebhookDeliveryUseCase(
     The owner sends a delivery again from the log (after fixing the
     receiver): the same event and body, signed anew, tried at once and
     then on the usual schedule for another 24 hours. A test event is sent
-    with "Send test event" instead. Owners only.
+    with "Send test event" instead. Owners only; with test events, at most
+    MANUAL_SENDS_PER_MINUTE a minute per business (429 past them).
     """
 
     def __init__(
@@ -42,6 +45,7 @@ class RetryWebhookDeliveryUseCase(
             BusinessAccessRequest, BusinessDocument
         ],
         delivery_repo: WebhookDeliveryRepoContract,
+        rate_limits: RequestRateLimitRegistryContract,
         job_queue: JobQueueFacilitatorContract,
         unit_of_work: StorageUnitOfWorkContract | None,
         wall_clock: WallClock[Microseconds],
@@ -50,6 +54,7 @@ class RetryWebhookDeliveryUseCase(
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
         self._delivery_repo: WebhookDeliveryRepoContract = delivery_repo
+        self._rate_limits: RequestRateLimitRegistryContract = rate_limits
         self._job_queue: JobQueueFacilitatorContract = job_queue
         self._unit_of_work: StorageUnitOfWorkContract | None = unit_of_work
         self._wall_clock: WallClock[Microseconds] = wall_clock
@@ -70,6 +75,7 @@ class RetryWebhookDeliveryUseCase(
             raise ConflictError("A test event is sent again with Send test event.")
 
         now: Microseconds = self._wall_clock.now_unix()
+        count_manual_send(self._rate_limits, business.id, now)
 
         def requeue(current: WebhookDeliveryDocument) -> WebhookDeliveryDocument:
             return current.model_copy(

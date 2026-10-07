@@ -64,12 +64,16 @@ def test_readyz_fails_while_the_database_is_down() -> None:
 
 
 class SlowReadiness:
+    """A check that hangs until the test releases it (or gives up on it)."""
+
     def __init__(self) -> None:
         self.release = threading.Event()
+        self.returned = threading.Event()
 
     def operate(self, input_data: ReadinessQuery) -> ReadinessReport:
         del input_data
         self.release.wait(timeout=5)
+        self.returned.set()
         raise AssertionError("The readiness deadline should have passed first.")
 
 
@@ -86,9 +90,9 @@ def test_a_readiness_check_that_hangs_answers_not_ready_in_time(
         )
     )
 
-    started = time.monotonic()
     response = client.get("/readyz")
-    elapsed = time.monotonic() - started
+    # The answer came while the check still hung: the deadline, not the check.
+    answered_first: bool = not slow.returned.is_set()
     slow.release.set()
 
     assert response.status_code == 503
@@ -96,7 +100,7 @@ def test_a_readiness_check_that_hangs_answers_not_ready_in_time(
         "status": "failed",
         "failure": "timeout",
     }
-    assert elapsed < 2
+    assert answered_first
 
 
 def test_healthz_answers_while_slow_requests_hold_every_request_thread() -> None:

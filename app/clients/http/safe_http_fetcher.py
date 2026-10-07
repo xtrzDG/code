@@ -58,9 +58,8 @@ class SafeHttpFetcher(SafeHttpFetcherContract):
         ssl_context: ssl.SSLContext | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        self._backend: VettingNetworkBackend = VettingNetworkBackend(
-            resolver, connector
-        )
+        self._resolver: HostResolver = resolver
+        self._connector: TcpConnector = connector
         self._ssl_context: ssl.SSLContext | None = ssl_context
         self._clock: Callable[[], float] = clock
 
@@ -69,7 +68,9 @@ class SafeHttpFetcher(SafeHttpFetcherContract):
         current_url: str = str(request.url)
         with httpcore.ConnectionPool(
             ssl_context=self._ssl_context,
-            network_backend=self._backend,
+            network_backend=VettingNetworkBackend(
+                self._resolver, self._connector, deadline, self._clock
+            ),
             max_connections=1,
             retries=0,
         ) as pool:

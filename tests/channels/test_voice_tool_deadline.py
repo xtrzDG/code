@@ -2,7 +2,6 @@
 
 import json
 import threading
-import time
 from typing import NoReturn
 
 import pytest
@@ -28,14 +27,21 @@ HEADERS: dict[str, str] = {
 TOOL_PATH: str = "/v1/voice/tools/check_availability"
 
 
+# Longer than any test waits: a tool held this long means the route waited.
+HELD_TOOL_SECONDS: float = 10.0
+
+
 class ToolOperator:
-    def __init__(self, delay_seconds: float) -> None:
-        self.delay_seconds: float = delay_seconds
+    """A tool that answers at once, or holds until the test `release`s it."""
+
+    def __init__(self, release: threading.Event | None = None) -> None:
+        self.release: threading.Event | None = release
         self.finished = threading.Event()
 
     def operate(self, input_data: VoiceToolWebhookRequest) -> VoiceToolCallResult:
         del input_data
-        time.sleep(self.delay_seconds)
+        if self.release is not None:
+            self.release.wait(timeout=HELD_TOOL_SECONDS)
         self.finished.set()
         return VoiceToolCallResult(result_json=LlmToolResultJson('{"slots": []}'))
 
@@ -59,7 +65,7 @@ def build_client(operator: ToolOperator) -> TestClient:
 
 
 def test_a_fast_tool_answers_with_its_result() -> None:
-    response = build_client(ToolOperator(0)).post(
+    response = build_client(ToolOperator()).post(
         TOOL_PATH, headers=HEADERS, content=b"{}"
     )
 
@@ -72,18 +78,20 @@ def test_a_tool_past_its_deadline_tells_the_agent_to_hand_over(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     monkeypatch.setattr(voice_routes, "VOICE_TOOL_DEADLINE_SECONDS", 0.2)
-    operator = ToolOperator(1.5)
+    release = threading.Event()
+    operator = ToolOperator(release)
 
-    started = time.monotonic()
     response = build_client(operator).post(TOOL_PATH, headers=HEADERS, content=b"{}")
-    elapsed = time.monotonic() - started
+    # The agent got its answer while the tool was still held.
+    answered_first: bool = not operator.finished.is_set()
+    release.set()
 
     assert response.status_code == 200
     assert "colleague will check" in json.loads(response.text)["error"]
-    assert elapsed < 1.2
+    assert answered_first
     assert "did not finish within" in caplog.text
     # The tool itself is not cut off: it finishes in its own thread.
-    assert operator.finished.wait(timeout=5)
+    assert operator.finished.wait(timeout=HELD_TOOL_SECONDS)
 
 
 def test_the_deadline_stays_below_the_voice_platform_timeout() -> None:

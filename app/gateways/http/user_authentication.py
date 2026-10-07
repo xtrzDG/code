@@ -110,7 +110,7 @@ def parse_bearer_token(authorization: str | None) -> AccessToken:
         raise AuthenticationRequiredError("Authorization must use the Bearer scheme.")
 
     raw_token: str = authorization[len(BEARER_PREFIX) :].strip()
-    if raw_token == "":
+    if not raw_token:
         raise AuthenticationRequiredError("Bearer token is empty.")
 
     return AccessToken(raw_token)

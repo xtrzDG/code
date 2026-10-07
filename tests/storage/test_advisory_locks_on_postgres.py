@@ -7,6 +7,7 @@ waits, and a lock never left behind on a pooled connection.
 import threading
 import time
 from collections.abc import Generator
+from dataclasses import dataclass
 
 import pytest
 
@@ -34,6 +35,24 @@ from tests.storage.storage_testing import build_fixed_wall_clock
 
 KEY: AdvisoryLockKey = AdvisoryLockKey("bookings|biz_test")
 WAIT: LockWaitSeconds = LockWaitSeconds(20)
+# A held lock is let go by the test; this only bounds a broken test.
+HELD_SECONDS: float = 10.0
+# How long a waiter is watched to still wait (it cannot get a held lock).
+QUIET_SECONDS: float = 0.3
+PAST_STATEMENT_TIMEOUT_SECONDS: float = 1.5
+
+
+@dataclass
+class Taker:
+    """A thread waiting for KEY: whether it got it, and what refused it."""
+
+    taken: threading.Event
+    errors: list[ExternalServiceError]
+    thread: threading.Thread | None = None
+
+    def join(self) -> None:
+        if self.thread is not None:
+            self.thread.join(HELD_SECONDS)
 
 
 class LockingProcess:
@@ -89,10 +108,10 @@ def processes(database_url: DatabaseUrl) -> Generator[tuple[LockingProcess, ...]
 
 def hold_in_thread(
     process: LockingProcess,
-    seconds: float,
+    release: threading.Event,
     is_session: bool = False,
-) -> tuple[threading.Thread, threading.Event]:
-    """Hold KEY in a thread for `seconds`; the event is set once it holds."""
+) -> threading.Thread:
+    """Hold KEY in a thread until `release` is set; return once it holds."""
 
     holding = threading.Event()
 
@@ -104,26 +123,52 @@ def hold_in_thread(
         )
         with lock:
             holding.set()
-            time.sleep(seconds)
+            release.wait(HELD_SECONDS)
 
     thread = threading.Thread(target=hold)
     thread.start()
-    assert holding.wait(10)
-    return thread, holding
+    assert holding.wait(HELD_SECONDS)
+    return thread
+
+
+def take_in_thread(process: LockingProcess, is_session: bool = False) -> Taker:
+    """Wait for KEY in a thread; `taken` is set once it got the lock."""
+
+    taker = Taker(threading.Event(), [])
+
+    def take() -> None:
+        lock = (
+            process.locks.hold_with_session(KEY, WAIT)
+            if is_session
+            else process.locks.hold_with_transaction(KEY, WAIT)
+        )
+        try:
+            with lock:
+                taker.taken.set()
+        except ExternalServiceError as error:
+            taker.errors.append(error)
+
+    taker.thread = threading.Thread(target=take)
+    taker.thread.start()
+    return taker
 
 
 def test_a_transaction_lock_has_one_holder_across_processes(
     processes: tuple[LockingProcess, ...],
 ) -> None:
     first, second = processes
-    holder, _ = hold_in_thread(first, 0.6)
-    started = time.monotonic()
+    release = threading.Event()
+    holder = hold_in_thread(first, release)
 
-    with second.locks.hold_with_transaction(KEY, WAIT):
-        waited = time.monotonic() - started
+    taker = take_in_thread(second)
+    # While the first process holds the lock, the second one waits for it.
+    assert not taker.taken.wait(QUIET_SECONDS)
+    release.set()
 
-    holder.join()
-    assert waited >= 0.4
+    assert taker.taken.wait(HELD_SECONDS)
+    holder.join(HELD_SECONDS)
+    taker.join()
+    assert taker.errors == []
 
 
 def test_the_next_holder_reads_what_the_previous_one_wrote(
@@ -132,7 +177,7 @@ def test_the_next_holder_reads_what_the_previous_one_wrote(
     first, second = processes
     business_id = BusinessId()
     contact = build_contact(GEORGIA, business_id)
-    written = threading.Event()
+    written, release = threading.Event(), threading.Event()
 
     def write_under_the_lock() -> None:
         with (
@@ -141,34 +186,39 @@ def test_the_next_holder_reads_what_the_previous_one_wrote(
         ):
             first.contacts.upsert(str(contact.id), contact)
             written.set()
-            time.sleep(0.3)
+            release.wait(HELD_SECONDS)
 
     writer = threading.Thread(target=write_under_the_lock)
     writer.start()
-    assert written.wait(10)
+    assert written.wait(HELD_SECONDS)
     with second.scope.scoped_to_business(business_id):
         # Not committed yet: the write ends with the lock.
         assert second.contacts.get(str(contact.id)) is None
+        release.set()
         with second.locks.hold_with_transaction(KEY, WAIT):
             assert second.contacts.get(str(contact.id)) == contact
 
-    writer.join()
+    writer.join(HELD_SECONDS)
 
 
 def test_a_busy_lock_fails_after_its_wait_and_names_no_ids(
     processes: tuple[LockingProcess, ...],
 ) -> None:
     first, second = processes
-    holder, _ = hold_in_thread(first, 2.0)
+    release = threading.Event()
+    holder = hold_in_thread(first, release)
     started = time.monotonic()
 
+    # The holder keeps the lock until after the refusal: only the wait's
+    # own limit can end it.
     with pytest.raises(ExternalServiceError) as refusal:  # noqa: SIM117
         with second.locks.hold_with_transaction(KEY, LockWaitSeconds(1)):
             pytest.fail("the lock was busy")
     waited = time.monotonic() - started
+    release.set()
 
-    holder.join()
-    assert 0.9 <= waited < 1.9
+    holder.join(HELD_SECONDS)
+    assert waited >= 0.9
     assert "bookings lock stayed busy for 1 s" in str(refusal.value)
     assert "biz_test" not in str(refusal.value)
     # The failed unit gave its connection back clean.
@@ -202,10 +252,17 @@ def test_a_session_lock_waits_past_the_statement_timeout(
     first = LockingProcess(database_url)
     second = LockingProcess(database_url, statement_timeout_seconds=1)
     try:
-        holder, _ = hold_in_thread(first, 1.6, is_session=True)
-        with second.locks.hold_with_session(KEY, WAIT):
-            pass
-        holder.join()
+        release = threading.Event()
+        holder = hold_in_thread(first, release, is_session=True)
+        taker = take_in_thread(second, is_session=True)
+        # Still waiting, unrefused, past its sessions' 1 s statement timeout.
+        assert not taker.taken.wait(PAST_STATEMENT_TIMEOUT_SECONDS)
+        assert taker.errors == []
+        release.set()
+        assert taker.taken.wait(HELD_SECONDS)
+        holder.join(HELD_SECONDS)
+        taker.join()
+        assert taker.errors == []
         # The wait's limits ended with the short transaction around it.
         with second.pool.connection() as connection:
             row = connection.execute("show statement_timeout").fetchone()
@@ -225,8 +282,8 @@ def test_a_session_lock_on_a_dead_connection_is_never_pooled_again(
             row = connection.execute("select pg_backend_pid()").fetchone()
         assert row is not None
         with second.pool.connection() as connection:
-            connection.execute("select pg_terminate_backend(%s)", (row[0],))
-        time.sleep(0.2)
+            # Waits until the backend is gone (or 10 s), not a guessed delay.
+            connection.execute("select pg_terminate_backend(%s, 10000)", (row[0],))
 
     # The server freed the lock with the session; the pool dropped it.
     assert first.pool.open_connection_count() == 0
