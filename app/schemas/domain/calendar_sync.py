@@ -4,7 +4,7 @@ that block a resource, what they made busy, and the resource's busy times
 offered back as an iCal feed.
 """
 
-from base_pydantic_schemas import BaseDocument, PersistentDocument
+from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
@@ -12,6 +12,10 @@ from app.schemas.constants.calendar_sync import (
     BookingSystemKind,
     BusyTimeSource,
     CalendarSyncProblem,
+)
+from app.schemas.typings.bookings.constrained_integers import (
+    BookingEndsAtUnixSeconds,
+    BookingStartsAtUnixSeconds,
 )
 from app.schemas.typings.bookings.constrained_strings import CalendarSyncErrorSummary
 from app.schemas.typings.bookings.prefixed_id import ResourceId
@@ -32,7 +36,10 @@ from app.schemas.typings.calendar_sync.prefixed_id import (
     IcalImportFeedId,
     ResourceCalendarLinkId,
 )
-from app.schemas.typings.calendar_sync.strings import BookingSystemResourceTitle
+from app.schemas.typings.calendar_sync.strings import (
+    BookingSystemBookingId,
+    BookingSystemResourceTitle,
+)
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 
 
@@ -64,11 +71,25 @@ class IcalImportFeed(PersistentDocument):
     status: BusySourceStatus = Field(default_factory=BusySourceStatus)
 
 
+class BookingSystemWriteStatus(PersistentDocument):
+    """
+    How writing the platform's bookings to the booking system went: when a
+    booking was last written (or cancelled) there, and the last failure
+    with its reason, cleared by the next success.
+    """
+
+    last_written_at: Microseconds | None = None
+    last_failed_at: Microseconds | None = None
+    problem: CalendarSyncProblem | None = None
+    problem_detail: CalendarSyncErrorSummary | None = None
+
+
 class BookingSystemLink(PersistentDocument):
     """
     The booking system a resource follows: which system, what the resource
     is there (a Cal.com event type), the business's API key, encrypted,
-    and how it synced.
+    how its bookings were read (`status`) and how the platform's bookings
+    were written there (`write_status`).
     """
 
     kind: BookingSystemKind
@@ -77,6 +98,24 @@ class BookingSystemLink(PersistentDocument):
     encrypted_api_key: EncryptedChannelSecret
     added_at: Microseconds
     status: BusySourceStatus = Field(default_factory=BusySourceStatus)
+    write_status: BookingSystemWriteStatus = Field(
+        default_factory=BookingSystemWriteStatus
+    )
+
+
+class BookingSystemBookingRef(PersistentDocument):
+    """
+    A platform booking written to a booking system: which system, for which
+    resource (whose link holds the key), the system's id of it, and the
+    times written, so a booking moved or cancelled later is followed there.
+    """
+
+    kind: BookingSystemKind
+    resource_id: ResourceId
+    booking_id: BookingSystemBookingId
+    starts_at: BookingStartsAtUnixSeconds
+    ends_at: BookingEndsAtUnixSeconds
+    written_at: Microseconds
 
 
 class ResourceCalendarLinkDocument(BaseDocument):
@@ -88,6 +127,8 @@ class ResourceCalendarLinkDocument(BaseDocument):
     its sources next (`next_sync_at`, None when nothing is linked).
     """
 
+    # 2: `booking_system.write_status` (with a default).
+    schema_version: SchemaVersion = SchemaVersion("2")
     id: ResourceCalendarLinkId
     business_id: BusinessId
     resource_id: ResourceId

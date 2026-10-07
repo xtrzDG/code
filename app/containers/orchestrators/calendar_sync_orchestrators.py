@@ -48,3 +48,6 @@ class CalendarSyncOrchestratorsContainer(containers.DeclarativeContainer):
     export_resource_busy_times_orchestrator = use_case_orchestrator(
         calendar_use_cases.export_resource_busy_times_use_case
     )
+    write_booking_system_booking_orchestrator = use_case_orchestrator(
+        calendar_use_cases.write_booking_system_booking_use_case
+    )

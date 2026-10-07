@@ -54,6 +54,19 @@ class BookingRepoContract(
     ) -> BookingDocument | None:
         raise NotImplementedError
 
+    def update(
+        self,
+        business_id: BusinessId,
+        booking_id: BookingId,
+        change: Callable[[BookingDocument], BookingDocument | None],
+    ) -> BookingDocument | None:
+        """
+        What `change` makes of the stored booking, written in one step (a
+        change made meanwhile is never overwritten); None when the booking
+        is gone or `change` keeps it as it is.
+        """
+        raise NotImplementedError
+
     def list_by_business(self, business_id: BusinessId) -> list[BookingDocument]:
         """Return bookings ordered by starts_at ascending."""
         raise NotImplementedError

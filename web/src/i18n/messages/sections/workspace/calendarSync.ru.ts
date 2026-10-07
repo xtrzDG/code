@@ -105,7 +105,7 @@ export const calendarSyncRu: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "Система бронирования",
-    description: "Брони из вашей системы бронирования закрывают этот ресурс.",
+    description: "Брони из вашей системы бронирования закрывают этот ресурс, а брони, принятые здесь, записываются туда.",
     system: "Система",
     eventType: "Номер типа события",
     eventTypeHint: "Число в конце ссылки на тип события в Cal.com.",
@@ -119,6 +119,11 @@ export const calendarSyncRu: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "Укажите номер типа события.",
     eventTypeInvalid: "Укажите номер так, как его показывает Cal.com: буквы, цифры, точки, дефисы.",
     apiKeyRequired: "Укажите API-ключ.",
+    writes: {
+      waiting: "Новые брони этого ресурса тоже будут записываться туда.",
+      done: "Брони записываются туда · последняя {time}",
+      failed: "Бронь не удалось записать туда ({time}): {reason}",
+    },
   },
   busy: {
     title: "Ближайшее занятое время",

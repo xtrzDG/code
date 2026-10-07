@@ -648,6 +648,7 @@
     "setup.apply_changes_again": "Änderungen übernehmen",
     "notifications.webhook_disabled.title": "Ein Webhook wurde abgeschaltet · {business}",
     "notifications.webhook_disabled.failures_detail": "Die Adresse {endpoint} erhält keine Ereignisse mehr: fehlgeschlagene Versuche in Folge – {failures}. Prüfen Sie, ob sie funktioniert, und schalten Sie sie unter Einstellungen → Integrationen wieder ein.",
-    "notifications.webhook_disabled.gone_detail": "Die Adresse {endpoint} hat geantwortet, dass es sie nicht mehr gibt (410), und erhält keine Ereignisse mehr. Wenn sie umgezogen ist, ändern Sie sie unter Einstellungen → Integrationen und schalten Sie sie wieder ein."
+    "notifications.webhook_disabled.gone_detail": "Die Adresse {endpoint} hat geantwortet, dass es sie nicht mehr gibt (410), und erhält keine Ereignisse mehr. Wenn sie umgezogen ist, ändern Sie sie unter Einstellungen → Integrationen und schalten Sie sie wieder ein.",
+    "calendar_sync.booking_system.guest_without_name": "Gast"
   }
 }

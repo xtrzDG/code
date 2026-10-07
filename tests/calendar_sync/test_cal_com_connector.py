@@ -26,6 +26,7 @@ from app.schemas.dto.calendar_sync.busy_reads import (
 )
 from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
+from app.schemas.typings.bookings.prefixed_id import BookingId
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.calendar_sync.constrained_integers import (
     BusyEndsAtUnixSeconds,
@@ -173,6 +174,41 @@ def test_a_booking_is_written_with_the_guest_name_only() -> None:
             "metadata": {"source": "assistant-workshop"},
         }
     ]
+    # Read back, the platform's own booking does not block the table twice.
+    assert busy_of(fake) == []
+
+
+def test_the_platforms_booking_is_marked_and_found_again() -> None:
+    fake = FakeCalCom()
+    adapter = fake.adapter()
+    marked = BookingSystemBookingDraft(
+        starts_at=BusyStartsAtUnixSeconds(1_791_280_800),
+        ends_at=BusyEndsAtUnixSeconds(1_791_284_400),
+        guest_name=ContactName("Nino"),
+        time_zone=TimezoneName("Asia/Tbilisi"),
+        language=LanguageTag("ru"),
+        platform_booking_id=BookingId(),
+    )
+
+    adapter.create_booking(CREDENTIALS, marked, TIMEOUT)
+    found = adapter.find_booking(CREDENTIALS, marked, TIMEOUT)
+    unmarked = adapter.find_booking(
+        CREDENTIALS, marked.model_copy(update={"platform_booking_id": None}), TIMEOUT
+    )
+    another = adapter.find_booking(
+        CREDENTIALS,
+        marked.model_copy(update={"platform_booking_id": BookingId()}),
+        TIMEOUT,
+    )
+    adapter.cancel_booking(CREDENTIALS, BookingSystemBookingId("created-1"), TIMEOUT)
+
+    assert fake.created[0]["metadata"] == {
+        "source": "assistant-workshop",
+        "booking_id": str(marked.platform_booking_id),
+    }
+    assert str(found) == "created-1"
+    assert unmarked is None and another is None
+    assert adapter.find_booking(CREDENTIALS, marked, TIMEOUT) is None
 
 
 def test_cancelling_a_booking_that_is_gone_already_is_fine() -> None:

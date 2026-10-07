@@ -138,6 +138,7 @@ describe("ResourceCalendarSheet: a resource's calendars", () => {
               external_resource_title: "Sea view stay",
               added_at: at(9),
               status: { block_count: 0 },
+              write_status: {},
             },
           }),
         )) as never,
@@ -155,6 +156,25 @@ describe("ResourceCalendarSheet: a resource's calendars", () => {
     const [, init] = vi.mocked(api.PUT).mock.calls[0] as unknown as [string, { body: unknown }];
     expect(init.body).toEqual({ kind: "cal_com", external_resource_id: "1203845", api_key: "cal_test_0000" });
     expect(await screen.findByText("Sea view stay")).toBeTruthy();
+    expect(screen.getByText(t("calendarSync.bookingSystem.writes.waiting"))).toBeTruthy();
+  });
+
+  it("says why the last booking could not be written to the booking system", async () => {
+    serve(
+      view({
+        booking_system: {
+          kind: "cal_com",
+          external_resource_id: "1203845",
+          added_at: at(9),
+          status: { block_count: 0 },
+          write_status: { last_failed_at: at(10), problem: "access_denied" },
+        },
+      }),
+    );
+    renderSheet();
+
+    const reason = t("calendarSync.problems.access_denied");
+    expect(await screen.findByText((content) => content.includes(reason) && content !== reason)).toBeTruthy();
   });
 
   it("shows a new shared address once, and asks before replacing it", async () => {

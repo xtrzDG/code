@@ -48,3 +48,6 @@ class CalendarSyncPipelinesContainer(containers.DeclarativeContainer):
     export_resource_busy_times_pipeline = orchestrator_pipeline(
         calendars.export_resource_busy_times_orchestrator
     )
+    write_booking_system_booking_pipeline = orchestrator_pipeline(
+        calendars.write_booking_system_booking_orchestrator
+    )

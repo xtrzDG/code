@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.calendar_sync import BookingSystemKind, BusyTimeSource
 from app.schemas.domain.calendar_sync import (
+    BookingSystemWriteStatus,
     BusySourceStatus,
     CalendarBusyTimesDocument,
     IcalExportFeedDocument,
@@ -15,6 +16,7 @@ from app.schemas.domain.calendar_sync import (
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.calendar_sync.resource_calendar import (
     BookingSystemView,
+    BookingSystemWriteStatusView,
     BusySourceStatusView,
     BusyTimeView,
     GoogleCalendarSourceView,
@@ -85,6 +87,7 @@ def build_calendar_view(
                 external_resource_title=link.booking_system.external_resource_title,
                 added_at=link.booking_system.added_at,
                 status=status_view(link.booking_system.status),
+                write_status=write_status_view(link.booking_system.write_status),
             )
         ),
         booking_system_kinds=parts.booking_system_kinds,
@@ -98,6 +101,15 @@ def status_view(status: BusySourceStatus) -> BusySourceStatusView:
         last_attempt_at=status.last_attempt_at,
         last_synced_at=status.last_synced_at,
         block_count=status.block_count,
+        problem=status.problem,
+        problem_detail=status.problem_detail,
+    )
+
+
+def write_status_view(status: BookingSystemWriteStatus) -> BookingSystemWriteStatusView:
+    return BookingSystemWriteStatusView(
+        last_written_at=status.last_written_at,
+        last_failed_at=status.last_failed_at,
         problem=status.problem,
         problem_detail=status.problem_detail,
     )

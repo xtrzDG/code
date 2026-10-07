@@ -6368,8 +6368,12 @@ export interface components {
          *     `origin` marks a booking the waitlist filled (a freed place a waiting
          *     customer took) or one a rebooking campaign brought back, for the
          *     revenue lines of the value report; None for every other booking.
+         *
+         *     `booking_system_booking` is the booking as the platform wrote it to the
+         *     booking system its resource follows (Cal.com), None until written.
          */
         BookingDocument: {
+            booking_system_booking?: components["schemas"]["BookingSystemBookingRef"] | null;
             /** Buffer Minutes */
             buffer_minutes?: number | null;
             /** Business Id */
@@ -6408,7 +6412,7 @@ export interface components {
             resource_id: string;
             /**
              * Schema Version
-             * @default 4
+             * @default 5
              */
             schema_version: string;
             /** Service Item Id */
@@ -6641,6 +6645,25 @@ export interface components {
             status: components["schemas"]["BookingStatus"];
         };
         /**
+         * BookingSystemBookingRef
+         * @description A platform booking written to a booking system: which system, for which
+         *     resource (whose link holds the key), the system's id of it, and the
+         *     times written, so a booking moved or cancelled later is followed there.
+         */
+        BookingSystemBookingRef: {
+            /** Booking Id */
+            booking_id: string;
+            /** Ends At */
+            ends_at: number;
+            kind: components["schemas"]["BookingSystemKind"];
+            /** Resource Id */
+            resource_id: string;
+            /** Starts At */
+            starts_at: number;
+            /** Written At */
+            written_at: number;
+        };
+        /**
          * BookingSystemKind
          * @description The booking systems the platform reads busy times from and writes its
          *     bookings to (one adapter each, in the connector registry).
@@ -6649,7 +6672,9 @@ export interface components {
         BookingSystemKind: "cal_com";
         /**
          * BookingSystemView
-         * @description The booking system the resource follows (its key is never shown).
+         * @description The booking system the resource follows (its key is never shown): how
+         *     its bookings were read (`status`) and how the platform's bookings were
+         *     written there (`write_status`).
          */
         BookingSystemView: {
             /** Added At */
@@ -6660,6 +6685,23 @@ export interface components {
             external_resource_title?: string | null;
             kind: components["schemas"]["BookingSystemKind"];
             status: components["schemas"]["BusySourceStatusView"];
+            /** @default {} */
+            write_status: components["schemas"]["BookingSystemWriteStatusView"];
+        };
+        /**
+         * BookingSystemWriteStatusView
+         * @description How the platform's bookings were written to the booking system: the
+         *     last one written (or cancelled) there, and the last failure with its
+         *     reason (`problem`), cleared by the next success.
+         */
+        BookingSystemWriteStatusView: {
+            /** Last Failed At */
+            last_failed_at?: number | null;
+            /** Last Written At */
+            last_written_at?: number | null;
+            problem?: components["schemas"]["CalendarSyncProblem"] | null;
+            /** Problem Detail */
+            problem_detail?: string | null;
         };
         /**
          * BookingUnit

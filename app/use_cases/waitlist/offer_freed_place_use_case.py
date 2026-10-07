@@ -1,5 +1,9 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.calendar_sync import (
+    BusyTimeSyncFacilitatorContract,
+    CalendarBusyTimesRepoContract,
+)
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.operations import BusinessLockRegistryContract
 from app.contracts.repositories.booking_repositories import BookingRepoContract
@@ -31,6 +35,8 @@ from app.use_cases.waitlist.offer_delivery import (
     WaitlistOfferDelivery,
 )
 from app.use_cases.waitlist.place_holding import hold_ends_at, hold_for, is_place_free
+from app.utilities.calendar_sync.busy_periods import blocked_times_of
+from app.utilities.calendar_sync.busy_windows import ON_DEMAND_READ_SECONDS
 from app.utilities.scheduling.zoned_time import load_time_zone
 from app.utilities.waitlist.offer_jobs import decode_freed_place
 from app.utilities.waitlist.place_matching import describe_freed_place, entry_fits
@@ -49,7 +55,9 @@ class OfferFreedPlaceUseCase(UseCaseContract[QueuedJobInput, JobReport]):
     or room, the service, a stay's nights) who can be reached now.
 
     Under the business's booking lock the place is checked to be still
-    free (no booking and no other hold takes its unit) and the customer's
+    free (no booking and no other hold takes its unit, and no calendar
+    outside the platform made the resource busy then, its busy times read
+    again first when stale, as availability does) and the customer's
     entry becomes OFFERED with the place held until the business's hold
     ends (or the online-booking notice before the place starts, whichever
     is first; with under five minutes left nothing is offered). Then the
@@ -69,6 +77,8 @@ class OfferFreedPlaceUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         lock_registry: BusinessLockRegistryContract,
         delivery: WaitlistOfferDelivery,
         live_events: EventPublisherFacilitatorContract,
+        busy_times_repo: CalendarBusyTimesRepoContract,
+        busy_time_sync: BusyTimeSyncFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -80,6 +90,8 @@ class OfferFreedPlaceUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         self._lock_registry: BusinessLockRegistryContract = lock_registry
         self._delivery: WaitlistOfferDelivery = delivery
         self._live_events: EventPublisherFacilitatorContract = live_events
+        self._busy_times_repo: CalendarBusyTimesRepoContract = busy_times_repo
+        self._busy_time_sync: BusyTimeSyncFacilitatorContract = busy_time_sync
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: QueuedJobInput) -> JobReport:
@@ -137,6 +149,10 @@ class OfferFreedPlaceUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         facts = describe_freed_place(
             place, resource, freed, load_time_zone(business.timezone)
         )
+        # The busy times of the resource's calendars, read again when stale,
+        # as availability reads them (before the lock: it may call out).
+        self._busy_time_sync.refresh_stale(business.id, ON_DEMAND_READ_SECONDS)
+        blocked = blocked_times_of(self._busy_times_repo.list_by_business(business.id))
         buffer_seconds: int = int(freed.buffer_minutes or 0) * SECONDS_PER_MINUTE
         offer = WaitlistOffer(
             freed_booking_id=freed.id,
@@ -157,6 +173,7 @@ class OfferFreedPlaceUseCase(UseCaseContract[QueuedJobInput, JobReport]):
                 resource,
                 buffer_seconds,
                 now,
+                blocked,
             ):
                 return None
 

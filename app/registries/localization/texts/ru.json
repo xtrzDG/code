@@ -648,6 +648,7 @@
     "setup.apply_changes_again": "Применить изменения",
     "notifications.webhook_disabled.title": "Вебхук отключён · {business}",
     "notifications.webhook_disabled.failures_detail": "Адрес {endpoint} больше не получает события: неудачных попыток подряд — {failures}. Проверьте, что он работает, и включите его снова: Настройки → Интеграции.",
-    "notifications.webhook_disabled.gone_detail": "Адрес {endpoint} ответил, что его больше нет (410), и больше не получает события. Если адрес сменился, измените его и включите снова: Настройки → Интеграции."
+    "notifications.webhook_disabled.gone_detail": "Адрес {endpoint} ответил, что его больше нет (410), и больше не получает события. Если адрес сменился, измените его и включите снова: Настройки → Интеграции.",
+    "calendar_sync.booking_system.guest_without_name": "Гость"
   }
 }

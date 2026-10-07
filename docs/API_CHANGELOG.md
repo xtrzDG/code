@@ -11,9 +11,9 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
-## 2026-10-07 — a switched-off webhook is news: link target and live event
+## 2026-10-07 — webhook switch-off notices, bookings written to Cal.com
 
-Spec: `218baee3d61e0c5a`
+Spec: `ed36493999d9107b`
 
 - **Changed** (additive) the notification link view
   (`GET /v1/businesses/{business_id}/notification-links/{token}`):
@@ -23,6 +23,12 @@ Spec: `218baee3d61e0c5a`
   (`GET /v1/businesses/{business_id}/events`): `webhook.changed` names an
   endpoint switched off on its own (failed attempts in a row, or 410
   Gone); clients that do not know it ignore it, as before.
+- **Changed** (additive) the resource calendar view
+  (`GET …/resources/{resource_id}/calendar` and the answers of its
+  changes): `booking_system.write_status` (`last_written_at`,
+  `last_failed_at`, `problem`, `problem_detail`) says how the bookings of
+  the resource were written to its booking system (Cal.com), which the
+  platform now does after every change of a booking.
 
 ## 2026-10-07 — wave 18 together: public API and webhooks, reply options, the bookings calendar, queue waits
 

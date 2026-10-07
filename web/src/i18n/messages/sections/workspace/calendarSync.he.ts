@@ -87,7 +87,7 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "מערכת הזמנות",
-    description: "הזמנות שנעשו במערכת ההזמנות שלכם חוסמות את המשאב הזה.",
+    description: "הזמנות שנעשו במערכת ההזמנות שלכם חוסמות את המשאב הזה, וההזמנות שמתקבלות כאן נרשמות שם.",
     system: "מערכת",
     eventType: "מזהה סוג האירוע",
     eventTypeHint: "המספר בסוף הקישור של סוג האירוע ב-Cal.com.",
@@ -101,6 +101,11 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "הזינו את מזהה סוג האירוע.",
     eventTypeInvalid: "השתמשו במזהה כפי ש-Cal.com מציג אותו: אותיות, ספרות, נקודות, מקפים.",
     apiKeyRequired: "הזינו את מפתח ה-API.",
+    writes: {
+      waiting: "גם ההזמנות החדשות של המשאב הזה יירשמו שם.",
+      done: "ההזמנות נרשמות שם · לאחרונה {time}",
+      failed: "לא ניתן היה לרשום שם הזמנה ({time}): {reason}",
+    },
   },
   busy: {
     title: "זמנים תפוסים קדימה",

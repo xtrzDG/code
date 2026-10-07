@@ -8,7 +8,7 @@ import type { MessageKey } from "@/i18n/translate";
 import { bookingSystemErrors, type ResourceCalendarView } from "@/lib/resourceCalendar";
 import type { Schema } from "@/api/types";
 
-import { CalendarSection, SourceStatus } from "./CalendarParts";
+import { BookingWrites, CalendarSection, SourceStatus } from "./CalendarParts";
 import type { ResourceCalendarState } from "./useResourceCalendar";
 
 type BookingSystemKind = Schema<"BookingSystemKind">;
@@ -73,6 +73,7 @@ export function BookingSystemSection({ calendar, view }: { calendar: ResourceCal
             />
           </p>
           <SourceStatus status={linked.status} />
+          <BookingWrites status={linked.write_status} />
           <Button variant="secondary" size="sm" isLoading={calendar.unlinkBookingSystem.isPending} onClick={() => void disconnect()}>
             {t("calendarSync.bookingSystem.disconnect")}
           </Button>

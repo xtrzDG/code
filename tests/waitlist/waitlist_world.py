@@ -132,6 +132,8 @@ class WaitlistWorld(GrowthWorld):
                 whatsapp_template=None,
             ),
             live_events=self.live_events,
+            busy_times_repo=self.busy_times_repo,
+            busy_time_sync=self.busy_time_sync,
             wall_clock=self.clock.wall_clock,
         )
 

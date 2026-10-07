@@ -47,6 +47,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.transformers.billing.billing_texts",
     "app.utilities.billing.win_back_texts",
     "app.utilities.integrations.webhook_disabled_texts",
+    "app.utilities.calendar_sync.booking_system_writes",
     "app.utilities.setup.setup_texts",
 )
 # Modules whose texts are printed on issued invoices and receipts: they

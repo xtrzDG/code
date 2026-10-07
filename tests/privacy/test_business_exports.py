@@ -139,7 +139,7 @@ def test_a_failure_is_retried_then_left_failed() -> None:
         ) -> None:
             raise OSError("disk full")
 
-        def read(self, business_id: BusinessId, path: ExportArchivePath) -> None:
+        def stream(self, business_id: BusinessId, path: ExportArchivePath) -> None:
             return None
 
         def delete(self, business_id: BusinessId, path: ExportArchivePath) -> None:

@@ -87,7 +87,7 @@ export const calendarSyncDe: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "Buchungssystem",
-    description: "In Ihrem Buchungssystem angelegte Buchungen blockieren diese Ressource.",
+    description: "In Ihrem Buchungssystem angelegte Buchungen blockieren diese Ressource, und die hier angenommenen Buchungen werden dort eingetragen.",
     system: "System",
     eventType: "ID des Ereignistyps",
     eventTypeHint: "Die Nummer am Ende des Links des Ereignistyps in Cal.com.",
@@ -101,6 +101,11 @@ export const calendarSyncDe: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "Geben Sie die ID des Ereignistyps ein.",
     eventTypeInvalid: "Verwenden Sie die ID so, wie Cal.com sie zeigt: Buchstaben, Ziffern, Punkte, Bindestriche.",
     apiKeyRequired: "Geben Sie den API-Schlüssel ein.",
+    writes: {
+      waiting: "Neue Buchungen dieser Ressource werden dort ebenfalls eingetragen.",
+      done: "Buchungen werden dort eingetragen · zuletzt {time}",
+      failed: "Eine Buchung konnte dort nicht eingetragen werden ({time}): {reason}",
+    },
   },
   busy: {
     title: "Kommende belegte Zeiten",

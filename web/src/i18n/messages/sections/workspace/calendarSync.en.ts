@@ -89,7 +89,7 @@ export const calendarSyncEn = {
   },
   bookingSystem: {
     title: "Booking system",
-    description: "Bookings made in your booking system block this resource.",
+    description: "Bookings made in your booking system block this resource, and the bookings taken here are written there.",
     system: "System",
     eventType: "Event type ID",
     eventTypeHint: "The number at the end of the event type's link in Cal.com.",
@@ -103,6 +103,11 @@ export const calendarSyncEn = {
     eventTypeRequired: "Enter the event type ID.",
     eventTypeInvalid: "Use the ID as Cal.com shows it: letters, digits, dots, dashes.",
     apiKeyRequired: "Enter the API key.",
+    writes: {
+      waiting: "New bookings of this resource will be written there too.",
+      done: "Bookings are written there · last {time}",
+      failed: "A booking could not be written there ({time}): {reason}",
+    },
   },
   busy: {
     title: "Busy times ahead",

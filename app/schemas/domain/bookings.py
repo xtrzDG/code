@@ -9,6 +9,7 @@ from app.schemas.constants.bookings import (
     LeadType,
 )
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.domain.calendar_sync import BookingSystemBookingRef
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -65,12 +66,16 @@ class BookingDocument(BaseDocument):
     `origin` marks a booking the waitlist filled (a freed place a waiting
     customer took) or one a rebooking campaign brought back, for the
     revenue lines of the value report; None for every other booking.
+
+    `booking_system_booking` is the booking as the platform wrote it to the
+    booking system its resource follows (Cal.com), None until written.
     """
 
     # 2: `service_item_id`, `buffer_minutes`, `value_minor` and
     # `currency_code` (optional). 3: `last_status_change` (optional).
-    # 4: `origin` (optional).
-    schema_version: SchemaVersion = SchemaVersion("4")
+    # 4: `origin` (optional). 5: `booking_system_booking` (optional; the
+    # upcaster writes it empty on older rows).
+    schema_version: SchemaVersion = SchemaVersion("5")
     id: BookingId = Field(default_factory=BookingId)
     business_id: BusinessId
     resource_id: ResourceId
@@ -93,6 +98,7 @@ class BookingDocument(BaseDocument):
     currency_code: CurrencyCode | None = None
     last_status_change: BookingStatusChange | None = None
     origin: BookingOrigin | None = None
+    booking_system_booking: BookingSystemBookingRef | None = None
 
 
 class LeadDocument(BaseDocument):

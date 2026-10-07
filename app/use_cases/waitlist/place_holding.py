@@ -1,6 +1,7 @@
 """
 Holding a freed place for one waiting customer: whether the place is still
-free (no booking and no other hold takes its unit), how long the hold may
+free (no booking, no other hold and no busy time of a calendar outside the
+platform takes its unit), how long the hold may
 last (the business's hold, ending before the online-booking notice of the
 place's start), and the entry's step from WAITING to OFFERED.
 """
@@ -26,7 +27,7 @@ from app.schemas.typings.waitlist.constrained_integers import (
     WaitlistOfferCount,
 )
 from app.utilities.scheduling.availability import busy_ranges
-from app.utilities.scheduling.overlap import has_free_unit
+from app.utilities.scheduling.overlap import BlockedTime, has_free_unit
 from app.utilities.scheduling.resource_selection import min_notice_seconds
 from app.utilities.waitlist.held_places import held_place_bookings
 
@@ -68,8 +69,13 @@ def is_place_free(
     resource: ResourceDocument,
     buffer_seconds: int,
     now: Microseconds,
+    blocked_times: Sequence[BlockedTime] = (),
 ) -> bool:
-    """No booking and no live hold takes the place's unit (under the lock)."""
+    """
+    No booking and no live hold takes the place's unit, and no calendar
+    outside the platform made the resource busy then (`blocked_times`, as
+    availability reads them), under the lock.
+    """
 
     business_id: BusinessId = resource.business_id
     bound = BookingSearchBoundSeconds(
@@ -85,7 +91,9 @@ def is_place_free(
         ),
     ]
     return has_free_unit(
-        busy_ranges(taken, resource, include_sandbox=False),
+        busy_ranges(
+            taken, resource, include_sandbox=False, blocked_times=blocked_times
+        ),
         int(place.starts_at),
         int(place.ends_at) + buffer_seconds,
         int(resource.unit_count),

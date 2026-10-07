@@ -5,7 +5,12 @@ import { useId, type ReactNode } from "react";
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { IconAlert, IconCheckCircle, IconClock } from "@/components/icons";
 import { useI18n } from "@/i18n/client";
-import { PROBLEM_KEYS, sourceHealth, type BusySourceStatusView } from "@/lib/resourceCalendar";
+import {
+  PROBLEM_KEYS,
+  sourceHealth,
+  type BookingSystemWriteStatusView,
+  type BusySourceStatusView,
+} from "@/lib/resourceCalendar";
 
 /** One part of a resource's calendars: a heading, what it does, its controls. */
 export function CalendarSection({
@@ -63,6 +68,43 @@ export function SourceStatus({ status }: { status: BusySourceStatusView | null |
     <p className="flex items-start gap-1.5 text-sm text-ink-subtle">
       <IconClock className="mt-0.5 size-4 shrink-0" aria-hidden />
       <span>{t("calendarSync.status.never")}</span>
+    </p>
+  );
+}
+
+/**
+ * How the bookings taken here went to the booking system: the last one
+ * that could not be written there and why, else when one was last written,
+ * else that new ones will be.
+ */
+export function BookingWrites({ status }: { status: BookingSystemWriteStatusView | undefined }) {
+  const { t } = useI18n();
+  const format = useBusinessFormat();
+  if (status?.problem && status.last_failed_at) {
+    return (
+      <p className="flex items-start gap-1.5 text-sm text-warning" role="status">
+        <IconAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+        <span>
+          {t("calendarSync.bookingSystem.writes.failed", {
+            time: format.dateTime(status.last_failed_at),
+            reason: t(PROBLEM_KEYS[status.problem]),
+          })}
+        </span>
+      </p>
+    );
+  }
+  if (status?.last_written_at) {
+    return (
+      <p className="flex items-start gap-1.5 text-sm text-ink-subtle">
+        <IconCheckCircle className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
+        <span>{t("calendarSync.bookingSystem.writes.done", { time: format.dateTime(status.last_written_at) })}</span>
+      </p>
+    );
+  }
+  return (
+    <p className="flex items-start gap-1.5 text-sm text-ink-subtle">
+      <IconClock className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>{t("calendarSync.bookingSystem.writes.waiting")}</span>
     </p>
   );
 }

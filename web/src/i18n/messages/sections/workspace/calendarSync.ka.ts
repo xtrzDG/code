@@ -90,7 +90,7 @@ export const calendarSyncKa: Translation<typeof calendarSyncEn> = {
   },
   bookingSystem: {
     title: "დაჯავშნის სისტემა",
-    description: "თქვენს დაჯავშნის სისტემაში გაკეთებული ჯავშნები ამ რესურსს ხურავს.",
+    description: "თქვენს დაჯავშნის სისტემაში გაკეთებული ჯავშნები ამ რესურსს ხურავს, აქ მიღებული ჯავშნები კი იქ იწერება.",
     system: "სისტემა",
     eventType: "ღონისძიების ტიპის ნომერი",
     eventTypeHint: "რიცხვი Cal.com-ში ღონისძიების ტიპის ბმულის ბოლოს.",
@@ -104,6 +104,11 @@ export const calendarSyncKa: Translation<typeof calendarSyncEn> = {
     eventTypeRequired: "მიუთითეთ ღონისძიების ტიპის ნომერი.",
     eventTypeInvalid: "მიუთითეთ ნომერი ისე, როგორც Cal.com აჩვენებს: ასოები, ციფრები, წერტილები, ტირეები.",
     apiKeyRequired: "მიუთითეთ API გასაღები.",
+    writes: {
+      waiting: "ამ რესურსის ახალი ჯავშნებიც იქ ჩაიწერება.",
+      done: "ჯავშნები იქ იწერება · ბოლოს {time}",
+      failed: "ჯავშნის იქ ჩაწერა ვერ მოხერხდა ({time}): {reason}",
+    },
   },
   busy: {
     title: "უახლოესი დაკავებული დრო",
