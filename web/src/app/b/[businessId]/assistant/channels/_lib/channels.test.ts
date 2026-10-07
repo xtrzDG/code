@@ -182,8 +182,8 @@ describe("plans", () => {
 
 describe("website chat look", () => {
   it("normalizes hex colours to the API's six-digit form", () => {
-    expect(normalizeHexColor("#0F766E")).toBe("#0f766e");
-    expect(normalizeHexColor(" 0f766e ")).toBe("#0f766e");
+    expect(normalizeHexColor("#8A4B2F")).toBe("#8a4b2f");
+    expect(normalizeHexColor(" 8a4b2f ")).toBe("#8a4b2f");
     expect(normalizeHexColor("#abc")).toBe("#aabbcc");
     expect(normalizeHexColor("red")).toBeNull();
     expect(normalizeHexColor("#12345")).toBeNull();
@@ -205,12 +205,12 @@ describe("website chat look", () => {
 
   it("fills the widget defaults into the saved look", () => {
     expect(savedWidgetLook(undefined)).toEqual({ color: WIDGET_DEFAULT_COLOR, position: "right" });
-    expect(savedWidgetLook(channel({ channel: "web_chat", widget_color: "#0F766E", widget_position: "left" }))).toEqual({
-      color: "#0f766e",
+    expect(savedWidgetLook(channel({ channel: "web_chat", widget_color: "#8A4B2F", widget_position: "left" }))).toEqual({
+      color: "#8a4b2f",
       position: "left",
     });
-    expect(isSameWidgetLook({ color: "#0F766E", position: "left" }, { color: "#0f766e", position: "left" })).toBe(true);
-    expect(isSameWidgetLook({ color: "#0f766e", position: "left" }, { color: "#0f766e", position: "right" })).toBe(false);
+    expect(isSameWidgetLook({ color: "#8A4B2F", position: "left" }, { color: "#8a4b2f", position: "left" })).toBe(true);
+    expect(isSameWidgetLook({ color: "#8a4b2f", position: "left" }, { color: "#8a4b2f", position: "right" })).toBe(false);
   });
 
   it("starts the live preview in the owner's language when the assistant speaks it", () => {

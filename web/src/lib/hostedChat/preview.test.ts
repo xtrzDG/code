@@ -12,9 +12,9 @@ import {
 
 describe("the live preview's address", () => {
   it("carries the first look so the chat starts in the chosen colour, corner and language", () => {
-    const path = buildChatPreviewPath("cafe-batumi", { color: "#0F766E", position: "left", language: "ka" });
+    const path = buildChatPreviewPath("cafe-batumi", { color: "#8A4B2F", position: "left", language: "ka" });
 
-    expect(path).toBe("/c/cafe-batumi?preview=1&color=%230f766e&position=left&lang=ka");
+    expect(path).toBe("/c/cafe-batumi?preview=1&color=%238a4b2f&position=left&lang=ka");
   });
 
   it("leaves out what is not well formed", () => {
