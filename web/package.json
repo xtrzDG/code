@@ -2,6 +2,10 @@
   "name": "assistant-workshop-web",
   "version": "0.1.0",
   "private": true,
+  "sideEffects": [
+    "*.css",
+    "./src/lib/zod.ts"
+  ],
   "engines": {
     "node": ">=22.12.0"
   },

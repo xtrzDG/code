@@ -19,6 +19,13 @@ const nextConfig: NextConfig = {
   // The cabinet talks to the Python API only through its own route handlers
   // (src/app/api/*), so no rewrites or CORS are needed.
   poweredByHeader: false,
+  experimental: {
+    // Fewer, larger JavaScript chunks: a first visit (the public site above
+    // all, budgets in lighthouserc.json) pays a round trip per file, while a
+    // later page reuses what is cached either way. Sizes are of unminified
+    // code (about 5x the gzipped size).
+    turbopackChunking: { minChunkSize: 100_000, maxChunkCountPerGroup: 10 },
+  },
   reactStrictMode: true,
   // Addresses from before the five sections (src/lib/legacyRoutes.ts).
   redirects: async () => legacyRedirects(),

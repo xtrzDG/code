@@ -1,102 +1,125 @@
 "use client";
 
 /**
- * The hero's picture: the still one (HeroFallback) right away, and on a
- * capable device the 3D scene, loaded once the page is idle and faded in
- * over it once its first frame is drawn. Reduced motion (also switched on
- * while the page is open), no WebGL, data saver or a weak device keep the
- * still picture; so does a scene that turns out too slow or fails.
+ * The hero's picture. Everyone first sees the poster (HeroFallback: the
+ * scene's composition in HTML and CSS, rendered on the server, animated with
+ * CSS). On a capable device in the wide layout (lib/heroDevice.ts) the 3D
+ * scene, a separate chunk with three.js, is fetched only after the page has
+ * loaded and painted, once the browser is idle and the hero is on screen,
+ * and fades in over the poster after its first frame, in the same box (no
+ * layout shift). Turning reduced motion on or narrowing the window to the
+ * phone layout goes back to the poster; so does a scene that turns out too
+ * slow or fails.
  *
- * `data-scene` says which one is showing ("static" or "3d").
+ * `data-scene` says which one is showing ("static" or "3d");
+ * `data-scene-reason` why the poster stays (see PosterReason).
  */
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
-import { heroSceneMode, type DeviceSignals } from "@/lib/heroScene";
+import { heroPlan, type PosterReason } from "@/lib/heroDevice";
+import { inSequence } from "@/lib/waits";
 import { cn } from "@/lib/cn";
 
 import { HeroFallback } from "./HeroFallback";
+import {
+  REDUCED_MOTION_QUERY,
+  WIDE_LAYOUT_QUERY,
+  afterNextPaint,
+  afterPageLoad,
+  hasWebGl,
+  readDeviceSignals,
+  whenIdle,
+  whenOnScreen,
+} from "./heroWaits";
 
 const HeroScene = dynamic(() => import("./scene/HeroScene"), { ssr: false });
 
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+type Stage =
+  | { kind: "waiting" }
+  | { kind: "poster"; reason: PosterReason }
+  | { kind: "loading" }
+  | { kind: "live" };
 
-function hasWebGl(): boolean {
-  try {
-    const probe = document.createElement("canvas");
-    const context = probe.getContext("webgl2") ?? probe.getContext("webgl");
-    context?.getExtension("WEBGL_lose_context")?.loseContext();
-    return context !== null;
-  } catch {
-    return false;
-  }
-}
+/** Runs the loading rules once; `stop` goes back to the poster for good. */
+function useSceneStage(box: RefObject<HTMLDivElement | null>) {
+  const [stage, setStage] = useState<Stage>({ kind: "waiting" });
 
-function readSignals(): DeviceSignals {
-  const browser = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+  useEffect(() => {
+    let cancel: () => void = () => undefined;
+    const stop = (reason: PosterReason) => {
+      cancel();
+      setStage({ kind: "poster", reason });
+    };
+    // Decided after hydration's first frame: the server cannot know the device.
+    cancel = afterNextPaint(() => {
+      const plan = heroPlan(readDeviceSignals());
+      if (plan.kind === "poster") {
+        stop(plan.reason);
+        return;
+      }
+      cancel = inSequence([afterPageLoad, whenIdle, whenOnScreen(box.current)], () => {
+        if (hasWebGl()) {
+          setStage({ kind: "loading" });
+        } else {
+          stop("no-webgl");
+        }
+      });
+    });
+    const motion = window.matchMedia(REDUCED_MOTION_QUERY);
+    const wide = window.matchMedia(WIDE_LAYOUT_QUERY);
+    const onChange = () => {
+      if (motion.matches) {
+        stop("reduced-motion");
+      } else if (!wide.matches) {
+        stop("narrow-screen");
+      }
+    };
+    motion.addEventListener("change", onChange);
+    wide.addEventListener("change", onChange);
+    return () => {
+      cancel();
+      motion.removeEventListener("change", onChange);
+      wide.removeEventListener("change", onChange);
+    };
+  }, [box]);
+
   return {
-    prefersReducedMotion: window.matchMedia(REDUCED_MOTION_QUERY).matches,
-    hasWebGl: hasWebGl(),
-    cores: browser.hardwareConcurrency || undefined,
-    memoryGb: browser.deviceMemory,
-    saveData: browser.connection?.saveData,
+    stage,
+    onReady: () => setStage((current) => (current.kind === "loading" ? { kind: "live" } : current)),
+    // Only a scene that is on its way or showing gives up: one that was sent
+    // away (reduced motion, narrow window) loses its WebGL context as it goes.
+    onFallback: () =>
+      setStage((current) =>
+        current.kind === "loading" || current.kind === "live" ? { kind: "poster", reason: "gave-up" } : current,
+      ),
   };
 }
 
-/** Runs `task` when the browser is idle (or soon, where it cannot tell). */
-function whenIdle(task: () => void): () => void {
-  if ("requestIdleCallback" in window) {
-    const handle = window.requestIdleCallback(task, { timeout: 2000 });
-    return () => window.cancelIdleCallback(handle);
-  }
-  const timer = globalThis.setTimeout(task, 300);
-  return () => globalThis.clearTimeout(timer);
-}
-
 export function HeroVisual({ label, className }: { label: string; className?: string }) {
-  const [wantsScene, setWantsScene] = useState(false);
-  const [isSceneLive, setSceneLive] = useState(false);
-  const [hasGivenUp, setGivenUp] = useState(false);
-
-  useEffect(() => {
-    if (hasGivenUp || heroSceneMode(readSignals()).mode !== "3d") {
-      return;
-    }
-    const cancel = whenIdle(() => setWantsScene(true));
-    const media = window.matchMedia(REDUCED_MOTION_QUERY);
-    const onMotionChange = () => {
-      if (media.matches) {
-        setWantsScene(false);
-        setSceneLive(false);
-      }
-    };
-    media.addEventListener("change", onMotionChange);
-    return () => {
-      cancel();
-      media.removeEventListener("change", onMotionChange);
-    };
-  }, [hasGivenUp]);
-
-  const showScene = wantsScene && !hasGivenUp;
-  const isLive = showScene && isSceneLive;
+  const box = useRef<HTMLDivElement>(null);
+  const { stage, onReady, onFallback } = useSceneStage(box);
+  const isLive = stage.kind === "live";
 
   return (
-    <div role="img" aria-label={label} data-scene={isLive ? "3d" : "static"} className={cn("relative aspect-square w-full", className)}>
-      <HeroFallback
-        className={cn("transition-[opacity,visibility] duration-700 ease-out", isLive && "invisible opacity-0")}
-      />
-      {showScene ? (
+    <div
+      ref={box}
+      role="img"
+      aria-label={label}
+      data-scene={isLive ? "3d" : "static"}
+      data-scene-reason={stage.kind === "poster" ? stage.reason : undefined}
+      className={cn("relative aspect-square w-full", className)}
+    >
+      <HeroFallback className={cn("transition-[opacity,visibility] duration-700 ease-out", isLive && "invisible opacity-0")} />
+      {stage.kind === "loading" || isLive ? (
         <HeroScene
           className={cn(
             "pointer-events-none absolute -inset-[30%] transition-opacity duration-1000 ease-out",
             isLive ? "opacity-100" : "opacity-0",
           )}
-          onReady={() => setSceneLive(true)}
-          onFallback={() => {
-            setGivenUp(true);
-            setSceneLive(false);
-          }}
+          onReady={onReady}
+          onFallback={onFallback}
         />
       ) : null}
     </div>

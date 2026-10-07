@@ -1,5 +1,5 @@
 import { IconCalendar, IconCheck, IconHandoff, IconWhatsApp } from "@/components/icons";
-import { Stagger, StaggerItem } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/siteMotion";
 import type { Translator } from "@/i18n/translate";
 
 /**

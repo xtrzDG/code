@@ -5,7 +5,8 @@ name: Lighthouse
 # against a production build of the cabinet and the API with the demo
 # data (development login codes, the rehearsal model). SEO, accessibility,
 # performance, layout shift and the JavaScript and page weight budgets
-# fail the job; best practices, LCP and blocking time only warn. The
+# fail the job, and on the landing page so do LCP (2.5 s) and blocking
+# time (300 ms); elsewhere those two and best practices only warn. The
 # reports are kept as an artifact.
 on:
   pull_request:

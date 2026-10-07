@@ -29,22 +29,24 @@
             "document-title": ["error", { "minScore": 1 }],
             "meta-description": ["error", { "minScore": 1 }],
             "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
-            "largest-contentful-paint": ["warn", { "maxNumericValue": 4000 }],
-            "total-blocking-time": ["warn", { "maxNumericValue": 600 }]
+            "largest-contentful-paint": ["warn", { "maxNumericValue": 2500 }],
+            "total-blocking-time": ["warn", { "maxNumericValue": 300 }]
           }
         },
         {
           "matchingUrlPattern": "^https?://[^/]+/[a-z]{2}/?$",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.6 }],
-            "resource-summary:script:size": ["error", { "maxNumericValue": 600000 }],
-            "resource-summary:total:size": ["error", { "maxNumericValue": 850000 }]
+            "categories:performance": ["error", { "minScore": 0.85 }],
+            "resource-summary:script:size": ["error", { "maxNumericValue": 350000 }],
+            "resource-summary:total:size": ["error", { "maxNumericValue": 600000 }],
+            "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+            "total-blocking-time": ["error", { "maxNumericValue": 300 }]
           }
         },
         {
           "matchingUrlPattern": "/for/",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.7 }],
+            "categories:performance": ["error", { "minScore": 0.85 }],
             "resource-summary:script:size": ["error", { "maxNumericValue": 350000 }],
             "resource-summary:total:size": ["error", { "maxNumericValue": 600000 }]
           }

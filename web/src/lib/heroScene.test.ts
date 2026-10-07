@@ -8,31 +8,12 @@ import {
   cameraForScroll,
   depthOpacity,
   dustPositions,
-  heroSceneMode,
   isFrameRateLow,
   messagePulseProgress,
   orbitPosition,
   pointerToParallax,
   seededRandom,
 } from "./heroScene";
-
-const CAPABLE = { prefersReducedMotion: false, hasWebGl: true, cores: 8, memoryGb: 8, saveData: false };
-
-describe("which hero a device gets", () => {
-  it("is the 3D scene on a capable device", () => {
-    expect(heroSceneMode(CAPABLE)).toEqual({ mode: "3d" });
-    // Browsers that hide cores or memory are given the benefit of the doubt.
-    expect(heroSceneMode({ prefersReducedMotion: false, hasWebGl: true })).toEqual({ mode: "3d" });
-  });
-
-  it("is the still picture with reduced motion, without WebGL, with data saver or on a weak device", () => {
-    expect(heroSceneMode({ ...CAPABLE, prefersReducedMotion: true })).toEqual({ mode: "static", reason: "reduced-motion" });
-    expect(heroSceneMode({ ...CAPABLE, hasWebGl: false })).toEqual({ mode: "static", reason: "no-webgl" });
-    expect(heroSceneMode({ ...CAPABLE, saveData: true })).toEqual({ mode: "static", reason: "save-data" });
-    expect(heroSceneMode({ ...CAPABLE, cores: 2 })).toEqual({ mode: "static", reason: "low-power" });
-    expect(heroSceneMode({ ...CAPABLE, memoryGb: 2 })).toEqual({ mode: "static", reason: "low-power" });
-  });
-});
 
 describe("orbits", () => {
   it("give every channel one bubble, each with a mark", () => {

@@ -1,6 +1,6 @@
 import type { NicheSummaryView } from "@/api/types";
 import { IconCalendar, IconChat, IconHandoff, IconPlug, IconShield } from "@/components/icons";
-import { Stagger, StaggerItem } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/siteMotion";
 import type { Translator } from "@/i18n/translate";
 import { listFormat } from "@/lib/intl/formatters";
 import { liveIntegrations } from "@/lib/publicSite/paths";

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Parallax, Reveal } from "@/components/motion";
+import { Parallax, Reveal } from "@/components/siteMotion";
 import { cn } from "@/lib/cn";
 
 /**

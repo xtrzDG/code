@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/motion.css";
+@import "../styles/siteMotion.css";
 @import "../styles/landing.css";
 @import "../styles/shell.css";
 @import "../styles/tunnel.css";

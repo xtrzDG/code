@@ -54,9 +54,10 @@ export function LandingFooter({
               </a>
             </li>
             <li>
-              <Link href={LOGIN_PATH} className={LINK_CLASS}>
+              {/* A plain link: the cabinet page loads whole (CabinetLink.tsx). */}
+              <a href={LOGIN_PATH} className={LINK_CLASS}>
                 {t("landing.nav.signIn")}
-              </Link>
+              </a>
             </li>
           </ul>
         </nav>

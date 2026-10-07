@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 
 import { IconCard, IconGlobe, IconPhone, type IconProps } from "@/components/icons";
-import { Stagger, StaggerItem, TiltCard } from "@/components/motion";
+import { Stagger, StaggerItem, TiltCard } from "@/components/siteMotion";
 import { TILT_DEGREES } from "@/lib/motion";
 import type { MessageKey, Translator } from "@/i18n/translate";
 
