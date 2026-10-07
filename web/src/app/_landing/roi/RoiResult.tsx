@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatedNumber } from "@/components/motion";
+import { AnimatedNumber } from "@/components/siteMotion";
 import { useI18n } from "@/i18n/client";
 import { numberFormat } from "@/lib/intl/formatters";
 import type { RoiResult as Result } from "@/lib/publicSite/roi";

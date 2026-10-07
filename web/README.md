@@ -1255,6 +1255,13 @@ as `reasonMessages` to `useMutation`); never match the English message.
   (`one`/`two`/`few`/`many`/`other`; Russian needs `few` and `many`, Hebrew
   `two`).
 - Server Components: `const { t } = await getI18n();` (`@/i18n/server`).
+- The public site (`/en`, `/ru/for/hotel`, `/ka/terms`…) renders its texts on
+  the server; its client components get only their own share of the
+  dictionary (`PUBLIC_CLIENT_TEXTS`, `src/i18n/publicScope.ts`), not the
+  cabinet's 280 KB. `publicScope.test.ts` walks the imports of the public
+  pages' client modules and fails when the list misses a key they name or
+  keeps one nobody reads; a link from the public site to a cabinet page
+  loads that page in full, with its whole dictionary (`I18nProvider`).
 - Keys are checked by TypeScript (`MessageKey`); for keys built at runtime
   keep a `Record<EnumValue, MessageKey>` map (see `BusinessStatusBadge.tsx`).
 - Add a section's texts under its own namespace (`bookings.*`, `leads.*`) in
@@ -1401,14 +1408,29 @@ motion.
   (`ease-spring-snappy` + `duration-(--motion-spring-snappy)`);
   `src/lib/motion.test.ts` fails when the two drift (paste the new values
   from `cssMotionTokens()`).
-- **Primitives** (`@/components/motion`): `Reveal` (on scroll) and `FadeIn`
-  (on mount), `Stagger`/`StaggerItem`, `PageTransition` (CSS, used by the
-  route templates), `TiltCard`/`TiltLayer` (3D tilt with glare and layers
-  at depth; mouse only), `AnimatedNumber` (counts up when seen, rewrites the
+- **Primitives** (`@/components/motion`): `FadeIn` (on mount),
+  `Stagger`/`StaggerItem`, `PageTransition` (CSS, used by the route
+  templates), `TiltCard`/`TiltLayer` (3D tilt with glare and layers at
+  depth; mouse only), `AnimatedNumber` (counts up when seen, rewrites the
   text node only), `AnimatedPresenceList` (items arrive and leave, the rest
-  slide), `MagneticButton`, `Parallax` (depth layers drifting with the
-  scroll). The animation code of `m.*` elements loads after the page
-  (LazyMotion + domMax, `strict`: use `m.div`, never `motion.div`).
+  slide), `MagneticButton`, `Burst`. The animation code of `m.*` elements
+  loads after the page (LazyMotion + domMax, `strict`: use `m.div`, never
+  `motion.div`).
+- **Public site primitives** (`@/components/siteMotion`): `Reveal` (on
+  scroll), `Stagger`/`StaggerItem`, `TiltCard`/`TiltLayer`,
+  `MagneticButton` and `Parallax` (depth layers drifting with the scroll),
+  with the cabinet primitives' props but moved by CSS alone
+  (`src/styles/siteMotion.css`): reveals with the `gentle` spring once one
+  shared IntersectionObserver marks them `data-revealed`, tilt and magnetic
+  pull with the `bouncy` spring from custom properties the pointer writes
+  (no render per move), parallax as a scroll-driven animation
+  (`animation-timeline: view()`, still where unsupported). So a public page
+  carries no animation library: there `MotionProvider` gets
+  `animates={false}` (no domMax is fetched), and the toasts' animated list
+  (`components/ui/ToastList.tsx`) is its own chunk, fetched with the first
+  toast into a live region that is always on the page.
+  `app/_landing/publicBundle.test.ts` walks the public pages' imports and
+  fails when their first load reaches `motion` or three.js.
 - **Cabinet**: page rise per route, the sidebar's active marker glides
   between sections and a thinner one between the open section's pages, which
   unfold under it (`layoutId`, one LayoutGroup per menu); the section tabs'
@@ -1422,37 +1444,49 @@ motion.
   the viewer behind it, the stages standing in perspective and rising one
   after another, a magnetic main button, and a light running around the
   sidebar's "Create an AI assistant".
-- **Landing**: the hero text rises in with CSS from the first paint; the 3D
-  hero (react-three-fiber, `_landing/scene/`): the assistant's orb with the
-  six channels' bubbles orbiting it and sending it messages, mouse parallax,
-  a camera that pulls back while the hero scrolls away. Every section
-  reveals on scroll, glows drift as depth layers, steps stand like a
-  corridor, plan and world cards tilt, the final card has a running edge
-  light; a backdrop of aurora clouds, a floor grid running towards the
-  viewer and grain.
+- **Landing**: the hero headline is there at the first paint (a light
+  sweeps across its gradient, the rest rises in with CSS); beside it the
+  hero poster, and on capable wide screens the 3D hero (react-three-fiber,
+  `_landing/scene/`) later: the assistant's orb with the six channels'
+  bubbles orbiting it and sending it messages, mouse parallax, a camera that
+  pulls back while the hero scrolls away. Every section reveals on scroll,
+  glows drift as depth layers, steps stand like a corridor, plan and world
+  cards tilt, the final card has a running edge light; a backdrop of aurora
+  clouds, a floor grid running towards the viewer and grain.
 - **Reduced motion**: MotionConfig `reducedMotion="user"` drops transforms
   and layout animations (fades stay, short); every CSS animation and
-  transition ends at once (globals.css); tilt, magnetic pull and parallax
-  stay still; numbers show their value; the hero keeps its still picture
-  and never loads the 3D chunk. The markup is the same on the server and in
-  the browser whatever the setting (no hydration mismatch); without
-  scripts a `<noscript>` style shows every revealed block.
-- **3D hero rules** (`HeroVisual`): everyone first sees `HeroFallback`, a
-  CSS picture of the same scene in the same box (no layout shift). The
-  scene loads when the browser is idle, only with WebGL, without reduced
-  motion or data saver and with at least 4 cores and 4 GB of memory
-  (`heroSceneMode`, `lib/heroScene.ts`), and fades in after its first
-  frame. It stops drawing off screen, lowers its resolution when frames are
-  slow and hands back to the picture if they stay slow, the WebGL context is
-  lost or setup fails. `data-scene="static" | "3d"` on the hero tells which
-  one shows. Nothing is downloaded at run time: bubble textures are drawn on
-  canvases, reflections come from a generated studio environment.
+  transition ends at once (globals.css), so the public site's reveals simply
+  appear; tilt, magnetic pull and parallax stay still; numbers show their
+  value; the hero keeps its poster and never loads the 3D chunk. The markup
+  is the same on the server and in the browser whatever the setting (no
+  hydration mismatch); without scripts a `<noscript>` style shows every
+  revealed block.
+- **3D hero rules** (`HeroVisual`): the server sends the poster
+  (`HeroFallback`, HTML and CSS in `src/styles/heroPoster.css`: the orb
+  among its channels, rings turning in 3D with a comet of light, a breathing
+  glow), so the largest paint never waits for script or WebGL, and phones
+  keep it as their moving picture. After the first paint `heroPlan`
+  (`lib/heroDevice.ts`) decides: reduced motion, Save-Data, a narrow screen
+  (under 64rem), a 2g/3g connection or a low-power device (under 4 cores or
+  4 GB; with a touch screen under 6 and 6) keep the poster, marked
+  `data-scene-reason`. Otherwise the scene's chunk is fetched once the page
+  has loaded, the browser is idle and the hero is (nearly) on screen
+  (`_landing/heroWaits.ts`, one after another by `lib/waits.ts`), only with
+  WebGL, and fades in over the poster in the same box after its first frame
+  (no layout shift). It stops drawing off screen, lowers its resolution when
+  frames are slow and hands back to the poster if they stay slow, the WebGL
+  context is lost or setup fails. `data-scene="static" | "3d"` on the hero
+  tells which one shows. Nothing is downloaded at run time: bubble textures
+  are drawn on canvases, reflections come from a generated studio
+  environment.
 - **e2e**: `playwright.config.ts` runs every test with
   `contextOptions.reducedMotion: "reduce"` (and SwiftShader for WebGL);
-  `e2e/landing-motion.spec.ts` checks the still picture with reduced motion,
-  the canvas without it (no layout shift) and the switch back when reduced
-  motion is turned on.
-
+  `e2e/landing-motion.spec.ts` checks the poster with reduced motion, with
+  Save-Data and on a phone (moving, no canvas), the poster in the server's
+  HTML and then the canvas on a capable desktop (no layout shift), the
+  switch back when reduced motion is turned on, the reveals, and that
+  three.js is never downloaded there nor on a niche page, a legal page or
+  `/login`.
 Budgets, measured with `npm run build && npm run measure:first-load`
 (gzipped JavaScript a first visit downloads; the 3D chunk excluded):
 

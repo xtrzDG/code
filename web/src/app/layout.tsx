@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <I18nProvider locale={locale} messages={clientTexts.messages} scope={clientTexts.scope}>
           <ThemeProvider initialTheme={theme}>
             <ViewerTimeZoneProvider initialZone={viewerTimeZone}>
-              <MotionProvider>
+              <MotionProvider animates={clientTexts.scope === "full"}>
                 <ToastProvider>
                   {children}
                   <StepUpDialog />

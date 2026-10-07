@@ -1,5 +1,5 @@
 import { IconChevronDown } from "@/components/icons";
-import { Reveal } from "@/components/motion";
+import { Reveal } from "@/components/siteMotion";
 import type { MessageKey, Translator } from "@/i18n/translate";
 
 import { Section } from "./Section";

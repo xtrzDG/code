@@ -9,7 +9,6 @@
  */
 
 import { CURRENCY_MINOR_DIGITS } from "./currencyDigits.generated";
-import { LANGUAGE_NAMES } from "./displayNames.generated";
 import { dateTimeFormat, numberFormat } from "./intl/formatters";
 
 export type Timestamp = Date | number;
@@ -201,29 +200,7 @@ export function weekdayName(weekday: number, locale: string, width: "long" | "sh
   return dateTimeFormat(locale, { weekday: width, timeZone: "UTC" }).format(date);
 }
 
-/** "русский" -> "Русский" (names used as labels start with a capital). */
-export function capitalizeFirst(text: string, locale?: string): string {
-  // Georgian (Mkhedruli) has no capitals: uppercasing would give Mtavruli ("Ქართული").
-  if (text.length === 0 || /^[\u10D0-\u10FF]/.test(text)) {
-    return text;
-  }
-  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
-}
-
-/**
- * A language tag as a label in the locale: languageName("ka", "ru") ->
- * "Грузинский". The interface languages read the backend's CLDR table (the
- * same on the server and in every browser; Chrome has no Georgian language
- * names); other tags and languages ask Intl.
- */
-export function languageName(tag: string, locale: string): string {
-  const known = LANGUAGE_NAMES[locale.split(/[-_]/)[0]?.toLowerCase() ?? locale]?.[tag];
-  if (known) {
-    return capitalizeFirst(known, locale);
-  }
-  try {
-    return capitalizeFirst(new Intl.DisplayNames([locale], { type: "language" }).of(tag) ?? tag, locale);
-  } catch {
-    return tag;
-  }
-}
+// Kept here for their callers; each lives in a module of its own, so a page
+// that formats only dates and money does not carry the table of language names.
+export { capitalizeFirst } from "./capitalize";
+export { languageName } from "./languageNames";

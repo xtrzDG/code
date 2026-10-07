@@ -9,7 +9,7 @@ import {
   IconInbox,
   type IconProps,
 } from "@/components/icons";
-import { Stagger, StaggerItem } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/siteMotion";
 import type { MessageKey, Translator } from "@/i18n/translate";
 
 import { IconTile, Section } from "./Section";

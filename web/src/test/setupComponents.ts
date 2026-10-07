@@ -8,11 +8,22 @@
  */
 
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeAll, vi } from "vitest";
+
+import { loadToastList } from "@/components/ui/toastList";
 
 import { installModalDialog, resetModalDialogs } from "./modalDialog";
 
 installModalDialog();
+
+// jsdom has no layout to animate: `m.*` elements get no animation code
+// (as without a <MotionProvider>) and render at once as plain elements.
+vi.mock("@/components/motion/motionFeatures", () => ({ default: {} }));
+
+// The browser fetches the toast list with the first toast; tests have it at once.
+beforeAll(async () => {
+  await loadToastList();
+});
 
 // jsdom has no scrolling: a no-op a test can spy on.
 if (!Element.prototype.scrollIntoView) {

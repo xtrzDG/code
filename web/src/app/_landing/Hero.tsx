@@ -1,6 +1,6 @@
 import type { Schema } from "@/api/types";
 import { IconArrowRight } from "@/components/icons";
-import { MagneticButton } from "@/components/motion";
+import { MagneticButton } from "@/components/siteMotion";
 import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
 import { CREATE_PATH } from "@/lib/navigation";

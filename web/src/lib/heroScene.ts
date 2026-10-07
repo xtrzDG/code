@@ -6,11 +6,10 @@
  * ./heroDevice.ts.
  */
 
+import type { ChannelMarkKey } from "./channelMarks";
 import { clamp, medianOf, roundTo } from "./motionMath";
 
-export const CHANNEL_MARK_KEYS = ["whatsapp", "telegram", "instagram", "messenger", "web_chat", "phone"] as const;
-
-export type ChannelMarkKey = (typeof CHANNEL_MARK_KEYS)[number];
+export { CHANNEL_MARK_KEYS, type ChannelMarkKey } from "./channelMarks";
 
 /** One bubble's path: a tilted circle around the orb. */
 export interface Orbit {

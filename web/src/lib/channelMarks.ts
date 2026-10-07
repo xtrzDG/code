@@ -5,7 +5,10 @@
  * landing's 3D bubbles (drawn on a canvas with Path2D) use the same paths.
  */
 
-import type { ChannelMarkKey } from "./heroScene";
+/** The channels with a mark, in the order the hero shows them. */
+export const CHANNEL_MARK_KEYS = ["whatsapp", "telegram", "instagram", "messenger", "web_chat", "phone"] as const;
+
+export type ChannelMarkKey = (typeof CHANNEL_MARK_KEYS)[number];
 
 export interface ChannelMark {
   /** Outline paths, stroked with round caps and joins (stroke width 1.75 at 24 px). */

@@ -5,7 +5,9 @@
  * `cssMotionTokens()` lists them and a unit test keeps the two in step).
  *
  * The cabinet moves little and quickly (`cabinet` distances, `snappy`
- * springs); the landing page is expressive (`landing`, `gentle`, `bouncy`).
+ * springs); the public site is expressive (`landing`, `gentle`, `bouncy`)
+ * and moves in CSS alone (src/components/siteMotion), so its pages carry no
+ * animation library.
  * Reduced motion: <MotionProvider> (MotionConfig reducedMotion="user") turns
  * every transform and layout animation off and keeps short fades; the CSS
  * side stops in globals.css under `prefers-reduced-motion`.
@@ -58,7 +60,7 @@ export type SpringName = keyof typeof SPRINGS;
 export const DISTANCES = { cabinet: 8, landing: 28 } as const;
 
 /** Delay between siblings appearing one after another (seconds). */
-const STAGGER = { cabinet: 0.035, landing: 0.08 } as const;
+export const STAGGER = { cabinet: 0.035, landing: 0.08 } as const;
 
 /** Largest tilt of a TiltCard at its edge (degrees). */
 export const TILT_DEGREES = { subtle: 4, expressive: 9 } as const;
@@ -120,7 +122,7 @@ export function cssMotionTokens(): Record<string, string> {
   for (const [name, points] of Object.entries(EASINGS)) {
     tokens[`--ease-${name}`] = cubicBezierCss(points);
   }
-  for (const name of ["press", "snappy"] as const) {
+  for (const name of ["press", "snappy", "gentle", "bouncy"] as const) {
     const { easing, durationMs } = springToCssLinear(SPRINGS[name]);
     tokens[`--ease-spring-${name}`] = easing;
     tokens[`--motion-spring-${name}`] = `${durationMs}ms`;

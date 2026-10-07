@@ -1,5 +1,5 @@
 import { IconChannelMark } from "@/components/icons";
-import { Reveal } from "@/components/motion";
+import { Reveal } from "@/components/siteMotion";
 import type { MessageKey, Translator } from "@/i18n/translate";
 import { CHANNEL_MARKS } from "@/lib/channelMarks";
 import type { ChannelMarkKey } from "@/lib/heroScene";

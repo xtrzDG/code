@@ -1,5 +1,5 @@
 import { IconCheck } from "@/components/icons";
-import { StaggerItem, TiltCard } from "@/components/motion";
+import { StaggerItem, TiltCard } from "@/components/siteMotion";
 import { ButtonLink } from "@/components/ui";
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import type { Translator } from "@/i18n/translate";

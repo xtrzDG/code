@@ -1,5 +1,5 @@
 import { IconCalendar, IconCheck, IconHandoff, IconSparkles, IconWhatsApp } from "@/components/icons";
-import { Stagger, StaggerItem, TiltCard, TiltLayer } from "@/components/motion";
+import { Stagger, StaggerItem, TiltCard, TiltLayer } from "@/components/siteMotion";
 import type { Translator } from "@/i18n/translate";
 
 import { Section } from "./Section";

@@ -1,5 +1,5 @@
 import { IconArrowRight } from "@/components/icons";
-import { MagneticButton, Reveal } from "@/components/motion";
+import { MagneticButton, Reveal } from "@/components/siteMotion";
 import { ButtonLink } from "@/components/ui";
 import type { Translator } from "@/i18n/translate";
 import { CREATE_PATH } from "@/lib/navigation";

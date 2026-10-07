@@ -10,8 +10,7 @@
 
 import type { CSSProperties } from "react";
 
-import { CHANNEL_MARKS } from "@/lib/channelMarks";
-import { CHANNEL_MARK_KEYS } from "@/lib/heroScene";
+import { CHANNEL_MARK_KEYS, CHANNEL_MARKS } from "@/lib/channelMarks";
 import { roundTo } from "@/lib/motionMath";
 import { cn } from "@/lib/cn";
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import type { NicheSummaryView } from "@/api/types";
 import { IconArrowRight } from "@/components/icons";
-import { Stagger, StaggerItem } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/siteMotion";
 import type { Locale } from "@/i18n/config";
 import type { Translator } from "@/i18n/translate";
 import { nichePath } from "@/lib/publicSite/paths";

@@ -1,4 +1,4 @@
-import { Stagger, StaggerItem } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/siteMotion";
 import type { Translator } from "@/i18n/translate";
 import { cn } from "@/lib/cn";
 

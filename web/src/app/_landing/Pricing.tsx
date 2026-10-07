@@ -1,5 +1,5 @@
 import type { CountryListItem, Schema } from "@/api/types";
-import { Stagger } from "@/components/motion";
+import { Stagger } from "@/components/siteMotion";
 import type { Translator } from "@/i18n/translate";
 import { countryChoices } from "@/lib/publicSite/countryChoices";
 import { hasConversion, rateDayLabel, rateSourceKey } from "@/lib/publicSite/prices";
