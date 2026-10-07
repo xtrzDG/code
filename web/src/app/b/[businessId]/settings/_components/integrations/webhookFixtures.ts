@@ -2,7 +2,7 @@
 
 import type { ApiKeyList, WebhookDeliveryView, WebhookEndpointList, WebhookEndpointView } from "@/lib/apiIntegrations";
 
-export const at = (day: number) => Date.UTC(2026, 9, day, 9) * 1000;
+const at = (day: number) => Date.UTC(2026, 9, day, 9) * 1000;
 export const SECRET = `whsec_${"0".repeat(43)}`;
 export const TOKEN = `awk_aaaaaaaa_${"0".repeat(40)}`;
 

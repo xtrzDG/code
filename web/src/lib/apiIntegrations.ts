@@ -12,11 +12,9 @@ export type WebhookEndpointView = Schema<"WebhookEndpointView">;
 export type WebhookEndpointList = Schema<"WebhookEndpointList">;
 export type CreatedWebhookEndpoint = Schema<"CreatedWebhookEndpoint">;
 export type WebhookDeliveryView = Schema<"WebhookDeliveryView">;
-export type WebhookDeliveryDetail = Schema<"WebhookDeliveryDetail">;
 export type BusinessEventType = Schema<"BusinessEventType">;
 export type WebhookEndpointStatus = Schema<"WebhookEndpointStatus">;
 export type WebhookDeliveryStatus = Schema<"WebhookDeliveryStatus">;
-export type WebhookDeliveryProblem = Schema<"WebhookDeliveryProblem">;
 export type WebhookEndpointBody = RequestBody<"/v1/businesses/{business_id}/webhooks", "post">;
 export type WebhookEndpointChange = RequestBody<"/v1/businesses/{business_id}/webhooks/{webhook_id}", "patch">;
 
