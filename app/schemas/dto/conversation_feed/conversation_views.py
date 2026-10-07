@@ -8,7 +8,11 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.channels import (
+    ChannelKind,
+    InboundContextNote,
+    MessageDirection,
+)
 from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
@@ -56,7 +60,10 @@ from app.schemas.typings.conversations.constrained_integers import (
     ConversationMessageCount,
     LlmTokenCount,
 )
-from app.schemas.typings.conversations.constrained_strings import ConversationSearchText
+from app.schemas.typings.conversations.constrained_strings import (
+    ChoiceLabel,
+    ConversationSearchText,
+)
 from app.schemas.typings.conversations.prefixed_id import (
     CallId,
     ConversationId,
@@ -113,10 +120,7 @@ class ConversationQuery(ImmutableDTO):
 
 
 class ConversationMessagesQuery(ImmutableDTO):
-    """
-    Earlier messages of a conversation: the page before the cursor the card
-    or the previous page gave (audited like the card).
-    """
+    """Earlier messages of a conversation, before a cursor (audited like the card)."""
 
     user_id: UserId
     business_id: BusinessId
@@ -174,13 +178,12 @@ class ToolCallView(ImmutableDTO):
 
 class MessageView(ImmutableDTO):
     """
-    A message with the model usage behind it; `sent_by` is the owner or
-    staff member who wrote a staff message from the cabinet, and
-    `delivery` how that message travels to the customer (None for every
-    other message, and for staff messages kept for the website chat);
-    `attachments` are a customer's voice notes, photos and places;
-    `guard` what the reply guard did with it (None: nothing to show, e.g.
-    staff messages and replies stored before the guard recorded verdicts).
+    A message with the model usage behind it. `sent_by`: who wrote a staff
+    message in the cabinet; `delivery`: how it travels (None otherwise and
+    for the website chat); `attachments`: a customer's voice notes, photos
+    and places; `context_note`: what a customer message refers to (a story);
+    `choices`: the options a reply offered to tap; `guard`: what the reply
+    guard did (None: nothing to show).
     """
 
     id: MessageId
@@ -200,6 +203,8 @@ class MessageView(ImmutableDTO):
     )
     delivery: MessageDeliveryView | None = None
     guard: MessageGuardView | None = None
+    context_note: InboundContextNote | None = None
+    choices: list[ChoiceLabel] = Field(default_factory=list[ChoiceLabel])
 
 
 class CallSummaryView(ImmutableDTO):

@@ -104,7 +104,9 @@ class AssistantVersionDocument(BaseDocument):
     #    the owner).
     # 6: the tool list_my_bookings in `tools` (a new value, no upcaster).
     # 7: the tool join_waitlist in `tools` (a new value, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("7")
+    # 8: the tool offer_choices may appear in `tools` once its release gate
+    #    is open (a new value, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("8")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

@@ -17,6 +17,7 @@ from app.schemas.constants.conversations import (
 )
 from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.conversation_engine import PreparedTurn, ReplyRecord
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.dto.conversations import AssistantReply
@@ -38,7 +39,9 @@ from app.utilities.conversations.assistant_texts.business_name_placeholder impor
     fill_business_name,
 )
 from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call_cost
+from app.utilities.conversations.reply_choices_text import close_with_prompt
 from app.utilities.conversations.reply_latency import measure_reply_latency
+from app.utilities.conversations.stored_tool_calls import storable_tool_calls
 from app.utilities.observability.metrics.null_service_metrics import (
     NO_SERVICE_METRICS,
 )
@@ -66,6 +69,8 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     when staff now own it. The reply names the version that answered and
     carries the turn's tool calls. A real customer's measured wait is
     observed for /metrics (answer latency by channel; test chats are not).
+    A reply that offers options ends with their prompt and keeps them
+    (`choices`); the channel shows them under it.
     """
 
     def __init__(
@@ -92,10 +97,11 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         turn: PreparedTurn = input_data.turn
         now: Microseconds = self._wall_clock.now_unix()
         disclosure: MessageText | None = self._find_disclosure(turn, input_data.text)
-        text: MessageText | None = (
-            input_data.text
-            if disclosure is None or input_data.text is None
-            else MessageText(f"{disclosure}{DISCLOSURE_SEPARATOR}{input_data.text}")
+        text: MessageText | None = compose_reply_text(input_data, disclosure)
+        choices: ReplyChoices | None = (
+            None
+            if input_data.choices is None
+            else input_data.choices.model_copy(update={"language": turn.reply_language})
         )
         cost: LlmCallCost = (
             LlmCallCost(CostMicroUsd(0), CostMicroUsd(0))
@@ -122,7 +128,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                     author=MessageAuthor.ASSISTANT,
                     text=text,
                     language=turn.reply_language,
-                    tool_calls=list(input_data.tool_calls),
+                    tool_calls=storable_tool_calls(input_data.tool_calls),
                     model_id=input_data.model_id,
                     input_tokens=input_data.input_tokens,
                     output_tokens=input_data.output_tokens,
@@ -137,6 +143,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                     guard_reasons=list(input_data.guard_reasons),
                     unverified_values=list(input_data.unverified_values),
                     claim_findings=list(input_data.claim_findings),
+                    choices=choices,
                     created_at=now,
                     updated_at=now,
                 )
@@ -189,6 +196,7 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 )
                 for record in input_data.tool_calls
             ],
+            choices=None if text is None else choices,
         )
 
     def _observe_answer_latency(
@@ -221,6 +229,23 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 str(turn.business.name),
             )
         )
+
+
+def compose_reply_text(
+    record: ReplyRecord, disclosure: MessageText | None
+) -> MessageText | None:
+    """
+    The reply as sent: the disclosure first when due, then the model's
+    text, closed by the prompt of the options it offers.
+    """
+
+    if record.text is None:
+        return None
+
+    body: str = close_with_prompt(str(record.text), record.choices)
+    return MessageText(
+        body if disclosure is None else f"{disclosure}{DISCLOSURE_SEPARATOR}{body}"
+    )
 
 
 def guard_verdict_of(record: ReplyRecord) -> ReplyGuardVerdict | None:

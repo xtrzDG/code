@@ -205,6 +205,7 @@
         if (known[message.id] && known[message.id].draft) {
           // The stored text replaces the stream's draft.
           known[message.id].text = message.text;
+          known[message.id].choices = readChoices(message.choices);
           delete known[message.id].draft;
           replaced += 1;
           return;
@@ -217,7 +218,8 @@
           role: message.author === "staff" ? "staff" : "assistant",
           id: message.id,
           text: message.text,
-          direction: message.direction === "rtl" ? "rtl" : "ltr"
+          direction: message.direction === "rtl" ? "rtl" : "ltr",
+          choices: readChoices(message.choices)
         });
         lastText = message.text;
         added += 1;

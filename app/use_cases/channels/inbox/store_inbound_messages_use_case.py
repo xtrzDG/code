@@ -133,6 +133,7 @@ def build_customer_event(
             message.contact_phone_number,
             message.attachments,
             message.acquisition_source,
+            message.context_note,
         ),
         created_at=now,
         updated_at=now,

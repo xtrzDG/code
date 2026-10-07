@@ -16,6 +16,7 @@ export const assistantChatKa: Translation<typeof assistantChatEn> = {
       human: "შეიძლება ადამიანს დაველაპარაკო?",
     },
     typing: "ასისტენტი წერს…",
+    choicesLabel: "ასარჩევი პასუხები",
     inputLabel: "შეტყობინება",
     placeholder: "დაწერეთ შეტყობინება…",
     inputHint: {

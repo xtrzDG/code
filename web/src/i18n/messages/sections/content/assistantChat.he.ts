@@ -16,6 +16,7 @@ export const assistantChatHe: Translation<typeof assistantChatEn> = {
       human: "אפשר לדבר עם נציג?",
     },
     typing: "העוזר כותב…",
+    choicesLabel: "תשובות לבחירה",
     inputLabel: "הודעה",
     placeholder: "כתבו הודעה…",
     inputHint: {

@@ -236,6 +236,22 @@ the old release, which ignores them; during the overlap an old API process
 counts no requests for the availability SLI, so the hour of the deploy
 reads a little low.
 
+The release with reply buttons (R14-CHANNEL-BUTTONS, no migration;
+`MessageDocument`, `InboundEventDocument` and `OutboundMessageDocument`
+version 7) follows the enum rule below: the model tool `offer_choices` sits
+behind the closed release gate `offer_choices_tool`, so the model is
+offered the tool in every chat but no version lists it and no stored tool
+call names it; the reply keeps the options it offered (`choices`). The
+next release opens the gate. The new fields (`choices` of a reply and of
+an outbound message, `context_note` of a customer message) are unknown to
+the old release, which ignores them: an old worker sends a reply with
+options as its text alone, which already ends with their question, and
+shows no story line. A Telegram bot is asked for `callback_query` updates
+the first time a new instance sends it a keyboard (`setWebhook` with the
+same address and secret); an old instance ignores a tap, so a customer who
+taps during the overlap (or after a rollback) gets no answer to it and
+types instead. Nothing needs cleaning after a rollback.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

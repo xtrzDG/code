@@ -72,6 +72,7 @@ export const TOOL_LABELS: Record<AssistantToolName, MessageKey> = {
   handoff_to_human: "conversations.tools.handoff_to_human",
   send_link: "conversations.tools.send_link",
   record_unanswered_question: "conversations.tools.record_unanswered_question",
+  offer_choices: "conversations.tools.offer_choices",
 };
 
 export const BOOKING_STATUS: Record<BookingStatus, StatusLabel> = {

@@ -3,9 +3,10 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName, LlmEffort
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, InboundContextNote
 from app.schemas.constants.conversations import LlmStopReason, ReplyGuardVerdict
 from app.schemas.domain.message_media import MessageAttachment
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.conversation_feed.conversation_views import ToolCallView
 from app.schemas.typings.assistants.constrained_integers import (
     AssistantVersionNumber,
@@ -67,7 +68,9 @@ class InboundMessage(ImmutableDTO):
     measured). `is_reply_deferred`: the customer wrote again right after,
     so this message is stored and answered together with the next one.
     `acquisition_source` is where the customer came from when the message
-    carried it; a conversation the message starts keeps it.
+    carried it; a conversation the message starts keeps it. `context_note`
+    is what the message refers to that the assistant cannot see (a reply to
+    the business's Instagram story, a story mention).
     """
 
     business_id: BusinessId
@@ -86,6 +89,7 @@ class InboundMessage(ImmutableDTO):
     waiting_since: Microseconds | None = None
     is_reply_deferred: IsReplyDeferred = False
     acquisition_source: AcquisitionSourceTag | None = None
+    context_note: InboundContextNote | None = None
 
 
 class AssistantReply(ImmutableDTO):
@@ -99,7 +103,9 @@ class AssistantReply(ImmutableDTO):
     out. `assistant_version_id` and `assistant_version_number` name the
     version that answered (the one the conversation is pinned to);
     `tool_calls` are the tools the model called in this turn, with their
-    input and result (the owner's test chat shows them).
+    input and result (the owner's test chat shows them). `choices` are the
+    options the reply offers to tap (the text already ends with their
+    prompt); every channel shows them its own way.
     """
 
     conversation_id: ConversationId
@@ -115,6 +121,7 @@ class AssistantReply(ImmutableDTO):
     assistant_version_id: AssistantVersionId | None = None
     assistant_version_number: AssistantVersionNumber | None = None
     tool_calls: list[ToolCallView] = Field(default_factory=list[ToolCallView])
+    choices: ReplyChoices | None = None
 
 
 class LlmToolDefinition(ImmutableDTO):

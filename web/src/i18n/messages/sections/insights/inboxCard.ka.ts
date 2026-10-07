@@ -14,6 +14,11 @@ export const inboxCardKa: Translation<typeof inboxCardEn> = {
   },
   panelLabel: "საუბრის შესახებ",
   panelTabs: "პანელი",
+  messageContext: {
+    story_reply: "პასუხი თქვენს ისტორიაზე",
+    story_mention: "მოხსენიება კლიენტის ისტორიაში",
+  },
+  offeredChoices: "შეთავაზებული ვარიანტები",
   actions: {
     label: "სწრაფი მოქმედებები",
     resolve: "მოგვარდა",

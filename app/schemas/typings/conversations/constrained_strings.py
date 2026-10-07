@@ -3,6 +3,36 @@
 from base_typed_string import BaseConstrainedTypedString
 
 
+class ChoiceLabel(BaseConstrainedTypedString):
+    """
+    One option the assistant offers as a button, a quick reply or a chip,
+    at most 20 characters on one line (WhatsApp reply buttons allow 20, so
+    every channel can show it as it is), without spaces around it. A tap
+    sends it back as the customer's message.
+
+    Example:
+        label = ChoiceLabel("Sat 19:30")
+    """
+
+    min_length = 1
+    max_length = 20
+    pattern = r"^\S(?:[^\x00-\x1f\x7f]*\S)?\Z"
+
+
+class ChoicePromptText(BaseConstrainedTypedString):
+    """
+    The question shown with offered choices, on one line, e.g. "Which time
+    suits you?"; it closes the reply the buttons are attached to.
+
+    Example:
+        prompt = ChoicePromptText("Which time suits you?")
+    """
+
+    min_length = 1
+    max_length = 200
+    pattern = r"^\S(?:[^\x00-\x1f\x7f]*\S)?\Z"
+
+
 class ConversationSearchText(BaseConstrainedTypedString):
     """
     What staff type to find conversations: part of a customer's name, phone

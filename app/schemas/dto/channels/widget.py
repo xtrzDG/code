@@ -32,6 +32,7 @@ from app.schemas.typings.channels.strings import (
 )
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.booleans import IsConversationHandedOff
+from app.schemas.typings.conversations.constrained_strings import ChoiceLabel
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -145,7 +146,11 @@ class WidgetMessagesQuery(ImmutableDTO):
 
 
 class WidgetMessageView(ImmutableDTO):
-    """An assistant or staff message as the widget shows it."""
+    """
+    An assistant or staff message as the widget shows it; `choices` are the
+    options an assistant reply offers, shown as chips under it until the
+    visitor writes (a tap sends the label).
+    """
 
     id: MessageId
     author: MessageAuthor
@@ -153,6 +158,7 @@ class WidgetMessageView(ImmutableDTO):
     language: LanguageTag | None = None
     direction: TextDirection
     created_at: Microseconds
+    choices: list[ChoiceLabel] = Field(default_factory=list[ChoiceLabel])
 
 
 class WidgetMessagesView(ImmutableDTO):

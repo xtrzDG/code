@@ -1,11 +1,14 @@
 import logging
+from functools import partial
 
+from app.adapters.channels.telegram_tap_updates import TelegramTapUpdates
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.channels import ChannelAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.message_media import InboundAttachment
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
     ChannelInboundMessage,
@@ -16,13 +19,14 @@ from app.schemas.exceptions.application_errors import (
     AuthenticationRequiredError,
     ExternalServiceError,
 )
+from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.channels.constrained_integers import DeliveredMessageCount
 from app.schemas.typings.channels.strings import (
     ChannelSecret,
     OutboundMessagePart,
     ProviderMessageId,
+    TelegramCallbackQueryId,
 )
-from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.schemas.typings.platform.strings import PlatformSecret
@@ -30,6 +34,8 @@ from app.utilities.channels.attachment_reading import has_content
 from app.utilities.channels.channel_phone_numbers import (
     parse_messaging_phone_number,
 )
+from app.utilities.channels.choice_delivery import send_with_choices, split_reply
+from app.utilities.channels.choice_payloads import telegram_inline_keyboard
 from app.utilities.channels.json_values import (
     JsonObject,
     parse_json_object,
@@ -38,11 +44,13 @@ from app.utilities.channels.json_values import (
     read_object,
     read_text,
 )
-from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.channels.skipped_webhook_parts import log_skipped_parts
 from app.utilities.channels.telegram_attachments import read_telegram_attachments
+from app.utilities.channels.telegram_messages import read_sender_name, tap_message
+from app.utilities.channels.telegram_taps import TelegramTap, chosen_text, read_tap
 from app.utilities.channels.telegram_update_kinds import update_kind
 from app.utilities.channels.webhook_signatures import is_matching_telegram_secret
+from app.utilities.conversations.reply_choices_text import number_the_options
 from app.utilities.security.key_ring import key_ring
 from app.utilities.sharing.acquisition_sources import read_start_payload
 
@@ -51,7 +59,6 @@ PLATFORM_NAME: str = "Telegram"
 # Telegram counts the 4096-character limit of sendMessage in UTF-16 units.
 TELEGRAM_MESSAGE_LIMIT: int = 4096
 PRIVATE_CHAT_TYPE: str = "private"
-MAX_CONTACT_NAME_LENGTH: int = 128
 
 
 class TelegramChannelAdapter(ChannelAdapterContract):
@@ -76,6 +83,9 @@ class TelegramChannelAdapter(ChannelAdapterContract):
         self._telegram_client: TelegramBotApiClientContract = telegram_client
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
         self._app_settings: AppSettings = app_settings
+        self._tap_updates: TelegramTapUpdates = TelegramTapUpdates(
+            telegram_client, app_settings
+        )
 
     def verify_signature(
         self,
@@ -100,6 +110,10 @@ class TelegramChannelAdapter(ChannelAdapterContract):
         payload: ChannelWebhookPayload,
     ) -> list[ChannelInboundMessage]:
         update: JsonObject | None = parse_json_object(payload.body)
+        tap: TelegramTap | None = read_tap(update)
+        if tap is not None:
+            return [tap_message(tap)]
+
         message: JsonObject | None = (
             None if update is None else read_object(update, "message")
         )
@@ -153,35 +167,86 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             )
         ]
 
-    def split(self, text: MessageText) -> list[MessageText]:
+    def split(
+        self, text: MessageText, choices: ReplyChoices | None = None
+    ) -> list[MessageText]:
         return [
             MessageText(part)
-            for part in split_message_text(str(text), TELEGRAM_MESSAGE_LIMIT)
+            for part in split_reply(str(text), TELEGRAM_MESSAGE_LIMIT, choices)
         ]
 
     def send(
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
+        choices: ReplyChoices | None = None,
     ) -> ChannelSendReceipt:
-        if target.credential is None:
+        """
+        Options go as an inline keyboard under the last part; a bot whose
+        taps cannot reach the platform gets them as a numbered list.
+        """
+
+        bot_token: ChannelSecret | None = target.credential
+        if bot_token is None:
             raise ExternalServiceError(
                 "The Telegram bot of this business is not connected."
             )
 
-        parts: list[MessageText] = self.split(text)
-        provider_message_id: ProviderMessageId | None = None
-        for part in parts:
-            provider_message_id = self._telegram_client.send_message(
-                target.credential,
-                target.channel_user_id,
-                OutboundMessagePart(str(part)),
+        def send_part(
+            part: str, keyboard: JsonObject | None = None
+        ) -> ProviderMessageId | None:
+            return self._telegram_client.send_message(
+                bot_token, target.channel_user_id, OutboundMessagePart(part), keyboard
             )
+
+        parts: list[MessageText] = self.split(text, choices)
+        provider_message_id: ProviderMessageId | None = None
+        for index, part in enumerate(parts):
+            if choices is None or index < len(parts) - 1:
+                provider_message_id = send_part(str(part))
+            elif self._tap_updates.ensure(bot_token):
+                provider_message_id = send_with_choices(
+                    PLATFORM_NAME,
+                    str(part),
+                    choices,
+                    partial(send_part, keyboard=telegram_inline_keyboard(choices)),
+                    send_part,
+                )
+            else:
+                provider_message_id = send_part(number_the_options(str(part), choices))
 
         return ChannelSendReceipt(
             delivered=DeliveredMessageCount(len(parts)),
             provider_message_id=provider_message_id,
         )
+
+    def acknowledge_taps(
+        self,
+        payload: ChannelWebhookPayload,
+        channel_secret: ChannelSecret | None,
+    ) -> None:
+        """
+        Answer the tap (the button stops showing progress), then keep the
+        chosen option as the tapped message's last line without its
+        buttons, so nothing is tapped twice. Best effort, logged.
+        """
+
+        tap: TelegramTap | None = read_tap(parse_json_object(payload.body))
+        if tap is None or channel_secret is None:
+            return
+
+        try:
+            self._telegram_client.answer_callback_query(
+                channel_secret, TelegramCallbackQueryId(tap.callback_query_id)
+            )
+            if tap.message_id is not None and tap.message_text is not None:
+                self._telegram_client.edit_message_text(
+                    channel_secret,
+                    ProviderMessageId(f"{tap.chat_id}:{tap.message_id}"),
+                    OutboundMessagePart(chosen_text(tap.message_text, tap.label)),
+                )
+        except ApplicationError as error:
+            LOGGER.info("A Telegram button tap was not acknowledged: %s", error)
 
     def signal_typing(
         self,
@@ -220,15 +285,3 @@ class TelegramChannelAdapter(ChannelAdapterContract):
             return None
 
         return parse_messaging_phone_number(self._phone_number_parser, raw_phone_number)
-
-
-def read_sender_name(sender: JsonObject) -> ContactName | None:
-    """First and last name of a Telegram user, as they set them."""
-
-    name_parts: list[str] = [
-        part.strip()
-        for part in (read_text(sender, "first_name"), read_text(sender, "last_name"))
-        if part is not None
-    ]
-    full_name: str = " ".join(name_parts)[:MAX_CONTACT_NAME_LENGTH].strip()
-    return None if full_name == "" else ContactName(full_name)

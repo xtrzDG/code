@@ -44,6 +44,28 @@ Spec: `65a65d7b9c3d848f`
   `api_contact`, `api_conversation`, `webhook_endpoint` and
   `webhook_delivery` in `GET …/audit-log`.
 
+## 2026-10-06 — reply options to tap, story context
+
+Spec: `a71e4517de813e60`
+
+- **Added** `AssistantToolName` value `offer_choices`: the assistant offers
+  2 to 10 short options (at most 20 characters each) with a reply. Version
+  tool lists and stored tool calls name it only once its release gate is
+  open; clients that list tool names show it as any other tool.
+- **Added** `ReplyChoices` (`prompt`, `options`, `language`) and
+  `AssistantReply.choices` (the owner's test chat): the options the reply
+  offers; its `text` already ends with `prompt`.
+- **Added** `MessageView.choices` (the labels an assistant reply offered,
+  empty for other messages) and `MessageView.context_note`
+  (`InboundContextNote`: `story_reply`, a reply to the business's
+  Instagram story; `story_mention`, a mention in the customer's own story).
+- **Added** `WidgetMessageView.choices` on `GET /v1/widget/{business_id}/messages`: the
+  options of an assistant reply, which the website chat shows as chips
+  until the visitor writes. A tap sends the label as an ordinary message.
+- **Changed** the stored documents behind these views are at version 7
+  (`MessageDocument`, `InboundEventDocument`, `OutboundMessageDocument`);
+  their schemas in the description gain the optional fields above.
+
 ## 2026-10-06 — wave 17 together: operation names, idempotency keys, ETags, the pipeline watchdog
 
 Spec: `a7fd87bc6c9d6bb9`

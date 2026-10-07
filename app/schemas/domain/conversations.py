@@ -3,7 +3,11 @@ from pydantic import Field
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.assistants import AssistantToolName
-from app.schemas.constants.channels import ChannelKind, MessageDirection
+from app.schemas.constants.channels import (
+    ChannelKind,
+    InboundContextNote,
+    MessageDirection,
+)
 from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
@@ -21,6 +25,7 @@ from app.schemas.constants.reply_safety import (
     ReplyGuardReason,
 )
 from app.schemas.domain.message_media import MessageAttachment
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.billing.constrained_integers import CostMicroUsd
@@ -191,9 +196,16 @@ class MessageDocument(BaseDocument):
     Version 5: `tool_calls` may name the tool list_my_bookings (a new
     value; version 4 rows read as they are). Version 6: they may name the
     tool join_waitlist (a new value; version 5 rows read as they are).
+
+    Version 7 (R14): an assistant reply may offer `choices` (the options
+    shown as buttons, quick replies or chips; its text already ends with
+    their prompt), and a customer message may say what it refers to
+    (`context_note`, e.g. a reply to the business's Instagram story). Both
+    optional. `tool_calls` may name offer_choices once its release gate is
+    open (a new value).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("6")
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId
@@ -223,6 +235,8 @@ class MessageDocument(BaseDocument):
     )
     claim_findings: list[ClaimFinding] = Field(default_factory=list[ClaimFinding])
     injection_flag: InjectionSignal | None = None
+    choices: ReplyChoices | None = None
+    context_note: InboundContextNote | None = None
 
 
 class LlmTurnDocument(BaseDocument):

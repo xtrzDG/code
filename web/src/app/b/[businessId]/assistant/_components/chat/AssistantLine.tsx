@@ -4,15 +4,25 @@ import { Badge } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { ChatEntry } from "../../_lib/chatEntries";
+import { ReplyChoices } from "./ReplyChoices";
 import { ToolCallList } from "./ToolCallList";
 
-/** One answer of the assistant: the version that gave it, what it did (badges) and the tools it called. */
+/**
+ * One answer of the assistant: the version that gave it, the options it
+ * offered (buttons to tap while it is the last answer, as in a messenger),
+ * what it did (badges) and the tools it called.
+ */
 export function AssistantLine({
   entry,
   answerLabel,
+  onChoose,
+  isSending = false,
 }: {
   entry: Extract<ChatEntry, { kind: "assistant" }>;
   answerLabel: (versionId: string | null, number?: number | null) => string;
+  /** Set while these options can still be tapped: sends the label as the customer's message. */
+  onChoose?: ((label: string) => void) | null;
+  isSending?: boolean;
 }) {
   const { t, tp } = useI18n();
   const reply = entry.reply;
@@ -43,6 +53,9 @@ export function AssistantLine({
       <div className="max-w-[85%] rounded-2xl rounded-es-md bg-surface-muted px-4 py-2.5 text-sm break-words whitespace-pre-wrap text-ink" dir="auto" data-user-content>
         {entry.text}
       </div>
+      {(entry.choices ?? []).length > 0 ? (
+        <ReplyChoices choices={entry.choices ?? []} onChoose={onChoose ?? null} isSending={isSending} />
+      ) : null}
       {badges.length > 0 ? (
         <div className="flex max-w-[85%] flex-wrap gap-1.5">
           {badges.map((badge) => (

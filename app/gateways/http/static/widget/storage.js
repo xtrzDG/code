@@ -57,12 +57,26 @@
             draft: item.draft === true,
             pending: item.pending === true,
             sentAt: typeof item.sentAt === "number" ? item.sentAt : 0,
-            failed: false
+            failed: false,
+            choices: readChoices(item.choices)
           };
         });
     } catch (error) {
       return [];
     }
+  }
+
+  // The options an assistant reply offers (chips under it until the
+  // visitor writes): short non-empty texts, at most MAX_CHOICES.
+  function readChoices(value) {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+    return value
+      .filter(function (choice) {
+        return typeof choice === "string" && choice.trim() !== "" && choice.length <= MAX_CHOICE_LENGTH;
+      })
+      .slice(0, MAX_CHOICES);
   }
 
   // The script's data-source, else ?src= or ?utm_source= of the page,

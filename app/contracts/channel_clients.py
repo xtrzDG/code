@@ -8,6 +8,7 @@ from app.schemas.dto.call_recordings import RecordingAudio
 from app.schemas.dto.channels.provider_profiles import (
     MetaPageProfile,
     TelegramBotProfile,
+    TelegramWebhookInfo,
     WhatsAppPhoneNumberProfile,
 )
 from app.schemas.typings.assistants.strings import VoiceAgentId
@@ -23,6 +24,7 @@ from app.schemas.typings.channels.strings import (
     ChannelSecret,
     OutboundMessagePart,
     ProviderMessageId,
+    TelegramCallbackQueryId,
     VoicePlatformToolId,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId, ProviderCallId
@@ -67,13 +69,40 @@ class TelegramBotApiClientContract(ClientContract, Protocol):
         bot_token: ProviderToken,
         chat_id: ChannelUserId,
         text: OutboundMessagePart,
+        reply_markup: JsonObject | None = None,
     ) -> ProviderMessageId | None:
         """
-        Send at most 4096 characters; the sent message's id
-        ("<chat id>:<message id>"). Raises ProviderRateLimitedError (429),
-        ChannelCredentialRejectedError (the token), ProviderRejectedMessageError
-        (another 4xx: blocked bot, unknown chat), ExternalServiceError.
+        Send at most 4096 characters, with an inline keyboard when given;
+        the sent message's id ("<chat id>:<message id>"). Raises
+        ProviderRateLimitedError (429), ChannelCredentialRejectedError (the
+        token), ProviderRejectedMessageError (another 4xx: blocked bot,
+        unknown chat, a bad keyboard), ExternalServiceError.
         """
+        raise NotImplementedError
+
+    def answer_callback_query(
+        self, bot_token: ProviderToken, callback_query_id: TelegramCallbackQueryId
+    ) -> None:
+        """
+        Tell Telegram a button tap was received (the button stops showing
+        progress). Errors as `send_message`.
+        """
+        raise NotImplementedError
+
+    def edit_message_text(
+        self,
+        bot_token: ProviderToken,
+        message_id: ProviderMessageId,
+        text: OutboundMessagePart,
+    ) -> None:
+        """
+        Replace the text of a sent message ("<chat id>:<message id>") and
+        remove its inline keyboard. Errors as `send_message`.
+        """
+        raise NotImplementedError
+
+    def get_webhook_info(self, bot_token: ProviderToken) -> TelegramWebhookInfo:
+        """Where the bot's webhook points and whether it gets button taps."""
         raise NotImplementedError
 
     def send_typing_action(
@@ -146,15 +175,31 @@ class MetaGraphApiClientContract(ClientContract, Protocol):
         """The "wamid..." of the sent template message."""
         raise NotImplementedError
 
+    def send_whatsapp_interactive(
+        self,
+        access_token: ProviderToken,
+        phone_number_id: MetaObjectId,
+        recipient: ChannelUserId,
+        interactive: JsonObject,
+    ) -> ProviderMessageId | None:
+        """
+        An interactive message (reply buttons or a list) within the 24-hour
+        window; the "wamid..." of the sent message. Errors as
+        `send_page_message`.
+        """
+        raise NotImplementedError
+
     def send_page_message(
         self,
         access_token: ProviderToken,
         recipient: ChannelUserId,
         text: OutboundMessagePart,
+        quick_replies: list[JsonObject] | None = None,
     ) -> ProviderMessageId | None:
         """
-        Messenger or Instagram message through the page token's Send API;
-        the "mid..." of the sent message. Raises ProviderRateLimitedError
+        Messenger or Instagram message through the page token's Send API,
+        with quick replies under it when given; the "mid..." of the sent
+        message. Raises ProviderRateLimitedError
         (429, throttling codes), ChannelCredentialRejectedError (the token),
         WhatsAppTemplateRejectedError, ProviderRejectedMessageError (another
         4xx), ExternalServiceError (5xx, network).

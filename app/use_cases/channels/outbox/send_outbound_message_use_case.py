@@ -97,8 +97,11 @@ class SendOutboundMessageUseCase(
         route: OutboundRoute | None = None
         try:
             route = self._route(input_data)
-            for part in route.parts[delivered:]:
-                provider_message_id = route.send_part(part) or provider_message_id
+            while delivered < len(route.parts):
+                provider_message_id = (
+                    route.sender_of(delivered)(route.parts[delivered])
+                    or provider_message_id
+                )
                 delivered += 1
         except ApplicationError as error:
             self._meter(input_data, delivered)

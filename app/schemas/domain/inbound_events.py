@@ -4,7 +4,7 @@ from base_pydantic_schemas import BaseDocument, PersistentDocument, SchemaVersio
 from pydantic import Field, model_validator
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.channels import ChannelKind, InboundContextNote
 from app.schemas.constants.deliveries import InboundEventKind, InboundEventStatus
 from app.schemas.domain.message_media import InboundAttachment
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -29,7 +29,9 @@ class InboundCustomerMessage(PersistentDocument):
     the typed text and the attachments (voice notes, photos, places, ...),
     whose files the worker fetches. `acquisition_source` is where the
     customer came from when the message carried it (a tagged link, an ad):
-    a conversation this message starts keeps it.
+    a conversation this message starts keeps it. `context_note` is what
+    the message refers to that the assistant cannot see (a reply to the
+    business's Instagram story, a story mention).
     """
 
     channel_user_id: ChannelUserId
@@ -40,6 +42,7 @@ class InboundCustomerMessage(PersistentDocument):
         default_factory=list[InboundAttachment]
     )
     acquisition_source: AcquisitionSourceTag | None = None
+    context_note: InboundContextNote | None = None
 
 
 class InboundEventDocument(BaseDocument):
@@ -76,9 +79,11 @@ class InboundEventDocument(BaseDocument):
     (optional). The queue runs a job in one place at a time, so a later
     attempt of that same job (its worker died) takes the event over at
     once instead of waiting out the processing lease.
+
+    Version 7: the customer message's `context_note` (optional).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("6")
+    schema_version: SchemaVersion = SchemaVersion("7")
     id: InboundEventId
     business_id: BusinessId | None = None
     kind: InboundEventKind

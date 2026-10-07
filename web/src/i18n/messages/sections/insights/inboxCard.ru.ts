@@ -16,6 +16,11 @@ export const inboxCardRu: Translation<typeof inboxCardEn> = {
   },
   panelLabel: "О разговоре",
   panelTabs: "Панель",
+  messageContext: {
+    story_reply: "Ответ на вашу историю",
+    story_mention: "Отметка в истории клиента",
+  },
+  offeredChoices: "Предложенные варианты",
   actions: {
     label: "Быстрые действия",
     resolve: "Решено",

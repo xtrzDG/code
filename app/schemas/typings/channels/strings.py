@@ -91,6 +91,10 @@ class RawChannelSecretInput(BaseTypedString):
     """
 
 
+class TelegramCallbackQueryId(BaseTypedString):
+    """Telegram's id of one button tap (`callback_query.id`), to answer it."""
+
+
 class TelegramBotDisplayName(BaseTypedString):
     """A Telegram bot's name as customers see it (getMe `first_name`)."""
 

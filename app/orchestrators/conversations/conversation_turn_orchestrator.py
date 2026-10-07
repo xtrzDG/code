@@ -181,6 +181,7 @@ class ConversationTurnOrchestrator(ConversationTurnOrchestratorContract):
             and (is_handed_off or is_farewell(str(turn.customer_text))),
             llm_round_count=generated.llm_round_count,
             is_fallback_model=generated.is_fallback_model,
+            choices=None if is_handed_off else generated.choices,
         )
 
     def _build_gated_record(self, turn: PreparedTurn, is_phone: bool) -> ReplyRecord:

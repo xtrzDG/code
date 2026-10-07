@@ -11,6 +11,7 @@ from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import ConversationStatus, MessageAuthor
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.message_media import MessageAttachment
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
@@ -23,7 +24,8 @@ from tests.channels.channels_fakes import AdjustableClock
 
 class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
     """
-    Engine stand-in: answers "Reply: <text>", stays silent or fails. Like the
+    Engine stand-in: answers "Reply: <text>" (with `reply_choices`), stays
+    silent or fails. Like the
     engine it stores the conversation of each customer (the first one gets
     `conversation_id`) with the customer's message and the answer, under the
     ids the inbox chose. `interruptions` are raised one per turn before
@@ -43,6 +45,8 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
         self.crashing_texts: set[str] = set()
         self.language: LanguageTag = LanguageTag("en")
         self.reply_text: str | None = None
+        # The options the answer offers (the model's offer_choices).
+        self.reply_choices: ReplyChoices | None = None
         self.conversation_id: ConversationId = ConversationId()
         self._conversation_repo: ConversationRepository = conversation_repo
         self._message_repo: MessageRepository = message_repo
@@ -82,6 +86,7 @@ class ScriptedCustomerPipeline(CustomerMessagePipelineContract):
             text=text,
             language=self.language,
             is_handed_off=self.is_silent,
+            choices=None if text is None else self.reply_choices,
         )
 
     def _conversation_of(self, message: InboundMessage) -> ConversationDocument:

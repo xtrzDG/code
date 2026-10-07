@@ -16,6 +16,10 @@ def integer_property(description: str) -> JsonSchema:
     return {"type": "integer", "description": description}
 
 
+def string_list_property(description: str) -> JsonSchema:
+    return {"type": "array", "items": {"type": "string"}, "description": description}
+
+
 def enum_property(values: list[str], description: str) -> JsonSchema:
     return {"type": "string", "enum": values, "description": description}
 

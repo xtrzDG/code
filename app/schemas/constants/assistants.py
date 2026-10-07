@@ -29,6 +29,9 @@ class AssistantToolName(StrEnum):
     HANDOFF_TO_HUMAN = "handoff_to_human"
     SEND_LINK = "send_link"
     RECORD_UNANSWERED_QUESTION = "record_unanswered_question"
+    # The customer's options as buttons, quick replies or chips (chat
+    # channels only; offered by the conversation, never stored in a version).
+    OFFER_CHOICES = "offer_choices"
 
 
 class AutotestRunStatus(StrEnum):

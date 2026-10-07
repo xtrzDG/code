@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds
 from app.contracts.adapter_contract import AdapterContract
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.manager_links import ManagerTelegramLinkDocument
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.calls.missed_calls import MissedCallReport
 from app.schemas.dto.channels.channel_webhooks import (
     ChannelDeliveryTarget,
@@ -67,10 +68,14 @@ class ChannelAdapterContract(AdapterContract, Protocol):
         """
         raise NotImplementedError
 
-    def split(self, text: MessageText) -> list[MessageText]:
+    def split(
+        self, text: MessageText, choices: ReplyChoices | None = None
+    ) -> list[MessageText]:
         """
         The platform messages `send` sends for `text`: one per part at the
         channel's length limit, in order (each part goes out as one message).
+        With `choices` the parts leave room for the options under the last
+        one (the platform's buttons, or a numbered list).
         """
         raise NotImplementedError
 
@@ -78,15 +83,32 @@ class ChannelAdapterContract(AdapterContract, Protocol):
         self,
         target: ChannelDeliveryTarget,
         text: MessageText,
+        choices: ReplyChoices | None = None,
     ) -> ChannelSendReceipt:
         """
         Send a text, split at the channel's length limit: how many platform
-        messages were sent and the id of the last. Raises
+        messages were sent and the id of the last. `choices` go under the
+        last part as the platform's buttons, quick replies or keyboard, or
+        as a numbered list where the platform refuses them. Raises
         ProviderRateLimitedError, ChannelCredentialRejectedError,
         ProviderRejectedMessageError (a 4xx: sending again cannot help) or
         ExternalServiceError (a temporary failure).
         """
         raise NotImplementedError
+
+    def acknowledge_taps(
+        self,
+        payload: ChannelWebhookPayload,
+        channel_secret: ChannelSecret | None,
+    ) -> None:
+        """
+        Tell the platform that the button taps of a verified delivery were
+        received, where it waits for that (a Telegram button shows progress
+        until its tap is answered). Best effort: a refusal is logged. A
+        channel whose taps arrive as plain messages does nothing (this
+        default).
+        """
+        del payload, channel_secret
 
     def signal_typing(
         self,

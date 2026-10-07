@@ -35,6 +35,8 @@ interface FakeMessage {
   author: "customer" | "assistant" | "staff";
   text: string;
   direction?: "ltr" | "rtl";
+  /** The options an assistant reply offers to tap (offer_choices). */
+  choices?: string[];
 }
 
 /** The widget API of one business, as GetWidgetMessagesUseCase answers. */
@@ -60,6 +62,8 @@ export class FakeWidgetApi {
   /** The live stream's requests and the events its next connection sends. */
   streamRequests: string[] = [];
   private streamEvents: string[] = [];
+  /** The options the next answer offers (then none again). */
+  nextChoices: string[] | null = null;
   /** Stored messages polls do not show yet (an answer the stream announced first). */
   hiddenIds = new Set<string>();
   private nextId = 1;
@@ -123,7 +127,11 @@ export class FakeWidgetApi {
       if (this.holdAnswers) {
         this.heldAnswers.push(`Answer to ${body.text}`);
       } else {
-        this.add("assistant", `Answer to ${body.text}`);
+        const answer = this.add("assistant", `Answer to ${body.text}`);
+        if (this.nextChoices) {
+          answer.choices = this.nextChoices;
+          this.nextChoices = null;
+        }
       }
       if (this.holdPosts) {
         // The visitor leaves before the answer arrives: the request is
@@ -154,7 +162,7 @@ export class FakeWidgetApi {
   }
 
   add(author: FakeMessage["author"], text: string, direction: "ltr" | "rtl" = "ltr"): FakeMessage {
-    const message = { id: `m${this.nextId++}`, author, text, direction };
+    const message: FakeMessage = { id: `m${this.nextId++}`, author, text, direction };
     this.messages.push(message);
     return message;
   }

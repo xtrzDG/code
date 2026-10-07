@@ -104,5 +104,9 @@ export const assistantDe: Translation<typeof assistantEn> = {
       name: "Unbeantwortete Frage notieren",
       description: "Speichert Fragen, die er nicht beantworten konnte, damit Sie sie beantworten.",
     },
+    offer_choices: {
+      name: "Antworten zum Antippen",
+      description: "Zeigt dem Kunden einige Antworten als Schaltflächen – eine Uhrzeit, eine Leistung, Ja oder Nein. Wo ein Kanal keine Schaltflächen hat, kommen sie als nummerierte Liste.",
+    },
   },
 };

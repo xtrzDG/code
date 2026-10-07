@@ -57,6 +57,7 @@ from app.use_cases.conversations.tools.booking_tool_handlers import (
     run_list_my_bookings,
     run_reschedule_booking,
 )
+from app.use_cases.conversations.tools.choice_tool_handlers import run_offer_choices
 from app.use_cases.conversations.tools.knowledge_tool_handlers import (
     run_get_price,
     run_search_knowledge,
@@ -74,9 +75,7 @@ from app.utilities.conversations.business_today import (
     BusinessToday,
     find_business_today,
 )
-from app.utilities.conversations.tool_payloads import (
-    describe_tool_input_error,
-)
+from app.utilities.conversations.tool_payloads import describe_tool_input_error
 
 type ToolHandler = Callable[[LlmToolCall, AssistantToolContext], AssistantToolOutcome]
 
@@ -104,12 +103,11 @@ class RunAssistantToolUseCase(
     (anyone can type someone else's number), and only in the conversation's
     sandbox mode; listing them (list_my_bookings) is scoped the same way.
     A tool not offered in the conversation, invalid input or a business
-    rule error (slot taken, unknown booking) becomes an error
-    result the model can act on instead of an exception. Availability and
-    booking results and their errors state today at the business
-    (`business_today`), and a date that has already passed is refused.
-    A booking a call made or moved is confirmed to its guest in writing
-    (`BookingConfirmationHook`; not in the owner's test chats).
+    rule error (slot taken, unknown booking) becomes an error result the
+    model can act on. Scheduling results and errors state today at the
+    business (`business_today`); a past date is refused. A booking a call
+    made or moved is confirmed to its guest in writing (not in test chats);
+    offer_choices puts options to tap under the reply.
     """
 
     def __init__(
@@ -221,6 +219,7 @@ class RunAssistantToolUseCase(
                 )
             ),
             AssistantToolName.JOIN_WAITLIST: self._run_join_waitlist,
+            AssistantToolName.OFFER_CHOICES: run_offer_choices,
             AssistantToolName.CREATE_LEAD: lambda call, context: run_create_lead(
                 self._create_lead, self._phone_number_parser, call, context
             ),

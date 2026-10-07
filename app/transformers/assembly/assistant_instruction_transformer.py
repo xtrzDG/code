@@ -1,13 +1,15 @@
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.dto.assistants.assembly_sources import AssistantInstructionSource
 from app.schemas.typings.assistants.strings import SystemPromptText
+from app.utilities.assembly.answer_format_sections import (
+    build_answer_format_section,
+)
 from app.utilities.assembly.example_sections import build_example_section
 from app.utilities.assembly.instruction_parts import (
     InstructionParts,
     collect_instruction_parts,
 )
 from app.utilities.assembly.instruction_sections import (
-    build_answer_format_section,
     build_booking_section,
     build_emergency_section,
     build_fact_section,

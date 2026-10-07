@@ -4,6 +4,7 @@ from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
 from typed_time_provider import Microseconds
 
+from app.schemas.constants.channels import InboundContextNote
 from app.schemas.constants.conversation_engine import ReplyFailureKind, TurnGate
 from app.schemas.constants.conversations import ReplyGuardVerdict
 from app.schemas.constants.reply_safety import ReplyGuardReason
@@ -16,6 +17,7 @@ from app.schemas.domain.conversations import (
     ToolCallRecord,
 )
 from app.schemas.domain.message_media import MessageAttachment
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.assistant_tools import AssistantToolContext, AssistantToolOutcome
 from app.schemas.dto.conversations import LlmToolCall
 from app.schemas.dto.reply_safety import VerifierUsage
@@ -62,7 +64,8 @@ class PreparedTurn(ImmutableDTO):
     tag, also one the business did not list: the AI disclosure, the
     platform's notices and the reply use it. `script_hint` is set when the
     customer types that language in another script ("Latn" for Georgian
-    written in Latin letters).
+    written in Latin letters). `context_note` is what the message refers to
+    that the model cannot see (a reply to the business's Instagram story).
     """
 
     business: BusinessDocument
@@ -83,6 +86,7 @@ class PreparedTurn(ImmutableDTO):
     context_line: MessageText
     tool_context: AssistantToolContext
     received_at: Microseconds
+    context_note: InboundContextNote | None = None
 
 
 class GeneratedReply(ImmutableDTO):
@@ -117,6 +121,8 @@ class GeneratedReply(ImmutableDTO):
     # answered (the version's own failed); `model_id` is then the fallback's.
     llm_round_count: LlmRoundCount = LlmRoundCount(0)
     is_fallback_model: IsFallbackModel = False
+    # The options the reply offers (offer_choices), checked with the text.
+    choices: ReplyChoices | None = None
 
 
 class ReplyRecord(ImmutableDTO):
@@ -152,6 +158,8 @@ class ReplyRecord(ImmutableDTO):
     waiting_since: Microseconds | None = None
     llm_round_count: LlmRoundCount = LlmRoundCount(0)
     is_fallback_model: IsFallbackModel = False
+    # The options offered with `text` (its prompt is added when stored).
+    choices: ReplyChoices | None = None
 
 
 class VoiceToolCallRecord(ImmutableDTO):

@@ -186,6 +186,7 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
             "language": "ru",
             "direction": "ltr",
             "created_at": staff_message["created_at"],
+            "choices": [],
         }
     ]
     assert body["cursor"] == staff_message["id"]

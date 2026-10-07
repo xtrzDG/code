@@ -22,6 +22,7 @@ from app.schemas.domain.outbound_messages import (
     OutboundMessageDocument,
     PushRecipient,
 )
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.channels.channel_webhooks import ChannelDeliveryTarget
 from app.schemas.exceptions.application_errors import (
     ChannelCredentialRejectedError,
@@ -40,12 +41,22 @@ type PartSender = Callable[[MessageText], ProviderMessageId | None]
 class OutboundRoute:
     """
     The parts of one message, how to send one of them, and the business
-    channel they go through (None for staff notifications).
+    channel they go through (None for staff notifications). A reply that
+    offers options sends its last part with them (`send_last_part`).
     """
 
     parts: list[MessageText]
     send_part: PartSender
     channel: ChannelDocument | None = None
+    send_last_part: PartSender | None = None
+
+    def sender_of(self, index: int) -> PartSender:
+        """How the part at `index` is sent."""
+
+        if self.send_last_part is not None and index == len(self.parts) - 1:
+            return self.send_last_part
+
+        return self.send_part
 
 
 def route_customer_reply(
@@ -88,10 +99,16 @@ def route_customer_reply(
         channel_user_id=recipient.channel_user_id,
         credential=credential,
     )
+    choices: ReplyChoices | None = message.choices
     return OutboundRoute(
-        parts=adapter.split(message.text),
+        parts=adapter.split(message.text, choices),
         send_part=lambda part: adapter.send(target, part).provider_message_id,
         channel=channel,
+        send_last_part=(
+            None
+            if choices is None
+            else lambda part: adapter.send(target, part, choices).provider_message_id
+        ),
     )
 
 

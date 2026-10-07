@@ -4,6 +4,7 @@ import { Alert, Button, Card, LoadingRegion, Spinner } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { AssistantVersionSummary } from "@/lib/assistant/versions";
 
+import { tappableChoices } from "../../_lib/chatEntries";
 import { useTestChat } from "../../_lib/useTestChat";
 import { ChatComposer } from "./ChatComposer";
 import { ChatEmpty } from "./ChatEmpty";
@@ -16,6 +17,7 @@ export function TestChat({ versions, initialVersionId }: { versions: AssistantVe
   const { t } = useI18n();
   const { scroller, input, entries, isRestoring, isHandedOff, isSending, text, setText, startNew, deliver, submit, onKeyDown, target, choices, answerLabel } =
     useTestChat(versions, initialVersionId);
+  const tappable = tappableChoices(entries);
 
   return (
     <Card padded={false}>
@@ -41,6 +43,7 @@ export function TestChat({ versions, initialVersionId }: { versions: AssistantVe
               entry={entry}
               answerLabel={answerLabel}
               onRetry={(message, key) => void deliver(message, key)}
+              onChoose={tappable?.key === entry.key && !isHandedOff ? (label) => void deliver(label) : null}
               isSending={isSending}
             />
           ))

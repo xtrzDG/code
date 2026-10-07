@@ -2,6 +2,9 @@
 
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.use_cases.channels.acknowledge_telegram_taps_use_case import (
+    AcknowledgeTelegramTapsUseCase,
+)
 from app.use_cases.channels.connection.connect_channel_use_case import (
     ConnectChannelUseCase,
 )
@@ -68,6 +71,9 @@ class ChannelsUseCases(ChannelsInfrastructure):
             wall_clock=self.wall_clock,
         )
         self.receive_telegram_webhook = ReceiveTelegramWebhookUseCase(
+            self.channel_repo, self.secret_cipher, self.telegram_adapter
+        )
+        self.acknowledge_telegram_taps = AcknowledgeTelegramTapsUseCase(
             self.channel_repo, self.secret_cipher, self.telegram_adapter
         )
         self.receive_meta_webhook = ReceiveMetaWebhookUseCase(

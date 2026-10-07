@@ -116,6 +116,9 @@
     instagram: "Instagram"
   };
   var MAX_STARTERS = 3;
+  // The options of one reply (the API's ReplyChoices).
+  var MAX_CHOICES = 10;
+  var MAX_CHOICE_LENGTH = 20;
   // Polling for staff replies: fast after activity, slower while idle.
   var POLL_FIRST_DELAY_MS = 4000;
   var POLL_BACKOFF_FACTOR = 1.6;

@@ -1,12 +1,17 @@
 import httpx
 
-from app.clients.meta.meta_graph_errors import build_graph_error
+from app.clients.meta.graph_requests import graph_request
+from app.clients.meta.meta_graph_readers import (
+    read_instagram_username,
+    read_object_id,
+    read_page_username,
+    read_whatsapp_message_id,
+)
 from app.contracts.channel_clients import MetaGraphApiClientContract, ProviderToken
 from app.schemas.dto.channels.provider_profiles import (
     MetaPageProfile,
     WhatsAppPhoneNumberProfile,
 )
-from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     WhatsAppTemplateLanguageCode,
@@ -19,16 +24,10 @@ from app.schemas.typings.channels.strings import (
     WhatsAppDisplayPhoneNumber,
 )
 from app.schemas.typings.conversations.strings import ChannelUserId
-from app.schemas.typings.sharing.constrained_strings import (
-    InstagramUsername,
-    MetaPageUsername,
-)
 from app.utilities.channels.json_values import (
     JsonObject,
-    parse_json_object,
     read_identifier,
     read_object,
-    read_objects,
     read_text,
 )
 
@@ -204,12 +203,39 @@ class MetaGraphClient(MetaGraphApiClientContract):
             )
         )
 
+    def send_whatsapp_interactive(
+        self,
+        access_token: ProviderToken,
+        phone_number_id: MetaObjectId,
+        recipient: ChannelUserId,
+        interactive: JsonObject,
+    ) -> ProviderMessageId | None:
+        return read_whatsapp_message_id(
+            self._request(
+                "POST",
+                f"/{phone_number_id}/messages",
+                access_token,
+                json_body={
+                    "messaging_product": "whatsapp",
+                    "recipient_type": "individual",
+                    "to": str(recipient),
+                    "type": "interactive",
+                    "interactive": interactive,
+                },
+            )
+        )
+
     def send_page_message(
         self,
         access_token: ProviderToken,
         recipient: ChannelUserId,
         text: OutboundMessagePart,
+        quick_replies: list[JsonObject] | None = None,
     ) -> ProviderMessageId | None:
+        message: JsonObject = {"text": str(text)}
+        if quick_replies:
+            message["quick_replies"] = list(quick_replies)
+
         sent: JsonObject = self._request(
             "POST",
             "/me/messages",
@@ -217,7 +243,7 @@ class MetaGraphClient(MetaGraphApiClientContract):
             json_body={
                 "recipient": {"id": str(recipient)},
                 "messaging_type": "RESPONSE",
-                "message": {"text": str(text)},
+                "message": message,
             },
         )
         message_id: str | None = read_identifier(sent, "message_id")
@@ -232,61 +258,12 @@ class MetaGraphClient(MetaGraphApiClientContract):
         json_body: JsonObject | None = None,
         is_lookup: bool = False,
     ) -> JsonObject:
-        try:
-            response: httpx.Response = self._http_client.request(
-                method,
-                path,
-                params=params,
-                json=json_body,
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
-        except httpx.HTTPError as transport_error:
-            raise ExternalServiceError(
-                f"Meta Graph API request failed: {type(transport_error).__name__}."
-            ) from None
-
-        body: JsonObject = parse_json_object(response.content) or {}
-        if response.status_code < 400 and "error" not in body:
-            return body
-
-        raise build_graph_error(
-            response.status_code,
-            body,
-            response.headers.get("Retry-After"),
+        return graph_request(
+            self._http_client,
+            method,
+            path,
+            str(access_token),
+            params=params,
+            json_body=json_body,
             is_lookup=is_lookup,
         )
-
-
-def read_object_id(source: JsonObject, key: str) -> MetaObjectId | None:
-    raw_id: str | None = read_identifier(source, key)
-    if raw_id is None:
-        return None
-
-    try:
-        return MetaObjectId(raw_id)
-    except ValueError:
-        return None
-
-
-def read_page_username(source: JsonObject) -> MetaPageUsername | None:
-    raw_username: str | None = read_text(source, "username")
-    try:
-        return None if raw_username is None else MetaPageUsername(raw_username)
-    except ValueError:
-        return None
-
-
-def read_instagram_username(source: JsonObject) -> InstagramUsername | None:
-    raw_username: str | None = read_text(source, "username")
-    try:
-        return None if raw_username is None else InstagramUsername(raw_username)
-    except ValueError:
-        return None
-
-
-def read_whatsapp_message_id(body: JsonObject) -> ProviderMessageId | None:
-    """The "wamid..." of a sent WhatsApp message (`messages[0].id`)."""
-
-    messages: list[JsonObject] = read_objects(body, "messages")
-    message_id: str | None = read_identifier(messages[0], "id") if messages else None
-    return None if message_id is None else ProviderMessageId(message_id)

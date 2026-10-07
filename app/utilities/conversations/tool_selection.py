@@ -2,6 +2,7 @@
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.businesses import ServiceMode
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.businesses import BusinessDocument
 
@@ -14,8 +15,11 @@ LEADS_ONLY_TOOLS: frozenset[AssistantToolName] = frozenset(
         AssistantToolName.HANDOFF_TO_HUMAN,
         AssistantToolName.SEARCH_KNOWLEDGE,
         AssistantToolName.LIST_MY_BOOKINGS,
+        AssistantToolName.OFFER_CHOICES,
     }
 )
+# Channels without anything to tap: a call is spoken.
+CHANNELS_WITHOUT_CHOICES: frozenset[ChannelKind] = frozenset({ChannelKind.PHONE})
 
 # The booking tools join_waitlist follows in a version's list.
 BOOKING_TOOL_ORDER: frozenset[AssistantToolName] = frozenset(
@@ -32,16 +36,24 @@ BOOKING_TOOL_ORDER: frozenset[AssistantToolName] = frozenset(
 def select_available_tools(
     version: AssistantVersionDocument,
     business: BusinessDocument,
+    channel: ChannelKind = ChannelKind.PHONE,
 ) -> list[AssistantToolName]:
     """
     The version's tools in its order (with list_my_bookings and
-    join_waitlist for a version assembled before they existed); in
-    LEADS_ONLY mode only the tools of LEADS_ONLY_TOOLS remain.
+    join_waitlist for a version assembled before they existed), then
+    offer_choices in a chat channel (every version gets it, so options to
+    tap need no new version); in LEADS_ONLY mode only the tools of
+    LEADS_ONLY_TOOLS remain.
     """
 
     tools: list[AssistantToolName] = with_join_waitlist(
         with_list_my_bookings(list(version.tools))
     )
+    if (
+        channel not in CHANNELS_WITHOUT_CHOICES
+        and AssistantToolName.OFFER_CHOICES not in tools
+    ):
+        tools.append(AssistantToolName.OFFER_CHOICES)
     if business.service_mode is ServiceMode.LEADS_ONLY:
         return [tool for tool in tools if tool in LEADS_ONLY_TOOLS]
 

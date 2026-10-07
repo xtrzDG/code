@@ -12,6 +12,7 @@ import typing
 import uuid
 from enum import Enum
 
+from annotated_types import MinLen
 from base_pydantic_schemas import PersistentDocument
 from base_typed_float import BaseConstrainedTypedFloat, BaseTypedFloat
 from base_typed_id import BasePrefixedTypedId
@@ -53,9 +54,29 @@ def sample_document[StoredDocument: PersistentDocument](
 
 def sample_object(model: type[BaseModel], path: str) -> dict[str, JsonValue]:
     return {
-        name: sample_value(field.annotation, f"{path}.{name}")
+        name: at_least_min_length(
+            sample_value(field.annotation, f"{path}.{name}"), field.metadata
+        )
         for name, field in model.model_fields.items()
     }
+
+
+def at_least_min_length(value: JsonValue, metadata: list[object]) -> JsonValue:
+    """A sample list as long as the field's `min_length` asks (its item repeated)."""
+
+    shortest: int = max(
+        (int(item.min_length) for item in metadata if isinstance(item, MinLen)),
+        default=0,
+    )
+    sample: JsonValue = value
+    if not isinstance(value, list):
+        return sample
+
+    items: list[JsonValue] = typing.cast(list[JsonValue], value)
+    if not items or len(items) >= shortest:
+        return sample
+
+    return items * shortest
 
 
 def sample_value(annotation: object, path: str) -> JsonValue:

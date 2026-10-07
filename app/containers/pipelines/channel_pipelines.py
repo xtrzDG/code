@@ -56,6 +56,7 @@ class ChannelPipelinesContainer(containers.DeclarativeContainer):
         ChannelWebhookOrchestrator[TelegramWebhookRequest],
         receive_webhook=channel_use_cases.receive_telegram_webhook_use_case,
         store_inbound_messages=delivery_use_cases.store_inbound_messages_use_case,
+        acknowledge_webhook=channel_use_cases.acknowledge_telegram_taps_use_case,
     )
     meta_webhook_orchestrator: Factory[
         OrchestratorContract[MetaWebhookRequest, ChannelWebhookOutcome]

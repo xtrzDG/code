@@ -175,6 +175,7 @@
             direction: item.direction,
             key: item.key,
             draft: item.draft === true ? true : undefined,
+            choices: item.choices && item.choices.length ? item.choices : undefined,
             pending: item.pending === true ? true : undefined,
             sentAt: item.pending === true ? item.sentAt : undefined
           };

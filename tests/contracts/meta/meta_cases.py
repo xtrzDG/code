@@ -21,6 +21,7 @@ SHEENA: dict[str, Any] = {
     "phone": "+16505551234",
     "attachments": [],
     "source": None,
+    "context": None,
 }
 MESSENGER: dict[str, Any] = {
     "channel": "messenger",
@@ -30,6 +31,7 @@ MESSENGER: dict[str, Any] = {
     "phone": None,
     "attachments": [],
     "source": None,
+    "context": None,
 }
 INSTAGRAM: dict[str, Any] = {
     **MESSENGER,
@@ -103,9 +105,21 @@ PAGE_CASES: tuple[MetaCase, ...] = (
     MetaCase(
         "instagram_message.json", ({**INSTAGRAM, "text": "Сколько стоит стрижка?"},)
     ),
+    # A reply to the business's story and a mention of it in the
+    # customer's own story: the assistant is told (the context note).
     MetaCase(
         "instagram_story_reply.json",
-        ({**INSTAGRAM, "text": "Is this colour still available?"},),
+        (
+            {
+                **INSTAGRAM,
+                "text": "Is this colour still available?",
+                "context": "story_reply",
+            },
+        ),
+    ),
+    MetaCase(
+        "instagram_story_mention.json",
+        ({**INSTAGRAM, "text": "", "context": "story_mention"},),
     ),
     MetaCase("instagram_echo.json", skipped="echo=1"),
     MetaCase("instagram_read.json", skipped="read=1"),
@@ -145,4 +159,5 @@ def summarize(message: ChannelInboundMessage) -> dict[str, Any]:
             if message.acquisition_source is None
             else str(message.acquisition_source)
         ),
+        "context": None if message.context_note is None else message.context_note.value,
     }

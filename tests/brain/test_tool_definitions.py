@@ -16,6 +16,7 @@ from app.schemas.dto.assistant_tools import (
     HandoffToHumanToolInput,
     JoinWaitlistToolInput,
     ListMyBookingsToolInput,
+    OfferChoicesToolInput,
     RecordUnansweredQuestionToolInput,
     RescheduleBookingToolInput,
     SearchKnowledgeToolInput,
@@ -35,6 +36,7 @@ INPUT_MODELS: dict[AssistantToolName, type[Any]] = {
     AssistantToolName.HANDOFF_TO_HUMAN: HandoffToHumanToolInput,
     AssistantToolName.SEND_LINK: SendLinkToolInput,
     AssistantToolName.RECORD_UNANSWERED_QUESTION: RecordUnansweredQuestionToolInput,
+    AssistantToolName.OFFER_CHOICES: OfferChoicesToolInput,
 }
 
 

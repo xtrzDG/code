@@ -274,6 +274,7 @@ class GetWidgetMessagesUseCase(
             language=message.language,
             direction=direction,
             created_at=message.created_at,
+            choices=[] if message.choices is None else list(message.choices.options),
         )
 
 

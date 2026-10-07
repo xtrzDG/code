@@ -155,6 +155,7 @@ class FinishInboundEventUseCase(
             recipient_key=recipient_key,
             customer=recipient,
             text=text,
+            choices=answer.choices,
             conversation_id=answer.conversation_id,
             source_message_id=event.reply_message_id,
             created_at=now,

@@ -14,6 +14,11 @@ export const inboxCardDe: Translation<typeof inboxCardEn> = {
   },
   panelLabel: "Über dieses Gespräch",
   panelTabs: "Bereich",
+  messageContext: {
+    story_reply: "Antwort auf Ihre Story",
+    story_mention: "Erwähnung in der Story des Kunden",
+  },
+  offeredChoices: "Angebotene Auswahl",
   actions: {
     label: "Schnellaktionen",
     resolve: "Erledigen",

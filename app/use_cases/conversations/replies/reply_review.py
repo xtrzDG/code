@@ -34,6 +34,7 @@ from app.use_cases.conversations.replies.reply_evidence import (
     gather_reply_evidence,
 )
 from app.use_cases.conversations.replies.turn_progress import TurnProgress
+from app.utilities.conversations.reply_choices_text import text_with_options
 from app.utilities.reply_guard.claim_candidates import find_claim_candidates
 
 
@@ -104,8 +105,14 @@ class ReplyReviewer:
         self._claim_check: ClaimCheckFacilitatorContract = claim_check
 
     def review(
-        self, turn: PreparedTurn, progress: TurnProgress, text: MessageText
+        self, turn: PreparedTurn, progress: TurnProgress, reply_text: MessageText
     ) -> ReplyReview:
+        """
+        The reply as the customer will read it: with the prompt and the
+        options it offers (an invented time on a button is held back too).
+        """
+
+        text = MessageText(text_with_options(str(reply_text), progress.choices))
         evidence: ReplyEvidence = gather_reply_evidence(
             self._message_repo, turn, progress
         )

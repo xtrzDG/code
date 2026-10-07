@@ -14,6 +14,11 @@ export const inboxCardHe: Translation<typeof inboxCardEn> = {
   },
   panelLabel: "על השיחה הזו",
   panelTabs: "לוח",
+  messageContext: {
+    story_reply: "תגובה לסטורי שלכם",
+    story_mention: "אזכור בסטורי של הלקוח",
+  },
+  offeredChoices: "אפשרויות שהוצעו",
   actions: {
     label: "פעולות מהירות",
     resolve: "סימון כטופל",

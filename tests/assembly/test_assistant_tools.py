@@ -2,6 +2,7 @@ from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.domain.resources import ResourceDocument
 from app.utilities.assembly.assistant_tools import (
     BOOKING_TOOLS,
+    CONVERSATION_TOOLS,
     can_take_bookings,
     select_assistant_tools,
 )
@@ -20,7 +21,10 @@ def test_restaurant_with_tables_rules_and_links_gets_every_tool() -> None:
 
     version = testbed.assemble(business.id)
 
-    assert version.tools == list(AssistantToolName)
+    # offer_choices is the conversation's (by its channel), never a version's.
+    assert version.tools == [
+        tool for tool in AssistantToolName if tool not in CONVERSATION_TOOLS
+    ]
     assert len(version.tools) == 12
 
 

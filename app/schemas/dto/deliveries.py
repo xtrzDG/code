@@ -16,6 +16,7 @@ from app.schemas.domain.outbound_messages import (
     OutboundMessageDocument,
     OutboundTemplate,
 )
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.channels.channel_webhooks import ChannelInboundMessage
 from app.schemas.dto.conversations import InboundMessage
 from app.schemas.dto.voice_webhooks import FinishedCallReport
@@ -85,13 +86,15 @@ class InboundEventClaim(ImmutableDTO):
 class InboundAnswer(ImmutableDTO):
     """
     What the assistant made of a customer message: the reply to send (None
-    when staff own the conversation) in its conversation.
+    when staff own the conversation) in its conversation, and the options
+    it offers to tap.
     """
 
     event: InboundEventDocument
     conversation_id: ConversationId | None = None
     text: MessageText | None = None
     is_handed_off: IsConversationHandedOff = False
+    choices: ReplyChoices | None = None
 
 
 class InboundFailure(ImmutableDTO):

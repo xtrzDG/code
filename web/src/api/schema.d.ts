@@ -5675,13 +5675,16 @@ export interface components {
          *     out. `assistant_version_id` and `assistant_version_number` name the
          *     version that answered (the one the conversation is pinned to);
          *     `tool_calls` are the tools the model called in this turn, with their
-         *     input and result (the owner's test chat shows them).
+         *     input and result (the owner's test chat shows them). `choices` are the
+         *     options the reply offers to tap (the text already ends with their
+         *     prompt); every channel shows them its own way.
          */
         AssistantReply: {
             /** Assistant Version Id */
             assistant_version_id?: string | null;
             /** Assistant Version Number */
             assistant_version_number?: number | null;
+            choices?: components["schemas"]["ReplyChoices"] | null;
             /** Conversation Id */
             conversation_id: string;
             /** Created Booking Ids */
@@ -5725,7 +5728,7 @@ export interface components {
          * @description Tool the language model may call (concept section 5).
          * @enum {string}
          */
-        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question";
+        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices";
         /**
          * AssistantVersionDetails
          * @description An assistant version with its frozen instructions and fact table: the
@@ -10567,12 +10570,22 @@ export interface components {
             provider_media_id?: string | null;
         };
         /**
+         * InboundContextNote
+         * @description What a customer message refers to that the assistant cannot see, as
+         *     the channel told it: a reply to the business's Instagram story, or a
+         *     mention of the business in the customer's own story.
+         * @enum {string}
+         */
+        InboundContextNote: "story_reply" | "story_mention";
+        /**
          * InboundCustomerMessage
          * @description A customer's message as the channel adapter read it from the webhook:
          *     the typed text and the attachments (voice notes, photos, places, ...),
          *     whose files the worker fetches. `acquisition_source` is where the
          *     customer came from when the message carried it (a tagged link, an ad):
-         *     a conversation this message starts keeps it.
+         *     a conversation this message starts keeps it. `context_note` is what
+         *     the message refers to that the assistant cannot see (a reply to the
+         *     business's Instagram story, a story mention).
          */
         InboundCustomerMessage: {
             /** Acquisition Source */
@@ -10585,6 +10598,7 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone Number */
             contact_phone_number?: string | null;
+            context_note?: components["schemas"]["InboundContextNote"] | null;
             /** Text */
             text: string;
         };
@@ -10622,6 +10636,8 @@ export interface components {
          *     (optional). The queue runs a job in one place at a time, so a later
          *     attempt of that same job (its worker died) takes the event over at
          *     once instead of waiting out the processing lease.
+         *
+         *     Version 7: the customer message's `context_note` (optional).
          */
         InboundEventDocument: {
             /**
@@ -10669,7 +10685,7 @@ export interface components {
             reply_message_id?: string;
             /**
              * Schema Version
-             * @default 6
+             * @default 7
              */
             schema_version: string;
             /** @default received */
@@ -12072,6 +12088,13 @@ export interface components {
          *     Version 5: `tool_calls` may name the tool list_my_bookings (a new
          *     value; version 4 rows read as they are). Version 6: they may name the
          *     tool join_waitlist (a new value; version 5 rows read as they are).
+         *
+         *     Version 7 (R14): an assistant reply may offer `choices` (the options
+         *     shown as buttons, quick replies or chips; its text already ends with
+         *     their prompt), and a customer message may say what it refers to
+         *     (`context_note`, e.g. a reply to the business's Instagram story). Both
+         *     optional. `tool_calls` may name offer_choices once its release gate is
+         *     open (a new value).
          */
         MessageDocument: {
             /** Attachments */
@@ -12080,8 +12103,10 @@ export interface components {
             /** Business Id */
             business_id: string;
             channel?: components["schemas"]["ChannelKind"] | null;
+            choices?: components["schemas"]["ReplyChoices"] | null;
             /** Claim Findings */
             claim_findings?: components["schemas"]["ClaimFinding"][];
+            context_note?: components["schemas"]["InboundContextNote"] | null;
             /** Conversation Id */
             conversation_id: string;
             /**
@@ -12129,7 +12154,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 6
+             * @default 7
              */
             schema_version: string;
             /** Sent By */
@@ -12176,18 +12201,20 @@ export interface components {
         };
         /**
          * MessageView
-         * @description A message with the model usage behind it; `sent_by` is the owner or
-         *     staff member who wrote a staff message from the cabinet, and
-         *     `delivery` how that message travels to the customer (None for every
-         *     other message, and for staff messages kept for the website chat);
-         *     `attachments` are a customer's voice notes, photos and places;
-         *     `guard` what the reply guard did with it (None: nothing to show, e.g.
-         *     staff messages and replies stored before the guard recorded verdicts).
+         * @description A message with the model usage behind it. `sent_by`: who wrote a staff
+         *     message in the cabinet; `delivery`: how it travels (None otherwise and
+         *     for the website chat); `attachments`: a customer's voice notes, photos
+         *     and places; `context_note`: what a customer message refers to (a story);
+         *     `choices`: the options a reply offered to tap; `guard`: what the reply
+         *     guard did (None: nothing to show).
          */
         MessageView: {
             /** Attachments */
             attachments?: components["schemas"]["MessageAttachmentView"][];
             author: components["schemas"]["MessageAuthor"];
+            /** Choices */
+            choices?: string[];
+            context_note?: components["schemas"]["InboundContextNote"] | null;
             /** Cost Micro Usd */
             cost_micro_usd: number;
             /** Created At */
@@ -12654,6 +12681,12 @@ export interface components {
          *     Version 6: the kind `booking_confirmation` (a guest's written
          *     confirmation of a booking the assistant made or moved, with its manage
          *     link). Rows of the earlier kinds read unchanged.
+         *
+         *     Version 7: a reply to a customer may carry the options it offers
+         *     (`choices`, optional): the channel shows them as buttons, a list,
+         *     quick replies or an inline keyboard under the reply's last part. A
+         *     release that does not know them sends the text alone, which already
+         *     ends with their prompt.
          */
         OutboundMessageDocument: {
             /**
@@ -12668,6 +12701,7 @@ export interface components {
             business_id: string;
             /** Call Id */
             call_id?: string | null;
+            choices?: components["schemas"]["ReplyChoices"] | null;
             /** Conversation Id */
             conversation_id?: string | null;
             /**
@@ -12706,7 +12740,7 @@ export interface components {
             recipient_key: string;
             /**
              * Schema Version
-             * @default 6
+             * @default 7
              */
             schema_version: string;
             /** Send Before */
@@ -14195,6 +14229,24 @@ export interface components {
             powered_by: components["schemas"]["PoweredByView"];
             /** Rewarded */
             rewarded: number;
+        };
+        /**
+         * ReplyChoices
+         * @description What the assistant asked and the options it offered with a reply: the
+         *     reply ends with `prompt`, and each option becomes a WhatsApp reply
+         *     button or list row, a Telegram inline button, a Messenger or Instagram
+         *     quick reply or a website chat chip (a numbered list where a channel
+         *     cannot show them). A tap comes back as the option's label. `language`
+         *     is the language they are written in (the reply's), for the platform's
+         *     own words around them (the button that opens a WhatsApp list).
+         */
+        ReplyChoices: {
+            /** Language */
+            language?: string | null;
+            /** Options */
+            options: string[];
+            /** Prompt */
+            prompt: string;
         };
         /**
          * ReplyGuardReason
@@ -16773,10 +16825,14 @@ export interface components {
         };
         /**
          * WidgetMessageView
-         * @description An assistant or staff message as the widget shows it.
+         * @description An assistant or staff message as the widget shows it; `choices` are the
+         *     options an assistant reply offers, shown as chips under it until the
+         *     visitor writes (a tap sends the label).
          */
         WidgetMessageView: {
             author: components["schemas"]["MessageAuthor"];
+            /** Choices */
+            choices?: string[];
             /** Created At */
             created_at: number;
             direction: components["schemas"]["TextDirection"];

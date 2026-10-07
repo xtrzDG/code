@@ -56,6 +56,9 @@ from app.schemas.typings.channels.strings import MetaWebhookChallenge
 from app.use_cases.channels.accept_widget_message_use_case import (
     AcceptWidgetMessageUseCase,
 )
+from app.use_cases.channels.acknowledge_telegram_taps_use_case import (
+    AcknowledgeTelegramTapsUseCase,
+)
 from app.use_cases.channels.configure_platform_bot_webhook_use_case import (
     ConfigurePlatformBotWebhookUseCase,
 )
@@ -115,6 +118,14 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         UseCaseContract[TelegramWebhookRequest, list[RoutedInboundMessage]]
     ] = Factory(
         ReceiveTelegramWebhookUseCase,
+        channel_repo=repositories.channel_repo,
+        secret_cipher=adapters.secret_cipher,
+        telegram_adapter=adapters.telegram_channel_adapter,
+    )
+    acknowledge_telegram_taps_use_case: Factory[
+        UseCaseContract[TelegramWebhookRequest, None]
+    ] = Factory(
+        AcknowledgeTelegramTapsUseCase,
         channel_repo=repositories.channel_repo,
         secret_cipher=adapters.secret_cipher,
         telegram_adapter=adapters.telegram_channel_adapter,

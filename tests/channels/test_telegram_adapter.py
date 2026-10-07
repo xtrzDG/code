@@ -96,7 +96,7 @@ class TestTelegramBotClient:
         assert testbed.telegram_transport.requests[0].json() == {
             "url": "https://api.workshop.test/v1/channels/telegram/x/webhook",
             "secret_token": BOT_SECRET,
-            "allowed_updates": ["message"],
+            "allowed_updates": ["message", "callback_query"],
             "drop_pending_updates": False,
         }
 

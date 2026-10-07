@@ -155,6 +155,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     handoff_to_human: "გადასცა ადამიანს",
     send_link: "გაგზავნა ბმული",
     record_unanswered_question: "ჩაიწერა უპასუხო კითხვა",
+    offer_choices: "შესთავაზა პასუხის ვარიანტები",
   },
   messageTokens: "ტოკენები: {count}",
   usage: {

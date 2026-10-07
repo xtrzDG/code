@@ -10,6 +10,7 @@ from app.schemas.domain.conversations import (
     LlmTurnDocument,
     ToolCallRecord,
 )
+from app.schemas.domain.reply_choices import ReplyChoices
 from app.schemas.dto.assistant_tools import AssistantToolOutcome
 from app.schemas.dto.conversation_engine import GeneratedReply, PreparedTurn
 from app.schemas.dto.conversations import LlmResponse, LlmToolCall
@@ -52,6 +53,8 @@ class TurnProgress:
     rounds_used: int = 0
     fallback_model_id: LlmModelId | None = None
     is_fallback_model: bool = False
+    # The options offer_choices put under the reply (the latest call wins).
+    choices: ReplyChoices | None = None
 
 
 def start_progress(stored_turns: list[LlmTurnDocument]) -> TurnProgress:
@@ -85,7 +88,11 @@ def record_tool_outcome(
     call: LlmToolCall,
     outcome: AssistantToolOutcome,
 ) -> None:
-    """The call, its result (evidence when it succeeded) and what it created."""
+    """
+    The call, its result (evidence when it succeeded) and what it created;
+    offered options are kept for the reply, and their result is no evidence
+    (the guard checks the options themselves).
+    """
 
     progress.tool_calls.append(
         ToolCallRecord(
@@ -95,7 +102,9 @@ def record_tool_outcome(
             is_error=outcome.result.is_error,
         )
     )
-    if not outcome.result.is_error:
+    if outcome.choices is not None:
+        progress.choices = outcome.choices
+    elif not outcome.result.is_error:
         progress.tool_results.append(str(outcome.result.result_json))
 
     if outcome.booking_id is not None:
@@ -146,4 +155,5 @@ def build_reply(
         output_tokens=LlmTokenCount(progress.output_tokens),
         llm_round_count=LlmRoundCount(progress.rounds_used),
         is_fallback_model=progress.is_fallback_model,
+        choices=None if text is None else progress.choices,
     )
