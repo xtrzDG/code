@@ -4,7 +4,8 @@ every selected scenario played `samples` times.
 """
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,7 +101,30 @@ def run_niche(
 
     # A customer scenario books and hands off for real: the staff alerts it
     # cannot deliver in a harness without channels are expected, not news.
-    logging.getLogger(APPLICATION_LOGGER).setLevel(logging.ERROR)
+    # The application log is quieter for this niche only, so a test that
+    # plays one in its own process leaves logging as it found it.
+    with application_log_level(logging.ERROR):
+        return play_niche(path, options, report_progress)
+
+
+@contextmanager
+def application_log_level(level: int) -> Iterator[None]:
+    """The application's loggers at `level` inside the block, as before after."""
+
+    application_logger: logging.Logger = logging.getLogger(APPLICATION_LOGGER)
+    previous_level: int = application_logger.level
+    application_logger.setLevel(level)
+    try:
+        yield
+    finally:
+        application_logger.setLevel(previous_level)
+
+
+def play_niche(
+    path: Path,
+    options: RunOptions,
+    report_progress: ProgressReporter | None,
+) -> NicheOutcome | None:
     dataset: EvalDataset = load_dataset(path)
     selected: list[ScenarioSpec] = select_scenarios(dataset, options)
     if not selected:
