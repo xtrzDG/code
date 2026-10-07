@@ -25,8 +25,14 @@ import type { ShellNavItem } from "./types";
 const PLACE =
   "relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] leading-tight font-medium transition-colors";
 
-/** A long name (Georgian, Russian) wraps to a second line instead of being cut. */
-const LABEL = "max-w-full text-center [overflow-wrap:anywhere] hyphens-auto";
+/**
+ * A name of two words wraps between them onto a second line; a word never
+ * breaks inside: the browser hyphenates it where it knows the language
+ * (`lang` of the page), and a word still too wide ends with "…" rather
+ * than spilling a letter onto the next line ("Posteingan-g"). Sections
+ * with a long name have a shorter one for the tab bar (SECTION_TAB_LABELS).
+ */
+const LABEL = "line-clamp-2 max-w-full text-center break-normal text-ellipsis hyphens-auto";
 
 function Marker() {
   return (
@@ -86,7 +92,9 @@ export function PhoneTabBar({
                 {item.isActive ? <Marker /> : null}
                 <span className="relative flex max-w-full flex-col items-center gap-1">
                   <PlaceIcon icon={item.icon} isActive={item.isActive} badge={item.badge ?? 0} />
-                  <span className={LABEL}>{item.label}</span>
+                  <span data-tab-label className={LABEL}>
+                    {item.tabLabel ?? item.label}
+                  </span>
                 </span>
               </Link>
             </li>
@@ -102,7 +110,9 @@ export function PhoneTabBar({
               {isMoreActive ? <Marker /> : null}
               <span className="relative flex max-w-full flex-col items-center gap-1">
                 <PlaceIcon icon={IconMenu} isActive={isMoreActive} badge={0} />
-                <span className={LABEL}>{t("navigation.more")}</span>
+                <span data-tab-label className={LABEL}>
+                  {t("navigation.more")}
+                </span>
               </span>
             </button>
           </li>

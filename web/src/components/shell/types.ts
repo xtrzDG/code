@@ -29,4 +29,6 @@ export interface ShellNavItem extends ShellLink {
   secondary?: boolean;
   /** One of the phone tab bar's places (the rest go under "More"). */
   inTabBar?: boolean;
+  /** Its name in the tab bar when `label` has a word too long for it. */
+  tabLabel?: string;
 }

@@ -28,7 +28,7 @@ import { useI18n } from "@/i18n/client";
 import { helpSlugForPage } from "@/lib/help/helpTopics";
 import { sectionBadge, pageBadge } from "@/lib/inboxBadges";
 import { ADMIN_PATH, businessLocation, businessPath, isConversationPath, type BusinessPage } from "@/lib/navigation";
-import { SECTION_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibleSections, type BusinessSection } from "@/lib/sections";
+import { SECTION_LABELS, SECTION_TAB_LABELS, canOpenPage, pageLabel, sectionOf, visiblePages, visibleSections, type BusinessSection } from "@/lib/sections";
 
 import { ApplyChangesProvider } from "../assistant/ApplyChangesContext";
 import { CoachMarkSlot } from "../help/CoachMark";
@@ -85,6 +85,7 @@ function useNavItems(prefetch: PagePrefetch): ShellNavItem[] {
       ),
       onPrefetch: prefetch[home],
       inTabBar: !MORE_SECTIONS.has(section),
+      tabLabel: t(SECTION_TAB_LABELS[section] ?? SECTION_LABELS[section]),
       pages: pages.map((entry) => ({
         href: businessPath(business.id, entry.page),
         label: t(entry.label),

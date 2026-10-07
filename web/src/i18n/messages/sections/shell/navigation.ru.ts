@@ -12,6 +12,9 @@ export const navigationRu: Translation<typeof navigationEn> = {
     assistant: "Помощник",
     settings: "Настройки",
   },
+  tabLabels: {
+    inbox: "Входящие",
+  },
   descriptions: {
     overview: "Как работает помощник и что сегодня ждёт вашего внимания.",
     inbox: "Все разговоры в одном месте: клиенты, которым нужен человек, заявки и кто из команды чем занимается.",

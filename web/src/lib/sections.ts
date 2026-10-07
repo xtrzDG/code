@@ -45,6 +45,11 @@ export const SECTION_LABELS: Record<BusinessSection, MessageKey> = {
   settings: "navigation.sections.settings",
 };
 
+/** A shorter name in the phone tab bar, for a section whose name has a word too long for a fifth of a phone ("Posteingang"). */
+export const SECTION_TAB_LABELS: Partial<Record<BusinessSection, MessageKey>> = {
+  inbox: "navigation.tabLabels.inbox",
+};
+
 export const SECTION_DESCRIPTIONS: Record<BusinessSection, MessageKey> = {
   overview: "navigation.descriptions.overview",
   inbox: "navigation.descriptions.inbox",

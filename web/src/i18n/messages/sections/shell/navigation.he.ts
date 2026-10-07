@@ -12,6 +12,9 @@ export const navigationHe: Translation<typeof navigationEn> = {
     assistant: "עוזר",
     settings: "הגדרות",
   },
+  tabLabels: {
+    inbox: "הודעות",
+  },
   descriptions: {
     overview: "איך העוזר שלכם מתפקד ומה מחכה לכם היום.",
     inbox: "כל השיחות במקום אחד: לקוחות שמחכים לנציג, פניות, ומי בצוות מטפל במה.",
