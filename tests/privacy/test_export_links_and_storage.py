@@ -36,6 +36,7 @@ from app.utilities.privacy.export_download_tokens import (
     hash_download_token,
     is_same_hash,
 )
+from tests.exports.archive_reading import read_whole
 from tests.security.previous_key_fakes import DictObjectStorage
 
 BUSINESS: BusinessId = BusinessId()
@@ -69,15 +70,15 @@ def test_an_archive_is_sealed_with_its_business_key() -> None:
 
     [sealed] = objects.objects.values()
     assert b"Giorgi" not in sealed
-    assert storage.read(BUSINESS, PATH) == b"PK zip bytes of Giorgi"
+    assert read_whole(storage, BUSINESS, PATH) == b"PK zip bytes of Giorgi"
     with pytest.raises(ExternalServiceError):
-        storage.read(OTHER_BUSINESS, PATH)
+        read_whole(storage, OTHER_BUSINESS, PATH)
     rotated = EncryptedObjectExportArchiveStorageAdapter(
         objects, PlatformSecret("newest-key-0000"), previous_master_secrets=[NEW_KEY]
     )
-    assert rotated.read(BUSINESS, PATH) == b"PK zip bytes of Giorgi"
+    assert read_whole(rotated, BUSINESS, PATH) == b"PK zip bytes of Giorgi"
     storage.delete(BUSINESS, PATH)
-    assert storage.read(BUSINESS, PATH) is None
+    assert read_whole(storage, BUSINESS, PATH) is None
     with pytest.raises(ValidationFailedError):
         storage.store(BUSINESS, ExportArchivePath("../escape.zip"), io.BytesIO(b"x"))
 
@@ -90,11 +91,11 @@ def test_development_keeps_archives_as_files_inside_one_directory(
     storage.store(BUSINESS, PATH, io.BytesIO(b"zip"))
 
     assert (tmp_path / str(PATH)).read_bytes() == b"zip"
-    assert storage.read(BUSINESS, PATH) == b"zip"
+    assert read_whole(storage, BUSINESS, PATH) == b"zip"
     storage.delete(BUSINESS, PATH)
-    assert storage.read(BUSINESS, PATH) is None
+    assert read_whole(storage, BUSINESS, PATH) is None
     with pytest.raises(ValidationFailedError):
-        storage.read(BUSINESS, ExportArchivePath("../../etc/passwd"))
+        read_whole(storage, BUSINESS, ExportArchivePath("../../etc/passwd"))
 
 
 def test_the_storage_follows_the_recordings_storage(tmp_path: Path) -> None:

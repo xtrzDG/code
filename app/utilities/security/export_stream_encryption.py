@@ -1,7 +1,8 @@
 """
 Streamed encryption of full business export archives (format AWX2): the
 archive is sealed segment by segment while it is read from its temporary
-file, so neither the archive nor its ciphertext is ever held in memory.
+file, and opened segment by segment while a download reads it from the
+bucket, so neither the archive nor its ciphertext is ever held in memory.
 
 Keys are those of `export_encryption` (per business and per archive).
 Each segment of `segment_size` plaintext bytes (the last one shorter, or
@@ -16,7 +17,8 @@ to another archive without failing to open.
 """
 
 import struct
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass
 from typing import BinaryIO
 
 from cryptography.exceptions import InvalidTag
@@ -30,7 +32,6 @@ from app.utilities.security.export_encryption import (
     KEY_ID_SIZE,
     SALT_SIZE,
     derive_archive_key,
-    open_archive,
 )
 from app.utilities.security.recording_encryption import master_key_id
 
@@ -95,24 +96,51 @@ def seal_stream(
         number += 1
 
 
-def open_stream(
+@dataclass(frozen=True)
+class SegmentOpener:
+    """The key and layout of one sealed AWX2 archive, from its header."""
+
+    header: bytes
+    cipher: AESGCM
+    nonce_prefix: bytes
+    step: int
+
+    def open_segment(self, sealed: bytes, number: int, is_last: bool) -> bytes:
+        """
+        One segment's plaintext.
+
+        Raises:
+            ExternalServiceError: the segment was changed, moved or cut.
+        """
+
+        if len(sealed) < TAG_SIZE:
+            raise ExternalServiceError("The stored export is cut off.")
+
+        try:
+            return self.cipher.decrypt(
+                segment_nonce(self.nonce_prefix, number, is_last), sealed, self.header
+            )
+        except InvalidTag as error:
+            raise ExternalServiceError("The stored export does not open.") from error
+
+
+def read_stream_header(
     secrets_by_key_id: Mapping[bytes, PlatformSecret],
     business_id: BusinessId,
     path: ExportArchivePath,
-    sealed: bytes,
-) -> bytes:
+    header: bytes,
+) -> SegmentOpener:
     """
-    The archive's bytes from a sealed AWX2 archive.
+    The opener of an AWX2 archive from its header (STREAM_HEADER_SIZE bytes).
 
     Raises:
-        ExternalServiceError: a key no longer in the ring, another business
-            or path, or changed, reordered or cut-off segments.
+        ExternalServiceError: a short header, or a key no longer in the ring.
     """
 
-    if len(sealed) < STREAM_HEADER_SIZE + TAG_SIZE:
+    if len(header) < STREAM_HEADER_SIZE:
         raise ExternalServiceError("The stored export is cut off.")
 
-    header: bytes = sealed[:STREAM_HEADER_SIZE]
+    header = header[:STREAM_HEADER_SIZE]
     _, key_id, salt, prefix, segment_size = struct.unpack(STREAM_HEADER_FORMAT, header)
     secret: PlatformSecret | None = secrets_by_key_id.get(key_id)
     if secret is None:
@@ -120,39 +148,57 @@ def open_stream(
             "The export was encrypted with a key no longer in ENCRYPTION_KEYS."
         )
 
-    cipher = AESGCM(derive_archive_key(secret, business_id, path, salt))
-    body: bytes = sealed[STREAM_HEADER_SIZE:]
-    step: int = int(segment_size) + TAG_SIZE
-    starts: list[int] = list(range(0, len(body), step))
-    plain: list[bytes] = []
-    try:
-        for number, start in enumerate(starts):
-            is_last: bool = number == len(starts) - 1
-            plain.append(
-                cipher.decrypt(
-                    segment_nonce(prefix, number, is_last),
-                    body[start : start + step],
-                    header,
-                )
-            )
-    except InvalidTag as error:
-        raise ExternalServiceError("The stored export does not open.") from error
-
-    return b"".join(plain)
+    return SegmentOpener(
+        header=header,
+        cipher=AESGCM(derive_archive_key(secret, business_id, path, salt)),
+        nonce_prefix=prefix,
+        step=int(segment_size) + TAG_SIZE,
+    )
 
 
-def open_sealed_archive(
-    secrets_by_key_id: Mapping[bytes, PlatformSecret],
-    business_id: BusinessId,
-    path: ExportArchivePath,
-    sealed: bytes,
-) -> bytes:
+def open_pieces(
+    opener: SegmentOpener, pieces: Iterable[bytes], skip: int = 0
+) -> Iterator[bytes]:
     """
-    The archive's bytes, whichever way it was sealed: in segments (AWX2)
-    or, written before segments, whole (AWX1, `open_archive`).
+    The archive's bytes a segment at a time from the sealed body after its
+    header, given in pieces of any size and in order (`skip` bytes of the
+    first piece left out: the header read with it). A complete segment
+    waits until the next byte after it is known (so it is not the last);
+    what remains at the end is the last one. One piece, one segment being
+    filled, one waiting and one opened are held at a time.
+
+    Raises (from the iterator):
+        ExternalServiceError: a changed, reordered or cut-off segment, at
+            the segment that shows it.
     """
 
-    if sealed.startswith(STREAM_MAGIC):
-        return open_stream(secrets_by_key_id, business_id, path, sealed)
+    waiting: bytes | None = None
+    filling = bytearray()
+    number: int = 0
+    for piece in pieces:
+        with memoryview(piece) as view:
+            offset: int = skip
+            skip = 0
+            while offset < len(view):
+                taken: int = min(opener.step - len(filling), len(view) - offset)
+                filling += view[offset : offset + taken]
+                offset += taken
+                if len(filling) < opener.step:
+                    continue
 
-    return open_archive(secrets_by_key_id, business_id, path, sealed)
+                if waiting is not None:
+                    yield opener.open_segment(waiting, number, False)
+                    number += 1
+                waiting = bytes(filling)
+                filling.clear()
+        # Let the piece go before the next one is read.
+        del piece
+
+    if filling or waiting is None:
+        if waiting is not None:
+            yield opener.open_segment(waiting, number, False)
+            number += 1
+        yield opener.open_segment(bytes(filling), number, True)
+        return
+
+    yield opener.open_segment(waiting, number, True)

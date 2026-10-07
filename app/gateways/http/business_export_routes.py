@@ -19,6 +19,7 @@ The full export of a business (Settings → Privacy):
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.responses import StreamingResponse
 
 from app.contracts.operator_contract import OperatorContract
 from app.gateways.http.openapi_error_contract import standard_error_responses
@@ -148,8 +149,8 @@ def build_business_export_router(
                 user_agent=read_user_agent(request.headers.get("user-agent")),
             )
         )
-        return Response(
-            content=download.content,
+        return StreamingResponse(
+            download.pieces,
             media_type="application/zip",
             headers={
                 **DOWNLOAD_HEADERS,

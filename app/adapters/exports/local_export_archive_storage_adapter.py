@@ -1,4 +1,5 @@
 import shutil
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import BinaryIO
 
@@ -35,11 +36,15 @@ class LocalExportArchiveStorageAdapter(ExportArchiveStorageContract):
             shutil.copyfileobj(archive, partial, COPY_BLOCK_SIZE)
         partial_path.replace(file_path)
 
-    def read(self, business_id: BusinessId, path: ExportArchivePath) -> bytes | None:
+    def stream(
+        self, business_id: BusinessId, path: ExportArchivePath
+    ) -> Iterable[bytes] | None:
         try:
-            return self.resolve_path(path).read_bytes()
+            archive: BinaryIO = self.resolve_path(path).open("rb")
         except FileNotFoundError, IsADirectoryError, NotADirectoryError:
             return None
+
+        return read_pieces(archive)
 
     def delete(self, business_id: BusinessId, path: ExportArchivePath) -> None:
         self.resolve_path(path).unlink(missing_ok=True)
@@ -59,3 +64,11 @@ class LocalExportArchiveStorageAdapter(ExportArchiveStorageContract):
             raise ValidationFailedError(f"Invalid export path {path!r}.")
 
         return file_path
+
+
+def read_pieces(archive: BinaryIO) -> Iterator[bytes]:
+    """The file a megabyte at a time, closed once read to its end."""
+
+    with archive:
+        while piece := archive.read(COPY_BLOCK_SIZE):
+            yield piece

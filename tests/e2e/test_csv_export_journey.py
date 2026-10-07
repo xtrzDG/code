@@ -123,6 +123,8 @@ def test_the_owner_downloads_the_full_export_by_a_one_time_link(
     assert downloaded.status_code == 200, downloaded.text
     assert downloaded.headers["content-type"] == "application/zip"
     assert downloaded.headers["cache-control"] == "no-store"
+    # Streamed a piece at a time: no length known before the last piece.
+    assert "content-length" not in downloaded.headers
     with zipfile.ZipFile(io.BytesIO(downloaded.content)) as archive:
         names = set(archive.namelist())
         bookings_csv = archive.read("csv/bookings.csv").decode("utf-8")
