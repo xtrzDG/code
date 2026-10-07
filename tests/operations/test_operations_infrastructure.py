@@ -1,7 +1,6 @@
 """Lock registry and calendar repositories."""
 
 import threading
-import time
 
 from app.adapters.locks.in_memory_advisory_lock_adapter import (
     InMemoryAdvisoryLockAdapter,
@@ -29,25 +28,35 @@ def test_lock_registry_serializes_one_business_but_not_others() -> None:
     registry = BusinessLockRegistry(InMemoryAdvisoryLockAdapter())
     first, second = BusinessId(), BusinessId()
     events: list[str] = []
+    holding, release = threading.Event(), threading.Event()
 
     def hold_first() -> None:
         with registry.lock_for(first):
             events.append("first-start")
-            time.sleep(0.05)
+            holding.set()
+            release.wait(timeout=10)
             events.append("first-end")
 
     holder = threading.Thread(target=hold_first)
     holder.start()
-    while "first-start" not in events:
-        time.sleep(0.001)
+    assert holding.wait(timeout=10)
 
+    # Another business's lock is free while the first one is held.
     with registry.lock_for(second):
         events.append("second")
 
-    with registry.lock_for(first):
-        events.append("first-again")
+    def take_first_again() -> None:
+        with registry.lock_for(first):
+            events.append("first-again")
 
-    holder.join()
+    # The first business's lock waits for its holder, released only now.
+    waiter = threading.Thread(target=take_first_again)
+    waiter.start()
+    waiter.join(timeout=0.1)
+    assert waiter.is_alive()
+    release.set()
+    waiter.join(timeout=10)
+    holder.join(timeout=10)
 
     assert events == ["first-start", "second", "first-end", "first-again"]
 
