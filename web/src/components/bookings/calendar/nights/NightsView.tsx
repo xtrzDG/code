@@ -4,7 +4,7 @@ import { useId, useRef } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconCalendar } from "@/components/icons";
-import { addDays, daysBetween, formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
+import { addDays, daysBetween, formatLocalDate } from "@/components/insights/dates";
 import type { BookingView } from "@/components/insights/types";
 import { ButtonLink, EmptyState } from "@/components/ui";
 import { localeDirection } from "@/i18n/config";
@@ -12,7 +12,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { businessPath } from "@/lib/navigation";
 
-import { windowDates } from "../_lib/calendarDates";
+import { formatDateSpan, windowDates } from "../_lib/calendarDates";
 import type { CalendarGrid, MoveTarget } from "../_lib/calendarTypes";
 import { layoutStays, stayNights } from "../_lib/nightsLayout";
 import { CalendarLegend } from "../CalendarLegend";
@@ -90,7 +90,7 @@ export function NightsView({
         ref={scrollRef}
         role="region"
         tabIndex={-1}
-        aria-label={t("bookingCalendar.nights.label", { range: formatLocalDateRange(from, grid.date_to, locale) })}
+        aria-label={t("bookingCalendar.nights.label", { range: formatDateSpan(from, grid.date_to, locale) })}
         data-calendar-nights={from}
         className="overflow-x-auto overscroll-x-contain rounded-2xl border border-line bg-surface"
       >

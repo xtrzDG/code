@@ -22,8 +22,8 @@ const HOUR_LINES = {
 };
 
 /** The ghost of the booking being moved, when it would land on this column. */
-function ghostOn(placeId: string, preview: MovePreview | null): Laned<BookingView> | null {
-  if (!preview || preview.target.resourceId !== placeId || preview.target.time === null) {
+function ghostOn(placeId: string, date: string, preview: MovePreview | null): Laned<BookingView> | null {
+  if (!preview || preview.target.resourceId !== placeId || preview.target.date !== date || preview.target.time === null) {
     return null;
   }
   const start = minuteOfTime(preview.target.time) ?? 0;
@@ -67,7 +67,7 @@ export function DayColumn({
 }) {
   const { t, locale } = useI18n();
   const height = (axis.end - axis.start) * MINUTE_HEIGHT;
-  const ghost = ghostOn(place.id, preview);
+  const ghost = ghostOn(place.id, date, preview);
 
   const create = (event: MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest("[data-calendar-booking]")) {

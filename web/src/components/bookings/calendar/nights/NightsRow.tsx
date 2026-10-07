@@ -3,12 +3,13 @@
 import type { ComponentProps, PointerEvent } from "react";
 
 import { BOOKING_STATUS } from "@/components/insights/labels";
-import { daysBetween, formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
+import { daysBetween, formatLocalDate } from "@/components/insights/dates";
 import type { BookingView } from "@/components/insights/types";
 import { UserContent } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { formatDateSpan } from "../_lib/calendarDates";
 import type { GridPlace, GridPlaceDay } from "../_lib/calendarTypes";
 import type { Laned } from "../_lib/dayLayout";
 import type { StayNights } from "../_lib/nightsLayout";
@@ -114,7 +115,7 @@ export function NightsRow({
             onClick={() => onOpen(booking)}
             aria-label={t("bookingCalendar.block.label", {
               name,
-              time: formatLocalDateRange(booking.date, booking.end_date, locale),
+              time: formatDateSpan(booking.date, booking.end_date, locale),
               place: booking.resource_name,
               status: t(BOOKING_STATUS[booking.status].label),
             })}

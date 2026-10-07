@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calendarWindow, isoWeekdayOf, shiftAnchor, weekStartOf, windowDates } from "./calendarDates";
+import { calendarWindow, formatDateSpan, isoWeekdayOf, shiftAnchor, weekStartOf, windowDates } from "./calendarDates";
 import { isCalendarView } from "./calendarTypes";
 import { clampStart, daySpan, layoutLanes, minuteOfTime, placeLoad, snapMinutes, timeAxis, timeOfMinute } from "./dayLayout";
 
@@ -122,5 +122,11 @@ describe("a place's load", () => {
 
   it("is null on a closed day", () => {
     expect(placeLoad({ ...terrace, is_open: false, open_unit_minutes: 0 }, [])).toEqual({ share: null, count: 0 });
+  });
+});
+
+describe("a window's dates as text", () => {
+  it("joins two dates of the locale", () => {
+    expect(formatDateSpan("2026-10-05", "2026-10-11", "en")).toBe("Oct 5 – Oct 11, 2026");
   });
 });

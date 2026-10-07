@@ -1,12 +1,12 @@
 "use client";
 
 import { IconChevronRight } from "@/components/icons";
-import { formatLocalDate, formatLocalDateRange, isLocalDate } from "@/components/insights/dates";
+import { formatLocalDate, isLocalDate } from "@/components/insights/dates";
 import { buttonClasses, Checkbox, DateField } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
-import { shiftAnchor } from "./_lib/calendarDates";
+import { formatDateSpan, shiftAnchor } from "./_lib/calendarDates";
 import type { CalendarView } from "./_lib/calendarTypes";
 
 const ARROW = cn(buttonClasses({ variant: "secondary", size: "sm" }), "w-8 justify-center px-0");
@@ -40,7 +40,7 @@ export function CalendarToolbar({
   const heading =
     view === "day"
       ? formatLocalDate(anchor, locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-      : formatLocalDateRange(window.from, window.to, locale);
+      : formatDateSpan(window.from, window.to, locale);
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <div role="group" aria-label={t("bookingCalendar.toolbar.label")} className="flex items-center gap-1">

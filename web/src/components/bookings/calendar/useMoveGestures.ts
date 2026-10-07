@@ -176,6 +176,10 @@ export function useMoveGestures({
       endSession();
       if (current.isActive) {
         commit(current.booking, current.locate(event.clientX, event.clientY) ?? origin(current.booking), "drag");
+        // The click that ends a drag is swallowed; when the moved block left the page none comes.
+        setTimeout(() => {
+          suppressClick.current = false;
+        }, 0);
       }
     },
     onPointerCancel: () => {

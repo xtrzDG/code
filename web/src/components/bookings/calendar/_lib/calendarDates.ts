@@ -4,7 +4,7 @@
  * weeks of nights from a date; and where the arrows go from there.
  */
 
-import { addDays, type LocalDateText } from "@/components/insights/dates";
+import { addDays, formatLocalDate, type LocalDateText } from "@/components/insights/dates";
 import type { IsoWeekday } from "@/lib/intl/localeCalendar";
 
 import type { CalendarView } from "./calendarTypes";
@@ -48,4 +48,14 @@ export function shiftAnchor(view: CalendarView, anchor: LocalDateText, step: -1 
 /** Every local date of a window, in order. */
 export function windowDates(from: LocalDateText, days: number): LocalDateText[] {
   return Array.from({ length: days }, (_, index) => addDays(from, index));
+}
+
+/**
+ * "Oct 5 – Oct 11, 2026": two dates of the locale joined by a dash. Not
+ * Intl's formatRange, whose spacing differs between the server's ICU and
+ * the browser's (the heading is rendered on both).
+ */
+export function formatDateSpan(from: LocalDateText, to: LocalDateText, locale: string): string {
+  const start = formatLocalDate(from, locale, { day: "numeric", month: "short" });
+  return `${start} – ${formatLocalDate(to, locale, { day: "numeric", month: "short", year: "numeric" })}`;
 }

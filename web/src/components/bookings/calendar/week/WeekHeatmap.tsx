@@ -2,12 +2,13 @@
 
 import { useRef, useState, type KeyboardEvent } from "react";
 
-import { formatLocalDate, formatLocalDateRange } from "@/components/insights/dates";
+import { formatLocalDate } from "@/components/insights/dates";
 import { UserContent } from "@/components/ui";
 import { localeDirection } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 
+import { formatDateSpan } from "../_lib/calendarDates";
 import type { CalendarGrid, CalendarView, GridPlace } from "../_lib/calendarTypes";
 import { dayLoad, loadLevel, placeDayShare, type LoadLevel } from "../_lib/weekLoad";
 import { HeatCell, HeatLegend } from "./HeatCell";
@@ -68,12 +69,12 @@ export function WeekHeatmap({
         <table
           ref={tableRef}
           onKeyDown={onKeyDown}
-          aria-label={t("bookingCalendar.week.label", { range: formatLocalDateRange(grid.date_from, grid.date_to, locale) })}
-          className="w-full min-w-[42rem] table-fixed border-separate border-spacing-1"
+          aria-label={t("bookingCalendar.week.label", { range: formatDateSpan(grid.date_from, grid.date_to, locale) })}
+          className="w-full min-w-[38rem] table-fixed border-separate border-spacing-1 sm:min-w-[42rem]"
         >
           <thead>
             <tr>
-              <th scope="col" className="w-36 px-2 text-start text-xs font-medium text-ink-subtle sm:w-44">
+              <th scope="col" className="sticky start-0 z-10 w-28 bg-surface px-2 text-start text-xs font-medium text-ink-subtle sm:w-44">
                 {t("bookingCalendar.week.place")}
               </th>
               {grid.days.map((day) => (
@@ -91,7 +92,7 @@ export function WeekHeatmap({
           <tbody>
             {rows.map((row, rowIndex) => (
               <tr key={row.key}>
-                <th scope="row" className="truncate px-2 text-start text-sm font-semibold text-ink">
+                <th scope="row" className="sticky start-0 z-10 truncate bg-surface px-2 text-start text-sm font-semibold text-ink">
                   {row.place ? <UserContent>{row.place.name}</UserContent> : t("bookingCalendar.week.allPlaces")}
                 </th>
                 {grid.days.map((day, columnIndex) => {
