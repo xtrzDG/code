@@ -98,6 +98,7 @@ describe("resource calendars", () => {
             external_resource_id: "1",
             added_at: 1,
             status: { block_count: 0 },
+            write_status: {},
           },
         }),
       ),
