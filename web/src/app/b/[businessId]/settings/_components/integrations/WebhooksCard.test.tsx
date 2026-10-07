@@ -16,6 +16,7 @@ import { WebhooksCard } from "./WebhooksCard";
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
 
 const WEBHOOKS = "/v1/businesses/{business_id}/webhooks";
+const DELIVERIES = "/v1/businesses/{business_id}/webhooks/{webhook_id}/deliveries";
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
 const { t, tp } = textsIn("en");
 
@@ -102,6 +103,27 @@ describe("WebhooksCard: where the business's events go", () => {
     await user.click(screen.getByLabelText(t("apiIntegrations.events.lead_created")));
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: t("apiIntegrations.webhooks.dialog.create") }));
     expect(await screen.findByText(t("apiIntegrations.webhooks.reasons.not_public"))).toBeTruthy();
+  });
+
+  it("keeps a webhook's delivery log intact when the webhook is paused after it was read", async () => {
+    answerGet((path) =>
+      path === WEBHOOKS ? ok(endpointList([endpoint()])) : path === DELIVERIES ? ok({ items: [delivery()], next_cursor: null }) : pending(),
+    );
+    vi.mocked(api.PATCH).mockImplementation((() => ok(endpoint({ status: "paused" }))) as never);
+    const user = userEvent.setup();
+    renderCard();
+
+    await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.deliveries"));
+    const log = await screen.findByRole("dialog", { name: t("apiIntegrations.deliveries.title") });
+    expect(await within(log).findByText(t("apiIntegrations.events.booking_created"))).toBeTruthy();
+    await user.click(within(log).getAllByRole("button", { name: t("common.close") })[0]);
+
+    await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.pause"));
+    expect(await screen.findByText(t("apiIntegrations.webhooks.statuses.paused"))).toBeTruthy();
+    await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.deliveries"));
+    const reopened = await screen.findByRole("dialog", { name: t("apiIntegrations.deliveries.title") });
+    expect(await within(reopened).findByText(t("apiIntegrations.events.booking_created"))).toBeTruthy();
+    expect(within(reopened).getAllByRole("listitem")).toHaveLength(1);
   });
 
   it("sends a test event, pauses, replaces the secret and deletes", async () => {
