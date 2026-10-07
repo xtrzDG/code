@@ -7,6 +7,7 @@ tests/durations.json keeps every part of .github/workflows/ci.yml within its
 budget (docs/operations/ci.md).
 """
 
+import re
 import warnings
 from collections.abc import Generator
 from dataclasses import dataclass, field
@@ -30,10 +31,14 @@ from tests.part_plan import (
 
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 CI_WORKFLOW: Path = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
-# The most measured seconds of tests one CI part may hold. A part runs them
-# on four xdist workers; with collection and the workers' start-up the
-# measured run's seconds came to about a quarter of a part's minutes on CI.
-PART_BUDGET_SECONDS: float = 720.0
+# A part's test step on CI: its four xdist workers share its files' seconds
+# (tests/durations.json holds seconds on CI's runners), never faster than its
+# longest file, plus about 30 seconds to start the workers and collect the
+# suite; it should stay within four minutes (docs/operations/ci.md).
+PART_WORKERS: int = 4
+PART_START_SECONDS: float = 30.0
+PART_BUDGET_SECONDS: float = 240.0
+PERF_MODULE: re.Pattern[str] = re.compile(r"^pytestmark = pytest\.mark\.perf$", re.MULTILINE)
 
 
 def test_a_part_is_read_from_its_index_and_total() -> None:
@@ -176,16 +181,24 @@ def test_the_committed_durations_keep_every_ci_part_within_its_budget() -> None:
 
     for group, total in ci_parts().items():
         files = weigh_files(((group, path) for path in durations[group]), durations)
-        loads = [round(sum(item.seconds for item in part)) for part in plan_parts(files, total)]
-        assert max(loads) <= PART_BUDGET_SECONDS, (
-            f"{group}: parts of {loads} measured seconds; add a part in ci.yml "
-            "or split the slowest test files (docs/operations/ci.md)."
+        estimates = [
+            round(max(sum(item.seconds for item in part) / PART_WORKERS, max(item.seconds for item in part)) + PART_START_SECONDS)
+            for part in plan_parts(files, total)
+        ]
+        assert max(estimates) <= PART_BUDGET_SECONDS, (
+            f"{group}: parts of about {estimates} seconds on CI; add a part in "
+            "ci.yml or split the slowest test files (docs/operations/ci.md)."
         )
 
 
 def test_the_committed_durations_name_existing_test_files() -> None:
     durations = load_durations()
-    test_files = {path.relative_to(PROJECT_ROOT).as_posix() for path in (PROJECT_ROOT / "tests").rglob("test_*.py")}
+    # CI never runs the timing budgets (`-m "not perf"`), so they have no duration.
+    test_files = {
+        path.relative_to(PROJECT_ROOT).as_posix()
+        for path in (PROJECT_ROOT / "tests").rglob("test_*.py")
+        if PERF_MODULE.search(path.read_text(encoding="utf-8")) is None
+    }
     measured = {path for files in durations.values() for path in files}
 
     assert measured, "tests/durations.json is empty: measure the suite (docs/operations/ci.md)."

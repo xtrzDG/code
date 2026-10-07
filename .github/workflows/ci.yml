@@ -544,6 +544,8 @@ jobs:
             web/e2e/.artifacts/results
             web/e2e/.artifacts/api.log
             web/e2e/flaky.json
+          # Everything but flaky.json sits in the hidden .artifacts folder.
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 

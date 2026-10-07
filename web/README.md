@@ -74,8 +74,9 @@ Behind a reverse proxy, run the API with
 | `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
 
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
-(CI job "web", which also runs `npm run knip` and keeps the build); the CI job
-"e2e" then runs `npm run e2e` in four shards that start that build.
+(CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
+next to it and keeps the build); the CI job "e2e" then runs `npm run e2e` in
+eight shards that start that build (`docs/operations/ci.md`).
 
 ## End-to-end tests
 
@@ -87,7 +88,8 @@ npx playwright install chromium   # once (CI: --with-deps)
 npm run e2e                       # builds the cabinet, starts API + cabinet, runs e2e/*.spec.ts
 E2E_SKIP_BUILD=1 npm run e2e      # reuse the last `next build`
 npm run e2e -- onboarding         # one file
-E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
+E2E_SHARD=2/8 npm run e2e         # one CI shard's spec files
+npm run e2e:durations             # measure every spec again (e2e/durations.json)
 ```
 
 - `e2e/playwright.config.ts` starts the API from the repository root
@@ -214,13 +216,29 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
 | --- | --- | --- |
 | `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
-| `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: every spec that signs in through `support/admin.ts` shares one shard, as they build one admin team on the shard's API; the rest are balanced by test count) |
+| `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: spec files go, longest first, to the shard with the least measured work, by `e2e/durations.json`) |
 | `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.63.0, which downloads Chromium 153; it also drives the Chromium 141 of older machine images) |
 
 Failures leave screenshots and traces in `e2e/.artifacts/results/`
 (`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
 and the API log as the `e2e-report-<shard>` artifact.
+
+CI runs the suite in eight shards, each with its own API, balanced by the
+seconds each spec file took (`e2e/durations.json`, written by Playwright's
+JSON reporter); a spec without a measurement counts as the mean, and
+`e2e/support/shards.test.ts` fails until it is measured or while a shard
+would run over its budget. After adding, splitting or slowing down specs:
+
+```bash
+npm run e2e:durations                         # the whole suite, rewrites e2e/durations.json
+npm run e2e:durations -- inbox.spec.ts        # these files; the other entries stay
+npm run e2e:durations -- --from report.json   # JSON reports of a CI run (e2e-report-* artifacts)
+```
+
+A spec file over a shard's budget is split into several files (as the
+route tour `tour-*.spec.ts` and the section audits `a11y-sections-*.spec.ts`
+are); `docs/operations/ci.md` has the budgets and the CI layout.
 
 A test that passes only on a retry (CI retries once) is flaky: the reporter
 `e2e/reporters/flakyReporter.ts` writes it to `e2e/flaky.json` and the job

@@ -116,7 +116,7 @@ function main(argv) {
     // No durations yet: every entry comes from this measurement.
   }
   writeFileSync(DURATIONS_PATH, formatDurations(mergeDurations(previous, measured, specNames)));
-  console.log(`e2e/durations.json: ${Object.keys(measured).length} spec files measured.`);
+  process.stdout.write(`e2e/durations.json: ${Object.keys(measured).length} spec files measured.\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
