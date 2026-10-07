@@ -118,7 +118,10 @@ def test_every_attack_is_played(dataset: EvalDataset) -> None:
     )
 
     assert [scenario.language for scenario in spoofs] == [ENGLISH]
-    assert spoofs[0].customer[0] == ATTACK_OPENINGS[spoofs[0].kind]
+    assert (
+        spoofs[0].customer[0]
+        == (ATTACK_OPENINGS[AutotestScenarioKind.PROMPT_INJECTION_SPOOF])
+    )
     for kind in TRANSLATED_ATTACK_KINDS:
         scenarios = by_kind(dataset, kind)
 
