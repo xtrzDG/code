@@ -39,7 +39,7 @@ export function WebhookEndpointDialog({
   onClose: () => void;
   onCreated: (created: CreatedWebhookEndpoint) => void;
 }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const [draft, setDraft] = useState<Draft>(() => draftOf(endpoint));
   const [error, setError] = useState<unknown>(null);
   const [eventsMissing, setEventsMissing] = useState(false);
@@ -90,7 +90,7 @@ export function WebhookEndpointDialog({
       }
     >
       <form id={formId} onSubmit={submit} className="space-y-5" noValidate>
-        {error ? <Alert tone="danger">{describeError(error, t, undefined, WEBHOOK_REASONS).title}</Alert> : null}
+        {error ? <Alert tone="danger">{describeError(error, { t, tp }, undefined, WEBHOOK_REASONS).title}</Alert> : null}
         <Field label={t("apiIntegrations.webhooks.dialog.url")} hint={t("apiIntegrations.webhooks.dialog.urlHint")} required>
           {(control) => (
             <Input

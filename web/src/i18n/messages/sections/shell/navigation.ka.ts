@@ -13,6 +13,9 @@ export const navigationKa: Translation<typeof navigationEn> = {
     assistant: "ასისტენტი",
     settings: "პარამეტრები",
   },
+  tabLabels: {
+    inbox: "შემოსული",
+  },
   descriptions: {
     overview: "როგორ მუშაობს თქვენი ასისტენტი და რა საჭიროებს დღეს თქვენს ყურადღებას.",
     inbox: "ყველა საუბარი ერთ ადგილას: კლიენტები, რომლებსაც ადამიანი სჭირდებათ, მოთხოვნები და ვინ რას უძღვება გუნდში.",

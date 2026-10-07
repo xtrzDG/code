@@ -49,7 +49,6 @@ export const profileEditKa: Translation<typeof profileEditEn> = {
     priced: { one: "{count} ფასით", other: "{count} ფასით" },
     noHours: "სამუშაო საათები მითითებული არ არის",
     roundTheClock: "24 საათი",
-    noBookings: "ჯავშნების გარეშე",
     partySize: { one: "ერთ ჯავშანში {count} ადამიანამდე", other: "ერთ ჯავშანში {count} ადამიანამდე" },
     noPeople: "საუბრებს ჯერ არავინ იღებს",
     answers: { one: "{count} მზა პასუხი", other: "{count} მზა პასუხი" },
@@ -99,6 +98,13 @@ export const profileEditKa: Translation<typeof profileEditEn> = {
     pasteHint: "ჩასვით სტრიქონები ცხრილიდან: დასახელება, ფასი, წუთები. Enter ახალ სტრიქონს ამატებს.",
     pasted: { one: "ჩაისვა {count} სტრიქონი", other: "ჩაისვა {count} სტრიქონი" },
     questionsTitle: "იმის შესახებ, რასაც სთავაზობთ",
+    compact: {
+      search: "ძიება შეთავაზებაში",
+      noMatches: "შეთავაზებაში „{query}“ ვერ მოიძებნა.",
+      group: { one: "{kind}: {count} სტრიქონი", other: "{kind}: {count} სტრიქონი" },
+      noPrice: "ფასის გარეშე",
+      minutes: { one: "{count} წთ", other: "{count} წთ" },
+    },
   },
   hours: {
     suggestedTitle: "ჩვეული საათები თქვენი სახეობის ბიზნესისთვის",

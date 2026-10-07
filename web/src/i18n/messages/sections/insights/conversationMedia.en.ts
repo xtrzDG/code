@@ -15,10 +15,7 @@ export const conversationMediaEn = {
     file: "File",
   },
   voice: {
-    title: "Voice message",
-    duration: "Voice message, {duration}",
     transcript: "Transcript",
-    noTranscript: "No transcript.",
     play: "Play",
     playLabel: "Play the voice message",
     playerLabel: "Voice message from the customer",
@@ -49,5 +46,4 @@ export const conversationMediaEn = {
     unrecognized_format: "Not a format the assistant reads: the customer was asked to write instead.",
     not_understood: "No words could be made out: the customer was asked to write instead.",
   },
-  auditNote: "Opening voice messages and photos is recorded in the audit log.",
 } as const;

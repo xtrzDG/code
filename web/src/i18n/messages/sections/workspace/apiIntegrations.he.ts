@@ -21,9 +21,10 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
     description: "שלחו הזמנות, פניות, העברות לאדם, שיחות חדשות ושיחות טלפון שהסתיימו למערכות שלכם ברגע שהן קורות. כל בקשה חתומה.",
     add: "הוספת וובהוק",
     empty: "עדיין אין וובהוקים. הוסיפו את כתובת המערכת שלכם, או חברו את Zapier עם מפתח API.",
-    limits: "עד {count} וובהוקים. כתובת שנכשלת {failures} פעמים ברציפות מושבתת.",
+    limits: { one: "וובהוק אחד לכל היותר.", other: "עד {count} וובהוקים." },
+    disableAfter: { one: "כתובת שנכשלת פעם אחת מושבתת.", other: "כתובת שנכשלת {failures} פעמים ברציפות מושבתת." },
     statuses: { active: "פעיל", paused: "מושהה", disabled: "מושבת" },
-    origins: { cabinet: "נוסף כאן", api: "נוסף על ידי Zapier או ה-API" },
+    origins: { api: "נוסף על ידי Zapier או ה-API" },
     eventCount: { one: "אירוע אחד", other: "{count} אירועים" },
     lastSuccess: "נמסר לאחרונה {time}",
     neverDelivered: "עדיין לא נמסר דבר",
@@ -42,7 +43,6 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
       delete: "מחיקה",
     },
     toasts: {
-      saved: "הוובהוק נשמר",
       paused: "הוובהוק הושהה",
       resumed: "הוובהוק פעיל",
       testDelivered: "אירוע הבדיקה נמסר",
@@ -74,7 +74,10 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
     },
     reasons: {
       not_public: "כתובת זו לא יכולה לקבל וובהוקים: השתמשו בכתובת https ציבורית.",
-      webhook_limit_reached: "לעסק יכולים להיות עד {count} וובהוקים. מחקו אחד קודם.",
+      webhook_limit_reached: {
+        one: "לעסק יכול להיות וובהוק אחד בלבד. מחקו אותו קודם.",
+        other: "לעסק יכולים להיות עד {count} וובהוקים. מחקו אחד קודם.",
+      },
     },
   },
   secret: {
@@ -118,7 +121,8 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
     description: "אפשרו ל-Zapier או לסקריפטים שלכם לקרוא וליצור הזמנות ופניות דרך ה-API הציבורי.",
     add: "יצירת מפתח API",
     empty: "עדיין אין מפתחות API.",
-    limits: "עד {count} מפתחות פעילים; כל אחד עד {rate} בקשות בדקה.",
+    limits: { one: "מפתח פעיל אחד לכל היותר.", other: "עד {count} מפתחות פעילים." },
+    rate: { one: "מפתח שולח עד בקשה אחת בדקה.", other: "מפתח שולח עד {rate} בקשות בדקה." },
     statuses: { active: "פעיל", revoked: "בוטל" },
     created: "נוצר {time}",
     lastUsed: "שימוש אחרון {time}",
@@ -150,7 +154,10 @@ export const apiIntegrationsHe: Translation<typeof apiIntegrationsEn> = {
     },
     toasts: { revoked: "מפתח ה-API בוטל" },
     reasons: {
-      api_key_limit_reached: "לעסק יכולים להיות עד {count} מפתחות פעילים. בטלו אחד קודם.",
+      api_key_limit_reached: {
+        one: "לעסק יכול להיות מפתח פעיל אחד בלבד. בטלו אותו קודם.",
+        other: "לעסק יכולים להיות עד {count} מפתחות פעילים. בטלו אחד קודם.",
+      },
     },
   },
 };

@@ -30,7 +30,6 @@ export const digestChannelsRu: Translation<typeof digestChannelsEn> = {
   whatsappNumberHint: "С кодом страны. Выбирая WhatsApp, вы соглашаетесь получать эти сообщения.",
   whatsappNotReady: "Сводки в WhatsApp на этой платформе ещё не настроены.",
   save: "Сохранить",
-  saved: "Сохранено",
   invalidNumber: "Введите номер с кодом страны, например +995 555 12 34 56.",
   refusals: {
     telegramNotAvailable: "Сводки в Telegram на этой платформе ещё не настроены.",

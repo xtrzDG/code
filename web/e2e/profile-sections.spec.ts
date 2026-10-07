@@ -4,19 +4,33 @@
  * answers are only offered, never saved until the owner takes them; the
  * offer is a compact table where Enter adds a line and lines pasted from a
  * spreadsheet become lines of their own, each saved by itself. Every
- * section passes the accessibility audit and fits a phone in long texts.
+ * section passes the accessibility audit and fits a phone in long texts;
+ * on a phone a long offer folds into groups, short rows and a search.
  */
 
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
 
-import { expect, test } from "./support/fixtures";
+import { API_URL } from "./support/env";
+import { expect, test, type Owner } from "./support/fixtures";
 import { en } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
 import { findOverflow, usePseudoLocale } from "./support/overflow";
 import { PROFILE_SECTIONS, saveState, templatePattern } from "./support/profile";
 
 const offer = en.tunnelOffer.offer;
+const compact = en.profileEdit.offer.compact;
+
+/** Lines of the offer straight through the API: name, kind, price in cents, minutes. */
+async function addOffer(request: APIRequestContext, owner: Owner, lines: [string, "service" | "package", number, number | null][]) {
+  for (const [title, kind, cents, minutes] of lines) {
+    const response = await request.post(`${API_URL}/v1/businesses/${owner.businessId}/knowledge`, {
+      headers: { authorization: `Bearer ${owner.token}` },
+      data: { kind, title, price_minor: cents, currency_code: "EUR", duration_minutes: minutes, is_active: true },
+    });
+    expect(response.status(), await response.text()).toBe(201);
+  }
+}
 
 /** The offer table's line `number` (from 1): its name and its price in euros. */
 function offerLine(page: Page, number: number) {
@@ -143,6 +157,49 @@ test("every section passes the accessibility audit", async ({ page, owner }) => 
 
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("a long offer folds into groups and short rows, found by name, edited one at a time", async ({ page, request, owner }) => {
+    const services = ["Haircut", "Beard trim", "Balayage", "Kids haircut", "Blow-dry", "Manicure", "Pedicure", "Brow shaping", "Hair colouring"];
+    await addOffer(request, owner, [
+      ...services.map((name, index): [string, "service", number, number] => [name, "service", 2000 + index * 500, 30 + index * 5]),
+      ["Bridal look", "package", 30000, null],
+      ["Spa day", "package", 12000, null],
+    ]);
+    await page.goto(`/b/${owner.businessId}/assistant/profile/offer`);
+
+    const servicesGroup = page.getByRole("button", { name: compact.group.other.replace("{kind}", en.knowledge.kindGroups.service).replace("{count}", "9") });
+    await expect(servicesGroup).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("button", { name: compact.group.other.replace("{kind}", en.knowledge.kindGroups.package).replace("{count}", "2") })).toBeVisible();
+    await expect(page.locator("input[data-offer-name]")).toHaveCount(0);
+    // Eleven lines no longer take four screens.
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThan(844 * 2);
+
+    await servicesGroup.click();
+    const list = page.getByRole("list", { name: en.knowledge.kindGroups.service });
+    await expect(list.locator("[data-offer-fold]")).toHaveCount(9);
+    await expect(list.getByRole("button", { name: /^Balayage/ })).toContainText("30 EUR · 40 min");
+    expect(await findOverflow(page), "the folded offer at 390 px").toEqual([]);
+
+    // One line opens for editing; Done saves it and folds it again.
+    await list.getByRole("button", { name: /^Balayage/ }).click();
+    const price = page.getByLabel(`${offer.price.replace("{currency}", "EUR")} 3`, { exact: true });
+    await expect(price).toHaveValue("30");
+    await price.fill("35");
+    await list.getByRole("button", { name: en.common.done }).click();
+    await expect(list.getByRole("button", { name: /^Balayage/ })).toContainText("35 EUR · 40 min");
+    await expect(saveState(page)).toHaveAttribute("data-save-state", "saved");
+
+    // The search looks through every group, case aside.
+    await page.getByRole("searchbox", { name: compact.search }).fill("HAIR");
+    await expect(page.locator("[data-offer-fold]")).toHaveCount(3);
+    await page.getByRole("searchbox", { name: compact.search }).fill("massage");
+    await expect(page.getByText(compact.noMatches.replace("{query}", "massage"))).toBeVisible();
+
+    // Saved for real: the page opened again shows the new price.
+    await page.reload();
+    await page.getByRole("button", { name: new RegExp(`^${en.knowledge.kindGroups.service}`) }).click();
+    await expect(page.getByRole("button", { name: /^Balayage/ })).toContainText("35 EUR");
+  });
 
   test("the cards and every section fit the screen in long texts", async ({ page, context, owner }) => {
     test.setTimeout(180_000);

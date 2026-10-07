@@ -8,7 +8,6 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
   title: "Метрики роста",
   description:
     "Как владельцы проходят путь от регистрации до оплаты, сколько приносят в месяц и насколько быстро работает кабинет. По собственным событиям продукта, без сторонних трекеров.",
-  generated: "Посчитано {time}",
   filters: {
     label: "Фильтры метрик",
     period: "Регистрации",
@@ -35,9 +34,19 @@ export const adminMetricsRu: Translation<typeof adminMetricsEn> = {
     timeToLive: "Медианное время до запуска",
     timeToLiveDetail: "От регистрации до первого запущенного помощника",
     activation: "Активированы за 7 дней",
-    activationDetail: "{activated} из {eligible} бизнесов; {pending} ещё в первой неделе",
+    activationDetail: {
+      one: "{activated} из {eligible} бизнеса; {pending} ещё в первой неделе",
+      few: "{activated} из {eligible} бизнесов; {pending} ещё в первой неделе",
+      many: "{activated} из {eligible} бизнесов; {pending} ещё в первой неделе",
+      other: "{activated} из {eligible} бизнеса; {pending} ещё в первой неделе",
+    },
     trialToPaid: "Из пробного в оплату",
-    trialDetail: "{converted} из {ended} завершённых пробных; начато {started}",
+    trialDetail: {
+      one: "{converted} из {ended} завершённого пробного; начато {started}",
+      few: "{converted} из {ended} завершённых пробных; начато {started}",
+      many: "{converted} из {ended} завершённых пробных; начато {started}",
+      other: "{converted} из {ended} завершённого пробного; начато {started}",
+    },
     mrr: "MRR",
     mrrDetail: "{change} за период",
     arpa: "ARPA",

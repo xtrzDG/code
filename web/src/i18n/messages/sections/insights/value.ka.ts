@@ -19,7 +19,9 @@ export const valueKa: Translation<typeof valueEn> = {
     afterHoursHint: "საუბრები, როცა დაკეტილი იყავით",
     hoursSaved: { one: "დაზოგილია თანამშრომლების ~{count} საათი", other: "დაზოგილია თანამშრომლების ~{count} საათი" },
     minutesSaved: { one: "დაზოგილია თანამშრომლების ~{count} წუთი", other: "დაზოგილია თანამშრომლების ~{count} წუთი" },
-    savedHint: "თქვენ ნაცვლად დაწერილი პასუხები: {replies}, მიღებული ზარები: {calls}",
+    savedHint: "თქვენ ნაცვლად: {replies} და {calls}",
+    savedReplies: { one: "{count} დაწერილი პასუხი", other: "{count} დაწერილი პასუხი" },
+    savedCalls: { one: "{count} მიღებული ზარი", other: "{count} მიღებული ზარი" },
     conversations: { one: "{count} საუბარი", other: "{count} საუბარი" },
     conversationsHint: "კლიენტები, რომლებმაც მოგწერეს ან დაგირეკეს",
     returnMultiple: "≈ {multiple}× ტარიფის ღირებულება",
@@ -63,7 +65,6 @@ export const valueKa: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "პირველი პერიოდი",
-    firstPeriodHint: "წინა პერიოდში აქტივობა არ ყოფილა: შესადარებელი ჯერ არაფერია",
     firstPeriodNote: "პირველი პერიოდი — შესადარებელი ჯერ არაფერია",
     up: "ზრდა {change} — {against}",
     down: "კლება {change} — {against}",

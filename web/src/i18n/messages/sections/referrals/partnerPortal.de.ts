@@ -28,16 +28,10 @@ export const partnerPortalDe: Translation<typeof partnerPortalEn> = {
     paying: "Bereits bezahlt",
     accrued: "Offen",
     paid: "Ausgezahlt",
-    invoices: "{count} Rechnungen",
-    none: "Noch keine Provisionen.",
   },
   businesses: {
     title: "Unternehmen, die Sie gebracht haben",
     empty: "Noch keine Unternehmen. Teilen Sie Ihren Link, um das erste zu bringen.",
-    business: "Unternehmen",
-    country: "Land",
-    plan: "Tarif",
-    status: "Status",
     signedUp: "Angemeldet",
     firstPaid: "Erste Zahlung",
     notYet: "Noch nicht",
@@ -46,10 +40,7 @@ export const partnerPortalDe: Translation<typeof partnerPortalEn> = {
   commissions: {
     title: "Provision je Rechnung",
     empty: "Noch keine Provisionen: Sie erscheinen, wenn ein von Ihnen gebrachtes Unternehmen bezahlt.",
-    month: "Monat",
-    business: "Unternehmen",
     base: "Rechnung vor Steuern",
-    amount: "Provision",
     status: "Status",
     statuses: {
       accrued: "Offen",

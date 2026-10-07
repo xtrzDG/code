@@ -27,8 +27,5 @@ export const formFieldsDe: Translation<typeof formFieldsEn> = {
     saved: "Gespeichert",
     failed: "Nicht gespeichert",
     retry: "Erneut versuchen",
-    retryLater: "Nicht gespeichert: keine Verbindung. Wir versuchen es gleich noch einmal.",
-    stale: "Jemand anderes hat das inzwischen geändert. Das Feld zeigt jetzt, was gespeichert ist.",
-    leaveWarning: "Eine Änderung wird noch gespeichert.",
   },
 };

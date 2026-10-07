@@ -15,8 +15,8 @@ import type { ApiKeyBody, ApiKeyList, ApiKeyView } from "@/lib/apiIntegrations";
 
 export const API_KEY_REASONS = {
   api_key_limit_reached: (reason: { details: readonly string[] }) => ({
-    key: "apiIntegrations.apiKeys.reasons.api_key_limit_reached" as const,
-    values: { count: Number(reason.details[0] ?? 0) },
+    pluralKey: "apiIntegrations.apiKeys.reasons.api_key_limit_reached" as const,
+    count: Number(reason.details[0] ?? 0),
   }),
 };
 

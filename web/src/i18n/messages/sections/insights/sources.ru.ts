@@ -40,5 +40,4 @@ export const sourcesRu: Translation<typeof sourcesEn> = {
   tagHint: "Дайте каждой ссылке и QR-коду свою метку в «Каналы» → «Поделиться» — и здесь у них будет своя строка.",
   tagLink: "Поставить метки",
   loading: "Загружаем источники…",
-  chip: "Откуда: {source}",
 };

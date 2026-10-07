@@ -59,7 +59,6 @@ export const waitlistHe: Translation<typeof waitlistEn> = {
   removeBody: "לא יוצע לו מקום שמתפנה. מקום שנשמר עבורו כרגע יעבור לבא בתור.",
   removeConfirm: "הסרה מהרשימה",
   removed: "הוסר מרשימת ההמתנה",
-  showMore: "להציג עוד",
   timeZone: "השעות לפי {timezone}.",
   settings: {
     title: "הגדרות רשימת ההמתנה",

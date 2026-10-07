@@ -14,10 +14,7 @@ export const conversationMediaDe: Translation<typeof conversationMediaEn> = {
     file: "Datei",
   },
   voice: {
-    title: "Sprachnachricht",
-    duration: "Sprachnachricht, {duration}",
     transcript: "Transkript",
-    noTranscript: "Kein Transkript.",
     play: "Abspielen",
     playLabel: "Sprachnachricht abspielen",
     playerLabel: "Sprachnachricht des Kunden",
@@ -48,5 +45,4 @@ export const conversationMediaDe: Translation<typeof conversationMediaEn> = {
     unrecognized_format: "Kein Format, das der Assistent liest: Der Kunde wurde gebeten, stattdessen zu schreiben.",
     not_understood: "Es waren keine Wörter zu erkennen: Der Kunde wurde gebeten, stattdessen zu schreiben.",
   },
-  auditNote: "Das Öffnen von Sprachnachrichten und Fotos wird im Protokoll festgehalten.",
 };

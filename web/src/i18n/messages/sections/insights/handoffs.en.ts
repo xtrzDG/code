@@ -5,13 +5,6 @@
  */
 
 export const handoffsEn = {
-  loading: "Loading…",
-  tabsLabel: "Show",
-  tabs: {
-    open: "Waiting",
-    resolved: "Resolved",
-    all: "All",
-  },
   urgency: {
     critical: "Critical",
     high: "Urgent",
@@ -36,17 +29,6 @@ export const handoffsEn = {
     resolved: "Resolved",
   },
   notificationFailedHint: "Staff did not get the notification. Call the customer back and check the contacts in settings.",
-  resolvedAt: "Resolved {date}",
-  resolve: "Resolve",
-  confirmResolve: {
-    title: "Mark as resolved?",
-    description: "{name}: the assistant starts answering this customer again.",
-    confirm: "Resolve",
-  },
-  resolved: "Marked as resolved",
-  emptyOpenTitle: "Nobody is waiting for a person",
-  emptyOpenDescription: "When the assistant passes a conversation to a person, it waits here with a short summary.",
-  emptyTitle: "Nothing here yet",
   summaryCodes: {
     model_declined: "The assistant would not answer this message.",
     model_unavailable: "The assistant was briefly unavailable and could not answer.",

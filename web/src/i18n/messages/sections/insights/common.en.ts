@@ -7,7 +7,6 @@
 export const insightsCommonEn = {
   loadingMore: "Loading…",
   showMore: "Show more",
-  shownOf: "Showing {shown} of {total}",
   includeTest: "Include test activity",
   includeTestHint: "From the test chat and checks",
   testBadge: "Test",
@@ -15,8 +14,6 @@ export const insightsCommonEn = {
   unknownCustomer: "Customer without a name",
   callPhone: "Call {phone}",
   openConversation: "Open the conversation",
-  all: "All",
-  clearFilters: "Clear filters",
   noMatchesTitle: "Nothing matches the filters",
   noMatchesDescription: "Change or clear the filters to see more.",
   copy: "Copy",

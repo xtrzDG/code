@@ -61,7 +61,9 @@ export const billingLifecycleHe: Translation<typeof billingLifecycleEn> = {
     months: { one: "חודש אחד", two: "חודשיים", other: "{count} חודשים" },
     window: "מ-{start} עד {until}",
     submit: "השהיה מ-{date}",
-    allowance: "הושהה {used} מתוך {cap} חודשים ב-{window} החודשים האחרונים.",
+    allowance: "הושהה {months} {window}.",
+    allowanceMonths: { one: "{used} מתוך חודש אחד", other: "{used} מתוך {cap} חודשים" },
+    allowanceWindow: { one: "בחודש האחרון", other: "ב-{window} החודשים האחרונים" },
     scheduledTitle: "ההפסקה נקבעה",
     scheduled:
       "מ-{start} עד {until} העוזר רק רושם פניות. התשלומים האוטומטיים כבויים; תשלומים במחיר מלא יתחדשו אחרי ההפסקה.",

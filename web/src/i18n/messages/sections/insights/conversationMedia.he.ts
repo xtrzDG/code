@@ -14,10 +14,7 @@ export const conversationMediaHe: Translation<typeof conversationMediaEn> = {
     file: "קובץ",
   },
   voice: {
-    title: "הודעה קולית",
-    duration: "הודעה קולית, {duration}",
     transcript: "תמלול",
-    noTranscript: "אין תמלול.",
     play: "השמעה",
     playLabel: "השמעת ההודעה הקולית",
     playerLabel: "הודעה קולית מהלקוח",
@@ -48,5 +45,4 @@ export const conversationMediaHe: Translation<typeof conversationMediaEn> = {
     unrecognized_format: "פורמט שהעוזר לא קורא: הלקוח התבקש לכתוב במקום.",
     not_understood: "לא ניתן היה לזהות מילים: הלקוח התבקש לכתוב במקום.",
   },
-  auditNote: "פתיחת הודעות קוליות ותמונות נרשמת ביומן הפעולות.",
 };

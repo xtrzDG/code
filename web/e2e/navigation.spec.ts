@@ -2,15 +2,17 @@
  * The six sections: every section and page opens from the sidebar (the
  * open section's pages under it) and on a phone from the tab bar and
  * "More", fits the screen, and the sidebar folds to icons and stays so.
+ * The tab bar's names keep their words whole in every cabinet language.
  */
 
 import type { Page } from "@playwright/test";
 
 import { SECTION_PAGES, visibleSections, type BusinessSection } from "../src/lib/sections";
 
+import { WEB_URL } from "./support/env";
 import { expect, test } from "./support/fixtures";
+import { de, en, he, ka, ru } from "./support/messages";
 import { waitForNetworkQuiet } from "./support/network";
-import { en } from "./support/messages";
 
 type MessagePath = string;
 
@@ -114,6 +116,42 @@ test.describe("on a phone", () => {
         await expect(sheet).toBeHidden();
         await expectPageOpened(page, owner.businessId, entry.page);
         await fits(page, entry.page);
+      });
+    }
+  });
+
+  test("the tab bar's names keep their words whole in every language", async ({ page, context, owner }) => {
+    const languages = { en, ru, ka, he, de };
+    for (const [locale, messages] of Object.entries(languages)) {
+      await test.step(locale, async () => {
+        await context.addCookies([{ name: "aw_locale", value: locale, url: WEB_URL, sameSite: "Lax" }]);
+        await page.goto(`/b/${owner.businessId}/overview`);
+        const tabBar = page.getByRole("navigation", { name: messages.navigation.tabBar });
+        await expect(tabBar.locator("[data-tab-label]")).toHaveCount(5);
+        // A word on two lines ("Posteingan|g") or cut with "…" is a problem; two words on two lines are not.
+        const problems = await tabBar.evaluate((nav) =>
+          [...nav.querySelectorAll<HTMLElement>("[data-tab-label]")].flatMap((label) => {
+            const text = label.textContent ?? "";
+            const found: string[] = [];
+            if (label.scrollWidth > label.clientWidth + 1 || label.scrollHeight > label.clientHeight + 1) {
+              found.push(`“${text}” is cut`);
+            }
+            const node = label.firstChild;
+            let start = 0;
+            for (const word of text.split(" ")) {
+              if (node) {
+                const range = document.createRange();
+                range.setStart(node, start);
+                range.setEnd(node, start + word.length);
+                const lines = new Set([...range.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top)));
+                if (lines.size > 1) found.push(`“${word}” breaks inside`);
+              }
+              start += word.length + 1;
+            }
+            return found;
+          }),
+        );
+        expect(problems, `the tab bar in ${locale}`).toEqual([]);
       });
     }
   });

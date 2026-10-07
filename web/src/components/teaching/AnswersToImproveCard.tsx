@@ -24,7 +24,7 @@ import { useAnswersToImprove } from "./useTeaching";
 const LINK = "rounded text-sm font-medium text-accent-ink underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 export function AnswersToImproveCard() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const { business, isOwner } = useBusiness();
   const answers = useAnswersToImprove();
   const [fixing, setFixing] = useState<{ conversationId: string; messageId: string } | null>(null);
@@ -58,7 +58,10 @@ export function AnswersToImproveCard() {
           </ul>
           {waiting > items.length ? (
             <p className="text-xs text-ink-subtle">
-              {t("teaching.improve.more", { bad: view.bad_rating_count, unanswered: view.unanswered_count })}
+              {t("teaching.improve.more", {
+                ratings: tp("teaching.improve.moreRatings", view.bad_rating_count),
+                questions: tp("teaching.improve.moreQuestions", view.unanswered_count),
+              })}
             </p>
           ) : null}
         </div>

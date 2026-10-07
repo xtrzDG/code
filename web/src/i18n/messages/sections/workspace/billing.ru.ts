@@ -31,7 +31,6 @@ export const billingRu: Translation<typeof billingEn> = {
     annual: "в год",
   },
   facts: {
-    price: "Цена",
     billingPeriod: "Оплата",
     currentPeriod: "Текущий период",
     trialEnds: "Пробный период до",
@@ -176,7 +175,12 @@ export const billingRu: Translation<typeof billingEn> = {
   },
   dialogs: {
     trialTitle: "Начать бесплатный период тарифа «{plan}»?",
-    trialDescription: "{days} дней бесплатно, сейчас ничего не списывается. После пробного периода тариф стоит {price}.",
+    trialDescription: {
+      one: "{days} день бесплатно, сейчас ничего не списывается. После пробного периода тариф стоит {price}.",
+      few: "{days} дня бесплатно, сейчас ничего не списывается. После пробного периода тариф стоит {price}.",
+      many: "{days} дней бесплатно, сейчас ничего не списывается. После пробного периода тариф стоит {price}.",
+      other: "{days} дня бесплатно, сейчас ничего не списывается. После пробного периода тариф стоит {price}.",
+    },
     trialConfirm: "Начать пробный период",
     trialStarted: "Пробный период начался",
     changeTitle: "Перейти на тариф «{plan}», {period}?",

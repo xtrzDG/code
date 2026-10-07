@@ -15,7 +15,6 @@ export const devicesHe: Translation<typeof devicesEn> = {
     tablet: "טאבלט",
     unknown: "מכשיר",
   },
-  unknownBrowser: "דפדפן לא ידוע",
   on: "{browser} ב-{system}",
   signedIn: "התחבר {date}",
   lastUsed: "שימוש אחרון {date}",

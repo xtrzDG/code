@@ -89,6 +89,5 @@ export const returnVisitsKa: Translation<typeof returnVisitsEn> = {
     sentAt: "გაიგზავნა {time}",
     bookedAt: "დაჯავშნა {time}",
     openConversation: "საუბრის გახსნა",
-    showMore: "მეტის ჩვენება",
   },
 };

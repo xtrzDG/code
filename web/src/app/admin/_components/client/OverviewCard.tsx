@@ -12,7 +12,7 @@ import { BUSINESS_STATUS_LABELS, PLAN_LABELS, SUBSCRIPTION_LABELS } from "../lab
 
 /** The active version's stored verdict: passed or not, and how many scenarios passed when the run counted them. */
 function VerdictValue({ verdict }: { verdict: Schema<"ClientAutotestVerdict"> }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const counted = verdict.passed_count !== null && verdict.passed_count !== undefined && Boolean(verdict.scenario_count);
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
@@ -23,7 +23,7 @@ function VerdictValue({ verdict }: { verdict: Schema<"ClientAutotestVerdict"> })
       </Badge>
       {counted ? (
         <span className="text-sm text-ink-muted">
-          {t("admin.detail.facts.verdictCounts", {
+          {tp("admin.detail.facts.verdictCounts", verdict.scenario_count ?? 0, {
             passed: formatNumber(verdict.passed_count ?? 0, locale),
             total: formatNumber(verdict.scenario_count ?? 0, locale),
           })}

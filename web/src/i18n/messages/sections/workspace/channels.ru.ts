@@ -148,7 +148,6 @@ export const channelsRu: Translation<typeof channelsEn> = {
     },
     dial: "Набрать",
     dialLabel: "Набрать {code}",
-    unavailable: "Инструкция по переадресации появится после подключения телефона.",
   },
   calendar: {
     title: "Google Календарь",

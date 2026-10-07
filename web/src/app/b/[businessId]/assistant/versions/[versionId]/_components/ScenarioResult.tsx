@@ -77,7 +77,7 @@ export function ScenarioResult({ result }: { result: AutotestScenarioResult }) {
               {average !== null ? ` · ${t("assistant.autotests.scoreValue", { score: formatScore(average, locale) })}` : ""}
               {plays ? (
                 <span title={t("assistant.comparison.playsHint")} className={cn(plays.passed < plays.played && "text-danger")}>
-                  {` · ${t("assistant.comparison.plays", { passed: plays.passed, played: plays.played })}`}
+                  {` · ${translator.tp("assistant.comparison.plays", plays.played, { passed: plays.passed, played: plays.played })}`}
                 </span>
               ) : null}
             </span>

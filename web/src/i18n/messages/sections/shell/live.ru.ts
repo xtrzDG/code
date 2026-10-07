@@ -24,7 +24,6 @@ export const liveRu: Translation<typeof liveEn> = {
   reconnect: "Попробовать сейчас",
   needsPersonTitle: "Клиенту нужен человек",
   needsPersonOpen: "Открыть",
-  needsPersonAnnouncement: "Клиенту нужен человек. Ждут: {count}.",
   sound: "Сигнал, когда нужен человек",
   soundHint: "Короткий звук на этом устройстве, когда разговор передан вашей команде.",
 };

@@ -102,6 +102,8 @@ test.describe("for an owner who reads Georgian", () => {
     await page.goto(`/b/${business.id}/assistant/channels`);
     const preview = page.frameLocator(`iframe[title="${ka.channelSetup.preview.frameTitle}"]`);
 
+    // The guide (docs/LAUNCH.md) sends the owner to the preview by its heading.
+    await expect(page.getByRole("region", { name: ka.channelSetup.preview.title })).toBeVisible();
     await expect(page.getByRole("button", { name: "ქართული" })).toHaveAttribute("aria-pressed", "true");
     await expect(preview.getByRole("textbox")).toHaveAttribute("placeholder", "დაწერეთ შეტყობინება…");
     await expect(preview.locator(".aw")).toHaveAttribute("lang", "ka");

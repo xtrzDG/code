@@ -43,7 +43,7 @@ export const knowledgeOfferDe: Translation<typeof knowledgeOfferEn> = {
       bufferRange: "0 bis 240 Minuten",
       seasonDate: "Diesen Tag gibt es in dem Monat nicht",
       seasonOverlap: "Die Saisons {first} und {second} teilen sich Tage: Eine Nacht muss einen Preis haben.",
-      tooManySeasons: "Höchstens {count} Saisons",
+      tooManySeasons: { one: "Höchstens {count} Saison", other: "Höchstens {count} Saisons" },
     },
   },
 };

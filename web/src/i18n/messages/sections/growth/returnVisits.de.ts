@@ -89,6 +89,5 @@ export const returnVisitsDe: Translation<typeof returnVisitsEn> = {
     sentAt: "Gesendet {time}",
     bookedAt: "Gebucht {time}",
     openConversation: "Gespräch öffnen",
-    showMore: "Mehr anzeigen",
   },
 };

@@ -78,7 +78,6 @@ export const teachingKa: Translation<typeof teachingEn> = {
     saveCheck: "შემოწმებად შენახვა",
   },
   checks: {
-    title: "ჩემი შემოწმებები",
     description:
       "კითხვები და ის, რაც პასუხმა უნდა გააკეთოს. ყოველი „ცვლილებების გამოყენება“ მათ სვამს და განახლება, რომელიც ერთს მაინც ვერ გაივლის, კლიენტებამდე არ მივა.",
     add: "შემოწმების დამატება",
@@ -86,7 +85,7 @@ export const teachingKa: Translation<typeof teachingEn> = {
     emptyTitle: "შემოწმებები ჯერ არ არის",
     emptyDescription:
       "დაამატეთ კითხვა, რომელსაც კლიენტები სვამენ, და რა უნდა გააკეთოს პასუხმა — ან შეინახეთ შემოწმება პასუხის გასწორებისას.",
-    count: "{count} / {limit} შემოწმება",
+    count: { one: "{count} / {limit} შემოწმება", other: "{count} / {limit} შემოწმება" },
     newTitle: "ახალი შემოწმება",
     editTitle: "შემოწმების შეცვლა",
     saveTitle: "შემოწმებად შენახვა",
@@ -156,6 +155,8 @@ export const teachingKa: Translation<typeof teachingEn> = {
     addAnswer: "პასუხის დამატება",
     saveCheck: "შემოწმებად შენახვა",
     open: "საუბრის გახსნა",
-    more: "სულ ელოდება: ცუდი შეფასება — {bad}, უპასუხო კითხვა — {unanswered}.",
+    more: "სულ ელოდება: {ratings} და {questions}.",
+    moreRatings: { one: "{count} ცუდი შეფასება", other: "{count} ცუდი შეფასება" },
+    moreQuestions: { one: "{count} უპასუხო კითხვა", other: "{count} უპასუხო კითხვა" },
   },
 };

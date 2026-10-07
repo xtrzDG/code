@@ -32,5 +32,4 @@ export const customerMemoryEn = {
   turnedOff: "Customer memory is off",
   notesShared: "The assistant now reads the team's notes",
   notesHidden: "The team's notes stay with the team",
-  loadError: "Customer memory settings could not be loaded.",
 } as const;

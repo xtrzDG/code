@@ -89,8 +89,14 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
       api_availability: "In diesen Stunden noch keine API-Anfragen gezählt",
     },
     events: {
-      inbound_answered: "{good} von {total} Kundennachrichten rechtzeitig beantwortet",
-      api_availability: "{good} von {total} Anfragen ohne Serverfehler",
+      inbound_answered: {
+        one: "{good} von {total} Kundennachricht rechtzeitig beantwortet",
+        other: "{good} von {total} Kundennachrichten rechtzeitig beantwortet",
+      },
+      api_availability: {
+        one: "{good} von {total} Anfrage ohne Serverfehler",
+        other: "{good} von {total} Anfragen ohne Serverfehler",
+      },
     },
     burn: "Letzte Stunde: {multiple}× das tragbare Tempo",
     latency: {
@@ -142,7 +148,6 @@ export const adminSystemDe: Translation<typeof adminSystemEn> = {
     noneDescription: "Jeder Job ist fertig oder wird noch versucht.",
     tally: "{name}: {count}",
     job: "Job",
-    lane: "Spur",
     business: "Unternehmen",
     platform: "Plattform",
     attempts: "Versuche",

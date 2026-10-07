@@ -25,11 +25,9 @@ export const bookingCalendarEn = {
   moveHint: "Drag a booking to another time or place. Or focus it and use the arrow keys: Enter moves it, Escape cancels.",
   day: {
     label: "Bookings of {date} by place",
-    time: "Time",
     closed: "Closed",
     closedDay: "Closed all day",
     newAt: "New booking: {place}",
-    newAtTime: "New booking: {place}, {time}",
     booked: "{percent} booked",
     now: "Now {time}",
     noPlacesTitle: "No places booked by time",
@@ -39,7 +37,6 @@ export const bookingCalendarEn = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "Test",
-    moving: "Moving…",
   },
   move: {
     pending: "Move to {place}, {time}? Enter moves it, Escape cancels.",
@@ -49,6 +46,12 @@ export const bookingCalendarEn = {
     undone: "The booking is back where it was",
     changed: "Someone changed this booking a moment ago: the calendar now shows it as it is.",
     cancelled: "Move cancelled",
+    tell: {
+      title: "Let {name} know the new time",
+      titleAnonymous: "Let the customer know the new time",
+      hint: "The assistant does not message customers about moves made in the calendar. Copy the text and send it in the channel you talk in.",
+      show: "Show the message",
+    },
   },
   week: {
     label: "How full each place is, {range}",
@@ -57,7 +60,7 @@ export const bookingCalendarEn = {
     closed: "Closed",
     free: "Free",
     share: "{percent} booked",
-    rooms: "{booked} of {open} rooms taken",
+    rooms: { one: "{booked} of {open} room taken", other: "{booked} of {open} rooms taken" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "How full",
     quiet: "Quiet",

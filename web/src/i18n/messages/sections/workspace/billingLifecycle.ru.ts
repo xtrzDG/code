@@ -72,7 +72,19 @@ export const billingLifecycleRu: Translation<typeof billingLifecycleEn> = {
     },
     window: "С {start} по {until}",
     submit: "Пауза с {date}",
-    allowance: "На паузе было {used} из {cap} мес. за последние {window} мес.",
+    allowance: "На паузе: {months} за {window}.",
+    allowanceMonths: {
+      one: "{used} из {cap} месяца",
+      few: "{used} из {cap} месяцев",
+      many: "{used} из {cap} месяцев",
+      other: "{used} из {cap} месяца",
+    },
+    allowanceWindow: {
+      one: "последний {window} месяц",
+      few: "последние {window} месяца",
+      many: "последние {window} месяцев",
+      other: "последние {window} месяца",
+    },
     scheduledTitle: "Пауза запланирована",
     scheduled:
       "С {start} по {until} помощник только принимает заявки. Автоплатежи выключены; оплата по полной цене начнётся снова после паузы.",

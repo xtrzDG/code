@@ -17,7 +17,7 @@ vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.f
 
 const KEYS = "/v1/businesses/{business_id}/api-keys";
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
-const { t } = textsIn("en");
+const { t, tp } = textsIn("en");
 
 function renderCard(locale: "en" | "ru" | "ka" = "en") {
   return renderInLocale(
@@ -48,7 +48,11 @@ describe("ApiKeysCard: keys of Zapier and the public API", () => {
     if (!old) throw new Error("the revoked key is listed");
     expect(within(old).getByText(texts.t("apiIntegrations.apiKeys.statuses.revoked"))).toBeTruthy();
     expect(within(old).queryByRole("button")).toBeNull();
-    expect(screen.getByText(texts.t("apiIntegrations.apiKeys.limits", { count: 10, rate: 120 }))).toBeTruthy();
+    const limits = `${texts.tp("apiIntegrations.apiKeys.limits", 10)} ${texts.tp("apiIntegrations.apiKeys.rate", 120, { rate: 120 })}`;
+    expect(screen.getByText(limits)).toBeTruthy();
+    if (locale === "en") {
+      expect(limits).toBe("Up to 10 active keys. A key makes up to 120 requests a minute.");
+    }
   });
 
   it("creates a key with chosen scopes and shows its token once", async () => {
@@ -88,7 +92,7 @@ describe("ApiKeysCard: keys of Zapier and the public API", () => {
     await user.type(within(dialog).getByLabelText(t("apiIntegrations.apiKeys.dialog.name"), { exact: false }), "CRM");
     await user.click(within(dialog).getByLabelText(new RegExp(t("apiIntegrations.apiKeys.scopes.leads_read"))));
     await user.click(within(dialog).getByRole("button", { name: t("apiIntegrations.apiKeys.dialog.create") }));
-    expect(await screen.findByText(t("apiIntegrations.apiKeys.reasons.api_key_limit_reached", { count: 10 }))).toBeTruthy();
+    expect(await screen.findByText(tp("apiIntegrations.apiKeys.reasons.api_key_limit_reached", 10))).toBeTruthy();
   });
 
   it("revokes a key after asking", async () => {

@@ -30,5 +30,4 @@ export const customerMemoryDe: Translation<typeof customerMemoryEn> = {
   turnedOff: "Das Kundengedächtnis ist aus",
   notesShared: "Der Assistent liest jetzt die Notizen des Teams",
   notesHidden: "Die Notizen des Teams bleiben beim Team",
-  loadError: "Die Einstellungen des Kundengedächtnisses konnten nicht geladen werden.",
 };

@@ -17,7 +17,6 @@ export const devicesEn = {
     tablet: "Tablet",
     unknown: "Device",
   },
-  unknownBrowser: "Unknown browser",
   on: "{browser} on {system}",
   signedIn: "Signed in {date}",
   lastUsed: "Last used {date}",

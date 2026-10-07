@@ -10,7 +10,6 @@ export const adminMetricsEn = {
   title: "Growth metrics",
   description:
     "How owners get from sign-up to paying, what they bring each month and how fast the cabinet feels. From the product's own events; no outside tracker.",
-  generated: "Calculated {time}",
   filters: {
     label: "Metric filters",
     period: "Sign-ups",
@@ -37,9 +36,15 @@ export const adminMetricsEn = {
     timeToLive: "Median time to go live",
     timeToLiveDetail: "From sign-up to the first assistant live",
     activation: "Activated within 7 days",
-    activationDetail: "{activated} of {eligible} businesses; {pending} still in their first week",
+    activationDetail: {
+      one: "{activated} of {eligible} business; {pending} still in their first week",
+      other: "{activated} of {eligible} businesses; {pending} still in their first week",
+    },
     trialToPaid: "Trial to paid",
-    trialDetail: "{converted} of {ended} finished trials; {started} started",
+    trialDetail: {
+      one: "{converted} of {ended} finished trial; {started} started",
+      other: "{converted} of {ended} finished trials; {started} started",
+    },
     mrr: "MRR",
     mrrDetail: "{change} in the period",
     arpa: "ARPA",

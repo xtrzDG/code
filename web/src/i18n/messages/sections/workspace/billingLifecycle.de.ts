@@ -62,7 +62,9 @@ export const billingLifecycleDe: Translation<typeof billingLifecycleEn> = {
     months: { one: "{count} Monat", other: "{count} Monate" },
     window: "Vom {start} bis {until}",
     submit: "Ab {date} pausieren",
-    allowance: "In den letzten {window} Monaten {used} von {cap} Monaten pausiert.",
+    allowance: "Pausiert: {months} {window}.",
+    allowanceMonths: { one: "{used} von {cap} Monat", other: "{used} von {cap} Monaten" },
+    allowanceWindow: { one: "im letzten Monat", other: "in den letzten {window} Monaten" },
     scheduledTitle: "Pause geplant",
     scheduled:
       "Vom {start} bis {until} nimmt der Assistent nur Anfragen auf. Automatische Zahlungen sind aus; Zahlungen zum vollen Preis beginnen nach der Pause wieder.",

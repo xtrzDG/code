@@ -91,7 +91,7 @@ function ErrorBudgetBody({ budget }: { budget: ErrorBudget }) {
 }
 
 function ObjectiveTile({ objective }: { objective: ObjectiveBudget }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const name = t(`adminSystem.errorBudget.objectives.${objective.series}`);
   const permille = objective.budget_left_permille;
   const tone = budgetTone(permille);
@@ -127,7 +127,7 @@ function ObjectiveTile({ objective }: { objective: ObjectiveBudget }) {
       </p>
       <p className="text-sm text-ink-muted">
         {objective.events > 0
-          ? t(`adminSystem.errorBudget.events.${objective.series}`, {
+          ? tp(`adminSystem.errorBudget.events.${objective.series}`, objective.events, {
               good: formatNumber(objective.good_events, locale),
               total: formatNumber(objective.events, locale),
             })

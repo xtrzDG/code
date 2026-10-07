@@ -35,5 +35,4 @@ export const sourcesKa: Translation<typeof sourcesEn> = {
   tagHint: "მიეცით ყოველ ბმულს და QR კოდს საკუთარი ნიშნული „არხები“ → „გაზიარება“ — და აქ მათ ცალკე სტრიქონი ექნებათ.",
   tagLink: "ნიშნულების დასმა",
   loading: "წყაროები იტვირთება…",
-  chip: "საიდან: {source}",
 };

@@ -5,8 +5,10 @@ import type { dataTasksEn } from "./dataTasks.en";
 
 export const dataTasksDe: Translation<typeof dataTasksEn> = {
   title: "Datenaufgaben nach einem Deploy",
-  description:
-    "Dokumentmigrationen und das Auffüllen von Suchspalten, die der Batch-Worker selbst in Stapeln von {size} Zeilen ausführt. Das nächste Release wird erst befördert, wenn jede Aufgabe erledigt ist.",
+  description: {
+    one: "Dokumentmigrationen und das Auffüllen von Suchspalten, die der Batch-Worker selbst in Stapeln von {size} Zeile ausführt. Das nächste Release wird erst befördert, wenn jede Aufgabe erledigt ist.",
+    other: "Dokumentmigrationen und das Auffüllen von Suchspalten, die der Batch-Worker selbst in Stapeln von {size} Zeilen ausführt. Das nächste Release wird erst befördert, wenn jede Aufgabe erledigt ist.",
+  },
   open: {
     one: "{count} Aufgabe offen",
     other: "{count} Aufgaben offen",
@@ -47,10 +49,13 @@ export const dataTasksDe: Translation<typeof dataTasksEn> = {
     knowledge: "Wissensliste",
   },
   holdsBack: "Hält zurück: {lists}",
-  rows: "{scanned} von etwa {estimate} Zeilen",
-  rowsUnknown: "{scanned} Zeilen angesehen",
-  changed: "{count} geändert, {batches} Stapel",
-  failedRows: "{count} Zeilen konnten nicht aktualisiert werden: {keys}",
+  rows: { one: "{scanned} von etwa {estimate} Zeile", other: "{scanned} von etwa {estimate} Zeilen" },
+  rowsUnknown: { one: "{scanned} Zeile angesehen", other: "{scanned} Zeilen angesehen" },
+  changed: { one: "{count} geändert, {batches} Stapel", other: "{count} geändert, {batches} Stapel" },
+  failedRows: {
+    one: "{count} Zeile konnte nicht aktualisiert werden: {keys}",
+    other: "{count} Zeilen konnten nicht aktualisiert werden: {keys}",
+  },
   dueSince: "Fällig seit {time}",
   doneAt: "Erledigt {time}",
   lastBatch: "Letzter Stapel {time}",

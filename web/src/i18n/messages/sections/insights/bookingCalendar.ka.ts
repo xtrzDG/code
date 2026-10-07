@@ -25,11 +25,9 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
   moveHint: "გადაათრიეთ ჯავშანი სხვა დროზე ან ადგილზე. ან აირჩიეთ და გადაიტანეთ ისრებით: Enter — გადატანა, Escape — გაუქმება.",
   day: {
     label: "{date}-ის ჯავშნები ადგილების მიხედვით",
-    time: "დრო",
     closed: "დაკეტილია",
     closedDay: "მთელი დღე დაკეტილია",
     newAt: "ახალი ჯავშანი: {place}",
-    newAtTime: "ახალი ჯავშანი: {place}, {time}",
     booked: "დაკავებულია {percent}",
     now: "ახლა {time}",
     noPlacesTitle: "დროით დასაჯავშნი ადგილები არ არის",
@@ -39,7 +37,6 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "ტესტი",
-    moving: "გადაგვაქვს…",
   },
   move: {
     pending: "გადავიტანოთ: {place}, {time}? Enter — გადატანა, Escape — გაუქმება.",
@@ -49,6 +46,12 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
     undone: "ჯავშანი ძველ ადგილას დაბრუნდა",
     changed: "ეს ჯავშანი ახლახან სხვამ შეცვალა: კალენდარი მას ახლანდელი სახით აჩვენებს.",
     cancelled: "გადატანა გაუქმდა",
+    tell: {
+      title: "შეატყობინეთ ახალი დრო: {name}",
+      titleAnonymous: "შეატყობინეთ კლიენტს ახალი დრო",
+      hint: "კალენდარში გადატანის შესახებ ასისტენტი კლიენტს თავად არ წერს. დააკოპირეთ ტექსტი და გაუგზავნეთ იმ არხით, სადაც საუბრობთ.",
+      show: "შეტყობინების ნახვა",
+    },
   },
   week: {
     label: "ადგილების დატვირთვა, {range}",
@@ -57,7 +60,7 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
     closed: "დაკეტილია",
     free: "თავისუფალია",
     share: "დაკავებულია {percent}",
-    rooms: "დაკავებულია {booked} ნომერი {open}-დან",
+    rooms: { one: "დაკავებულია {booked} ნომერი {open}-დან", other: "დაკავებულია {booked} ნომერი {open}-დან" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "დატვირთვა",
     quiet: "თავისუფალი",

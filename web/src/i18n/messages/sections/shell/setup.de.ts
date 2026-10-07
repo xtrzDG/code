@@ -12,7 +12,7 @@ export const setupDe: Translation<typeof setupEn> = {
     "Erzählen Sie uns in wenigen einfachen Schritten von Ihrem Unternehmen. Wir bereiten einen Assistenten vor, der Ihren Kunden Tag und Nacht antwortet, Buchungen annimmt und Sie ruft, wenn eine Person gebraucht wird.",
   start: "KI-Assistenten erstellen",
   continue: "Weiter erstellen",
-  progress: "{done} von {total} Schritten erledigt",
+  progress: { one: "{done} von {total} Schritt erledigt", other: "{done} von {total} Schritten erledigt" },
   duration: "Etwa 20 Minuten. Sie können jederzeit pausieren und später weitermachen.",
   stagesLabel: "So läuft es ab",
   stages: {
@@ -32,5 +32,4 @@ export const setupDe: Translation<typeof setupEn> = {
   staffTitle: "Der Assistent wird gerade erstellt",
   staffDescription:
     "Der Inhaber von {business} richtet ihn ein. Gespräche, Buchungen und Anfragen erscheinen hier, sobald er bereit ist.",
-  create: "Meinen Assistenten erstellen",
 };

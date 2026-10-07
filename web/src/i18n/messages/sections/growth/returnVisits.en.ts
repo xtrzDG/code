@@ -89,6 +89,5 @@ export const returnVisitsEn = {
     sentAt: "Sent {time}",
     bookedAt: "Booked {time}",
     openConversation: "Open the conversation",
-    showMore: "Show more",
   },
 } as const;

@@ -78,7 +78,6 @@ export const teachingRu: Translation<typeof teachingEn> = {
     saveCheck: "Сохранить как проверку",
   },
   checks: {
-    title: "Мои проверки",
     description:
       "Вопросы и то, что должен сделать ответ. Каждое «Применить изменения» задаёт их, и обновление, которое не прошло хотя бы одну, не дойдёт до клиентов.",
     add: "Добавить проверку",
@@ -86,7 +85,12 @@ export const teachingRu: Translation<typeof teachingEn> = {
     emptyTitle: "Проверок пока нет",
     emptyDescription:
       "Добавьте вопрос, который задают клиенты, и что должен сделать ответ — или сохраните проверку, когда исправляете ответ.",
-    count: "{count} из {limit} проверок",
+    count: {
+      one: "{count} из {limit} проверки",
+      few: "{count} из {limit} проверок",
+      many: "{count} из {limit} проверок",
+      other: "{count} из {limit} проверки",
+    },
     newTitle: "Новая проверка",
     editTitle: "Изменить проверку",
     saveTitle: "Сохранить как проверку",
@@ -158,6 +162,18 @@ export const teachingRu: Translation<typeof teachingEn> = {
     addAnswer: "Добавить ответ",
     saveCheck: "Сохранить как проверку",
     open: "Открыть разговор",
-    more: "Всего ждут: плохих оценок — {bad}, вопросов без ответа — {unanswered}.",
+    more: "Всего ждут: {ratings} и {questions}.",
+    moreRatings: {
+      one: "{count} плохая оценка",
+      few: "{count} плохие оценки",
+      many: "{count} плохих оценок",
+      other: "{count} плохой оценки",
+    },
+    moreQuestions: {
+      one: "{count} вопрос без ответа",
+      few: "{count} вопроса без ответа",
+      many: "{count} вопросов без ответа",
+      other: "{count} вопроса без ответа",
+    },
   },
 };

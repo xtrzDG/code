@@ -12,7 +12,6 @@ export const segmentsEn = {
   limit: "A business keeps at most 50 segments. Delete one to save another.",
   members: "Customers",
   noMembers: "Nobody matches this segment right now.",
-  showMore: "Show more customers",
   export: "Download CSV",
   exportHint: "The customers of the segment with their phones, channels, tags and bookings, for a campaign elsewhere.",
   edit: "Edit",

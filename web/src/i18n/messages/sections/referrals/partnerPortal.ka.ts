@@ -28,16 +28,10 @@ export const partnerPortalKa: Translation<typeof partnerPortalEn> = {
     paying: "უკვე გადაიხადეს",
     accrued: "გადასახდელი",
     paid: "გადახდილი",
-    invoices: "ანგარიშები: {count}",
-    none: "საკომისიოები ჯერ არ არის.",
   },
   businesses: {
     title: "მოყვანილი ბიზნესები",
     empty: "ჯერ არავინ. გააზიარეთ ბმული, რომ პირველი ბიზნესი მოიყვანოთ.",
-    business: "ბიზნესი",
-    country: "ქვეყანა",
-    plan: "ტარიფი",
-    status: "სტატუსი",
     signedUp: "რეგისტრაცია",
     firstPaid: "პირველი გადახდა",
     notYet: "ჯერ არა",
@@ -46,10 +40,7 @@ export const partnerPortalKa: Translation<typeof partnerPortalEn> = {
   commissions: {
     title: "საკომისიო ანგარიშების მიხედვით",
     empty: "საკომისიოები ჯერ არ არის: ისინი გამოჩნდება, როცა მოყვანილი ბიზნესი გადაიხდის.",
-    month: "თვე",
-    business: "ბიზნესი",
     base: "ანგარიში გადასახადის გარეშე",
-    amount: "საკომისიო",
     status: "სტატუსი",
     statuses: {
       accrued: "გადასახდელი",

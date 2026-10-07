@@ -18,7 +18,7 @@ export const widgetSitesHe: Translation<typeof widgetSitesEn> = {
   remove: "הסרת {site}",
   invalid: "זו לא כתובת אתר. הקלידו אותה כמו בשורת הכתובת של הדפדפן, למשל cafe-batumi.ge.",
   duplicate: "האתר הזה כבר ברשימה.",
-  full: "הרשימה מכילה עד {count} אתרים.",
+  full: { one: "הרשימה מכילה אתר אחד לכל היותר.", other: "הרשימה מכילה עד {count} אתרים." },
   alwaysAllowed: "עמוד הצ׳אט שלכם והתצוגה המקדימה בלוח הבקרה הזה תמיד עובדים.",
   ownerOnly: "רק בעלים יכולים לשנות את הרשימה הזו.",
   save: "שמירת הרשימה",

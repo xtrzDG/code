@@ -44,7 +44,7 @@ export const knowledgeOfferEn = {
       bufferRange: "0 to 240 minutes",
       seasonDate: "That month has no such day",
       seasonOverlap: "Seasons {first} and {second} share days: a night must have one rate.",
-      tooManySeasons: "At most {count} seasons",
+      tooManySeasons: { one: "At most {count} season", other: "At most {count} seasons" },
     },
   },
 } as const;

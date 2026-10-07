@@ -27,11 +27,9 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
     "Ziehen Sie eine Buchung auf eine andere Zeit oder einen anderen Platz. Oder wählen Sie sie aus und nutzen Sie die Pfeiltasten: Enter verschiebt, Escape bricht ab.",
   day: {
     label: "Buchungen am {date} nach Platz",
-    time: "Uhrzeit",
     closed: "Geschlossen",
     closedDay: "Ganztägig geschlossen",
     newAt: "Neue Buchung: {place}",
-    newAtTime: "Neue Buchung: {place}, {time}",
     booked: "{percent} belegt",
     now: "Jetzt {time}",
     noPlacesTitle: "Keine Plätze, die nach Zeit gebucht werden",
@@ -42,7 +40,6 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "Test",
-    moving: "Wird verschoben…",
   },
   move: {
     pending: "Nach {place}, {time} verschieben? Enter verschiebt, Escape bricht ab.",
@@ -52,6 +49,12 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
     undone: "Die Buchung ist wieder an ihrem Platz",
     changed: "Jemand hat diese Buchung gerade geändert: Der Kalender zeigt sie jetzt so, wie sie ist.",
     cancelled: "Verschieben abgebrochen",
+    tell: {
+      title: "Neue Zeit an {name} mitteilen",
+      titleAnonymous: "Neue Zeit dem Kunden mitteilen",
+      hint: "Der Assistent schreibt Kunden nicht von selbst, wenn Sie eine Buchung im Kalender verschieben. Kopieren Sie den Text und senden Sie ihn im Kanal, in dem Sie schreiben.",
+      show: "Nachricht anzeigen",
+    },
   },
   week: {
     label: "Auslastung der Plätze, {range}",
@@ -60,7 +63,7 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
     closed: "Geschlossen",
     free: "Frei",
     share: "{percent} belegt",
-    rooms: "{booked} von {open} Zimmern belegt",
+    rooms: { one: "{booked} von {open} Zimmer belegt", other: "{booked} von {open} Zimmern belegt" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "Auslastung",
     quiet: "Ruhig",

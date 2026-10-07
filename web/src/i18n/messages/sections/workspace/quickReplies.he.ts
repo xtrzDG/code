@@ -40,7 +40,6 @@ export const quickRepliesHe: Translation<typeof quickRepliesEn> = {
     insert: "הוספה",
     insertLabel: "הוספת {variable} לטקסט ב{language}",
     preview: "תצוגה מקדימה",
-    previewHint: "עם לקוח והזמנה לדוגמה.",
     sample: {
       name: "נועה",
       bookingTime: "שבת, 19:30",

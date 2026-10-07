@@ -78,14 +78,13 @@ export const teachingDe: Translation<typeof teachingEn> = {
     saveCheck: "Als Prüfung speichern",
   },
   checks: {
-    title: "Meine Prüfungen",
     description:
       "Fragen mit dem, was die Antwort leisten muss. Jedes „Änderungen übernehmen“ stellt sie, und ein Update, das eine davon nicht besteht, erreicht keine Kunden.",
     add: "Prüfung hinzufügen",
     loading: "Prüfungen werden geladen…",
     emptyTitle: "Noch keine Prüfungen",
     emptyDescription: "Fügen Sie eine Frage hinzu, die Kunden stellen, und was die Antwort leisten muss, oder speichern Sie eine, wenn Sie eine Antwort korrigieren.",
-    count: "{count} von {limit} Prüfungen",
+    count: { one: "{count} von {limit} Prüfung", other: "{count} von {limit} Prüfungen" },
     newTitle: "Neue Prüfung",
     editTitle: "Prüfung ändern",
     saveTitle: "Als Prüfung speichern",
@@ -155,6 +154,8 @@ export const teachingDe: Translation<typeof teachingEn> = {
     addAnswer: "Antwort hinzufügen",
     saveCheck: "Als Prüfung speichern",
     open: "Gespräch öffnen",
-    more: "Insgesamt warten {bad} schlechte Bewertungen und {unanswered} unbeantwortete Fragen.",
+    more: "Insgesamt warten {ratings} und {questions}.",
+    moreRatings: { one: "{count} schlechte Bewertung", other: "{count} schlechte Bewertungen" },
+    moreQuestions: { one: "{count} unbeantwortete Frage", other: "{count} unbeantwortete Fragen" },
   },
 };

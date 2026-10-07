@@ -21,7 +21,9 @@ export const valueEn = {
     afterHoursHint: "conversations while you were closed",
     hoursSaved: { one: "~{count} staff hour saved", other: "~{count} staff hours saved" },
     minutesSaved: { one: "~{count} staff minute saved", other: "~{count} staff minutes saved" },
-    savedHint: "{replies} replies written and {calls} calls answered for you",
+    savedHint: "{replies} and {calls} for you",
+    savedReplies: { one: "{count} reply written", other: "{count} replies written" },
+    savedCalls: { one: "{count} call answered", other: "{count} calls answered" },
     conversations: { one: "{count} conversation", other: "{count} conversations" },
     conversationsHint: "customers who wrote or called",
     returnMultiple: "≈ {multiple}× your plan's price",
@@ -65,7 +67,6 @@ export const valueEn = {
   },
   delta: {
     firstPeriod: "first period",
-    firstPeriodHint: "No activity in the period before: nothing to compare with yet",
     firstPeriodNote: "First period: nothing to compare with yet",
     up: "Up {change} vs {against}",
     down: "Down {change} vs {against}",

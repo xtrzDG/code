@@ -20,8 +20,6 @@ export const customersKa: Translation<typeof customersEn> = {
     emptyDescription: "აქ გამოჩნდება ყველა, ვინც მოგწერთ, დაგირეკავთ ან დაჯავშნის, მათი ისტორიით ყველა არხში.",
     noMatches: "ამ ფილტრებს არცერთი კლიენტი არ შეესაბამება.",
     clearFilters: "ყველას ჩვენება",
-    showMore: "მეტი კლიენტის ჩვენება",
-    open: "გახსნა: {name}",
   },
   row: {
     phoneMasked: "ტელეფონი გუნდისთვის დამალულია",
@@ -75,7 +73,6 @@ export const customersKa: Translation<typeof customersEn> = {
     tooMany: "კლიენტს შეიძლება ჰქონდეს არაუმეტეს 20 ტეგისა.",
     vip: "VIP კლიენტი",
     vipHint: "მონიშნეთ ყველაზე მნიშვნელოვანი კლიენტები; ამ ნიშნით შეგიძლიათ სიის გაფილტვრა და სეგმენტების შექმნა.",
-    saved: "ბარათი შენახულია",
   },
   block: {
     title: "დაბლოკვა",
@@ -87,7 +84,6 @@ export const customersKa: Translation<typeof customersEn> = {
     confirm: "დაბლოკვა",
     blocked: "{name} დაბლოკილია",
     unblocked: "{name} განბლოკილია",
-    ownerOnly: "კლიენტებს მხოლოდ მფლობელები ბლოკავენ.",
   },
   data: {
     title: "მონაცემების მოთხოვნები",

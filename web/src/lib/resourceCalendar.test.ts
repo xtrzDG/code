@@ -119,7 +119,8 @@ describe("resource calendars", () => {
   });
 
   it("has a text for every problem and refusal", () => {
-    const { t } = createTranslator("en", en);
+    const english = createTranslator("en", en);
+    const { t } = english;
     for (const key of Object.values(PROBLEM_KEYS)) {
       expect(t(key)).not.toBe(key);
     }
@@ -129,7 +130,7 @@ describe("resource calendars", () => {
       detail: "Refused",
       reasons: [{ code: "feed_limit", message: "limit", details: [] }],
     });
-    expect(describeError(refusal, t, undefined, CALENDAR_REFUSAL_MESSAGES).title).toBe(
+    expect(describeError(refusal, english, undefined, CALENDAR_REFUSAL_MESSAGES).title).toBe(
       "A resource imports at most 5 calendars.",
     );
     expect(Object.keys(CALENDAR_REFUSAL_MESSAGES)).toHaveLength(10);

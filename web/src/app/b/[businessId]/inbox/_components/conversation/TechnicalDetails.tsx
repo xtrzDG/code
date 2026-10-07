@@ -92,7 +92,7 @@ export function hasTechnicalDetails(message: MessageView, isPlatformAdmin: boole
 
 /** The technical details of one message. */
 export function MessageTechnicalDetails({ message, className }: { message: MessageView; className?: string }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
   const { isPlatformAdmin } = useBusiness();
   const tokens = message.input_tokens + message.output_tokens;
@@ -102,7 +102,7 @@ export function MessageTechnicalDetails({ message, className }: { message: Messa
         <p className="text-xs text-ink-muted">
           {[
             message.model_id,
-            t("conversations.messageTokens", { count: format.number(tokens) }),
+            tp("conversations.messageTokens", tokens, { count: format.number(tokens) }),
             formatMicroUsd(message.cost_micro_usd, locale),
           ]
             .filter(Boolean)

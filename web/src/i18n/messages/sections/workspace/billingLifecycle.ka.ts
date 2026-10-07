@@ -62,7 +62,9 @@ export const billingLifecycleKa: Translation<typeof billingLifecycleEn> = {
     months: { one: "{count} თვე", other: "{count} თვე" },
     window: "{start}-დან {until}-მდე",
     submit: "პაუზა {date}-დან",
-    allowance: "ბოლო {window} თვეში პაუზაზე იყო {used} თვე {cap}-დან.",
+    allowance: "{window} პაუზაზე იყო {months}.",
+    allowanceMonths: { one: "{used} თვე {cap}-დან", other: "{used} თვე {cap}-დან" },
+    allowanceWindow: { one: "ბოლო {window} თვეში", other: "ბოლო {window} თვეში" },
     scheduledTitle: "პაუზა დაგეგმილია",
     scheduled:
       "{start}-დან {until}-მდე ასისტენტი მხოლოდ მოთხოვნებს იღებს. ავტომატური გადახდები გამორთულია; სრული ფასით გადახდა პაუზის შემდეგ განახლდება.",

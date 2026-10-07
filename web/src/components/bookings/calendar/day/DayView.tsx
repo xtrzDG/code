@@ -68,6 +68,7 @@ export function DayView({
     places: places.map((place) => ({ id: place.id, name: place.name })),
     bounds: { firstMinute: axis.start, lastMinute: axis.end - SLOT_MINUTES, firstDate: date, lastDate: date },
     forwardKey: localeDirection(locale) === "rtl" ? "ArrowLeft" : "ArrowRight",
+    scroller: () => scrollRef.current,
   });
   const announcement = useMoveAnnouncement(gestures.preview, gestures.isCancelled);
 

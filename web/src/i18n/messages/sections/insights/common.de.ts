@@ -6,7 +6,6 @@ import type { insightsCommonEn } from "./common.en";
 export const insightsCommonDe: Translation<typeof insightsCommonEn> = {
   loadingMore: "Wird geladen…",
   showMore: "Mehr anzeigen",
-  shownOf: "{shown} von {total} angezeigt",
   includeTest: "Testaktivität einbeziehen",
   includeTestHint: "Aus dem Test-Chat und den Prüfungen",
   testBadge: "Test",
@@ -14,8 +13,6 @@ export const insightsCommonDe: Translation<typeof insightsCommonEn> = {
   unknownCustomer: "Kunde ohne Namen",
   callPhone: "{phone} anrufen",
   openConversation: "Gespräch öffnen",
-  all: "Alle",
-  clearFilters: "Filter zurücksetzen",
   noMatchesTitle: "Nichts passt zu den Filtern",
   noMatchesDescription: "Ändern oder löschen Sie die Filter, um mehr zu sehen.",
   copy: "Kopieren",

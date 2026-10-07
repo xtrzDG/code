@@ -22,7 +22,6 @@ export const liveKa: Translation<typeof liveEn> = {
   reconnect: "ახლავე ცდა",
   needsPersonTitle: "კლიენტს ადამიანი სჭირდება",
   needsPersonOpen: "გახსნა",
-  needsPersonAnnouncement: "კლიენტს ადამიანი სჭირდება. ელოდება: {count}.",
   sound: "ხმოვანი სიგნალი, როცა ადამიანია საჭირო",
   soundHint: "მოკლე ხმა ამ მოწყობილობაზე, როცა საუბარი თქვენს გუნდს გადაეცემა.",
 };

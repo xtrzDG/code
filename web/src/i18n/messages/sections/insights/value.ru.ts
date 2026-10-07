@@ -39,7 +39,19 @@ export const valueRu: Translation<typeof valueEn> = {
       many: "~{count} минут работы сотрудников сэкономлено",
       other: "~{count} минуты работы сотрудников сэкономлено",
     },
-    savedHint: "за вас написано ответов: {replies}, принято звонков: {calls}",
+    savedHint: "за вас {replies} и {calls}",
+    savedReplies: {
+      one: "написан {count} ответ",
+      few: "написано {count} ответа",
+      many: "написано {count} ответов",
+      other: "написано {count} ответа",
+    },
+    savedCalls: {
+      one: "принят {count} звонок",
+      few: "принято {count} звонка",
+      many: "принято {count} звонков",
+      other: "принято {count} звонка",
+    },
     conversations: {
       one: "{count} разговор",
       few: "{count} разговора",
@@ -90,7 +102,6 @@ export const valueRu: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "первый период",
-    firstPeriodHint: "В предыдущем периоде активности не было: сравнивать пока не с чем",
     firstPeriodNote: "Первый период — сравнивать пока не с чем",
     up: "Рост на {change} к {against}",
     down: "Снижение на {change} к {against}",

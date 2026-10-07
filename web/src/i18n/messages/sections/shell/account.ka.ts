@@ -13,5 +13,4 @@ export const accountKa: Translation<typeof accountEn> = {
   installHint: "გახსენით კაბინეტი მთავარი ეკრანიდან ან დოკიდან, როგორც აპლიკაცია.",
   installIosTitle: "დაყენება iPhone-ზე ან iPad-ზე",
   installIosSteps: "Safari-ში ეკრანის ქვემოთ დააჭირეთ „გაზიარებას“, შემდეგ „მთავარ ეკრანზე დამატებას“.",
-  installed: "აპლიკაცია დაყენებულია",
 };

@@ -35,5 +35,4 @@ export const sourcesHe: Translation<typeof sourcesEn> = {
   tagHint: "תנו לכל קישור ולכל קוד QR תגית משלו בערוצים → שיתוף, והוא יופיע כאן כשורה נפרדת.",
   tagLink: "תיוג הקישורים שלכם",
   loading: "טוענים את המקורות…",
-  chip: "מקור: {source}",
 };

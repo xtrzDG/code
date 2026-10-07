@@ -13,6 +13,10 @@ export const navigationEn = {
     assistant: "Assistant",
     settings: "Settings",
   },
+  /** Shorter names for the phone tab bar, where a long word would not fit a fifth of the screen. */
+  tabLabels: {
+    inbox: "Inbox",
+  },
   descriptions: {
     overview: "How your assistant is doing and what needs you today.",
     inbox: "Every conversation in one place: the customers waiting for a person, requests, and who of the team handles what.",

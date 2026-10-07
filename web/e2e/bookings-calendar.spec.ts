@@ -2,9 +2,13 @@
  * Bookings → Day, Week, Nights against the real API:
  *
  *  - a booking dragged to another master's column an hour later moves
- *    there (the API agrees), and Undo in the toast puts it back;
+ *    there (the API agrees), the calendar offers the message about the new
+ *    time for the customer, and Undo in the toast puts it back;
  *  - the keyboard moves a focused booking a quarter of an hour per arrow
- *    and to the next place, Enter moves it, Escape cancels a preview;
+ *    and to the next place, Enter moves it, Escape cancels a preview, and
+ *    the offered message opens as the list's reschedule shows it;
+ *  - a drag near the grid's edge scrolls the grid, with the mouse down the
+ *    day and with a finger sideways on a phone;
  *  - a guest house sees its rooms by night with the stays as bars, moves a
  *    stay to another room a night later with the keys, and the week's
  *    heatmap opens a day of nights;
@@ -23,6 +27,9 @@ test.describe.configure({ timeout: 120_000 });
 
 const calendar = en.bookingCalendar;
 const ONE_HOUR = 56;
+
+/** The calendar's offer to tell the customer the new time. */
+const offerFor = (page: Page, name: string) => page.getByText(calendar.move.tell.title.replace("{name}", name));
 
 async function seriousViolations(page: Page): Promise<string[]> {
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
@@ -63,9 +70,12 @@ test("a booking dragged to another master moves there, and Undo puts it back", a
   await expect(toast).toBeVisible();
   await expect(lenaColumn.getByRole("button", { name: /^Anna Schmidt, 11:00/ })).toBeVisible();
   await expect.poll(where).toEqual([lena, "11:00"]);
+  await expect(offerFor(page, "Anna Schmidt")).toBeVisible();
 
   await toast.getByRole("button", { name: en.common.undo }).click();
   await expect(page.getByText(calendar.move.undone)).toBeVisible();
+  // Back where the customer knows it: nothing to tell them.
+  await expect(offerFor(page, "Anna Schmidt")).toBeHidden();
   await expect(page.locator(`[data-calendar-column="${nino}"]`).getByRole("button", { name: /^Anna Schmidt, 10:00/ })).toBeVisible();
   await expect.poll(where).toEqual([nino, "10:00"]);
 });
@@ -98,6 +108,43 @@ test("the keyboard moves a booking a quarter of an hour at a time and to the nex
   await expect(page.getByRole("status").filter({ hasText: "Moved to Lena" })).toBeVisible();
   await expect(page.locator(`[data-calendar-column="${lena}"]`).getByRole("button", { name: /^Lukas Weber, 1:00/ })).toBeFocused();
   await expect.poll(async () => (await bookingNow(request, owner, booking.id, day))?.time).toBe("13:00");
+
+  // The same message the list's reschedule form shows, from the offer above the grid.
+  await page.getByRole("button", { name: calendar.move.tell.show }).click();
+  const message = page.getByRole("dialog", { name: en.bookings.rescheduled });
+  await expect(message.getByText(en.insights.customerMessage.title)).toBeVisible();
+  await expect(message.locator("p[data-user-content]")).toHaveText(/\S/);
+  await message.getByRole("button", { name: en.common.done }).click();
+  await expect(offerFor(page, "Lukas Weber")).toBeHidden();
+});
+
+test("a booking dragged near the grid's bottom edge scrolls the day down", async ({ page, request, owner }) => {
+  const day = berlinDate(3);
+  const nino = await addPlace(request, owner, { name: "Nino" });
+  await bookByHand(request, owner, { name: "Mia Wagner", date: day, time: "10:00", resourceId: nino });
+  // A laptop screen: the day is taller than its box.
+  await page.setViewportSize({ width: 1280, height: 640 });
+
+  await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
+  const grid = page.locator(`[data-calendar-day="${day}"]`);
+  const block = page.getByRole("button", { name: /^Mia Wagner, / });
+  await expect(block).toBeVisible();
+  const box = await grid.boundingBox();
+  const from = await block.boundingBox();
+  if (!box || !from) throw new Error("The grid is not laid out.");
+  expect(await grid.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(ONE_HOUR);
+  const top = await grid.evaluate((element) => element.scrollTop);
+
+  await page.mouse.move(from.x + from.width / 2, from.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + 30, { steps: 4 });
+  await page.mouse.move(from.x + from.width / 2, box.y + box.height - 6, { steps: 8 });
+  await expect.poll(() => grid.evaluate((element) => element.scrollTop)).toBeGreaterThan(top + ONE_HOUR);
+  // Escape drops nothing: the booking stays where it was.
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(page.locator("[data-calendar-ghost]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Mia Wagner, 10:00/ })).toBeAttached();
 });
 
 test("a guest house sees its rooms by night, moves a stay with the keys and opens nights from the week", async ({
@@ -167,5 +214,37 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
     await block.click();
     await expect(page.getByRole("dialog", { name: "Sofia Klein" })).toBeVisible();
+  });
+
+  test("a finger holding a booking at the grid's side scrolls the places sideways", async ({ page, request, owner }) => {
+    const day = berlinDate(2);
+    const nino = await addPlace(request, owner, { name: "Nino" });
+    await addPlace(request, owner, { name: "Lena" });
+    const mariam = await addPlace(request, owner, { name: "Mariam" });
+    await bookByHand(request, owner, { name: "Elif Kaya", date: day, time: "10:00", resourceId: nino });
+
+    await page.goto(`/b/${owner.businessId}/bookings?view=day&date=${day}`);
+    const grid = page.locator(`[data-calendar-day="${day}"]`);
+    const block = page.getByRole("button", { name: /^Elif Kaya, / });
+    await expect(block).toBeVisible();
+    const box = await grid.boundingBox();
+    const from = await block.boundingBox();
+    if (!box || !from) throw new Error("The grid is not laid out.");
+    expect(await grid.evaluate((element) => element.scrollLeft)).toBe(0);
+
+    const touch = await page.context().newCDPSession(page);
+    const finger = (type: "touchStart" | "touchMove" | "touchEnd", x = 0, y = 0) =>
+      touch.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
+    const y = from.y + 12;
+    await finger("touchStart", from.x + from.width / 2, y);
+    // A long press grabs it.
+    await expect(page.locator("[data-calendar-ghost]")).toBeVisible();
+    for (let step = 1; step <= 6; step += 1) {
+      await finger("touchMove", from.x + from.width / 2 + ((box.x + box.width - 4 - from.x - from.width / 2) * step) / 6, y);
+    }
+    await expect.poll(() => grid.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await expect(page.locator(`[data-calendar-column="${mariam}"] [data-calendar-ghost]`)).toBeVisible();
+    await finger("touchEnd");
+    await expect(page.getByRole("status").filter({ hasText: "Moved to Mariam" })).toBeVisible();
   });
 });

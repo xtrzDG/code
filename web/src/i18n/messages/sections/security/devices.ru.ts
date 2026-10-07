@@ -15,7 +15,6 @@ export const devicesRu: Translation<typeof devicesEn> = {
     tablet: "Планшет",
     unknown: "Устройство",
   },
-  unknownBrowser: "Неизвестный браузер",
   on: "{browser}, {system}",
   signedIn: "Вход {date}",
   lastUsed: "Последний раз {date}",

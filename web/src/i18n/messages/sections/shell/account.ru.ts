@@ -13,5 +13,4 @@ export const accountRu: Translation<typeof accountEn> = {
   installHint: "Открывайте кабинет с главного экрана или из дока, как приложение.",
   installIosTitle: "Установка на iPhone или iPad",
   installIosSteps: "В Safari нажмите «Поделиться» внизу экрана, затем «На экран „Домой“».",
-  installed: "Приложение установлено",
 };

@@ -91,8 +91,8 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
       api_availability: "עדיין לא נספרו בקשות API בשעות אלה",
     },
     events: {
-      inbound_answered: "{good} מתוך {total} הודעות לקוחות נענו בזמן",
-      api_availability: "{good} מתוך {total} בקשות ללא שגיאת שרת",
+      inbound_answered: { one: "{good} מתוך הודעת לקוח אחת נענו בזמן", other: "{good} מתוך {total} הודעות לקוחות נענו בזמן" },
+      api_availability: { one: "{good} מתוך בקשה אחת ללא שגיאת שרת", other: "{good} מתוך {total} בקשות ללא שגיאת שרת" },
     },
     burn: "בשעה האחרונה: פי {multiple} מהקצב הבר-קיימא",
     latency: {
@@ -144,7 +144,6 @@ export const adminSystemHe: Translation<typeof adminSystemEn> = {
     noneDescription: "כל משימה הסתיימה או עדיין בניסיונות.",
     tally: "{name}: {count}",
     job: "משימה",
-    lane: "מסלול",
     business: "עסק",
     platform: "פלטפורמה",
     attempts: "ניסיונות",

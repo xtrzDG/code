@@ -19,7 +19,9 @@ export const valueDe: Translation<typeof valueEn> = {
     afterHoursHint: "Gespräche, während Sie geschlossen hatten",
     hoursSaved: { one: "~{count} Arbeitsstunde gespart", other: "~{count} Arbeitsstunden gespart" },
     minutesSaved: { one: "~{count} Arbeitsminute gespart", other: "~{count} Arbeitsminuten gespart" },
-    savedHint: "Für Sie geschriebene Antworten: {replies}, angenommene Anrufe: {calls}",
+    savedHint: "Für Sie: {replies} und {calls}",
+    savedReplies: { one: "{count} Antwort geschrieben", other: "{count} Antworten geschrieben" },
+    savedCalls: { one: "{count} Anruf angenommen", other: "{count} Anrufe angenommen" },
     conversations: { one: "{count} Gespräch", other: "{count} Gespräche" },
     conversationsHint: "Kunden, die geschrieben oder angerufen haben",
     returnMultiple: "≈ das {multiple}-Fache Ihres Tarifpreises",
@@ -63,7 +65,6 @@ export const valueDe: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "erster Zeitraum",
-    firstPeriodHint: "Keine Aktivität im Vorzeitraum: noch nichts zum Vergleichen",
     firstPeriodNote: "Erster Zeitraum: noch nichts zum Vergleichen",
     up: "Plus {change} gegenüber {against}",
     down: "Minus {change} gegenüber {against}",

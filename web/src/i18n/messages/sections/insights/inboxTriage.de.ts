@@ -57,7 +57,6 @@ export const inboxTriageDe: Translation<typeof inboxTriageEn> = {
     days: "{count} T.",
   },
   details: {
-    label: "Über dieses Gespräch",
     source: "Kam von",
     assignee: "Bearbeitet von",
     lastMessage: "Letzte Nachricht",

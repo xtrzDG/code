@@ -22,8 +22,6 @@ export const customersEn = {
     emptyDescription: "Everyone who writes, calls or books appears here, with their history across channels.",
     noMatches: "No customers match these filters.",
     clearFilters: "Show everyone",
-    showMore: "Show more customers",
-    open: "Open {name}",
   },
   row: {
     phoneMasked: "Phone hidden from the team",
@@ -77,7 +75,6 @@ export const customersEn = {
     tooMany: "A customer carries at most 20 tags.",
     vip: "VIP customer",
     vipHint: "Mark the customers who matter most; filter the list and build segments by it.",
-    saved: "The card is saved",
   },
   block: {
     title: "Block",
@@ -89,7 +86,6 @@ export const customersEn = {
     confirm: "Block",
     blocked: "{name} is blocked",
     unblocked: "{name} is unblocked",
-    ownerOnly: "Only owners block customers.",
   },
   data: {
     title: "Data requests",

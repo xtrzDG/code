@@ -95,6 +95,5 @@ export const returnVisitsRu: Translation<typeof returnVisitsEn> = {
     sentAt: "Отправлено {time}",
     bookedAt: "Записался {time}",
     openConversation: "Открыть разговор",
-    showMore: "Показать ещё",
   },
 };

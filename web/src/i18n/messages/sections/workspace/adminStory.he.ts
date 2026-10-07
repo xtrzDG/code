@@ -28,7 +28,6 @@ export const adminStoryHe: Translation<typeof adminStoryEn> = {
     byline: "{name} · {date}",
     edited: "נערכה {date}",
     unknownAuthor: "מנהל לשעבר",
-    actions: "פעולות על ההערה",
   },
   timeline: {
     title: "ציר זמן",
@@ -36,8 +35,6 @@ export const adminStoryHe: Translation<typeof adminStoryEn> = {
     empty: "עדיין לא קרה דבר בחשבון הזה.",
     loadMore: "להציג ישנים יותר",
     system: "מערכת",
-    platformStaff: "צוות הפלטפורמה",
-    owner: "הבעלים",
     by: "על ידי {name}",
     reason: "למה: {reason}",
     kinds: {

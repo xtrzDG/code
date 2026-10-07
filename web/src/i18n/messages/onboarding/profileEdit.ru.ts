@@ -49,7 +49,6 @@ export const profileEditRu: Translation<typeof profileEditEn> = {
     priced: { one: "{count} с ценой", few: "{count} с ценой", many: "{count} с ценой", other: "{count} с ценой" },
     noHours: "Часы работы не указаны",
     roundTheClock: "круглосуточно",
-    noBookings: "Без броней",
     partySize: {
       one: "до {count} человека в брони",
       few: "до {count} человек в брони",
@@ -114,6 +113,13 @@ export const profileEditRu: Translation<typeof profileEditEn> = {
     pasteHint: "Вставьте строки из таблицы: название, цена, минуты. Enter добавляет строку.",
     pasted: { one: "Вставлена {count} строка", few: "Вставлено {count} строки", many: "Вставлено {count} строк", other: "Вставлено {count} строки" },
     questionsTitle: "О том, что вы предлагаете",
+    compact: {
+      search: "Найти в предложении",
+      noMatches: "В предложении нет ничего похожего на «{query}».",
+      group: { one: "{kind}: {count} строка", few: "{kind}: {count} строки", many: "{kind}: {count} строк", other: "{kind}: {count} строки" },
+      noPrice: "Без цены",
+      minutes: { one: "{count} мин", few: "{count} мин", many: "{count} мин", other: "{count} мин" },
+    },
   },
   hours: {
     suggestedTitle: "Обычные часы для бизнеса вашего вида",

@@ -21,7 +21,6 @@ export const helpCenterHe: Translation<typeof helpCenterEn> = {
     daily_work: "עבודה יומיומית",
     account: "חשבון וחיוב",
   },
-  loadFailed: "לא הצלחנו לטעון את העזרה. בדקו את החיבור ונסו שוב.",
   allArticles: "כל המאמרים",
   related: "לקריאה בהמשך",
   otherLanguage: "המאמר הזה עדיין לא תורגם, ולכן הוא מוצג ב{language}.",

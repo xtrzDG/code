@@ -8,7 +8,6 @@ export const adminMetricsKa: Translation<typeof adminMetricsEn> = {
   title: "ზრდის მეტრიკები",
   description:
     "როგორ გადიან მფლობელები გზას რეგისტრაციიდან გადახდამდე, რამდენი შემოაქვთ თვეში და რამდენად სწრაფია კაბინეტი. პროდუქტის საკუთარი მოვლენებით, გარე ტრეკერის გარეშე.",
-  generated: "დათვლილია {time}",
   filters: {
     label: "მეტრიკების ფილტრები",
     period: "რეგისტრაციები",
@@ -35,9 +34,15 @@ export const adminMetricsKa: Translation<typeof adminMetricsEn> = {
     timeToLive: "გაშვებამდე საშუალო (მედიანური) დრო",
     timeToLiveDetail: "რეგისტრაციიდან პირველი ასისტენტის გაშვებამდე",
     activation: "გააქტიურდნენ 7 დღეში",
-    activationDetail: "{activated} {eligible} ბიზნესიდან; {pending} ჯერ პირველ კვირაშია",
+    activationDetail: {
+      one: "{activated} {eligible} ბიზნესიდან; {pending} ჯერ პირველ კვირაშია",
+      other: "{activated} {eligible} ბიზნესიდან; {pending} ჯერ პირველ კვირაშია",
+    },
     trialToPaid: "საცდელიდან გადახდამდე",
-    trialDetail: "{converted} {ended} დასრულებული საცდელიდან; დაწყებულია {started}",
+    trialDetail: {
+      one: "{converted} {ended} დასრულებული საცდელიდან; დაწყებულია {started}",
+      other: "{converted} {ended} დასრულებული საცდელიდან; დაწყებულია {started}",
+    },
     mrr: "MRR",
     mrrDetail: "{change} პერიოდში",
     arpa: "ARPA",

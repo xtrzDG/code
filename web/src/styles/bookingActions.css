@@ -102,15 +102,17 @@
   font-size: 13.5px;
 }
 
+/* The UI kit's date field, a touch larger here (16 px: no zoom on a phone's focus). */
 .bp-field input {
   min-height: 46px;
-  padding: 0 12px;
-  border: 1px solid var(--line-strong);
   border-radius: 12px;
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
   font-size: 16px;
+}
+
+.bp-field-hint {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
 }
 
 .bp-slots {

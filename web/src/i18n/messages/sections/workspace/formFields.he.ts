@@ -27,8 +27,5 @@ export const formFieldsHe: Translation<typeof formFieldsEn> = {
     saved: "נשמר",
     failed: "לא נשמר",
     retry: "לנסות שוב",
-    retryLater: "לא נשמר: אין חיבור. ננסה שוב עוד רגע.",
-    stale: "מישהו אחר שינה את זה בינתיים. השדה מציג עכשיו את מה שנשמר.",
-    leaveWarning: "שינוי עדיין נשמר.",
   },
 };

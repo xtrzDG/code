@@ -91,8 +91,14 @@ export const adminSystemEn = {
       api_availability: "No API requests counted in these hours yet",
     },
     events: {
-      inbound_answered: "{good} of {total} customer messages answered in time",
-      api_availability: "{good} of {total} requests without a server error",
+      inbound_answered: {
+        one: "{good} of {total} customer message answered in time",
+        other: "{good} of {total} customer messages answered in time",
+      },
+      api_availability: {
+        one: "{good} of {total} request without a server error",
+        other: "{good} of {total} requests without a server error",
+      },
     },
     burn: "Last hour: {multiple}× the sustainable pace",
     latency: {
@@ -144,7 +150,6 @@ export const adminSystemEn = {
     noneDescription: "Every job finished or is still being tried.",
     tally: "{name}: {count}",
     job: "Job",
-    lane: "Lane",
     business: "Business",
     platform: "Platform",
     attempts: "Attempts",

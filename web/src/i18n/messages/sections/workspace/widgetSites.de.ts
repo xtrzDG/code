@@ -18,7 +18,7 @@ export const widgetSitesDe: Translation<typeof widgetSitesEn> = {
   remove: "{site} entfernen",
   invalid: "Das ist keine Website-Adresse. Geben Sie sie wie in der Adressleiste ein, zum Beispiel cafe-batumi.ge.",
   duplicate: "Diese Website steht bereits auf der Liste.",
-  full: "Die Liste fasst bis zu {count} Websites.",
+  full: { one: "Die Liste fasst bis zu {count} Website.", other: "Die Liste fasst bis zu {count} Websites." },
   alwaysAllowed: "Ihre Chat-Seite und die Vorschau in diesem Dashboard funktionieren immer.",
   ownerOnly: "Nur ein Inhaber kann diese Liste ändern.",
   save: "Liste speichern",

@@ -19,7 +19,9 @@ export const valueHe: Translation<typeof valueEn> = {
     afterHoursHint: "שיחות כשהייתם סגורים",
     hoursSaved: { one: "~שעת צוות אחת נחסכה", other: "~{count} שעות צוות נחסכו" },
     minutesSaved: { one: "~דקת צוות אחת נחסכה", other: "~{count} דקות צוות נחסכו" },
-    savedHint: "תשובות שנכתבו בשבילכם: {replies}, שיחות טלפון שנענו: {calls}",
+    savedHint: "בשבילכם: {replies} ו{calls}",
+    savedReplies: { one: "נכתבה תשובה אחת", other: "נכתבו {count} תשובות" },
+    savedCalls: { one: "נענתה שיחת טלפון אחת", other: "נענו {count} שיחות טלפון" },
     conversations: { one: "שיחה אחת", other: "{count} שיחות" },
     conversationsHint: "לקוחות שכתבו או התקשרו",
     returnMultiple: "≈ פי {multiple} ממחיר המסלול שלכם",
@@ -63,7 +65,6 @@ export const valueHe: Translation<typeof valueEn> = {
   },
   delta: {
     firstPeriod: "תקופה ראשונה",
-    firstPeriodHint: "לא הייתה פעילות בתקופה הקודמת: עדיין אין למה להשוות",
     firstPeriodNote: "תקופה ראשונה: עדיין אין למה להשוות",
     up: "עלייה של {change} לעומת {against}",
     down: "ירידה של {change} לעומת {against}",

@@ -31,5 +31,4 @@ export const customerMemoryKa: Translation<typeof customerMemoryEn> = {
   turnedOff: "მომხმარებლების მეხსიერება გამორთულია",
   notesShared: "ასისტენტი ახლა კითხულობს გუნდის შენიშვნებს",
   notesHidden: "გუნდის შენიშვნები გუნდშივე რჩება",
-  loadError: "მომხმარებლების მეხსიერების პარამეტრების ჩატვირთვა ვერ მოხერხდა.",
 };

@@ -48,7 +48,7 @@ function ApiKeyRow({ apiKey, onRevoke }: { apiKey: ApiKeyView; onRevoke: (apiKey
  * token is shown once), see when each was last used, and revoke one.
  */
 export function ApiKeysCard() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const toast = useToast();
   const apiKeys = useApiKeys();
   const [creating, setCreating] = useState({ open: false, nonce: 0 });
@@ -83,7 +83,8 @@ export function ApiKeysCard() {
       footer={
         data ? (
           <p className="text-sm text-ink-subtle">
-            {t("apiIntegrations.apiKeys.limits", { count: data.max_keys, rate: data.requests_per_minute })}
+            {tp("apiIntegrations.apiKeys.limits", data.max_keys)}{" "}
+            {tp("apiIntegrations.apiKeys.rate", data.requests_per_minute, { rate: data.requests_per_minute })}
           </p>
         ) : undefined
       }

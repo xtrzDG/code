@@ -28,5 +28,4 @@ export const customerMemoryHe: Translation<typeof customerMemoryEn> = {
   turnedOff: "זיכרון הלקוחות כבוי",
   notesShared: "העוזר קורא עכשיו את ההערות של הצוות",
   notesHidden: "ההערות של הצוות נשארות אצל הצוות",
-  loadError: "לא הצלחנו לטעון את הגדרות זיכרון הלקוחות.",
 };

@@ -4,13 +4,6 @@ import type { Translation } from "../../../translate";
 import type { handoffsEn } from "./handoffs.en";
 
 export const handoffsHe: Translation<typeof handoffsEn> = {
-  loading: "טוענים…",
-  tabsLabel: "הצגה",
-  tabs: {
-    open: "ממתינות",
-    resolved: "טופלו",
-    all: "הכול",
-  },
   urgency: {
     critical: "קריטי",
     high: "דחוף",
@@ -35,17 +28,6 @@ export const handoffsHe: Translation<typeof handoffsEn> = {
     resolved: "טופל",
   },
   notificationFailedHint: "הצוות לא קיבל את ההודעה. התקשרו ללקוח בחזרה ובדקו את אנשי הקשר בהגדרות.",
-  resolvedAt: "טופל {date}",
-  resolve: "סימון כטופל",
-  confirmResolve: {
-    title: "לסמן כטופל?",
-    description: "{name}: העוזר מתחיל לענות ללקוח הזה שוב.",
-    confirm: "סימון כטופל",
-  },
-  resolved: "סומן כטופל",
-  emptyOpenTitle: "אף אחד לא מחכה לאדם",
-  emptyOpenDescription: "כשהעוזר מעביר שיחה לאדם, היא ממתינה כאן עם סיכום קצר.",
-  emptyTitle: "עדיין אין כאן כלום",
   summaryCodes: {
     model_declined: "העוזר לא הסכים לענות על ההודעה הזו.",
     model_unavailable: "העוזר לא היה זמין לרגע ולא הצליח לענות.",

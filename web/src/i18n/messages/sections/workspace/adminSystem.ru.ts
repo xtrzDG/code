@@ -94,8 +94,18 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       api_availability: "За эти часы запросов к API ещё не было",
     },
     events: {
-      inbound_answered: "{good} из {total} сообщений клиентов получили ответ вовремя",
-      api_availability: "{good} из {total} запросов без ошибки сервера",
+      inbound_answered: {
+        one: "Вовремя отвечено: {good} из {total} сообщения клиентов",
+        few: "Вовремя отвечено: {good} из {total} сообщений клиентов",
+        many: "Вовремя отвечено: {good} из {total} сообщений клиентов",
+        other: "Вовремя отвечено: {good} из {total} сообщения клиентов",
+      },
+      api_availability: {
+        one: "Без ошибки сервера: {good} из {total} запроса",
+        few: "Без ошибки сервера: {good} из {total} запросов",
+        many: "Без ошибки сервера: {good} из {total} запросов",
+        other: "Без ошибки сервера: {good} из {total} запроса",
+      },
     },
     burn: "Последний час: {multiple}× от допустимого темпа",
     latency: {
@@ -149,7 +159,6 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
     noneDescription: "Каждая задача выполнена или ещё выполняется.",
     tally: "{name}: {count}",
     job: "Задача",
-    lane: "Очередь",
     business: "Бизнес",
     platform: "Платформа",
     attempts: "Попыток",

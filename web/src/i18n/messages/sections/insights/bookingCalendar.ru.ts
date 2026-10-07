@@ -25,11 +25,9 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
   moveHint: "Перетащите бронь на другое время или место. Или выберите её и двигайте стрелками: Enter — перенести, Escape — отменить.",
   day: {
     label: "Брони на {date} по местам",
-    time: "Время",
     closed: "Закрыто",
     closedDay: "Закрыто весь день",
     newAt: "Новая бронь: {place}",
-    newAtTime: "Новая бронь: {place}, {time}",
     booked: "занято {percent}",
     now: "Сейчас {time}",
     noPlacesTitle: "Нет мест с бронированием по времени",
@@ -39,7 +37,6 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "Тест",
-    moving: "Переносим…",
   },
   move: {
     pending: "Перенести: {place}, {time}? Enter — перенести, Escape — отменить.",
@@ -49,6 +46,12 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
     undone: "Бронь вернулась на прежнее место",
     changed: "Эту бронь только что изменил кто-то другой: календарь показывает её такой, какая она сейчас.",
     cancelled: "Перенос отменён",
+    tell: {
+      title: "{name} ещё не знает новое время",
+      titleAnonymous: "Клиент ещё не знает новое время",
+      hint: "Помощник сам не пишет клиентам о переносах в календаре. Скопируйте текст и отправьте его там, где вы общаетесь.",
+      show: "Показать сообщение",
+    },
   },
   week: {
     label: "Загрузка мест, {range}",
@@ -57,7 +60,12 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
     closed: "Закрыто",
     free: "Свободно",
     share: "занято {percent}",
-    rooms: "занято {booked} из {open} номеров",
+    rooms: {
+      one: "занято {booked} из {open} номера",
+      few: "занято {booked} из {open} номеров",
+      many: "занято {booked} из {open} номеров",
+      other: "занято {booked} из {open} номера",
+    },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "Загрузка",
     quiet: "Свободно",

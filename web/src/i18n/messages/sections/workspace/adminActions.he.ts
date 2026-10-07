@@ -91,6 +91,5 @@ export const adminActionsHe: Translation<typeof adminActionsEn> = {
     description: "ב-{date} הבעלים ביקשו מצוות הפלטפורמה להגדיר את העסק ({plan}).",
     markDone: "סימון כהושלם",
     marked: "ההגדרה שנעשתה בשביל הלקוח סומנה כהושלמה",
-    doneTitle: "ההגדרה שנעשתה בשביל הלקוח הסתיימה",
   },
 };

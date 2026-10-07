@@ -4,12 +4,6 @@ import type { Translation } from "../../../translate";
 import type { conversationsEn } from "./conversations.en";
 
 export const conversationsRu: Translation<typeof conversationsEn> = {
-  customerMessages: {
-    one: "{count} сообщение клиента",
-    few: "{count} сообщения клиента",
-    many: "{count} сообщений клиента",
-    other: "{count} сообщения клиента",
-  },
   rating: {
     label: "Работа помощника",
     good: "Хорошо",
@@ -58,11 +52,7 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     },
   },
   reply: {
-    title: "Ответ клиенту",
     label: "Сообщение клиенту",
-    placeholder: "Напишите сообщение… (Ctrl+Enter — отправить)",
-    send: "Отправить",
-    sending: "Отправка…",
     sent: "Отправляем в {channel}: статус доставки виден под сообщением",
     stored: "Сообщение ждёт в чате на сайте",
     refused: "Сейчас это сообщение отправить нельзя.",
@@ -98,9 +88,7 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
   },
   loading: "Загружаем разговоры…",
   loadingOne: "Загружаем разговор…",
-  listLabel: "Список разговоров",
   search: "Поиск",
-  searchPlaceholder: "Имя, телефон или текст",
   channel: "Канал",
   allChannels: "Все каналы",
   statusFilter: "Статус",
@@ -117,19 +105,8 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     handoff: "У человека",
     closed: "Закрыт",
   },
-  emptyTitle: "Разговоров пока нет",
-  emptyDescription: "Разговоры появятся здесь, как только клиенты напишут или позвонят помощнику.",
   selectTitle: "Выберите разговор",
   selectDescription: "Здесь откроются расшифровка, действия помощника и связанные брони.",
-  back: "Все разговоры",
-  messages: {
-    one: "{count} сообщение",
-    few: "{count} сообщения",
-    many: "{count} сообщений",
-    other: "{count} сообщения",
-  },
-  started: "Начат",
-  lastMessage: "Последнее сообщение",
   noPhone: "Нет телефона",
   transcript: "Расшифровка",
   emptyTranscript: "В этом разговоре нет сообщений.",
@@ -138,7 +115,6 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
   searchOlder: "Искать в более старых разговорах",
   searchOlderDescription: "Среди последних разговоров совпадений нет.",
   handoffNotice: "Разговор ведёт человек: помощник молчит, пока разговор не отметят решённым.",
-  toHandoffs: "Открыть «Нужен человек»",
   author: {
     you: "вы",
     customer: "Клиент",
@@ -146,12 +122,6 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     staff: "Сотрудник",
     system: "Система",
     voiceAgent: "Голосовой агент",
-  },
-  actions: {
-    one: "{count} действие",
-    few: "{count} действия",
-    many: "{count} действий",
-    other: "{count} действия",
   },
   toolInput: "Запрос",
   toolResult: "Результат",
@@ -171,11 +141,10 @@ export const conversationsRu: Translation<typeof conversationsEn> = {
     record_unanswered_question: "Записал вопрос без ответа",
     offer_choices: "Предложил варианты ответа",
   },
-  messageTokens: "токенов: {count}",
+  messageTokens: { one: "{count} токен", few: "{count} токена", many: "{count} токенов", other: "{count} токена" },
   usage: {
     tokens: "Токены",
     tokensValue: "{input} вход · {output} выход",
-    cost: "Стоимость",
   },
   linked: {
     book: "Забронировать",

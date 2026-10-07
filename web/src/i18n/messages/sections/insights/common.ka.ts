@@ -9,7 +9,6 @@ import type { insightsCommonEn } from "./common.en";
 export const insightsCommonKa: Translation<typeof insightsCommonEn> = {
   loadingMore: "იტვირთება…",
   showMore: "მეტის ჩვენება",
-  shownOf: "ნაჩვენებია {shown} / {total}",
   includeTest: "სატესტოების ჩვენება",
   includeTestHint: "სატესტო ჩატიდან და შემოწმებებიდან",
   testBadge: "ტესტი",
@@ -17,8 +16,6 @@ export const insightsCommonKa: Translation<typeof insightsCommonEn> = {
   unknownCustomer: "კლიენტი სახელის გარეშე",
   callPhone: "დარეკვა: {phone}",
   openConversation: "საუბრის გახსნა",
-  all: "ყველა",
-  clearFilters: "ფილტრების გასუფთავება",
   noMatchesTitle: "ფილტრებს არაფერი ემთხვევა",
   noMatchesDescription: "შეცვალეთ ან გაასუფთავეთ ფილტრები.",
   copy: "კოპირება",

@@ -33,7 +33,7 @@ import { ThisDeviceCard } from "./notifications/ThisDeviceCard";
  * open dialog says so, keeping what was typed for another try.
  */
 export function NotificationsTab() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const { business, isOwner } = useBusiness();
   const mine = useMyNotifications();
   const delivery = useNotificationContacts();
@@ -56,7 +56,7 @@ export function NotificationsTab() {
               size="sm"
               leadingIcon={<IconPlus className="size-4" aria-hidden />}
               disabled={isFull}
-              title={isFull ? t("settings.contacts.limit", { count: MAX_MANAGER_CONTACTS }) : undefined}
+              title={isFull ? tp("settings.contacts.limit", MAX_MANAGER_CONTACTS, { count: MAX_MANAGER_CONTACTS }) : undefined}
               onClick={list.startAdding}
             >
               {t("settings.contacts.add")}

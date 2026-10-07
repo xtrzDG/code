@@ -21,9 +21,20 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
     description: "Отправляйте брони, заявки, передачи человеку, новые разговоры и завершённые звонки в свои системы в момент, когда они происходят. Каждый запрос подписан.",
     add: "Добавить вебхук",
     empty: "Вебхуков пока нет. Добавьте адрес своей системы или подключите Zapier с ключом API.",
-    limits: "До {count} вебхуков. Адрес, который не принял {failures} запросов подряд, отключается.",
+    limits: {
+      one: "До {count} вебхука.",
+      few: "До {count} вебхуков.",
+      many: "До {count} вебхуков.",
+      other: "До {count} вебхука.",
+    },
+    disableAfter: {
+      one: "Адрес, который не принял {failures} запрос подряд, отключается.",
+      few: "Адрес, который не принял {failures} запроса подряд, отключается.",
+      many: "Адрес, который не принял {failures} запросов подряд, отключается.",
+      other: "Адрес, который не принял {failures} запроса подряд, отключается.",
+    },
     statuses: { active: "Включён", paused: "На паузе", disabled: "Отключён" },
-    origins: { cabinet: "Добавлен здесь", api: "Добавлен Zapier или через API" },
+    origins: { api: "Добавлен Zapier или через API" },
     eventCount: { one: "{count} событие", few: "{count} события", many: "{count} событий", other: "{count} события" },
     lastSuccess: "Последняя доставка {time}",
     neverDelivered: "Пока ничего не доставлено",
@@ -47,7 +58,6 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
       delete: "Удалить",
     },
     toasts: {
-      saved: "Вебхук сохранён",
       paused: "Вебхук на паузе",
       resumed: "Вебхук включён",
       testDelivered: "Тестовое событие доставлено",
@@ -79,7 +89,12 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
     },
     reasons: {
       not_public: "Этот адрес не может принимать вебхуки: укажите публичный https-адрес.",
-      webhook_limit_reached: "У бизнеса может быть до {count} вебхуков. Сначала удалите один.",
+      webhook_limit_reached: {
+        one: "У бизнеса может быть до {count} вебхука. Сначала удалите один.",
+        few: "У бизнеса может быть до {count} вебхуков. Сначала удалите один.",
+        many: "У бизнеса может быть до {count} вебхуков. Сначала удалите один.",
+        other: "У бизнеса может быть до {count} вебхука. Сначала удалите один.",
+      },
     },
   },
   secret: {
@@ -123,7 +138,18 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
     description: "Позвольте Zapier или своим скриптам читать и создавать брони и заявки через публичный API.",
     add: "Создать ключ API",
     empty: "Ключей API пока нет.",
-    limits: "До {count} активных ключей; каждый — до {rate} запросов в минуту.",
+    limits: {
+      one: "До {count} активного ключа.",
+      few: "До {count} активных ключей.",
+      many: "До {count} активных ключей.",
+      other: "До {count} активного ключа.",
+    },
+    rate: {
+      one: "Ключ делает до {rate} запроса в минуту.",
+      few: "Ключ делает до {rate} запросов в минуту.",
+      many: "Ключ делает до {rate} запросов в минуту.",
+      other: "Ключ делает до {rate} запроса в минуту.",
+    },
     statuses: { active: "Активен", revoked: "Отозван" },
     created: "Создан {time}",
     lastUsed: "Последнее использование {time}",
@@ -155,7 +181,12 @@ export const apiIntegrationsRu: Translation<typeof apiIntegrationsEn> = {
     },
     toasts: { revoked: "Ключ API отозван" },
     reasons: {
-      api_key_limit_reached: "У бизнеса может быть до {count} активных ключей. Сначала отзовите один.",
+      api_key_limit_reached: {
+        one: "У бизнеса может быть до {count} активного ключа. Сначала отзовите один.",
+        few: "У бизнеса может быть до {count} активных ключей. Сначала отзовите один.",
+        many: "У бизнеса может быть до {count} активных ключей. Сначала отзовите один.",
+        other: "У бизнеса может быть до {count} активного ключа. Сначала отзовите один.",
+      },
     },
   },
 };

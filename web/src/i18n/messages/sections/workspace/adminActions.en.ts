@@ -97,6 +97,5 @@ export const adminActionsEn = {
     description: "On {date} the owner asked the platform team to set the business up ({plan}).",
     markDone: "Mark as done",
     marked: "The done-for-you setup is marked done",
-    doneTitle: "Done-for-you setup finished",
   },
 } as const;

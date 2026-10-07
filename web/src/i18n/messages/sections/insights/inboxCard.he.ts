@@ -34,38 +34,28 @@ export const inboxCardHe: Translation<typeof inboxCardEn> = {
     since: "מאז {time}",
   },
   details: {
-    title: "פרטים",
     customer: "לקוח",
     channel: "ערוץ",
     language: "שפה",
     started: "התחילה",
     lastMessage: "הודעה אחרונה",
-    assignment: "בטיפול של",
   },
   technical: {
     title: "פרטים טכניים",
     hint: "מה עומד מאחורי התשובות: העדכון של העוזר שנתן אותן והבקשות המדויקות שלו לנתונים שלכם.",
-    model: "מודל",
-    models: "מודלים",
     tokens: "טוקנים",
     cost: "עלות AI",
     version: "גרסת העוזר",
-    toolCalls: {
-      one: "בקשה אחת לנתונים שלכם",
-      other: "{count} בקשות לנתונים שלכם",
-    },
     message: "פרטים טכניים של ההודעה הזו",
   },
   notes: {
     title: "הערות",
     hint: "רק הצוות שלכם רואה את זה",
     description: "הערות נשארות בתוך הצוות: הלקוח והעוזר אף פעם לא רואים אותן.",
-    label: "הערה לצוות",
     placeholder: "מה הובטח, מי חוזר ללקוח, מה לזכור…",
     add: "הוספת הערה",
     adding: "שומרים…",
     added: "ההערה נשמרה. רק הצוות שלכם רואה אותה.",
-    by: "{name}, {time}",
     unknownAuthor: "חבר צוות לשעבר",
     delete: "מחיקת ההערה",
     confirmDelete: {
@@ -76,7 +66,6 @@ export const inboxCardHe: Translation<typeof inboxCardEn> = {
     deleted: "ההערה נמחקה",
     empty: "עדיין אין הערות. הערה עוזרת למי שבא אחריכם: מה הובטח, מי חוזר ללקוח.",
     loading: "טוענים הערות…",
-    older: "להציג הערות ישנות יותר",
     length: "{count} / {max}",
   },
   quickReplies: {
@@ -88,7 +77,6 @@ export const inboxCardHe: Translation<typeof inboxCardEn> = {
     emptyOwner: "צרו תשובות שאתם שולחים לעיתים קרובות בהגדרות → תשובות מהירות.",
     manage: "ניהול תשובות מהירות",
     noMatch: "אין תשובה מהירה שמתאימה ל„/{query}”.",
-    language: "ב{language}",
     missing: "מלאו לפני השליחה:",
     fillLabel: "ערך עבור {variable}",
     fill: "מילוי",
@@ -102,7 +90,6 @@ export const inboxCardHe: Translation<typeof inboxCardEn> = {
   composer: {
     placeholder: "כתבו ללקוח…",
     sendLabel: "שליחה",
-    unavailable: "אי אפשר לכתוב מכאן כרגע",
   },
   request: {
     updated: "פנייה: {status}",

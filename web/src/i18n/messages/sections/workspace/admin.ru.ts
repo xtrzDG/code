@@ -55,7 +55,12 @@ export const adminRu: Translation<typeof adminEn> = {
     margin: "Маржа",
   },
   minutesShort: "{used}/{included} мин",
-  dialogsShort: "{used}/{included} диалогов",
+  dialogsShort: {
+    one: "{used}/{included} диалога",
+    few: "{used}/{included} диалогов",
+    many: "{used}/{included} диалогов",
+    other: "{used}/{included} диалога",
+  },
   noSubscription: "Нет подписки",
   unknown: "—",
   count: {
@@ -82,8 +87,6 @@ export const adminRu: Translation<typeof adminEn> = {
     issuesTitle: "Что требует внимания",
     noIssues: "Всё в порядке.",
     facts: {
-      country: "Страна",
-      niche: "Ниша",
       status: "Статус бизнеса",
       serviceMode: "Помощник",
       plan: "Тариф",
@@ -105,7 +108,12 @@ export const adminRu: Translation<typeof adminEn> = {
       verdict: "Проверки действующей версии",
       verdictPassed: "v{number}: пройдены",
       verdictFailed: "v{number}: не пройдены",
-      verdictCounts: "Пройдено сценариев: {passed} из {total}",
+      verdictCounts: {
+        one: "Пройдено {passed} из {total} сценария",
+        few: "Пройдено {passed} из {total} сценариев",
+        many: "Пройдено {passed} из {total} сценариев",
+        other: "Пройдено {passed} из {total} сценария",
+      },
       handoffs: "Нужен человек, 7 дней",
       toolErrors: "Ошибок инструментов за 7 дней",
       openQuestions: "Открытых вопросов",

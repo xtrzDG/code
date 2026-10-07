@@ -59,7 +59,6 @@ export const waitlistDe: Translation<typeof waitlistEn> = {
   removeBody: "Dem Kunden wird kein frei gewordener Platz mehr angeboten. Ein gerade reservierter Platz geht an den Nächsten in der Reihe.",
   removeConfirm: "Von der Liste nehmen",
   removed: "Von der Warteliste genommen",
-  showMore: "Mehr anzeigen",
   timeZone: "Uhrzeiten in {timezone}.",
   settings: {
     title: "Einstellungen der Warteliste",

@@ -7,7 +7,6 @@ export const adminMetricsHe: Translation<typeof adminMetricsEn> = {
   nav: "מדדים",
   title: "מדדי צמיחה",
   description: "איך בעלים מגיעים מהרשמה לתשלום, מה הם מכניסים כל חודש וכמה מהיר לוח הבקרה מרגיש. מהאירועים של המוצר עצמו; בלי מעקב חיצוני.",
-  generated: "חושב {time}",
   filters: {
     label: "מסנני מדדים",
     period: "הרשמות",
@@ -34,9 +33,15 @@ export const adminMetricsHe: Translation<typeof adminMetricsEn> = {
     timeToLive: "זמן חציוני עד עלייה לאוויר",
     timeToLiveDetail: "מההרשמה ועד העוזר הראשון באוויר",
     activation: "הופעלו בתוך 7 ימים",
-    activationDetail: "{activated} מתוך {eligible} עסקים; {pending} עדיין בשבוע הראשון שלהם",
+    activationDetail: {
+      one: "{activated} מתוך עסק אחד; {pending} עדיין בשבוע הראשון שלהם",
+      other: "{activated} מתוך {eligible} עסקים; {pending} עדיין בשבוע הראשון שלהם",
+    },
     trialToPaid: "מניסיון לתשלום",
-    trialDetail: "{converted} מתוך {ended} תקופות ניסיון שהסתיימו; {started} התחילו",
+    trialDetail: {
+      one: "{converted} מתוך תקופת ניסיון אחת שהסתיימה; {started} התחילו",
+      other: "{converted} מתוך {ended} תקופות ניסיון שהסתיימו; {started} התחילו",
+    },
     mrr: "MRR",
     mrrDetail: "{change} בתקופה",
     arpa: "ARPA",

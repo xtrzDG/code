@@ -22,7 +22,6 @@ export const helpCenterEn = {
     daily_work: "Daily work",
     account: "Account and billing",
   },
-  loadFailed: "The help could not be loaded. Check the connection and try again.",
   allArticles: "All articles",
   related: "Read next",
   otherLanguage: "This article is not translated yet, so it is shown in {language}.",

@@ -22,7 +22,7 @@ export const assistantComparisonDe: Translation<typeof assistantComparisonEn> = 
     outcomeMove: "vorher {from}, jetzt {to}",
     noChanges: "Gegenüber dem Live-Update hat sich nichts geändert: keine neuen Probleme, und keine Bewertung hat sich um einen halben Punkt oder mehr bewegt.",
     noShared: "Dieser Durchlauf und der des Live-Updates haben noch keine gemeinsamen Szenarien.",
-    plays: "{passed} von {played} Durchgängen bestanden",
+    plays: { one: "{passed} von {played} Durchgang bestanden", other: "{passed} von {played} Durchgängen bestanden" },
     playsHint: "Wichtige Szenarien werden mehrmals gespielt; jeder Durchgang muss bestehen.",
   },
 };

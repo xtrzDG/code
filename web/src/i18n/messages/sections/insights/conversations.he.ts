@@ -4,10 +4,6 @@ import type { Translation } from "../../../translate";
 import type { conversationsEn } from "./conversations.en";
 
 export const conversationsHe: Translation<typeof conversationsEn> = {
-  customerMessages: {
-    one: "הודעה אחת מהלקוח",
-    other: "{count} הודעות מהלקוח",
-  },
   rating: {
     label: "העבודה של העוזר",
     good: "טוב",
@@ -54,11 +50,7 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     },
   },
   reply: {
-    title: "תשובה ללקוח",
     label: "הודעה ללקוח",
-    placeholder: "כתבו הודעה… (Ctrl+Enter שולח)",
-    send: "שליחה",
-    sending: "שולחים…",
     sent: "שולחים ל-{channel}: סטטוס המסירה מופיע מתחת להודעה",
     stored: "ההודעה ממתינה בצ׳אט באתר",
     refused: "אי אפשר לשלוח את ההודעה כרגע.",
@@ -94,9 +86,7 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
   },
   loading: "טוענים שיחות…",
   loadingOne: "טוענים את השיחה…",
-  listLabel: "רשימת השיחות",
   search: "חיפוש",
-  searchPlaceholder: "שם, טלפון או טקסט",
   channel: "ערוץ",
   allChannels: "כל הערוצים",
   statusFilter: "סטטוס",
@@ -113,14 +103,8 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     handoff: "אצל אדם",
     closed: "סגורה",
   },
-  emptyTitle: "עדיין אין שיחות",
-  emptyDescription: "שיחות מופיעות כאן ברגע שלקוחות כותבים לעוזר או מתקשרים אליו.",
   selectTitle: "בחרו שיחה",
   selectDescription: "התמלול, הפעולות של העוזר וההזמנות המקושרות נפתחים כאן.",
-  back: "כל השיחות",
-  messages: { one: "הודעה אחת", other: "{count} הודעות" },
-  started: "התחילה",
-  lastMessage: "הודעה אחרונה",
   noPhone: "אין מספר טלפון",
   transcript: "תמלול",
   emptyTranscript: "אין הודעות בשיחה הזו.",
@@ -129,7 +113,6 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
   searchOlder: "חיפוש בשיחות ישנות יותר",
   searchOlderDescription: "שום דבר לא התאים בין השיחות האחרונות.",
   handoffNotice: "אדם מטפל בשיחה הזו: העוזר שותק עד שהיא תסומן כפתורה.",
-  toHandoffs: "פתיחת „צריך אדם”",
   author: {
     you: "אתם",
     customer: "לקוח",
@@ -138,7 +121,6 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     system: "מערכת",
     voiceAgent: "סוכן קולי",
   },
-  actions: { one: "פעולה אחת", other: "{count} פעולות" },
   toolInput: "בקשה",
   toolResult: "תוצאה",
   toolError: "שגיאה",
@@ -157,11 +139,10 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     record_unanswered_question: "רשם שאלה בלי תשובה",
     offer_choices: "הציע תשובות לבחירה",
   },
-  messageTokens: "{count} טוקנים",
+  messageTokens: { one: "טוקן אחד", other: "{count} טוקנים" },
   usage: {
     tokens: "טוקנים",
     tokensValue: "{input} נכנסים · {output} יוצאים",
-    cost: "עלות",
   },
   linked: {
     book: "הזמנה",

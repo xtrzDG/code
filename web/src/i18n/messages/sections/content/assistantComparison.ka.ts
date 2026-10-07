@@ -25,7 +25,7 @@ export const assistantComparisonKa: Translation<typeof assistantComparisonEn> = 
     outcomeMove: "იყო: {from}, ახლა: {to}",
     noChanges: "მოქმედ განახლებასთან შედარებით არაფერი შეცვლილა: ახალი პრობლემები არ არის და არც ერთი შეფასება ნახევარი ქულით ან მეტით არ შეცვლილა.",
     noShared: "ამ გაშვებასა და მოქმედი განახლების გაშვებას ჯერ საერთო სცენარები არ აქვს.",
-    plays: "გავლილი გათამაშებები: {passed} / {played}",
+    plays: { one: "გავლილი გათამაშებები: {passed} / {played}", other: "გავლილი გათამაშებები: {passed} / {played}" },
     playsHint: "მნიშვნელოვანი სცენარები რამდენჯერმე თამაშდება და ყოველ ჯერზე უნდა გაიაროს.",
   },
 };

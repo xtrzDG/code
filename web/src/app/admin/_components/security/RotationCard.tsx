@@ -109,7 +109,7 @@ function FindingText({ finding }: { finding: RotationFinding }) {
     case "webhooks":
       return tp("adminSecurity.run.verdict.webhooks", finding.count);
     case "keysChanged":
-      return t("adminSecurity.run.verdict.keysChanged", { then: finding.then, now: finding.now });
+      return tp("adminSecurity.run.verdict.keysChanged", Number(finding.then), { then: finding.then, now: finding.now });
     case "clean":
       return t(finding.isSingleKey ? "adminSecurity.run.verdict.cleanSingle" : "adminSecurity.run.verdict.clean");
   }

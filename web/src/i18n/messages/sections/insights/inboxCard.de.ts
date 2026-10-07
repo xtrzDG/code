@@ -34,38 +34,28 @@ export const inboxCardDe: Translation<typeof inboxCardEn> = {
     since: "seit {time}",
   },
   details: {
-    title: "Details",
     customer: "Kunde",
     channel: "Kanal",
     language: "Sprache",
     started: "Begonnen",
     lastMessage: "Letzte Nachricht",
-    assignment: "Bearbeitet von",
   },
   technical: {
     title: "Technische Details",
     hint: "Was hinter den Antworten steht: das Update des Assistenten, das sie gegeben hat, und seine genauen Anfragen an Ihre Daten.",
-    model: "Modell",
-    models: "Modelle",
     tokens: "Tokens",
     cost: "KI-Kosten",
     version: "Version des Assistenten",
-    toolCalls: {
-      one: "{count} Anfrage an Ihre Daten",
-      other: "{count} Anfragen an Ihre Daten",
-    },
     message: "Technische Details dieser Nachricht",
   },
   notes: {
     title: "Notizen",
     hint: "Nur Ihr Team sieht das",
     description: "Notizen bleiben in Ihrem Team: Kunde und Assistent sehen sie nie.",
-    label: "Notiz für das Team",
     placeholder: "Was zugesagt wurde, wer zurückruft, woran zu denken ist…",
     add: "Notiz hinzufügen",
     adding: "Wird gespeichert…",
     added: "Notiz gespeichert. Nur Ihr Team sieht sie.",
-    by: "{name}, {time}",
     unknownAuthor: "Ehemaliges Teammitglied",
     delete: "Notiz löschen",
     confirmDelete: {
@@ -76,7 +66,6 @@ export const inboxCardDe: Translation<typeof inboxCardEn> = {
     deleted: "Notiz gelöscht",
     empty: "Noch keine Notizen. Eine Notiz hilft der nächsten Person: was zugesagt wurde, wer zurückruft.",
     loading: "Notizen werden geladen…",
-    older: "Ältere Notizen anzeigen",
     length: "{count} / {max}",
   },
   quickReplies: {
@@ -88,7 +77,6 @@ export const inboxCardDe: Translation<typeof inboxCardEn> = {
     emptyOwner: "Legen Sie häufige Antworten unter Einstellungen → Schnellantworten an.",
     manage: "Schnellantworten verwalten",
     noMatch: "Keine Schnellantwort passt zu „/{query}“.",
-    language: "Auf {language}",
     missing: "Vor dem Senden ausfüllen:",
     fillLabel: "Wert für {variable}",
     fill: "Ausfüllen",
@@ -102,7 +90,6 @@ export const inboxCardDe: Translation<typeof inboxCardEn> = {
   composer: {
     placeholder: "Dem Kunden schreiben…",
     sendLabel: "Senden",
-    unavailable: "Von hier können Sie gerade nicht schreiben",
   },
   request: {
     updated: "Anfrage: {status}",

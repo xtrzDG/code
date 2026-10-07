@@ -5,8 +5,10 @@ import type { dataTasksEn } from "./dataTasks.en";
 
 export const dataTasksHe: Translation<typeof dataTasksEn> = {
   title: "משימות נתונים אחרי פריסה",
-  description:
-    "הסבות מסמכים ומילוי עמודות חיפוש שה-worker של האצוות מריץ בעצמו באצוות של {size} שורות. הגרסה הבאה מקודמת רק אחרי שכל המשימות הסתיימו.",
+  description: {
+    one: "הסבות מסמכים ומילוי עמודות חיפוש שה-worker של האצוות מריץ בעצמו באצוות של שורה אחת. הגרסה הבאה מקודמת רק אחרי שכל המשימות הסתיימו.",
+    other: "הסבות מסמכים ומילוי עמודות חיפוש שה-worker של האצוות מריץ בעצמו באצוות של {size} שורות. הגרסה הבאה מקודמת רק אחרי שכל המשימות הסתיימו.",
+  },
   open: {
     one: "משימה אחת פתוחה",
     other: "{count} משימות פתוחות",
@@ -47,10 +49,10 @@ export const dataTasksHe: Translation<typeof dataTasksEn> = {
     knowledge: "רשימת הידע",
   },
   holdsBack: "מעכבת: {lists}",
-  rows: "{scanned} מתוך כ-{estimate} שורות",
-  rowsUnknown: "{scanned} שורות נבדקו",
-  changed: "{count} שונו, {batches} אצוות",
-  failedRows: "לא הצלחנו לשדרג {count} שורות: {keys}",
+  rows: { one: "{scanned} מתוך כשורה אחת", other: "{scanned} מתוך כ-{estimate} שורות" },
+  rowsUnknown: { one: "שורה אחת נבדקה", other: "{scanned} שורות נבדקו" },
+  changed: { one: "{count} שונו, אצווה אחת", other: "{count} שונו, {batches} אצוות" },
+  failedRows: { one: "לא הצלחנו לשדרג שורה אחת: {keys}", other: "לא הצלחנו לשדרג {count} שורות: {keys}" },
   dueSince: "ממתינה מאז {time}",
   doneAt: "הסתיימה {time}",
   lastBatch: "אצווה אחרונה {time}",

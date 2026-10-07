@@ -8,7 +8,6 @@ export const adminMetricsDe: Translation<typeof adminMetricsEn> = {
   title: "Wachstumskennzahlen",
   description:
     "Wie Inhaber von der Registrierung zum Bezahlen kommen, was sie jeden Monat einbringen und wie schnell sich das Dashboard anfühlt. Aus den eigenen Ereignissen des Produkts; kein externes Tracking.",
-  generated: "Berechnet {time}",
   filters: {
     label: "Filter der Kennzahlen",
     period: "Registrierungen",
@@ -35,9 +34,15 @@ export const adminMetricsDe: Translation<typeof adminMetricsEn> = {
     timeToLive: "Median bis zum Start",
     timeToLiveDetail: "Von der Registrierung bis zum ersten Live-Assistenten",
     activation: "Innerhalb von 7 Tagen aktiviert",
-    activationDetail: "{activated} von {eligible} Unternehmen; {pending} noch in ihrer ersten Woche",
+    activationDetail: {
+      one: "{activated} von {eligible} Unternehmen; {pending} noch in ihrer ersten Woche",
+      other: "{activated} von {eligible} Unternehmen; {pending} noch in ihrer ersten Woche",
+    },
     trialToPaid: "Von Test zu bezahlt",
-    trialDetail: "{converted} von {ended} beendeten Testphasen; {started} begonnen",
+    trialDetail: {
+      one: "{converted} von {ended} beendeten Testphase; {started} begonnen",
+      other: "{converted} von {ended} beendeten Testphasen; {started} begonnen",
+    },
     mrr: "MRR",
     mrrDetail: "{change} im Zeitraum",
     arpa: "ARPA",

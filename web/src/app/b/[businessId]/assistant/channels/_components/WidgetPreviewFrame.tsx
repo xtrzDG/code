@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { Spinner } from "@/components/ui";
@@ -22,6 +22,7 @@ import { initialPreviewLanguage, type WidgetLook } from "../_lib/widgetLook";
 export function WidgetPreviewFrame({ look }: { look: WidgetLook }) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
+  const headingId = useId();
   const frame = useRef<HTMLIFrameElement>(null);
   const [language, setLanguage] = useState(() =>
     initialPreviewLanguage(locale, business.languages, business.default_language),
@@ -55,7 +56,10 @@ export function WidgetPreviewFrame({ look }: { look: WidgetLook }) {
   }, [isReady, look.color, look.position, language]);
 
   return (
-    <div className="min-w-0 space-y-3">
+    <section aria-labelledby={headingId} className="min-w-0 space-y-3">
+      <h3 id={headingId} className="text-sm font-medium text-ink">
+        {t("channelSetup.preview.title")}
+      </h3>
       {business.languages.length > 1 ? (
         <div role="group" aria-label={t("channelSetup.preview.languages")} className="flex flex-wrap gap-1.5">
           {business.languages.map((tag) => (
@@ -93,6 +97,6 @@ export function WidgetPreviewFrame({ look }: { look: WidgetLook }) {
         ) : null}
       </div>
       <p className="text-xs text-ink-subtle">{t("channelSetup.preview.hint")}</p>
-    </div>
+    </section>
   );
 }

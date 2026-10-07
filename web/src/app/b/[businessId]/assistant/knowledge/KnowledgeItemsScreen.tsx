@@ -35,7 +35,7 @@ export function KnowledgeItemsScreen() {
           tone="warning"
           title={
             list.hasMoreQuestions
-              ? t("knowledge.items.questionsAlertMany", { count: openQuestions })
+              ? tp("knowledge.items.questionsAlertMany", openQuestions, { count: openQuestions })
               : tp("knowledge.items.questionsAlert", openQuestions)
           }
           action={

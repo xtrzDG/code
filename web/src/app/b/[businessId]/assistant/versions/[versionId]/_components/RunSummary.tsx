@@ -15,7 +15,7 @@ import { numberFormat } from "@/lib/intl/formatters";
  * progress while it runs.
  */
 export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning: boolean }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
   const summary = summarizeRun(run);
   const onlyOwnerChecks = !run.is_passed && onlyOwnerCheckFailures(run.results).length > 0;
@@ -50,7 +50,7 @@ export function RunSummary({ run, isRunning }: { run: AutotestRunView; isRunning
       <div className="space-y-2" role="status">
         <div className="flex items-center justify-between gap-3 text-sm text-ink-muted">
           <span className="flex items-center gap-2">
-            <Spinner size="sm" /> {t("assistant.autotests.progress", { done: summary.done, total: summary.total })}
+            <Spinner size="sm" /> {tp("assistant.autotests.progress", summary.total, { done: summary.done, total: summary.total })}
           </span>
           <span>{percent.format(summary.progress)}</span>
         </div>

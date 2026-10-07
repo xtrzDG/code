@@ -31,7 +31,6 @@ export const adminStoryEn = {
     byline: "{name} · {date}",
     edited: "edited {date}",
     unknownAuthor: "A former admin",
-    actions: "Note actions",
   },
   timeline: {
     title: "Timeline",
@@ -39,8 +38,6 @@ export const adminStoryEn = {
     empty: "Nothing has happened on this account yet.",
     loadMore: "Show older",
     system: "System",
-    platformStaff: "Platform staff",
-    owner: "The owner",
     by: "by {name}",
     reason: "Why: {reason}",
     kinds: {

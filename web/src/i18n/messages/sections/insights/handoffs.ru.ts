@@ -4,13 +4,6 @@ import type { Translation } from "../../../translate";
 import type { handoffsEn } from "./handoffs.en";
 
 export const handoffsRu: Translation<typeof handoffsEn> = {
-  loading: "Загружаем…",
-  tabsLabel: "Показать",
-  tabs: {
-    open: "Ждут",
-    resolved: "Решённые",
-    all: "Все",
-  },
   urgency: {
     critical: "Критично",
     high: "Срочно",
@@ -35,17 +28,6 @@ export const handoffsRu: Translation<typeof handoffsEn> = {
     resolved: "Решено",
   },
   notificationFailedHint: "Сотрудники не получили уведомление. Перезвоните клиенту и проверьте контакты в настройках.",
-  resolvedAt: "Решено {date}",
-  resolve: "Решено",
-  confirmResolve: {
-    title: "Отметить как решённое?",
-    description: "{name}: помощник снова начнёт отвечать этому клиенту.",
-    confirm: "Решено",
-  },
-  resolved: "Отмечено как решённое",
-  emptyOpenTitle: "Сейчас никто не ждёт человека",
-  emptyOpenDescription: "Когда помощник передаёт разговор человеку, разговор ждёт здесь с кратким пересказом.",
-  emptyTitle: "Здесь пока пусто",
   summaryCodes: {
     model_declined: "Помощник не стал отвечать на это сообщение.",
     model_unavailable: "Помощник был временно недоступен и не смог ответить.",

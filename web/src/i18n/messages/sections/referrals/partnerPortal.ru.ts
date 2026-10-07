@@ -28,16 +28,10 @@ export const partnerPortalRu: Translation<typeof partnerPortalEn> = {
     paying: "Уже оплатили",
     accrued: "К выплате",
     paid: "Выплачено",
-    invoices: "Счетов: {count}",
-    none: "Комиссий пока нет.",
   },
   businesses: {
     title: "Приведённые бизнесы",
     empty: "Пока никого. Поделитесь ссылкой, чтобы привести первый бизнес.",
-    business: "Бизнес",
-    country: "Страна",
-    plan: "Тариф",
-    status: "Статус",
     signedUp: "Регистрация",
     firstPaid: "Первая оплата",
     notYet: "Ещё нет",
@@ -46,10 +40,7 @@ export const partnerPortalRu: Translation<typeof partnerPortalEn> = {
   commissions: {
     title: "Комиссия по счетам",
     empty: "Комиссий пока нет: они появятся, когда приведённый бизнес заплатит.",
-    month: "Месяц",
-    business: "Бизнес",
     base: "Счёт без налога",
-    amount: "Комиссия",
     status: "Статус",
     statuses: {
       accrued: "К выплате",

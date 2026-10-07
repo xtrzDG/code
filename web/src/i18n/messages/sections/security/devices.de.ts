@@ -15,7 +15,6 @@ export const devicesDe: Translation<typeof devicesEn> = {
     tablet: "Tablet",
     unknown: "Gerät",
   },
-  unknownBrowser: "Unbekannter Browser",
   on: "{browser} auf {system}",
   signedIn: "Angemeldet {date}",
   lastUsed: "Zuletzt genutzt {date}",

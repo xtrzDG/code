@@ -25,11 +25,9 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
   moveHint: "גררו הזמנה לשעה או למקום אחרים. או בחרו אותה והזיזו בעזרת החצים: Enter מעביר, Escape מבטל.",
   day: {
     label: "הזמנות ליום {date} לפי מקום",
-    time: "שעה",
     closed: "סגור",
     closedDay: "סגור כל היום",
     newAt: "הזמנה חדשה: {place}",
-    newAtTime: "הזמנה חדשה: {place}, {time}",
     booked: "{percent} תפוס",
     now: "עכשיו {time}",
     noPlacesTitle: "אין מקומות שמוזמנים לפי שעה",
@@ -39,7 +37,6 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
   block: {
     label: "{name}, {time}, {place}, {status}",
     test: "בדיקה",
-    moving: "מעבירים…",
   },
   move: {
     pending: "להעביר אל {place}, {time}? Enter מעביר, Escape מבטל.",
@@ -49,6 +46,12 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
     undone: "ההזמנה חזרה למקומה",
     changed: "מישהו שינה את ההזמנה הזו לפני רגע: היומן מציג אותה כפי שהיא עכשיו.",
     cancelled: "ההעברה בוטלה",
+    tell: {
+      title: "יש לעדכן את {name} בשעה החדשה",
+      titleAnonymous: "יש לעדכן את הלקוח בשעה החדשה",
+      hint: "העוזר לא שולח ללקוחות הודעה על העברות שנעשו בלוח השנה. אפשר להעתיק את הטקסט ולשלוח אותו בערוץ שבו אתם מדברים.",
+      show: "הצגת ההודעה",
+    },
   },
   week: {
     label: "עד כמה כל מקום מלא, {range}",
@@ -57,7 +60,7 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
     closed: "סגור",
     free: "פנוי",
     share: "{percent} תפוס",
-    rooms: "{booked} מתוך {open} חדרים תפוסים",
+    rooms: { one: "{booked} מתוך חדר אחד תפוס", other: "{booked} מתוך {open} חדרים תפוסים" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "תפוסה",
     quiet: "שקט",

@@ -22,7 +22,7 @@ type Confirming = { action: "delete" | "rotate"; endpoint: WebhookEndpointView }
  * pause and resume, and the delivery log of each.
  */
 export function WebhooksCard() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const toast = useToast();
   const webhooks = useWebhooks();
   const [editing, setEditing] = useState<Editing>({ open: false, endpoint: null, nonce: 0 });
@@ -77,7 +77,8 @@ export function WebhooksCard() {
       footer={
         data ? (
           <p className="text-sm text-ink-subtle">
-            {t("apiIntegrations.webhooks.limits", { count: data.max_endpoints, failures: data.failures_before_disable })}
+            {tp("apiIntegrations.webhooks.limits", data.max_endpoints)}{" "}
+            {tp("apiIntegrations.webhooks.disableAfter", data.failures_before_disable, { failures: data.failures_before_disable })}
           </p>
         ) : undefined
       }

@@ -34,7 +34,6 @@ export const billingKa: Translation<typeof billingEn> = {
     annual: "წელიწადში",
   },
   facts: {
-    price: "ფასი",
     billingPeriod: "გადახდა",
     currentPeriod: "მიმდინარე პერიოდი",
     trialEnds: "საცდელი პერიოდი სრულდება",
@@ -164,7 +163,10 @@ export const billingKa: Translation<typeof billingEn> = {
   },
   dialogs: {
     trialTitle: "დავიწყოთ ტარიფის „{plan}“ უფასო პერიოდი?",
-    trialDescription: "{days} დღე უფასოდ, ახლა არაფერი ჩამოიჭრება. საცდელი პერიოდის შემდეგ ტარიფი ღირს {price}.",
+    trialDescription: {
+      one: "{days} დღე უფასოდ, ახლა არაფერი ჩამოიჭრება. საცდელი პერიოდის შემდეგ ტარიფი ღირს {price}.",
+      other: "{days} დღე უფასოდ, ახლა არაფერი ჩამოიჭრება. საცდელი პერიოდის შემდეგ ტარიფი ღირს {price}.",
+    },
     trialConfirm: "საცდელი პერიოდის დაწყება",
     trialStarted: "საცდელი პერიოდი დაიწყო",
     changeTitle: "გადავიდეთ ტარიფზე „{plan}“, {period}?",

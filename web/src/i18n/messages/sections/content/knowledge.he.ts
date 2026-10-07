@@ -57,7 +57,10 @@ export const knowledgeHe: Translation<typeof knowledgeEn> = {
       one: "לקוחות שאלו שאלה אחת שהעוזר לא ידע לענות עליה",
       other: "לקוחות שאלו {count} שאלות שהעוזר לא ידע לענות עליהן",
     },
-    questionsAlertMany: "לקוחות שאלו יותר מ-{count} שאלות שהעוזר לא ידע לענות עליהן",
+    questionsAlertMany: {
+      one: "לקוחות שאלו יותר משאלה אחת שהעוזר לא ידע לענות עליה",
+      other: "לקוחות שאלו יותר מ-{count} שאלות שהעוזר לא ידע לענות עליהן",
+    },
     questionsHint: "הוסיפו תשובות כדי שהעוזר יוכל לענות בפעם הבאה.",
     questionsAction: "מענה",
   },

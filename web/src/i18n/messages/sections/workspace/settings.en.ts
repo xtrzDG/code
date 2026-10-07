@@ -34,7 +34,10 @@ export const settingsEn = {
     retentionUnit: "days",
     retentionHint: "Older recordings and call transcripts are deleted automatically. From 1 to 3650 days.",
     retentionShorterTitle: "Keep call recordings for less time?",
-    retentionShorterDescription: "Recordings and call transcripts older than {days} days are deleted at tonight's cleanup. This cannot be undone.",
+    retentionShorterDescription: {
+      one: "Recordings and call transcripts older than {days} day are deleted at tonight's cleanup. This cannot be undone.",
+      other: "Recordings and call transcripts older than {days} days are deleted at tonight's cleanup. This cannot be undone.",
+    },
     retentionShorterConfirm: "Shorten and delete older ones",
     staleTitle: "Someone else saved these settings while you were editing",
     staleDescription: "Fields someone else changed now show their saved values; your other changes are saved.",
@@ -49,7 +52,6 @@ export const settingsEn = {
   },
   status: {
     title: "Assistant status",
-    current: "Now",
     live: "The assistant answers customers in all connected channels.",
     paused: "The assistant is paused: customers get no answers from it.",
     notLive: "The assistant starts answering customers after you publish it in the Assistant section.",
@@ -134,7 +136,7 @@ export const settingsEn = {
     openChannels: "Create a Telegram link",
     language: "Language of notifications",
     saved: "Notification contacts saved",
-    limit: "You can add up to {count} contacts.",
+    limit: { one: "You can add up to {count} contact.", other: "You can add up to {count} contacts." },
     stale: "The list was changed while you were editing (by another owner or the Telegram bot). It is up to date now: check it and save again.",
     errors: {
       required: "Fill in this field",

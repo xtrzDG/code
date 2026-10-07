@@ -38,7 +38,7 @@ function useSetupProgress(businessId: string, canSetUp: boolean): { done: number
 }
 
 export function SetupHero({ canSetUp }: { canSetUp: boolean }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const { business } = useBusiness();
   const progress = useSetupProgress(business.id, canSetUp);
   const hasStarted = progress !== null && progress.done > 0;
@@ -70,13 +70,13 @@ export function SetupHero({ canSetUp }: { canSetUp: boolean }) {
 
           {progress && hasStarted ? (
             <div className="mt-6 max-w-sm">
-              <p className="text-sm font-medium text-ink">{t("setup.progress", { done: progress.done, total: progress.total })}</p>
+              <p className="text-sm font-medium text-ink">{tp("setup.progress", progress.total, { done: progress.done, total: progress.total })}</p>
               <div
                 role="progressbar"
                 aria-valuemin={0}
                 aria-valuemax={progress.total}
                 aria-valuenow={progress.done}
-                aria-label={t("setup.progress", { done: progress.done, total: progress.total })}
+                aria-label={tp("setup.progress", progress.total, { done: progress.done, total: progress.total })}
                 className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted"
               >
                 <div

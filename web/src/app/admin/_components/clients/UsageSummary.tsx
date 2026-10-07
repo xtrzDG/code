@@ -9,7 +9,7 @@ import { clientUsagePercent, type AdminClientSummary } from "../../_lib/clients"
 
 /** A client's package use: minutes and dialogs against the plan, with a badge when near or over. */
 export function UsageSummary({ client }: { client: AdminClientSummary }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const percent = clientUsagePercent(client);
   const level = usageLevel(percent);
   return (
@@ -23,7 +23,7 @@ export function UsageSummary({ client }: { client: AdminClientSummary }) {
         </p>
       ) : null}
       <p>
-        {t("admin.dialogsShort", {
+        {tp("admin.dialogsShort", client.included_dialogs, {
           used: formatNumber(client.used_dialogs, locale),
           included: formatNumber(client.included_dialogs, locale),
         })}

@@ -12,7 +12,7 @@ export const setupHe: Translation<typeof setupEn> = {
     "ספרו לנו על העסק בכמה צעדים פשוטים. נכין עוזר שעונה ללקוחות שלכם יומם ולילה, מקבל הזמנות וקורא לכם כשצריך אדם.",
   start: "יצירת עוזר AI",
   continue: "המשך היצירה",
-  progress: "{done} מתוך {total} צעדים הושלמו",
+  progress: { one: "{done} מתוך צעד אחד הושלם", other: "{done} מתוך {total} צעדים הושלמו" },
   duration: "כ-20 דקות. אפשר לעצור ולחזור בכל זמן.",
   stagesLabel: "איך זה עובד",
   stages: {
@@ -31,5 +31,4 @@ export const setupHe: Translation<typeof setupEn> = {
   },
   staffTitle: "העוזר בתהליך יצירה",
   staffDescription: "הבעלים של {business} מגדירים אותו. שיחות, הזמנות ופניות יופיעו כאן ברגע שהוא יהיה מוכן.",
-  create: "יצירת העוזר שלי",
 };

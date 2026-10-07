@@ -19,7 +19,7 @@ type PayoutRowView = Schema<"PayoutRowView">;
  * report and the API refuses them the change.
  */
 export function PayoutsCard({ canMarkPaid }: { canMarkPaid: boolean }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const toast = useToast();
   const [months] = useState(() => payoutMonths(new Date()));
   const [month, setMonth] = useState(months[0] ?? "");
@@ -69,7 +69,7 @@ export function PayoutsCard({ canMarkPaid }: { canMarkPaid: boolean }) {
                 <p className="font-medium text-ink">{row.partner_name ?? row.partner_id}</p>
                 <p className="text-xs text-ink-subtle">
                   {t("adminPartners.payouts.accrued")}: {formatMoney(row.accrued_minor, row.currency_code, locale)} (
-                  {t("adminPartners.payouts.invoices", { count: formatNumber(row.accrued_invoices, locale) })}) ·{" "}
+                  {tp("adminPartners.payouts.invoices", row.accrued_invoices, { count: formatNumber(row.accrued_invoices, locale) })}) ·{" "}
                   {t("adminPartners.payouts.paid")}: {formatMoney(row.paid_minor, row.currency_code, locale)}
                 </p>
               </div>

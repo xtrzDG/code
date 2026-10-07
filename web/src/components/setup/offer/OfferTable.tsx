@@ -8,20 +8,26 @@
  *
  * In the profile editor the table also has the kind and the minutes,
  * shows a line's problems as soon as it could not be saved, and takes
- * lines pasted from a spreadsheet (name, price, minutes).
+ * lines pasted from a spreadsheet (name, price, minutes). There, on a
+ * phone, a long offer folds into short rows, groups and a search
+ * (OfferCompactList); the full table stays on larger screens.
  */
 
-import type { ClipboardEvent, KeyboardEvent } from "react";
+import type { ClipboardEvent, KeyboardEvent, ReactNode } from "react";
 
 import type { KnowledgeItemKind } from "@/api/types";
 import { IconPlus } from "@/components/icons";
 import { Button, useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { kindHasDuration } from "@/lib/knowledge/kinds";
+import type { TunnelOfferRow } from "@/lib/tunnel/offer";
+import { COMPACT_OFFER_FROM } from "@/lib/tunnel/offerCompact";
 import { parsePastedOffer } from "@/lib/tunnel/offerPaste";
+import { PHONE_SCREEN_QUERY, useMediaQuery } from "@/lib/useMediaQuery";
 import { validateOfferRow } from "@/lib/wizard/offers";
 
 import type { StepMode } from "../stepMode";
+import { OfferCompactList } from "./OfferCompactList";
 import { OfferLine, type OfferColumns } from "./OfferLine";
 import type { OfferRows } from "./useOfferRows";
 
@@ -54,6 +60,8 @@ export function OfferTable({
   const { t, tp } = useI18n();
   const toast = useToast();
   const isEdit = mode === "edit";
+  const isPhone = useMediaQuery(PHONE_SCREEN_QUERY);
+  const isCompact = isEdit && isPhone && table.rows.length >= COMPACT_OFFER_FROM;
   const hasSuggestions = table.rows.some((row) => row.isSuggestion);
   const columns: OfferColumns = { kinds, showKind: isEdit && kinds.length > 1, showDuration: isEdit && kinds.some(kindHasDuration) };
 
@@ -86,31 +94,38 @@ export function OfferTable({
     toast.success(tp("profileEdit.offer.pasted", count));
   };
 
+  const line = (row: TunnelOfferRow, index: number, footer?: ReactNode) => (
+    <OfferLine
+      key={row.key}
+      row={row}
+      index={index}
+      currency={currency}
+      errors={table.showErrors || (isEdit && table.status[row.key] === "failed") ? validateOfferRow(row, currency) : {}}
+      status={table.status[row.key]}
+      columns={columns}
+      onChange={(patch) => table.update(row.key, patch)}
+      onLeave={() => void table.save(row.key)}
+      onRemove={() => void table.remove(row.key)}
+      footer={footer}
+    />
+  );
+
   return (
     <div className="space-y-3">
       {isEdit && table.rows.length > 0 ? <ColumnHeads columns={columns} currency={currency} /> : null}
-      <ul
-        aria-label={t("tunnelOffer.offer.tableLabel")}
-        data-enter="own"
-        onKeyDown={onKeyDown}
-        onPaste={isEdit ? onPaste : undefined}
-        className="space-y-2.5"
-      >
-        {table.rows.map((row, index) => (
-          <OfferLine
-            key={row.key}
-            row={row}
-            index={index}
-            currency={currency}
-            errors={table.showErrors || (isEdit && table.status[row.key] === "failed") ? validateOfferRow(row, currency) : {}}
-            status={table.status[row.key]}
-            columns={columns}
-            onChange={(patch) => table.update(row.key, patch)}
-            onLeave={() => void table.save(row.key)}
-            onRemove={() => void table.remove(row.key)}
-          />
-        ))}
-      </ul>
+      {isCompact ? (
+        <OfferCompactList table={table} currency={currency} kinds={kinds} onPaste={onPaste} renderLine={line} />
+      ) : (
+        <ul
+          aria-label={t("tunnelOffer.offer.tableLabel")}
+          data-enter="own"
+          onKeyDown={onKeyDown}
+          onPaste={isEdit ? onPaste : undefined}
+          className="space-y-2.5"
+        >
+          {table.rows.map((row, index) => line(row, index))}
+        </ul>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="secondary" onClick={table.add} leadingIcon={<IconPlus className="size-4" aria-hidden />}>
           {t("tunnelOffer.offer.addRow")}

@@ -148,7 +148,6 @@ export const channelsKa: Translation<typeof channelsEn> = {
     },
     dial: "აკრეფა",
     dialLabel: "აკრიფეთ {code}",
-    unavailable: "გადამისამართების ინსტრუქცია ტელეფონის დაკავშირების შემდეგ გამოჩნდება.",
   },
   calendar: {
     title: "Google Calendar",

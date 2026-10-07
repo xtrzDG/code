@@ -58,7 +58,10 @@ export const knowledgeDe: Translation<typeof knowledgeEn> = {
       one: "Kunden haben {count} Frage gestellt, die der Assistent nicht beantworten konnte",
       other: "Kunden haben {count} Fragen gestellt, die der Assistent nicht beantworten konnte",
     },
-    questionsAlertMany: "Kunden haben mehr als {count} Fragen gestellt, die der Assistent nicht beantworten konnte",
+    questionsAlertMany: {
+      one: "Kunden haben mehr als {count} Frage gestellt, die der Assistent nicht beantworten konnte",
+      other: "Kunden haben mehr als {count} Fragen gestellt, die der Assistent nicht beantworten konnte",
+    },
     questionsHint: "Fügen Sie Antworten hinzu, damit der Assistent beim nächsten Mal antworten kann.",
     questionsAction: "Beantworten",
   },

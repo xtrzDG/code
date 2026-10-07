@@ -22,7 +22,7 @@ import { AUTO_LANGUAGE, checkFormOf, newCheckForm } from "@/lib/teachingChecks";
 import { CheckRow } from "./CheckRow";
 
 export function ChecksScreen() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const toast = useToast();
   const checks = useChecks();
   const [editing, setEditing] = useState<{ check: CheckView | null } | null>(null);
@@ -84,7 +84,7 @@ export function ChecksScreen() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="max-w-2xl space-y-1">
               <p className="text-sm text-ink-muted">{t("teaching.checks.description")}</p>
-              <p className="text-xs text-ink-subtle">{t("teaching.checks.count", { count: items.length, limit })}</p>
+              <p className="text-xs text-ink-subtle">{tp("teaching.checks.count", limit, { count: items.length, limit })}</p>
             </div>
             {addButton}
           </div>

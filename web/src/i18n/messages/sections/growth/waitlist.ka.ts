@@ -59,7 +59,6 @@ export const waitlistKa: Translation<typeof waitlistEn> = {
   removeBody: "გათავისუფლებულ ადგილს აღარ შესთავაზებენ. მისთვის ახლა დაჭერილი ადგილი რიგში შემდეგს გადაეცემა.",
   removeConfirm: "სიიდან ამოღება",
   removed: "მოლოდინის სიიდან ამოღებულია",
-  showMore: "მეტის ჩვენება",
   timeZone: "დრო მითითებულია სასაათო სარტყლით: {timezone}.",
   settings: {
     title: "მოლოდინის სიის პარამეტრები",

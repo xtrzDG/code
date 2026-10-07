@@ -24,7 +24,7 @@ export function SeasonalRatesEditor({
   problem?: SeasonsProblem;
   onChange: (rows: SeasonRow[]) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const months = monthNames(locale);
   const update = (key: string, patch: Partial<SeasonRow>) =>
     onChange(rows.map((row) => (row.key === key ? clampDays({ ...row, ...patch }) : row)));
@@ -39,7 +39,7 @@ export function SeasonalRatesEditor({
       ) : null}
       {problem?.tooMany ? (
         <p className="text-sm text-danger" role="alert">
-          {t("knowledge.offer.errors.tooManySeasons", { count: MAX_SEASONS })}
+          {tp("knowledge.offer.errors.tooManySeasons", MAX_SEASONS, { count: MAX_SEASONS })}
         </p>
       ) : null}
       {rows.length === 0 ? <p className="text-sm text-ink-subtle">{t("knowledge.offer.noSeasons")}</p> : null}

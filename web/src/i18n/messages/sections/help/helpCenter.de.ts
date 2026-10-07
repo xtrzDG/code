@@ -21,7 +21,6 @@ export const helpCenterDe: Translation<typeof helpCenterEn> = {
     daily_work: "Tägliche Arbeit",
     account: "Konto und Abrechnung",
   },
-  loadFailed: "Die Hilfe konnte nicht geladen werden. Prüfen Sie die Verbindung und versuchen Sie es erneut.",
   allArticles: "Alle Artikel",
   related: "Weiterlesen",
   otherLanguage: "Dieser Artikel ist noch nicht übersetzt und wird deshalb auf {language} angezeigt.",

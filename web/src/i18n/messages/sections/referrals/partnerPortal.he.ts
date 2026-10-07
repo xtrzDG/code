@@ -28,16 +28,10 @@ export const partnerPortalHe: Translation<typeof partnerPortalEn> = {
     paying: "כבר שילמו",
     accrued: "לתשלום",
     paid: "שולם",
-    invoices: "{count} חשבוניות",
-    none: "עדיין אין עמלות.",
   },
   businesses: {
     title: "עסקים שהבאתם",
     empty: "עדיין אין עסקים. שתפו את הקישור שלכם כדי להביא את הראשון.",
-    business: "עסק",
-    country: "מדינה",
-    plan: "מסלול",
-    status: "סטטוס",
     signedUp: "נרשם",
     firstPaid: "תשלום ראשון",
     notYet: "עדיין לא",
@@ -46,10 +40,7 @@ export const partnerPortalHe: Translation<typeof partnerPortalEn> = {
   commissions: {
     title: "עמלה לפי חשבונית",
     empty: "עדיין אין עמלות: הן מופיעות כשעסק שהבאתם משלם.",
-    month: "חודש",
-    business: "עסק",
     base: "חשבונית לפני מס",
-    amount: "עמלה",
     status: "סטטוס",
     statuses: {
       accrued: "לתשלום",

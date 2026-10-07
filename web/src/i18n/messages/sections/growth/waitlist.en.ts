@@ -61,7 +61,6 @@ export const waitlistEn = {
   removeBody: "They will not be offered a freed place. A place held for them now goes to the next one in line.",
   removeConfirm: "Take off the list",
   removed: "Taken off the waitlist",
-  showMore: "Show more",
   timeZone: "Times are in {timezone}.",
   settings: {
     title: "Waitlist settings",

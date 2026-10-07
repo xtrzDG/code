@@ -43,7 +43,12 @@ export const knowledgeOfferRu: Translation<typeof knowledgeOfferEn> = {
       bufferRange: "От 0 до 240 минут",
       seasonDate: "В этом месяце нет такого дня",
       seasonOverlap: "У сезонов {first} и {second} общие дни: у ночи должна быть одна цена.",
-      tooManySeasons: "Не больше {count} сезонов",
+      tooManySeasons: {
+        one: "Не больше {count} сезона",
+        few: "Не больше {count} сезонов",
+        many: "Не больше {count} сезонов",
+        other: "Не больше {count} сезона",
+      },
     },
   },
 };

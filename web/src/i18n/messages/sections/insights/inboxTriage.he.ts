@@ -57,7 +57,6 @@ export const inboxTriageHe: Translation<typeof inboxTriageEn> = {
     days: "{count} ימ׳",
   },
   details: {
-    label: "על השיחה הזו",
     source: "הגיע מ",
     assignee: "בטיפול של",
     lastMessage: "הודעה אחרונה",

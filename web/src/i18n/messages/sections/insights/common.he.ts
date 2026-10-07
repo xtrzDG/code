@@ -6,7 +6,6 @@ import type { insightsCommonEn } from "./common.en";
 export const insightsCommonHe: Translation<typeof insightsCommonEn> = {
   loadingMore: "טוענים…",
   showMore: "להציג עוד",
-  shownOf: "מוצגים {shown} מתוך {total}",
   includeTest: "לכלול פעילות ניסיון",
   includeTestHint: "מצ׳אט הניסיון ומהבדיקות",
   testBadge: "ניסיון",
@@ -14,8 +13,6 @@ export const insightsCommonHe: Translation<typeof insightsCommonEn> = {
   unknownCustomer: "לקוח ללא שם",
   callPhone: "חיוג ל-{phone}",
   openConversation: "פתיחת השיחה",
-  all: "הכול",
-  clearFilters: "ניקוי המסננים",
   noMatchesTitle: "שום דבר לא מתאים למסננים",
   noMatchesDescription: "שנו או נקו את המסננים כדי לראות עוד.",
   copy: "העתקה",
