@@ -16,20 +16,20 @@ Everything starts at once except `coverage` (after every backend part),
 | Job | What it does | Waits for | Expected |
 | --- | --- | --- | ---: |
 | `backend-checks` | ruff, mypy, pyright, legal texts | — | ~2:15 |
-| `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4) | pytest with coverage on four xdist workers, one part of a group each | — | __BACKEND_PART__ |
+| `backend-tests` (postgres 1/2, 2/2; rest 1/4 … 4/4) | pytest with coverage on four xdist workers, one part of a group each | — | ~4:15 (tests ~3:15) |
 | `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
-| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the build kept as the `cabinet-build` artifact | — | __WEB_BUILD__ |
+| `web-build` | `npm ci`, `.next/cache` restored, `next build`, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
 | `web-checks` | check:intl, lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
 | `security` | pip-audit, npm audit, gitleaks, bandit | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
-| `e2e` (1/8 … 8/8) | starts the downloaded build and its own API, runs its spec files | `web-build` | __E2E_SHARD__ |
+| `e2e` (1/8 … 8/8) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
 The critical path is `web-build` → the slowest `e2e` shard → `durations`:
-__CRITICAL_PATH__. The backend path (`backend-tests` → `coverage`) ends
-about __BACKEND_PATH__ after the push. At most 17 jobs run at the same time
-(eight shards, six backend parts and three others), within the 20 that
-GitHub runs at once for a free account.
+about 1:45 + 4:40 + 0:20, under seven minutes. The backend path
+(`backend-tests` → `coverage`) ends about 4:45 after the push. At most 17
+jobs run at the same time (eight shards, six backend parts and three
+others), within the 20 that GitHub runs at once for a free account.
 
 Expected times are local measurements scaled to GitHub's runners (public
 repository: four vCPUs, the same core count as the machine they were
@@ -37,7 +37,19 @@ measured on). Run 37537772194 gave the scale: its four e2e shards' test
 steps took 1.03–1.16 times the seconds the same specs took locally, plus
 about 15 seconds to start the API and the cabinet, and each shard about
 70 seconds more for its setup (checkout, uv and npm installs, Chromium,
-the build's download). __BACKEND_CALIBRATION__
+the build's download). `web/e2e/durations.json` comes from one later
+local run of the whole suite on a machine busy with other work, whose
+specs took 1.22 times as long as in that calibrating local run: every
+duration was scaled by 0.86 (1.05 / 1.22) to CI's runners, and a shard of
+the plan holds about 194 of those seconds. `tests/durations.json` comes
+from one local run of the whole backend suite on four xdist workers, scaled
+per group so that each group's sum matches the worker-seconds of run
+37537772194: its `rest` part spent 679 seconds in pytest and its `postgres`
+part 283, about 30 of each collecting, on four workers (factors 0.53 and
+0.76). Each part of the plan holds about 650 (rest) or 506 (postgres) of
+those seconds, about 2:45 and 2:10 on four workers plus the collection;
+the slowest Postgres file (the chaos game days, about 157 seconds) sets
+the floor of its part.
 
 ## Backend tests in parts
 
@@ -95,7 +107,10 @@ the audit of every section as `a11y-sections-en.spec.ts` and
 ## Refreshing the durations files
 
 Refresh after adding, splitting or noticeably slowing down tests, or when
-the run summary shows one part or shard well above the others.
+the run summary shows one part or shard well above the others. Both files
+hold seconds on CI's runners, so CI's own reports are the best source; a
+run on an idle four-core machine measures about the same (CI took 1.03–1.16
+times as long), a run on a busy or faster machine needs scaling first.
 
 The end-to-end specs (`web/e2e/durations.json`):
 

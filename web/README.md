@@ -226,8 +226,9 @@ Failures leave screenshots and traces in `e2e/.artifacts/results/`
 and the API log as the `e2e-report-<shard>` artifact.
 
 CI runs the suite in eight shards, each with its own API, balanced by the
-seconds each spec file took (`e2e/durations.json`, written by Playwright's
-JSON reporter); a spec without a measurement counts as the mean, and
+seconds each spec file takes on CI's runners (`e2e/durations.json`, written
+by Playwright's JSON reporter; an idle four-core machine measures about
+the same); a spec without a measurement counts as the mean, and
 `e2e/support/shards.test.ts` fails until it is measured or while a shard
 would run over its budget. After adding, splitting or slowing down specs:
 
@@ -237,9 +238,10 @@ npm run e2e:durations -- inbox.spec.ts        # these files; the other entries s
 npm run e2e:durations -- --from report.json   # JSON reports of a CI run (e2e-report-* artifacts)
 ```
 
-A spec file over a shard's budget is split into several files (as the
-route tour `tour-*.spec.ts` and the section audits `a11y-sections-*.spec.ts`
-are); `docs/operations/ci.md` has the budgets and the CI layout.
+A spec file over half a shard's budget is split into several files (as
+the route tour `tour-*.spec.ts`, the section audits `a11y-sections-*.spec.ts`
+and the long texts `pseudo-locale-*.spec.ts` are); `docs/operations/ci.md`
+has the budgets and the CI layout.
 
 A test that passes only on a retry (CI retries once) is flaky: the reporter
 `e2e/reporters/flakyReporter.ts` writes it to `e2e/flaky.json` and the job
