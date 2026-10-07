@@ -27,4 +27,17 @@ class InboundProcessingAttemptCount(BaseConstrainedTypedInt):
     le = 1000
 
 
+class QueueToClaimMilliseconds(BaseConstrainedTypedInt):
+    """
+    Milliseconds from a customer's message being stored and queued to a
+    worker taking it to answer: the pickup, and the wait for the rest of a
+    burst of quick messages.
+
+    Example:
+        waited = QueueToClaimMilliseconds(40)
+    """
+
+    ge = 0
+
+
 # Keep abc order for all non example types, if possible.
