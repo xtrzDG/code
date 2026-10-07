@@ -3,9 +3,11 @@ name: Evals nightly
 # Every night and on demand: the evaluation datasets (evals/datasets) played
 # against real models, the AI customer and the judge from the other model
 # family, three samples per scenario (pass^3), compared with
-# evals/baselines/<model>.json. A pass-rate drop beyond the tolerance fails
-# the run; the report (JSON and HTML) and the recorded cassettes are kept as
-# an artifact. Without OPENAI_API_KEY and ANTHROPIC_API_KEY the benchmark is
+# evals/baselines/<model>.json. The run fails when pass^k, or the pass rate
+# of any deterministic criterion (language identity, memory, leaks, tool
+# calls, ...), drops by more than 3 points; summary.md becomes the job
+# summary, and the report (JSON, HTML, Markdown) and the recorded cassettes
+# are kept as an artifact. Without OPENAI_API_KEY and ANTHROPIC_API_KEY the benchmark is
 # skipped with a notice. Pull requests replay the committed cassettes
 # offline instead (tests/evals). evals/README.md explains both.
 on:
@@ -22,9 +24,13 @@ on:
         type: number
         default: 3
       tolerance:
-        description: "Allowed pass-rate drop against the baseline (0.05 = 5 points)"
+        description: "Allowed pass^k drop against the baseline (0.03 = 3 points)"
         type: string
-        default: "0.05"
+        default: "0.03"
+      criterion_tolerance:
+        description: "Allowed drop of any criterion's pass rate (0.03 = 3 points)"
+        type: string
+        default: "0.03"
       update_baseline:
         description: "Store this run as the model's baseline (artifact; commit it in a PR)"
         type: boolean
@@ -58,7 +64,8 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       NICHES: ${{ inputs.niches || '' }}
       SAMPLES: ${{ inputs.samples || 3 }}
-      TOLERANCE: ${{ inputs.tolerance || '0.05' }}
+      TOLERANCE: ${{ inputs.tolerance || '0.03' }}
+      CRITERION_TOLERANCE: ${{ inputs.criterion_tolerance || '0.03' }}
       UPDATE_BASELINE: ${{ inputs.update_baseline && '--update-baseline' || '' }}
       MODEL: ${{ matrix.model }}
       JUDGE: ${{ matrix.judge }}
@@ -91,7 +98,8 @@ jobs:
         if: ${{ steps.keys.outputs.enabled == 'true' }}
         run: uv sync --frozen
 
-      # Exit code 1: the pass rate fell by more than the tolerance.
+      # Exit code 1: pass^k or a criterion's pass rate fell by more than its
+      # tolerance (only scenarios both runs played are compared).
       - name: Play the datasets and compare with the baseline
         if: ${{ steps.keys.outputs.enabled == 'true' }}
         shell: bash
@@ -102,11 +110,16 @@ jobs:
           set +e
           uv run python -m scripts.run_evals --record \
             --model "$MODEL" --judge-model "$JUDGE" \
-            --samples "$SAMPLES" --tolerance "$TOLERANCE" --workers 8 \
+            --samples "$SAMPLES" --tolerance "$TOLERANCE" \
+            --criterion-tolerance "$CRITERION_TOLERANCE" --workers 8 \
             --cassettes "reports/evals/$MODEL/cassettes" --out "reports/evals/$MODEL" \
             "${niche_arguments[@]}" $UPDATE_BASELINE 2>&1 | tee "reports/evals/$MODEL/run.log"
           status=${PIPESTATUS[0]}
-          tail -n 6 "reports/evals/$MODEL/run.log" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "reports/evals/$MODEL/summary.md" ]; then
+            cat "reports/evals/$MODEL/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            tail -n 6 "reports/evals/$MODEL/run.log" >> "$GITHUB_STEP_SUMMARY"
+          fi
           exit "$status"
 
       - name: Keep the report, the cassettes and the baseline
