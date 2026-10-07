@@ -3,6 +3,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.reply_locks import ReplyLockRegistryContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
@@ -18,6 +19,7 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument, MessageDocument
 from app.schemas.domain.inbound_events import InboundEventDocument
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
@@ -47,10 +49,13 @@ class SendHoldingReplyUseCase(UseCaseContract[InboundEventDocument, MessageId | 
 
     When it is the conversation's first assistant message, it opens with
     the AI disclosure: the customer learns they talk to an AI assistant
-    with the first thing it says. Nothing is sent when the reply is already
-    stored, the message is not in the conversation yet, or staff own the
-    conversation (the assistant stays silent then). Returns the holding
-    message's id when it was sent.
+    with the first thing it says, and the reply that follows does not say
+    it again. The decision and the writes run under the reply's lock
+    (`ReplyLockRegistryContract`), which the turn's own recording of the
+    reply takes too, so exactly one of the two carries the disclosure.
+    Nothing is sent when the reply is already stored, the message is not in
+    the conversation yet, or staff own the conversation (the assistant
+    stays silent then). Returns the holding message's id when it was sent.
     """
 
     def __init__(
@@ -63,7 +68,9 @@ class SendHoldingReplyUseCase(UseCaseContract[InboundEventDocument, MessageId | 
         localized_text_resolver: LocalizedTextResolverContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        reply_locks: ReplyLockRegistryContract,
     ) -> None:
+        self._reply_locks: ReplyLockRegistryContract = reply_locks
         self._business_repo: BusinessRepoContract = business_repo
         self._message_repo: MessageRepoContract = message_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
@@ -80,22 +87,29 @@ class SendHoldingReplyUseCase(UseCaseContract[InboundEventDocument, MessageId | 
         if event.business_id is None or event.customer_message is None:
             return None
 
+        with self._reply_locks.lock_for_reply(
+            event.business_id, event.reply_message_id
+        ):
+            return self._hold(event, event.business_id)
+
+    def _hold(
+        self, event: InboundEventDocument, business_id: BusinessId
+    ) -> MessageId | None:
         holding_id: MessageId = derive_holding_message_id(event.reply_message_id)
         if (
-            self._message_repo.get(event.business_id, event.reply_message_id)
-            is not None
-            or self._message_repo.get(event.business_id, holding_id) is not None
+            self._message_repo.get(business_id, event.reply_message_id) is not None
+            or self._message_repo.get(business_id, holding_id) is not None
         ):
             return None
 
         customer_message: MessageDocument | None = self._message_repo.get(
-            event.business_id, event.customer_message_id
+            business_id, event.customer_message_id
         )
         conversation: ConversationDocument | None = (
             None
             if customer_message is None
             else self._conversation_repo.get(
-                event.business_id, customer_message.conversation_id
+                business_id, customer_message.conversation_id
             )
         )
         if (
@@ -125,7 +139,7 @@ class SendHoldingReplyUseCase(UseCaseContract[InboundEventDocument, MessageId | 
             MessageDocument(
                 id=holding_id,
                 conversation_id=conversation.id,
-                business_id=event.business_id,
+                business_id=business_id,
                 direction=MessageDirection.OUTBOUND,
                 author=MessageAuthor.ASSISTANT,
                 text=text,
@@ -136,7 +150,7 @@ class SendHoldingReplyUseCase(UseCaseContract[InboundEventDocument, MessageId | 
             )
         )
         self._live_events.publish(
-            event.business_id,
+            business_id,
             LiveEventKind.CONVERSATION_MESSAGE,
             (conversation.id,),
             is_sandbox=conversation.is_sandbox,

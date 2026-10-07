@@ -6,7 +6,11 @@ of the turn deadline, over a stand-in engine that can think slowly.
 
 import time
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.contracts.jobs import QueuedJobOperator
+from app.registries.locks.reply_lock_registry import ReplyLockRegistry
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.conversations import AssistantReply, InboundMessage
@@ -92,6 +96,7 @@ class ReplySpeedTestbed(ChannelsTestbed):
         deadline_seconds: ChatTurnDeadlineSeconds = DEADLINE_SECONDS,
     ) -> None:
         super().__init__()
+        self.reply_locks = ReplyLockRegistry(InMemoryAdvisoryLockAdapter())
         self.patient = PatientPipeline(self)
         self.pipeline = self.patient
         self.typing = RecordingTypingSignals()
@@ -118,6 +123,7 @@ class ReplySpeedTestbed(ChannelsTestbed):
                     self.text_resolver,
                     self.live_events,
                     self.wall_clock,
+                    self.reply_locks,
                 ),
                 deadline_seconds=self.deadline_seconds,
             )
