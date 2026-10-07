@@ -58,7 +58,7 @@ export function DataTaskBadges({ task }: { task: DataTask }) {
 
 /** How far the walk is against the table's estimated rows, what changed, and what failed. */
 export function DataTaskProgress({ task }: { task: DataTask }) {
-  const { t, tp } = useI18n();
+  const { tp } = useI18n();
   const format = useSystemFormat();
   const percent = dataTaskPercent(task);
   return (
