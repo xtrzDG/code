@@ -111,7 +111,7 @@ def resolve_fernet_key(
 
     is_production: bool = environment is DeploymentEnvironment.PRODUCTION
     secret_text: str = "" if encryption_key is None else encryption_key.strip()
-    if secret_text == "":
+    if not secret_text:
         if is_production:
             raise ValidationFailedError(
                 "ENCRYPTION_KEY must be set in production to store channel "
