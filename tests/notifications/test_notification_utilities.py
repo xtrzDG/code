@@ -114,6 +114,11 @@ def test_altered_foreign_and_malformed_tokens_are_refused() -> None:
     assert StaffLinkSigner(PlatformSecret("x" * 40)).read(StaffLinkToken(token)) is None
     assert signer.read(StaffLinkToken(token[:-4])) is None
     assert signer.read(StaffLinkToken("A" * 66 + "-")) is None
+    # The last character's two spare bits set: the same bytes, another link.
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    respelled = token[:-1] + alphabet[alphabet.index(token[-1]) | 0b11]
+    assert base64.urlsafe_b64decode(respelled + "=") == raw
+    assert signer.read(StaffLinkToken(respelled)) is None
 
     payload = struct.pack("!B16sB16sI", 2, bytes(16), 1, bytes(16), 1)
     resigned = payload + signature_of(payload)
