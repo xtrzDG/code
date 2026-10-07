@@ -10,11 +10,13 @@ read from the API description so a new route is covered by itself:
 - the public API takes an API key only: a cabinet token is 401 there.
 """
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import Any, cast
 
 import pytest
+from fastapi import APIRouter
 from httpx2 import Response
+from starlette.routing import BaseRoute, Mount
 
 from app.schemas.constants.users import LoginMethod
 from app.schemas.typings.billing.prefixed_id import InvoiceId
@@ -32,6 +34,7 @@ from tests.platform.route_access_tables import (
     ADMIN_QUERIES,
     PUBLIC_API_PREFIX,
     PUBLIC_OPERATIONS,
+    UNDOCUMENTED_ROUTES,
 )
 
 BUSINESS_PREFIX: str = "/v1/businesses/{business_id}"
@@ -120,11 +123,38 @@ def key(operation: Operation) -> str:
     return f"{operation[0]} {operation[1]}"
 
 
+def route_paths(routes: Sequence[BaseRoute], prefix: str = "") -> Iterator[str]:
+    """Every route's full path, through included routers and mounts."""
+
+    for route in routes:
+        # FastAPI keeps an included router whole, with its include prefix.
+        included: object = getattr(route, "original_router", None)
+        context: object = getattr(route, "include_context", None)
+        if isinstance(included, APIRouter):
+            yield from route_paths(
+                included.routes, prefix + str(getattr(context, "prefix", ""))
+            )
+        elif isinstance(route, Mount):
+            yield from route_paths(route.routes, prefix + route.path)
+        else:
+            yield prefix + str(getattr(route, "path", ""))
+
+
 def test_the_public_list_names_only_existing_operations(workshop: Workshop) -> None:
     keys = {key(operation) for operation in operations(workshop)}
 
     assert len(keys) >= MINIMUM_OPERATIONS
     assert sorted(set(PUBLIC_OPERATIONS) - keys) == []
+
+
+def test_routes_left_out_of_the_description_are_the_reviewed_ones(
+    workshop: Workshop,
+) -> None:
+    documented = set(cast(dict[str, Any], workshop.application.openapi()["paths"]))
+    hidden = set(route_paths(workshop.application.routes)) - documented
+
+    # A new route outside the description must be reviewed and listed.
+    assert sorted(hidden) == sorted(UNDOCUMENTED_ROUTES)
 
 
 def test_every_other_operation_refuses_a_caller_without_credentials(

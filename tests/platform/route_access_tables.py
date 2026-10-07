@@ -57,6 +57,19 @@ PUBLIC_OPERATIONS: dict[str, str] = {
     "POST /v1/telephony/zadarma/notifications": "Zadarma's signature",
     "GET /v1/integrations/google-calendar/callback": "a signed OAuth state",
 }
+# Routes left out of the API description, and what protects each.
+UNDOCUMENTED_ROUTES: dict[str, str] = {
+    "/openapi.json": "the API description; not served in production",
+    "/docs": "the API description; not served in production",
+    "/docs/oauth2-redirect": "the API description; not served in production",
+    "/redoc": "the API description; not served in production",
+    "/healthz": "liveness: no data",
+    "/readyz": "readiness: check names and states only",
+    "/healthz/pipeline": "whether the worker pulses: no business data",
+    "/metrics": "METRICS_TOKEN (tests/e2e/test_service_metrics.py)",
+    "/widget.js": "the public website chat script",
+    "/widget/demo": "the widget's demo page (development data only)",
+}
 # Prefixes whose operations need the platform admin role on top of a token.
 ADMIN_PREFIX: str = "/v1/admin/"
 # Operations that take a public API key, never a cabinet token.
