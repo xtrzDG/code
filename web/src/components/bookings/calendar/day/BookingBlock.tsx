@@ -71,6 +71,8 @@ export function BookingBlock({
   const booking = laned.item;
   const texts = useBlockTexts(booking, party);
   const minutes = laned.span.end - laned.span.start;
+  // Side by side with others, a block shows when it starts; its end is in its label and on the grid.
+  const shownTimes = laned.lanes > 1 ? texts.times.split("–")[0] : texts.times;
   return (
     <button
       type="button"
@@ -89,7 +91,7 @@ export function BookingBlock({
     >
       <span aria-hidden className={cn("absolute inset-y-1 start-1 w-1 rounded-full", STATUS_STYLE[booking.status].mark)} />
       <span className="flex min-w-0 items-baseline gap-1.5">
-        <span className="shrink-0 font-medium text-ink-muted tabular-nums">{texts.times}</span>
+        <span className="shrink-0 font-medium text-ink-muted tabular-nums">{shownTimes}</span>
         {minutes < 45 ? <UserContent className="truncate font-semibold text-ink">{texts.name}</UserContent> : null}
         {booking.is_sandbox ? (
           <span className="ms-auto shrink-0 rounded bg-surface px-1 text-[10px] font-semibold text-ink-subtle uppercase">

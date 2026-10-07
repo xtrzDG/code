@@ -98,6 +98,9 @@ export function DayView({
     );
   }
 
+  // A place whose bookings overlap gets wider, so side-by-side blocks stay readable.
+  const lanedByPlace = new Map(places.map((place) => [place.id, layoutLanes(entries.filter((entry) => entry.item.resource_id === place.id))]));
+  const widths = places.map((place) => 9 + 4.5 * (Math.min(Math.max(1, ...(lanedByPlace.get(place.id) ?? []).map((entry) => entry.lanes)), 3) - 1));
   const firstOpen = (placeId: string) => placeDays.get(placeId)?.open_ranges?.[0]?.opens_at ?? axis.start;
   const container = () => scrollRef.current;
   return (
@@ -112,7 +115,7 @@ export function DayView({
       >
         <div
           className="grid w-full"
-          style={{ gridTemplateColumns: `4rem repeat(${places.length}, minmax(9rem, 1fr))`, minWidth: `calc(4rem + ${places.length} * 9rem)` }}
+          style={{ gridTemplateColumns: `4rem ${widths.map((width) => `minmax(${width}rem, ${width}fr)`).join(" ")}`, minWidth: `calc(4rem + ${widths.reduce((sum, width) => sum + width, 0)}rem)` }}
         >
           <div className="sticky start-0 top-0 z-40 border-e border-b border-line bg-surface" />
           {places.map((place) => {
@@ -135,7 +138,7 @@ export function DayView({
               date={date}
               axis={axis}
               openRanges={placeDays.get(place.id)?.open_ranges ?? []}
-              laned={layoutLanes(entries.filter((entry) => entry.item.resource_id === place.id))}
+              laned={lanedByPlace.get(place.id) ?? []}
               preview={gestures.preview}
               nowMinute={nowMinute}
               hintId={hintId}
