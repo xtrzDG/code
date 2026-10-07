@@ -16,6 +16,7 @@ import { WebhooksCard } from "./WebhooksCard";
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
 
 const WEBHOOKS = "/v1/businesses/{business_id}/webhooks";
+const DELIVERIES = "/v1/businesses/{business_id}/webhooks/{webhook_id}/deliveries";
 const me = { user: { id: "user_owner", is_platform_admin: false } } as unknown as CurrentUserView;
 const { t, tp } = textsIn("en");
 
@@ -132,5 +133,31 @@ describe("WebhooksCard: where the business's events go", () => {
     await user.click(screen.getByRole("button", { name: t("apiIntegrations.webhooks.deleteDialog.confirm") }));
     expect(await screen.findByText(t("apiIntegrations.webhooks.empty"))).toBeTruthy();
     expect(tp("apiIntegrations.webhooks.eventCount", 2)).toBeTruthy();
+  });
+
+  it("keeps a delivery log it read before as it was when a webhook changes", async () => {
+    const user = userEvent.setup();
+    let logReads = 0;
+    answerGet((path) => {
+      if (path === WEBHOOKS) return ok(endpointList([endpoint()]));
+      if (path !== DELIVERIES) return pending();
+      logReads += 1;
+      // Opened again, the log shows what it read first while it loads.
+      return logReads === 1 ? ok({ items: [delivery()], next_cursor: null }) : pending();
+    });
+    vi.mocked(api.PATCH).mockImplementation((() => ok(endpoint({ status: "paused" }))) as never);
+    renderCard();
+
+    await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.deliveries"));
+    const log = await screen.findByRole("dialog", { name: t("apiIntegrations.deliveries.title") });
+    expect(await within(log).findByText(t("apiIntegrations.events.booking_created"))).toBeTruthy();
+    await user.click(within(log).getAllByRole("button", { name: t("apiIntegrations.deliveries.close") }).at(-1)!);
+    await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.pause"));
+    expect(await screen.findByText(t("apiIntegrations.webhooks.statuses.paused"))).toBeTruthy();
+
+    await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.deliveries"));
+    const reopened = await screen.findByRole("dialog", { name: t("apiIntegrations.deliveries.title") });
+    expect(within(reopened).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(reopened).getByText(t("apiIntegrations.events.booking_created"))).toBeTruthy();
   });
 });
