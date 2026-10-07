@@ -6,12 +6,17 @@ from app.contracts.rate_limits import RateLimitBucketAdapterContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.schemas.dto.rate_limits import RateLimitCounter
 from app.schemas.typings.platform.constrained_integers import (
+    RateLimitRequestCount,
     RateWindowSeconds,
     RetryAfterSeconds,
 )
 from app.schemas.typings.platform.constrained_strings import RateLimitKey
 from app.schemas.typings.storage.constrained_integers import DocumentCount
-from app.utilities.limits.sliding_window_limits import locate_window, seconds_until_free
+from app.utilities.limits.sliding_window_limits import (
+    is_within_limit,
+    locate_window,
+    seconds_until_free,
+)
 
 
 class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
@@ -49,6 +54,21 @@ class RequestRateLimitRegistry(RequestRateLimitRegistryContract):
         return seconds_until_free(
             self._buckets.read_counts(counter.key, position), counter, position
         )
+
+    def has_room(
+        self,
+        counter: RateLimitCounter,
+        window: RateWindowSeconds,
+        now: Microseconds,
+    ) -> bool:
+        position = locate_window(now, window)
+        counts = self._buckets.read_counts(counter.key, position)
+        with_one_more = counts.model_copy(
+            update={
+                "current_count": RateLimitRequestCount(int(counts.current_count) + 1)
+            }
+        )
+        return is_within_limit(with_one_more, counter, position)
 
     def forget_expired(self, now: Microseconds) -> DocumentCount:
         return self._buckets.delete_expired(now)

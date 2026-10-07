@@ -150,6 +150,19 @@ class RequestRateLimitRegistryContract(RegistryContract, Protocol):
         """
         raise NotImplementedError
 
+    def has_room(
+        self,
+        counter: RateLimitCounter,
+        window: RateWindowSeconds,
+        now: Microseconds,
+    ) -> bool:
+        """
+        Whether one more request would stay within the counter's limit,
+        counting nothing: a check before costly work that only failures
+        count against (`try_acquire_all` counts them afterwards).
+        """
+        raise NotImplementedError
+
     def forget_expired(self, now: Microseconds) -> DocumentCount:
         """Drop counters no limit needs any more; how many went."""
         raise NotImplementedError
