@@ -57,7 +57,7 @@ export const bookingCalendarEn = {
     closed: "Closed",
     free: "Free",
     share: "{percent} booked",
-    rooms: "{booked} of {open} rooms taken",
+    rooms: { one: "{booked} of {open} room taken", other: "{booked} of {open} rooms taken" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "How full",
     quiet: "Quiet",

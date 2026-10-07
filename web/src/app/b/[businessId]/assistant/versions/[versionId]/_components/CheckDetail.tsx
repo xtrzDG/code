@@ -43,7 +43,7 @@ export function CheckDetail({ check, readiness }: { check: GoLiveCheck; readines
 }
 
 function AutotestsDetail({ check, readiness }: { check: GoLiveCheck; readiness: GoLiveReadiness }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const details = check.details ?? [];
   const run = readiness.autotest_run;
   if (check.is_ok) {
@@ -53,7 +53,7 @@ function AutotestsDetail({ check, readiness }: { check: GoLiveCheck; readiness: 
     return (
       <>
         {run && run.status === "running" && run.scenario_count > 0
-          ? t("assistant.checklist.autotestsProgress", { done: run.completed_count, total: run.scenario_count })
+          ? tp("assistant.checklist.autotestsProgress", run.scenario_count, { done: run.completed_count, total: run.scenario_count })
           : t("assistant.checklist.autotestsRunning")}
       </>
     );

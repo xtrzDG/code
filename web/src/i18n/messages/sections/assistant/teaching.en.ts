@@ -88,7 +88,7 @@ export const teachingEn = {
     emptyTitle: "No checks yet",
     emptyDescription:
       "Add a question customers ask and what the answer must do, or save one when you fix an answer.",
-    count: "{count} of {limit} checks",
+    count: { one: "{count} of {limit} check", other: "{count} of {limit} checks" },
     newTitle: "New check",
     editTitle: "Change the check",
     saveTitle: "Save as a check",
@@ -158,6 +158,8 @@ export const teachingEn = {
     addAnswer: "Add an answer",
     saveCheck: "Save as a check",
     open: "Open conversation",
-    more: "{bad} bad ratings and {unanswered} questions without an answer wait in all.",
+    more: "{ratings} and {questions} wait in all.",
+    moreRatings: { one: "{count} bad rating", other: "{count} bad ratings" },
+    moreQuestions: { one: "{count} question without an answer", other: "{count} questions without an answer" },
   },
 } as const;

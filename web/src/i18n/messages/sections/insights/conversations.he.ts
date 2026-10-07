@@ -157,7 +157,7 @@ export const conversationsHe: Translation<typeof conversationsEn> = {
     record_unanswered_question: "רשם שאלה בלי תשובה",
     offer_choices: "הציע תשובות לבחירה",
   },
-  messageTokens: "{count} טוקנים",
+  messageTokens: { one: "טוקן אחד", other: "{count} טוקנים" },
   usage: {
     tokens: "טוקנים",
     tokensValue: "{input} נכנסים · {output} יוצאים",

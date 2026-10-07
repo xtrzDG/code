@@ -61,7 +61,10 @@ export const adminSecurityEn = {
         other: "{count} Telegram webhooks could not be registered again: re-encrypt again later.",
       },
       failed: "The run stopped: {error}. Start it again; tokens it already moved stay moved.",
-      keysChanged: "The key ring changed after this run ({then} keys then, {now} now): re-encrypt again.",
+      keysChanged: {
+        one: "The key ring changed after this run ({then} key then, {now} now): re-encrypt again.",
+        other: "The key ring changed after this run ({then} keys then, {now} now): re-encrypt again.",
+      },
     },
   },
 } as const;

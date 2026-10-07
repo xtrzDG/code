@@ -161,7 +161,10 @@ export const billingDe: Translation<typeof billingEn> = {
   },
   dialogs: {
     trialTitle: "Kostenlose Testphase von „{plan}“ starten?",
-    trialDescription: "{days} Tage kostenlos, jetzt wird nichts berechnet. Nach der Testphase kostet der Tarif {price}.",
+    trialDescription: {
+      one: "{days} Tag kostenlos, jetzt wird nichts berechnet. Nach der Testphase kostet der Tarif {price}.",
+      other: "{days} Tage kostenlos, jetzt wird nichts berechnet. Nach der Testphase kostet der Tarif {price}.",
+    },
     trialConfirm: "Testphase starten",
     trialStarted: "Die kostenlose Testphase hat begonnen",
     changeTitle: "Zu „{plan}“, {period}, wechseln?",

@@ -43,7 +43,7 @@ export const knowledgeOfferHe: Translation<typeof knowledgeOfferEn> = {
       bufferRange: "0 עד 240 דקות",
       seasonDate: "אין יום כזה בחודש הזה",
       seasonOverlap: "לעונות {first} ו-{second} יש ימים משותפים: ללילה חייב להיות מחיר אחד.",
-      tooManySeasons: "לכל היותר {count} עונות",
+      tooManySeasons: { one: "לכל היותר עונה אחת", other: "לכל היותר {count} עונות" },
     },
   },
 };

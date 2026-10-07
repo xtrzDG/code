@@ -57,7 +57,10 @@ export const knowledgeEn = {
       one: "Customers asked {count} question the assistant could not answer",
       other: "Customers asked {count} questions the assistant could not answer",
     },
-    questionsAlertMany: "Customers asked more than {count} questions the assistant could not answer",
+    questionsAlertMany: {
+      one: "Customers asked more than {count} question the assistant could not answer",
+      other: "Customers asked more than {count} questions the assistant could not answer",
+    },
     questionsHint: "Add answers so the assistant can answer next time.",
     questionsAction: "Answer",
   },

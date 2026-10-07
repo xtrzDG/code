@@ -80,7 +80,7 @@ export function PeriodTiles({
         <StatTile
           label={t("dashboard.kpi.afterHours")}
           value={<AnimatedNumber value={data.after_hours_share_percent} format={(percent) => formatPercent(percent, locale)} />}
-          hint={t("dashboard.kpi.afterHoursHint", {
+          hint={tp("dashboard.kpi.afterHoursHint", data.conversation_count, {
             count: format.number(data.after_hours_conversation_count),
             total: format.number(data.conversation_count),
           })}

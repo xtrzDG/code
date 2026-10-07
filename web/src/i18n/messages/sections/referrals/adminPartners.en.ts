@@ -64,7 +64,7 @@ export const adminPartnersEn = {
     empty: "No commissions in this month.",
     accrued: "To pay",
     paid: "Paid out",
-    invoices: "{count} invoices",
+    invoices: { one: "{count} invoice", other: "{count} invoices" },
     markPaid: "Mark paid",
     markTitle: "Mark {month} paid for {name}",
     markDescription: "Every commission of this month still to be paid is marked paid, with the transfer's reference, in the audit log.",

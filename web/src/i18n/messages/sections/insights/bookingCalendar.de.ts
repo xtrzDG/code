@@ -60,7 +60,7 @@ export const bookingCalendarDe: Translation<typeof bookingCalendarEn> = {
     closed: "Geschlossen",
     free: "Frei",
     share: "{percent} belegt",
-    rooms: "{booked} von {open} Zimmern belegt",
+    rooms: { one: "{booked} von {open} Zimmer belegt", other: "{booked} von {open} Zimmern belegt" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "Auslastung",
     quiet: "Ruhig",

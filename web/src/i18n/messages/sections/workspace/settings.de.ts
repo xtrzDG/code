@@ -34,7 +34,10 @@ export const settingsDe: Translation<typeof settingsEn> = {
     retentionUnit: "Tage",
     retentionHint: "Ältere Aufnahmen und Anruftranskripte werden automatisch gelöscht. 1 bis 3650 Tage.",
     retentionShorterTitle: "Anrufaufnahmen kürzer aufbewahren?",
-    retentionShorterDescription: "Aufnahmen und Anruftranskripte, die älter als {days} Tage sind, werden bei der Bereinigung heute Nacht gelöscht. Das lässt sich nicht rückgängig machen.",
+    retentionShorterDescription: {
+      one: "Aufnahmen und Anruftranskripte, die älter als {days} Tag sind, werden bei der Bereinigung heute Nacht gelöscht. Das lässt sich nicht rückgängig machen.",
+      other: "Aufnahmen und Anruftranskripte, die älter als {days} Tage sind, werden bei der Bereinigung heute Nacht gelöscht. Das lässt sich nicht rückgängig machen.",
+    },
     retentionShorterConfirm: "Verkürzen und ältere löschen",
     staleTitle: "Jemand anderes hat diese Einstellungen gespeichert, während Sie bearbeitet haben",
     staleDescription: "Felder, die jemand anderes geändert hat, zeigen jetzt ihre gespeicherten Werte; Ihre anderen Änderungen sind gespeichert.",
@@ -134,7 +137,7 @@ export const settingsDe: Translation<typeof settingsEn> = {
     openChannels: "Telegram-Link erstellen",
     language: "Sprache der Benachrichtigungen",
     saved: "Kontakte für Benachrichtigungen gespeichert",
-    limit: "Sie können bis zu {count} Kontakte hinzufügen.",
+    limit: { one: "Sie können bis zu {count} Kontakt hinzufügen.", other: "Sie können bis zu {count} Kontakte hinzufügen." },
     stale: "Die Liste wurde geändert, während Sie bearbeitet haben (von einem anderen Inhaber oder dem Telegram-Bot). Sie ist jetzt aktuell: Prüfen Sie sie und speichern Sie erneut.",
     errors: {
       required: "Füllen Sie dieses Feld aus",

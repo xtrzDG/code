@@ -19,7 +19,7 @@ export const widgetSitesEn = {
   remove: "Remove {site}",
   invalid: "This is not a website address. Type it as in the browser's address bar, for example cafe-batumi.ge.",
   duplicate: "This website is already on the list.",
-  full: "The list holds up to {count} websites.",
+  full: { one: "The list holds up to {count} website.", other: "The list holds up to {count} websites." },
   alwaysAllowed: "Your chat page and the preview in this cabinet always work.",
   ownerOnly: "Only an owner can change this list.",
   save: "Save list",

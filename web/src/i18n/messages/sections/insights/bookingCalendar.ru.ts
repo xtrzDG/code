@@ -57,7 +57,12 @@ export const bookingCalendarRu: Translation<typeof bookingCalendarEn> = {
     closed: "Закрыто",
     free: "Свободно",
     share: "занято {percent}",
-    rooms: "занято {booked} из {open} номеров",
+    rooms: {
+      one: "занято {booked} из {open} номера",
+      few: "занято {booked} из {open} номеров",
+      many: "занято {booked} из {open} номеров",
+      other: "занято {booked} из {open} номера",
+    },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "Загрузка",
     quiet: "Свободно",

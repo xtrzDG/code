@@ -36,7 +36,7 @@ export function PauseCard({
   actions: SubscriptionLifecycleActions;
   canManage: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const format = useBusinessFormat();
   const toast = useToast();
   const [months, setMonths] = useState(1);
@@ -180,9 +180,11 @@ export function PauseCard({
         {options.paused_months > 0 ? (
           <p className="text-ink-subtle">
             {t("billingLifecycle.pause.allowance", {
-              used: options.paused_months,
-              cap: options.cap_months,
-              window: options.window_months,
+              months: tp("billingLifecycle.pause.allowanceMonths", options.cap_months, {
+                used: options.paused_months,
+                cap: options.cap_months,
+              }),
+              window: tp("billingLifecycle.pause.allowanceWindow", options.window_months, { window: options.window_months }),
             })}
           </p>
         ) : null}

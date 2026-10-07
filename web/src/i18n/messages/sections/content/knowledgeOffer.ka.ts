@@ -43,7 +43,7 @@ export const knowledgeOfferKa: Translation<typeof knowledgeOfferEn> = {
       bufferRange: "0-დან 240 წუთამდე",
       seasonDate: "ამ თვეში ასეთი დღე არ არის",
       seasonOverlap: "სეზონებს {first} და {second} საერთო დღეები აქვთ: ღამეს ერთი ფასი უნდა ჰქონდეს.",
-      tooManySeasons: "მაქსიმუმ {count} სეზონი",
+      tooManySeasons: { one: "მაქსიმუმ {count} სეზონი", other: "მაქსიმუმ {count} სეზონი" },
     },
   },
 };

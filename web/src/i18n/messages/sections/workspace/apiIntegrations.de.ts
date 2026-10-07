@@ -21,7 +21,11 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
     description: "Senden Sie Buchungen, Anfragen, Übergaben, neue Gespräche und beendete Anrufe in dem Moment an Ihre eigenen Systeme, in dem sie passieren. Jede Anfrage ist signiert.",
     add: "Webhook hinzufügen",
     empty: "Noch keine Webhooks. Fügen Sie die Adresse Ihres Systems hinzu oder verbinden Sie Zapier mit einem API-Schlüssel.",
-    limits: "Bis zu {count} Webhooks. Eine Adresse, die {failures}-mal hintereinander scheitert, wird abgeschaltet.",
+    limits: { one: "Bis zu {count} Webhook.", other: "Bis zu {count} Webhooks." },
+    disableAfter: {
+      one: "Eine Adresse, die einmal scheitert, wird abgeschaltet.",
+      other: "Eine Adresse, die {failures}-mal hintereinander scheitert, wird abgeschaltet.",
+    },
     statuses: { active: "Aktiv", paused: "Pausiert", disabled: "Abgeschaltet" },
     origins: { cabinet: "Hier hinzugefügt", api: "Von Zapier oder der API hinzugefügt" },
     eventCount: { one: "{count} Ereignis", other: "{count} Ereignisse" },
@@ -74,7 +78,10 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
     },
     reasons: {
       not_public: "Diese Adresse kann keine Webhooks empfangen: Verwenden Sie eine öffentliche https-Adresse.",
-      webhook_limit_reached: "Ein Unternehmen kann bis zu {count} Webhooks haben. Löschen Sie zuerst einen.",
+      webhook_limit_reached: {
+        one: "Ein Unternehmen kann bis zu {count} Webhook haben. Löschen Sie ihn zuerst.",
+        other: "Ein Unternehmen kann bis zu {count} Webhooks haben. Löschen Sie zuerst einen.",
+      },
     },
   },
   secret: {
@@ -118,7 +125,11 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
     description: "Lassen Sie Zapier oder Ihre eigenen Skripte über die öffentliche API Buchungen und Anfragen lesen und anlegen.",
     add: "API-Schlüssel erstellen",
     empty: "Noch keine API-Schlüssel.",
-    limits: "Bis zu {count} aktive Schlüssel; jeder bis zu {rate} Anfragen pro Minute.",
+    limits: { one: "Bis zu {count} aktiver Schlüssel.", other: "Bis zu {count} aktive Schlüssel." },
+    rate: {
+      one: "Ein Schlüssel stellt bis zu {rate} Anfrage pro Minute.",
+      other: "Ein Schlüssel stellt bis zu {rate} Anfragen pro Minute.",
+    },
     statuses: { active: "Aktiv", revoked: "Widerrufen" },
     created: "Erstellt {time}",
     lastUsed: "Zuletzt verwendet {time}",
@@ -150,7 +161,10 @@ export const apiIntegrationsDe: Translation<typeof apiIntegrationsEn> = {
     },
     toasts: { revoked: "API-Schlüssel widerrufen" },
     reasons: {
-      api_key_limit_reached: "Ein Unternehmen kann bis zu {count} aktive Schlüssel haben. Widerrufen Sie zuerst einen.",
+      api_key_limit_reached: {
+        one: "Ein Unternehmen kann bis zu {count} aktiven Schlüssel haben. Widerrufen Sie ihn zuerst.",
+        other: "Ein Unternehmen kann bis zu {count} aktive Schlüssel haben. Widerrufen Sie zuerst einen.",
+      },
     },
   },
 };

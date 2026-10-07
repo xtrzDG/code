@@ -34,7 +34,10 @@ export const settingsHe: Translation<typeof settingsEn> = {
     retentionUnit: "ימים",
     retentionHint: "הקלטות ותמלולי שיחות ישנים יותר נמחקים אוטומטית. מ-1 עד 3650 ימים.",
     retentionShorterTitle: "לשמור הקלטות שיחות פחות זמן?",
-    retentionShorterDescription: "הקלטות ותמלולי שיחות ישנים מ-{days} ימים יימחקו בניקוי של הלילה. אי אפשר לבטל את זה.",
+    retentionShorterDescription: {
+      one: "הקלטות ותמלולי שיחות ישנים מיום אחד יימחקו בניקוי של הלילה. אי אפשר לבטל את זה.",
+      other: "הקלטות ותמלולי שיחות ישנים מ-{days} ימים יימחקו בניקוי של הלילה. אי אפשר לבטל את זה.",
+    },
     retentionShorterConfirm: "קיצור ומחיקת הישנים",
     staleTitle: "מישהו אחר שמר את ההגדרות האלה בזמן שערכתם",
     staleDescription: "שדות שמישהו אחר שינה מציגים עכשיו את הערכים השמורים שלהם; השינויים האחרים שלכם נשמרו.",
@@ -134,7 +137,7 @@ export const settingsHe: Translation<typeof settingsEn> = {
     openChannels: "יצירת קישור Telegram",
     language: "שפת ההתראות",
     saved: "אנשי הקשר להתראות נשמרו",
-    limit: "אפשר להוסיף עד {count} אנשי קשר.",
+    limit: { one: "אפשר להוסיף איש קשר אחד.", other: "אפשר להוסיף עד {count} אנשי קשר." },
     stale: "הרשימה שונתה בזמן שערכתם (על ידי בעלים אחרים או בוט ה-Telegram). היא מעודכנת עכשיו: בדקו אותה ושמרו שוב.",
     errors: {
       required: "מלאו את השדה",

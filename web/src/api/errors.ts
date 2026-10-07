@@ -13,7 +13,7 @@
  * their own texts.
  */
 
-import type { MessageKey, MessageValues } from "@/i18n/translate";
+import type { MessageKey, MessageValues, PluralKey, Translator } from "@/i18n/translate";
 
 import type { components } from "./schema";
 
@@ -214,8 +214,16 @@ const ERROR_MESSAGE_KEYS: Record<ApiErrorCode, MessageKey> = {
 /** Context-specific texts, e.g. `{ access_denied: "auth.errors.countryRestricted" }`. */
 export type ErrorMessageOverrides = Partial<Record<ApiErrorCode, MessageKey>>;
 
-/** The text of one refusal reason: a message key and values from its details. */
-type ReasonMessage = (reason: ApiErrorReason) => { key: MessageKey; values?: MessageValues };
+/**
+ * The text of one refusal reason: a message key and values from its
+ * details, or plural forms and the count that picks one ("up to 1 webhook",
+ * "up to 10 webhooks").
+ */
+type ReasonText =
+  | { key: MessageKey; values?: MessageValues }
+  | { pluralKey: PluralKey; count: number; values?: MessageValues };
+
+type ReasonMessage = (reason: ApiErrorReason) => ReasonText;
 
 /**
  * Localized texts for refusal reason codes, e.g. a booking refused because
@@ -237,19 +245,31 @@ export interface ErrorDescription {
   requestId: string | null;
 }
 
+type Translate = (key: MessageKey, values?: MessageValues) => string;
+
 /** Localized title (and, where useful, the backend detail) for an error toast. */
+export function describeError(error: unknown, t: Translate, overrides?: ErrorMessageOverrides): ErrorDescription;
+/** The same with refusal reasons in the user's language: they may count, so they need the whole translator. */
 export function describeError(
   error: unknown,
-  t: (key: MessageKey, values?: MessageValues) => string,
+  texts: Pick<Translator, "t" | "tp">,
+  overrides?: ErrorMessageOverrides,
+  reasonMessages?: ReasonMessages,
+): ErrorDescription;
+export function describeError(
+  error: unknown,
+  texts: Translate | Pick<Translator, "t" | "tp">,
   overrides?: ErrorMessageOverrides,
   reasonMessages?: ReasonMessages,
 ): ErrorDescription {
+  const t = typeof texts === "function" ? texts : texts.t;
   const apiError = toApiError(error);
   const known = reasonMessages ? apiError.reasons.find((reason) => Object.hasOwn(reasonMessages, reason.code)) : undefined;
-  if (known && reasonMessages) {
+  if (known && reasonMessages && typeof texts !== "function") {
     const message = reasonMessages[known.code]?.(known);
     if (message) {
-      return { title: t(message.key, message.values), detail: null, requestId: null };
+      const title = "pluralKey" in message ? texts.tp(message.pluralKey, message.count, message.values) : t(message.key, message.values);
+      return { title, detail: null, requestId: null };
     }
   }
   const overridden = overrides?.[apiError.code] !== undefined;

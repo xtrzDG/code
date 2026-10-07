@@ -170,8 +170,14 @@ export const bookingsDe: Translation<typeof bookingsEn> = {
     closed: "Das Unternehmen ist zu dieser Zeit am {day} geschlossen: außerhalb der Öffnungszeiten oder ein Feiertag.",
     tooSoon: "Diese Zeit ist zu früh: Buchungen brauchen mehr Vorlauf.",
     taken: "Diese Zeit am {day} ist bereits gebucht. Wählen Sie eine andere Zeit oder einen anderen Platz.",
-    partyTooLarge: "Online-Buchungen sind auf {max} Gäste begrenzt; eine größere Gruppe übernimmt eine Führungskraft.",
-    noSeatingResource: "Kein Platz fasst eine Gruppe von {count} Gästen.",
+    partyTooLarge: {
+      one: "Online-Buchungen sind auf {max} Gast begrenzt; eine größere Gruppe übernimmt eine Führungskraft.",
+      other: "Online-Buchungen sind auf {max} Gäste begrenzt; eine größere Gruppe übernimmt eine Führungskraft.",
+    },
+    noSeatingResource: {
+      one: "Kein Platz fasst eine Gruppe von {count} Gast.",
+      other: "Kein Platz fasst eine Gruppe von {count} Gästen.",
+    },
     noSeatingResourceForParty: "Kein Platz fasst eine Gruppe dieser Größe.",
     notPerformed: "Die gewählte Person oder der Platz bietet diese Leistung nicht an. Wählen Sie eine(n) von denen, die es tun.",
     unknownService: "Diese Leistung kann nicht mehr gebucht werden. Wählen Sie eine andere.",
@@ -204,7 +210,10 @@ export const bookingsDe: Translation<typeof bookingsEn> = {
   undo: {
     done: "Rückgängig gemacht: Die Buchung ist wieder „{status}“",
     slotTaken: "Rückgängig nicht möglich: Jemand anderes hat diese Zeit inzwischen gebucht.",
-    expired: "Zu spät zum Rückgängigmachen: Eine Änderung lässt sich {minutes} Minuten lang rückgängig machen.",
+    expired: {
+      one: "Zu spät zum Rückgängigmachen: Eine Änderung lässt sich {minutes} Minute lang rückgängig machen.",
+      other: "Zu spät zum Rückgängigmachen: Eine Änderung lässt sich {minutes} Minuten lang rückgängig machen.",
+    },
     changed: "Die Buchung hat sich inzwischen geändert. Die Liste zeigt sie so, wie sie jetzt ist.",
     placeGone: "Rückgängig nicht möglich: Der Platz der Buchung existiert nicht mehr.",
   },

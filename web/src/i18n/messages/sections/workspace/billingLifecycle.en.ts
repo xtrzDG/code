@@ -59,7 +59,9 @@ export const billingLifecycleEn = {
     months: { one: "{count} month", other: "{count} months" },
     window: "From {start} to {until}",
     submit: "Pause from {date}",
-    allowance: "Paused {used} of {cap} months in the last {window} months.",
+    allowance: "Paused {months} in {window}.",
+    allowanceMonths: { one: "{used} of {cap} month", other: "{used} of {cap} months" },
+    allowanceWindow: { one: "the last {window} month", other: "the last {window} months" },
     scheduledTitle: "Pause scheduled",
     scheduled:
       "From {start} to {until} the assistant only takes requests. Automatic payments are off; full-price payments start again after the pause.",

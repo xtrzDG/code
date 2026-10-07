@@ -21,7 +21,7 @@ export function BillingDialogs({
   lifecycle: SubscriptionLifecycleActions;
   data: BillingOverview | undefined;
 }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
   const { choice, dialogError } = actions;
 
@@ -46,7 +46,7 @@ export function BillingDialogs({
   const choiceDescription = (choice: PlanChoice): string => {
     switch (choice.action) {
       case "trial":
-        return t("billing.dialogs.trialDescription", { days: choice.quote.trial_days, price: pricePer(choice) });
+        return tp("billing.dialogs.trialDescription", choice.quote.trial_days, { days: choice.quote.trial_days, price: pricePer(choice) });
       case "subscribe": {
         const price = quotedMoneyText(planPrice(choice.quote, choice.period), format.money);
         return choice.period === "annual"

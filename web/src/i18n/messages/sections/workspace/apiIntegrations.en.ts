@@ -23,7 +23,11 @@ export const apiIntegrationsEn = {
     description: "Send bookings, leads, handoffs, new conversations and finished calls to your own systems the moment they happen. Every request is signed.",
     add: "Add webhook",
     empty: "No webhooks yet. Add the address of your system, or connect Zapier with an API key.",
-    limits: "Up to {count} webhooks. An address that fails {failures} times in a row is switched off.",
+    limits: { one: "Up to {count} webhook.", other: "Up to {count} webhooks." },
+    disableAfter: {
+      one: "An address that fails once is switched off.",
+      other: "An address that fails {failures} times in a row is switched off.",
+    },
     statuses: { active: "On", paused: "Paused", disabled: "Switched off" },
     origins: { cabinet: "Added here", api: "Added by Zapier or the API" },
     eventCount: { one: "{count} event", other: "{count} events" },
@@ -76,7 +80,10 @@ export const apiIntegrationsEn = {
     },
     reasons: {
       not_public: "This address cannot receive webhooks: use a public https address.",
-      webhook_limit_reached: "A business can have up to {count} webhooks. Delete one first.",
+      webhook_limit_reached: {
+        one: "A business can have up to {count} webhook. Delete it first.",
+        other: "A business can have up to {count} webhooks. Delete one first.",
+      },
     },
   },
   secret: {
@@ -120,7 +127,8 @@ export const apiIntegrationsEn = {
     description: "Let Zapier or your own scripts read and create bookings and leads through the public API.",
     add: "Create API key",
     empty: "No API keys yet.",
-    limits: "Up to {count} active keys; each makes up to {rate} requests a minute.",
+    limits: { one: "Up to {count} active key.", other: "Up to {count} active keys." },
+    rate: { one: "A key makes up to {rate} request a minute.", other: "A key makes up to {rate} requests a minute." },
     statuses: { active: "Active", revoked: "Revoked" },
     created: "Created {time}",
     lastUsed: "Last used {time}",
@@ -152,7 +160,10 @@ export const apiIntegrationsEn = {
     },
     toasts: { revoked: "API key revoked" },
     reasons: {
-      api_key_limit_reached: "A business can have up to {count} active keys. Revoke one first.",
+      api_key_limit_reached: {
+        one: "A business can have up to {count} active key. Revoke it first.",
+        other: "A business can have up to {count} active keys. Revoke one first.",
+      },
     },
   },
 };

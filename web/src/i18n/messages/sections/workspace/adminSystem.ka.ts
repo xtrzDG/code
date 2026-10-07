@@ -90,8 +90,14 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       api_availability: "ამ საათებში API-ზე მოთხოვნები ჯერ არ ყოფილა",
     },
     events: {
-      inbound_answered: "კლიენტების {total} შეტყობინებიდან {good}-ს დროულად უპასუხეს",
-      api_availability: "{total} მოთხოვნიდან {good} სერვერის შეცდომის გარეშე",
+      inbound_answered: {
+        one: "კლიენტების {total} შეტყობინებიდან {good}-ს დროულად უპასუხეს",
+        other: "კლიენტების {total} შეტყობინებიდან {good}-ს დროულად უპასუხეს",
+      },
+      api_availability: {
+        one: "{total} მოთხოვნიდან {good} სერვერის შეცდომის გარეშე",
+        other: "{total} მოთხოვნიდან {good} სერვერის შეცდომის გარეშე",
+      },
     },
     burn: "ბოლო საათი: დასაშვები ტემპის {multiple}×",
     latency: {

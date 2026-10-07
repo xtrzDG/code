@@ -57,7 +57,7 @@ export const bookingCalendarHe: Translation<typeof bookingCalendarEn> = {
     closed: "סגור",
     free: "פנוי",
     share: "{percent} תפוס",
-    rooms: "{booked} מתוך {open} חדרים תפוסים",
+    rooms: { one: "{booked} מתוך חדר אחד תפוס", other: "{booked} מתוך {open} חדרים תפוסים" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "תפוסה",
     quiet: "שקט",

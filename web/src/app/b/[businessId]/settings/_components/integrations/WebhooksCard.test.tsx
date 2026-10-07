@@ -60,7 +60,11 @@ describe("WebhooksCard: where the business's events go", () => {
     const zapier = await rowOf("Zapier");
     expect(within(zapier).getByText(texts.t("apiIntegrations.webhooks.statuses.disabled"))).toBeTruthy();
     expect(within(zapier).getByText(texts.t("apiIntegrations.webhooks.origins.api"))).toBeTruthy();
-    expect(screen.getByText(texts.t("apiIntegrations.webhooks.limits", { count: 10, failures: 15 }))).toBeTruthy();
+    const limits = `${texts.tp("apiIntegrations.webhooks.limits", 10)} ${texts.tp("apiIntegrations.webhooks.disableAfter", 15, { failures: 15 })}`;
+    expect(screen.getByText(limits)).toBeTruthy();
+    if (locale === "en") {
+      expect(limits).toBe("Up to 10 webhooks. An address that fails 15 times in a row is switched off.");
+    }
   });
 
   it("adds a webhook with its events and shows its signing secret once", async () => {

@@ -63,7 +63,7 @@ export const adminPartnersRu: Translation<typeof adminPartnersEn> = {
     empty: "В этом месяце комиссий нет.",
     accrued: "К выплате",
     paid: "Выплачено",
-    invoices: "Счетов: {count}",
+    invoices: { one: "{count} счёт", few: "{count} счёта", many: "{count} счетов", other: "{count} счёта" },
     markPaid: "Отметить оплаченным",
     markTitle: "Отметить {month} оплаченным: {name}",
     markDescription: "Все невыплаченные комиссии этого месяца будут отмечены выплаченными, с номером перевода в журнале аудита.",

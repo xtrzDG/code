@@ -22,7 +22,7 @@ export const assistantComparisonHe: Translation<typeof assistantComparisonEn> = 
     outcomeMove: "{from} לפני, {to} עכשיו",
     noChanges: "שום דבר לא השתנה לעומת העדכון שבאוויר: אין בעיות חדשות, ואף ציון לא זז בחצי נקודה או יותר.",
     noShared: "להרצה הזו ולהרצה של העדכון שבאוויר עדיין אין תרחישים משותפים.",
-    plays: "{passed} מתוך {played} משחקים עברו",
+    plays: { one: "{passed} מתוך משחק אחד עבר", other: "{passed} מתוך {played} משחקים עברו" },
     playsHint: "תרחישים חשובים משוחקים יותר מפעם אחת; כל משחק חייב לעבור.",
   },
 };

@@ -83,7 +83,7 @@ export const teachingHe: Translation<typeof teachingEn> = {
     loading: "טוענים בדיקות…",
     emptyTitle: "עדיין אין בדיקות",
     emptyDescription: "הוסיפו שאלה שלקוחות שואלים ומה התשובה חייבת לעשות, או שמרו בדיקה כשאתם מתקנים תשובה.",
-    count: "{count} מתוך {limit} בדיקות",
+    count: { one: "{count} מתוך בדיקה אחת", other: "{count} מתוך {limit} בדיקות" },
     newTitle: "בדיקה חדשה",
     editTitle: "שינוי הבדיקה",
     saveTitle: "שמירה כבדיקה",
@@ -154,6 +154,8 @@ export const teachingHe: Translation<typeof teachingEn> = {
     addAnswer: "הוספת תשובה",
     saveCheck: "שמירה כבדיקה",
     open: "פתיחת השיחה",
-    more: "בסך הכול ממתינים {bad} דירוגים רעים ו-{unanswered} שאלות בלי תשובה.",
+    more: "בסך הכול ממתינים: {ratings}, {questions}.",
+    moreRatings: { one: "דירוג רע אחד", other: "{count} דירוגים רעים" },
+    moreQuestions: { one: "שאלה אחת בלי תשובה", other: "{count} שאלות בלי תשובה" },
   },
 };

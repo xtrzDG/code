@@ -58,7 +58,7 @@ export function DataTaskBadges({ task }: { task: DataTask }) {
 
 /** How far the walk is against the table's estimated rows, what changed, and what failed. */
 export function DataTaskProgress({ task }: { task: DataTask }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const format = useSystemFormat();
   const percent = dataTaskPercent(task);
   return (
@@ -84,15 +84,15 @@ export function DataTaskProgress({ task }: { task: DataTask }) {
       ) : null}
       <div>
         {task.row_estimate
-          ? t("dataTasks.rows", { scanned: format.number(task.scanned_count), estimate: format.number(task.row_estimate) })
-          : t("dataTasks.rowsUnknown", { scanned: format.number(task.scanned_count) })}
+          ? tp("dataTasks.rows", task.row_estimate, { scanned: format.number(task.scanned_count), estimate: format.number(task.row_estimate) })
+          : tp("dataTasks.rowsUnknown", task.scanned_count, { scanned: format.number(task.scanned_count) })}
       </div>
       <div className="text-ink-muted">
-        {t("dataTasks.changed", { count: format.number(task.changed_count), batches: format.number(task.batch_count) })}
+        {tp("dataTasks.changed", task.batch_count, { count: format.number(task.changed_count), batches: format.number(task.batch_count) })}
       </div>
       {task.failed_row_count > 0 ? (
         <div className="text-danger">
-          {t("dataTasks.failedRows", {
+          {tp("dataTasks.failedRows", task.failed_row_count, {
             count: format.number(task.failed_row_count),
             keys: task.failed_document_keys.slice(0, 3).join(", "),
           })}

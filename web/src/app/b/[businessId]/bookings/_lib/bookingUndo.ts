@@ -9,7 +9,10 @@ import type { ReasonMessages } from "@/api/errors";
 
 export const UNDO_REFUSAL_MESSAGES: ReasonMessages = {
   slot_taken: () => ({ key: "bookings.undo.slotTaken" }),
-  undo_expired: (reason) => ({ key: "bookings.undo.expired", values: { minutes: reason.details[0] ?? "10" } }),
+  undo_expired: (reason) => {
+    const minutes = reason.details[0] ?? "10";
+    return { pluralKey: "bookings.undo.expired", count: Number(minutes), values: { minutes } };
+  },
   nothing_to_undo: () => ({ key: "bookings.undo.changed" }),
   status_changed: () => ({ key: "bookings.undo.changed" }),
   place_gone: () => ({ key: "bookings.undo.placeGone" }),

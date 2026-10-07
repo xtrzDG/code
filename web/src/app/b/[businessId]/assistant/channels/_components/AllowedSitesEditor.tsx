@@ -30,7 +30,7 @@ export function AllowedSitesEditor({
   canManage: boolean;
   onSaved: (view: AllowedSitesView) => void;
 }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const toast = useToast();
   const { business } = useBusiness();
   const [sites, setSites] = useState<string[]>([...saved]);
@@ -102,7 +102,7 @@ export function AllowedSitesEditor({
         <form noValidate onSubmit={add} className="space-y-2">
           <Field
             label={t("widgetSites.addLabel")}
-            hint={isFull ? t("widgetSites.full", { count: MAX_ALLOWED_SITES }) : t("widgetSites.addHint")}
+            hint={isFull ? tp("widgetSites.full", MAX_ALLOWED_SITES, { count: MAX_ALLOWED_SITES }) : t("widgetSites.addHint")}
             error={addError ? t(addError === "invalid" ? "widgetSites.invalid" : "widgetSites.duplicate") : undefined}
           >
             {(control) => (

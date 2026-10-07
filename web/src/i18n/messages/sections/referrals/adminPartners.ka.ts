@@ -63,7 +63,7 @@ export const adminPartnersKa: Translation<typeof adminPartnersEn> = {
     empty: "ამ თვეში საკომისიოები არ არის.",
     accrued: "გადასახდელი",
     paid: "გადახდილი",
-    invoices: "ანგარიშები: {count}",
+    invoices: { one: "{count} ანგარიში", other: "{count} ანგარიში" },
     markPaid: "გადახდილად მონიშვნა",
     markTitle: "{month} გადახდილად მონიშვნა: {name}",
     markDescription: "ამ თვის ყველა გადაუხდელი საკომისიო მოინიშნება გადახდილად, გადარიცხვის ნომრით აუდიტის ჟურნალში.",

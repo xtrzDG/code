@@ -20,7 +20,7 @@ import { useSystemFormat } from "./useSystemFormat";
  * the next release waits for every task (docs/operations/deploys.md).
  */
 export function DataTasksCard() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const toast = useToast();
   const format = useSystemFormat();
   const { tasks, walkAgain, isRetrying } = useDataTasks();
@@ -40,7 +40,7 @@ export function DataTasksCard() {
     <Card
       aria-label={title}
       title={title}
-      description={t("dataTasks.description", { size: format.number(view?.batch_size ?? 5000) })}
+      description={tp("dataTasks.description", view?.batch_size ?? 5000, { size: format.number(view?.batch_size ?? 5000) })}
       padded={false}
     >
       {tasks.error && !view ? (

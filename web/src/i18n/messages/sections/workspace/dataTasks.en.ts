@@ -6,8 +6,10 @@
 
 export const dataTasksEn = {
   title: "Data tasks after a deploy",
-  description:
-    "Document migrations and lookup column backfills the batch worker runs by itself in batches of {size} rows. The next release is promoted only once every task is done.",
+  description: {
+    one: "Document migrations and lookup column backfills the batch worker runs by itself in batches of {size} row. The next release is promoted only once every task is done.",
+    other: "Document migrations and lookup column backfills the batch worker runs by itself in batches of {size} rows. The next release is promoted only once every task is done.",
+  },
   open: {
     one: "{count} task open",
     other: "{count} tasks open",
@@ -48,10 +50,10 @@ export const dataTasksEn = {
     knowledge: "Knowledge list",
   },
   holdsBack: "Holds back: {lists}",
-  rows: "{scanned} of about {estimate} rows",
-  rowsUnknown: "{scanned} rows looked at",
-  changed: "{count} changed, {batches} batches",
-  failedRows: "{count} rows could not be upgraded: {keys}",
+  rows: { one: "{scanned} of about {estimate} row", other: "{scanned} of about {estimate} rows" },
+  rowsUnknown: { one: "{scanned} row looked at", other: "{scanned} rows looked at" },
+  changed: { one: "{count} changed, {batches} batch", other: "{count} changed, {batches} batches" },
+  failedRows: { one: "{count} row could not be upgraded: {keys}", other: "{count} rows could not be upgraded: {keys}" },
   dueSince: "Due since {time}",
   doneAt: "Done {time}",
   lastBatch: "Last batch {time}",

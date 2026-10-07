@@ -176,7 +176,10 @@ function WorkingHero({ model, isPlaceholder }: { model: ValueModel; isPlaceholde
             text={tp(saved.unit === "hours" ? "value.hero.hoursSaved" : "value.hero.minutesSaved", saved.count, {
               count: number(saved.count),
             })}
-            hint={t("value.hero.savedHint", { replies: number(current.assistant_reply_count), calls: number(current.call_count) })}
+            hint={t("value.hero.savedHint", {
+              replies: tp("value.hero.savedReplies", current.assistant_reply_count, { count: number(current.assistant_reply_count) }),
+              calls: tp("value.hero.savedCalls", current.call_count, { count: number(current.call_count) }),
+            })}
             chip={<DeltaChip
                 current={current.staff_minutes_saved}
                 previous={previous.staff_minutes_saved}

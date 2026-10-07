@@ -50,7 +50,7 @@ export function HeatCell({
   const loadText = isClosed
     ? t("bookingCalendar.week.closed")
     : rooms
-      ? t("bookingCalendar.week.rooms", { booked: String(rooms.booked), open: String(rooms.open) })
+      ? tp("bookingCalendar.week.rooms", rooms.open, { booked: String(rooms.booked), open: String(rooms.open) })
       : count === 0
         ? t("bookingCalendar.week.free")
         : t("bookingCalendar.week.share", { percent });

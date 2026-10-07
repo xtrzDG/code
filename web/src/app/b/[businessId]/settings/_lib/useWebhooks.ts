@@ -22,8 +22,8 @@ import type {
 export const WEBHOOK_REASONS = {
   not_public: () => ({ key: "apiIntegrations.webhooks.reasons.not_public" as const }),
   webhook_limit_reached: (reason: { details: readonly string[] }) => ({
-    key: "apiIntegrations.webhooks.reasons.webhook_limit_reached" as const,
-    values: { count: Number(reason.details[0] ?? 0) },
+    pluralKey: "apiIntegrations.webhooks.reasons.webhook_limit_reached" as const,
+    count: Number(reason.details[0] ?? 0),
   }),
 };
 

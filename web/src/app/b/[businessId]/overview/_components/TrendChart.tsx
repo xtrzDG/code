@@ -33,7 +33,7 @@ const SERIES_STYLE: Record<TrendSeries, { label: MessageKey; color: string }> = 
  * hovered (or arrow-key focused) day, and the same numbers as a table.
  */
 export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const format = useBusinessFormat();
   const id = useId();
   const plotRef = useRef<HTMLDivElement>(null);
@@ -51,9 +51,9 @@ export function TrendChart({ days }: { days: readonly DashboardDay[] }) {
   const readout = (day: DashboardDay) =>
     t("dashboard.trend.readout", {
       date: formatLocalDate(day.date, locale, { dateStyle: "full" }),
-      requests: format.number(day.conversation_count),
-      bookings: format.number(day.booking_count),
-      handoffs: format.number(day.handoff_count),
+      requests: tp("dashboard.trend.readoutRequests", day.conversation_count, { count: format.number(day.conversation_count) }),
+      bookings: tp("dashboard.trend.readoutBookings", day.booking_count, { count: format.number(day.booking_count) }),
+      handoffs: tp("dashboard.trend.readoutHandoffs", day.handoff_count, { count: format.number(day.handoff_count) }),
     });
 
   const onPointer = (event: PointerEvent<HTMLDivElement>) => {

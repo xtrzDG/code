@@ -39,7 +39,19 @@ export const valueRu: Translation<typeof valueEn> = {
       many: "~{count} минут работы сотрудников сэкономлено",
       other: "~{count} минуты работы сотрудников сэкономлено",
     },
-    savedHint: "за вас написано ответов: {replies}, принято звонков: {calls}",
+    savedHint: "за вас {replies} и {calls}",
+    savedReplies: {
+      one: "написан {count} ответ",
+      few: "написано {count} ответа",
+      many: "написано {count} ответов",
+      other: "написано {count} ответа",
+    },
+    savedCalls: {
+      one: "принят {count} звонок",
+      few: "принято {count} звонка",
+      many: "принято {count} звонков",
+      other: "принято {count} звонка",
+    },
     conversations: {
       one: "{count} разговор",
       few: "{count} разговора",

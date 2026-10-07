@@ -63,7 +63,7 @@ export const adminPartnersHe: Translation<typeof adminPartnersEn> = {
     empty: "אין עמלות בחודש הזה.",
     accrued: "לתשלום",
     paid: "שולם",
-    invoices: "{count} חשבוניות",
+    invoices: { one: "חשבונית אחת", other: "{count} חשבוניות" },
     markPaid: "סימון כמשולם",
     markTitle: "סימון {month} כמשולם עבור {name}",
     markDescription: "כל עמלה של החודש הזה שעדיין לא שולמה תסומן כמשולמת, עם אסמכתת ההעברה, ביומן הפעולות.",

@@ -157,7 +157,7 @@ export const conversationsEn = {
     record_unanswered_question: "Noted a question without an answer",
     offer_choices: "Offered answers to tap",
   },
-  messageTokens: "{count} tokens",
+  messageTokens: { one: "{count} token", other: "{count} tokens" },
   usage: {
     tokens: "Tokens",
     tokensValue: "{input} in · {output} out",

@@ -170,8 +170,11 @@ export const bookingsEn = {
     closed: "The business is closed at that time on {day}: outside opening hours or a holiday.",
     tooSoon: "That time is too soon: bookings need more advance notice.",
     taken: "That time on {day} is already booked. Choose another time or place.",
-    partyTooLarge: "Online booking is limited to {max} guests; a larger party is handled by a manager.",
-    noSeatingResource: "No place seats a party of {count} guests.",
+    partyTooLarge: {
+      one: "Online booking is limited to {max} guest; a larger party is handled by a manager.",
+      other: "Online booking is limited to {max} guests; a larger party is handled by a manager.",
+    },
+    noSeatingResource: { one: "No place seats a party of {count} guest.", other: "No place seats a party of {count} guests." },
     noSeatingResourceForParty: "No place seats a party of this size.",
     notPerformed: "The chosen person or place does not do this service. Choose one of those who do.",
     unknownService: "This service can no longer be booked. Choose another one.",
@@ -204,7 +207,10 @@ export const bookingsEn = {
   undo: {
     done: "Undone: the booking is “{status}” again",
     slotTaken: "Can't undo: someone else booked this time in the meantime.",
-    expired: "It's too late to undo: a change can be undone for {minutes} minutes.",
+    expired: {
+      one: "It's too late to undo: a change can be undone for {minutes} minute.",
+      other: "It's too late to undo: a change can be undone for {minutes} minutes.",
+    },
     changed: "The booking has changed in the meantime. The list shows it as it is now.",
     placeGone: "Can't undo: the booking's place no longer exists.",
   },

@@ -161,7 +161,10 @@ export const billingEn = {
   },
   dialogs: {
     trialTitle: "Start the free trial of “{plan}”?",
-    trialDescription: "{days} days free, nothing is charged now. After the trial the plan costs {price}.",
+    trialDescription: {
+      one: "{days} day free, nothing is charged now. After the trial the plan costs {price}.",
+      other: "{days} days free, nothing is charged now. After the trial the plan costs {price}.",
+    },
     trialConfirm: "Start trial",
     trialStarted: "The free trial has started",
     changeTitle: "Switch to “{plan}”, {period}?",

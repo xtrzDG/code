@@ -22,7 +22,7 @@ export const assistantComparisonEn = {
     outcomeMove: "{from} before, {to} now",
     noChanges: "Nothing changed against the live update: no new problems, and no score moved by half a point or more.",
     noShared: "This run and the live update's run have no scenarios in common yet.",
-    plays: "{passed} of {played} plays passed",
+    plays: { one: "{passed} of {played} play passed", other: "{passed} of {played} plays passed" },
     playsHint: "Important scenarios are played more than once; each play must pass.",
   },
 } as const;

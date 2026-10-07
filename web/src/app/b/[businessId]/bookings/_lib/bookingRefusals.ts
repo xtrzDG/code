@@ -11,11 +11,15 @@ export const BOOKING_REFUSAL_MESSAGES: ReasonMessages = {
   too_soon: () => ({ key: "bookings.errors.tooSoon" }),
   time_required: () => ({ key: "bookings.errors.timeRequired" }),
   taken: (reason) => ({ key: "bookings.errors.taken", values: { day: reason.details[0] ?? "" } }),
-  party_too_large: (reason) => ({ key: "bookings.errors.partyTooLarge", values: { max: reason.details[0] ?? "" } }),
+  party_too_large: (reason) => ({
+    pluralKey: "bookings.errors.partyTooLarge",
+    count: Number(reason.details[0]),
+    values: { max: reason.details[0] ?? "" },
+  }),
   not_performed: () => ({ key: "bookings.errors.notPerformed" }),
   unknown_service: () => ({ key: "bookings.errors.unknownService" }),
   no_seating_resource: (reason) =>
     reason.details[0]
-      ? { key: "bookings.errors.noSeatingResource", values: { count: reason.details[0] } }
+      ? { pluralKey: "bookings.errors.noSeatingResource", count: Number(reason.details[0]), values: { count: reason.details[0] } }
       : { key: "bookings.errors.noSeatingResourceForParty" },
 };

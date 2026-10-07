@@ -32,7 +32,7 @@ function EditorForm({
   formId: string;
   onSaved: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const { business } = useBusiness();
   const languages = editorLanguages(business.languages, business.default_language, reply);
   const [draft, setDraft] = useState<QuickReplyDraft>(() => draftOf(reply, languages));
@@ -59,7 +59,7 @@ function EditorForm({
   return (
     <form id={formId} onSubmit={(event) => void submit(event)} className="space-y-5" noValidate>
       {error ? (
-        <Alert tone="danger">{describeError(error, t, undefined, QUICK_REPLY_REASONS).title}</Alert>
+        <Alert tone="danger">{describeError(error, { t, tp }, undefined, QUICK_REPLY_REASONS).title}</Alert>
       ) : null}
       <Field
         label={t("quickReplies.editor.title")}

@@ -23,7 +23,7 @@ export function ApiKeyDialog({
   onClose: () => void;
   onCreated: (created: CreatedApiKey) => void;
 }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const [name, setName] = useState("");
   const [chosen, setChosen] = useState<ApiKeyScope[]>([]);
   const [error, setError] = useState<unknown>(null);
@@ -58,7 +58,7 @@ export function ApiKeyDialog({
       }
     >
       <form id="api-key-new" onSubmit={submit} className="space-y-5" noValidate>
-        {error ? <Alert tone="danger">{describeError(error, t, undefined, API_KEY_REASONS).title}</Alert> : null}
+        {error ? <Alert tone="danger">{describeError(error, { t, tp }, undefined, API_KEY_REASONS).title}</Alert> : null}
         <Field label={t("apiIntegrations.apiKeys.dialog.name")} hint={t("apiIntegrations.apiKeys.dialog.nameHint")} required>
           {(control) => <Input {...control} maxLength={80} autoComplete="off" value={name} onChange={(event) => setName(event.target.value)} />}
         </Field>

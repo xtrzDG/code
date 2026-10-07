@@ -25,7 +25,12 @@ export const assistantComparisonRu: Translation<typeof assistantComparisonEn> = 
     outcomeMove: "Было: {from}, сейчас: {to}",
     noChanges: "По сравнению с обновлением в работе ничего не изменилось: новых проблем нет, ни одна оценка не сдвинулась на полбалла и больше.",
     noShared: "У этого прогона и прогона обновления в работе пока нет общих сценариев.",
-    plays: "Пройдено прогонов: {passed} из {played}",
+    plays: {
+      one: "Пройдено {passed} из {played} прогона",
+      few: "Пройдено {passed} из {played} прогонов",
+      many: "Пройдено {passed} из {played} прогонов",
+      other: "Пройдено {passed} из {played} прогона",
+    },
     playsHint: "Важные сценарии играются несколько раз, и пройти нужно каждый раз.",
   },
 };

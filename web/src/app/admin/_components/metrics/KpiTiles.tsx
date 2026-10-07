@@ -44,7 +44,7 @@ export function KpiTiles({ view, format }: { view: AdminMetricsView; format: Met
       key: "activation",
       label: t("adminMetrics.kpi.activation"),
       value: format.percent(activation.rate),
-      detail: t("adminMetrics.kpi.activationDetail", {
+      detail: tp("adminMetrics.kpi.activationDetail", activation.eligible, {
         activated: format.number(activation.activated),
         eligible: format.number(activation.eligible),
         pending: format.number(activation.pending),
@@ -54,7 +54,7 @@ export function KpiTiles({ view, format }: { view: AdminMetricsView; format: Met
       key: "trialToPaid",
       label: t("adminMetrics.kpi.trialToPaid"),
       value: format.percent(trials.rate),
-      detail: t("adminMetrics.kpi.trialDetail", {
+      detail: tp("adminMetrics.kpi.trialDetail", trials.ended, {
         converted: format.number(trials.converted),
         ended: format.number(trials.ended),
         started: format.number(trials.started),

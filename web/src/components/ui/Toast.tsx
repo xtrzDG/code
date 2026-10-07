@@ -58,7 +58,8 @@ const ERROR_DURATION_MS = 9_000;
 const MAX_VISIBLE = 4;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const { t } = useI18n();
+  const i18n = useI18n();
+  const { t } = i18n;
   const [items, setItems] = useState<ToastItem[]>([]);
   const nextId = useRef(1);
 
@@ -80,12 +81,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       info: (title, description) => show({ tone: "info", title, description }),
       undoable: (title, onUndo) => show({ tone: "success", title, action: { label: t("common.undo"), onAction: onUndo } }),
       error: (error, overrides, reasonMessages) => {
-        const { title, detail, requestId } = describeError(error, t, overrides, reasonMessages);
+        const { title, detail, requestId } = describeError(error, i18n, overrides, reasonMessages);
         const lines = [detail, requestId ? t("common.requestId", { id: requestId }) : null].filter(Boolean);
         show({ tone: "error", title, description: lines.join(" · ") || null });
       },
     }),
-    [show, dismiss, t],
+    [show, dismiss, t, i18n],
   );
 
   return (

@@ -8,7 +8,8 @@ import { createTranslator } from "@/i18n/translate";
 import { BOOKING_REFUSAL_MESSAGES } from "./bookingRefusals";
 
 describe("booking refusals in the user's language", () => {
-  const tRu = createTranslator("ru", ru, en).t;
+  const russian = createTranslator("ru", ru, en);
+  const tRu = russian.t;
   const closedBody = {
     error: "validation_failed",
     message: "The business is closed at that time on 2026-12-31 (outside opening hours or a holiday).",
@@ -16,7 +17,7 @@ describe("booking refusals in the user's language", () => {
   };
 
   it("names the reason instead of a generic title and the English sentence", () => {
-    const description = describeError(parseApiError(422, closedBody), tRu, undefined, BOOKING_REFUSAL_MESSAGES);
+    const description = describeError(parseApiError(422, closedBody), russian, undefined, BOOKING_REFUSAL_MESSAGES);
 
     expect(description.title).toBe("2026-12-31 в это время заведение закрыто: вне часов работы или праздничный день.");
     expect(description.detail).toBeNull();
@@ -34,7 +35,7 @@ describe("booking refusals in the user's language", () => {
       "unknown_service",
     ]) {
       const error = parseApiError(422, { error: "validation_failed", message: "x", reasons: [{ code, message: "x", details: ["4"] }] });
-      const { title } = describeError(error, tRu, undefined, BOOKING_REFUSAL_MESSAGES);
+      const { title } = describeError(error, russian, undefined, BOOKING_REFUSAL_MESSAGES);
       expect(title).not.toBe(tRu("errors.codes.validation_failed"));
       expect(title).not.toMatch(/[A-Za-z]{4}/);
     }
@@ -42,7 +43,7 @@ describe("booking refusals in the user's language", () => {
 
   it("falls back to the generic text without a known reason", () => {
     const error = parseApiError(422, { error: "validation_failed", message: "Odd" });
-    expect(describeError(error, tRu, undefined, BOOKING_REFUSAL_MESSAGES)).toEqual({
+    expect(describeError(error, russian, undefined, BOOKING_REFUSAL_MESSAGES)).toEqual({
       title: tRu("errors.codes.validation_failed"),
       detail: "Odd",
       requestId: null,

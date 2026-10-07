@@ -57,7 +57,7 @@ export const bookingCalendarKa: Translation<typeof bookingCalendarEn> = {
     closed: "დაკეტილია",
     free: "თავისუფალია",
     share: "დაკავებულია {percent}",
-    rooms: "დაკავებულია {booked} ნომერი {open}-დან",
+    rooms: { one: "დაკავებულია {booked} ნომერი {open}-დან", other: "დაკავებულია {booked} ნომერი {open}-დან" },
     cell: "{place}, {date}: {load}, {count}",
     legendTitle: "დატვირთვა",
     quiet: "თავისუფალი",

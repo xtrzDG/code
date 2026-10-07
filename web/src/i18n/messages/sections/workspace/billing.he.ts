@@ -161,7 +161,10 @@ export const billingHe: Translation<typeof billingEn> = {
   },
   dialogs: {
     trialTitle: "להתחיל את תקופת הניסיון של „{plan}”?",
-    trialDescription: "{days} ימים בחינם, לא מחויב דבר עכשיו. אחרי תקופת הניסיון המסלול עולה {price}.",
+    trialDescription: {
+      one: "יום אחד בחינם, לא מחויב דבר עכשיו. אחרי תקופת הניסיון המסלול עולה {price}.",
+      other: "{days} ימים בחינם, לא מחויב דבר עכשיו. אחרי תקופת הניסיון המסלול עולה {price}.",
+    },
     trialConfirm: "התחלת ניסיון",
     trialStarted: "תקופת הניסיון החינמית התחילה",
     changeTitle: "לעבור ל-„{plan}”, {period}?",

@@ -60,7 +60,10 @@ export const adminSecurityDe: Translation<typeof adminSecurityEn> = {
         other: "{count} Telegram-Webhooks konnten nicht neu registriert werden: Verschlüsseln Sie später erneut.",
       },
       failed: "Der Durchlauf ist stehen geblieben: {error}. Starten Sie ihn erneut; bereits umgezogene Tokens bleiben umgezogen.",
-      keysChanged: "Der Schlüsselbund hat sich nach diesem Durchlauf geändert (damals {then} Schlüssel, jetzt {now}): Verschlüsseln Sie erneut.",
+      keysChanged: {
+        one: "Der Schlüsselbund hat sich nach diesem Durchlauf geändert (damals {then} Schlüssel, jetzt {now}): Verschlüsseln Sie erneut.",
+        other: "Der Schlüsselbund hat sich nach diesem Durchlauf geändert (damals {then} Schlüssel, jetzt {now}): Verschlüsseln Sie erneut.",
+      },
     },
   },
 };

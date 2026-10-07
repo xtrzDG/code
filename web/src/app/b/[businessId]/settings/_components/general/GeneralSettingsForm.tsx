@@ -19,7 +19,7 @@ import { StaleNotices } from "./StaleNotices";
  * recordings for less time deletes the older ones, so it asks first.
  */
 export function GeneralSettingsForm({ initial, switched }: { initial: BusinessView; switched: BusinessView | null }) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const { isOwner } = useBusiness();
   const settings = useGeneralSettings(initial, switched);
   const options = useGeneralChoices(settings.baseline, settings.form);
@@ -40,7 +40,7 @@ export function GeneralSettingsForm({ initial, switched }: { initial: BusinessVi
         onClose={settings.cancelConfirmation}
         onConfirm={settings.confirm}
         title={t("settings.general.retentionShorterTitle")}
-        description={t("settings.general.retentionShorterDescription", { days: settings.form.retentionDays.trim() })}
+        description={tp("settings.general.retentionShorterDescription", Number(settings.form.retentionDays.trim()), { days: settings.form.retentionDays.trim() })}
         confirmLabel={t("settings.general.retentionShorterConfirm")}
       />
     </div>

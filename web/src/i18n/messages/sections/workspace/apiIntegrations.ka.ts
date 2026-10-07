@@ -21,7 +21,11 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
     description: "გაგზავნეთ ჯავშნები, მოთხოვნები, ადამიანისთვის გადაცემები, ახალი საუბრები და დასრულებული ზარები თქვენს სისტემებში მაშინვე, როგორც კი ისინი მოხდება. ყველა მოთხოვნა ხელმოწერილია.",
     add: "ვებჰუკის დამატება",
     empty: "ვებჰუკები ჯერ არ არის. დაამატეთ თქვენი სისტემის მისამართი ან დააკავშირეთ Zapier API გასაღებით.",
-    limits: "მაქსიმუმ {count} ვებჰუკი. მისამართი, რომელმაც ზედიზედ {failures} მოთხოვნა ვერ მიიღო, ითიშება.",
+    limits: { one: "მაქსიმუმ {count} ვებჰუკი.", other: "მაქსიმუმ {count} ვებჰუკი." },
+    disableAfter: {
+      one: "მისამართი, რომელმაც ზედიზედ {failures} მოთხოვნა ვერ მიიღო, ითიშება.",
+      other: "მისამართი, რომელმაც ზედიზედ {failures} მოთხოვნა ვერ მიიღო, ითიშება.",
+    },
     statuses: { active: "ჩართულია", paused: "შეჩერებულია", disabled: "გამორთულია" },
     origins: { cabinet: "დამატებულია აქ", api: "დამატებულია Zapier-ით ან API-ით" },
     eventCount: { one: "{count} მოვლენა", other: "{count} მოვლენა" },
@@ -74,7 +78,10 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
     },
     reasons: {
       not_public: "ეს მისამართი ვერ მიიღებს ვებჰუკებს: მიუთითეთ საჯარო https მისამართი.",
-      webhook_limit_reached: "ბიზნესს შეიძლება ჰქონდეს მაქსიმუმ {count} ვებჰუკი. ჯერ ერთი წაშალეთ.",
+      webhook_limit_reached: {
+        one: "ბიზნესს შეიძლება ჰქონდეს მაქსიმუმ {count} ვებჰუკი. ჯერ ერთი წაშალეთ.",
+        other: "ბიზნესს შეიძლება ჰქონდეს მაქსიმუმ {count} ვებჰუკი. ჯერ ერთი წაშალეთ.",
+      },
     },
   },
   secret: {
@@ -118,7 +125,8 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
     description: "მიეცით Zapier-ს ან თქვენს სკრიპტებს საჯარო API-ით ჯავშნებისა და მოთხოვნების წაკითხვისა და შექმნის საშუალება.",
     add: "API გასაღების შექმნა",
     empty: "API გასაღებები ჯერ არ არის.",
-    limits: "მაქსიმუმ {count} აქტიური გასაღები; თითოეული — წუთში {rate} მოთხოვნამდე.",
+    limits: { one: "მაქსიმუმ {count} აქტიური გასაღები.", other: "მაქსიმუმ {count} აქტიური გასაღები." },
+    rate: { one: "გასაღები წუთში {rate} მოთხოვნამდე აგზავნის.", other: "გასაღები წუთში {rate} მოთხოვნამდე აგზავნის." },
     statuses: { active: "აქტიური", revoked: "გაუქმებული" },
     created: "შეიქმნა {time}",
     lastUsed: "ბოლოს გამოყენდა {time}",
@@ -150,7 +158,10 @@ export const apiIntegrationsKa: Translation<typeof apiIntegrationsEn> = {
     },
     toasts: { revoked: "API გასაღები გაუქმდა" },
     reasons: {
-      api_key_limit_reached: "ბიზნესს შეიძლება ჰქონდეს მაქსიმუმ {count} აქტიური გასაღები. ჯერ ერთი გააუქმეთ.",
+      api_key_limit_reached: {
+        one: "ბიზნესს შეიძლება ჰქონდეს მაქსიმუმ {count} აქტიური გასაღები. ჯერ ერთი გააუქმეთ.",
+        other: "ბიზნესს შეიძლება ჰქონდეს მაქსიმუმ {count} აქტიური გასაღები. ჯერ ერთი გააუქმეთ.",
+      },
     },
   },
 };

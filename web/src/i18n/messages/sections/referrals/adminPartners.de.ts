@@ -63,7 +63,7 @@ export const adminPartnersDe: Translation<typeof adminPartnersEn> = {
     empty: "Keine Provisionen in diesem Monat.",
     accrued: "Zu zahlen",
     paid: "Ausgezahlt",
-    invoices: "{count} Rechnungen",
+    invoices: { one: "{count} Rechnung", other: "{count} Rechnungen" },
     markPaid: "Als bezahlt markieren",
     markTitle: "{month} für {name} als bezahlt markieren",
     markDescription: "Jede noch offene Provision dieses Monats wird mit dem Verwendungszweck der Überweisung im Protokoll als bezahlt markiert.",

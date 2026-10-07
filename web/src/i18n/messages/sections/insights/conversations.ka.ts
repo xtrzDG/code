@@ -157,7 +157,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     record_unanswered_question: "ჩაიწერა უპასუხო კითხვა",
     offer_choices: "შესთავაზა პასუხის ვარიანტები",
   },
-  messageTokens: "ტოკენები: {count}",
+  messageTokens: { one: "{count} ტოკენი", other: "{count} ტოკენი" },
   usage: {
     tokens: "ტოკენები",
     tokensValue: "{input} შემავალი · {output} გამავალი",

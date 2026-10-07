@@ -13,7 +13,7 @@ export const setupEn = {
     "Tell us about your business in a few simple steps. We will prepare an assistant that answers your customers day and night, takes bookings and calls you when a person is needed.",
   start: "Create an AI assistant",
   continue: "Continue creating",
-  progress: "{done} of {total} steps done",
+  progress: { one: "{done} of {total} step done", other: "{done} of {total} steps done" },
   duration: "About 20 minutes. You can stop and come back any time.",
   stagesLabel: "How it goes",
   stages: {

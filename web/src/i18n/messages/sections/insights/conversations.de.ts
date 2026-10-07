@@ -161,7 +161,7 @@ export const conversationsDe: Translation<typeof conversationsEn> = {
     record_unanswered_question: "Hat eine unbeantwortete Frage notiert",
     offer_choices: "Hat Antworten zum Antippen angeboten",
   },
-  messageTokens: "{count} Tokens",
+  messageTokens: { one: "{count} Token", other: "{count} Tokens" },
   usage: {
     tokens: "Tokens",
     tokensValue: "{input} ein · {output} aus",
