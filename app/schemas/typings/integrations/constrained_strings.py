@@ -33,8 +33,8 @@ class ApiKeyPrefix(BaseConstrainedTypedString):
 
 class ApiKeySecretHash(BaseConstrainedTypedString):
     """
-    SHA-256 hex digest of a whole API key: what is stored and looked up
-    (the key itself is not stored).
+    Hex scrypt digest of a whole API key, salted with its prefix: what is
+    stored and looked up (the key itself is not stored).
 
     Example:
         digest = ApiKeySecretHash("ab" * 32)

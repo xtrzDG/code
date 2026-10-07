@@ -29,7 +29,7 @@ LAST_USED_STAMP_MICROSECONDS: int = 60 * 1_000_000
 class AuthenticateApiKeyUseCase(UseCaseContract[ApiKeyCredentials, ApiKeyPrincipal]):
     """
     A public API request's bearer key: found across businesses by its
-    SHA-256 (the token names no business), then everything else in its
+    scrypt digest (the token names no business), then everything else in its
     business's scope. A revoked or unknown key, or one whose business is
     gone, is 401; each key may make PUBLIC_API_REQUESTS_PER_MINUTE requests
     a minute (429 with Retry-After past them). When the key was last used

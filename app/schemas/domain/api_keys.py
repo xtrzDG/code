@@ -18,7 +18,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 class ApiKeyDocument(BaseDocument):
     """
     One API key of a business (a business collection). The key itself is
-    shown once, when it is made; only its SHA-256 (`secret_hash`, looked up
+    shown once, when it is made; only its scrypt digest (`secret_hash`, looked up
     across businesses when a request comes) and its public `prefix` are
     stored. `scopes` say what it may read or create. A REVOKED key is
     refused. `last_used_at` is written at most once a minute.

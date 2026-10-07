@@ -25,8 +25,8 @@ from app.utilities.integrations.integration_secrets import hash_api_key, new_api
 class CreateApiKeyUseCase(UseCaseContract[CreateApiKeyCommand, CreatedApiKey]):
     """
     A new API key of the business with the scopes the owner chose: a random
-    token (`awk_<prefix>_<secret>`) shown this once; only its SHA-256 and
-    its prefix are stored, so a leaked database holds no usable key. At
+    token (`awk_<prefix>_<secret>`) shown this once; only its scrypt digest
+    and its prefix are stored, so a leaked database holds no usable key. At
     most MAX_API_KEYS active keys (409 `api_key_limit_reached`). Owners
     only; audited.
     """

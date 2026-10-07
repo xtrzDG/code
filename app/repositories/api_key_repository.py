@@ -19,7 +19,7 @@ KEY_LIST_LIMIT: DocumentQueryLimit = DocumentQueryLimit(100)
 class ApiKeyRepository(BusinessScopedRepository[ApiKeyDocument], ApiKeyRepoContract):
     """
     API keys, read by business and id, the business's list in creation
-    order, and across businesses by the SHA-256 of a whole key (a unique
+    order, and across businesses by the digest of a whole key (a unique
     index, migration 1181): the one read a request needs before its
     business is known.
     """
