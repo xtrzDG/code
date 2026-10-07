@@ -32,6 +32,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.foundation.access_support import ACCESS_SETTINGS
 from tests.foundation.support_access_builders import build_authorize_business_access
+from tests.live_events.signalling_bus import SubscriptionSignallingBus
 from tests.operations.operations_api import TokenAuthenticator, operator
 from tests.operations.operations_world import OperationsWorld
 
@@ -44,8 +45,8 @@ TEST_LIMITS: LiveStreamLimits = LiveStreamLimits(
     lifetime_seconds=LiveStreamLifetimeSeconds(0.35),
     streams_per_user=LiveStreamsPerUser(2),
 )
-# Events published this long after a stream was asked for reach it live.
-PUBLISH_DELAY_SECONDS: float = 0.12
+# How long a test waits for its stream to subscribe before publishing.
+SUBSCRIBE_TIMEOUT_SECONDS: float = 10.0
 
 
 @dataclass(frozen=True)
@@ -93,7 +94,8 @@ class LiveApi:
             name="Other", owner_id=self.other_owner_id
         )
         self.bus: LiveEventBusAdapterContract = bus or InMemoryLiveEventBusAdapter()
-        self.streams = LiveEventStreamFacilitator(self.bus, limits)
+        self._signals = SubscriptionSignallingBus(self.bus)
+        self.streams = LiveEventStreamFacilitator(self._signals, limits)
         world = self.world
         application = FastAPI()
         install_error_handlers(application)
@@ -138,25 +140,31 @@ class LiveApi:
     ) -> Response:
         """
         Open the stream; `publish` goes on the bus, and `meanwhile` runs,
-        while it is open.
+        once it is open (subscribed), not after a guessed delay.
         """
 
         headers: dict[str, str] = {"Authorization": f"Bearer {token}"}
         if last_event_id is not None:
             headers["Last-Event-ID"] = last_event_id
 
+        self._signals.subscribed.clear()
+
         def while_open() -> None:
+            if not publish and meanwhile is None:
+                return
+
+            self._signals.subscribed.wait(SUBSCRIBE_TIMEOUT_SECONDS)
             for event in publish:
                 self.bus.publish(event)
             if meanwhile is not None:
                 meanwhile()
 
-        timer = threading.Timer(PUBLISH_DELAY_SECONDS, while_open)
-        timer.start()
+        helper = threading.Thread(target=while_open)
+        helper.start()
         try:
             return self.client.get(self.url("/events"), headers=headers)
         finally:
-            timer.join()
+            helper.join()
 
     def get(self, path: str, token: str = STAFF_TOKEN) -> Response:
         return self.client.get(
