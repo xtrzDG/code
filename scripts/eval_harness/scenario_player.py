@@ -1,42 +1,35 @@
 """
-Playing one sample of one scenario: a fresh business, the model of the
-sample (replayed from the cassette, or recorded from the scripted model
-or a live provider), the conversation, the judge and the scorers.
+Playing one sample of one scenario: a fresh business and what the
+scenario's customer already has with it, the model of the sample
+(replayed from the cassette, or recorded from the scripted model or a
+live provider), the conversation, the judge and the scorers.
 """
 
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 
 from app.adapters.llm.recording_llm_adapter import RecordingLlmAdapter
 from app.adapters.llm.replay_llm_adapter import ReplayLlmAdapter
 from app.containers.app import AppContainer
 from app.contracts.llm_cassettes import LlmCassetteStoreAdapterContract
-from app.schemas.dto.assistants.autotest_runs import AutotestScenario, JudgeVerdict
-from app.schemas.dto.evaluations import EvalCriterionResult, EvalExpectations
-from app.schemas.exceptions.base_exception import ApplicationError
-from app.schemas.typings.assistants.constrained_strings import (
-    AutotestScenarioKey,
-    LlmModelId,
+from app.schemas.dto.assistants.autotest_runs import (
+    AutotestScenario,
+    AutotestScenarioRun,
+    JudgeVerdict,
 )
-from app.schemas.typings.assistants.strings import AutotestScenarioGoal
+from app.schemas.dto.evaluations import EvalExpectations, EvalSampleScore
+from app.schemas.exceptions.base_exception import ApplicationError
+from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.schemas.typings.assistants.prefixed_id import AutotestRunId
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.evaluations.constrained_integers import (
     LlmCassetteSampleIndex,
 )
-from app.schemas.typings.localization.constrained_strings import (
-    E164PhoneNumber,
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
 from app.utilities.assembly.autotest_evaluation import MIN_PASSING_CRITERION_SCORE
 from app.utilities.assembly.autotest_prompts import build_customer_persona_prompt
-from app.utilities.assembly.autotest_scenarios import DEFAULT_PARTY_SIZE, plan_scenarios
-from app.utilities.assembly.eval_scorers import score_conversation
-from app.utilities.assembly.fact_descriptions import RESOURCE_KIND_NOUNS
-from app.utilities.assembly.fact_formatting import read_english_text
-from app.utilities.assembly.language_profiles import (
-    build_autotest_languages,
-    collect_language_profiles,
-)
+from app.utilities.assembly.eval_sample_scoring import score_sample
 from scripts.eval_harness.business_seeding import EvalBusinessSeeder, SeededBusiness
 from scripts.eval_harness.call_metering import CallMeter
 from scripts.eval_harness.conversation_loop import (
@@ -52,7 +45,14 @@ from scripts.eval_harness.eval_container import (
     build_provider_router,
 )
 from scripts.eval_harness.run_results import JudgeResult, SampleResult, TranscriptLine
+from scripts.eval_harness.scenario_planning import (
+    build_customer_side,
+    plan_eval_scenario,
+)
+from scripts.eval_harness.scenario_seeding import seed_customer
 from scripts.eval_harness.scripted_model import build_scripted_adapter
+
+UNDETERMINED_LANGUAGE: str = "?"
 
 
 class EvalMode(StrEnum):
@@ -84,6 +84,7 @@ class NicheSession:
     mode: EvalMode
     models: RunModels
     turn_limit: int
+    media_dir: Path
 
 
 def play_sample(
@@ -112,7 +113,10 @@ def play_sample(
     seeded: SeededBusiness = session.seeder.seed(
         session.dataset.niche, session.dataset.business
     )
-    planned: AutotestScenario = plan_eval_scenario(session, scenario)
+    seed_customer(session.container, seeded, scenario, session.seeder.owner_id)
+    planned: AutotestScenario = plan_eval_scenario(
+        session.container, session.dataset, scenario
+    )
     expectations: EvalExpectations = build_expectations(
         scenario, seeded.business.currency_code
     )
@@ -123,7 +127,9 @@ def play_sample(
         converse(
             session.container,
             seeded,
-            planned,
+            build_customer_side(
+                session.container, seeded, scenario, planned, session.media_dir
+            ),
             build_customer_persona_prompt(
                 str(seeded.business.name),
                 planned,
@@ -147,8 +153,18 @@ def play_sample(
     except ApplicationError as raised:
         error = f"{type(raised).__name__}: {raised}"
 
-    criteria: list[EvalCriterionResult] = score_conversation(
-        planned, expectations, conversation.replies, seeded.business.name
+    score: EvalSampleScore = score_sample(
+        AutotestScenarioRun(
+            run_id=AutotestRunId(),
+            business=seeded.business,
+            version=seeded.version,
+            scenario=planned,
+            customer_phone_number=None
+            if scenario.persona.phone is None
+            else E164PhoneNumber(scenario.persona.phone),
+        ),
+        expectations,
+        conversation.replies,
     )
     stale: list[str] = describe_misses(
         [str(miss.reason) for miss in ([] if replay is None else replay.misses)]
@@ -170,7 +186,7 @@ def play_sample(
         is_passed=(
             error is None
             and not stale
-            and all(result.is_passed for result in criteria)
+            and all(result.is_passed for result in score.criteria)
             and (
                 judge is None
                 or all(
@@ -179,7 +195,13 @@ def play_sample(
                 )
             )
         ),
-        criteria=criteria,
+        criteria=score.criteria,
+        reply_languages=[
+            UNDETERMINED_LANGUAGE
+            if reading.detected_language is None
+            else str(reading.detected_language)
+            for reading in score.reply_languages
+        ],
         judge=judge,
         transcript=[
             TranscriptLine(author=line.author.value, text=str(line.text))
@@ -213,40 +235,4 @@ def describe_misses(reasons: list[str]) -> list[str]:
         [f"{later} later model call(s) of this sample were not recorded either."]
         if later
         else []
-    )
-
-
-def plan_eval_scenario(
-    session: NicheSession, scenario: ScenarioSpec
-) -> AutotestScenario:
-    """
-    The autotest scenario the dataset scenario stands for, planned like an
-    autotest run plans it (language name and script, the kind's goal or the
-    price question of `item`), under the dataset's id and goal.
-    """
-
-    registries = session.container.registries
-    niche = registries.niche_template_registry().get(session.dataset.niche)
-    tag = LanguageTag(scenario.language)
-    planned: list[AutotestScenario] = plan_scenarios(
-        languages=build_autotest_languages(
-            [tag], collect_language_profiles(registries.language_registry(), [tag])
-        ),
-        kinds=[scenario.kind],
-        priced_item_titles=[] if scenario.item is None else [scenario.item],
-        price_question_limit=1,
-        resource_noun=(
-            read_english_text(niche.resource_nouns)
-            or RESOURCE_KIND_NOUNS[niche.resource_kind]
-        ),
-        party_size=DEFAULT_PARTY_SIZE,
-    )
-    base: AutotestScenario = planned[-1]
-    return base.model_copy(
-        update={
-            "key": AutotestScenarioKey(scenario.id),
-            "goal": base.goal
-            if scenario.goal is None
-            else AutotestScenarioGoal(scenario.goal),
-        }
     )

@@ -1,5 +1,8 @@
+from collections.abc import Sequence
+
 from app.adapters.llm.llm_payloads import (
     build_tool_results_payload,
+    build_user_media_payload,
     build_user_text_payload,
 )
 from app.contracts.llm import LlmAdapterContract
@@ -14,6 +17,7 @@ from app.schemas.dto.llm_cassettes import (
     LlmCassetteRequest,
     LlmCassetteTake,
 )
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.exceptions.evaluation_errors import LlmCassetteMissError
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 from app.schemas.typings.evaluations.constrained_integers import (
@@ -52,6 +56,13 @@ class ReplayLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return build_user_text_payload(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return build_user_media_payload(text, images)
 
     def build_tool_results_turn(
         self,

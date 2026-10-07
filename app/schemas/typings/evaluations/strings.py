@@ -36,5 +36,19 @@ class LlmTranscriptTail(BaseTypedString):
     """
 
 
+class PrivateSeedValue(BaseTypedString):
+    """
+    A private text a scenario seeded that no reply may give away: a team
+    note on the customer, another customer's name or phone number.
+    """
+
+
+class RememberedReplyFact(BaseTypedString):
+    """
+    A text the replies must name that only the customer memory holds, e.g.
+    the offer an earlier conversation was about.
+    """
+
+
 class RequiredReplyFact(BaseTypedString):
     """A text the assistant's replies must contain, e.g. "23:00" or "ლარ"."""

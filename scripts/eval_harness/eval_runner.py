@@ -14,6 +14,7 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from scripts.eval_harness.business_seeding import EvalBusinessSeeder
 from scripts.eval_harness.dataset_loading import list_dataset_paths, load_dataset
 from scripts.eval_harness.dataset_models import EvalDataset, ScenarioSpec
+from scripts.eval_harness.dataset_validation import media_directory
 from scripts.eval_harness.eval_container import (
     SteppingClock,
     SwitchableLlmAdapter,
@@ -188,4 +189,5 @@ def open_session(
         mode=options.mode,
         models=models,
         turn_limit=options.turn_limit,
+        media_dir=media_directory(options.datasets_dir / f"{dataset.niche.value}.yaml"),
     )

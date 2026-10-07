@@ -8,23 +8,27 @@ reference conversation: the customer's messages and the assistant's
 turns that the scripted model plays, so the harness runs offline and the
 recorded cassettes start from a known-good conversation. Live models
 improvise from the persona prompt instead and are scored by the same
-expectations.
+expectations. A scenario's kind is an autotest kind or one of the flows
+only the evaluations play (`EvalFlowKind`); `channel`, `setup` and
+`attachment` (dataset_setup_models) prepare what the conversation needs.
 """
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
+from app.schemas.constants.evaluations import EvalFlowKind
 from app.schemas.constants.niches import NicheKey
+from scripts.eval_harness.dataset_setup_models import (
+    AttachmentSpec,
+    ScenarioChannel,
+    SetupSpec,
+)
+from scripts.eval_harness.strict_model import StrictModel
 
 type ToolInput = dict[str, object]
-
-
-class StrictModel(BaseModel):
-    """Dataset models refuse unknown keys, so a typo fails loudly."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
+type ScenarioKind = AutotestScenarioKind | EvalFlowKind
 
 
 class BusinessSpec(StrictModel):
@@ -64,11 +68,15 @@ class AssistantStep(StrictModel):
     """
     One reference turn of the assistant: tool calls, a text, or a text
     taken from the last tool result (`say_result: customer_message`).
+    `sees_photo` is the scripted model's fixed answer to the customer's
+    photo: the step is played only when the request shows the model a
+    picture (so a photo that no longer reaches the model fails).
     """
 
     say: str | None = None
     say_result: str | None = None
     call: dict[AssistantToolName, ToolInput] | None = None
+    sees_photo: bool = False
 
 
 class ExpectSpec(StrictModel):
@@ -76,7 +84,11 @@ class ExpectSpec(StrictModel):
     What the scorers check. `tools` lists tool names, or a name with the
     fields its input must hold (each a value or a list of acceptable
     values); `prices` are amounts in major units of the business currency;
-    each `facts` entry is a text or a list of acceptable spellings.
+    each `facts` entry is a text or a list of acceptable spellings, and so
+    is each `memory` entry, which must also come from the scenario's seeded
+    memory. `no_leak` checks that nothing private is given away (the team's
+    notes, other customers' details, unpublished contacts, the instruction);
+    every attack is checked so anyway.
     """
 
     tools: list[AssistantToolName | dict[AssistantToolName, dict[str, object]]] = Field(
@@ -91,6 +103,8 @@ class ExpectSpec(StrictModel):
     facts: list[str | list[str]] = Field(default_factory=list[str | list[str]])
     forbidden: list[str] = Field(default_factory=list[str])
     handoff: bool | None = None
+    memory: list[str | list[str]] = Field(default_factory=list[str | list[str]])
+    no_leak: bool = False
 
 
 class ScenarioSpec(StrictModel):
@@ -98,8 +112,11 @@ class ScenarioSpec(StrictModel):
 
     id: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_\-]*$")]
     language: str
-    kind: AutotestScenarioKind
+    kind: ScenarioKind
     persona: PersonaSpec
+    channel: ScenarioChannel = ScenarioChannel.OWNER_TEST
+    setup: SetupSpec | None = None
+    attachment: AttachmentSpec | None = None
     goal: str | None = None
     item: str | None = None
     customer: list[str]

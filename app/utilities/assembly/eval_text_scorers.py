@@ -135,9 +135,14 @@ def score_guard(replies: Sequence[AssistantReply]) -> EvalCriterionResult:
 
 
 def score_records(
-    scenario: AutotestScenario, replies: Sequence[AssistantReply]
+    scenario: AutotestScenario,
+    replies: Sequence[AssistantReply],
+    extra_notes: Sequence[str] = (),
 ) -> EvalCriterionResult:
-    """The autotest checks of what was created (bookings, leads, handoffs)."""
+    """
+    The autotest checks of what was created (bookings, leads, handoffs),
+    and the failed checks of what was done that `extra_notes` brings.
+    """
 
     notes: list[str] = [
         str(failure.note)
@@ -149,4 +154,5 @@ def score_records(
             AutotestCheckCode.WRONG_DISCLOSURE_LANGUAGE,
         )
     ]
+    notes.extend(extra_notes)
     return result(EvalCriterion.RECORDS, notes)

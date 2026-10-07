@@ -22,6 +22,8 @@ class SampleResult(BaseModel):
     One play of a scenario. It passes when every deterministic criterion
     holds, the judge (when there is one) scored nothing below 3, the
     conversation ran to its end and, on replay, every call was recorded.
+    `reply_languages` is the language each written reply read as ("?" when
+    it told too little), for the per-language confusion of the report.
     """
 
     sample_index: int
@@ -29,6 +31,7 @@ class SampleResult(BaseModel):
     criteria: list[EvalCriterionResult] = Field(
         default_factory=list[EvalCriterionResult]
     )
+    reply_languages: list[str] = Field(default_factory=list[str])
     judge: JudgeResult | None = None
     transcript: list[TranscriptLine] = Field(default_factory=list[TranscriptLine])
     tool_calls: list[str] = Field(default_factory=list[str])

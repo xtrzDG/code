@@ -3,11 +3,12 @@ The real AppContainer for an evaluation run: storage in memory, a clock
 that starts every scenario on Monday 2026-10-05 at 12:00 in Tbilisi and
 moves one millisecond per reading (so stored rows keep their order), and
 one language-model seam the harness points at the adapter of the scenario
-sample being played (replay, recording, scripted or a live provider).
+sample being played (replay, recording, scripted or a live provider), and
+the customers' photos kept in memory.
 """
 
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from typing import Protocol, cast
 
@@ -19,12 +20,14 @@ from app.containers.app import AppContainer
 from app.contracts.llm import LlmAdapterContract
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.conversations.llm_models import resolve_llm_provider
+from scripts.eval_harness.media_inputs import InMemoryMediaStorage
 
 SCENARIO_START: datetime = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 NANOSECONDS_PER_SECOND: int = 1_000_000_000
@@ -84,6 +87,13 @@ class SwitchableLlmAdapter(LlmAdapterContract):
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return self._adapter().build_user_text_turn(text)
 
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return self._adapter().build_user_media_turn(text, images)
+
     def build_tool_results_turn(
         self, results: list[LlmToolResult]
     ) -> LlmProviderPayload:
@@ -128,6 +138,8 @@ def build_eval_container(
         WallClock(preferred_time_unit_type=Microseconds, unix_nanosecond_factory=clock),
     )
     replace_provider(container.adapters.routing_llm_adapter, seam)
+    # Photos a scenario sends stay in memory, never in a directory.
+    replace_provider(container.adapters.media.media_storage, InMemoryMediaStorage())
     return container
 
 
