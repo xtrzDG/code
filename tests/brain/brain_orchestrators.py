@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.adapters.locks.in_memory_advisory_lock_adapter import (
+    InMemoryAdvisoryLockAdapter,
+)
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.reply_safety import ClaimCheckFacilitatorContract
 from app.orchestrators.conversations.conversation_turn_orchestrator import (
@@ -14,6 +17,7 @@ from app.orchestrators.conversations.voice_tool_call_orchestrator import (
     VoiceToolCallOrchestrator,
 )
 from app.registries.billing.plan_registry import PlanRegistry
+from app.registries.locks.reply_lock_registry import ReplyLockRegistry
 from app.registries.tools.assistant_tool_registry import AssistantToolRegistry
 from app.schemas.constants.assistants import LlmEffort
 from app.schemas.typings.assistants.constrained_integers import (
@@ -138,6 +142,7 @@ def build_brain_orchestrators(
             localized_text_resolver=texts,
             live_events=live_events,
             wall_clock=wall_clock,
+            reply_locks=ReplyLockRegistry(InMemoryAdvisoryLockAdapter()),
         ),
         localized_text_resolver=texts,
         storage_scope=storage_scope,

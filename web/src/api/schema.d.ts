@@ -10761,7 +10761,9 @@ export interface components {
          *     attempt of that same job (its worker died) takes the event over at
          *     once instead of waiting out the processing lease.
          *
-         *     Version 7: the customer message's `context_note` (optional).
+         *     Version 7: the customer message's `context_note` (optional) and
+         *     `queue_to_claim_ms`, how long the message waited from being queued to a
+         *     worker taking it to answer (optional, kept from the first take).
          */
         InboundEventDocument: {
             /**
@@ -10805,6 +10807,8 @@ export interface components {
             processed_at?: number | null;
             /** Provider Message Id */
             provider_message_id: string;
+            /** Queue To Claim Ms */
+            queue_to_claim_ms?: number | null;
             /** Reply Message Id */
             reply_message_id?: string;
             /**

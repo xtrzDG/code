@@ -31,6 +31,7 @@ from app.utilities.deliveries.inbound_claims import (
     is_inbound_event_held_by_another,
     take_inbound_event,
 )
+from app.utilities.observability.log_formatting import log_fields
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -40,13 +41,16 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
     Take the customer messages a `process_inbound_message` job answers.
 
     Quick messages in a row get one reply: the job's message and the same
-    customer's other unanswered ones (`inbound_bursts`) are answered once
-    the customer has been quiet for MESSAGE_COALESCE_SECONDS (0 turns this
-    off: every message is answered on its own, at once). Until then
-    the job queues itself again for that moment and nothing is taken (the
-    inbox is not changed). When it is time, every message of the burst is
-    held by this worker until its lease ends; a message another worker
-    took meanwhile is left to it.
+    customer's other unanswered ones (`inbound_bursts`) are answered at
+    once when the newest reads as a finished sentence, else once the
+    customer has been quiet for MESSAGE_COALESCE_SECONDS (1.5 s on
+    Telegram; 0 turns grouping off: every message is answered on its own,
+    at once). Until then the job queues itself again for that moment (the
+    queue wakes its lane exactly then) and nothing is taken (the inbox is
+    not changed). When it is time, every message of the burst is held by
+    this worker until its lease ends; a message another worker took
+    meanwhile is left to it. The first take of each message records how
+    long it waited since it was queued (`queue_to_claim_ms`, also logged).
 
     None when there is nothing to do: the job's message is finished or gone,
     or another processing still holds it (the job comes back when that
@@ -107,8 +111,20 @@ class ClaimInboundBurstUseCase(UseCaseContract[QueuedJobInput, InboundBurst | No
                     )
                 )
 
-        if not any(claim.event.id == trigger.id for claim in claims):
+        taken: InboundEventDocument | None = next(
+            (claim.event for claim in claims if claim.event.id == trigger.id), None
+        )
+        if taken is None:
             return None
+
+        if taken.queue_to_claim_ms is not None:
+            logger.info(
+                "Customer messages taken to answer",
+                extra=log_fields(
+                    queue_to_claim_ms=int(taken.queue_to_claim_ms),
+                    burst_size=len(claims),
+                ),
+            )
 
         return InboundBurst(trigger=trigger, claims=claims)
 

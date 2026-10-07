@@ -15,6 +15,7 @@ from app.schemas.typings.conversations.prefixed_id import ConversationId, Messag
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
 from app.schemas.typings.deliveries.constrained_integers import (
     InboundProcessingAttemptCount,
+    QueueToClaimMilliseconds,
 )
 from app.schemas.typings.deliveries.prefixed_id import InboundEventId, OutboundMessageId
 from app.schemas.typings.deliveries.strings import InboundErrorText, InboundPayloadText
@@ -80,7 +81,9 @@ class InboundEventDocument(BaseDocument):
     attempt of that same job (its worker died) takes the event over at
     once instead of waiting out the processing lease.
 
-    Version 7: the customer message's `context_note` (optional).
+    Version 7: the customer message's `context_note` (optional) and
+    `queue_to_claim_ms`, how long the message waited from being queued to a
+    worker taking it to answer (optional, kept from the first take).
     """
 
     schema_version: SchemaVersion = SchemaVersion("7")
@@ -104,6 +107,7 @@ class InboundEventDocument(BaseDocument):
     handoff_requested_at: Microseconds | None = None
     customer_channel_user_id: ChannelUserId | None = None
     holder_job_id: QueuedJobId | None = None
+    queue_to_claim_ms: QueueToClaimMilliseconds | None = None
 
     @model_validator(mode="after")
     def copy_customer_sender(self) -> Self:

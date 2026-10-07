@@ -14,10 +14,12 @@ from app.schemas.constants.deliveries import InboundEventStatus
 from app.schemas.domain.inbound_events import InboundEventDocument
 from app.schemas.typings.deliveries.constrained_integers import (
     InboundProcessingAttemptCount,
+    QueueToClaimMilliseconds,
 )
 from app.schemas.typings.platform.prefixed_id import QueuedJobId
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
+MICROSECONDS_PER_MILLISECOND: int = 1_000
 # How long one processing of an event may hold it: longer than any turn of
 # the model with its tools (a request or job that runs longer is dead).
 INBOUND_PROCESSING_LEASE_SECONDS: int = 180
@@ -65,7 +67,8 @@ def take_inbound_event(
 ) -> InboundEventDocument | None:
     """
     The event as held by job `job_id` until `inbound_lease_end(now)`, or
-    None when it is finished or held by another processing.
+    None when it is finished or held by another processing. The first take
+    records how long the event waited since it was queued.
     """
 
     if is_inbound_event_finished(event) or is_inbound_event_held_by_another(
@@ -78,4 +81,16 @@ def take_inbound_event(
     event.lease_until = inbound_lease_end(now)
     event.holder_job_id = job_id
     event.updated_at = now
+    if event.queue_to_claim_ms is None:
+        event.queue_to_claim_ms = queue_to_claim(event, now)
+
     return event
+
+
+def queue_to_claim(
+    event: InboundEventDocument, now: Microseconds
+) -> QueueToClaimMilliseconds:
+    """Milliseconds since the event was stored and queued (0 for a clock step back)."""
+
+    waited: int = max(0, int(now) - int(event.created_at))
+    return QueueToClaimMilliseconds(waited // MICROSECONDS_PER_MILLISECOND)

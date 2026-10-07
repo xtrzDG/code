@@ -17,6 +17,13 @@ from app.schemas.typings.platform.strings import JobPayloadJson
 from app.utilities.observability.log_context import current_log_context
 from app.utilities.observability.tracing.trace_context import current_trace_parent
 
+MICROSECONDS_PER_SECOND: int = 1_000_000
+# A job due within this many seconds wakes its lane exactly when it is due
+# (a customer's grouped messages, a short retry); one due later is found by
+# the lane's polls, at most one poll interval late, which is small next to
+# its wait.
+EXACT_WAKEUP_HORIZON_SECONDS: int = 600
+
 
 class JobQueueFacilitator(JobQueueFacilitatorContract):
     """
@@ -24,8 +31,10 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
     wakes the idle threads of the job's lane: in this process, and on
     Postgres in every worker process (NOTIFY). The job row and its wake-up
     are one storage transaction (`unit_of_work`), so the signal leaves only
-    once the job is committed and a woken worker always finds it; a job
-    queued for later is found by the polls when it is due. A job carries
+    once the job is committed and a woken worker always finds it. A job
+    queued for later (up to EXACT_WAKEUP_HORIZON_SECONDS ahead) announces
+    its due time instead, and the listening workers wake its lane then;
+    the polls find any job whose wake-up was lost. A job carries
     the request id and the trace of the code that queued it, so its log
     lines and spans join that request's.
     """
@@ -68,6 +77,8 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
             self._job_repo.save(job)
             if job.run_at <= now:
                 self._job_wakeup.notify(lane)
+            elif is_within_exact_wakeup(job.run_at, now):
+                self._job_wakeup.notify_at(lane, job.run_at)
 
         return job.id
 
@@ -76,3 +87,9 @@ class JobQueueFacilitator(JobQueueFacilitatorContract):
             return nullcontext()
 
         return self._unit_of_work.unit_of_work()
+
+
+def is_within_exact_wakeup(run_at: Microseconds, now: Microseconds) -> bool:
+    return (
+        int(run_at) - int(now) <= EXACT_WAKEUP_HORIZON_SECONDS * MICROSECONDS_PER_SECOND
+    )

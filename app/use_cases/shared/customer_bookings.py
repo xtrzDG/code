@@ -1,8 +1,8 @@
 """
 A customer's own bookings that are not over yet, as the assistant reads
 them: the customer memory's upcoming bookings and the list_my_bookings
-tool. Read from the bookings not over yet (indexed by their end),
-never across businesses.
+tool. Read by the customer's contacts and the end of their bookings (one
+indexed read, migration 1184), never across businesses.
 """
 
 from collections.abc import Collection
@@ -18,10 +18,12 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.bookings import BookingView
+from app.schemas.dto.customer_bookings import ContactBookingLookup
 from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.booleans import IsSandboxConversation
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.utilities.scheduling.booking_views import build_booking_view
 from app.utilities.scheduling.zoned_time import load_time_zone
 
@@ -35,20 +37,24 @@ def find_customer_bookings(
     statuses: Collection[BookingStatus],
     is_sandbox: IsSandboxConversation,
     ends_after: BookingSearchBoundSeconds,
+    limit: DocumentQueryLimit,
 ) -> list[BookingView]:
     """
     The bookings of these contacts in these statuses and sandbox mode that
-    have not ended at `ends_after`, the soonest first, in the business's
-    time zone with their resource and service.
+    have not ended at `ends_after`, the soonest first and at most `limit`,
+    in the business's time zone with their resource and service.
     """
 
-    bookings: list[BookingDocument] = [
-        booking
-        for booking in booking_repo.list_ending_after(business.id, ends_after)
-        if booking.contact_id in contact_ids
-        and booking.status in statuses
-        and booking.is_sandbox == is_sandbox
-    ]
+    bookings: list[BookingDocument] = booking_repo.list_for_contacts(
+        business.id,
+        ContactBookingLookup(
+            contact_ids=tuple(sorted(contact_ids, key=str)),
+            statuses=tuple(sorted(statuses, key=lambda status: status.value)),
+            is_sandbox=is_sandbox,
+            ends_after=ends_after,
+            limit=limit,
+        ),
+    )
     if not bookings:
         return []
 

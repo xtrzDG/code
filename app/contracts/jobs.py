@@ -245,8 +245,9 @@ class JobQueueFacilitatorContract(FacilitatorContract, Protocol):
 
 class JobWakeupContract(UtilityContract, Protocol):
     """
-    The signal "a job was queued in this lane": idle lane threads start at
-    once instead of at their next poll. In memory it reaches the threads of
+    The signal "a job was queued in this lane" (or "will be due then"):
+    idle lane threads start at once, or when the job is due, instead of at
+    their next poll. In memory it reaches the threads of
     the same process; on Postgres (NOTIFY on `workshop_jobs`) the worker
     processes that `listen`. A lost or spurious wake-up costs only one poll
     interval or one empty claim: a woken thread claims from the queue.
@@ -256,6 +257,15 @@ class JobWakeupContract(UtilityContract, Protocol):
         """
         Signal `lane`. Called inside the enqueue's storage transaction, the
         signal leaves when the job is committed, never before.
+        """
+        raise NotImplementedError
+
+    def notify_at(self, lane: JobLane, run_at: Microseconds) -> None:
+        """
+        Signal that a job of `lane` becomes due at `run_at`: the listening
+        workers wake the lane then, instead of at its next poll. Called
+        inside the enqueue's storage transaction like `notify`, so it
+        leaves only once the job is committed.
         """
         raise NotImplementedError
 

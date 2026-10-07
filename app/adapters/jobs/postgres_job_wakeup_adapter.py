@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from typing import LiteralString
 
 import psycopg
+from typed_time_provider import Microseconds
 
 from app.clients.postgres import postgres_notification_listener
 from app.clients.postgres.postgres_connection_pool_client import (
@@ -20,6 +21,10 @@ from app.contracts.jobs import JobWakeupContract
 from app.schemas.constants.jobs import JobLane
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.typings.platform.strings import DatabaseUrl
+from app.utilities.jobs.job_wakeup_payloads import (
+    decode_job_wakeup,
+    encode_job_wakeup,
+)
 from app.utilities.jobs.job_wakeup_signal import JobWakeupSignal
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -51,7 +56,11 @@ class PostgresJobWakeupAdapter(JobWakeupContract):
       enqueue's transaction, so Postgres sends it when the job row commits
       (never before, and not at all when the transaction rolls back): a
       woken worker always finds the job. It also works through a
-      transaction pooler.
+      transaction pooler. A job queued for later sends
+      `<lane>@<run_at>` (`notify_at`), and every listening worker arms a
+      timer for that moment (`JobWakeupSignal.notify_at`): a burst of a
+      customer's messages is answered the moment the customer has been
+      quiet long enough, not at the next poll.
     - `listen` holds one LISTEN session for the block (the worker, while
       its lane threads run; `PostgresNotificationListener` reconnects with
       growing pauses) and sets the lane's in-process event for every
@@ -72,9 +81,18 @@ class PostgresJobWakeupAdapter(JobWakeupContract):
         self._signal: JobWakeupSignal = JobWakeupSignal() if signal is None else signal
 
     def notify(self, lane: JobLane) -> None:
+        self._send(lane, None)
+
+    def notify_at(self, lane: JobLane, run_at: Microseconds) -> None:
+        self._send(lane, run_at)
+
+    def _send(self, lane: JobLane, run_at: Microseconds | None) -> None:
         try:
             with self._connection_pool.connection() as connection:
-                connection.execute(NOTIFY_STATEMENT, (JOB_WAKEUP_CHANNEL, lane.value))
+                connection.execute(
+                    NOTIFY_STATEMENT,
+                    (JOB_WAKEUP_CHANNEL, encode_job_wakeup(lane, run_at)),
+                )
         except psycopg.Error as error:
             raise ExternalServiceError(
                 f"Could not signal the {lane.value} job lane ({type(error).__name__})."
@@ -92,19 +110,23 @@ class PostgresJobWakeupAdapter(JobWakeupContract):
             on_listening=self._signal.notify_all,
             thread_name=WAKEUP_LISTENER_THREAD_NAME,
         )
-        listener.ensure_started()
-        try:
-            yield
-        finally:
-            listener.stop(timeout_seconds=LISTENER_STOP_SECONDS)
+        with self._signal.listen():
+            listener.ensure_started()
+            try:
+                yield
+            finally:
+                listener.stop(timeout_seconds=LISTENER_STOP_SECONDS)
 
     def _receive(self, payload: str) -> None:
-        try:
-            lane = JobLane(payload)
-        except ValueError:
+        wakeup: tuple[JobLane, Microseconds | None] | None = decode_job_wakeup(payload)
+        if wakeup is None:
             # A lane of a newer release during a deploy: its own workers
             # take those jobs.
             LOGGER.debug("Ignored a wake-up for an unknown job lane")
             return
 
-        self._signal.notify(lane)
+        lane, run_at = wakeup
+        if run_at is None:
+            self._signal.notify(lane)
+        else:
+            self._signal.notify_at(lane, run_at)

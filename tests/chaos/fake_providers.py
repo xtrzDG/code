@@ -19,7 +19,7 @@ import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any
+from typing import Any, cast
 
 # No number, price or promise: the reply guard lets it through as it is.
 REPLY_TEXT: str = "Здравствуйте! Сейчас уточню у администратора и сразу отвечу."
@@ -35,8 +35,22 @@ class ProviderState:
         self.llm_delay_seconds: float = 0.0
         self.meta_messages: int = 0
         self.llm_calls: int = 0
+        # Every request to Meta that answered: when it came (wall clock) and
+        # its JSON body (a reply, or a "typing…" with a read receipt).
+        self.meta_posts: list[tuple[float, dict[str, Any]]] = []
         self._guard = threading.Lock()
         self.released = threading.Event()
+
+    def record_meta(self, body: bytes) -> None:
+        try:
+            document: Any = json.loads(body or b"{}")
+        except ValueError:
+            document = {}
+        body_fields: dict[str, Any] = (
+            cast(dict[str, Any], document) if isinstance(document, dict) else {}
+        )
+        with self._guard:
+            self.meta_posts.append((time.time(), body_fields))
 
     def count(self, kind: str) -> int:
         with self._guard:
@@ -88,7 +102,7 @@ def build_handler(state: ProviderState) -> type[BaseHTTPRequestHandler]:
 
         def do_POST(self) -> None:  # noqa: N802 - http.server's name
             length = int(self.headers.get("Content-Length") or 0)
-            self.rfile.read(length)
+            body = self.rfile.read(length)
             if self.path.startswith("/openai/"):
                 state.count("llm")
                 state.released.wait(timeout=state.llm_delay_seconds)
@@ -101,6 +115,7 @@ def build_handler(state: ProviderState) -> type[BaseHTTPRequestHandler]:
                 return
 
             number = state.count("meta")
+            state.record_meta(body)
             self._answer(
                 {
                     "messaging_product": "whatsapp",

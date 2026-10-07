@@ -3,6 +3,11 @@ from collections.abc import Callable
 from typing import cast
 
 import openai
+
+# The SDK loads its Responses resource (and the streaming helpers it
+# imports) on the first `client.responses`: imported with this module, a
+# process pays for it at start, not on its first customer's turn.
+from openai.resources.responses import Responses
 from openai.types.responses import (
     Response,
     ResponseIncludable,
@@ -76,8 +81,9 @@ class OpenAiResponsesClient(OpenAiResponsesClientContract):
             reasoning = cast(Reasoning, {"effort": reasoning_effort})
             include = [ENCRYPTED_REASONING_INCLUDE]
 
+        responses: Responses = sdk_client.responses
         try:
-            return sdk_client.responses.create(
+            return responses.create(
                 model=model,
                 instructions=instructions,
                 input=cast(ResponseInputParam, input_items),

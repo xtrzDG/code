@@ -1,7 +1,9 @@
 """
-Quick messages in a row get one reply: the worker waits until the customer
-has been quiet for MESSAGE_COALESCE_SECONDS, shows "typing…" meanwhile and
-answers every message in one turn.
+Quick messages in a row get one reply, and a finished question is answered
+at once: after a fragment the worker waits until the customer has been
+quiet (1.5 s on Telegram, these tests' channel), shows "typing…" meanwhile
+and answers every message in one turn; a burst whose newest message reads
+as a finished sentence is answered without waiting.
 """
 
 from app.schemas.constants.deliveries import InboundEventStatus
@@ -38,10 +40,10 @@ def write(
         )
 
 
-def test_three_quick_messages_get_one_reply() -> None:
+def test_three_quick_fragments_get_one_reply() -> None:
     testbed = ReplySpeedTestbed()
     _, channel = connect_bot(testbed)
-    write(testbed, channel, ["Hi", "Do you have a table for 4", "tonight at 8?"])
+    write(testbed, channel, ["Hi", "Do you have a table for 4", "tonight at 8"])
 
     testbed.run_worker()
     # The customer may still be writing: "typing…", no answer yet.
@@ -51,11 +53,11 @@ def test_three_quick_messages_get_one_reply() -> None:
         str(CHAT_ID)
     }
 
-    testbed.clock.advance(3)
+    testbed.clock.advance(2)
     testbed.run_worker()
 
     assert sent_texts(testbed) == [
-        "Reply to: Hi / Do you have a table for 4 / tonight at 8?"
+        "Reply to: Hi / Do you have a table for 4 / tonight at 8"
     ]
     events = inbox(testbed)
     assert [event.status for event in events] == [InboundEventStatus.ANSWERED] * 3
@@ -69,14 +71,32 @@ def test_three_quick_messages_get_one_reply() -> None:
     assert {turn.waiting_since for turn in turns} == {events[0].created_at}
     [kept] = testbed.typing.kept
     assert kept.replying_to == events[-1].provider_message_id
+    # Taken 2 s after the newest message: 4, 3 and 2 s after each was queued.
+    assert [event.queue_to_claim_ms for event in events] == [4_000, 3_000, 2_000]
+
+
+def test_a_finished_question_ends_the_wait_for_the_whole_burst() -> None:
+    testbed = ReplySpeedTestbed()
+    _, channel = connect_bot(testbed)
+    write(testbed, channel, ["Hi", "Do you have a table for 4 tonight at 8?"])
+
+    testbed.run_worker()
+
+    assert sent_texts(testbed) == [
+        "Reply to: Hi / Do you have a table for 4 tonight at 8?"
+    ]
+    assert testbed.typing.once == []
+    assert [event.status for event in inbox(testbed)] == [
+        InboundEventStatus.ANSWERED
+    ] * 2
 
 
 def test_a_customer_who_keeps_writing_is_answered_within_three_waits() -> None:
     testbed = ReplySpeedTestbed()
     _, channel = connect_bot(testbed)
-    # A new message every 2 s: never 3 s of quiet. The last one came 8 s
-    # after the first; 9 s after the first is the longest wait.
-    write(testbed, channel, ["one", "two", "three", "four", "five"], gap_seconds=2)
+    # A fragment every second: never 1.5 s of quiet. The last one came 4 s
+    # after the first; 4.5 s after the first is the longest wait.
+    write(testbed, channel, ["one", "two", "three", "four", "five"])
     testbed.run_worker()
     assert sent_texts(testbed) == []
 
@@ -86,21 +106,35 @@ def test_a_customer_who_keeps_writing_is_answered_within_three_waits() -> None:
     assert sent_texts(testbed) == ["Reply to: one / two / three / four / five"]
 
 
-def test_a_single_message_waits_only_for_the_quiet_time() -> None:
+def test_a_single_finished_question_is_answered_at_once() -> None:
     testbed = ReplySpeedTestbed()
     _, channel = connect_bot(testbed)
     write(testbed, channel, ["Are you open today?"])
 
     testbed.run_worker()
-    assert sent_texts(testbed) == []
-
-    testbed.clock.advance(3)
-    testbed.run_worker()
 
     assert sent_texts(testbed) == ["Reply to: Are you open today?"]
     [event] = inbox(testbed)
     assert event.status is InboundEventStatus.ANSWERED
+    assert event.queue_to_claim_ms == 0
     assert testbed.patient.messages[0].is_reply_deferred is False
+    assert testbed.typing.once == []
+
+
+def test_a_single_fragment_waits_only_for_the_quiet_time() -> None:
+    testbed = ReplySpeedTestbed()
+    _, channel = connect_bot(testbed)
+    write(testbed, channel, ["Hi"])
+
+    testbed.run_worker()
+    assert sent_texts(testbed) == []
+
+    testbed.clock.advance(2)
+    testbed.run_worker()
+
+    assert sent_texts(testbed) == ["Reply to: Hi"]
+    [event] = inbox(testbed)
+    assert event.queue_to_claim_ms == 2_000
 
 
 def test_messages_far_apart_are_answered_one_by_one() -> None:

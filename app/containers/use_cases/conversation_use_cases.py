@@ -166,6 +166,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         localized_text_resolver=utilities.localized_text_resolver,
         live_events=facilitators.event_publisher,
         wall_clock=time_provider.microsecond_wall_clock,
+        reply_locks=registries.reply_lock_registry,
         metrics=utilities.service_metrics,
     )
     open_voice_conversation_use_case: Factory[

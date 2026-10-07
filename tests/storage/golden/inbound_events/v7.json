@@ -41,6 +41,7 @@
   "payload": "Sample InboundPayloadText",
   "processed_at": 1790000000000000,
   "provider_message_id": "Sample ProviderMessageId",
+  "queue_to_claim_ms": 1,
   "reply_message_id": "message_fcc6527c-bfb5-43e4-aa15-0a957bccdbf4",
   "schema_version": "7",
   "status": "received",

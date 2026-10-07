@@ -31,6 +31,7 @@ from app.gateways.telemetry_lifecycle import (
     start_telemetry,
 )
 from app.gateways.worker.background_worker import BackgroundWorker
+from app.gateways.worker.turn_cache_warmup import warm_turn_caches
 from app.utilities.observability.logging_setup import configure_logging
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -44,7 +45,9 @@ def main(
     """
     Run the worker until stopped; returns the process exit code. A flow of
     personal data to a provider the sub-processor list does not cover stops
-    it in production before it starts (`check_processor_uses`).
+    it in production before it starts (`check_processor_uses`). The reply
+    guard's locale data is loaded before the lanes start, not by the first
+    customer's turn (`warm_turn_caches`).
     """
 
     container: AppContainer = AppContainer() if app_container is None else app_container
@@ -52,6 +55,7 @@ def main(
     install_stop_signal_handlers(stop)
     # The worker sends the nightly quality sample: it checks the providers too.
     check_processor_uses(container)
+    warm_turn_caches()
     worker: BackgroundWorker = container.gateways.background_worker()
     metrics_server: WorkerMetricsServer | None = start_worker_metrics(container)
     LOGGER.info("Background worker started")

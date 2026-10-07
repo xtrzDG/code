@@ -8,6 +8,7 @@ from app.contracts.repositories.booking_repositories import (
 )
 from app.repositories.listing.booking_listing import BookingListing, LeadListing
 from app.repositories.listing.booking_window_listing import BookingWindowListing
+from app.repositories.listing.customer_booking_lookup import CustomerBookingLookup
 from app.repositories.listing.handoff_listing import (
     HandoffListing,
     UnansweredQuestionListing,
@@ -19,7 +20,9 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuestionId
 
 
-class BookingRepository(BookingListing, BookingWindowListing, BookingRepoContract):
+class BookingRepository(
+    BookingListing, BookingWindowListing, CustomerBookingLookup, BookingRepoContract
+):
     def save(self, booking: BookingDocument) -> None:
         self._store(str(booking.id), booking)
 

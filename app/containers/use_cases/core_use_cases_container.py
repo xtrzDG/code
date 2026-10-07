@@ -265,6 +265,7 @@ class CoreUseCasesContainer(containers.DeclarativeContainer):
         ReplySpeedUseCasesContainer,
         config=config,
         facilitators=facilitators,
+        registries=registries,
         repositories=repositories,
         time_provider=time_provider,
         utilities=utilities,

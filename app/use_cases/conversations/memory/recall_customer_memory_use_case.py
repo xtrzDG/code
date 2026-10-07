@@ -162,7 +162,8 @@ class RecallCustomerMemoryUseCase(
                 ends_after=BookingSearchBoundSeconds(
                     microseconds_to_seconds(int(input_data.now))
                 ),
-            )[:MAX_UPCOMING_BOOKINGS],
+                limit=MAX_UPCOMING_BOOKINGS,
+            ),
             open_leads=open_leads(
                 self._lead_repo, business_id, [input_data.conversation, *earlier]
             ),

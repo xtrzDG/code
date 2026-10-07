@@ -12,12 +12,13 @@ from app.schemas.dto.customer_memory.returning_customers import (
     RememberedNote,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.shared.lead_views import build_lead_view
 
 # The latest conversations whose summaries, requests and notes are read.
 RECALLED_CONVERSATION_COUNT: int = 10
 MAX_SUMMARIES: int = 3
-MAX_UPCOMING_BOOKINGS: int = 3
+MAX_UPCOMING_BOOKINGS: DocumentQueryLimit = DocumentQueryLimit(3)
 MAX_OPEN_LEADS: int = 3
 MAX_TEAM_NOTES: int = 3
 # Requests and notes are looked up in this many of the latest conversations.

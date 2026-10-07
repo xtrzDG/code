@@ -32,6 +32,10 @@ from tests.e2e.harness import start_workshop
 from tests.e2e.harness_settings import E2E_ENVIRONMENT
 from tests.perf.latency import PerfReport
 from tests.perf.perf_scale import PerfScale, read_report_path, read_scale
+from tests.storage.conftest import (
+    migrated_template_database,
+    postgres_server,
+)
 from tests.storage.postgres_server import (
     ThrowawayPostgresServer,
     is_postgres_available,
@@ -42,6 +46,10 @@ from tests.storage.storage_testing import (
     RecordedRetryPause,
     build_fixed_wall_clock,
 )
+
+# The reply budget runs on the game days' world (tests/chaos), on the
+# throwaway Postgres of the storage tests.
+__all__ = ["migrated_template_database", "postgres_server"]
 
 
 @dataclass(frozen=True)

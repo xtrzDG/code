@@ -41,6 +41,7 @@ from app.registries.locks.login_code_send_lock_registry import (
 from app.registries.locks.platform_alert_lock_registry import (
     PlatformAlertLockRegistry,
 )
+from app.registries.locks.reply_lock_registry import ReplyLockRegistry
 from app.registries.maintenance.data_task_registry import DataTaskRegistry
 from app.registries.niches.niche_template_registry import NicheTemplateRegistry
 from app.registries.niches.niche_value_registry import NicheValueRegistry
@@ -146,6 +147,10 @@ class RegistriesContainer(containers.DeclarativeContainer):
     )
     customer_message_lock_registry: Singleton[CustomerMessageLockRegistry] = Singleton(
         CustomerMessageLockRegistry, advisory_locks=adapters.advisory_locks
+    )
+    # One per assistant reply: its "one moment" and the reply itself.
+    reply_lock_registry: Singleton[ReplyLockRegistry] = Singleton(
+        ReplyLockRegistry, advisory_locks=adapters.advisory_locks
     )
     # Places for turns in this process, taken before anything held for long:
     # customer turns before their lock (LLM_MAX_CONCURRENCY), the owners'

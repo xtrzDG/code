@@ -1,7 +1,10 @@
+from contextlib import AbstractContextManager, nullcontext
+
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.localization_utilities import LocalizedTextResolverContract
+from app.contracts.reply_locks import ReplyLockRegistryContract
 from app.contracts.repositories.billing_repositories import UsageEventRepoContract
 from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
@@ -42,6 +45,7 @@ from app.utilities.conversations.llm_models import LlmCallCost, compute_llm_call
 from app.utilities.conversations.reply_choices_text import close_with_prompt
 from app.utilities.conversations.reply_latency import measure_reply_latency
 from app.utilities.conversations.stored_tool_calls import storable_tool_calls
+from app.utilities.deliveries.holding_replies import derive_holding_message_id
 from app.utilities.observability.metrics.null_service_metrics import (
     NO_SERVICE_METRICS,
 )
@@ -59,7 +63,10 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     The first assistant reply of a chat conversation starts with the
     disclosure "Hello! I am the AI assistant of <business>." in the language
     the customer writes in, also one the business did not list
-    (`reply_language`; phone calls disclose in the call greeting). The
+    (`reply_language`; phone calls disclose in the call greeting), unless
+    the "one moment" of this slow turn already said it: the reply of an
+    inbox message is decided and stored under the reply's lock, which the
+    holding message takes too, so the customer hears the disclosure once. The
     outbound message keeps the tool calls, model, tokens and cost (from the
     model price table, the claim check's verifier included) and what the
     reply guard did (verdict, reasons, flagged values, checked claims; only
@@ -81,8 +88,10 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         localized_text_resolver: LocalizedTextResolverContract,
         live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
+        reply_locks: ReplyLockRegistryContract,
         metrics: ServiceMetricsContract = NO_SERVICE_METRICS,
     ) -> None:
+        self._reply_locks: ReplyLockRegistryContract = reply_locks
         self._metrics: ServiceMetricsContract = metrics
         self._message_repo: MessageRepoContract = message_repo
         self._conversation_repo: ConversationRepoContract = conversation_repo
@@ -96,8 +105,6 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
     def run(self, input_data: ReplyRecord) -> AssistantReply:
         turn: PreparedTurn = input_data.turn
         now: Microseconds = self._wall_clock.now_unix()
-        disclosure: MessageText | None = self._find_disclosure(turn, input_data.text)
-        text: MessageText | None = compose_reply_text(input_data, disclosure)
         choices: ReplyChoices | None = (
             None
             if input_data.choices is None
@@ -114,40 +121,13 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
         )
         # The id the inbox chose: the reply it sends is this one.
         reply_id: MessageId = turn.reply_message_id or MessageId()
-        reply_latency: ReplyLatencyMilliseconds | None = measure_reply_latency(
-            input_data.waiting_since, now
-        )
-        if text is not None:
-            self._observe_answer_latency(turn, reply_latency)
-            self._message_repo.save(
-                MessageDocument(
-                    id=reply_id,
-                    conversation_id=turn.conversation.id,
-                    business_id=turn.business.id,
-                    direction=MessageDirection.OUTBOUND,
-                    author=MessageAuthor.ASSISTANT,
-                    text=text,
-                    language=turn.reply_language,
-                    tool_calls=storable_tool_calls(input_data.tool_calls),
-                    model_id=input_data.model_id,
-                    input_tokens=input_data.input_tokens,
-                    output_tokens=input_data.output_tokens,
-                    cost_micro_usd=CostMicroUsd(
-                        int(cost.total) + int(total_verifier_cost(input_data))
-                    ),
-                    channel=turn.conversation.channel,
-                    reply_latency_ms=reply_latency,
-                    llm_round_count=input_data.llm_round_count,
-                    is_fallback_model=input_data.is_fallback_model,
-                    guard_verdict=guard_verdict_of(input_data),
-                    guard_reasons=list(input_data.guard_reasons),
-                    unverified_values=list(input_data.unverified_values),
-                    claim_findings=list(input_data.claim_findings),
-                    choices=choices,
-                    created_at=now,
-                    updated_at=now,
-                )
+        with self._reply_lock(turn):
+            disclosure: MessageText | None = self._find_disclosure(
+                turn, input_data.text
             )
+            text: MessageText | None = compose_reply_text(input_data, disclosure)
+            if text is not None:
+                self._store_reply(input_data, reply_id, text, choices, cost, now)
 
         record_reply_usage(self._usage_event_repo, input_data, cost, now)
         conversation: ConversationDocument = (
@@ -207,17 +187,74 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 turn.conversation.channel, milliseconds_as_seconds(int(latency))
             )
 
+    def _reply_lock(self, turn: PreparedTurn) -> AbstractContextManager[object]:
+        """The lock of an inbox message's reply (it may have a holding message)."""
+
+        if turn.reply_message_id is None:
+            return nullcontext()
+
+        return self._reply_locks.lock_for_reply(turn.business.id, turn.reply_message_id)
+
+    def _store_reply(
+        self,
+        record: ReplyRecord,
+        reply_id: MessageId,
+        text: MessageText,
+        choices: ReplyChoices | None,
+        cost: LlmCallCost,
+        now: Microseconds,
+    ) -> None:
+        turn: PreparedTurn = record.turn
+        reply_latency: ReplyLatencyMilliseconds | None = measure_reply_latency(
+            record.waiting_since, now
+        )
+        self._observe_answer_latency(turn, reply_latency)
+        self._message_repo.save(
+            MessageDocument(
+                id=reply_id,
+                conversation_id=turn.conversation.id,
+                business_id=turn.business.id,
+                direction=MessageDirection.OUTBOUND,
+                author=MessageAuthor.ASSISTANT,
+                text=text,
+                language=turn.reply_language,
+                tool_calls=storable_tool_calls(record.tool_calls),
+                model_id=record.model_id,
+                input_tokens=record.input_tokens,
+                output_tokens=record.output_tokens,
+                cost_micro_usd=CostMicroUsd(
+                    int(cost.total) + int(total_verifier_cost(record))
+                ),
+                channel=turn.conversation.channel,
+                reply_latency_ms=reply_latency,
+                llm_round_count=record.llm_round_count,
+                is_fallback_model=record.is_fallback_model,
+                guard_verdict=guard_verdict_of(record),
+                guard_reasons=list(record.guard_reasons),
+                unverified_values=list(record.unverified_values),
+                claim_findings=list(record.claim_findings),
+                choices=choices,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+
     def _find_disclosure(
         self,
         turn: PreparedTurn,
         text: MessageText | None,
     ) -> MessageText | None:
-        """The AI disclosure that opens the first chat reply, if due."""
+        """
+        The AI disclosure that opens the first chat reply, if due: not when
+        this turn's "one moment" was the first thing the assistant said
+        (it carried the disclosure).
+        """
 
         if (
             text is None
             or not turn.is_first_reply
             or turn.conversation.channel is ChannelKind.PHONE
+            or self._holding_spoke_first(turn)
         ):
             return None
 
@@ -228,6 +265,15 @@ class RecordAssistantReplyUseCase(UseCaseContract[ReplyRecord, AssistantReply]):
                 ),
                 str(turn.business.name),
             )
+        )
+
+    def _holding_spoke_first(self, turn: PreparedTurn) -> bool:
+        return (
+            turn.reply_message_id is not None
+            and self._message_repo.get(
+                turn.business.id, derive_holding_message_id(turn.reply_message_id)
+            )
+            is not None
         )
 
 
