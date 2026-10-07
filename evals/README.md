@@ -164,7 +164,9 @@ niches with `--workers 8`); commit `evals/cassettes` and
 `evals/baselines/scripted.json` together. A change of the tools or the
 instruction (a new tool such as `offer_choices`) makes every cassette
 stale: re-record, and give the new tool a scenario, since
-`test_eval_coverage.py` fails until one expects it. A reference conversation that no longer passes (for example a
+`test_eval_coverage.py` fails until one expects it (`offer_choices` is
+played by the restaurant's `taptime__*` scenarios: a booking made by
+tapping the offered times and yes). A reference conversation that no longer passes (for example a
 tool now refuses an input) shows up in the report and in
 `git diff evals/baselines`.
 

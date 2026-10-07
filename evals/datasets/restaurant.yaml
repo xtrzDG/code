@@ -3,7 +3,8 @@
 # languages it does not list (the platform reads any language), and the last
 # scenarios are a German guest and guests typing Georgian and Russian in
 # Latin letters. Eight scenarios per language, and in ka, ru and en a
-# guest asking for the fully booked Friday who joins the waitlist. `customer` and `assistant` are the reference
+# guest asking for the fully booked Friday who joins the waitlist, and a
+# guest who books by tapping the offered times and yes (offer_choices). `customer` and `assistant` are the reference
 # conversation the scripted model plays (the seeded cassettes); a live model
 # improvises from the persona and goal and is scored by `expect`
 # (evals/README.md describes every field).
@@ -1342,4 +1343,92 @@ scenarios:
     tools:
     - send_link: {kind: menu}
     facts: [mtsvane-ezo.example/menu]
+    handoff: false
+# Booking by tapping options (offer_choices): the free times, then yes or no.
+- id: taptime__ka
+  language: ka
+  kind: booking
+  persona: {name: ნინო, phone: '+995555100201'}
+  goal: Book a table for 2 on Thursday evening, around 20:00. Pick a time from the options the assistant offers, give your name and phone number, and confirm by tapping yes.
+  customer: ['გამარჯობა! მაგიდა 2 ადამიანზე ხუთშაბათს საღამოს, დაახლოებით 20:00-ზე. მე ვარ ნინო, ტელეფონი +995 555 10 02 01.', '20:00', 'დიახ, დაჯავშნეთ']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-08', time: '20:00', party_size: 2, nights: null, resource_type: null, duration_minutes: null}
+  - call:
+      offer_choices: {prompt_text: 'რომელი დრო გაწყობთ?', options: ['19:00', '19:30', '20:00', '20:30', '21:00']}
+  - {say: 'ხუთშაბათს საღამოს 19:00-დან 21:00-მდე თავისუფალი მაგიდებია 2 ადამიანისთვის.'}
+  - call:
+      offer_choices: {prompt_text: 'დავჯავშნო?', options: ['დიახ, დაჯავშნეთ', 'სხვა დრო']}
+  - {say: 'მაგიდა 2 ადამიანზე ხუთშაბათს, 20:00-ზე, სახელზე ნინო.'}
+  - call:
+      create_booking: {name: ნინო, phone: '+995555100201', resource_type: null, date: '2026-10-08', time: '20:00', party_size: 2, duration_minutes: null, nights: null, notes: null}
+  - {say: 'მზადაა, ნინო! ჯავშანი გაფორმდა ხუთშაბათს, 20:00-ზე. გელოდებით!'}
+  expect:
+    tools:
+    - check_availability
+    - offer_choices
+    - create_booking:
+        name: [ნინო, Nino]
+        phone: '+995555100201'
+        party_size: 2
+        date: '2026-10-08'
+        time: '20:00'
+    handoff: false
+- id: taptime__ru
+  language: ru
+  kind: booking
+  persona: {name: Анна, phone: '+79161234567'}
+  goal: Book a table for 2 on Thursday evening, around 20:00. Pick a time from the options the assistant offers, give your name and phone number, and confirm by tapping yes.
+  customer: ['Здравствуйте! Столик на двоих в четверг вечером, около 20:00. Я Анна, телефон +7 916 123-45-67.', '20:00', 'Да, бронируйте']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-08', time: '20:00', party_size: 2, nights: null, resource_type: null, duration_minutes: null}
+  - call:
+      offer_choices: {prompt_text: 'Какое время вам удобно?', options: ['19:00', '19:30', '20:00', '20:30', '21:00']}
+  - {say: 'В четверг вечером есть свободные столики на двоих с 19:00 до 21:00.'}
+  - call:
+      offer_choices: {prompt_text: 'Забронировать?', options: ['Да, бронируйте', 'Другое время']}
+  - {say: 'Столик на двоих в четверг в 20:00 на имя Анна.'}
+  - call:
+      create_booking: {name: Анна, phone: '+79161234567', resource_type: null, date: '2026-10-08', time: '20:00', party_size: 2, duration_minutes: null, nights: null, notes: null}
+  - {say: 'Готово, Анна! Вы забронированы на четверг, 20:00. Ждём вас!'}
+  expect:
+    tools:
+    - check_availability
+    - offer_choices
+    - create_booking:
+        name: [Анна, Anna]
+        phone: '+79161234567'
+        party_size: 2
+        date: '2026-10-08'
+        time: '20:00'
+    handoff: false
+- id: taptime__en
+  language: en
+  kind: booking
+  persona: {name: Emma, phone: '+447911123456'}
+  goal: Book a table for 2 on Thursday evening, around 20:00. Pick a time from the options the assistant offers, give your name and phone number, and confirm by tapping yes.
+  customer: ['Hi! A table for 2 on Thursday evening, around 20:00, please. I am Emma, phone +44 7911 123456.', '20:00', 'Yes, book it']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-08', time: '20:00', party_size: 2, nights: null, resource_type: null, duration_minutes: null}
+  - call:
+      offer_choices: {prompt_text: 'Which time suits you?', options: ['19:00', '19:30', '20:00', '20:30', '21:00']}
+  - {say: 'On Thursday evening there are free tables for 2 from 19:00 to 21:00.'}
+  - call:
+      offer_choices: {prompt_text: 'Shall I book it?', options: ['Yes, book it', 'Another time']}
+  - {say: 'A table for 2 on Thursday at 20:00 for Emma.'}
+  - call:
+      create_booking: {name: Emma, phone: '+447911123456', resource_type: null, date: '2026-10-08', time: '20:00', party_size: 2, duration_minutes: null, nights: null, notes: null}
+  - {say: 'Done, Emma! You are booked for Thursday at 20:00. See you!'}
+  expect:
+    tools:
+    - check_availability
+    - offer_choices
+    - create_booking:
+        name: [Emma]
+        phone: '+447911123456'
+        party_size: 2
+        date: '2026-10-08'
+        time: '20:00'
     handoff: false
