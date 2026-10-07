@@ -139,8 +139,9 @@ class LiveApi:
         meanwhile: Callable[[], object] | None = None,
     ) -> Response:
         """
-        Open the stream; `publish` goes on the bus, and `meanwhile` runs,
-        once it is open (subscribed), not after a guessed delay.
+        Open the stream; `publish` goes on the bus as it subscribes (before
+        its lifetime starts), and `meanwhile` runs once it is open, not
+        after a guessed delay.
         """
 
         headers: dict[str, str] = {"Authorization": f"Bearer {token}"}
@@ -148,16 +149,14 @@ class LiveApi:
             headers["Last-Event-ID"] = last_event_id
 
         self._signals.subscribed.clear()
+        self._signals.publish_on_subscribe(publish)
 
         def while_open() -> None:
-            if not publish and meanwhile is None:
+            if meanwhile is None:
                 return
 
             self._signals.subscribed.wait(SUBSCRIBE_TIMEOUT_SECONDS)
-            for event in publish:
-                self.bus.publish(event)
-            if meanwhile is not None:
-                meanwhile()
+            meanwhile()
 
         helper = threading.Thread(target=while_open)
         helper.start()
