@@ -1,9 +1,11 @@
 /**
- * The still picture of the hero scene, in CSS: the orb, its orbits and the
- * six channels' bubbles around it, gently floating. It is what everyone
- * sees first (server-rendered, same size as the 3D scene, so nothing
- * shifts), and what stays for reduced motion, without WebGL and on weak
- * devices. Styles: `.hero-still*` in src/styles/landing.css.
+ * The hero's poster: the 3D scene's composition in HTML and CSS — the orb,
+ * two tilted orbits with a light running along each, and the six channels'
+ * bubbles floating around it. It is what everyone sees first
+ * (server-rendered, no WebGL, in the scene's own box, so nothing shifts
+ * when the scene fades in over it), all a phone shows, and what stays for
+ * reduced motion (then still), without WebGL and on weak devices. Styles:
+ * `.hero-still*` in src/styles/heroPoster.css.
  */
 
 import type { CSSProperties } from "react";

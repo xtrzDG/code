@@ -1,8 +1,9 @@
 /**
- * The landing hero's 3D scene, as numbers: whether this device gets the
- * scene or the still picture, where each channel's message bubble orbits
- * the assistant, how scrolling moves the camera, and the colours of each
- * scheme. Pure functions; the scene (app/_landing/scene/) only draws them.
+ * The landing hero's 3D scene, as numbers: where each channel's message
+ * bubble orbits the assistant, how scrolling moves the camera, and how the
+ * dust and the frame-rate watch work. Pure functions; the scene
+ * (app/_landing/scene/) only draws them. Which device gets the scene:
+ * ./heroDevice.ts.
  */
 
 import { clamp, medianOf, roundTo } from "./motionMath";
@@ -10,43 +11,6 @@ import { clamp, medianOf, roundTo } from "./motionMath";
 export const CHANNEL_MARK_KEYS = ["whatsapp", "telegram", "instagram", "messenger", "web_chat", "phone"] as const;
 
 export type ChannelMarkKey = (typeof CHANNEL_MARK_KEYS)[number];
-
-/** What the browser tells about itself, read once on the landing page. */
-export interface DeviceSignals {
-  prefersReducedMotion: boolean;
-  hasWebGl: boolean;
-  /** navigator.hardwareConcurrency (logical cores); undefined when the browser hides it. */
-  cores?: number;
-  /** navigator.deviceMemory in GB (Chromium only). */
-  memoryGb?: number;
-  /** The visitor asked for less data (navigator.connection.saveData). */
-  saveData?: boolean;
-}
-
-export type HeroSceneMode = "3d" | "static";
-
-export type StaticReason = "reduced-motion" | "no-webgl" | "save-data" | "low-power";
-
-/**
- * The 3D scene runs only where it is wanted and will be smooth: no reduced
- * motion, WebGL present, no data saver, and not a weak device (fewer than
- * four cores or under 4 GB of memory). Everyone else sees the still picture.
- */
-export function heroSceneMode(signals: DeviceSignals): { mode: HeroSceneMode; reason?: StaticReason } {
-  if (signals.prefersReducedMotion) {
-    return { mode: "static", reason: "reduced-motion" };
-  }
-  if (!signals.hasWebGl) {
-    return { mode: "static", reason: "no-webgl" };
-  }
-  if (signals.saveData) {
-    return { mode: "static", reason: "save-data" };
-  }
-  if ((signals.cores !== undefined && signals.cores < 4) || (signals.memoryGb !== undefined && signals.memoryGb < 4)) {
-    return { mode: "static", reason: "low-power" };
-  }
-  return { mode: "3d" };
-}
 
 /** One bubble's path: a tilted circle around the orb. */
 export interface Orbit {

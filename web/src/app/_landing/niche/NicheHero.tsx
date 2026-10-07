@@ -12,7 +12,9 @@ import { HeroBackdrop } from "../HeroBackdrop";
 /**
  * The top of a niche's page: where it sits, what the assistant does for
  * it and the calls to action, beside a demo business of this kind to talk
- * to (`demo`) when one is configured.
+ * to (`demo`) when one is configured. The headline and the description
+ * only lift into place (never fade): the largest text is painted with the
+ * first frame.
  */
 export function NicheHero({
   t,
@@ -27,7 +29,6 @@ export function NicheHero({
 }) {
   return (
     <section aria-labelledby="niche-title" className="relative isolate overflow-x-clip">
-      <HeroBackdrop />
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-10 pb-14 sm:px-6 sm:pt-16 sm:pb-20 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
         <div className="min-w-0 space-y-6">
           <nav aria-label={t("nichePage.breadcrumb")} className="animate-rise">
@@ -48,11 +49,11 @@ export function NicheHero({
           <p className="animate-rise text-sm font-medium text-accent [animation-delay:60ms]">{t("nichePage.eyebrow")}</p>
           <h1
             id="niche-title"
-            className="landing-gradient-text max-w-3xl animate-rise text-4xl font-semibold tracking-tight text-balance [animation-delay:120ms] sm:text-5xl"
+            className="landing-gradient-text max-w-3xl animate-lift text-4xl font-semibold tracking-tight text-balance [animation-delay:120ms] sm:text-5xl"
           >
             {t("nichePage.title", { niche: niche.name })}
           </h1>
-          <div className="max-w-2xl animate-rise space-y-3 text-lg text-pretty text-ink-muted [animation-delay:180ms]">
+          <div className="max-w-2xl animate-lift space-y-3 text-lg text-pretty text-ink-muted [animation-delay:180ms]">
             <p>{niche.description}</p>
             <p className="text-base">{t("nichePage.lead")}</p>
           </div>
@@ -71,6 +72,7 @@ export function NicheHero({
           <div className="relative mx-auto w-full min-w-0 max-w-md animate-rise [animation-delay:200ms] lg:max-w-none">{demo}</div>
         ) : null}
       </div>
+      <HeroBackdrop />
     </section>
   );
 }

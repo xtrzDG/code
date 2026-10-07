@@ -15,9 +15,12 @@ type DemoList = Schema<"PublicDemoList">;
 /**
  * What the product does and the two calls to action, beside a live demo
  * assistant the visitor can talk to right away (an example conversation
- * when no demo can answer). The assistant in 3D (or its still picture)
- * glows behind the chat. The text rises in with CSS, so it moves from the
- * first paint, before any script.
+ * when no demo can answer). The assistant's picture glows behind the chat:
+ * a CSS poster from the server, and on a capable wide screen the 3D scene
+ * once the page is idle (HeroVisual); on a phone the poster rises above the
+ * chat. The text moves in with CSS from the first paint, before any
+ * script; the headline and the lead only lift (never fade), so the largest
+ * text is painted with the first frame.
  */
 export function Hero({
   t,
@@ -31,7 +34,6 @@ export function Hero({
   const liveDemos = demos?.demos ?? [];
   return (
     <section aria-labelledby="hero-title" className="relative isolate overflow-x-clip">
-      <HeroBackdrop />
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-12 pb-14 sm:px-6 sm:pt-20 sm:pb-20 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
         <div className="space-y-7">
           <p className="inline-flex animate-rise items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1 text-xs font-medium text-ink-muted backdrop-blur">
@@ -43,11 +45,11 @@ export function Hero({
           </p>
           <h1
             id="hero-title"
-            className="landing-gradient-text animate-rise text-4xl font-semibold tracking-tight text-balance [animation-delay:80ms] sm:text-5xl lg:max-w-[34rem] lg:leading-[1.08]"
+            className="landing-gradient-text animate-lift text-4xl font-semibold tracking-tight text-balance [animation-delay:80ms] sm:text-5xl lg:max-w-[34rem] lg:leading-[1.08]"
           >
             {t("landing.hero.title")}
           </h1>
-          <p className="max-w-xl animate-rise text-lg text-pretty text-ink-muted [animation-delay:160ms] lg:max-w-lg">
+          <p className="max-w-xl animate-lift text-lg text-pretty text-ink-muted [animation-delay:160ms] lg:max-w-lg">
             {t("landing.hero.subtitle")}
           </p>
           <div className="flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row">
@@ -70,8 +72,8 @@ export function Hero({
             {t("landing.hero.note")}
           </p>
         </div>
-        <div className="relative mx-auto w-full max-w-md animate-rise [animation-delay:200ms] lg:max-w-none">
-          <div className="pointer-events-none absolute -top-20 -end-28 -z-10 hidden w-[30rem] opacity-80 lg:block">
+        <div className="relative mx-auto w-full max-w-md animate-rise pt-36 [animation-delay:200ms] lg:max-w-none lg:pt-0">
+          <div className="pointer-events-none absolute inset-x-0 -top-6 -z-10 mx-auto w-[19rem] lg:inset-x-auto lg:-top-20 lg:-end-28 lg:mx-0 lg:w-[30rem] lg:opacity-80">
             <HeroVisual label={t("landing.hero.sceneLabel")} />
           </div>
           <div id="demo" className="scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-surface/95 shadow-2xl backdrop-blur">
@@ -83,6 +85,7 @@ export function Hero({
           </div>
         </div>
       </div>
+      <HeroBackdrop />
     </section>
   );
 }

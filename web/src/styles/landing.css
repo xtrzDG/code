@@ -1,13 +1,19 @@
 /*
  * The public landing page: its moving backdrop (aurora, a floor grid running
- * towards the viewer, film grain), the hero's entrance, the still picture
- * of the 3D scene and a few depth effects. Imported by src/app/globals.css.
- * Everything here is transform and opacity animation (no repaints), and
- * stops under prefers-reduced-motion (globals.css).
+ * towards the viewer, film grain), the hero's entrance and a few depth
+ * effects; the hero's poster is in ./heroPoster.css. Imported by
+ * src/app/globals.css. Everything here is transform and opacity animation
+ * (composited, no repaints), and stops under prefers-reduced-motion
+ * (globals.css).
  */
+
+@import "./heroPoster.css";
 
 @theme {
   --animate-rise: aw-rise 0.9s var(--ease-emphasized) backwards;
+  /* The hero's headline and lead: they move but never fade, so the largest
+     text is painted with the first frame (Largest Contentful Paint). */
+  --animate-lift: aw-lift 0.9s var(--ease-emphasized) backwards;
   --animate-float: aw-float 7s ease-in-out infinite;
   --animate-drift: aw-drift 26s ease-in-out infinite alternate;
   --animate-spin-slow: aw-spin 22s linear infinite;
@@ -17,12 +23,18 @@
     from {
       opacity: 0;
       transform: translateY(18px);
-      filter: blur(6px);
     }
     to {
       opacity: 1;
       transform: none;
-      filter: none;
+    }
+  }
+  @keyframes aw-lift {
+    from {
+      transform: translateY(14px);
+    }
+    to {
+      transform: none;
     }
   }
   @keyframes aw-float {
@@ -95,6 +107,18 @@
 }
 :root[data-theme="light"] .landing-aurora > span {
   opacity: 0.4;
+}
+
+/*
+ * The landing heroes' backdrop has fixed sizes: whatever the hero's height
+ * while the page streams in, nothing in it moves (no layout shift).
+ */
+.hero-backdrop .landing-aurora {
+  inset: -10rem -10% auto;
+  height: 64rem;
+}
+.hero-backdrop .landing-floor {
+  height: 23rem;
 }
 
 /* A floor of lines running towards the viewer, fading into the distance. */
@@ -192,105 +216,4 @@
   .landing-faq details[open]::details-content {
     height: auto;
   }
-}
-
-/* ── The still picture of the hero scene ─────────────────────────────── */
-
-.hero-still {
-  position: absolute;
-  inset: 0;
-}
-.hero-still-glow {
-  position: absolute;
-  inset: 12%;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in oklab, var(--accent-solid) 50%, transparent), transparent 66%);
-}
-.hero-still-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 74%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1px solid color-mix(in oklab, var(--accent-solid) 40%, transparent);
-  transform: translate(-50%, -50%) rotateX(72deg) rotateZ(-14deg);
-}
-.hero-still-ring-wide {
-  width: 96%;
-  transform: translate(-50%, -50%) rotateX(66deg) rotateZ(18deg);
-  opacity: 0.7;
-}
-.hero-still-orb {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 36%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  overflow: hidden;
-  transform: translate(-50%, -50%);
-  box-shadow:
-    0 0 90px -12px color-mix(in oklab, var(--accent-solid) 80%, transparent),
-    inset 0 0 0 1px rgb(255 255 255 / 0.25);
-}
-.hero-still-orb::before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  background: conic-gradient(from 200deg, var(--accent-solid), var(--tone-sand), var(--accent), var(--tone-rose), var(--accent-solid));
-  filter: blur(14px);
-  animation: var(--animate-spin-slow);
-}
-.hero-still-orb::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 28%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 22%),
-    radial-gradient(circle at 50% 50%, transparent 58%, rgb(255 255 255 / 0.45) 100%),
-    radial-gradient(circle at 70% 80%, rgb(24 14 8 / 0.35), transparent 55%);
-}
-.hero-still-bubble {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 7%;
-  width: 27%;
-  aspect-ratio: 1.75;
-  padding: 0 5%;
-  border-radius: 999px 999px 999px 18px;
-  border: 1px solid var(--line);
-  background: linear-gradient(to bottom, var(--surface), var(--surface-muted));
-  box-shadow: 0 14px 30px -18px rgb(0 0 0 / 0.55);
-  transform: translate(-50%, -50%);
-  animation: var(--animate-float);
-}
-.hero-still-badge {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 34%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-}
-.hero-still-badge > svg {
-  width: 62%;
-  height: 62%;
-}
-.hero-still-lines {
-  display: grid;
-  flex: 1;
-  gap: 0.35rem;
-}
-.hero-still-lines > i {
-  display: block;
-  height: 0.4rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--ink) 75%, transparent);
-}
-.hero-still-lines > i + i {
-  width: 65%;
-  background: color-mix(in oklab, var(--ink) 25%, transparent);
 }
