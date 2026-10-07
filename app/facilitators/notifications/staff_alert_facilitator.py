@@ -18,6 +18,7 @@ from app.contracts.transformer_contract import TransformerContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.notifications import StaffTextStyle
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
 from app.schemas.domain.notification_preferences import (
     StaffNotificationPreferences,
@@ -67,7 +68,8 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
     - An alert that names a subject (a call's summary) reaches each
       recipient once, however often it is raised; one that names contact
       channels skips the staff contacts of other channels; a personal one
-      (`recipient_user_ids`) reaches only those users' devices.
+      (`recipient_user_ids`) reaches only those users' devices, and one
+      for some roles (`member_roles`) only the devices of those members.
 
     One failing recipient never stops the others. Never raises.
     """
@@ -174,18 +176,18 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         zone: ZoneInfo,
         now: Microseconds,
     ) -> int:
-        members: set[UserId] = {member.user_id for member in business.members}
+        roles: dict[UserId, BusinessMemberRole] = {
+            member.user_id: member.role for member in business.members
+        }
         preferences_by_user: dict[UserId, StaffNotificationPreferences] = {}
         queued: int = 0
         for subscription in self._push_subscription_repo.list_by_business(business.id):
-            if subscription.user_id not in members:
+            role: BusinessMemberRole | None = roles.get(subscription.user_id)
+            if role is None:
                 self._push_subscription_repo.delete(business.id, subscription.id)
                 continue
 
-            if (
-                alert.recipient_user_ids is not None
-                and subscription.user_id not in alert.recipient_user_ids
-            ):
+            if not is_addressed(alert, subscription.user_id, role):
                 continue
 
             preferences = preferences_by_user.get(subscription.user_id)
@@ -266,3 +268,11 @@ def is_wanted(alert: StaffAlert, preferences: StaffNotificationPreferences) -> b
     """The recipient chose the alert's event; news without an event always is."""
 
     return alert.event is None or alert.event in preferences.events
+
+
+def is_addressed(alert: StaffAlert, user_id: UserId, role: BusinessMemberRole) -> bool:
+    """A member's devices hear the alert: they are among its users and roles."""
+
+    return (
+        alert.recipient_user_ids is None or user_id in alert.recipient_user_ids
+    ) and (alert.member_roles is None or role in alert.member_roles)

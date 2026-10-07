@@ -645,6 +645,9 @@
     "setup.actions.overview": "פתיחת הסקירה",
     "setup.actions.phone_test": "הצגת קוד ה-QR",
     "setup.actions.share": "קישור וכרטיס QR",
-    "setup.apply_changes_again": "החלת השינויים"
+    "setup.apply_changes_again": "החלת השינויים",
+    "notifications.webhook_disabled.title": "וובהוק הושבת · {business}",
+    "notifications.webhook_disabled.failures_detail": "הכתובת {endpoint} לא מקבלת יותר אירועים: ניסיונות כושלים ברציפות — {failures}. ודאו שהכתובת עובדת והפעילו אותה שוב בהגדרות ← חיבורים.",
+    "notifications.webhook_disabled.gone_detail": "הכתובת {endpoint} השיבה שהיא כבר לא קיימת (410) ולא מקבלת יותר אירועים. אם הכתובת השתנתה, עדכנו אותה בהגדרות ← חיבורים והפעילו אותה שוב."
   }
 }

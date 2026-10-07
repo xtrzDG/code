@@ -11,6 +11,19 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-07 — a switched-off webhook is news: link target and live event
+
+Spec: `218baee3d61e0c5a`
+
+- **Changed** (additive) the notification link view
+  (`GET /v1/businesses/{business_id}/notification-links/{token}`):
+  `target` may be `integrations` (Settings → Integrations), the page the
+  alert about a webhook endpoint switched off on its own opens.
+- **Changed** (additive) the live event stream
+  (`GET /v1/businesses/{business_id}/events`): `webhook.changed` names an
+  endpoint switched off on its own (failed attempts in a row, or 410
+  Gone); clients that do not know it ignore it, as before.
+
 ## 2026-10-07 — wave 18 together: public API and webhooks, reply options, the bookings calendar, queue waits
 
 Spec: `ca0a87d47e5c7ff3`

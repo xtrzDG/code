@@ -23,35 +23,44 @@ def record_endpoint_outcome(
     delivery: WebhookDeliveryDocument,
     attempt: WebhookAttempt,
     failures_before_disable: WebhookFailuresBeforeDisable,
-) -> None:
+) -> WebhookEndpointDocument | None:
     """
     A real event's attempt counts on its endpoint (a test event, or one
     refused because the endpoint was off, does not). A receiver's 410 Gone
     removes an endpoint a public API client subscribed (its REST hook was
-    unsubscribed) and switches off one the owner added.
+    unsubscribed) and switches off one the owner added. Returns the
+    endpoint when this attempt switched it off (only one attempt can: the
+    switch-off happens while the stored endpoint is ACTIVE), else None.
     """
 
     problem = attempt.result.problem
     if delivery.is_test or problem is WebhookDeliveryProblem.ENDPOINT_OFF:
-        return
+        return None
 
     endpoint = endpoint_repo.get(delivery.business_id, delivery.endpoint_id)
     if endpoint is None:
-        return
+        return None
 
     if (
         problem is WebhookDeliveryProblem.GONE
         and endpoint.origin is WebhookEndpointOrigin.API
     ):
         endpoint_repo.delete(delivery.business_id, endpoint.id)
-        return
+        return None
 
     now: Microseconds = attempt.attempted_at
-    endpoint_repo.update(
-        delivery.business_id,
-        endpoint.id,
-        lambda current: followed(current, problem, now, failures_before_disable),
-    )
+    switched_off: list[bool] = [False]
+
+    def follow(current: WebhookEndpointDocument) -> WebhookEndpointDocument:
+        updated = followed(current, problem, now, failures_before_disable)
+        switched_off[0] = (
+            current.status is WebhookEndpointStatus.ACTIVE
+            and updated.status is WebhookEndpointStatus.DISABLED
+        )
+        return updated
+
+    stored = endpoint_repo.update(delivery.business_id, endpoint.id, follow)
+    return stored if stored is not None and switched_off[0] else None
 
 
 def followed(

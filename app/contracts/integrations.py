@@ -15,6 +15,7 @@ from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument, LeadDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.conversations import ConversationDocument
+from app.schemas.domain.webhooks import WebhookDeliveryDocument, WebhookEndpointDocument
 from app.schemas.dto.integrations.webhook_attempts import (
     WebhookPostRequest,
     WebhookPostResult,
@@ -125,5 +126,20 @@ class WebhookPosterContract(ClientContract, Protocol):
         The checks an address passes before any lookup (https, port 443 or
         80, no credentials, no intranet name or private IP literal): None
         when it passes, else the refusal.
+        """
+        raise NotImplementedError
+
+
+class WebhookDisabledNoticeFacilitatorContract(FacilitatorContract, Protocol):
+    def notice_disabled(
+        self,
+        endpoint: WebhookEndpointDocument,
+        delivery: WebhookDeliveryDocument,
+    ) -> None:
+        """
+        Tell the business that `endpoint` was switched off on its own by the
+        failed attempt of `delivery` (the last of the failures in a row, or
+        the receiver's 410 Gone): one staff alert per switch-off, an audit
+        entry and a live event for the open cabinets. Never raises.
         """
         raise NotImplementedError

@@ -25942,7 +25942,7 @@
         "type": "object"
       },
       "StaffLinkTarget": {
-        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device);\nPRIVACY is Settings → Privacy (a full export was downloaded).\nLink targets live only in signed links, never in stored documents.",
+        "description": "The cabinet page a notification link opens (after sign-in). REPORT is a\nstored digest or monthly report on the Reports page (owners), where its\nreader also turns the summaries off; OVERVIEW is the business's\nOverview (a milestone's celebration waits there). The activation\nreminders open SETUP (the guided setup, at the saved step), CHANNELS,\nSHARE (the link and QR card on the Channels page) and BILLING (where\nthe done-for-you setup is chosen). ACCOUNT_SECURITY is the person's\nAccount → Security page (their sessions: a sign-in from a new device);\nPRIVACY is Settings → Privacy (a full export was downloaded);\nINTEGRATIONS is Settings → Integrations (a webhook was switched off).\nLink targets live only in signed links, never in stored documents.",
         "enum": [
           "conversation",
           "lead",
@@ -25955,7 +25955,8 @@
           "share",
           "billing",
           "account_security",
-          "privacy"
+          "privacy",
+          "integrations"
         ],
         "title": "StaffLinkTarget",
         "type": "string"

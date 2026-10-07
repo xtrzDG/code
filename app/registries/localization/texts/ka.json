@@ -645,6 +645,9 @@
     "setup.actions.overview": "მიმოხილვის გახსნა",
     "setup.actions.phone_test": "QR-კოდის ჩვენება",
     "setup.actions.share": "ბმული და QR-ბარათი",
-    "setup.apply_changes_again": "ცვლილებების გამოყენება"
+    "setup.apply_changes_again": "ცვლილებების გამოყენება",
+    "notifications.webhook_disabled.title": "ვებჰუკი გამოირთო · {business}",
+    "notifications.webhook_disabled.failures_detail": "მისამართი {endpoint} მოვლენებს აღარ იღებს: ზედიზედ წარუმატებელი მცდელობები — {failures}. შეამოწმეთ, რომ ის მუშაობს, და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები.",
+    "notifications.webhook_disabled.gone_detail": "მისამართმა {endpoint} გვიპასუხა, რომ აღარ არსებობს (410), და მოვლენებს აღარ იღებს. თუ მისამართი შეიცვალა, შეცვალეთ და ხელახლა ჩართეთ: პარამეტრები → ინტეგრაციები."
   }
 }

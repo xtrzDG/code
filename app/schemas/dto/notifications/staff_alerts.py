@@ -19,6 +19,7 @@ from app.schemas.constants.notifications import (
     StaffLinkTarget,
     StaffTextStyle,
 )
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.dto.bookings import BookingView
 from app.schemas.typings.bookings.constrained_strings import LocalDate
 from app.schemas.typings.bookings.prefixed_id import BookingId, LeadId
@@ -64,7 +65,10 @@ class StaffAlert(ImmutableDTO):
     milestone of the business, such as its first booking) is news for
     everyone it goes to, whatever events they chose. `recipient_user_ids`
     makes an alert personal (a sign-in from a new device): only those
-    cabinet users' devices hear it, and no staff contact.
+    cabinet users' devices hear it, and no staff contact. `member_roles`
+    limits the devices to members of those roles (a switched-off webhook
+    is news for owners, who alone can switch it on again); the staff
+    contacts still hear it.
     """
 
     business_id: BusinessId
@@ -79,6 +83,7 @@ class StaffAlert(ImmutableDTO):
     subject: StaffAlertSubject | None = None
     contact_channels: list[ManagerContactChannel] | None = None
     recipient_user_ids: list[UserId] | None = None
+    member_roles: list[BusinessMemberRole] | None = None
 
 
 class HandoffBrief(ImmutableDTO):

@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from typed_time_provider import Microseconds
 
+from app.contracts.integrations import WebhookDisabledNoticeFacilitatorContract
 from app.contracts.jobs import JobQueueFacilitatorContract
 from app.contracts.repositories.integration_repositories import (
     WebhookDeliveryRepoContract,
@@ -16,7 +17,7 @@ from app.schemas.constants.integrations import (
     WebhookDeliveryStatus,
 )
 from app.schemas.constants.jobs import JobLane
-from app.schemas.domain.webhooks import WebhookDeliveryDocument
+from app.schemas.domain.webhooks import WebhookDeliveryDocument, WebhookEndpointDocument
 from app.schemas.dto.integrations.webhook_attempts import WebhookAttempt
 from app.schemas.typings.integrations.constrained_integers import (
     WebhookAttemptCount,
@@ -58,7 +59,8 @@ class RecordWebhookAttemptUseCase(
     never both record one attempt. The endpoint follows
     (`record_endpoint_outcome`): a success resets its failures, a failure
     counts, and past WEBHOOK_DISABLE_AFTER_FAILURES in a row, or on 410
-    Gone, it is switched off.
+    Gone, it is switched off. Once the switch-off is stored, the business
+    hears about it (`notices`: an alert, an audit entry, a live event).
     """
 
     def __init__(
@@ -68,6 +70,7 @@ class RecordWebhookAttemptUseCase(
         job_queue: JobQueueFacilitatorContract,
         unit_of_work: StorageUnitOfWorkContract | None,
         failures_before_disable: WebhookFailuresBeforeDisable,
+        notices: WebhookDisabledNoticeFacilitatorContract,
         # Spreads retry times only; nothing secret depends on it.
         jitter: Callable[[], float] = random.random,  # nosec B311
     ) -> None:
@@ -78,6 +81,7 @@ class RecordWebhookAttemptUseCase(
         self._failures_before_disable: WebhookFailuresBeforeDisable = (
             failures_before_disable
         )
+        self._notices: WebhookDisabledNoticeFacilitatorContract = notices
         self._jitter: Callable[[], float] = jitter
 
     def run(self, input_data: WebhookAttempt) -> WebhookDeliveryDocument | None:
@@ -125,9 +129,11 @@ class RecordWebhookAttemptUseCase(
                     run_at=next_attempt_at,
                     lane=JobLane.DEFAULT,
                 )
-            record_endpoint_outcome(
+            switched_off: WebhookEndpointDocument | None = record_endpoint_outcome(
                 self._endpoint_repo, stored, input_data, self._failures_before_disable
             )
+        if switched_off is not None:
+            self._notices.notice_disabled(switched_off, stored)
         if stored.status is WebhookDeliveryStatus.FAILED:
             LOGGER.warning(
                 "Webhook delivery %s (%s) given up after %d attempt(s): %s",

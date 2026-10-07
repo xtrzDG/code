@@ -15136,11 +15136,12 @@ export interface components {
          *     SHARE (the link and QR card on the Channels page) and BILLING (where
          *     the done-for-you setup is chosen). ACCOUNT_SECURITY is the person's
          *     Account → Security page (their sessions: a sign-in from a new device);
-         *     PRIVACY is Settings → Privacy (a full export was downloaded).
+         *     PRIVACY is Settings → Privacy (a full export was downloaded);
+         *     INTEGRATIONS is Settings → Integrations (a webhook was switched off).
          *     Link targets live only in signed links, never in stored documents.
          * @enum {string}
          */
-        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing" | "account_security" | "privacy";
+        StaffLinkTarget: "conversation" | "lead" | "booking" | "notifications" | "report" | "overview" | "setup" | "channels" | "share" | "billing" | "account_security" | "privacy" | "integrations";
         /**
          * StaffLinkView
          * @description Where a link leads, for the cabinet to open (it maps the target to its

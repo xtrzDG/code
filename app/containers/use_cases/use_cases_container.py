@@ -205,6 +205,7 @@ class UseCasesContainer(BusinessUseCasesContainer):
         facilitators=CoreUseCasesContainer.facilitators,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )
     # API keys and the public API /v1/public-api/* (1181).

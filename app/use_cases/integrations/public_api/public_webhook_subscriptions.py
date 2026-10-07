@@ -24,7 +24,6 @@ from app.schemas.dto.public_api.commands import (
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.use_cases.integrations.api_key_records import require_scope
 from app.use_cases.integrations.webhook_records import (
-    WEBHOOK_ENDPOINT_ENTITY,
     endpoint_view,
     new_endpoint,
     refuse_address,
@@ -32,6 +31,7 @@ from app.use_cases.integrations.webhook_records import (
     require_endpoint,
 )
 from app.use_cases.shared.operations_support import build_audit_entry
+from app.utilities.integrations.webhook_endpoints import WEBHOOK_ENDPOINT_ENTITY
 
 NOT_SUBSCRIBED_MESSAGE: str = "No webhook of this business was made through the API."
 

@@ -11,10 +11,10 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.integrations.webhook_views import WebhookEndpointCommand
 from app.use_cases.integrations.webhook_records import (
-    WEBHOOK_ENDPOINT_ENTITY,
     require_endpoint,
 )
 from app.use_cases.shared.operations_support import build_audit_entry
+from app.utilities.integrations.webhook_endpoints import WEBHOOK_ENDPOINT_ENTITY
 
 
 class DeleteWebhookEndpointUseCase(UseCaseContract[WebhookEndpointCommand, None]):

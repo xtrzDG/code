@@ -26,6 +26,7 @@ const LIVE_EVENT_NAMES = [
   "knowledge_import.progress",
   "assistant.apply",
   "waitlist.changed",
+  "webhook.changed",
 ] as const;
 
 type LiveEventName = (typeof LIVE_EVENT_NAMES)[number];
@@ -159,5 +160,11 @@ export function invalidationsFor(event: LiveEvent, businessId: string): QueryKey
     case "waitlist.changed":
       // Someone joined, a place was held, taken or given up: the lists, their counts, the value lines.
       return [dashboard, queryKeys.bookings.waitlistAll(businessId), queryKeys.bookings.waitlistSettings(businessId)];
+    case "webhook.changed":
+      // An endpoint switched off on its own: the Integrations card and its delivery log.
+      return [
+        queryKeys.integrations.webhooks(businessId),
+        ...event.ids.map((webhookId) => queryKeys.integrations.deliveries(businessId, webhookId)),
+      ];
   }
 }

@@ -73,6 +73,15 @@ describe("live events", () => {
     expect(queryKeys.bookings.waitlist(BUSINESS, "active").slice(0, 2)).toEqual([...queryKeys.bookings.all(BUSINESS)]);
   });
 
+  it("reload the webhooks and the endpoint's delivery log when one is switched off", () => {
+    const keys = invalidationsFor(event("webhook.changed", ["webhook_1"]), BUSINESS);
+
+    expect(keys).toEqual([
+      queryKeys.integrations.webhooks(BUSINESS),
+      queryKeys.integrations.deliveries(BUSINESS, "webhook_1"),
+    ]);
+  });
+
   it("reload the progress of Apply changes, the versions and the pending changes when it moves on", () => {
     const keys = invalidationsFor(event("assistant.apply", ["assistant_apply_1"]), BUSINESS);
 

@@ -645,6 +645,9 @@
     "setup.actions.overview": "Open the overview",
     "setup.actions.phone_test": "Show the QR code",
     "setup.actions.share": "Get the link and QR card",
-    "setup.apply_changes_again": "Apply changes"
+    "setup.apply_changes_again": "Apply changes",
+    "notifications.webhook_disabled.title": "A webhook was switched off · {business}",
+    "notifications.webhook_disabled.failures_detail": "The address {endpoint} gets no more events after {failures} failed attempts in a row. Check that it works, then switch it on again in Settings → Integrations.",
+    "notifications.webhook_disabled.gone_detail": "The address {endpoint} answered that it is gone (410) and gets no more events. If it moved, change it in Settings → Integrations and switch it on again."
   }
 }

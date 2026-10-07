@@ -87,5 +87,8 @@ export function linkTargetPath(view: StaffLinkView): string {
     // A download of the business's full export: where exports are made.
     case "privacy":
       return businessPath(business, "settings/privacy");
+    // A webhook switched off after failures: where it is switched on again.
+    case "integrations":
+      return businessPath(business, "settings/integrations");
   }
 }
