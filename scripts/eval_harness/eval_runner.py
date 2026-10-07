@@ -4,9 +4,9 @@ every selected scenario played `samples` times.
 """
 
 import logging
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable, Generator
 from concurrent.futures import ProcessPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -108,7 +108,7 @@ def run_niche(
 
 
 @contextmanager
-def application_log_level(level: int) -> Iterator[None]:
+def application_log_level(level: int) -> Generator[None]:
     """The application's loggers at `level` inside the block, as before after."""
 
     application_logger: logging.Logger = logging.getLogger(APPLICATION_LOGGER)
