@@ -11,6 +11,55 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-07 — wave 18 together: public API and webhooks, reply options, the bookings calendar, queue waits
+
+Spec: `ca0a87d47e5c7ff3`
+
+The API description with the four entries below merged together (the
+public API, API keys and outbound webhooks; reply options to tap and the
+story context; the bookings calendar grid and calendar moves; the
+`queue_to_claim_ms` of inbox events in the customer's data export). Each
+of those entries names the description of its own change alone; nothing
+else changed for clients. `InboundEventDocument` version 7 carries both
+`context_note` and `queue_to_claim_ms`.
+
+## 2026-10-07 — the bookings calendar: one call for the day, week and nights grids; drag to move
+
+Spec: `9d71b69cc4302f90`
+
+- **Added** `GET /v1/businesses/{business_id}/bookings/grid?date=&days=`
+  (`operations_get_booking_grid`; owners and staff): the window of `days`
+  local days (1–31, one by default) from `date` in the business time zone.
+  `places` are the resources (inactive ones only while they still hold
+  bookings in the window); `days[].places[]` gives each place's opening
+  ranges that day and how full it is: `open_unit_minutes` and
+  `booked_unit_minutes` for places booked by time slots, `open_units` and
+  `booked_units` (rooms for sale and taken that night) for places booked
+  by the night; `days[].business_ranges` are the business's own hours.
+  `bookings` are the `BookingView`s that overlap the window, cancelled
+  ones never, test ones only with `include_sandbox=true`.
+  `include_bookings=false` returns the load alone (a week's heatmap) and is
+  not audited; with the bookings the call is audited as a view of
+  customers' data. `is_truncated` says the window held more bookings than
+  one calendar reads (5 000).
+- **Added** `POST /v1/businesses/{business_id}/bookings/{booking_id}/reschedule`
+  takes optional `new_resource_id` (the place a booking was dropped on: it
+  goes there only, booked the same way and seating the party, else 404 or
+  422) and `expected_date` with `expected_time` (the local start the
+  calendar showed: 409 with reason `booking_changed` when it starts
+  elsewhere now). Without them the move behaves as before.
+
+## 2026-10-07 — inbox messages record how long they waited for a worker
+
+Spec: `227b9d723be5ebb8`
+
+- **Changed** (additive) `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`:
+  each inbox event of the customer's data export (`InboundEventDocument`,
+  schema version 7) may carry `queue_to_claim_ms`, the milliseconds from
+  the message being stored and queued to a worker taking it to answer
+  (the pickup, and the wait for the rest of a burst of quick messages).
+  Older events have none.
+
 ## 2026-10-06 — public API, API keys and outbound webhooks
 
 Spec: `65a65d7b9c3d848f`
@@ -65,43 +114,6 @@ Spec: `a71e4517de813e60`
 - **Changed** the stored documents behind these views are at version 7
   (`MessageDocument`, `InboundEventDocument`, `OutboundMessageDocument`);
   their schemas in the description gain the optional fields above.
-
-## 2026-10-07 — the bookings calendar: one call for the day, week and nights grids; drag to move
-
-Spec: `9d71b69cc4302f90`
-
-- **Added** `GET /v1/businesses/{business_id}/bookings/grid?date=&days=`
-  (`operations_get_booking_grid`; owners and staff): the window of `days`
-  local days (1–31, one by default) from `date` in the business time zone.
-  `places` are the resources (inactive ones only while they still hold
-  bookings in the window); `days[].places[]` gives each place's opening
-  ranges that day and how full it is: `open_unit_minutes` and
-  `booked_unit_minutes` for places booked by time slots, `open_units` and
-  `booked_units` (rooms for sale and taken that night) for places booked
-  by the night; `days[].business_ranges` are the business's own hours.
-  `bookings` are the `BookingView`s that overlap the window, cancelled
-  ones never, test ones only with `include_sandbox=true`.
-  `include_bookings=false` returns the load alone (a week's heatmap) and is
-  not audited; with the bookings the call is audited as a view of
-  customers' data. `is_truncated` says the window held more bookings than
-  one calendar reads (5 000).
-- **Added** `POST /v1/businesses/{business_id}/bookings/{booking_id}/reschedule`
-  takes optional `new_resource_id` (the place a booking was dropped on: it
-  goes there only, booked the same way and seating the party, else 404 or
-  422) and `expected_date` with `expected_time` (the local start the
-  calendar showed: 409 with reason `booking_changed` when it starts
-  elsewhere now). Without them the move behaves as before.
-
-## 2026-10-07 — inbox messages record how long they waited for a worker
-
-Spec: `227b9d723be5ebb8`
-
-- **Changed** (additive) `GET /v1/businesses/{business_id}/contacts/{contact_id}/export`:
-  each inbox event of the customer's data export (`InboundEventDocument`,
-  schema version 7) may carry `queue_to_claim_ms`, the milliseconds from
-  the message being stored and queued to a worker taking it to answer
-  (the pickup, and the wait for the rest of a burst of quick messages).
-  Older events have none.
 
 ## 2026-10-06 — wave 17 together: operation names, idempotency keys, ETags, the pipeline watchdog
 
