@@ -158,18 +158,6 @@
   transform-origin: 50% 100%;
 }
 
-/*
- * Blocks below a hero: the browser styles, lays out and paints them only
- * when they come near the screen (content-visibility), so the first frame
- * is the hero's alone and appears sooner. Until then a block takes an
- * estimated height, and the real one once it has been shown (`auto`); it
- * stays in the accessibility tree and in find-in-page.
- */
-.landing-deferred {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 40rem;
-}
-
 /* Film grain over the whole page: a fixed SVG noise, barely there. */
 .landing-grain {
   position: fixed;

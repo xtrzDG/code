@@ -7,8 +7,6 @@ import { cn } from "@/lib/cn";
  * One block of the landing page: a hairline on top, a heading and a short
  * lead that rise in when the block scrolls into view, and optionally a
  * coloured glow drifting behind it slower than the page (a depth layer).
- * Rendered by the browser only near the screen (`landing-deferred`), so the
- * first frame is the hero's alone.
  */
 export function Section({
   id,
@@ -34,7 +32,7 @@ export function Section({
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className={cn("landing-deferred relative isolate scroll-mt-16 overflow-x-clip border-t border-line py-16 sm:py-24", className)}
+      className={cn("relative isolate scroll-mt-16 overflow-x-clip border-t border-line py-16 sm:py-24", className)}
     >
       {glow ? (
         <Parallax

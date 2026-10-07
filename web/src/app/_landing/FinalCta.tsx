@@ -7,7 +7,7 @@ import { CREATE_PATH } from "@/lib/navigation";
 /** The closing call to action: a card with a light running round its edge, coming out of the depth. */
 export function FinalCta({ t }: { t: Translator["t"] }) {
   return (
-    <section aria-labelledby="cta-title" className="landing-deferred overflow-x-clip border-t border-line py-16 sm:py-24">
+    <section aria-labelledby="cta-title" className="overflow-x-clip border-t border-line py-16 sm:py-24">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <Reveal depth={1}>
           <div className="landing-beam relative overflow-hidden rounded-2xl border border-line bg-surface px-6 py-12 text-center sm:px-12 sm:py-16">

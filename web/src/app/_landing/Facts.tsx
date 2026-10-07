@@ -12,7 +12,7 @@ const FACTS = [
 /** Four short facts under the hero, in one hairline grid; they arrive one after another. */
 export function Facts({ t }: { t: Translator["t"] }) {
   return (
-    <section aria-label={t("landing.facts.label")} className="landing-deferred border-t border-line">
+    <section aria-label={t("landing.facts.label")} className="border-t border-line">
       <Stagger as="dl" className="mx-auto grid w-full max-w-6xl grid-cols-2 lg:grid-cols-4">
         {FACTS.map(([title, text], index) => (
           <StaggerItem

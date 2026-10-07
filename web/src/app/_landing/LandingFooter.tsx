@@ -29,7 +29,7 @@ export function LandingFooter({
 }) {
   const shown = (niches ?? []).slice(0, FOOTER_NICHES);
   return (
-    <footer className="landing-deferred border-t border-line" data-testid="site-footer">
+    <footer className="border-t border-line" data-testid="site-footer">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 text-sm sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div className="space-y-2">
           <p className="font-semibold text-ink">{t("common.appName")}</p>
