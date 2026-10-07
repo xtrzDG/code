@@ -11,6 +11,7 @@ import { BUSINESS_PAGES, setupPath } from "../src/lib/navigation";
 
 import { uniqueEmail } from "./support/api";
 import { expect, test } from "./support/fixtures";
+import { emulateCapableDesktop } from "./support/heroScene";
 import { waitForNetworkQuiet } from "./support/network";
 import { en } from "./support/messages";
 
@@ -76,6 +77,8 @@ test.describe("Content Security Policy", () => {
     test.use({ contextOptions: { reducedMotion: "no-preference" } });
 
     test("the landing's 3D hero does not break it", async ({ page }) => {
+      // The scene loads only on a device meant for it, whatever the runner has.
+      await emulateCapableDesktop(page);
       await watchPolicyViolations(page);
 
       await openAndCheck(page, "/");
