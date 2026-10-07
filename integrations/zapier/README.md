@@ -20,7 +20,9 @@ top of the public API (`/v1/public-api/*`, frozen; see
   when a Zap is turned on (the key needs `webhooks:manage`) and remove it
   with `DELETE /v1/public-api/webhooks/{id}` when it is turned off. Every
   request is checked against the subscription's signing secret
-  (`Workshop-Signature`, `lib/signature.js`). The editor's test step reads
+  (`Workshop-Signature`, `lib/signature.js`, at most five minutes old); one
+  that cannot be checked (no secret, no raw body, no signature) is refused,
+  never passed on. The editor's test step reads
   recent records through the list routes where there is one (it needs the
   read scope); handoffs and calls use the built-in sample.
 - **Actions** send an `Idempotency-Key` made from the Zap and its input,
