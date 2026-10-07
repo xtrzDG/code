@@ -116,7 +116,9 @@ describe("WebhooksCard: where the business's events go", () => {
     await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.deliveries"));
     const log = await screen.findByRole("dialog", { name: t("apiIntegrations.deliveries.title") });
     expect(await within(log).findByText(t("apiIntegrations.events.booking_created"))).toBeTruthy();
-    await user.click(within(log).getAllByRole("button", { name: t("common.close") })[0]);
+    const [closeLog] = within(log).getAllByRole("button", { name: t("common.close") });
+    if (!closeLog) throw new Error("the delivery log has a close button");
+    await user.click(closeLog);
 
     await choose(await rowOf("CRM"), t("apiIntegrations.webhooks.actions.pause"));
     expect(await screen.findByText(t("apiIntegrations.webhooks.statuses.paused"))).toBeTruthy();
