@@ -6,6 +6,7 @@ from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
+from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
@@ -79,6 +80,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -162,6 +164,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         RetryWebhookDeliveryUseCase,
         authorize_business_access=authorize,
         delivery_repo=deliveries,
+        rate_limits=registries.request_rate_limit_registry,
         job_queue=facilitators.job_queue_facilitator,
         unit_of_work=adapters.storage_unit_of_work,
         wall_clock=wall_clock,
@@ -173,6 +176,7 @@ class WebhookUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=authorize,
         endpoint_repo=endpoints,
         delivery_repo=deliveries,
+        rate_limits=registries.request_rate_limit_registry,
         wall_clock=wall_clock,
     )
     attempt_webhook_delivery_use_case: Factory[
