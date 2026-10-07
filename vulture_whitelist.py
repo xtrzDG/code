@@ -26,6 +26,8 @@ _.run_queued_jobs  # app/gateways/worker/background_worker.py
 _.worker_id  # app/gateways/worker/heartbeat_recorder.py
 _.wait_until_listening  # app/adapters/events/postgres_live_event_listener.py
 _.open_stream_count  # app/facilitators/events/live_event_stream_facilitator.py
+_.has_listeners  # app/utilities/jobs/job_wakeup_signal.py
+_.pending_wakeup_count  # app/utilities/jobs/job_wakeup_signal.py
 # The current schema version of every collection, read by the document
 # evolution policy (tests/architecture_policy/test_document_evolution.py).
 _.CURRENT_SCHEMA_VERSION  # app/adapters/storage/document_upgrades.py

@@ -132,17 +132,15 @@ class AdaptersContainer(containers.DeclarativeContainer):
         time_provider=time_provider, utilities=utilities,
     )  # fmt: skip
     calls: CallAdaptersContainer = Container(  # type: ignore[assignment]
-        CallAdaptersContainer,
-        clients=clients,
-        config=config,
-        time_provider=time_provider,
-        utilities=utilities,
-    )
+        CallAdaptersContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
 
     # Readiness, storage transactions and the job queue's wake-ups.
     processes: ProcessAdaptersContainer = Container(  # type: ignore[assignment]
-        ProcessAdaptersContainer, clients=clients, config=config, utilities=utilities
-    )
+        ProcessAdaptersContainer, clients=clients, config=config,
+        time_provider=time_provider, utilities=utilities,
+    )  # fmt: skip
     database_probe = processes.database_probe
     migration_source = processes.migration_source
     storage_unit_of_work = processes.storage_unit_of_work

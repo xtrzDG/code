@@ -21,6 +21,7 @@ from app.adapters.storage.unit_of_work_factory import (
 )
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
+from app.containers.time_provider import TimeProviderContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.data_tasks import DataTaskBatchAdapterContract
 from app.contracts.health import DatabaseProbeAdapterContract
@@ -31,6 +32,7 @@ from app.contracts.storage import StorageReadSessionContract, StorageUnitOfWorkC
 class ProcessAdaptersContainer(containers.DeclarativeContainer):
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
 
     # --- Readiness (GET /readyz): the database probe over the shared pool and
@@ -62,6 +64,7 @@ class ProcessAdaptersContainer(containers.DeclarativeContainer):
         connection_pool=clients.postgres_pool,
         database_url=config.app_settings.provided.database_url,
         listen_database_url=config.app_settings.provided.live_events_database_url,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     # One keyset batch of a post-deploy data task (Postgres; nothing to do
     # in memory).
