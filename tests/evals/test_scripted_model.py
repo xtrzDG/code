@@ -9,6 +9,7 @@ from app.utilities.assembly.autotest_prompts import (
     CUSTOMER_PERSONA_OPENING,
     DONE_MARKER,
     JUDGE_SYSTEM_PROMPT,
+    OWNER_CHECK_CONTINUATION_OPENING,
 )
 from scripts.eval_harness.dataset_models import ScenarioSpec
 from scripts.eval_harness.scripted_model import ScenarioScript, build_scripted_adapter
@@ -91,3 +92,54 @@ def test_a_missing_result_field_or_step_fails_loudly() -> None:
 
     with pytest.raises(ExternalServiceError, match="has no assistant step 4"):
         played.respond(llm_request([*two_turns, user_turn("c"), ASSISTANT_TURN]))
+
+
+def photo_spec() -> ScenarioSpec:
+    return ScenarioSpec.model_validate(
+        {
+            "id": "photo__en",
+            "language": "en",
+            "kind": "photo_menu",
+            "channel": "whatsapp",
+            "persona": {"name": "Emma", "phone": "+447911123456"},
+            "attachment": {"photo": "restaurant.png"},
+            "goal": "Ask the price of the dish in the photo.",
+            "customer": ["How much is this?", "Thanks!"],
+            "assistant": [
+                {"sees_photo": True, "say": "That is the khachapuri: 22 GEL."},
+            ],
+        }
+    )
+
+
+def photo_turn(text: str) -> str:
+    return json.dumps(
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": text},
+                {"type": "image", "source": {"type": "base64", "data": "AAAA"}},
+            ],
+        }
+    )
+
+
+def test_the_answer_to_a_photo_needs_the_photo() -> None:
+    played = ScenarioScript(photo_spec())
+
+    assert played.respond(llm_request([photo_turn("How much is this?")])).text == (
+        "That is the khachapuri: 22 GEL."
+    )
+    with pytest.raises(ExternalServiceError, match="shows the model no picture"):
+        played.respond(llm_request([user_turn("How much is this?")]))
+
+
+def test_after_a_message_sent_for_it_the_customer_goes_on_with_the_next() -> None:
+    persona = f"{CUSTOMER_PERSONA_OPENING} of the business."
+    continuation = user_turn(
+        f"{OWNER_CHECK_CONTINUATION_OPENING}\nYour first message: How much is this?"
+    )
+
+    assert ScenarioScript(photo_spec()).respond(
+        llm_request([continuation], persona)
+    ).text == ("Thanks!")
