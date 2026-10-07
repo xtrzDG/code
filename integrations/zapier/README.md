@@ -52,6 +52,9 @@ zapier push
 ```
 
 `platformVersion` follows the pinned `zapier-platform-core` in
-`package.json`; raise both together. A new trigger or field is fine at any
+`package.json`; raise both together. `overrides` holds `form-data` at
+4.0.6: core 19.1.0 pins 4.0.5, which has a CRLF injection in multipart
+field names (GHSA-hmw2-7cc7-3qxx); drop the override once the core's own
+pin is 4.0.6 or later (`npm audit --omit=dev` after `npm install`). A new trigger or field is fine at any
 time; renaming a key breaks existing Zaps (it is the same rule as the
 public API's).
