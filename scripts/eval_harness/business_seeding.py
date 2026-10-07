@@ -56,6 +56,7 @@ from app.schemas.typings.localization.constrained_strings import (
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.money.money_math import build_money_from_major_units
 from scripts.eval_harness.booked_up_days import book_up
+from scripts.eval_harness.catalog_seeding import build_catalog
 from scripts.eval_harness.dataset_models import BusinessSpec
 
 STARTER_SEED: str = "starter"
@@ -227,6 +228,12 @@ class EvalBusinessSeeder:
                     ),
                 )
             )
+
+        if spec.catalog is not None and starters.offers:
+            for item in build_catalog(
+                business, spec.catalog, starters.offers[0].kind, now
+            ):
+                knowledge_repo.save(item)
 
         for faq in starters.faq:
             answer: str | None = spec.answers.get(str(faq.key))

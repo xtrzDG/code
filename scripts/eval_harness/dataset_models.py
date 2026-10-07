@@ -20,6 +20,7 @@ from pydantic import Field
 from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
 from app.schemas.constants.evaluations import EvalFlowKind
 from app.schemas.constants.niches import NicheKey
+from scripts.eval_harness.catalog_seeding import CatalogSpec
 from scripts.eval_harness.dataset_setup_models import (
     AttachmentSpec,
     ScenarioChannel,
@@ -55,6 +56,8 @@ class BusinessSpec(StrictModel):
     answers: dict[str, str] = Field(default_factory=dict[str, str])
     # Local days (YYYY-MM-DD) with every place taken: the waitlist's days.
     booked_up: list[str] = Field(default_factory=list[str])
+    # Generated items beyond the fact table's limit (catalog_seeding).
+    catalog: CatalogSpec | None = None
 
 
 class PersonaSpec(StrictModel):
