@@ -156,6 +156,8 @@ test.describe("in Hebrew", () => {
     const calendar = move.getByRole("dialog", { name: "לוח שנה" });
     expect(await calendar.evaluate((element) => getComputedStyle(element).direction)).toBe("rtl");
     await expect(calendar.getByRole("button", { name: "החודש הבא" })).toBeVisible();
+    // The keyboard is in the calendar at once (on a day), so Escape closes it.
+    await expect(calendar.locator(":focus")).toHaveCount(1);
     await page.keyboard.press("Escape");
     await expect(calendar).toBeHidden();
     await move.getByRole("combobox", { name: "תאריך" }).fill(dayAfter(await bookingDate(request, booked.token)));
