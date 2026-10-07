@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
-from scripts.eval_harness.baselines import DEFAULT_TOLERANCE
+from scripts.eval_harness.baselines import (
+    DEFAULT_CRITERION_TOLERANCE,
+    DEFAULT_TOLERANCE,
+)
 from scripts.eval_harness.eval_runner import (
     DEFAULT_TURN_LIMIT,
     SCRIPTED_MODEL,
@@ -35,6 +38,7 @@ class CliOptions:
     baselines_dir: Path
     out_dir: Path
     tolerance: float
+    criterion_tolerance: float
     update_baseline: bool
     require_pass: bool
 
@@ -59,7 +63,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cassettes", type=Path, default=EVALS_DIRECTORY / "cassettes")
     parser.add_argument("--baselines", type=Path, default=EVALS_DIRECTORY / "baselines")
     parser.add_argument("--out", type=Path, default=Path("reports") / "evals")
-    parser.add_argument("--tolerance", type=float, default=DEFAULT_TOLERANCE)
+    parser.add_argument(
+        "--tolerance",
+        type=float,
+        default=DEFAULT_TOLERANCE,
+        help="allowed pass^k drop against the baseline (0.03 = 3 points)",
+    )
+    parser.add_argument(
+        "--criterion-tolerance",
+        type=float,
+        default=DEFAULT_CRITERION_TOLERANCE,
+        help="allowed drop of any criterion's pass rate against the baseline",
+    )
     parser.add_argument(
         "--update-baseline", action="store_true", help="accept this run as baseline"
     )
@@ -100,6 +115,7 @@ def parse_options(arguments: list[str] | None = None) -> CliOptions:
         baselines_dir=parsed.baselines,
         out_dir=parsed.out,
         tolerance=parsed.tolerance,
+        criterion_tolerance=parsed.criterion_tolerance,
         update_baseline=parsed.update_baseline,
         require_pass=parsed.require_pass,
     )

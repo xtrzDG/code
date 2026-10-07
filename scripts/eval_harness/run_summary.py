@@ -1,8 +1,9 @@
 """
 The numbers of a run: pass^k (a scenario counts only when every sample
 passed), pass@1 (the share of passed samples), per-criterion pass rates,
-judge averages, pass rates per niche and language, list-price cost and
-the p50/p95 model latency of the assistant's turns.
+judge averages, pass rates per niche and language, what the replies of each scenario
+language read as (`language_confusion`), list-price cost and the p50/p95
+model latency of the assistant's turns.
 """
 
 import math
@@ -11,6 +12,10 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel, Field
 
+from scripts.eval_harness.language_confusion import (
+    LanguageConfusionRow,
+    summarize_language_confusion,
+)
 from scripts.eval_harness.run_results import SampleResult, ScenarioResult
 
 MICRO_USD_PER_USD: int = 1_000_000
@@ -44,6 +49,9 @@ class RunSummary(BaseModel):
     criteria: list[CriterionSummary] = Field(default_factory=list[CriterionSummary])
     judge_averages: dict[str, float] = Field(default_factory=dict[str, float])
     groups: list[GroupSummary] = Field(default_factory=list[GroupSummary])
+    language_confusion: list[LanguageConfusionRow] = Field(
+        default_factory=list[LanguageConfusionRow]
+    )
 
 
 def summarize(scenarios: Sequence[ScenarioResult]) -> RunSummary:
@@ -69,6 +77,7 @@ def summarize(scenarios: Sequence[ScenarioResult]) -> RunSummary:
         criteria=summarize_criteria(samples),
         judge_averages=average_judge_scores(samples),
         groups=summarize_groups(scenarios),
+        language_confusion=summarize_language_confusion(scenarios),
     )
 
 

@@ -1,6 +1,7 @@
 """
 A self-contained HTML page of a run: headline numbers, the baseline
-comparison, criteria, the niche x language matrix and every scenario with
+comparison, criteria, the niche x language matrix, what each scenario
+language's replies read as, and every scenario with
 its transcript, failed checks and judge notes. Light and dark follow the
 reader's system setting; no script, no external file.
 """
@@ -9,6 +10,7 @@ from html import escape
 from pathlib import Path
 
 from scripts.eval_harness.eval_report import EvalReport
+from scripts.eval_harness.html_languages import render_language_confusion
 from scripts.eval_harness.html_sections import (
     render_baseline,
     render_criteria,
@@ -43,6 +45,7 @@ def render_html(report: EvalReport) -> str:
         render_criteria(report.summary),
         render_judge(report.summary),
         render_matrix(report.summary),
+        render_language_confusion(report.summary),
         render_scenarios(report.scenarios),
         "</main></body></html>",
     ]
