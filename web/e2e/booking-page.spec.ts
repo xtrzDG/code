@@ -17,6 +17,16 @@ import { DEMO_RESTAURANT, signInAsDemoOwner } from "./support/demo";
 import { expect, test } from "./support/fixtures";
 import { waitForNetworkQuiet } from "./support/network";
 
+/** "Thursday, October 8, 2026": a calendar day's name in English. */
+function fullDate(isoDate: string): string {
+  return new Intl.DateTimeFormat("en", { dateStyle: "full", timeZone: "UTC" }).format(new Date(`${isoDate}T12:00:00Z`));
+}
+
+/** "Oct 8, 2026": the date as the English date field shows it. */
+function shortDate(isoDate: string): string {
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${isoDate}T12:00:00Z`));
+}
+
 /** Serious and critical WCAG 2.1 A/AA violations on the page (axe-core). */
 async function seriousViolations(page: Page): Promise<string[]> {
   await waitForNetworkQuiet(page);
@@ -60,11 +70,19 @@ test("an English guest opens the link, saves the calendar file and moves the boo
   expect(calendar).toContain(`SUMMARY:${DEMO_RESTAURANT}`);
   expect(calendar).toContain("STATUS:CONFIRMED");
 
-  // Another free time, the next day.
-  const nextDay = dayAfter(await bookingDate(request, booked.token));
+  // Another free time, the next day, picked in the date field's calendar.
+  const bookedDay = await bookingDate(request, booked.token);
+  const nextDay = dayAfter(bookedDay);
   await page.getByRole("button", { name: "Change time" }).click();
   const move = page.getByRole("region", { name: "Choose a new time" });
-  await move.getByLabel("Date").fill(nextDay);
+  await move.getByRole("button", { name: "Open the calendar" }).click();
+  const picker = move.getByRole("dialog", { name: "Calendar" });
+  if (nextDay.slice(0, 7) !== bookedDay.slice(0, 7)) {
+    await picker.getByRole("button", { name: "Next month" }).click();
+  }
+  await picker.getByRole("button", { name: fullDate(nextDay), exact: true }).click();
+  await expect(picker).toBeHidden();
+  await expect(move.getByRole("combobox", { name: "Date" })).toHaveValue(shortDate(nextDay));
   const times = move.getByRole("group", { name: "Free times" }).getByRole("button");
   await times.nth(1).click();
   await expect(times.nth(1)).toHaveAttribute("aria-pressed", "true");
@@ -133,7 +151,14 @@ test.describe("in Hebrew", () => {
 
     await page.getByRole("button", { name: "שינוי שעה" }).click();
     const move = page.getByRole("region", { name: "בחרו שעה חדשה" });
-    await move.getByLabel("תאריך").fill(dayAfter(await bookingDate(request, booked.token)));
+    // The date field and its calendar speak Hebrew and read right to left.
+    await move.getByRole("button", { name: "פתיחת לוח השנה" }).click();
+    const calendar = move.getByRole("dialog", { name: "לוח שנה" });
+    expect(await calendar.evaluate((element) => getComputedStyle(element).direction)).toBe("rtl");
+    await expect(calendar.getByRole("button", { name: "החודש הבא" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(calendar).toBeHidden();
+    await move.getByRole("combobox", { name: "תאריך" }).fill(dayAfter(await bookingDate(request, booked.token)));
     await expect(move.getByRole("group", { name: "שעות פנויות" }).getByRole("button").first()).toBeVisible();
     await move.getByRole("button", { name: "סגירה" }).click();
     await expect(move).toBeHidden();

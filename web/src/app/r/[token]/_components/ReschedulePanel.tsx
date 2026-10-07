@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "@/api/client";
 import { unwrap } from "@/api/result";
 import type { Schema } from "@/api/types";
+import { DateField } from "@/components/ui/DateField";
+import { DateFieldLanguage } from "@/components/ui/DateFieldLanguage";
+import { bookingDateTexts } from "@/lib/bookingPage/dateTexts";
 import { fillPlaceholders, formatLocalTime, moveTarget, todayIn, wallClock } from "@/lib/bookingPage/format";
 import { bookingProblem, type BookingProblem } from "@/lib/bookingPage/refusals";
 import type { BookingPageTexts } from "@/lib/bookingPage/texts";
@@ -58,10 +61,11 @@ function SlotChoice({
 }
 
 /**
- * "Choose a new time": a date (from today in the business's zone), its
- * free times (or, for a stay, whether its nights are free from that date)
- * and the move. The API checks the time again under the booking's lock;
- * a time taken meanwhile reloads the day's free times.
+ * "Choose a new time": a date (from today in the business's zone, in the
+ * UI kit's date field speaking the page's language), its free times (or,
+ * for a stay, whether its nights are free from that date) and the move.
+ * Only a free time can be chosen; the API checks it again under the
+ * booking's lock, and a time taken meanwhile reloads the day's free times.
  */
 export function ReschedulePanel({
   id,
@@ -87,8 +91,10 @@ export function ReschedulePanel({
   const [failedDate, setFailedDate] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const [isSaving, setSaving] = useState(false);
+  const dateTexts = useMemo(() => bookingDateTexts(language), [language]);
   const isStay = view.booking_unit === "night";
   const isValidDate = wallClock(date) !== null && date >= today;
+  const isPast = wallClock(date) !== null && date < today;
 
   useEffect(() => {
     if (!isValidDate) {
@@ -152,10 +158,26 @@ export function ReschedulePanel({
   return (
     <section id={id} className="bp-panel" aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>{texts.newTime}</h2>
-      <label className="bp-field">
-        <span>{texts.date}</span>
-        <input type="date" value={date} min={today} required onChange={(event) => pickDate(event.target.value)} />
-      </label>
+      <div className="bp-field">
+        <label htmlFor={`${id}-date`}>{texts.date}</label>
+        <DateFieldLanguage locale={language} texts={dateTexts}>
+          <DateField
+            id={`${id}-date`}
+            value={date}
+            min={today}
+            today={today}
+            required
+            aria-invalid={isPast || undefined}
+            aria-describedby={isPast ? `${id}-date-hint` : undefined}
+            onChange={pickDate}
+          />
+        </DateFieldLanguage>
+        {isPast ? (
+          <p id={`${id}-date-hint`} className="bp-field-hint">
+            {dateTexts.pastDate}
+          </p>
+        ) : null}
+      </div>
       <div className="bp-slots" aria-live="polite" aria-busy={isLoading}>
         {isLoading ? <p className="bp-hint">{texts.loadingTimes}</p> : null}
         {answer ? (

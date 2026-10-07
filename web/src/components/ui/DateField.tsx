@@ -4,7 +4,8 @@
  * A calendar date in the cabinet's language: it reads "6 окт. 2026 г.",
  * "6 ოქტ. 2026" or "Oct 6, 2026" whatever the browser's own language is,
  * opens a month whose week starts where the cabinet's language starts it,
- * and keeps an ISO value ("2026-10-06"; "" for none).
+ * and keeps an ISO value ("2026-10-06"; "" for none). A page for customers
+ * gives it the customer's language with DateFieldLanguage.
  *
  *     <Field label={t("…date")}>
  *       {(control) => <DateField {...control} value={date} onChange={setDate} min={today} />}
@@ -19,12 +20,12 @@
 import { useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 import { IconCalendar } from "@/components/icons";
-import { useI18n } from "@/i18n/client";
 import { mergeClassOverrides } from "@/lib/classMerge";
 import { cn } from "@/lib/cn";
 import { dateText, deviceToday, parseTypedDate, type IsoDate } from "@/lib/dateInput";
 
 import { Calendar } from "./Calendar";
+import { useDateFieldLanguage } from "./DateFieldLanguage";
 import { Popover } from "./Popover";
 
 export interface DateFieldProps {
@@ -71,7 +72,7 @@ export function DateField({
   className,
   onBlur,
 }: DateFieldProps) {
-  const { t, locale } = useI18n();
+  const { text, locale } = useDateFieldLanguage();
   const ownId = useId();
   const calendarId = `${ownId}-calendar`;
   const anchor = useRef<HTMLDivElement>(null);
@@ -164,7 +165,7 @@ export function DateField({
         aria-controls={isOpen ? calendarId : undefined}
         disabled={disabled}
         autoFocus={autoFocus}
-        placeholder={placeholder ?? t("formFields.date.placeholder")}
+        placeholder={placeholder ?? text("placeholder")}
         value={shown}
         onChange={(event) => {
           const text = event.target.value;
@@ -190,7 +191,7 @@ export function DateField({
       />
       <button
         type="button"
-        aria-label={t("formFields.date.open")}
+        aria-label={text("open")}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         disabled={disabled}
@@ -206,7 +207,7 @@ export function DateField({
         <IconCalendar className="size-4" aria-hidden />
       </button>
       {isOpen ? (
-        <Popover anchor={anchor} label={t("formFields.date.calendar")} onClose={() => close(false)}>
+        <Popover anchor={anchor} label={text("calendar")} onClose={() => close(false)}>
           <div id={calendarId}>
             <Calendar
               value={value}

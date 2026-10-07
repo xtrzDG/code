@@ -12,7 +12,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { IconChevronRight } from "@/components/icons";
-import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import {
   addDaysIso,
@@ -30,6 +29,7 @@ import {
 import { weekdayName } from "@/lib/format";
 
 import { Button } from "./Button";
+import { useDateFieldLanguage } from "./DateFieldLanguage";
 
 const NAV_BUTTON =
   "inline-flex size-9 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink " +
@@ -53,7 +53,7 @@ export function Calendar({
   onClear?: () => void;
   onEscape: () => void;
 }) {
-  const { t, locale } = useI18n();
+  const { text, locale } = useDateFieldLanguage();
   const titleId = useId();
   const grid = useRef<HTMLTableElement>(null);
   const [focused, setFocused] = useState<IsoDate>(() => clampIso(isIsoDate(value) ? value : today, min, max));
@@ -108,7 +108,7 @@ export function Calendar({
         <button
           type="button"
           className={NAV_BUTTON}
-          aria-label={t("formFields.date.previousMonth")}
+          aria-label={text("previousMonth")}
           disabled={!canGoBack}
           onClick={() => go(addMonthsIso(focused, -1), false)}
         >
@@ -120,7 +120,7 @@ export function Calendar({
         <button
           type="button"
           className={NAV_BUTTON}
-          aria-label={t("formFields.date.nextMonth")}
+          aria-label={text("nextMonth")}
           disabled={!canGoForward}
           onClick={() => go(addMonthsIso(focused, 1), false)}
         >
@@ -176,11 +176,11 @@ export function Calendar({
       </table>
       <div className="flex items-center justify-between gap-2 border-t border-line pt-2">
         <Button variant="ghost" size="sm" disabled={!isWithin(today, min, max)} onClick={() => onSelect(today)}>
-          {t("formFields.date.today")}
+          {text("today")}
         </Button>
         {onClear ? (
           <Button variant="ghost" size="sm" onClick={onClear}>
-            {t("formFields.date.clear")}
+            {text("clear")}
           </Button>
         ) : null}
       </div>
