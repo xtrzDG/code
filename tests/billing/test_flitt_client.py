@@ -74,6 +74,31 @@ def test_client_rejects_a_forged_response_signature() -> None:
         build_client_with(httpx.MockTransport(respond)).create_checkout_url({})
 
 
+def test_client_reads_a_status_only_from_a_signed_envelope() -> None:
+    def answer(order: dict[str, object], *, signed: bool) -> httpx.MockTransport:
+        data: str = encode_envelope_data(order)
+        envelope: dict[str, object] = {"version": "2.0", "data": data}
+        if signed:
+            envelope["signature"] = build_envelope_signature(FLITT_SECRET_KEY, data)
+
+        return httpx.MockTransport(
+            lambda request: httpx.Response(200, json={"response": envelope})
+        )
+
+    signed = build_client_with(answer({"checkout_url": CHECKOUT_URL}, signed=True))
+    assert signed.create_checkout_url({})["checkout_url"] == CHECKOUT_URL
+
+    with pytest.raises(ExternalServiceError):
+        build_client_with(
+            answer({"checkout_url": CHECKOUT_URL}, signed=False)
+        ).create_checkout_url({})
+
+    with pytest.raises(ExternalServiceError):
+        build_client_with(
+            answer({"response_status": "failure"}, signed=True)
+        ).create_checkout_url({})
+
+
 def test_client_reports_refusals_without_request_data() -> None:
     sandbox = FlittSandbox(
         refusal={

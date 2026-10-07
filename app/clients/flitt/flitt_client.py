@@ -160,6 +160,7 @@ class FlittClient(ClientContract):
                 body.get(RESPONSE_WRAPPER_KEY),
                 "Flitt response",
             )
+            is_signed_envelope: bool = False
             if isinstance(result.get("data"), str):
                 envelope_data: str = str(result["data"])
                 signature: object = result.get("signature")
@@ -169,6 +170,7 @@ class FlittClient(ClientContract):
                 ):
                     raise ExternalServiceError("Flitt response signature is invalid.")
 
+                is_signed_envelope = signature is not None
                 result = {
                     **{key: value for key, value in result.items() if key != "data"},
                     **decode_envelope_data(envelope_data),
@@ -178,7 +180,7 @@ class FlittClient(ClientContract):
                 "Flitt returned an unreadable response."
             ) from error
 
-        if result.get("response_status") != SUCCESS_RESPONSE_STATUS:
+        if not is_accepted(result, is_signed_envelope=is_signed_envelope):
             raise ExternalServiceError(describe_flitt_error(result))
 
         return result
@@ -187,6 +189,20 @@ class FlittClient(ClientContract):
         return (
             int(self._merchant_id) if self._merchant_id.isdigit() else self._merchant_id
         )
+
+
+def is_accepted(result: Mapping[str, object], *, is_signed_envelope: bool) -> bool:
+    """
+    Whether Flitt accepted the call. A refusal always says "failure"; a
+    protocol 2.0 answer signed with the payment key may leave the status
+    out (its checkout answer carries only `checkout_url` and `payment_id`).
+    """
+
+    status: object = result.get("response_status")
+    if status is None:
+        return is_signed_envelope
+
+    return status == SUCCESS_RESPONSE_STATUS
 
 
 def describe_flitt_error(result: Mapping[str, object]) -> str:

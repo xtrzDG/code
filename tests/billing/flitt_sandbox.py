@@ -51,13 +51,18 @@ class FlittSandbox:
             )
 
         self.checkout_orders.append(order)
+        # As Flitt answers: a signed 2.0 envelope, no response_status.
+        answer: str = base64.b64encode(
+            json.dumps(
+                {"order": {"checkout_url": CHECKOUT_URL, "payment_id": 802345671}}
+            ).encode()
+        ).decode()
+        signature: str = hashlib.sha1(
+            f"{FLITT_SECRET_KEY}|{answer}".encode()
+        ).hexdigest()
         return httpx.Response(
             200,
             json={
-                "response": {
-                    "response_status": "success",
-                    "checkout_url": CHECKOUT_URL,
-                    "payment_id": 802345671,
-                }
+                "response": {"version": "2.0", "data": answer, "signature": signature}
             },
         )

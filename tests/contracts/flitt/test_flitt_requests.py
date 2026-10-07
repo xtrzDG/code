@@ -75,6 +75,7 @@ def checkout_request() -> PaymentCheckoutRequest:
     "fixture",
     [
         "checkout_url_response.json",
+        "checkout_url_envelope_response.json",
         "checkout_failure_response.json",
         "subscription_stop_response.json",
     ],
@@ -96,6 +97,23 @@ def test_checkout_request_matches_the_protocol() -> None:
     [request] = transport.requests
     assert_outbound(request.json(), SPEC, "request:api")
     assert_outbound(opened(request.json()), SPEC, "CheckoutOrder")
+    assert str(session.checkout_url).startswith("https://pay.flitt.com/")
+    assert session.payment_reference == "802345671"
+
+
+def test_a_signed_checkout_answer_without_a_status_is_read() -> None:
+    # Flitt's live test merchant answers the checkout with a signed 2.0
+    # envelope holding only checkout_url and payment_id (no
+    # response_status); field names seen in the nightly run of 2026-10-07.
+    transport = RecordingTransport()
+    transport.respond(
+        "POST",
+        r"/api/checkout/url/$",
+        load_json_fixture("flitt", "checkout_url_envelope_response.json"),
+    )
+
+    session = gateway(transport).create_checkout(checkout_request())
+
     assert str(session.checkout_url).startswith("https://pay.flitt.com/")
     assert session.payment_reference == "802345671"
 
