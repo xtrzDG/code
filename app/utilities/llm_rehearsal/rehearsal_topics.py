@@ -101,6 +101,16 @@ LABELS: dict[str, dict[RehearsalTopic, str]] = {
         RehearsalTopic.COMPLAINT: "საჩივრები",
         RehearsalTopic.OTHER: "სხვა კითხვები",
     },
+    "he": {
+        RehearsalTopic.EVENTS: "חגיגות ואירועים",
+        RehearsalTopic.BOOKING: "הזמנות",
+        RehearsalTopic.PRICES: "מחירים",
+        RehearsalTopic.HOURS: "שעות פעילות",
+        RehearsalTopic.PLACE: "כתובת וחניה",
+        RehearsalTopic.OFFER: "תפריט ושירותים",
+        RehearsalTopic.COMPLAINT: "תלונות",
+        RehearsalTopic.OTHER: "שאלות אחרות",
+    },
     "de": {
         RehearsalTopic.EVENTS: "Feiern und Veranstaltungen",
         RehearsalTopic.BOOKING: "Buchung",

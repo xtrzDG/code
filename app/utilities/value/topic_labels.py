@@ -1,16 +1,19 @@
 """
 The languages a topic is labelled in and which label a cabinet reads.
 
-The nightly grouping names every topic in each cabinet language (Georgian,
-Russian and English, the languages owners read the cabinet in) and in the
-owner's own language, so an English or Georgian cabinet never shows a
-Russian owner's labels. The catch-all of other questions is no label at
-all: the cabinet names it from its own dictionary. Its owner-language text
-here only fills the version 1 `label` field the release before still reads.
+The nightly grouping names every topic in each cabinet language (English,
+Russian, Georgian, Hebrew and German, the languages owners read the
+cabinet in) and in the owner's own language, so an English or Hebrew
+cabinet never shows a Russian owner's labels. The catch-all of other
+questions is no label at all: the cabinet names it from its own
+dictionary. Its owner-language text here only fills the version 1 `label`
+field the release before still reads (the Hebrew and German ones are
+drafts waiting for a native speaker, like the rest of those languages).
 """
 
 from collections.abc import Sequence
 
+from app.schemas.constants.localization import CabinetLanguage
 from app.schemas.constants.value import TopicKind
 from app.schemas.domain.conversation_topics import (
     ConversationTopic,
@@ -21,12 +24,22 @@ from app.schemas.typings.localization.constrained_strings import LanguageTag
 
 ENGLISH: str = "en"
 # The languages the cabinet is translated into, in the order labels are asked.
-CABINET_LANGUAGES: tuple[str, ...] = ("en", "ru", "ka")
+CABINET_LANGUAGES: tuple[str, ...] = tuple(
+    language.value
+    for language in (
+        CabinetLanguage.ENGLISH,
+        CabinetLanguage.RUSSIAN,
+        CabinetLanguage.GEORGIAN,
+        CabinetLanguage.HEBREW,
+        CabinetLanguage.GERMAN,
+    )
+)
 # The catch-all's text in the owner-language `label` field (version 1 readers).
 OTHER_TOPIC_LABELS: dict[str, str] = {
     "en": "Other questions",
     "ru": "Другие вопросы",
     "ka": "სხვა კითხვები",
+    "he": "שאלות אחרות",
     "de": "Andere Fragen",
     "uk": "Інші питання",
     "fr": "Autres questions",
@@ -44,6 +57,10 @@ CATCH_ALL_LABELS: frozenset[str] = frozenset(
         "другое",
         "разное",
         "სხვა",
+        "אחר",
+        "שונות",
+        "sonstiges",
+        "andere",
     }
 )
 

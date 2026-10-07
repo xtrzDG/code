@@ -1,8 +1,9 @@
 """
 Where owner-facing catalog texts live, for the policy test and the catalog
 tests: the plan catalog, the niche templates, the call forwarding guides,
-the staff notification texts and the billing texts, and apart from them
-the wording of issued invoices and receipts (reviewed languages only).
+the staff notification texts, the billing texts and the guided setup's
+steps, and apart from them the wording of issued invoices and receipts
+(reviewed languages only).
 
 Customer-facing texts (the confirmations, reminders and replies customers
 read, in any of the widget's languages) are not owner texts: they live
@@ -45,6 +46,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.transformers.notifications.value_digest_texts",
     "app.transformers.billing.billing_texts",
     "app.utilities.billing.win_back_texts",
+    "app.utilities.setup.setup_texts",
 )
 # Modules whose texts are printed on issued invoices and receipts: they
 # carry reviewed languages only (a draft would stay on a kept document).

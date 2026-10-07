@@ -73,8 +73,9 @@ def labels_of(view: ConversationTopicsView) -> list[tuple[str, TopicKind]]:
 
 
 def test_the_owner_language_comes_first_then_the_cabinet_languages() -> None:
-    assert label_languages(LanguageTag("ru")) == ["ru", "en", "ka"]
-    assert label_languages(LanguageTag("de-AT")) == ["de", "en", "ru", "ka"]
+    assert label_languages(LanguageTag("ru")) == ["ru", "en", "ka", "he", "de"]
+    assert label_languages(LanguageTag("de-AT")) == ["de", "en", "ru", "ka", "he"]
+    assert label_languages(LanguageTag("uk")) == ["uk", "en", "ru", "ka", "he", "de"]
 
 
 def test_every_cabinet_reads_the_topics_in_its_own_language() -> None:
@@ -83,18 +84,23 @@ def test_every_cabinet_reads_the_topics_in_its_own_language() -> None:
 
     assert tick(bench, llm) == 1
 
-    assert "Label languages: ru, en, ka" in read_texts(
+    assert "Label languages: ru, en, ka, he, de" in read_texts(
         str(llm.requests[0].transcript[-1])
     )
     english, georgian, russian = read(bench, "en"), read(bench, "ka"), read(bench, None)
+    hebrew, german = read(bench, "he"), read(bench, "de")
     assert english.label_language == "en" and russian.label_language == "ru"
     assert ("Prices", TopicKind.NAMED) in labels_of(english)
     assert ("ფასები", TopicKind.NAMED) in labels_of(georgian)
     assert ("Цены", TopicKind.NAMED) in labels_of(russian)
+    assert ("מחירים", TopicKind.NAMED) in labels_of(hebrew)
+    assert ("Preise", TopicKind.NAMED) in labels_of(german)
     # The greeting fits no topic: the catch-all, named per reader.
     assert ("Other questions", TopicKind.OTHER) in labels_of(english)
     assert ("სხვა კითხვები", TopicKind.OTHER) in labels_of(georgian)
-    for view in (english, georgian):
+    assert ("שאלות אחרות", TopicKind.OTHER) in labels_of(hebrew)
+    assert ("Andere Fragen", TopicKind.OTHER) in labels_of(german)
+    for view in (english, georgian, hebrew, german):
         assert not [label for label, _ in labels_of(view) if CYRILLIC.search(label)]
 
 
@@ -109,7 +115,13 @@ def test_the_catch_all_is_stored_as_a_kind_and_listed_last() -> None:
     assert georgian[-1].kind is TopicKind.OTHER
     # The release before reads `label`: the catch-all's owner-language text.
     assert str(georgian[-1].label) == "Другие вопросы" and georgian[-1].labels == []
-    assert {item.language for item in georgian[0].labels} == {"ru", "en", "ka"}
+    assert {item.language for item in georgian[0].labels} == {
+        "ru",
+        "en",
+        "ka",
+        "he",
+        "de",
+    }
 
 
 def test_a_missing_label_falls_back_to_english_then_the_owner_language() -> None:
