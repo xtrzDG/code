@@ -70,6 +70,13 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       admin_plan_overridden: "המסלול שונה על ידי הפלטפורמה",
     },
     entities: {
+      api_key: "מפתח API",
+      api_booking: "הזמנות שנקראו דרך ה-API",
+      api_lead: "פניות שנקראו דרך ה-API",
+      api_contact: "לקוחות שנקראו דרך ה-API",
+      api_conversation: "שיחות שנקראו דרך ה-API",
+      webhook_endpoint: "וובהוק",
+      webhook_delivery: "משלוח וובהוק",
       contact: "לקוח",
       booking: "הזמנה",
       manager_contacts: "אנשי קשר להתראות",

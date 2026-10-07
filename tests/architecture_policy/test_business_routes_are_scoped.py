@@ -45,6 +45,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "channels.process_platform_bot_update_operator": "staff bot job",
     "compliance.purge_expired_recordings_operator": "retention over every business",
     "privacy.purge_business_exports_operator": "expired export archives, all",
+    "webhooks.purge_webhook_deliveries_operator": "webhook log past 30 days, all",
     "privacy.retention_purge_operator": "data past every business's retention",
     "legal.send_subprocessor_notices_operator": "daily job over every business",
     "calendars.sync_due_calendars_operator": "periodic job over every business",

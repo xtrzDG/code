@@ -11,6 +11,39 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-06 — public API, API keys and outbound webhooks
+
+Spec: `65a65d7b9c3d848f`
+
+- **Added** the public API under `/v1/public-api/*` (tag `public-api`), a
+  frozen contract for integrations (Zapier, customers' scripts), with an
+  API key as `Authorization: Bearer awk_…`: `GET /me`; `GET /bookings`,
+  `/bookings/{booking_id}`, `/leads`, `/leads/{lead_id}`, `/contacts`,
+  `/contacts/{contact_id}`, `/conversations`, `/conversations/{conversation_id}`
+  (newest first, `limit` and `cursor`); `POST /bookings` and `POST /leads`
+  (201, `Idempotency-Key`); `POST /webhooks` and `DELETE /webhooks/{webhook_id}`
+  (REST-hook subscriptions). A missing scope is 403 `access_denied` with the
+  reason `missing_scope`; a key makes at most `PUBLIC_API_REQUESTS_PER_MINUTE`
+  requests a minute (429 with `Retry-After`).
+- **Added** API keys in the cabinet (tag `api-keys`, owners):
+  `GET` and `POST /v1/businesses/{business_id}/api-keys` (the token is in
+  the answer of `POST` only; 409 `conflict` with the reason
+  `api_key_limit_reached` past 10 active keys) and
+  `DELETE …/api-keys/{api_key_id}` (204; the key's webhooks go too).
+- **Added** outbound webhooks (tag `webhooks`, owners):
+  `GET` and `POST /v1/businesses/{business_id}/webhooks` (the signing secret
+  in the answer of `POST` only; 422 with the reason `not_public` for an
+  address that is not public https; 409 with `webhook_limit_reached`),
+  `PATCH` and `DELETE …/webhooks/{webhook_id}`, `POST …/rotate-secret`,
+  `POST …/test` ("Send test event"), `GET …/deliveries` (the delivery log),
+  `GET /v1/businesses/{business_id}/webhook-deliveries/{delivery_id}` (with
+  the request body, audited) and `POST …/retry`. The requests a webhook
+  receives (`Workshop-Signature`, the event envelope, retries) are described
+  in [api-versioning.md](api-versioning.md).
+- **Added** audit entities `api_key`, `api_booking`, `api_lead`,
+  `api_contact`, `api_conversation`, `webhook_endpoint` and
+  `webhook_delivery` in `GET …/audit-log`.
+
 ## 2026-10-06 — wave 17 together: operation names, idempotency keys, ETags, the pipeline watchdog
 
 Spec: `a7fd87bc6c9d6bb9`

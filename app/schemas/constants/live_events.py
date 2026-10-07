@@ -28,6 +28,11 @@ class LiveEventKind(StrEnum):
     LEAD_CREATED = "lead.created"
     # A waitlist entry joined, was offered a freed place, booked or ended.
     WAITLIST_CHANGED = "waitlist.changed"
+    # For webhooks only (the bus never carries them, cabinets never see
+    # them): a customer's first message opened a conversation,
+    CONVERSATION_STARTED = "conversation.started"
+    # and a phone call was stored with its outcome (and summary).
+    CALL_FINISHED = "call.finished"
     # The website chat's own events, for the visitor's widget stream only
     # (cabinet streams never carry them; ids: the visitor, then the message):
     # a worker started writing the visitor's answer,
@@ -40,6 +45,13 @@ class LiveEventKind(StrEnum):
 # of the cabinet: its streams skip them and they are not kept for replay.
 WIDGET_LIVE_EVENTS: frozenset[LiveEventKind] = frozenset(
     {LiveEventKind.WIDGET_TYPING, LiveEventKind.WIDGET_REPLY}
+)
+
+
+# Announced for the business event observers (webhooks) only: the
+# publisher does not put them on the live bus.
+OBSERVER_ONLY_EVENTS: frozenset[LiveEventKind] = frozenset(
+    {LiveEventKind.CONVERSATION_STARTED, LiveEventKind.CALL_FINISHED}
 )
 
 

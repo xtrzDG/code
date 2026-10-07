@@ -45,6 +45,7 @@ from app.containers.pipelines.platform_ops_pipelines import (
 )
 from app.containers.pipelines.platform_pipelines import PlatformPipelinesContainer
 from app.containers.pipelines.privacy_pipelines import PrivacyPipelinesContainer
+from app.containers.pipelines.public_api_pipelines import PublicApiPipelinesContainer
 from app.containers.pipelines.public_demo_pipelines import (
     PublicDemoPipelinesContainer,
 )
@@ -63,6 +64,7 @@ from app.containers.pipelines.subscription_lifecycle_pipelines import (
 )
 from app.containers.pipelines.telemetry_pipelines import TelemetryPipelinesContainer
 from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
+from app.containers.pipelines.webhook_pipelines import WebhookPipelinesContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 
@@ -234,3 +236,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
         ReferralPipelinesContainer,
         referrals=orchestrators.referrals,
     )
+    webhooks: WebhookPipelinesContainer = Container(  # type: ignore[assignment]
+        WebhookPipelinesContainer, webhooks=orchestrators.webhooks
+    )  # fmt: skip
+    public_api: PublicApiPipelinesContainer = Container(  # type: ignore[assignment]
+        PublicApiPipelinesContainer, public_api=orchestrators.public_api
+    )  # fmt: skip

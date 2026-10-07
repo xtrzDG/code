@@ -6,6 +6,7 @@ from app.schemas.configurations.growth_settings import GrowthSettings
 from app.schemas.configurations.media_settings import MediaSettings
 from app.schemas.configurations.platform_alert_settings import PlatformAlertSettings
 from app.schemas.configurations.privacy_settings import PrivacySettings
+from app.schemas.configurations.public_api_settings import PublicApiSettings
 from app.schemas.configurations.public_site_settings import PublicSiteSettings
 from app.schemas.configurations.quality_settings import QualitySettings
 from app.schemas.configurations.reply_safety_settings import ReplySafetySettings
@@ -281,8 +282,7 @@ class AppSettings(ImmutableDTO):
     platform_alerts: PlatformAlertSettings = Field(
         default_factory=PlatformAlertSettings
     )
-    # When unused and admin sessions end (SESSION_IDLE_TIMEOUT_SECONDS,
-    # ADMIN_SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_LIFETIME_SECONDS).
+    # When sessions end (SESSION_IDLE_TIMEOUT_SECONDS, ADMIN_SESSION_*).
     sessions: SessionSettings = Field(default_factory=SessionSettings)
     # The cabinet's "Help and support" contacts (SUPPORT_*).
     support: SupportSettings = Field(default_factory=SupportSettings)
@@ -297,3 +297,4 @@ class AppSettings(ImmutableDTO):
     spend_guard: SpendGuardSettings = Field(default_factory=SpendGuardSettings)
     growth: GrowthSettings = Field(default_factory=GrowthSettings)
     telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
+    public_api: PublicApiSettings = Field(default_factory=PublicApiSettings)

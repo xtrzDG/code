@@ -29,6 +29,7 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
     PROCESS_POST_CALL_JOB,
 )
+from app.utilities.integrations.webhook_jobs import DELIVER_WEBHOOK_JOB
 from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
 from app.utilities.waitlist.offer_jobs import OFFER_FREED_PLACE_JOB
@@ -75,5 +76,7 @@ def queued_job_operator_map(operators: OperatorsContainer) -> Dict:
             OFFER_FREED_PLACE_JOB: operators.growth.offer_freed_place_operator,
             # The next batch of businesses an all-businesses incident reaches.
             EXPAND_INCIDENT_JOB: operators.reliability.expand_incident_operator,
+            # An outbound webhook's signed POST, retried up to a day (1181).
+            DELIVER_WEBHOOK_JOB: operators.webhooks.deliver_webhook_operator,
         }
     )

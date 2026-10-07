@@ -43,6 +43,7 @@ from tests.e2e.edge_fakes import (
     refuse_openai_sdk,
 )
 from tests.e2e.harness_settings import ELEVENLABS_BASE_URL
+from tests.integrations.fake_webhook_poster import FakeWebhookPoster
 from tests.media.media_fakes import InMemoryMediaStorage
 
 
@@ -148,6 +149,8 @@ def build_workshop_container(
     )
     # Calendars outside the platform (iCal feeds, Cal.com) stay here too.
     CalendarEdges().install(container)
+    # Webhook receivers answer from a script (`FakeWebhookPoster`).
+    replace_provider(container.clients.webhook_poster, FakeWebhookPoster())
     if (
         settings.langfuse_public_key is not None
         and settings.langfuse_secret_key is not None

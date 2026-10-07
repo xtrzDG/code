@@ -2,6 +2,7 @@
 
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.live_events import EventPublisherFacilitatorContract
 from app.contracts.llm import LlmAdapterContract
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.notifications import StaffAlertFacilitatorContract
@@ -18,6 +19,7 @@ from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.channel_events import PostCallEventStatus
+from app.schemas.constants.live_events import LiveEventKind
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
@@ -61,7 +63,9 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
     Idempotent per provider call id: the summary is written once (a call
     already summarized keeps its text) and every recipient gets the alert
     once, however often the post-call step runs. Nothing is sent while the
-    owner keeps summaries off in Settings → Calls.
+    owner keeps summaries off in Settings → Calls. The finished call is
+    announced (`call.finished` for the business's webhooks) after its
+    summary, or right away while summaries are off.
     """
 
     def __init__(
@@ -79,6 +83,7 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         ],
         phone_number_parser: PhoneNumberParserContract,
         app_settings: AppSettings,
+        live_events: EventPublisherFacilitatorContract,
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
@@ -95,6 +100,7 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
             CallReportTextInput, StaffAlertBrief
         ] = report_brief_transformer
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
+        self._live_events: EventPublisherFacilitatorContract = live_events
         self._wall_clock: WallClock[Microseconds] = wall_clock
 
     def run(self, input_data: CallSummaryRequest) -> CallSummaryOutcome:
@@ -112,12 +118,16 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
         call: CallDocument | None = self._call_repo.get(
             recorded.business_id, recorded.call_id
         )
-        if business is None or call is None or not self._is_enabled(business):
+        if business is None or call is None:
+            return CallSummaryOutcome()
+        if not self._is_enabled(business):
+            self._announce(call)
             return CallSummaryOutcome()
 
         is_generated: bool = False
         if call.summarized_at is None:
             call, is_generated = self._summarize(business, call, input_data)
+        self._announce(call)
 
         facts: CallReportTextInput = self._facts(business, call, input_data)
         notified = self._staff_alerts.alert(
@@ -137,6 +147,13 @@ class SummarizeCallUseCase(UseCaseContract[CallSummaryRequest, CallSummaryOutcom
             ),
         )
         return CallSummaryOutcome(is_generated=is_generated, notified_count=notified)
+
+    def _announce(self, call: CallDocument) -> None:
+        """The finished call for the live views' observers (once per call)."""
+
+        self._live_events.publish(
+            call.business_id, LiveEventKind.CALL_FINISHED, (call.id,)
+        )
 
     def _is_enabled(self, business: BusinessDocument) -> bool:
         settings: CallSettingsDocument | None = (

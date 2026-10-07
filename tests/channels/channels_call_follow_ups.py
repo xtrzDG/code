@@ -134,6 +134,7 @@ class ChannelsCallFollowUps(ChannelsInbox):
             self.report_brief,
             self.phone_number_parser,
             self.settings,
+            self.live_events,
             self.wall_clock,
         )
         self.register_missed_call = RegisterMissedCallUseCase(

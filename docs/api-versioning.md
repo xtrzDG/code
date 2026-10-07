@@ -7,6 +7,7 @@ change:
 | --- | --- | --- | --- |
 | Owner cabinet (`web/`) | `/v1/...` (cabinet, catalog, auth, admin) | we, in the same pull request | additive within `/v1` |
 | Website widget | `/widget.js`, `/widget/demo`, `/v1/widget/{business_id}/config`, `/v1/widget/{business_id}/messages` | nobody: the snippet is pasted on customers' sites and cached by browsers and CDNs | **frozen** |
+| Integrations (Zapier, customers' scripts) | `/v1/public-api/*` (tag `public-api`) and the webhook requests we send | customers, at their own pace | **frozen** (below) |
 | Platforms | `/v1/channels/telegram/{channel_id}/webhook`, `/v1/channels/telegram-platform/webhook`, `/v1/channels/meta/webhook`, `/v1/payments/flitt/webhook`, `/v1/voice/tools/{tool_name}`, `/v1/voice/webhooks/*`, `/v1/integrations/google-calendar/callback` | registered once at Telegram, Meta, Flitt, ElevenLabs and Google | **frozen** |
 
 `web/openapi.json` is the contract. It is exported from the code
@@ -62,6 +63,9 @@ it document the header:
 - `POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages`
   (a staff message);
 - `POST /v1/businesses/{business_id}/billing/checkout` and `…/subscribe`.
+- `POST /v1/public-api/bookings`, `POST /v1/public-api/leads` and
+  `POST /v1/public-api/webhooks` (the public API; the keys belong to the
+  user who created the API key).
 
 There is no creating `POST` for leads (the assistant records them), so
 they need no key. Other operations ignore the header. The rules:
@@ -106,6 +110,85 @@ tags; weak tags (`W/"7"`) never match (strong comparison). Without
 with 409 `stale_revision` (the cabinet uses it). The ETag names the
 business revision for writes; it is not a cache validator (no
 `If-None-Match`/304).
+
+## The public API and webhooks: a frozen contract
+
+`/v1/public-api/*` (tag `public-api`) is the API customers call with an API
+key (Settings → Integrations → API keys, `Authorization: Bearer awk_…`),
+and the webhook requests we send are a contract their receivers parse. Both
+are frozen like the widget routes: nothing is removed, renamed or retyped,
+and no response gains a value of an enum an existing client cannot handle.
+Allowed: a new route, a new optional field in a request, a new field in a
+response or an event's `data`, a new event type (sent only to endpoints that
+subscribe to it by name). Anything else is `/v2/public-api`, run next to
+`/v1` for at least 12 months. The cabinet's own routes for keys and webhooks
+(`/v1/businesses/{business_id}/api-keys`, `…/webhooks`,
+`…/webhook-deliveries`, tags `api-keys` and `webhooks`) follow the ordinary
+`/v1` rule.
+
+**Keys.** A key belongs to one business; it is shown once and stored as a
+SHA-256 hash with its prefix. Its scopes (`bookings:read`, `bookings:write`,
+`leads:read`, `leads:write`, `contacts:read`, `conversations:read`,
+`webhooks:manage`) decide what it may do: a missing scope is 403
+`access_denied` with the reason `missing_scope`; a record of another business is
+404. A key makes at most `PUBLIC_API_REQUESTS_PER_MINUTE` requests a minute
+(429 with `Retry-After`); every read and write is audited under the key.
+
+| Route | Scope |
+| --- | --- |
+| `GET /v1/public-api/me` | any: the key, its scopes and its business |
+| `GET /v1/public-api/bookings`, `…/bookings/{id}` | `bookings:read` |
+| `POST /v1/public-api/bookings` | `bookings:write` (201; capacity and hours enforced) |
+| `GET /v1/public-api/leads`, `…/leads/{id}` | `leads:read` |
+| `POST /v1/public-api/leads` | `leads:write` (201) |
+| `GET /v1/public-api/contacts`, `…/contacts/{id}` | `contacts:read` |
+| `GET /v1/public-api/conversations`, `…/conversations/{id}` | `conversations:read` (one with its messages) |
+| `POST /v1/public-api/webhooks`, `DELETE …/webhooks/{id}` | `webhooks:manage` (REST hooks: Zapier subscribes and unsubscribes) |
+
+Lists are newest first and take `?limit` (1 to 200) and the `cursor` of
+the previous page's `next_cursor`. Times are ISO 8601 with the business's
+offset. The two creating `POST`s honour `Idempotency-Key` (rules above;
+keys belong to the user who created the API key). Sandbox (test chat)
+records are never returned.
+
+**Webhook requests.** An endpoint (a public `https` address; private,
+loopback and link-local addresses are refused before every attempt, and
+redirects are not followed) receives one `POST` per event it subscribed to:
+
+```http
+POST /your/hook HTTP/1.1
+Content-Type: application/json
+Workshop-Event-Id: event_…
+Workshop-Event-Type: booking.created
+Workshop-Delivery-Id: webhook_delivery_…
+Workshop-Signature: t=1791331200,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd
+
+{"id": "event_…", "type": "booking.created", "created_at": "2026-10-06T21:00:00+04:00",
+ "business_id": "business_…", "data": { …the record as the public API returns it… }}
+```
+
+Event types: `booking.created`, `booking.updated`, `booking.cancelled`,
+`lead.created`, `lead.updated`, `handoff.created`, `handoff.resolved`,
+`conversation.started`, `call.finished`, and `webhook.test` (the owner's
+"Send test event"). Bookings, leads, conversations and calls carry the
+`acquisition_source` that brought the customer, bookings their `value`.
+
+To verify a request, take `t` and `v1` from `Workshop-Signature`, compute
+HMAC-SHA256 over `<t>.<raw body>` keyed with the endpoint's whole signing
+secret (`whsec_…`, shown once when the endpoint is created or its secret
+rotated), compare in constant time, and refuse a `t` more than 5 minutes
+from your clock. Answer 2xx within 10 seconds; the same `Workshop-Event-Id`
+may arrive more than once and events may arrive out of order.
+
+A failed attempt (a network error, a timeout, 3xx, 4xx or 5xx) is tried
+again after about 30 s, 2 min, 10 min, 30 min, 1 h, 2 h, 4 h, 6 h and
+8 h (±20 %), for at most 24 hours from the event. After
+`WEBHOOK_DISABLE_AFTER_FAILURES` failed attempts in a row the endpoint is
+switched off (Settings → Integrations shows it, and the owner turns it
+on again); an answer of 410 Gone switches it off
+at once (and removes a REST-hook subscription). The delivery log in the
+cabinet keeps every delivery for 30 days, and a failed one can be sent
+again from there.
 
 ## Deprecation
 

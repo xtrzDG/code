@@ -1547,6 +1547,138 @@
         "title": "ApiErrorCode",
         "type": "string"
       },
+      "ApiKeyList": {
+        "additionalProperties": false,
+        "description": "The business's keys, newest first, with the scopes a key may get.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "max_keys": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Max Keys",
+            "type": "integer"
+          },
+          "requests_per_minute": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Requests Per Minute",
+            "type": "integer"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyScope"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scopes",
+          "max_keys",
+          "requests_per_minute"
+        ],
+        "title": "ApiKeyList",
+        "type": "object"
+      },
+      "ApiKeyScope": {
+        "description": "What an API key may do: read or create one kind of record.",
+        "enum": [
+          "bookings:read",
+          "bookings:write",
+          "leads:read",
+          "leads:write",
+          "contacts:read",
+          "conversations:read",
+          "webhooks:manage"
+        ],
+        "title": "ApiKeyScope",
+        "type": "string"
+      },
+      "ApiKeyStatus": {
+        "description": "ACTIVE keys are accepted; a REVOKED key is refused from then on.",
+        "enum": [
+          "active",
+          "revoked"
+        ],
+        "title": "ApiKeyStatus",
+        "type": "string"
+      },
+      "ApiKeyView": {
+        "additionalProperties": false,
+        "description": "A key as the cabinet lists it: never its secret, only its prefix.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^\\S(.*\\S)?$",
+            "title": "Name",
+            "type": "string"
+          },
+          "prefix": {
+            "maxLength": 12,
+            "minLength": 12,
+            "pattern": "^awk_[a-z2-7]{8}$",
+            "title": "Prefix",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyScope"
+            },
+            "title": "Scopes",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApiKeyStatus"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "scopes",
+          "status",
+          "created_at"
+        ],
+        "title": "ApiKeyView",
+        "type": "object"
+      },
       "ApplyAttentionCode": {
         "description": "Why applied changes did not go live, in words an owner can act on:\nsomething required is missing in the profile, nobody receives\nhandoffs, the data processing agreement is not accepted, the plan needs\npayment, the version could not be built, the automatic checks found\nproblems or stopped, voice could not be set up, or the version could\nnot be published.",
         "enum": [
@@ -4481,6 +4613,23 @@
         },
         "title": "BusinessContacts",
         "type": "object"
+      },
+      "BusinessEventType": {
+        "description": "What a webhook endpoint can subscribe to: a change in the business, as\nthe public API names it. A frozen list (docs/api-versioning.md): a new\ntype is added only for endpoints that ask for it by name.\n\n`booking.cancelled` is sent instead of `booking.updated` when a change\nleaves the booking cancelled. `webhook.test` is the owner's \"Send test\nevent\"; nobody subscribes to it.",
+        "enum": [
+          "booking.created",
+          "booking.updated",
+          "booking.cancelled",
+          "lead.created",
+          "lead.updated",
+          "handoff.created",
+          "handoff.resolved",
+          "conversation.started",
+          "call.finished",
+          "webhook.test"
+        ],
+        "title": "BusinessEventType",
+        "type": "string"
       },
       "BusinessExportList": {
         "additionalProperties": false,
@@ -10516,6 +10665,50 @@
           "default_owner_language"
         ],
         "title": "CountryProfileView",
+        "type": "object"
+      },
+      "CreatedApiKey": {
+        "additionalProperties": false,
+        "description": "A new key with its secret token: shown this once, stored only hashed.",
+        "properties": {
+          "api_key": {
+            "$ref": "#/components/schemas/ApiKeyView"
+          },
+          "token": {
+            "maxLength": 53,
+            "minLength": 53,
+            "pattern": "^awk_[a-z2-7]{8}_[A-Za-z0-9]{40}$",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "api_key",
+          "token"
+        ],
+        "title": "CreatedApiKey",
+        "type": "object"
+      },
+      "CreatedWebhookEndpoint": {
+        "additionalProperties": false,
+        "description": "An endpoint with its signing secret, shown this once (when it was made\nor given a new secret): the receiver checks signatures with it.",
+        "properties": {
+          "endpoint": {
+            "$ref": "#/components/schemas/WebhookEndpointView"
+          },
+          "signing_secret": {
+            "maxLength": 49,
+            "minLength": 49,
+            "pattern": "^whsec_[A-Za-z0-9_-]{43}$",
+            "title": "Signing Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint",
+          "signing_secret"
+        ],
+        "title": "CreatedWebhookEndpoint",
         "type": "object"
       },
       "CurrentUserView": {
@@ -22008,6 +22201,568 @@
         "title": "ProviderSpend",
         "type": "object"
       },
+      "PublicApiIdentity": {
+        "additionalProperties": false,
+        "description": "`GET /v1/public-api/me`: the key, its business and its limits.",
+        "properties": {
+          "api_key_id": {
+            "title": "Api Key Id",
+            "type": "string"
+          },
+          "api_key_name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^\\S(.*\\S)?$",
+            "title": "Api Key Name",
+            "type": "string"
+          },
+          "business_id": {
+            "title": "Business Id",
+            "type": "string"
+          },
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "requests_per_minute": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Requests Per Minute",
+            "type": "integer"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyScope"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "business_id",
+          "business_name",
+          "api_key_id",
+          "api_key_name",
+          "scopes",
+          "requests_per_minute"
+        ],
+        "title": "PublicApiIdentity",
+        "type": "object"
+      },
+      "PublicBooking": {
+        "additionalProperties": false,
+        "description": "A booking: when (`starts_at`, `ends_at` with the business's offset, and\nits `timezone`), what (`resource`, `service`, `party_size`, `value`),\nfor whom (`contact`) and where it came from (`source_channel`, and the\ntag of the link or ad that brought the customer, `acquisition_source`).",
+        "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/PublicContactRef"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "ends_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "party_size": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Party Size",
+            "type": "integer"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicResourceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "service": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicServiceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "starts_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "timezone": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "updated_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicMoney"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "starts_at",
+          "ends_at",
+          "timezone",
+          "party_size",
+          "contact",
+          "source_channel",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PublicBooking",
+        "type": "object"
+      },
+      "PublicBookingPage": {
+        "additionalProperties": false,
+        "description": "Bookings, the latest start first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicBooking"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "PublicBookingPage",
+        "type": "object"
+      },
+      "PublicContact": {
+        "additionalProperties": false,
+        "description": "A customer of the business.",
+        "properties": {
+          "created_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "updated_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PublicContact",
+        "type": "object"
+      },
+      "PublicContactPage": {
+        "additionalProperties": false,
+        "description": "Contacts, the newest first (erased ones are left out).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicContact"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "PublicContactPage",
+        "type": "object"
+      },
+      "PublicContactRef": {
+        "additionalProperties": false,
+        "description": "The customer a record is about (empty name and phone once erased).",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "PublicContactRef",
+        "type": "object"
+      },
+      "PublicConversation": {
+        "additionalProperties": false,
+        "description": "A customer's conversation in one channel: who (`contact`), where\n(`channel`, `acquisition_source`), its state and, once it was quiet for\na while, what it was about (`summary`).",
+        "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/PublicContactRef"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "last_message_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Last Message At",
+            "type": "string"
+          },
+          "started_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConversationStatus"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "status",
+          "contact",
+          "started_at",
+          "last_message_at"
+        ],
+        "title": "PublicConversation",
+        "type": "object"
+      },
+      "PublicConversationDetail": {
+        "additionalProperties": false,
+        "description": "A conversation with its latest messages, oldest first.",
+        "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/PublicContactRef"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "last_message_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Last Message At",
+            "type": "string"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicMessage"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "started_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConversationStatus"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "status",
+          "contact",
+          "started_at",
+          "last_message_at"
+        ],
+        "title": "PublicConversationDetail",
+        "type": "object"
+      },
+      "PublicConversationPage": {
+        "additionalProperties": false,
+        "description": "Conversations, the latest message first (no test chats).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicConversation"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "PublicConversationPage",
+        "type": "object"
+      },
       "PublicDemoCard": {
         "additionalProperties": false,
         "description": "A demo business a visitor can chat with: its name, kind of business\n(`niche_name` in the language asked for), city and country, the\nlanguages its assistant answers in, and up to three starter questions\nper language from its FAQ.",
@@ -22157,6 +22912,246 @@
           "messages_left"
         ],
         "title": "PublicDemoReply",
+        "type": "object"
+      },
+      "PublicLead": {
+        "additionalProperties": false,
+        "description": "A request passed to the team (a banquet, a group, an order...).",
+        "properties": {
+          "acquisition_source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquisition Source"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/PublicContactRef"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "details": {
+            "title": "Details",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "party_size": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Party Size"
+          },
+          "requested_date": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "minLength": 10,
+                "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Date"
+          },
+          "source_channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LeadStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/LeadType"
+          },
+          "updated_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "details",
+          "contact",
+          "source_channel",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PublicLead",
+        "type": "object"
+      },
+      "PublicLeadPage": {
+        "additionalProperties": false,
+        "description": "Leads, the newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "PublicLeadPage",
+        "type": "object"
+      },
+      "PublicMessage": {
+        "additionalProperties": false,
+        "description": "One message of a conversation (`author`: customer, assistant, staff).",
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/MessageAuthor"
+          },
+          "created_at": {
+            "maxLength": 25,
+            "minLength": 20,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "author",
+          "text",
+          "created_at"
+        ],
+        "title": "PublicMessage",
+        "type": "object"
+      },
+      "PublicMoney": {
+        "additionalProperties": false,
+        "description": "An amount in minor units (cents, tetri) of its ISO 4217 currency.",
+        "properties": {
+          "amount_minor": {
+            "minimum": 0.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_minor",
+          "currency"
+        ],
+        "title": "PublicMoney",
+        "type": "object"
+      },
+      "PublicResourceRef": {
+        "additionalProperties": false,
+        "description": "The table, room, specialist or other resource a booking takes.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PublicResourceRef",
+        "type": "object"
+      },
+      "PublicServiceRef": {
+        "additionalProperties": false,
+        "description": "The service, package or room type a booking is for.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PublicServiceRef",
         "type": "object"
       },
       "PushDeviceView": {
@@ -28391,6 +29386,361 @@
           "rating"
         ],
         "title": "WebVitalView",
+        "type": "object"
+      },
+      "WebhookDeliveryDetail": {
+        "additionalProperties": false,
+        "description": "A delivery with the exact JSON body it sends (customer data in it).",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/WebhookDeliveryView"
+          },
+          "payload": {
+            "title": "Payload",
+            "type": "string"
+          }
+        },
+        "required": [
+          "delivery",
+          "payload"
+        ],
+        "title": "WebhookDeliveryDetail",
+        "type": "object"
+      },
+      "WebhookDeliveryPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "title": "WebhookDeliveryPage",
+        "type": "object"
+      },
+      "WebhookDeliveryProblem": {
+        "description": "Why an attempt failed, in the terms the delivery log explains:\n\n- NOT_PUBLIC: the address is not a public https address (SSRF guard);\n- UNKNOWN_HOST, CONNECTION_FAILED, TIMEOUT, REQUEST_FAILED: the network;\n- HTTP_STATUS: the receiver answered 3xx (redirects are not followed),\n  4xx or 5xx;\n- GONE: the receiver answered 410, so the endpoint is switched off;\n- ENDPOINT_OFF: the endpoint was paused, switched off or removed\n  before the attempt.",
+        "enum": [
+          "not_public",
+          "unknown_host",
+          "connection_failed",
+          "timeout",
+          "request_failed",
+          "http_status",
+          "gone",
+          "endpoint_off"
+        ],
+        "title": "WebhookDeliveryProblem",
+        "type": "string"
+      },
+      "WebhookDeliveryStatus": {
+        "description": "PENDING: waiting for its first or next attempt. DELIVERED: the receiver\nanswered 2xx. FAILED: given up (24 hours of attempts, a refusal that a\nretry cannot fix, or the endpoint was switched off or removed).",
+        "enum": [
+          "pending",
+          "delivered",
+          "failed"
+        ],
+        "title": "WebhookDeliveryStatus",
+        "type": "string"
+      },
+      "WebhookDeliveryView": {
+        "additionalProperties": false,
+        "description": "One event's delivery in the log: its state and the last attempt.",
+        "properties": {
+          "attempts": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "endpoint_id": {
+            "title": "Endpoint Id",
+            "type": "string"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "event_type": {
+            "$ref": "#/components/schemas/BusinessEventType"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_test": {
+            "default": false,
+            "title": "Is Test",
+            "type": "boolean"
+          },
+          "last_attempt_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Attempt At"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_problem": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebhookDeliveryProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_status_code": {
+            "anyOf": [
+              {
+                "maximum": 599.0,
+                "minimum": 100.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Status Code"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WebhookDeliveryStatus"
+          }
+        },
+        "required": [
+          "id",
+          "endpoint_id",
+          "event_id",
+          "event_type",
+          "status",
+          "attempts",
+          "created_at"
+        ],
+        "title": "WebhookDeliveryView",
+        "type": "object"
+      },
+      "WebhookEndpointList": {
+        "additionalProperties": false,
+        "description": "The business's endpoints, the events one may subscribe to, how many\nendpoints a business may have, and after how many failed attempts in\na row an endpoint is switched off.",
+        "properties": {
+          "event_types": {
+            "items": {
+              "$ref": "#/components/schemas/BusinessEventType"
+            },
+            "title": "Event Types",
+            "type": "array"
+          },
+          "failures_before_disable": {
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Failures Before Disable",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEndpointView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "max_endpoints": {
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Max Endpoints",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "event_types",
+          "max_endpoints",
+          "failures_before_disable"
+        ],
+        "title": "WebhookEndpointList",
+        "type": "object"
+      },
+      "WebhookEndpointOrigin": {
+        "description": "CABINET: the owner added it in Settings → Integrations. API: a client\nof the public API subscribed it with an API key (a Zapier REST hook);\nit is removed when that client unsubscribes or the receiver answers\n410 Gone.",
+        "enum": [
+          "cabinet",
+          "api"
+        ],
+        "title": "WebhookEndpointOrigin",
+        "type": "string"
+      },
+      "WebhookEndpointStatus": {
+        "description": "ACTIVE: events are sent. PAUSED: the owner paused it (nothing is\nqueued). DISABLED: switched off after too many failed attempts in a\nrow, or because the receiver answered 410 Gone; the owner turns it on\nagain.",
+        "enum": [
+          "active",
+          "paused",
+          "disabled"
+        ],
+        "title": "WebhookEndpointStatus",
+        "type": "string"
+      },
+      "WebhookEndpointView": {
+        "additionalProperties": false,
+        "description": "One endpoint as the cabinet shows it: where, what it subscribed to,\nits state and how the latest attempts went. The secret shows only its\nlast four characters.",
+        "properties": {
+          "consecutive_failures": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Consecutive Failures",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "disabled_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled At"
+          },
+          "event_types": {
+            "items": {
+              "$ref": "#/components/schemas/BusinessEventType"
+            },
+            "title": "Event Types",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "pattern": "^\\S(.*\\S)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "last_attempt_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Attempt At"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/WebhookEndpointOrigin"
+          },
+          "secret_hint": {
+            "maxLength": 4,
+            "minLength": 4,
+            "pattern": "^[A-Za-z0-9_-]{4}$",
+            "title": "Secret Hint",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WebhookEndpointStatus"
+          },
+          "url": {
+            "maxLength": 2000,
+            "minLength": 12,
+            "pattern": "^https://[^\\s/?#@]+(/[^\\s]*)?$",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "event_types",
+          "status",
+          "origin",
+          "secret_hint",
+          "consecutive_failures",
+          "created_at"
+        ],
+        "title": "WebhookEndpointView",
         "type": "object"
       },
       "WebsiteImportProblem": {
@@ -38434,6 +39784,405 @@
         "summary": "Get Answers To Improve",
         "tags": [
           "conversations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/api-keys": {
+      "get": {
+        "operationId": "api_keys_list_business_api_keys",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Business Api Keys",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "post": {
+        "operationId": "api_keys_create_business_api_key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Body of a new key: what it is for and what it may do.",
+                "properties": {
+                  "name": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "pattern": "^\\S(.*\\S)?$",
+                    "title": "Name",
+                    "type": "string"
+                  },
+                  "scopes": {
+                    "items": {
+                      "description": "What an API key may do: read or create one kind of record.",
+                      "enum": [
+                        "bookings:read",
+                        "bookings:write",
+                        "leads:read",
+                        "leads:write",
+                        "contacts:read",
+                        "conversations:read",
+                        "webhooks:manage"
+                      ],
+                      "title": "ApiKeyScope",
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "title": "Scopes",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "name",
+                  "scopes"
+                ],
+                "title": "ApiKeyRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApiKey"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Business Api Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/api-keys/{api_key_id}": {
+      "delete": {
+        "operationId": "api_keys_revoke_business_api_key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "api_key_id",
+            "required": true,
+            "schema": {
+              "title": "Api Key Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Revoke Business Api Key",
+        "tags": [
+          "api-keys"
         ]
       }
     },
@@ -71213,6 +72962,1303 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/webhook-deliveries/{delivery_id}": {
+      "get": {
+        "operationId": "webhooks_get_webhook_delivery",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "delivery_id",
+            "required": true,
+            "schema": {
+              "title": "Delivery Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Webhook Delivery",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/webhook-deliveries/{delivery_id}/retry": {
+      "post": {
+        "operationId": "webhooks_retry_webhook_delivery",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "delivery_id",
+            "required": true,
+            "schema": {
+              "title": "Delivery Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Retry Webhook Delivery",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/webhooks": {
+      "get": {
+        "operationId": "webhooks_list_webhooks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Webhooks",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "post": {
+        "operationId": "webhooks_create_webhook",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A new endpoint: its https address, a note, what it subscribes to.",
+                "properties": {
+                  "event_types": {
+                    "items": {
+                      "description": "What a webhook endpoint can subscribe to: a change in the business, as\nthe public API names it. A frozen list (docs/api-versioning.md): a new\ntype is added only for endpoints that ask for it by name.\n\n`booking.cancelled` is sent instead of `booking.updated` when a change\nleaves the booking cancelled. `webhook.test` is the owner's \"Send test\nevent\"; nobody subscribes to it.",
+                      "enum": [
+                        "booking.created",
+                        "booking.updated",
+                        "booking.cancelled",
+                        "lead.created",
+                        "lead.updated",
+                        "handoff.created",
+                        "handoff.resolved",
+                        "conversation.started",
+                        "call.finished",
+                        "webhook.test"
+                      ],
+                      "title": "BusinessEventType",
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "title": "Event Types",
+                    "type": "array"
+                  },
+                  "label": {
+                    "anyOf": [
+                      {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "pattern": "^\\S(.*\\S)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Label"
+                  },
+                  "url": {
+                    "maxLength": 2000,
+                    "minLength": 12,
+                    "pattern": "^https://[^\\s/?#@]+(/[^\\s]*)?$",
+                    "title": "Url",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url",
+                  "event_types"
+                ],
+                "title": "WebhookEndpointRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedWebhookEndpoint"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Webhook",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/webhooks/{webhook_id}": {
+      "delete": {
+        "operationId": "webhooks_delete_webhook",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "title": "Webhook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Delete Webhook",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "patch": {
+        "operationId": "webhooks_update_webhook",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "title": "Webhook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A change of an endpoint; omitted fields stay. `status` ACTIVE switches\nit on (also after it was switched off for failures: the count starts\nagain), PAUSED stops new events.",
+                "properties": {
+                  "event_types": {
+                    "anyOf": [
+                      {
+                        "items": {
+                          "description": "What a webhook endpoint can subscribe to: a change in the business, as\nthe public API names it. A frozen list (docs/api-versioning.md): a new\ntype is added only for endpoints that ask for it by name.\n\n`booking.cancelled` is sent instead of `booking.updated` when a change\nleaves the booking cancelled. `webhook.test` is the owner's \"Send test\nevent\"; nobody subscribes to it.",
+                          "enum": [
+                            "booking.created",
+                            "booking.updated",
+                            "booking.cancelled",
+                            "lead.created",
+                            "lead.updated",
+                            "handoff.created",
+                            "handoff.resolved",
+                            "conversation.started",
+                            "call.finished",
+                            "webhook.test"
+                          ],
+                          "title": "BusinessEventType",
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Event Types"
+                  },
+                  "label": {
+                    "anyOf": [
+                      {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "pattern": "^\\S(.*\\S)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Label"
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "description": "ACTIVE: events are sent. PAUSED: the owner paused it (nothing is\nqueued). DISABLED: switched off after too many failed attempts in a\nrow, or because the receiver answered 410 Gone; the owner turns it on\nagain.",
+                        "enum": [
+                          "active",
+                          "paused",
+                          "disabled"
+                        ],
+                        "title": "WebhookEndpointStatus",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2000,
+                        "minLength": 12,
+                        "pattern": "^https://[^\\s/?#@]+(/[^\\s]*)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Url"
+                  }
+                },
+                "title": "WebhookEndpointChange",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Webhook",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/webhooks/{webhook_id}/deliveries": {
+      "get": {
+        "operationId": "webhooks_list_webhook_deliveries",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "title": "Webhook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Webhook Deliveries",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/webhooks/{webhook_id}/rotate-secret": {
+      "post": {
+        "operationId": "webhooks_rotate_webhook_secret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "title": "Webhook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedWebhookEndpoint"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Rotate Webhook Secret",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/webhooks/{webhook_id}/test": {
+      "post": {
+        "operationId": "webhooks_send_webhook_test",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "title": "Webhook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Send Webhook Test",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
     "/v1/catalog/countries": {
       "get": {
         "operationId": "catalog_list_countries",
@@ -75769,6 +78815,1968 @@
         "summary": "Get Platform Status",
         "tags": [
           "platform status"
+        ]
+      }
+    },
+    "/v1/public-api/bookings": {
+      "get": {
+        "operationId": "public_api_list_bookings_page",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBookingPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Bookings Page",
+        "tags": [
+          "public-api"
+        ]
+      },
+      "post": {
+        "operationId": "public_api_create_booking_record",
+        "parameters": [
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A booking made through the API, as staff add one in the cabinet: the\ncustomer (a contact with the phone is reused, else a new one), the\nday and time in the business's time zone, a resource and a service.\nCapacity and opening hours are enforced.",
+                "properties": {
+                  "contact_name": {
+                    "title": "Contact Name",
+                    "type": "string"
+                  },
+                  "contact_phone_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Contact Phone Number"
+                  },
+                  "date": {
+                    "maxLength": 10,
+                    "minLength": 10,
+                    "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "title": "Date",
+                    "type": "string"
+                  },
+                  "duration_minutes": {
+                    "anyOf": [
+                      {
+                        "maximum": 43200,
+                        "minimum": 5,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Duration Minutes"
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  },
+                  "nights": {
+                    "anyOf": [
+                      {
+                        "maximum": 365,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Nights"
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Notes"
+                  },
+                  "party_size": {
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "title": "Party Size",
+                    "type": "integer"
+                  },
+                  "resource_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Resource Id"
+                  },
+                  "service_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Service Id"
+                  },
+                  "time": {
+                    "anyOf": [
+                      {
+                        "maxLength": 5,
+                        "minLength": 5,
+                        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Time"
+                  }
+                },
+                "required": [
+                  "contact_name",
+                  "date",
+                  "party_size"
+                ],
+                "title": "PublicBookingRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBooking"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Booking Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/bookings/{booking_id}": {
+      "get": {
+        "operationId": "public_api_get_booking_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "booking_id",
+            "required": true,
+            "schema": {
+              "title": "Booking Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBooking"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Booking Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/contacts": {
+      "get": {
+        "operationId": "public_api_list_contacts_page",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicContactPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Contacts Page",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/contacts/{contact_id}": {
+      "get": {
+        "operationId": "public_api_get_contact_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicContact"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Contact Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/conversations": {
+      "get": {
+        "operationId": "public_api_list_conversations_page",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicConversationPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Conversations Page",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/conversations/{conversation_id}": {
+      "get": {
+        "operationId": "public_api_get_conversation_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicConversationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Conversation Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/leads": {
+      "get": {
+        "operationId": "public_api_list_leads_page",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicLeadPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "List Leads Page",
+        "tags": [
+          "public-api"
+        ]
+      },
+      "post": {
+        "operationId": "public_api_create_lead_record",
+        "parameters": [
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A request the team should follow up (a contact form, a CRM).",
+                "properties": {
+                  "budget": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Budget"
+                  },
+                  "contact_name": {
+                    "title": "Contact Name",
+                    "type": "string"
+                  },
+                  "contact_phone_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Contact Phone Number"
+                  },
+                  "details": {
+                    "title": "Details",
+                    "type": "string"
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "maxLength": 16,
+                        "minLength": 2,
+                        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Language"
+                  },
+                  "party_size": {
+                    "anyOf": [
+                      {
+                        "maximum": 10000,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Party Size"
+                  },
+                  "requested_date": {
+                    "anyOf": [
+                      {
+                        "maxLength": 10,
+                        "minLength": 10,
+                        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Requested Date"
+                  },
+                  "type": {
+                    "description": "Kind of request passed to a manager.",
+                    "enum": [
+                      "banquet",
+                      "group",
+                      "corporate",
+                      "order",
+                      "viewing",
+                      "other"
+                    ],
+                    "title": "LeadType",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contact_name",
+                  "type",
+                  "details"
+                ],
+                "title": "PublicLeadRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicLead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Create Lead Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/leads/{lead_id}": {
+      "get": {
+        "operationId": "public_api_get_lead_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicLead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Lead Record",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/me": {
+      "get": {
+        "operationId": "public_api_get_me",
+        "parameters": [
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiIdentity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Me",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/webhooks": {
+      "post": {
+        "operationId": "public_api_subscribe_webhook_url",
+        "parameters": [
+          {
+            "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional. A value you choose once per action (a UUID is best, at most 255 visible ASCII characters) and send again on every retry of it. A retry gets the first answer back (with `Idempotent-Replayed: true`) instead of creating a second one; the same key with a different body is refused with 409 `idempotency_key_reused`, and a retry while the first request still runs with 409 `in_progress`. Keys are kept for 24 hours per user; a refused or failed request frees its key.",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A REST-hook subscription (Zapier): where to POST which events.",
+                "properties": {
+                  "event_types": {
+                    "items": {
+                      "description": "What a webhook endpoint can subscribe to: a change in the business, as\nthe public API names it. A frozen list (docs/api-versioning.md): a new\ntype is added only for endpoints that ask for it by name.\n\n`booking.cancelled` is sent instead of `booking.updated` when a change\nleaves the booking cancelled. `webhook.test` is the owner's \"Send test\nevent\"; nobody subscribes to it.",
+                      "enum": [
+                        "booking.created",
+                        "booking.updated",
+                        "booking.cancelled",
+                        "lead.created",
+                        "lead.updated",
+                        "handoff.created",
+                        "handoff.resolved",
+                        "conversation.started",
+                        "call.finished",
+                        "webhook.test"
+                      ],
+                      "title": "BusinessEventType",
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "title": "Event Types",
+                    "type": "array"
+                  },
+                  "label": {
+                    "anyOf": [
+                      {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "pattern": "^\\S(.*\\S)?$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Label"
+                  },
+                  "url": {
+                    "maxLength": 2000,
+                    "minLength": 12,
+                    "pattern": "^https://[^\\s/?#@]+(/[^\\s]*)?$",
+                    "title": "Url",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url",
+                  "event_types"
+                ],
+                "title": "PublicWebhookRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedWebhookEndpoint"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Subscribe Webhook Url",
+        "tags": [
+          "public-api"
+        ]
+      }
+    },
+    "/v1/public-api/webhooks/{webhook_id}": {
+      "delete": {
+        "operationId": "public_api_unsubscribe_webhook_url",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "webhook_id",
+            "required": true,
+            "schema": {
+              "title": "Webhook Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`Bearer awk_…`: an API key from Settings → Integrations → API keys.",
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Unsubscribe Webhook Url",
+        "tags": [
+          "public-api"
         ]
       }
     },

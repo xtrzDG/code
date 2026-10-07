@@ -76,6 +76,7 @@ modules =
     app.use_cases.idempotency
     app.use_cases.inbox
     app.use_cases.insights
+    app.use_cases.integrations
     app.use_cases.jobs
     app.use_cases.knowledge
     app.use_cases.leads

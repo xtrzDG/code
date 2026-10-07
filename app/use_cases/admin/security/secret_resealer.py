@@ -1,8 +1,9 @@
 """
 Seal one business's stored secrets again with the current key: its
 channels' credentials, its Google Calendar tokens and its resources'
-calendar secrets (iCal feed addresses, booking-system keys), each written back
-only if it did not change meanwhile; and register its Telegram bots'
+calendar secrets (iCal feed addresses, booking-system keys) and its webhooks'
+signing secrets, each written back only if it did not change meanwhile; and
+register its Telegram bots'
 webhooks again with the secret of the current key.
 """
 
@@ -13,6 +14,9 @@ from app.contracts.calendar_sync import ResourceCalendarLinkRepoContract
 from app.contracts.channel_clients import TelegramBotApiClientContract
 from app.contracts.operations import CalendarConnectionRepoContract
 from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.integration_repositories import (
+    WebhookEndpointRepoContract,
+)
 from app.contracts.secret_cipher import (
     SecretCipherAdapterContract,
     SecretRotationAdapterContract,
@@ -27,6 +31,9 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.channels.constrained_strings import ChannelWebhookUrl
 from app.schemas.typings.channels.strings import EncryptedChannelSecret
 from app.use_cases.admin.security.calendar_link_resealer import reseal_calendar_links
+from app.use_cases.admin.security.webhook_secret_resealer import (
+    reseal_webhook_endpoints,
+)
 from app.utilities.channels.channel_endpoints import (
     build_telegram_webhook_path,
     join_public_url,
@@ -59,7 +66,11 @@ class SecretResealer:
         telegram_client: TelegramBotApiClientContract,
         app_settings: AppSettings,
         calendar_link_repo: ResourceCalendarLinkRepoContract | None = None,
+        webhook_endpoint_repo: WebhookEndpointRepoContract | None = None,
     ) -> None:
+        self._webhook_endpoint_repo: WebhookEndpointRepoContract | None = (
+            webhook_endpoint_repo
+        )
         self._calendar_link_repo: ResourceCalendarLinkRepoContract | None = (
             calendar_link_repo
         )
@@ -95,6 +106,12 @@ class SecretResealer:
         if self._calendar_link_repo is not None:
             reseal_calendar_links(
                 self._calendar_link_repo,
+                business_id,
+                lambda encrypted: self._reseal(encrypted, tally),
+            )
+        if self._webhook_endpoint_repo is not None:
+            reseal_webhook_endpoints(
+                self._webhook_endpoint_repo,
                 business_id,
                 lambda encrypted: self._reseal(encrypted, tally),
             )

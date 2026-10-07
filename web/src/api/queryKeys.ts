@@ -164,6 +164,12 @@ export const queryKeys = {
     list: (businessId: Id) => ["integrations", businessId, "list"] as const,
     /** The connected Google account's calendars to link a resource to. */
     googleCalendars: (businessId: Id) => ["integrations", businessId, "googleCalendars"] as const,
+    /** Outbound webhooks with the event catalog. */
+    webhooks: (businessId: Id) => ["integrations", businessId, "webhooks"] as const,
+    /** One webhook's delivery log, newest first. */
+    deliveries: (businessId: Id, webhookId: Id) => ["integrations", businessId, "webhooks", webhookId, "deliveries"] as const,
+    /** API keys with the scopes a key may get. */
+    apiKeys: (businessId: Id) => ["integrations", businessId, "apiKeys"] as const,
   },
 
   profile: {

@@ -2,6 +2,7 @@ from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.integration_facilitators import IntegrationFacilitatorsContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.facilitators.events.event_publisher_facilitator import (
     EventPublisherFacilitator,
@@ -28,11 +29,14 @@ class LiveFacilitatorsContainer(containers.DeclarativeContainer):
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
     time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    integrations: IntegrationFacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
+    # Webhooks hear every announced change first (`EmitBusinessEventFacilitator`).
     event_publisher: Singleton[EventPublisherFacilitator] = Singleton(
         EventPublisherFacilitator,
         bus=adapters.live_event_bus,
         wall_clock=time_provider.microsecond_wall_clock,
+        observers=integrations.business_event_observers,
     )
     live_stream_limits: Singleton[LiveStreamLimits] = Singleton(LiveStreamLimits)
     live_stream_facilitator: Singleton[LiveEventStreamFacilitator] = Singleton(

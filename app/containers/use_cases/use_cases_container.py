@@ -16,6 +16,7 @@ from app.containers.use_cases.platform_ops_use_cases import (
     PlatformOpsUseCasesContainer,
 )
 from app.containers.use_cases.platform_use_cases import PlatformUseCasesContainer
+from app.containers.use_cases.public_api_use_cases import PublicApiUseCasesContainer
 from app.containers.use_cases.referral_use_cases import ReferralUseCasesContainer
 from app.containers.use_cases.reliability_use_cases import (
     ReliabilityUseCasesContainer,
@@ -27,6 +28,7 @@ from app.containers.use_cases.subscription_lifecycle_use_cases import (
 )
 from app.containers.use_cases.telemetry_use_cases import TelemetryUseCasesContainer
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
+from app.containers.use_cases.webhook_use_cases import WebhookUseCasesContainer
 from app.use_cases.example_use_case import ExampleUseCase
 
 
@@ -193,6 +195,30 @@ class UseCasesContainer(BusinessUseCasesContainer):
         IdempotencyUseCasesContainer,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+    )
+    # Outbound webhooks: endpoints, signed deliveries and their retries (1181).
+    webhooks: WebhookUseCasesContainer = Container(  # type: ignore[assignment]
+        WebhookUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    # API keys and the public API /v1/public-api/* (1181).
+    public_api: PublicApiUseCasesContainer = Container(  # type: ignore[assignment]
+        PublicApiUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        clients=CoreUseCasesContainer.clients,
+        config=CoreUseCasesContainer.config,
+        facilitators=CoreUseCasesContainer.facilitators,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
     )
 
     # --- Template example (keeps its concrete type).

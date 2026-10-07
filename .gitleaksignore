@@ -1832,3 +1832,6 @@ f702f7ca2e4c78b68d8fbfbac9cb147e2adc77cb:tests/storage/golden/queued_jobs/v2.jso
 # Reviewed 2026-10-06 (W17 integration): the review comment above quotes the
 # same enum member line of the b2b_supply niche template; not a secret.
 0d2c2e8dcf82c8927ad278c66efbcf6c9a033757:.gitleaksignore:generic-api-key:1829
+# Reviewed 2026-10-06 (R15-PUBLIC-API-WEBHOOKS): a made-up Idempotency-Key
+# (a UUID) in a public API test; replaced by a low-entropy value since.
+e5f518dabade7ed1229794d3d09ccc0e0ab739a1:tests/integrations/test_public_api_writes.py:generic-api-key:52

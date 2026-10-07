@@ -40,6 +40,9 @@ from app.gateways.worker.periodic.purge_idempotency_keys import (
     purge_idempotency_keys_job,
 )
 from app.gateways.worker.periodic.purge_stale_rows import purge_stale_rows_job
+from app.gateways.worker.periodic.purge_webhook_deliveries import (
+    purge_webhook_deliveries_job,
+)
 from app.gateways.worker.periodic.quality_sampling import quality_sampling_job
 from app.gateways.worker.periodic.record_platform_status import (
     record_platform_status_job,
@@ -281,5 +284,9 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         # Post-deploy data tasks: migrations and lookup backfills (1164).
         Factory(
             run_data_tasks_job, operator=operators.data_tasks.run_data_tasks_operator
+        ),
+        Factory(  # The webhooks' delivery log, 30 days (1181).
+            purge_webhook_deliveries_job,
+            operator=operators.webhooks.purge_webhook_deliveries_operator,
         ),
     )

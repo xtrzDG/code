@@ -27,6 +27,7 @@ from app.gateways.http.health_router_assembly import build_health_routers
 from app.gateways.http.help_router_assembly import build_help_routers
 from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
 from app.gateways.http.inbox_router_assembly import build_inbox_routers
+from app.gateways.http.integration_router_assembly import build_integration_routers
 from app.gateways.http.knowledge_routes import build_knowledge_router
 from app.gateways.http.launch_router_assembly import build_launch_routers
 from app.gateways.http.memory_router_assembly import build_memory_routers
@@ -268,4 +269,5 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_customer_routers(operators, current_user),
         *build_spend_guard_routers(operators, current_user),
         *build_referral_routers(operators, current_user),
+        *build_integration_routers(operators, current_user),
     ]

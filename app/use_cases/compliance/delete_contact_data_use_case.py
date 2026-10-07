@@ -30,6 +30,9 @@ from app.contracts.repositories.feedback_repositories import (
 from app.contracts.repositories.inbox_repositories import (
     ConversationNoteRepoContract,
 )
+from app.contracts.repositories.integration_repositories import (
+    WebhookDeliveryRepoContract,
+)
 from app.contracts.repositories.media_repositories import MessageMediaRepoContract
 from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
@@ -84,22 +87,21 @@ class DeleteContactDataUseCase(
 
     Recordings, voice notes and photos are deleted from storage first, so a
     storage failure leaves the database untouched and the erasure can be
-    retried (`contact_file_erasure`). Then the messages,
-    model transcripts and the team's internal notes of their conversations
-    and call transcripts are deleted, and the contact keeps only its id and
-    the erasure time (no name, phones, language or channel identities), so
-    the cabinet shows it as erased and a new message from the same person
-    starts a new contact.
+    retried (`contact_file_erasure`). Then the messages, model transcripts and
+    the team's internal notes of their conversations and call transcripts are
+    deleted, and the contact keeps only its id and the erasure time (no name,
+    phones, language or channel identities), so the cabinet shows it as erased
+    and a new message from the same person starts a new contact.
     Business records stay but lose the personal parts: conversations lose
     the channel identity, bookings their notes, leads their details and
     budget, handoffs their summary. Missed calls, queued messages, webhook
-    events and requests for feedback lose what identifies the person
-    (`contact_trace_erasure`). A customer who said STOP stays on the
-    suppression list (only digests, kept on purpose), so the erasure never
-    makes them reachable again. The copies the sub-processors keep (the
-    traces of the conversations' model calls at Langfuse, the calls at
-    ElevenLabs) are deleted by queued jobs with retries
-    (`processor_erasure`), so a processor's outage never fails the
+    events and requests for feedback lose what identifies the person, the
+    outbound webhooks' deliveries about them go (`contact_trace_erasure`).
+    A customer who said STOP stays on the suppression list (only digests,
+    kept on purpose), so the erasure never makes them reachable again. The
+    copies the sub-processors keep (the traces of the conversations' model
+    calls at Langfuse, the calls at ElevenLabs) are deleted by queued jobs with
+    retries (`processor_erasure`), so a processor's outage never fails the
     erasure. The erasure is audited with the contact id only.
     """
 
@@ -132,6 +134,7 @@ class DeleteContactDataUseCase(
         feedback_request_repo: FeedbackRequestRepoContract,
         processor_erasure: ProcessorErasureFacilitatorContract,
         waitlist_entry_repo: WaitlistEntryRepoContract | None = None,
+        webhook_delivery_repo: WebhookDeliveryRepoContract | None = None,
     ) -> None:
         self._processor_erasure: ProcessorErasureFacilitatorContract = processor_erasure
         self._step_up: StepUpGuardContract = step_up
@@ -159,12 +162,9 @@ class DeleteContactDataUseCase(
             recording_storage, media_storage, message_media_repo
         )
         self._traces: ContactTraceEraser = ContactTraceEraser(
-            missed_call_repo,
-            outbound_message_repo,
-            inbound_event_repo,
-            feedback_request_repo,
-            waitlist_entry_repo,
-        )
+            missed_call_repo, outbound_message_repo, inbound_event_repo,
+            feedback_request_repo, waitlist_entry_repo, webhook_delivery_repo,
+        )  # fmt: skip
 
     def run(self, input_data: ContactDataCommand) -> ContactErasureResult:
         business: BusinessDocument = self._authorize_business_access.run(

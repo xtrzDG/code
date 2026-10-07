@@ -71,6 +71,13 @@ export const settingsRecordsEn = {
       admin_plan_overridden: "Plan changed by the platform",
     },
     entities: {
+      api_key: "API key",
+      api_booking: "Bookings read through the API",
+      api_lead: "Leads read through the API",
+      api_contact: "Customers read through the API",
+      api_conversation: "Conversations read through the API",
+      webhook_endpoint: "Webhook",
+      webhook_delivery: "Webhook delivery",
       contact: "Customer",
       booking: "Booking",
       manager_contacts: "Notification contacts",

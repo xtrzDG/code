@@ -67,6 +67,9 @@ from app.utilities.config_helpers.app_settings.privacy_settings_section import (
 from app.utilities.config_helpers.app_settings.public_address_settings_section import (
     read_public_address_settings,
 )
+from app.utilities.config_helpers.app_settings.public_api_settings_section import (
+    read_public_api_settings,
+)
 from app.utilities.config_helpers.app_settings.public_site_settings_section import (
     read_public_site_settings,
 )
@@ -175,5 +178,6 @@ def assemble_app_settings(environment_variables: Mapping[str, str]) -> AppSettin
         **read_public_site_settings(environment_variables),
         **read_spend_guard_settings(environment_variables),
         **read_growth_settings(environment_variables),
+        **read_public_api_settings(environment_variables),
         **read_telemetry_settings(environment_variables),
     )

@@ -7,6 +7,9 @@ the storage scope of its business.
 
 from tests.platform.authorization_calendars import OWNER_ONLY_CALENDAR_OPERATIONS
 from tests.platform.authorization_customers import OWNER_ONLY_CUSTOMER_OPERATIONS
+from tests.platform.authorization_integrations import (
+    OWNER_ONLY_INTEGRATION_OPERATIONS,
+)
 from tests.platform.authorization_requests import BUSINESS_PREFIX as B
 
 CORRECTION: str = (
@@ -110,6 +113,7 @@ OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
         f"PUT {B}/waitlist-settings",
         *OWNER_ONLY_CUSTOMER_OPERATIONS,
         *OWNER_ONLY_CALENDAR_OPERATIONS,
+        *OWNER_ONLY_INTEGRATION_OPERATIONS,
     }
 )
 

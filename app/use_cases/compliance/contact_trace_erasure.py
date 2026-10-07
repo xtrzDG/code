@@ -21,6 +21,9 @@ from app.contracts.repositories.delivery_repositories import (
 from app.contracts.repositories.feedback_repositories import (
     FeedbackRequestRepoContract,
 )
+from app.contracts.repositories.integration_repositories import (
+    WebhookDeliveryRepoContract,
+)
 from app.contracts.repositories.waitlist_repositories import WaitlistEntryRepoContract
 from app.schemas.constants.deliveries import InboundEventStatus, OutboundMessageStatus
 from app.schemas.constants.waitlist import WaitlistEndReason, WaitlistStatus
@@ -64,6 +67,8 @@ class ContactTraceEraser:
     inbound_event_repo: InboundEventRepoContract
     feedback_request_repo: FeedbackRequestRepoContract
     waitlist_entry_repo: WaitlistEntryRepoContract | None = None
+    # The outbound webhooks' deliveries describing the contact are deleted.
+    webhook_delivery_repo: WebhookDeliveryRepoContract | None = None
 
     def erase(self, records: ContactRecords, now: Microseconds) -> TraceErasure:
         business_id = records.contact.business_id
@@ -95,6 +100,10 @@ class ContactTraceEraser:
                     business_id, entry.id, lambda stored: erase_waitlist(stored, now)
                 )
 
+        if self.webhook_delivery_repo is not None:
+            self.webhook_delivery_repo.delete_of_contact(
+                business_id, records.contact.id
+            )
         return TraceErasure(
             missed_calls=ErasedRecordCount(len(records.missed_calls)),
             outbound_messages=ErasedRecordCount(len(records.outbound_messages)),

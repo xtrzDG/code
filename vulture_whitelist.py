@@ -648,3 +648,11 @@ _.measured_until  # app/schemas/dto/service_levels.py (ErrorBudgetView)
 _.access_role  # app/schemas/dto/calendar_sync/busy_reads.py (GoogleCalendarEntry)
 _.ical_export  # app/schemas/dto/calendar_sync/resource_calendar.py
 _.problem_count  # app/schemas/dto/calendar_sync/integrations.py (ResourceSyncSummary)
+
+# Settings → Integrations (1181): response fields the cabinet reads (the
+# caps, the signing secret shown once) and who revoked an API key, kept on
+# the key for the owner's records; no Python code reads them.
+_.max_keys  # app/schemas/dto/integrations/api_key_views.py
+_.max_endpoints  # app/schemas/dto/integrations/webhook_views.py
+_.signing_secret  # app/schemas/dto/integrations/webhook_views.py
+_.revoked_by  # app/schemas/domain/api_keys.py

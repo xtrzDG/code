@@ -52,6 +52,9 @@ from app.gateways.worker.periodic.purge_idempotency_keys import (
     PURGE_IDEMPOTENCY_KEYS_JOB,
 )
 from app.gateways.worker.periodic.purge_stale_rows import PURGE_STALE_ROWS_JOB
+from app.gateways.worker.periodic.purge_webhook_deliveries import (
+    PURGE_WEBHOOK_DELIVERIES_JOB,
+)
 from app.gateways.worker.periodic.quality_sampling import QUALITY_SAMPLING_JOB
 from app.gateways.worker.periodic.record_platform_status import (
     RECORD_PLATFORM_STATUS_JOB,
@@ -105,6 +108,7 @@ from app.utilities.deliveries.delivery_jobs import (
     PROCESS_PLATFORM_BOT_UPDATE_JOB,
     PROCESS_POST_CALL_JOB,
 )
+from app.utilities.integrations.webhook_jobs import DELIVER_WEBHOOK_JOB
 from app.utilities.memory.summary_jobs import SUMMARIZE_CONVERSATION_JOB
 from app.utilities.privacy.processor_erasure_jobs import ERASE_PROCESSOR_COPIES_JOB
 from app.utilities.waitlist.offer_jobs import OFFER_FREED_PLACE_JOB
@@ -164,6 +168,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
         (SEND_WIN_BACK_MESSAGES_JOB, 3_600),
         (RUN_DATA_TASKS_JOB, 300),
+        (PURGE_WEBHOOK_DELIVERIES_JOB, 86_400),
     ]
     assert [job.name for job in jobs if job.is_process_local] == [FLUSH_LLM_TRACES_JOB]
     # The worker plays queued autotest runs (concept: assembly autotests run
@@ -187,8 +192,9 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         ERASE_PROCESSOR_COPIES_JOB,
         OFFER_FREED_PLACE_JOB,
         EXPAND_INCIDENT_JOB,
+        DELIVER_WEBHOOK_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (37, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (38, 0, 0)
     assert right_after.periodic_runs == 0
     # The trace flush and the end of the waitlist's expired holds.
     assert a_minute_later.periodic_runs == 2

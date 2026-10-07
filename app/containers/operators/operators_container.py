@@ -42,6 +42,7 @@ from app.containers.operators.platform_ops_operators import (
     PlatformOpsOperatorsContainer,
 )
 from app.containers.operators.privacy_operators import PrivacyOperatorsContainer
+from app.containers.operators.public_api_operators import PublicApiOperatorsContainer
 from app.containers.operators.public_demo_operators import (
     PublicDemoOperatorsContainer,
 )
@@ -60,6 +61,7 @@ from app.containers.operators.subscription_lifecycle_operators import (
 )
 from app.containers.operators.telemetry_operators import TelemetryOperatorsContainer
 from app.containers.operators.value_operators import ValueOperatorsContainer
+from app.containers.operators.webhook_operators import WebhookOperatorsContainer
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -254,5 +256,15 @@ class OperatorsContainer(containers.DeclarativeContainer):
     referrals: ReferralOperatorsContainer = Container(  # type: ignore[assignment]
         ReferralOperatorsContainer,
         referral_pipelines=pipelines.referrals,
+        utilities=utilities,
+    )
+    webhooks: WebhookOperatorsContainer = Container(  # type: ignore[assignment]
+        WebhookOperatorsContainer,
+        webhook_pipelines=pipelines.webhooks,
+        utilities=utilities,
+    )
+    public_api: PublicApiOperatorsContainer = Container(  # type: ignore[assignment]
+        PublicApiOperatorsContainer,
+        public_api_pipelines=pipelines.public_api,
         utilities=utilities,
     )

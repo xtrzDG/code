@@ -29,6 +29,9 @@ from app.containers.adapters.growth_collections_container import (
 from app.containers.adapters.inbox_collections_container import (
     InboxCollectionsContainer,
 )
+from app.containers.adapters.integration_collections_container import (
+    IntegrationCollectionsContainer,
+)
 from app.containers.adapters.launch_collections_container import (
     LaunchCollectionsContainer,
 )
@@ -125,6 +128,7 @@ COLLECTION_CONTAINERS = (
     GrowthCollectionsContainer,
     # Two-way availability (1160).
     CalendarSyncCollectionsContainer,
+    IntegrationCollectionsContainer,
 )
 
 
