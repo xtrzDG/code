@@ -102,6 +102,21 @@ def test_expected_tools_must_be_called_and_forbidden_ones_must_not() -> None:
     ]
 
 
+def test_an_expected_tool_that_only_failed_did_not_happen() -> None:
+    expectations = EvalExpectations(
+        tool_calls=[ExpectedToolCall(tool_name=AssistantToolName.CANCEL_BOOKING)]
+    )
+    refused = tool_call(AssistantToolName.CANCEL_BOOKING, {}, is_error=True)
+    retried = tool_call(AssistantToolName.CANCEL_BOOKING, {"date": "2026-10-08"})
+
+    assert notes(
+        score_tool_calls(expectations, [reply("Sorry.", tool_calls=[refused])])
+    ) == ["cancel_booking was called, but every call of it failed."]
+    assert score_tool_calls(
+        expectations, [reply("Done.", tool_calls=[refused, retried])]
+    ).is_passed
+
+
 def test_booking_fields_must_match_the_persona() -> None:
     expectations = booking_expectation(
         name=["ნინო", "Nino"], phone=["+995555100201"], party_size=["2"]
