@@ -74,8 +74,9 @@ Behind a reverse proxy, run the API with
 | `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
 
 All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
-(CI job "web", which also runs `npm run knip` and keeps the build); the CI job
-"e2e" then runs `npm run e2e` in four shards that start that build.
+(CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
+next to it and keeps the build); the CI job "e2e" then runs `npm run e2e` in
+eight shards that start that build (`docs/operations/ci.md`).
 
 ## End-to-end tests
 
@@ -87,7 +88,8 @@ npx playwright install chromium   # once (CI: --with-deps)
 npm run e2e                       # builds the cabinet, starts API + cabinet, runs e2e/*.spec.ts
 E2E_SKIP_BUILD=1 npm run e2e      # reuse the last `next build`
 npm run e2e -- onboarding         # one file
-E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
+E2E_SHARD=2/8 npm run e2e         # one CI shard's spec files
+npm run e2e:durations             # measure every spec again (e2e/durations.json)
 ```
 
 - `e2e/playwright.config.ts` starts the API from the repository root
@@ -121,8 +123,9 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   as a title), so the sentence itself is still checked. Never mark the
   interface's own text.
 - The cabinet's server runs with `TZ=UTC` while the browser reads in
-  Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-routes.spec.ts`, run by
-  `npm run e2e` like the rest) opens every route of the screenshot tour from
+  Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-*.spec.ts` with
+  `e2e/support/tour.ts`, run by `npm run e2e` like the rest) opens every
+  route of the screenshot tour from
   Asia/Tbilisi, first without and then with the remembered reader's zone, so
   a date formatted without its zone fails on the hydration error.
 - A business page keeps its live event stream open, so
@@ -172,7 +175,7 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   (`e2e/roles.spec.ts`), old addresses redirected with their query
   (`e2e/redirects.spec.ts`), the manifest, icons, service worker and offline
   page (`e2e/pwa.spec.ts`), an axe audit of every page in both themes and on
-  a phone (`e2e/a11y.spec.ts`), switching the interface language ru/ka/en
+  a phone (`e2e/a11y*.spec.ts`), switching the interface language ru/ka/en
   from the user menu, the website chat demo page of the API, going back to a
   section showing its data from the cache (no skeleton, no spinner), a
   request's status changing at once on its conversation, rolling back on a
@@ -186,7 +189,8 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
   its badge, the tab title count and a toast elsewhere (`e2e/live.spec.ts`:
   the demo restaurant's real widget API and event stream), every page in
   the pseudo-locale at 1440 and 390 px without sideways scrolling or a cut
-  control (`e2e/pseudo-locale.spec.ts`; the suite starts the cabinet with
+  control (`e2e/pseudo-locale-ltr.spec.ts` and `-rtl.spec.ts`, both from
+  `e2e/support/long-texts.ts`; the suite starts the cabinet with
   `PSEUDO_LOCALE=true`), a 45-minute service performed by one master added
   in the knowledge base, booked by hand and listed with its value, and the
   demo salon counting clients, not guests (`e2e/services.spec.ts`), a
@@ -213,13 +217,31 @@ E2E_SHARD=2/4 npm run e2e         # one CI shard's spec files
 | --- | --- | --- |
 | `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
 | `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
-| `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: every spec that signs in through `support/admin.ts` shares one shard, as they build one admin team on the shard's API; the rest are balanced by test count) |
+| `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: spec files go, longest first, to the shard with the least measured work, by `e2e/durations.json`) |
 | `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.63.0, which downloads Chromium 153; it also drives the Chromium 141 of older machine images) |
 
 Failures leave screenshots and traces in `e2e/.artifacts/results/`
 (`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
 and the API log as the `e2e-report-<shard>` artifact.
+
+CI runs the suite in eight shards, each with its own API, balanced by the
+seconds each spec file takes on CI's runners (`e2e/durations.json`, written
+by Playwright's JSON reporter; an idle four-core machine measures about
+the same); a spec without a measurement counts as the mean, and
+`e2e/support/shards.test.ts` fails until it is measured or while a shard
+would run over its budget. After adding, splitting or slowing down specs:
+
+```bash
+npm run e2e:durations                         # the whole suite, rewrites e2e/durations.json
+npm run e2e:durations -- inbox.spec.ts        # these files; the other entries stay
+npm run e2e:durations -- --from report.json   # JSON reports of a CI run (e2e-report-* artifacts)
+```
+
+A spec file over half a shard's budget is split into several files (as
+the route tour `tour-*.spec.ts`, the section audits `a11y-sections-*.spec.ts`
+and the long texts `pseudo-locale-*.spec.ts` are); `docs/operations/ci.md`
+has the budgets and the CI layout.
 
 A test that passes only on a retry (CI retries once) is flaky: the reporter
 `e2e/reporters/flakyReporter.ts` writes it to `e2e/flaky.json` and the job
@@ -948,8 +970,10 @@ has the owner's switch for the setup reminders (`SetupRemindersCard`).
 
 ### Accessibility
 
-- `e2e/a11y.spec.ts` runs axe-core (WCAG 2.1 A and AA rules) on every page of
-  a business in the dark and the light theme, on the setup invitation, every
+- `e2e/a11y-sections-en.spec.ts` and `e2e/a11y-sections-he.spec.ts`
+  (`e2e/support/axe.ts`) run axe-core (WCAG 2.1 A and AA rules) on every page
+  of a business in the dark and the light theme; `e2e/a11y.spec.ts` on the
+  setup invitation, every
   screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
   with the "More" sheet open; any serious or critical violation fails it.
 - Landmarks: one `<h1>` per page (the section's, inside a section frame),
@@ -1303,11 +1327,12 @@ the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser
 (`document.cookie = "aw_locale=en-XA; path=/"`): every text becomes
 `[Šáṽé ẋẋ]`, accented, 40 % longer and in brackets, so a cut text (no closing
 bracket), a hard-coded string (no accents) and an overflowing layout stand
-out. `e2e/pseudo-locale.spec.ts` opens every page this way at 1440 and 390 px
+out. `e2e/pseudo-locale-ltr.spec.ts` opens every page this way at 1440 and 390 px
 and fails on a page that scrolls sideways or a button, tab or link whose
 text does not fit. Dates and numbers stay English. Its right-to-left twin
 `ar-XB` (the usual tag of the bidi pseudo-locale) has the same texts on pages
-laid out right to left, as for Hebrew; the spec runs every page in both.
+laid out right to left, as for Hebrew; `e2e/pseudo-locale-rtl.spec.ts` runs
+every page in it (both from `e2e/support/long-texts.ts`).
 
 The interface language is chosen by the `aw_locale` cookie (set at sign-in from
 the account language, by the language switcher, or by the proxy from

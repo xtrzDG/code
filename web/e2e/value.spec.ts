@@ -13,6 +13,7 @@ import type { APIRequestContext } from "@playwright/test";
 import { API_URL, WEB_URL } from "./support/env";
 import { expect, signInContext, test } from "./support/fixtures";
 import { signInAsPlatformAdmin } from "./support/admin";
+import { DEMO_OWNER_EMAIL, signInAsDemoOwner } from "./support/demo";
 import { waitingConversationOf } from "./support/inbox";
 import { apiLogSize, waitForLoginCode } from "./support/login-codes";
 import { en, ka, ru } from "./support/messages";
@@ -33,8 +34,14 @@ const LOGIN_CODE_COOLDOWN_MS = 31_000;
 
 test.describe.configure({ timeout: 120_000 });
 
-/** Signs a demo account in, waiting out the code cooldown once if another spec just asked. */
+/**
+ * Signs a demo account in, waiting out the code cooldown once if another
+ * spec just asked; the demo owner's sign-in is the worker's shared one.
+ */
 async function signInDemo(request: APIRequestContext, email: string): Promise<{ token: string; businessId: string }> {
+  if (email === DEMO_OWNER_EMAIL) {
+    return signInAsDemoOwner(request);
+  }
   let since = apiLogSize();
   let start = await request.post(`${API_URL}/v1/auth/otp/start`, { data: { email, locale: "en" } });
   if (start.status() === 429) {

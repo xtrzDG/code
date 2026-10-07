@@ -96,7 +96,7 @@ placeholder) before a full stop in any dictionary.
 Russian and Georgian texts run 20–40 % longer than English. Every layout is
 checked with the pseudo-locale (the cabinet started with
 `PSEUDO_LOCALE=true` and the `aw_locale=en-XA` cookie: English padded by
-40 % with accented letters; `web/e2e/pseudo-locale.spec.ts`) at 1440 and
+40 % with accented letters; `web/e2e/pseudo-locale-*.spec.ts`) at 1440 and
 390 px: no horizontal overflow, no clipped button or tab.
 
 ## Dates and numbers in Georgian
