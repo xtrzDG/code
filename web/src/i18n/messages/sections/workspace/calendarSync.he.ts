@@ -137,7 +137,7 @@ export const calendarSyncHe: Translation<typeof calendarSyncEn> = {
       google_calendar: "ההזמנות מופיעות בלוח השנה שלכם ב-Google, והזמנים התפוסים בו חוסמים את המשאבים שלכם.",
       ical_import: "ימים תפוסים של Airbnb, Booking.com ולוחות שנה אחרים חוסמים את המשאבים שלכם.",
       ical_export: "ההזמנות של המשאבים שלכם, משותפות ככתובות לוח שנה לאתרים אחרים.",
-      cal_com: "הזמנות שנעשו ב-Cal.com חוסמות את המשאבים שלכם.",
+      cal_com: "הזמנות שנעשו ב-Cal.com חוסמות את המשאבים שלכם, וההזמנות שמתקבלות כאן נרשמות שם.",
     },
     states: { off: "כבוי", on: "פעיל", attention: "דורש תשומת לב", unavailable: "לא זמין" },
     resources: { one: "משאב אחד", other: "{count} משאבים" },

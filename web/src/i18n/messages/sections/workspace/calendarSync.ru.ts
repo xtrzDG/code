@@ -155,7 +155,7 @@ export const calendarSyncRu: Translation<typeof calendarSyncEn> = {
       google_calendar: "Брони появляются в вашем календаре Google, а его занятое время закрывает ресурсы.",
       ical_import: "Занятые дни из Airbnb, Booking.com и других календарей закрывают ваши ресурсы.",
       ical_export: "Брони ваших ресурсов, открытые как адреса календарей для других сайтов.",
-      cal_com: "Брони из Cal.com закрывают ваши ресурсы.",
+      cal_com: "Брони из Cal.com закрывают ваши ресурсы, а брони, принятые здесь, записываются туда.",
     },
     states: { off: "Выключено", on: "Включено", attention: "Требует внимания", unavailable: "Недоступно" },
     resources: { one: "{count} ресурс", few: "{count} ресурса", many: "{count} ресурсов", other: "{count} ресурса" },

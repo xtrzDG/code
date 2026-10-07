@@ -137,7 +137,7 @@ export const calendarSyncDe: Translation<typeof calendarSyncEn> = {
       google_calendar: "Buchungen erscheinen in Ihrem Google-Kalender, und seine belegten Zeiten blockieren Ihre Ressourcen.",
       ical_import: "Belegte Tage von Airbnb, Booking.com und anderen Kalendern blockieren Ihre Ressourcen.",
       ical_export: "Die Buchungen Ihrer Ressourcen, als Kalenderadressen für andere Websites geteilt.",
-      cal_com: "In Cal.com angelegte Buchungen blockieren Ihre Ressourcen.",
+      cal_com: "In Cal.com angelegte Buchungen blockieren Ihre Ressourcen, und die hier angenommenen Buchungen werden dort eingetragen.",
     },
     states: { off: "Aus", on: "An", attention: "Braucht Aufmerksamkeit", unavailable: "Nicht verfügbar" },
     resources: { one: "{count} Ressource", other: "{count} Ressourcen" },

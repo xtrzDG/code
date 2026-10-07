@@ -139,7 +139,7 @@ export const calendarSyncEn = {
       google_calendar: "Bookings appear in your Google calendar, and its busy times block your resources.",
       ical_import: "Busy days of Airbnb, Booking.com and other calendars block your resources.",
       ical_export: "Your resources' bookings, shared as calendar addresses for other sites.",
-      cal_com: "Bookings made in Cal.com block your resources.",
+      cal_com: "Bookings made in Cal.com block your resources, and bookings taken here are written there.",
     },
     states: { off: "Off", on: "On", attention: "Needs attention", unavailable: "Not available" },
     resources: { one: "{count} resource", other: "{count} resources" },
