@@ -7,6 +7,7 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.booking_grid import BookingGrid, BookingGridQuery
 from app.schemas.dto.calendar import (
     CalendarConnectionOutcome,
     CalendarConnectionStatusQuery,
@@ -31,6 +32,9 @@ from app.schemas.dto.resources import (
     ScheduleExceptionListQuery,
     ScheduleExceptionView,
     UpdateResourceCommand,
+)
+from app.use_cases.bookings.calendar.get_booking_grid_use_case import (
+    GetBookingGridUseCase,
 )
 from app.use_cases.calendar.complete_google_calendar_connection_use_case import (
     CompleteGoogleCalendarConnectionUseCase,
@@ -60,8 +64,8 @@ from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCa
 
 class SchedulingUseCasesContainer(containers.DeclarativeContainer):
     """
-    What bookings are placed on: resources, their schedule exceptions and the
-    Google Calendar connection.
+    What bookings are placed on: resources, their schedule exceptions, the
+    bookings calendar over them and the Google Calendar connection.
     """
 
     adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -116,6 +120,22 @@ class SchedulingUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         DeleteScheduleExceptionUseCase,
         schedule_exception_repo=repositories.schedule_exception_repo,
+    )
+
+    # --- The bookings calendar (Bookings → Day, Week, Nights).
+    get_booking_grid_use_case: Factory[
+        UseCaseContract[BookingGridQuery, BookingGrid]
+    ] = Factory(
+        GetBookingGridUseCase,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        resource_repo=repositories.resource_repo,
+        schedule_exception_repo=repositories.schedule_exception_repo,
+        booking_repo=repositories.booking_repo,
+        knowledge_item_repo=repositories.knowledge_item_repo,
+        contact_repo=repositories.contact_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
 
     # --- Google Calendar.

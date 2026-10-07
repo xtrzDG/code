@@ -12,8 +12,11 @@ from app.schemas.constants.bookings import BookingUnit
 from app.schemas.domain.bookings import BookingDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
 from app.schemas.domain.resources import ResourceDocument
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.bookings.constrained_integers import BookingDurationMinutes
 from app.schemas.typings.bookings.constrained_strings import LocalTimeOfDay
+from app.schemas.typings.bookings.prefixed_id import ResourceId
+from app.use_cases.bookings.booking_edits import booking_unit_label
 from app.use_cases.bookings.booking_support import SchedulingInputs, stay_night_count
 from app.use_cases.bookings.reschedule_candidates import (
     booked_length,
@@ -22,6 +25,7 @@ from app.use_cases.bookings.reschedule_candidates import (
 from app.utilities.scheduling.booking_placement import place_booking
 from app.utilities.scheduling.placement import Placement
 from app.utilities.scheduling.placement_request import PlacementRequest
+from app.utilities.scheduling.resource_selection import select_resources
 from app.utilities.scheduling.zoned_time import (
     SECONDS_PER_MINUTE,
     minute_of_day,
@@ -40,11 +44,19 @@ def place_moved_booking(
     new_time: LocalTimeOfDay | None,
     bookings: Sequence[BookingDocument],
     earliest_start: int,
+    target: ResourceDocument | None = None,
 ) -> Placement:
-    """The new time of a moved booking: same length (or nights), own resource first."""
+    """
+    The new time of a moved booking: same length (or nights), on `target`
+    only when staff dropped it there, else its own resource first.
+    """
 
     return place_booking(
-        reschedule_candidates(inputs.resources, booking, current, offer, items),
+        (
+            [target]
+            if target is not None
+            else reschedule_candidates(inputs.resources, booking, current, offer, items)
+        ),
         PlacementRequest(
             local_date=new_date,
             minute_of_day=None if new_time is None else parse_time_of_day(new_time),
@@ -64,6 +76,43 @@ def place_moved_booking(
             blocked_times=inputs.blocked_times,
         ),
     )
+
+
+def dropped_place(
+    inputs: SchedulingInputs,
+    booking: BookingDocument,
+    current: ResourceDocument,
+    resource_id: ResourceId | None,
+) -> ResourceDocument | None:
+    """
+    The place staff dropped a booking on (the calendar), checked as an
+    edit's new place is: active, booked the same way (time slots or
+    nights) and seating the party; None without one.
+
+    Raises:
+        NotFoundError: no such active place.
+        ValidationFailedError: it is booked another way, or too small.
+    """
+
+    if resource_id is None:
+        return None
+
+    target: ResourceDocument = select_resources(
+        inputs.resources, resource_id, None, inputs.rules
+    )[0]
+    if target.booking_unit is not current.booking_unit:
+        raise ValidationFailedError(
+            f"{target.name} is booked by {booking_unit_label(target)}, unlike "
+            f"{current.name}; make a new booking instead."
+        )
+
+    if int(target.capacity) < int(booking.party_size):
+        raise ValidationFailedError(
+            f"{target.name} seats at most {int(target.capacity)} guests, "
+            f"not {int(booking.party_size)}."
+        )
+
+    return target
 
 
 def ensure_free_at_booked_time(

@@ -24,6 +24,9 @@ class OperationsOrchestratorsContainer(containers.DeclarativeContainer):
     list_bookings_orchestrator = use_case_orchestrator(
         booking_use_cases.list_bookings_use_case
     )
+    get_booking_grid_orchestrator = use_case_orchestrator(
+        scheduling_use_cases.get_booking_grid_use_case
+    )
     create_manual_booking_orchestrator = use_case_orchestrator(
         booking_use_cases.create_manual_booking_use_case
     )

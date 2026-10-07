@@ -28,6 +28,9 @@ class OperationsOperatorsContainer(containers.DeclarativeContainer):
     list_bookings_operator = pipeline_operator(
         operations_pipelines.list_bookings_pipeline, storage_scope
     )
+    get_booking_grid_operator = pipeline_operator(
+        operations_pipelines.get_booking_grid_pipeline, storage_scope
+    )
     create_manual_booking_operator = pipeline_operator(
         operations_pipelines.create_manual_booking_pipeline, storage_scope
     )

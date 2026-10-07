@@ -3,6 +3,22 @@
 from base_typed_int import BaseConstrainedTypedInt
 
 
+class BookedUnitCount(BaseConstrainedTypedInt):
+    """How many units of a place booked by the night (rooms) are taken one night."""
+
+    ge = 0
+    le = 1000
+
+
+class BookedUnitMinutes(BaseConstrainedTypedInt):
+    """
+    Minutes the bookings of a place take within its opening hours of one
+    day, summed over its units (two tables for an hour: 120).
+    """
+
+    ge = 0
+
+
 class BookingDurationMinutes(BaseConstrainedTypedInt):
     """Length of one time-slot booking in minutes (up to 30 days)."""
 
@@ -14,6 +30,23 @@ class BookingEndsAtUnixSeconds(BaseConstrainedTypedInt):
     """UTC UNIX timestamp (seconds) when a booking ends."""
 
     ge = 0
+
+
+class BookingGridDayCount(BaseConstrainedTypedInt):
+    """How many local days one bookings calendar shows (a day up to a month)."""
+
+    ge = 1
+    le = 31
+
+
+class BookingGridReadCeiling(BaseConstrainedTypedInt):
+    """
+    The most bookings one calendar window reads before it stops and says
+    so (a guard against a runaway window, far above a busy month).
+    """
+
+    ge = 1
+    le = 20000
 
 
 class BookingReminderLeadSeconds(BaseConstrainedTypedInt):
@@ -53,6 +86,12 @@ class CalendarTokenLifetimeSeconds(BaseConstrainedTypedInt):
     ge = 0
 
 
+class GridBookingCount(BaseConstrainedTypedInt):
+    """How many bookings (not cancelled) a place has on one day of the calendar."""
+
+    ge = 0
+
+
 class MinNoticeMinutes(BaseConstrainedTypedInt):
     """How long before the start a booking must be made (concept min_notice)."""
 
@@ -65,6 +104,22 @@ class NightCount(BaseConstrainedTypedInt):
 
     ge = 1
     le = 365
+
+
+class OpenUnitCount(BaseConstrainedTypedInt):
+    """How many units of a place booked by the night (rooms) can be sold one night."""
+
+    ge = 0
+    le = 1000
+
+
+class OpenUnitMinutes(BaseConstrainedTypedInt):
+    """
+    Minutes a place is open on one day, summed over its units (three
+    tables open ten hours: 1800): what its bookings could fill.
+    """
+
+    ge = 0
 
 
 class PartySize(BaseConstrainedTypedInt):

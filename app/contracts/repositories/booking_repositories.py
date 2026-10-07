@@ -16,6 +16,9 @@ from app.contracts.repositories.booking_listing_contracts import (
     LeadListingContract,
     UnansweredQuestionListingContract,
 )
+from app.contracts.repositories.booking_window_contracts import (
+    BookingWindowListingContract,
+)
 from app.contracts.repositories.business_document_pages import (
     BusinessDocumentPagesContract,
 )
@@ -28,6 +31,7 @@ from app.schemas.typings.handoffs.prefixed_id import HandoffId, UnansweredQuesti
 
 class BookingRepoContract(
     BookingListingContract,
+    BookingWindowListingContract,
     BusinessDocumentPagesContract[BookingDocument],
     RepoContract,
     Protocol,

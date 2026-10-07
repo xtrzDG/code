@@ -62,10 +62,13 @@ from app.use_cases.bookings.booking_support import (
     notify_staff_about_booking,
     stay_night_count,
 )
-from app.use_cases.bookings.booking_versions import refuse_changed_booking
+from app.use_cases.bookings.booking_versions import (
+    refuse_changed_booking,
+    refuse_moved_booking,
+)
 from app.use_cases.bookings.bookings_in_play import HeldPlaces, bookings_not_over_on
 from app.use_cases.bookings.freed_places import held_place_of, notice_if_freed
-from app.use_cases.bookings.moved_placements import place_moved_booking
+from app.use_cases.bookings.moved_placements import dropped_place, place_moved_booking
 from app.use_cases.bookings.reschedule_candidates import (
     booked_offer,
     reprice_stay,
@@ -90,8 +93,9 @@ class RescheduleBookingUseCase(
 
     The same resource is preferred; another free performer of the booked
     service (or resource of the same kind) that seats the party is used
-    when it is taken, and the service's buffer still applies. A moved stay
-    is priced again for its new nights. Availability is checked
+    when it is taken, and the service's buffer still applies; a booking
+    dragged on the calendar goes to the place it was dropped on only. A
+    moved stay is priced again for its new nights. Availability is checked
     under the business lock without counting the booking itself. Customer
     requests follow the online-booking notice and notify staff; cabinet
     moves (booking id only) do not. The confirmation quotes the profile's
@@ -189,6 +193,9 @@ class RescheduleBookingUseCase(
                 is_sandbox=input_data.is_sandbox,
             )
             refuse_changed_booking(booking, input_data.expected_starts_at)
+            refuse_moved_booking(
+                booking, inputs.zone, input_data.expected_date, input_data.expected_time
+            )
             if booking.status not in BLOCKING_BOOKING_STATUSES:
                 raise ConflictError(
                     f"The booking is {booking.status} and can no longer be moved."
@@ -228,6 +235,7 @@ class RescheduleBookingUseCase(
                     if is_customer_request
                     else now_seconds
                 ),
+                target=dropped_place(inputs, booking, current, input_data.resource_id),
             )
             reprice_stay(
                 booking,
