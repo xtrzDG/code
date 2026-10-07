@@ -3805,6 +3805,248 @@
         "title": "BookingDocument",
         "type": "object"
       },
+      "BookingGrid": {
+        "additionalProperties": false,
+        "description": "The calendar window `date_from`..`date_to` (inclusive local dates) in\nthe business time zone. `is_truncated`: the window holds more bookings\nthan one calendar reads, so the counts and the bookings are incomplete.",
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/BookingView"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "date_from": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date From",
+            "type": "string"
+          },
+          "date_to": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date To",
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/BookingGridDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "is_truncated": {
+            "default": false,
+            "title": "Is Truncated",
+            "type": "boolean"
+          },
+          "places": {
+            "items": {
+              "$ref": "#/components/schemas/BookingGridPlace"
+            },
+            "title": "Places",
+            "type": "array"
+          },
+          "timezone": {
+            "maxLength": 64,
+            "minLength": 2,
+            "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "timezone"
+        ],
+        "title": "BookingGrid",
+        "type": "object"
+      },
+      "BookingGridDay": {
+        "additionalProperties": false,
+        "description": "A local day: the business's own opening ranges and every place on it.",
+        "properties": {
+          "business_ranges": {
+            "items": {
+              "$ref": "#/components/schemas/GridOpenRange"
+            },
+            "title": "Business Ranges",
+            "type": "array"
+          },
+          "date": {
+            "maxLength": 10,
+            "minLength": 10,
+            "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "title": "Date",
+            "type": "string"
+          },
+          "places": {
+            "items": {
+              "$ref": "#/components/schemas/BookingGridPlaceDay"
+            },
+            "title": "Places",
+            "type": "array"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "BookingGridDay",
+        "type": "object"
+      },
+      "BookingGridPlace": {
+        "additionalProperties": false,
+        "description": "A place of the calendar (a column of the day, a row of the week and of\nthe nights): how it is booked and how many it holds. An inactive place\nshows only while it still has bookings in the window.",
+        "properties": {
+          "booking_unit": {
+            "$ref": "#/components/schemas/BookingUnit"
+          },
+          "capacity": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ResourceKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "serves_item_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Serves Item Ids",
+            "type": "array"
+          },
+          "slot_minutes": {
+            "anyOf": [
+              {
+                "maximum": 43200.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Minutes"
+          },
+          "unit_count": {
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Unit Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "booking_unit",
+          "capacity",
+          "unit_count",
+          "is_active"
+        ],
+        "title": "BookingGridPlace",
+        "type": "object"
+      },
+      "BookingGridPlaceDay": {
+        "additionalProperties": false,
+        "description": "One place on one day. A place booked by time slots has its opening\nranges and its load in unit-minutes (`open_unit_minutes` it could\nfill, `booked_unit_minutes` its bookings fill within its hours); a\nplace booked by the night has rooms (`open_units` for sale that\nnight, `booked_units` taken). `booking_count` counts the bookings on\nthe day (the stays over the night).",
+        "properties": {
+          "booked_unit_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booked Unit Minutes"
+          },
+          "booked_units": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booked Units"
+          },
+          "booking_count": {
+            "minimum": 0.0,
+            "title": "Booking Count",
+            "type": "integer"
+          },
+          "is_open": {
+            "title": "Is Open",
+            "type": "boolean"
+          },
+          "open_ranges": {
+            "items": {
+              "$ref": "#/components/schemas/GridOpenRange"
+            },
+            "title": "Open Ranges",
+            "type": "array"
+          },
+          "open_unit_minutes": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Unit Minutes"
+          },
+          "open_units": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Units"
+          },
+          "resource_id": {
+            "title": "Resource Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "is_open",
+          "booking_count"
+        ],
+        "title": "BookingGridPlaceDay",
+        "type": "object"
+      },
       "BookingHit": {
         "additionalProperties": false,
         "description": "A booking of a customer the search found (or named by its id).",
@@ -13061,6 +13303,30 @@
           "is_connected"
         ],
         "title": "GoogleCalendarSourceView",
+        "type": "object"
+      },
+      "GridOpenRange": {
+        "additionalProperties": false,
+        "description": "An opening range within one local day (minutes from its midnight).",
+        "properties": {
+          "closes_at": {
+            "maximum": 1440.0,
+            "minimum": 1.0,
+            "title": "Closes At",
+            "type": "integer"
+          },
+          "opens_at": {
+            "maximum": 1439.0,
+            "minimum": 0.0,
+            "title": "Opens At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "opens_at",
+          "closes_at"
+        ],
+        "title": "GridOpenRange",
         "type": "object"
       },
       "GrowthView": {
@@ -44538,6 +44804,182 @@
         ]
       }
     },
+    "/v1/businesses/{business_id}/bookings/grid": {
+      "get": {
+        "description": "The calendar from the local `date` for `days` days (1 to 31, one by\ndefault) in the business time zone: every place with its opening\nranges and load per day (unit-minutes for time slots, rooms for\nnights) and the bookings that overlap the window, cancelled ones\nleft out. `include_bookings=false` returns the load alone (the\nweek's heatmap, not audited); with the bookings the call is\naudited as a view of customers' data.",
+        "operationId": "operations_get_booking_grid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "title": "Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Days"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_sandbox",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Include Sandbox"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_bookings",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Include Bookings"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingGrid"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Booking Grid",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
     "/v1/businesses/{business_id}/bookings/{booking_id}": {
       "patch": {
         "operationId": "operations_patch_booking",
@@ -44949,14 +45391,54 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "Body of a cabinet reschedule: new local date and (for slots) time.",
+                "description": "Body of a cabinet reschedule: new local date and (for slots) time.\n`new_resource_id` (a booking dragged on the calendar) moves it to that\nplace only; without it the booked place comes first, then another\nfree one. `expected_date` and `expected_time`, the local start the\ncabinet showed, refuse the move (409 `booking_changed`) when someone\nmoved the booking since.",
                 "properties": {
+                  "expected_date": {
+                    "anyOf": [
+                      {
+                        "maxLength": 10,
+                        "minLength": 10,
+                        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected Date"
+                  },
+                  "expected_time": {
+                    "anyOf": [
+                      {
+                        "maxLength": 5,
+                        "minLength": 5,
+                        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Expected Time"
+                  },
                   "new_date": {
                     "maxLength": 10,
                     "minLength": 10,
                     "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
                     "title": "New Date",
                     "type": "string"
+                  },
+                  "new_resource_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "New Resource Id"
                   },
                   "new_time": {
                     "anyOf": [

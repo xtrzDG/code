@@ -28,6 +28,7 @@ from app.utilities.paging.keyset_paging import single_value_position
 from app.utilities.scheduling.zoned_time import (
     local_day_start_microseconds,
     microseconds_to_seconds,
+    to_local_date,
 )
 
 SECONDS_PER_DAY: int = 86_400
@@ -58,21 +59,22 @@ def window_bounds(
 ) -> WindowBounds:
     """
     Raises:
-        ValidationFailedError: the window runs past the last date there is.
+        ValidationFailedError: the window runs past the last date a booking
+            may have.
     """
 
+    local_days: list[date] = [
+        first_day + timedelta(days=offset) for offset in range(int(days))
+    ]
     try:
-        local_days: list[date] = [
-            first_day + timedelta(days=offset) for offset in range(int(days))
-        ]
-        after_last: date = local_days[-1] + timedelta(days=1)
-    except OverflowError as error:
+        to_local_date(local_days[-1])
+    except ValueError as error:
         raise ValidationFailedError("The calendar runs past the last date.") from error
 
     return WindowBounds(
         days=local_days,
         start=_day_start(first_day, zone),
-        end=_day_start(after_last, zone),
+        end=_day_start(local_days[-1] + timedelta(days=1), zone),
     )
 
 

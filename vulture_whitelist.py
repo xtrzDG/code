@@ -648,3 +648,11 @@ _.measured_until  # app/schemas/dto/service_levels.py (ErrorBudgetView)
 _.access_role  # app/schemas/dto/calendar_sync/busy_reads.py (GoogleCalendarEntry)
 _.ical_export  # app/schemas/dto/calendar_sync/resource_calendar.py
 _.problem_count  # app/schemas/dto/calendar_sync/integrations.py (ResourceSyncSummary)
+
+# The bookings calendar (R12-BOOKINGS-CALENDAR): response fields the day,
+# week and nights grids of the cabinet read (GET …/bookings/grid).
+_.open_ranges  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.booked_unit_minutes  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.open_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.booked_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
+_.business_ranges  # app/schemas/dto/booking_grid.py (BookingGridDay)

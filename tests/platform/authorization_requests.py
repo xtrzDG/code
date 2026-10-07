@@ -87,6 +87,7 @@ REQUEST_BODIES.update(CALENDAR_BODIES)
 REQUEST_BODIES[f"PUT {B}/campaign-settings"] = {"rule_kind": "rebook", "delay_days": 30}
 REQUIRED_QUERIES: dict[str, dict[str, str]] = {
     f"GET {B}/availability": {"date": "2026-10-20"},
+    f"GET {B}/bookings/grid": {"date": "2026-10-20", "days": "7"},
     **CUSTOMER_QUERIES,
 }
 
