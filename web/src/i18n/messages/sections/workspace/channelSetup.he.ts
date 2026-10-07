@@ -82,6 +82,7 @@ export const channelSetupHe: Translation<typeof channelSetupEn> = {
     },
   },
   preview: {
+    title: "תצוגה מקדימה חיה",
     frameTitle: "תצוגה מקדימה של הצ׳אט באתר שלכם",
     loading: "טוען את התצוגה המקדימה…",
     languages: "שפת התצוגה המקדימה",

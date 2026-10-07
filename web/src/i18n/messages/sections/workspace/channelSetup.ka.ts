@@ -86,6 +86,7 @@ export const channelSetupKa: Translation<typeof channelSetupEn> = {
     },
   },
   preview: {
+    title: "ცოცხალი გადახედვა",
     frameTitle: "ასე გამოიყურება ჩატი თქვენს საიტზე",
     loading: "გადახედვა იტვირთება…",
     languages: "გადახედვის ენა",

@@ -86,6 +86,7 @@ export const channelSetupRu: Translation<typeof channelSetupEn> = {
     },
   },
   preview: {
+    title: "Живой просмотр",
     frameTitle: "Так чат выглядит на вашем сайте",
     loading: "Загружаем просмотр…",
     languages: "Язык просмотра",
