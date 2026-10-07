@@ -113,6 +113,13 @@ export const profileEditRu: Translation<typeof profileEditEn> = {
     pasteHint: "Вставьте строки из таблицы: название, цена, минуты. Enter добавляет строку.",
     pasted: { one: "Вставлена {count} строка", few: "Вставлено {count} строки", many: "Вставлено {count} строк", other: "Вставлено {count} строки" },
     questionsTitle: "О том, что вы предлагаете",
+    compact: {
+      search: "Найти в предложении",
+      noMatches: "В предложении нет ничего похожего на «{query}».",
+      group: { one: "{kind}: {count} строка", few: "{kind}: {count} строки", many: "{kind}: {count} строк", other: "{kind}: {count} строки" },
+      noPrice: "Без цены",
+      minutes: { one: "{count} мин", few: "{count} мин", many: "{count} мин", other: "{count} мин" },
+    },
   },
   hours: {
     suggestedTitle: "Обычные часы для бизнеса вашего вида",

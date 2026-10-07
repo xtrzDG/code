@@ -10,7 +10,7 @@
  * minutes columns those two go to a second row under the name and price.
  */
 
-import type { FocusEvent } from "react";
+import type { FocusEvent, ReactNode } from "react";
 
 import type { KnowledgeItemKind } from "@/api/types";
 import { IconX } from "@/components/icons";
@@ -41,6 +41,7 @@ export function OfferLine({
   onChange,
   onLeave,
   onRemove,
+  footer,
 }: {
   row: TunnelOfferRow;
   index: number;
@@ -51,6 +52,8 @@ export function OfferLine({
   onChange: (patch: OfferRowPatch) => void;
   onLeave: () => void;
   onRemove: () => void;
+  /** Under the line: the folded offer's "Done" on a phone. */
+  footer?: ReactNode;
 }) {
   const { t } = useI18n();
   const name = row.title.trim() || t("tunnelOffer.offer.removeEmpty");
@@ -160,6 +163,7 @@ export function OfferLine({
           {t(problem)}
         </p>
       ) : null}
+      {footer}
     </li>
   );
 }

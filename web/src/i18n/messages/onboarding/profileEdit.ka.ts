@@ -98,6 +98,13 @@ export const profileEditKa: Translation<typeof profileEditEn> = {
     pasteHint: "ჩასვით სტრიქონები ცხრილიდან: დასახელება, ფასი, წუთები. Enter ახალ სტრიქონს ამატებს.",
     pasted: { one: "ჩაისვა {count} სტრიქონი", other: "ჩაისვა {count} სტრიქონი" },
     questionsTitle: "იმის შესახებ, რასაც სთავაზობთ",
+    compact: {
+      search: "ძიება შეთავაზებაში",
+      noMatches: "შეთავაზებაში „{query}“ ვერ მოიძებნა.",
+      group: { one: "{kind}: {count} სტრიქონი", other: "{kind}: {count} სტრიქონი" },
+      noPrice: "ფასის გარეშე",
+      minutes: { one: "{count} წთ", other: "{count} წთ" },
+    },
   },
   hours: {
     suggestedTitle: "ჩვეული საათები თქვენი სახეობის ბიზნესისთვის",

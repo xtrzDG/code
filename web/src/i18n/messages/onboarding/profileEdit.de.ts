@@ -99,6 +99,13 @@ export const profileEditDe: Translation<typeof profileEditEn> = {
     pasteHint: "Fügen Sie Zeilen aus einer Tabelle ein: Name, Preis, Minuten. Enter fügt eine Zeile hinzu.",
     pasted: { one: "{count} Zeile eingefügt", other: "{count} Zeilen eingefügt" },
     questionsTitle: "Über Ihr Angebot",
+    compact: {
+      search: "Im Angebot suchen",
+      noMatches: "Nichts in Ihrem Angebot passt zu „{query}“.",
+      group: { one: "{kind}: {count} Zeile", other: "{kind}: {count} Zeilen" },
+      noPrice: "Ohne Preis",
+      minutes: { one: "{count} Min.", other: "{count} Min." },
+    },
   },
   hours: {
     suggestedTitle: "Die üblichen Öffnungszeiten für Ihre Branche",

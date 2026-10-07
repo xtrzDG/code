@@ -99,6 +99,13 @@ export const profileEditHe: Translation<typeof profileEditEn> = {
     pasteHint: "הדביקו שורות מגיליון אלקטרוני: שם, מחיר, דקות. Enter מוסיף שורה.",
     pasted: { one: "שורה אחת הודבקה", two: "שתי שורות הודבקו", other: "{count} שורות הודבקו" },
     questionsTitle: "על ההצעה שלכם",
+    compact: {
+      search: "חיפוש בהצעה",
+      noMatches: "אין בהצעה שלכם שום דבר שמתאים ל„{query}”.",
+      group: { one: "{kind}: שורה אחת", two: "{kind}: שתי שורות", other: "{kind}: {count} שורות" },
+      noPrice: "בלי מחיר",
+      minutes: { one: "דקה אחת", two: "שתי דקות", other: "{count} דק׳" },
+    },
   },
   hours: {
     suggestedTitle: "השעות המקובלות לסוג העסק שלכם",
