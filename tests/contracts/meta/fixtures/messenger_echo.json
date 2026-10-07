@@ -1,0 +1,27 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "104922111111111",
+      "time": 1750276000123,
+      "messaging": [
+        {
+          "sender": {
+            "id": "104922111111111"
+          },
+          "recipient": {
+            "id": "7034567890123456"
+          },
+          "timestamp": 1750276005000,
+          "message": {
+            "is_echo": true,
+            "app_id": 1517776481860111,
+            "metadata": "assistant-reply",
+            "mid": "m_1457764197618:41d102a3e1ae206a38",
+            "text": "Yes, we have a table at 19:00."
+          }
+        }
+      ]
+    }
+  ]
+}

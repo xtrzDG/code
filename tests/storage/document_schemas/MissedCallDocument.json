@@ -1,0 +1,176 @@
+{
+  "collection": "missed_calls",
+  "document_type": "MissedCallDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "call_id": {
+        "anyOf": [
+          {
+            "pattern": "^call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "called_at": {
+        "type": "integer"
+      },
+      "caller_phone_number": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "channel": {
+        "anyOf": [
+          {
+            "enum": [
+              "whatsapp",
+              "sms"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "conversation_id": {
+        "anyOf": [
+          {
+            "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^missed_call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "last_error": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "provider_call_id": {
+        "type": "string"
+      },
+      "reason": {
+        "enum": [
+          "no_answer",
+          "busy",
+          "abandoned",
+          "line_failed",
+          "not_started",
+          "no_speech",
+          "transfer_unanswered"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "sent_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "skip_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "turned_off",
+              "opted_out",
+              "already_texted",
+              "daily_limit",
+              "in_conversation",
+              "no_channel",
+              "not_live",
+              "no_caller_number",
+              "too_late"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "source": {
+        "enum": [
+          "pbx",
+          "voice_platform"
+        ],
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "queued",
+          "sent",
+          "failed",
+          "skipped"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "source",
+      "provider_call_id",
+      "reason",
+      "called_at",
+      "language",
+      "status"
+    ],
+    "type": "object"
+  }
+}

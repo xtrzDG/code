@@ -7,3 +7,136 @@ class PlanKey(StrEnum):
     CHAT = "chat"
     VOICE_AND_CHAT = "voice_and_chat"
     PLUS = "plus"
+
+
+class SetupOption(StrEnum):
+    """
+    How a business gets set up: SELF_SERVE, the owner in the cabinet's
+    guided setup (free), or DONE_FOR_YOU, the platform team sets it up for
+    the plan's setup fee (an onboarding request reaches the team).
+    """
+
+    SELF_SERVE = "self_serve"
+    DONE_FOR_YOU = "done_for_you"
+
+
+class OnboardingRequestStatus(StrEnum):
+    """A done-for-you setup the owner asked for: OPEN until the team is done."""
+
+    OPEN = "open"
+    DONE = "done"
+
+
+class BillingPeriod(StrEnum):
+    """How often a subscription is charged."""
+
+    MONTHLY = "monthly"
+    ANNUAL = "annual"
+
+
+class SubscriptionStatus(StrEnum):
+    """
+    Subscription state driven by the payment provider.
+
+    INCOMPLETE: chosen without a trial and waiting for its first payment;
+    the business has no service from it until that payment arrives.
+    PAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;
+    the assistant only takes requests, the channels stay connected and
+    the pause costs a share of the price (R14). Written only with
+    SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
+    every reader the value: the release gate `subscription_pause`
+    (docs/operations/deploys.md).
+    """
+
+    INCOMPLETE = "incomplete"
+    TRIALING = "trialing"
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELLED = "cancelled"
+    PAUSED = "paused"
+
+
+class InvoiceStatus(StrEnum):
+    """Invoice state."""
+
+    ISSUED = "issued"
+    PAID = "paid"
+    FAILED = "failed"
+    VOID = "void"
+
+
+class UsageKind(StrEnum):
+    """Metered usage unit, as in the concept's usage_events table."""
+
+    VOICE_SECONDS = "voice_seconds"
+    LLM_INPUT_TOKENS = "llm_input_tokens"
+    LLM_OUTPUT_TOKENS = "llm_output_tokens"
+    DIALOG = "dialog"
+    WHATSAPP_REPLY = "whatsapp_reply"
+    WHATSAPP_TEMPLATE = "whatsapp_template"
+    TRANSFER_SECONDS = "transfer_seconds"
+    TRANSCRIPTION_SECONDS = "transcription_seconds"
+
+
+class InvoiceKind(StrEnum):
+    """What an invoice charges for."""
+
+    SERVICE_PERIOD = "service_period"
+    SETUP_FEE = "setup_fee"
+    USAGE_OVERAGE = "usage_overage"
+
+
+class PackageMetric(StrEnum):
+    """Included package quantity of a plan that is metered per period."""
+
+    VOICE_MINUTES = "voice_minutes"
+    DIALOGS = "dialogs"
+
+
+class BillingNoticeKind(StrEnum):
+    """Billing message sent to the owners of a business."""
+
+    PAYMENT_FAILED = "payment_failed"
+    TRIAL_ENDED_UNPAID = "trial_ended_unpaid"
+    RENEWAL_MISSED = "renewal_missed"
+    LEADS_ONLY_STARTED = "leads_only_started"
+    SUBSCRIPTION_ENDED = "subscription_ended"
+    PACKAGE_USAGE_WARNING = "package_usage_warning"
+    OVERAGE_INVOICED = "overage_invoiced"
+    PAUSE_STARTED = "pause_started"
+    PAUSE_ENDED = "pause_ended"
+
+
+class ExchangeRateSource(StrEnum):
+    """
+    Who set an exchange rate. NBG: the National Bank of Georgia's official
+    rates against the lari (about 40 currencies, daily). ECB: the European
+    Central Bank's euro reference rates (about 30 currencies, each TARGET
+    day). PLANNING: the rate of the platform's own cost model, the last
+    fallback when no published rate is stored yet.
+    """
+
+    NBG = "nbg"
+    ECB = "ecb"
+    PLANNING = "planning"
+
+
+class ManualPaymentMethod(StrEnum):
+    """
+    How money a platform admin recorded by hand arrived, outside the
+    payment provider: a BANK_TRANSFER to the platform's account, or CASH.
+    """
+
+    BANK_TRANSFER = "bank_transfer"
+    CASH = "cash"
+
+
+class BillingCreditKind(StrEnum):
+    """
+    One line of a business's credit ledger: credit a platform admin
+    GRANTED (with the reason), or credit an invoice USED when it was
+    issued (given back by voiding that invoice).
+    """
+
+    GRANTED = "granted"
+    USED = "used"

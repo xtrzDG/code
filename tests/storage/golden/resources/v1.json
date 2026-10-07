@@ -1,0 +1,21 @@
+{
+  "booking_unit": "time_slot",
+  "business_id": "business_4b64a99a-702c-4083-a416-005408d8c8c7",
+  "capacity": 1,
+  "created_at": 1790000000000000,
+  "id": "resource_25d9c843-3235-49e3-8e71-7a9f821f789c",
+  "is_active": true,
+  "kind": "table",
+  "name": "Sample ResourceName",
+  "schedule": [
+    {
+      "closes_at": 1080,
+      "opens_at": 540,
+      "weekday": 1
+    }
+  ],
+  "schema_version": "1",
+  "slot_minutes": 30,
+  "unit_count": 1,
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,264 @@
+{
+  "collection": "conversations",
+  "document_type": "ConversationDocument",
+  "schema_version": 5,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "acquisition_source": {
+        "anyOf": [
+          {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "assigned_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "assigned_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "assignee_user_id": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "assignment_revision": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "assistant_version_id": {
+        "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "awaits_improvement": {
+        "default": false,
+        "type": "boolean"
+      },
+      "awaits_team": {
+        "default": false,
+        "type": "boolean"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "channel": {
+        "enum": [
+          "phone",
+          "whatsapp",
+          "instagram",
+          "messenger",
+          "telegram",
+          "web_chat",
+          "viber",
+          "owner_test"
+        ],
+        "type": "string"
+      },
+      "channel_user_id": {
+        "type": "string"
+      },
+      "contact_id": {
+        "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "has_open_request": {
+        "default": false,
+        "type": "boolean"
+      },
+      "id": {
+        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "improved_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "is_after_hours": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_sandbox": {
+        "default": false,
+        "type": "boolean"
+      },
+      "language": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_message_at": {
+        "type": "integer"
+      },
+      "rated_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rated_by": {
+        "anyOf": [
+          {
+            "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rated_message_id": {
+        "anyOf": [
+          {
+            "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rating": {
+        "anyOf": [
+          {
+            "enum": [
+              "good",
+              "bad"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rating_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "wrong_info",
+              "should_hand_off",
+              "tone",
+              "too_long"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "5",
+        "type": "string"
+      },
+      "status": {
+        "default": "open",
+        "enum": [
+          "open",
+          "handoff",
+          "closed"
+        ],
+        "type": "string"
+      },
+      "summarized_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "summary": {
+        "anyOf": [
+          {
+            "maxLength": 300,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "contact_id",
+      "assistant_version_id",
+      "channel",
+      "channel_user_id",
+      "last_message_at"
+    ],
+    "type": "object"
+  }
+}

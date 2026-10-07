@@ -1,0 +1,102 @@
+{
+  "collection": "schedule_exceptions",
+  "document_type": "ScheduleExceptionDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "date": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^schedule_exception_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_closed_all_day": {
+        "default": true,
+        "type": "boolean"
+      },
+      "note": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "resource_id": {
+        "anyOf": [
+          {
+            "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "special_hours": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "closes_at": {
+              "maximum": 1440,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opens_at": {
+              "maximum": 1439,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "weekday": {
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "type": "integer"
+            }
+          },
+          "required": [
+            "weekday",
+            "opens_at",
+            "closes_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "date"
+    ],
+    "type": "object"
+  }
+}

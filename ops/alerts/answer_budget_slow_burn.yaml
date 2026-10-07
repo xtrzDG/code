@@ -1,0 +1,15 @@
+# The answer SLO burns steadily: customer messages miss "answered or handed
+# off within 60 s" at more than 6 times the sustainable pace over the last
+# six hours and over the last 30 minutes alike, once the six hours hold 20
+# messages: a fifth of the month's budget would go within a day.
+code: answer_budget_slow_burn
+severity: sev2
+summary: Customer messages miss the 60 s answer at 6 times the pace the monthly error budget allows (6 h and 30 min).
+measure: burn rate of the inbound_answered slots over 360 min and over 30 min (both must exceed)
+threshold: 600
+unit: percent
+window_minutes: 360
+short_window_minutes: 30
+volume_floor: 20
+source: service_level_slots (doc_series, doc_slot_start), migration 1163
+runbook: docs/operations/runbooks/error-budget-burn.md

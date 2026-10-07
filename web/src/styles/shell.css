@@ -1,0 +1,73 @@
+/*
+ * The cabinet's frame: the phone sheet ("More") and the user menu rising
+ * into place, and the living light around "Create an AI assistant".
+ * Imported by src/app/globals.css; transform and opacity only, and still
+ * under prefers-reduced-motion (globals.css ends every animation at once).
+ */
+
+@layer components {
+  dialog[data-motion="sheet-bottom"] {
+    --dialog-from: translateY(100%);
+  }
+
+  /* The account panel above the user menu (a native popover). */
+  .user-menu-panel {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+    transform-origin: bottom left;
+    transition-property: opacity, transform, overlay, display;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--ease-exit);
+    transition-behavior: allow-discrete;
+  }
+  .user-menu-panel:popover-open {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--motion-base), var(--motion-spring-snappy), 0s, 0s;
+    transition-timing-function: var(--ease-standard), var(--ease-spring-snappy), linear, linear;
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+
+  /* A light running around the edge of the setup entry and the hero's button area. */
+  .setup-glow {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .setup-glow::before {
+    content: "";
+    position: absolute;
+    inset: -60%;
+    z-index: -2;
+    background: conic-gradient(from 0deg, var(--accent-solid), var(--tone-sand), var(--tone-rose), var(--accent), var(--accent-solid));
+    animation: var(--animate-spin-slow);
+  }
+  .setup-glow::after {
+    content: "";
+    position: absolute;
+    inset: 1.5px;
+    z-index: -1;
+    border-radius: inherit;
+    background:
+      radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--accent-solid) 34%, transparent), transparent 70%),
+      var(--surface);
+  }
+
+  /* The stages of setup stand like a corridor leading away. */
+  .setup-stages {
+    perspective: 900px;
+  }
+  .setup-stage {
+    transform-style: preserve-3d;
+    transition: transform var(--motion-base) var(--ease-standard);
+  }
+  @media (hover: hover) {
+    .setup-stage:hover {
+      transform: translateZ(18px) rotateX(4deg);
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# No worker answers anyone: the freshest pulse of any worker is more than
+# five minutes old (or none is stored). Checked by the API's pipeline
+# watchdog every minute, outside the workers, and sent straight through the
+# platform bot and SMTP (no job queue); the workers' own platform_alerts
+# job resolves it once a worker beats again. GET /healthz/pipeline answers
+# 503 on the same reading, for the external uptime monitor.
+code: worker_down
+severity: sev1
+summary: No background worker wrote its pulse for five minutes; customers get no answers.
+measure: seconds since the freshest worker pulse
+threshold: 300
+unit: seconds
+window_minutes: 5
+volume_floor: 0
+source: worker_heartbeats (beat_at), migration 1030; the API's watchdog (1173)
+runbook: docs/operations/runbooks/worker-down.md

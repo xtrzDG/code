@@ -1,0 +1,124 @@
+{
+  "collection": "user_sessions",
+  "document_type": "UserSessionDocument",
+  "schema_version": 3,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "auth_level": {
+        "anyOf": [
+          {
+            "enum": [
+              "one_factor",
+              "two_factor"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "authenticated_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "created_ip": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "expires_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^user_session_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "idle_expires_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_seen_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_seen_ip": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "3",
+        "type": "string"
+      },
+      "token_hash": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_agent": {
+        "anyOf": [
+          {
+            "maxLength": 512,
+            "minLength": 1,
+            "pattern": "^[\\x20-\\x7e]+$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user_id",
+      "token_hash",
+      "expires_at"
+    ],
+    "type": "object"
+  }
+}

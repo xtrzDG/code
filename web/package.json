@@ -1,0 +1,71 @@
+{
+  "name": "assistant-workshop-web",
+  "version": "0.1.0",
+  "private": true,
+  "sideEffects": [
+    "*.css",
+    "./src/lib/zod.ts"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint --max-warnings=0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "knip": "knip --no-progress",
+    "e2e": "playwright test --config e2e/playwright.config.ts",
+    "e2e:durations": "node scripts/e2e-durations.mjs",
+    "check:intl": "node scripts/check-intl.mjs",
+    "measure:first-load": "node scripts/measure-first-load.mjs",
+    "gen:icons": "node scripts/render-app-icons.mjs",
+    "gen:api": "npm run gen:api:spec && npm run gen:api:types && npm run gen:currencies && npm run gen:names",
+    "gen:api:spec": "cd .. && uv run python -m scripts.export_openapi web/openapi.json",
+    "gen:api:types": "openapi-typescript openapi.json --output src/api/schema.d.ts",
+    "gen:currencies": "cd .. && uv run python -m scripts.export_currency_digits web/src/lib/currencyDigits.generated.ts",
+    "gen:names": "cd .. && uv run python -m scripts.export_display_names web/src/lib/displayNames.generated.ts && uv run python -m scripts.export_zone_cities web/src/lib/zoneCities.generated.ts"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.1",
+    "@sentry/nextjs": "11.3.0",
+    "clsx": "2.1.1",
+    "libphonenumber-js": "1.13.14",
+    "motion": "13.4.6",
+    "next": "16.3.8",
+    "openapi-fetch": "0.17.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "0.186.1",
+    "uqr": "0.1.3",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
+    "@types/node": "22.20.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.182.0",
+    "@vitest/coverage-v8": "5.0.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "fast-check": "4.10.2",
+    "jsdom": "29.1.1",
+    "jsqr": "1.4.0",
+    "knip": "6.39.0",
+    "openapi-typescript": "7.13.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  }
+}

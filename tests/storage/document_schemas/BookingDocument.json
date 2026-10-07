@@ -1,0 +1,283 @@
+{
+  "collection": "bookings",
+  "document_type": "BookingDocument",
+  "schema_version": 5,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "booking_system_booking": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "booking_id": {
+                "type": "string"
+              },
+              "ends_at": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "kind": {
+                "enum": [
+                  "cal_com"
+                ],
+                "type": "string"
+              },
+              "resource_id": {
+                "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "starts_at": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "written_at": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "kind",
+              "resource_id",
+              "booking_id",
+              "starts_at",
+              "ends_at",
+              "written_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "buffer_minutes": {
+        "anyOf": [
+          {
+            "maximum": 240,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "contact_id": {
+        "pattern": "^contact_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "conversation_id": {
+        "anyOf": [
+          {
+            "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "anyOf": [
+          {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "ends_at": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^booking_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_sandbox": {
+        "default": false,
+        "type": "boolean"
+      },
+      "language": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_status_change": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "changed_at": {
+                "type": "integer"
+              },
+              "changed_by": {
+                "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "previous_status": {
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "cancelled",
+                  "no_show",
+                  "completed"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "previous_status",
+              "changed_at",
+              "changed_by"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "origin": {
+        "anyOf": [
+          {
+            "enum": [
+              "waitlist",
+              "campaign"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "party_size": {
+        "maximum": 10000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "reminder_sent_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "resource_id": {
+        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "5",
+        "type": "string"
+      },
+      "service_item_id": {
+        "anyOf": [
+          {
+            "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "source_channel": {
+        "enum": [
+          "phone",
+          "whatsapp",
+          "instagram",
+          "messenger",
+          "telegram",
+          "web_chat",
+          "viber",
+          "owner_test"
+        ],
+        "type": "string"
+      },
+      "starts_at": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "status": {
+        "default": "confirmed",
+        "enum": [
+          "pending",
+          "confirmed",
+          "cancelled",
+          "no_show",
+          "completed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "value_minor": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "business_id",
+      "resource_id",
+      "contact_id",
+      "starts_at",
+      "ends_at",
+      "party_size",
+      "source_channel"
+    ],
+    "type": "object"
+  }
+}

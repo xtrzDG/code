@@ -1,0 +1,111 @@
+{
+  "collection": "assistant_applies",
+  "document_type": "AssistantApplyDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "assistant_version_id": {
+        "anyOf": [
+          {
+            "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "attention": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "enum": [
+                "profile_incomplete",
+                "staff_contact_missing",
+                "agreement_not_accepted",
+                "payment_needed",
+                "build_failed",
+                "checks_failed",
+                "checks_stopped",
+                "voice_not_ready",
+                "publish_failed"
+              ],
+              "type": "string"
+            },
+            "details": {
+              "items": {
+                "maxLength": 120,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+\\-]*$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "finished_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^assistant_apply_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "requested_by": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "stage": {
+        "enum": [
+          "building",
+          "checking",
+          "publishing",
+          "live",
+          "needs_attention"
+        ],
+        "type": "string"
+      },
+      "started_at": {
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "stage",
+      "requested_by",
+      "started_at"
+    ],
+    "type": "object"
+  }
+}

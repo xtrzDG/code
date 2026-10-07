@@ -13,20 +13,50 @@ dependencies = [
     "dependency-injector",
     "typed-time-provider",
     "fastapi>=0.142.2",
+    # Tolerant reads of stored documents use model_validate_json(extra=...).
+    "pydantic>=2.13.5",
     "uvicorn[standard]>=0.54.0",
     "phonenumbers>=9.0.40",
     "babel>=2.18.0",
     "anthropic>=1.11.0",
     "httpx>=0.28.1",
+    # The safe web fetcher connects through httpcore to vetted addresses.
+    "httpcore>=1.0.9",
+    "openai>=3.22.1",
+    "cryptography>=50.0.2",
+    "psycopg[binary]>=3.3.6",
+    "sentry-sdk>=2.71.0",
+    "pyotp>=2.9.0",
+    "weasyprint>=66",
+    "prometheus-client>=0.22",
+    "opentelemetry-api>=1.30",
+    "opentelemetry-sdk>=1.30",
+    "opentelemetry-exporter-otlp-proto-http>=1.30",
+    "icalendar>=6.3",
+    "recurring-ical-events>=3.8",
 ]
 
 [dependency-groups]
 dev = [
+    "bandit>=1.9.4",
+    "elevenlabs>=2.71",
+    "flask>=3.1",
+    "flask-cors>=6.0",
+    "hypothesis>=6.140",
+    "import-linter>=2.15",
+    "jsonschema>=4.25",
+    "moto[s3]>=5.1",
     "mypy",
     "pyright",
     "pytest",
     "pytest-cov",
+    "pytest-xdist>=3.8.0",
+    # Evaluation datasets (evals/datasets/*.yaml, scripts/run_evals.py).
+    "pyyaml>=6.0.3",
     "ruff",
+    "types-jsonschema>=4.25",
+    "types-pyyaml>=6.0.12",
+    "vulture>=2.16",
 ]
 
 [tool.uv]
@@ -40,6 +70,10 @@ target-version = "py314"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 fixable = ["ALL"]
 
+[tool.ruff.lint.per-file-ignores]
+# Each line names an attribute so vulture counts it as used.
+"vulture_whitelist.py" = ["B018"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -47,17 +81,52 @@ indent-style = "space"
 [tool.mypy]
 python_version = "3.14"
 strict = true
-mypy_path = "."
+# Typed stubs of libraries without inline types (stubs/: WeasyPrint).
+mypy_path = ".:stubs"
 explicit_package_bases = true
+exclude = ["^stubs/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Timing budgets over large seeded tables run on their own:
+# `uv run pytest -m perf` (tests/perf: PERF_SCALE, PERF_REPORT; weekly in
+# .github/workflows/perf.yml, docs/operations/capacity.md).
+addopts = "-m 'not perf'"
+markers = [
+    "perf: timing budgets on large tables (run with -m perf)",
+    # Set by tests/conftest.py; CI runs `-m postgres` and `-m "not postgres"`
+    # in parallel jobs and combines their coverage.
+    "postgres: runs against a throwaway Postgres server (set automatically)",
+]
+
+# CI: `uv run pytest -n auto --cov=app --cov-branch --cov-fail-under=95`,
+# split into `-m postgres` and `-m "not postgres"` jobs whose data files
+# `coverage combine` joins before the floor is checked. The floor is line
+# and branch coverage of app/ together; lower it never, raise it when the
+# suite allows.
+[tool.coverage.run]
+source = ["app"]
+branch = true
+# Data files from different jobs (checkouts) combine into one report.
+relative_files = true
+
+[tool.coverage.report]
+fail_under = 95
+skip_covered = true
+show_missing = true
+exclude_also = [
+    # Bodies of Protocol contracts: implementations are tested instead.
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
 
 [tool.pyright]
 typeCheckingMode = "strict"
+stubPath = "stubs"
 venvPath = "."
 venv = ".venv"
 exclude = [
+    "vulture_whitelist.py",
     ".venv",
     "venv",
     "node_modules",
@@ -66,3 +135,42 @@ exclude = [
     "build",
     ".dev_tools",
 ]
+
+# Dead code: `uv run vulture` (CI runs it through
+# tests/architecture_policy/test_dead_code.py). Framework entry points are
+# recognised by decorator or name; everything else that looks unused but is
+# used from outside Python (serialized fields, enum values read by the
+# cabinet) is listed in vulture_whitelist.py with the reason.
+[tool.vulture]
+paths = ["app", "scripts", "vulture_whitelist.py"]
+min_confidence = 60
+sort_by_size = false
+ignore_decorators = [
+    "@router.*",
+    "@http_application.*",
+    "@model_validator",
+    "@field_validator",
+]
+ignore_names = [
+    # Value constraints of constrained primitives, read by their base class.
+    "min_length",
+    "max_length",
+    "pattern",
+    "gt",
+    "ge",
+    "lt",
+    "le",
+    "multiple_of",
+    "uuid_version",
+    # html.parser.HTMLParser callbacks.
+    "handle_starttag",
+    "handle_endtag",
+    "handle_data",
+]
+
+# Static security scan: `uv run bandit -c pyproject.toml -r app scripts -b
+# bandit-baseline.json`. The baseline holds the findings reviewed on its
+# date (generated_at) and accepted as false positives (SECURITY.md lists
+# them); any new finding fails CI.
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "web"]

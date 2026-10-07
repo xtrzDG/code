@@ -1,0 +1,26 @@
+{
+  "country_code": "GE",
+  "created_at": 1790000000000000,
+  "display_name": "Sample UserDisplayName",
+  "email": "owner@example.com",
+  "id": "user_ea72dfea-08f0-438f-8531-8ba0df13dff2",
+  "is_platform_admin": true,
+  "is_verified": true,
+  "locale": "ka",
+  "login_method": "phone",
+  "phone_number": "+995599123456",
+  "schema_version": "2",
+  "signup_attribution": {
+    "first_seen_at": 1790000000000000,
+    "landing_path": "/c/cafe-batumi",
+    "referral_code": "partner-42",
+    "referrer_host": "www.google.com",
+    "source_tag": "qr",
+    "utm_campaign": "autumn-launch",
+    "utm_content": "hero-button",
+    "utm_medium": "social",
+    "utm_source": "instagram",
+    "utm_term": "ai receptionist"
+  },
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,354 @@
+{
+  "collection": "business_profiles",
+  "document_type": "BusinessProfileDocument",
+  "schema_version": 3,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "address": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "maps_url": {
+                "anyOf": [
+                  {
+                    "maxLength": 2048,
+                    "minLength": 10,
+                    "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "answers_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "booking_rules": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "cancellation_policy": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "deposit_currency_code": {
+                "anyOf": [
+                  {
+                    "maxLength": 3,
+                    "minLength": 3,
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "deposit_minor": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "max_party_size": {
+                "maximum": 10000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "min_notice_minutes": {
+                "default": 0,
+                "maximum": 525600,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resource_kind": {
+                "enum": [
+                  "table",
+                  "room",
+                  "staff",
+                  "arena",
+                  "bay",
+                  "vehicle",
+                  "slot"
+                ],
+                "type": "string"
+              },
+              "slot_minutes": {
+                "maximum": 43200,
+                "minimum": 5,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "resource_kind",
+              "slot_minutes",
+              "max_party_size"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "contacts": {
+        "additionalProperties": false,
+        "properties": {
+          "handoff_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "public_phone_number": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 8,
+                "pattern": "^\\+[1-9][0-9]{6,14}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "forbidden": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "google_review_url": {
+        "anyOf": [
+          {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "handoff_rules": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "hours": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "closes_at": {
+              "maximum": 1440,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opens_at": {
+              "maximum": 1439,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "weekday": {
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "type": "integer"
+            }
+          },
+          "required": [
+            "weekday",
+            "opens_at",
+            "closes_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "is_recording_notice_enabled": {
+        "default": true,
+        "type": "boolean"
+      },
+      "links": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "menu",
+                "map",
+                "payment",
+                "booking_page",
+                "delivery",
+                "website",
+                "privacy",
+                "google_review"
+              ],
+              "type": "string"
+            },
+            "url": {
+              "maxLength": 2048,
+              "minLength": 10,
+              "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "url"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "niche_answers": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "answer": {
+              "type": "string"
+            },
+            "question_key": {
+              "maxLength": 64,
+              "minLength": 2,
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "question_key",
+            "answer"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "niche_key": {
+        "enum": [
+          "restaurant",
+          "hotel",
+          "entertainment",
+          "beauty_salon",
+          "clinic",
+          "fitness",
+          "short_term_rental",
+          "car_service",
+          "car_rental_and_tours",
+          "event_venue",
+          "real_estate",
+          "education",
+          "online_shop",
+          "veterinary",
+          "home_services",
+          "b2b_supply"
+        ],
+        "type": "string"
+      },
+      "privacy_notice_url": {
+        "anyOf": [
+          {
+            "maxLength": 2048,
+            "minLength": 10,
+            "pattern": "^https?://[^\\s/]+(/[^\\s]*)?$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "3",
+        "type": "string"
+      },
+      "tone": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "niche_key",
+      "answers_language"
+    ],
+    "type": "object"
+  }
+}

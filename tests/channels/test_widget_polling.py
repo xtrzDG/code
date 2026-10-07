@@ -1,0 +1,215 @@
+"""GET /v1/widget/{business_id}/messages: answers the widget has not shown yet."""
+
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.constants.conversations import ConversationStatus
+from app.schemas.domain.conversations import ConversationDocument
+from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.conversations.prefixed_id import MessageId
+from app.schemas.typings.conversations.strings import ChannelUserId
+from tests.channels.test_widget import enable_widget
+from tests.channels.testbed import ChannelsTestbed
+from tests.channels.widget_polling_steps import (
+    OTHER_VISITOR,
+    add_staff_message,
+    poll,
+    send,
+)
+from tests.channels.widget_tickets import without_ticket
+
+
+class TestWidgetPolling:
+    def test_staff_replies_after_a_handoff_reach_the_widget(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        testbed.pipeline.is_silent = True
+        reply = send(testbed, business.id, "אני רוצה לדבר עם מישהו")
+        assert reply["is_handed_off"] is True
+
+        nothing_yet = poll(client, business.id, after=reply["cursor"])
+        assert nothing_yet.status_code == 200
+        assert nothing_yet.headers["Access-Control-Allow-Origin"] == "*"
+        assert without_ticket(nothing_yet.json()) == {
+            "items": [],
+            "cursor": reply["cursor"],
+            "has_more": False,
+            "is_handed_off": True,
+        }
+
+        staff = add_staff_message(
+            testbed, business.id, testbed.pipeline.conversation_id, "שלום, כאן דנה"
+        )
+        body = poll(client, business.id, after=reply["cursor"]).json()
+
+        assert body["items"] == [
+            {
+                "id": str(staff.id),
+                "author": "staff",
+                "text": "שלום, כאן דנה",
+                "language": "he",
+                "direction": "rtl",
+                "created_at": int(staff.created_at),
+                "choices": [],
+            }
+        ]
+        assert body["cursor"] == str(staff.id)
+        assert body["is_handed_off"] is True
+        assert poll(client, business.id, after=body["cursor"]).json()["items"] == []
+
+    def test_the_answer_comes_again_after_the_reply_cursor_with_its_id(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        reply = send(testbed, business.id, "Hi")
+
+        body = poll(client, business.id, after=reply["cursor"]).json()
+
+        assert [item["id"] for item in body["items"]] == [reply["message_id"]]
+        assert body["items"][0]["author"] == "assistant"
+        assert body["cursor"] == reply["message_id"]
+        assert body["is_handed_off"] is False
+
+    def test_customer_messages_and_other_visitors_are_never_returned(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        first = send(testbed, business.id, "Hi")
+        send(testbed, business.id, "And another thing")
+        other = ConversationDocument(
+            business_id=business.id,
+            contact_id=ContactId(),
+            assistant_version_id=AssistantVersionId(),
+            channel=ChannelKind.WEB_CHAT,
+            channel_user_id=ChannelUserId(OTHER_VISITOR),
+            last_message_at=testbed.clock.now_microseconds(),
+            created_at=testbed.clock.now_microseconds(),
+            updated_at=testbed.clock.now_microseconds(),
+        )
+        testbed.conversation_repo.save(other)
+        foreign = add_staff_message(
+            testbed, business.id, other.id, "For someone else", "en"
+        )
+
+        body = poll(client, business.id, after=first["cursor"]).json()
+
+        assert [item["text"] for item in body["items"]] == [
+            "Reply: Hi",
+            "Reply: And another thing",
+        ]
+        assert all(item["author"] == "assistant" for item in body["items"])
+        assert without_ticket(
+            poll(client, business.id, session_key=OTHER_VISITOR).json()
+        ) == {
+            "items": [],
+            "cursor": str(foreign.id),
+            "has_more": False,
+            "is_handed_off": False,
+        }
+        assert without_ticket(
+            poll(client, business.id, session_key="v1_nobody_has_written_yet").json()
+        ) == {
+            "items": [],
+            "cursor": None,
+            "has_more": False,
+            "is_handed_off": False,
+        }
+
+    def test_without_a_known_position_only_the_current_one_is_returned(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        reply = send(testbed, business.id, "Hi")
+
+        fresh = without_ticket(poll(client, business.id).json())
+        erased = without_ticket(
+            poll(client, business.id, after=str(MessageId())).json()
+        )
+
+        # The position is the visitor's own latest message, so an answer the
+        # widget missed (the page was left while it was written) comes next.
+        assert fresh == {
+            "items": [],
+            "cursor": reply["cursor"],
+            "has_more": False,
+            "is_handed_off": False,
+        }
+        assert erased == fresh
+
+    def test_an_answer_the_widget_missed_comes_after_the_position(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        reply = send(testbed, business.id, "Do you deliver to Batumi?")
+
+        position = poll(client, business.id).json()
+        missed = poll(client, business.id, after=position["cursor"]).json()
+
+        assert position["items"] == []
+        assert [item["id"] for item in missed["items"]] == [reply["message_id"]]
+        assert missed["items"][0]["text"] == "Reply: Do you deliver to Batumi?"
+
+    def test_long_backlogs_come_in_pages(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        testbed.pipeline.is_silent = True
+        reply = send(testbed, business.id, "Hello?")
+        for number in range(55):
+            add_staff_message(
+                testbed,
+                business.id,
+                testbed.pipeline.conversation_id,
+                f"Note {number}",
+            )
+
+        first = poll(client, business.id, after=reply["cursor"]).json()
+        second = poll(client, business.id, after=first["cursor"]).json()
+
+        assert len(first["items"]) == 50
+        assert first["has_more"] is True
+        assert first["cursor"] == first["items"][-1]["id"]
+        assert [item["text"] for item in second["items"]] == [
+            f"Note {number}" for number in range(50, 55)
+        ]
+        assert second["has_more"] is False
+
+    def test_a_resolved_handoff_is_reported(self) -> None:
+        testbed = ChannelsTestbed()
+        business = enable_widget(testbed)
+        client = testbed.build_http_client()
+        testbed.pipeline.is_silent = True
+        reply = send(testbed, business.id, "Help")
+        conversation = testbed.conversation_repo.get(
+            business.id, testbed.pipeline.conversation_id
+        )
+        assert conversation is not None
+        conversation.status = ConversationStatus.OPEN
+        testbed.conversation_repo.save(conversation)
+
+        body = poll(client, business.id, after=reply["cursor"]).json()
+
+        assert body["is_handed_off"] is False
+
+    def test_closed_chats_and_bad_queries_are_refused(self) -> None:
+        testbed = ChannelsTestbed()
+        owner_id = testbed.add_user("owner")
+        business = testbed.add_business(owner_id)
+        testbed.add_channel(
+            business.id, ChannelKind.WEB_CHAT, status=ChannelStatus.DISABLED
+        )
+        open_business = enable_widget(testbed)
+        client = testbed.build_http_client()
+
+        closed = poll(client, business.id)
+        unknown = poll(client, BusinessId())
+        bad_key = poll(client, open_business.id, session_key="short")
+        bad_after = poll(client, open_business.id, after="not an id")
+        missing_key = client.get(f"/v1/widget/{open_business.id}/messages")
+
+        assert closed.status_code == 404
+        assert unknown.status_code == 404
+        assert bad_key.status_code == 422
+        assert bad_after.status_code == 422
+        assert missing_key.status_code == 422

@@ -1,0 +1,17 @@
+{
+  "attempts": 1,
+  "created_at": 1790000000000000,
+  "finished_at": 1790000000000000,
+  "id": "periodic_run_98e7a34c-9982-45ff-8012-045b09517a36",
+  "job_name": "send_booking_reminders",
+  "last_error": "Sample JobErrorText",
+  "lease_token": "0123456789abcdef0123456789abcdef",
+  "lease_until": 1790000000000000,
+  "period_key": "2026-09-21",
+  "processed_count": 1,
+  "retry_at": 1790000000000000,
+  "schema_version": "1",
+  "started_at": 1790000000000000,
+  "status": "running",
+  "updated_at": 1790000000000000
+}

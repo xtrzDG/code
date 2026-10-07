@@ -1,0 +1,103 @@
+/** `notifications.*` in Hebrew (a draft awaiting native review). */
+
+import type { Translation } from "../../../translate";
+import type { notificationsEn } from "./notifications.en";
+
+export const notificationsHe: Translation<typeof notificationsEn> = {
+  device: {
+    title: "במכשיר הזה",
+    description: "העברות, פניות והזמנות מגיעות כהתראות לטלפון או למחשב הזה, גם כשלוח הבקרה סגור.",
+    on: "פעיל",
+    off: "כבוי",
+    enable: "הפעלת התראות במכשיר הזה",
+    disable: "כיבוי במכשיר הזה",
+    test: "שליחת ניסיון",
+    enabled: "ההתראות פעילות במכשיר הזה",
+    disabled: "ההתראות כבויות במכשיר הזה",
+    unsupported: "הדפדפן הזה לא יכול להציג התראות. ב-iPhone או ב-iPad, הוסיפו את לוח הבקרה למסך הבית („שיתוף” → „הוספה למסך הבית”) ופתחו אותו משם.",
+    denied: "ההתראות חסומות לאתר הזה. אפשרו אותן בהגדרות האתר בדפדפן ונסו שוב.",
+    notConfigured: "התראות במכשירים עדיין לא מוגדרות בשרת הזה.",
+    dismissed: "ההתראות לא אושרו. לחצו שוב על הכפתור כשתהיו מוכנים.",
+    failed: "לא הצלחנו להפעיל התראות בדפדפן הזה. נסו שוב.",
+    lastDelivered: "התראה אחרונה {time}",
+    neverDelivered: "עדיין אין התראות",
+    lastError: "האחרונה לא הגיעה: {error}",
+    otherDevices: "המכשירים האחרים שלי",
+    otherDevice: "מכשיר שנוסף {date}",
+    removeOther: "כיבוי",
+    removeOtherLabel: "כיבוי ההתראות במכשיר שנוסף {date}",
+    removed: "ההתראות כבויות במכשיר ההוא",
+    testDelivered: "התראת הניסיון בדרך למכשיר הזה",
+    testFailed: "הניסיון לא הגיע למכשיר הזה: {error}",
+    testPending: "ננסה שוב לשלוח את הניסיון למכשיר הזה: {error}",
+  },
+  setupReminders: {
+    title: "תזכורות הגדרה",
+    label: "תזכורות הגדרה",
+    description:
+      "כמה תזכורות קצרות בימים הראשונים, ב-Telegram, בדוא״ל ובמכשירים שלכם: כשהעוזר עדיין לא באוויר, יש לו רק ערוץ אחד או עדיין אין לקוחות. הן נעצרות מעצמן ברגע שהכול מוכן.",
+  },
+  mine: {
+    title: "מה מגיע אליי",
+    description: "הבחירה שלכם למכשירים שלכם בעסק הזה. השעות לפי אזור הזמן של העסק, {timeZone}.",
+    eventOff: "כבר לא תקבלו התראות על: {event}",
+  },
+  preferences: {
+    events: "התראה על",
+    noEvents: "שום דבר לא נבחר: לא יגיעו התראות.",
+    event: {
+      handoff: "לקוחות שצריכים אדם",
+      lead: "פניות חדשות",
+      booking: "הזמנות: חדשות, מועברות ומבוטלות",
+    },
+    quietHours: "שעות שקטות",
+    quietHoursHint: "התראות ממתינות עד שהשעות השקטות מסתיימות. העברות דחופות עדיין מגיעות.",
+    quietHoursToggle: "לעכב התראות בשעות האלה",
+    quietFrom: "מ",
+    quietUntil: "עד",
+    errors: {
+      format: "הזינו שעה כמו 22:00",
+      same: "ההתחלה והסיום חייבים להיות שונים",
+    },
+    summary: {
+      everything: "הכול, בכל שעה",
+      events: "רק: {events}",
+      nothing: "כלום",
+      quiet: "שקט {from}–{until}",
+    },
+    short: {
+      handoff: "העברות",
+      lead: "פניות",
+      booking: "הזמנות",
+    },
+  },
+  contacts: {
+    test: "שליחת ניסיון",
+    testLabel: "שליחת התראת ניסיון אל {name}",
+    testDelivered: "הניסיון הגיע אל {name}",
+    testSimulated: "אין כאן ספק: הניסיון אל {name} נכתב ביומן השרת",
+    testFailed: "הניסיון אל {name} לא הגיע: {error}",
+    testPending: "ננסה שוב לשלוח את הניסיון אל {name}: {error}",
+    providerMissing: "לא מוגדר בשרת",
+    providerMissingHint: "שום דבר לא נשלח בדרך הזו עד שספק ה-{channel} של הפלטפורמה יוגדר.",
+    testUnavailable: "אי אפשר לשלוח ניסיון: {channel} לא מוגדר בשרת של הפלטפורמה.",
+    status: {
+      delivered: "נמסר",
+      pending: "ממתין",
+      dead: "לא נמסר",
+    },
+    deliveredAt: "נמסר {time}",
+    attemptedAt: "נוסה {time}",
+    never: "עדיין לא נשלח דבר",
+    telegramLinked: "מקושר כ-@{username}",
+    telegramChat: "צ׳אט Telegram",
+  },
+  link: {
+    expiredTitle: "הקישור הזה פג",
+    expiredDescription: "קישורי התראות עובדים 7 ימים. פתחו את העסק כדי למצוא על מה הייתה ההתראה.",
+    invalidTitle: "הקישור הזה לא עובד",
+    invalidDescription: "ייתכן שהוא קטוע, או מיועד לחשבון אחר. התחברו עם החשבון שאליו נשלחה ההתראה.",
+    openBusiness: "פתיחת העסק",
+    toBusinesses: "העסקים שלי",
+  },
+};

@@ -1,0 +1,393 @@
+{
+  "collection": "businesses",
+  "document_type": "BusinessDocument",
+  "schema_version": 6,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "city": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "country_code": {
+        "maxLength": 2,
+        "minLength": 2,
+        "pattern": "^[A-Z]{2}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "currency_code": {
+        "maxLength": 3,
+        "minLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "type": "string"
+      },
+      "data_region": {
+        "enum": [
+          "eu",
+          "us"
+        ],
+        "type": "string"
+      },
+      "default_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "dpa_version_accepted": {
+        "anyOf": [
+          {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z][0-9A-Za-z.\\-_]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "hides_powered_by": {
+        "default": false,
+        "type": "boolean"
+      },
+      "id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "languages": {
+        "items": {
+          "maxLength": 16,
+          "minLength": 2,
+          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "manager_contacts": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "channel": {
+              "enum": [
+                "telegram",
+                "whatsapp",
+                "email",
+                "sms"
+              ],
+              "type": "string"
+            },
+            "language": {
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "preferences": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "events": {
+                      "items": {
+                        "enum": [
+                          "handoff",
+                          "lead",
+                          "booking"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "quiet_hours": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "ends_at": {
+                              "maxLength": 5,
+                              "minLength": 5,
+                              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                              "type": "string"
+                            },
+                            "starts_at": {
+                              "maxLength": 5,
+                              "minLength": 5,
+                              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "starts_at",
+                            "ends_at"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "telegram_username": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "minLength": 4,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "name",
+            "channel",
+            "address",
+            "language"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "members": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "role": {
+              "enum": [
+                "owner",
+                "staff",
+                "agency"
+              ],
+              "type": "string"
+            },
+            "user_id": {
+              "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_id",
+            "role"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
+      },
+      "niche_key": {
+        "enum": [
+          "restaurant",
+          "hotel",
+          "entertainment",
+          "beauty_salon",
+          "clinic",
+          "fitness",
+          "short_term_rental",
+          "car_service",
+          "car_rental_and_tours",
+          "event_venue",
+          "real_estate",
+          "education",
+          "online_shop",
+          "veterinary",
+          "home_services",
+          "b2b_supply"
+        ],
+        "type": "string"
+      },
+      "owner_language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "plan_key": {
+        "enum": [
+          "chat",
+          "voice_and_chat",
+          "plus"
+        ],
+        "type": "string"
+      },
+      "public_slug": {
+        "anyOf": [
+          {
+            "maxLength": 40,
+            "minLength": 3,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "published_assistant_version_id": {
+        "anyOf": [
+          {
+            "pattern": "^assistant_version_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "recording_retention_days": {
+        "default": 90,
+        "maximum": 3650,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "referred_by": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9._-]+$",
+                "type": "string"
+              },
+              "owner_kind": {
+                "enum": [
+                  "partner",
+                  "business"
+                ],
+                "type": "string"
+              },
+              "partner_id": {
+                "anyOf": [
+                  {
+                    "pattern": "^partner_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "referred_at": {
+                "type": "integer"
+              },
+              "referring_business_id": {
+                "anyOf": [
+                  {
+                    "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "code",
+              "owner_kind",
+              "referred_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "require_mfa_for_members": {
+        "default": false,
+        "type": "boolean"
+      },
+      "revision": {
+        "default": 0,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "6",
+        "type": "string"
+      },
+      "service_mode": {
+        "default": "full",
+        "enum": [
+          "full",
+          "leads_only"
+        ],
+        "type": "string"
+      },
+      "status": {
+        "default": "onboarding",
+        "enum": [
+          "onboarding",
+          "testing",
+          "live",
+          "paused"
+        ],
+        "type": "string"
+      },
+      "timezone": {
+        "maxLength": 64,
+        "minLength": 2,
+        "pattern": "^[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+){0,2}$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "name",
+      "niche_key",
+      "country_code",
+      "timezone",
+      "currency_code",
+      "languages",
+      "default_language",
+      "owner_language",
+      "plan_key",
+      "data_region",
+      "members"
+    ],
+    "type": "object"
+  }
+}

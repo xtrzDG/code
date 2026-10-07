@@ -1,0 +1,18 @@
+{
+  "business_id": "business_c4ef2cd9-5576-46e0-b5c1-5da7507dafdd",
+  "created_at": 1790000000000000,
+  "date": "2026-09-21",
+  "id": "schedule_exception_c43a4202-892f-4a25-bc3c-b9297d5ef7b2",
+  "is_closed_all_day": true,
+  "note": "Sample ScheduleExceptionNote",
+  "resource_id": "resource_f620643d-645d-4f44-b7ff-985e17197ae7",
+  "schema_version": "1",
+  "special_hours": [
+    {
+      "closes_at": 1080,
+      "opens_at": 540,
+      "weekday": 1
+    }
+  ],
+  "updated_at": 1790000000000000
+}

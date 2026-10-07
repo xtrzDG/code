@@ -1,0 +1,1697 @@
+# Assistant Workshop — owner cabinet (web)
+
+The owner cabinet of the AI front-line assistant and its public landing page:
+the product, prices by country and FAQ at `/`, sign-in by phone (any country)
+or e-mail, businesses, "Create an AI assistant" (a full-screen tunnel of eight
+questions ending in a live assistant; see [Create an AI assistant](#create-an-ai-assistant)),
+then five calm sections (Overview, Inbox, Bookings, Assistant, Settings; see
+[Navigation](#navigation)) and the platform admin. It installs as an app (manifest, icons, service worker,
+offline page).
+Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4.
+Interface languages: Georgian (`ka`), Russian (`ru`), English (`en`), Hebrew (`he`,
+right to left) and German (`de`); Hebrew and German are drafts awaiting a
+native speaker's review.
+Colour themes: dark (the default), light and the system's setting.
+
+The browser never talks to the Python API directly and never sees the bearer
+token: every call goes through the cabinet's own route handlers (a
+backend-for-frontend), which keep the token in an httpOnly cookie.
+
+## Run
+
+Requirements: Node 22.12+ and npm 10; the backend from the repository root.
+
+```bash
+# 1. the API (repository root), in-memory storage, login codes printed to its log
+uv sync
+APP_ENV=development uv run uvicorn app.main:create_application --factory --port 8000
+
+# 2. the cabinet
+cd web
+cp .env.example .env.local      # BACKEND_URL=http://localhost:8000
+npm ci
+npm run dev                     # http://localhost:3000
+```
+
+Sign in with any mobile number of a supported country (or an e-mail); in
+development the 6-digit code appears in the API log
+(`Login code 123456 via … Code logging is for development only.`).
+
+### Environment
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `BACKEND_URL` | `http://localhost:8000` | Base URL of the Python API, used only on the server (route handlers, proxy, Server Components). |
+| `COOKIE_SECURE` | `true` in production | `false` serves the session cookie without `Secure` (a production build over plain HTTP). |
+| `SITE_URL` | the request's own address | Public address of the site (`https://app.example.com`): the canonical links, hreflang alternates, `sitemap.xml`, `robots.txt` and structured data of the public pages name it. Set it in production: without it the address comes from the request's `Host` header. |
+| `TRUSTED_PROXY_HOPS` | `0` | How many right-most `X-Forwarded-For` entries the cabinet's own proxies add (Render: `1`). Only those are forwarded to the API; the rest of the header comes from the browser and could be forged. `0` forwards no client address. |
+| `SENTRY_DSN` | none | Sentry project of the cabinet's errors (server and browser). Empty: nothing is sent. Browser errors go through the cabinet's own `/api/monitoring` (no CSP or ad-blocker trouble; the browser never sees the DSN), at most 120 envelopes a minute per server. Events carry no request, cookies, user or breadcrumbs, and e-mails and phone numbers in error texts are masked (`src/lib/monitoring`). The browser SDK is downloaded only after the first error. |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.05` | Share of server requests traced in Sentry (0 to 1). |
+| `APP_RELEASE`, `RENDER_GIT_COMMIT` | none | The deployed build in error reports; Render sets `RENDER_GIT_COMMIT` itself, `APP_RELEASE` names it on other platforms. |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | none | Build time only (CI on `main`): with the token, `next build` uploads the source maps to that Sentry organization and project for the release `APP_RELEASE` and deletes them from the build; without it the build is unchanged (`src/lib/monitoring/sourceMaps.ts`, `docs/operations/observability.md`). |
+| `PSEUDO_LOCALE` | off | `true` serves the pseudo-locale `en-XA` (English accented, 40 % longer, in brackets) to a browser whose `aw_locale` cookie is `en-XA`, and its right-to-left twin to `ar-XB`; for development and the overflow test, never in production. See [Translations](#translations). |
+
+Behind a reverse proxy, run the API with
+`--proxy-headers --forwarded-allow-ips=<address range of this web server>` (never
+`*`): the cabinet forwards the client address its proxies vouch for
+(`TRUSTED_PROXY_HOPS`), so the audit log keeps the client's address.
+
+## Scripts
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` / `build` / `start` | Next.js development server, production build, production server |
+| `npm run lint` | ESLint (`eslint-config-next` + strict project rules), zero warnings allowed; every file in `src/` and `e2e/` has at most 300 lines (`max-lines`; the generated `schema.d.ts` and `*.generated.ts` are exempt) |
+| `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
+| `npm run check:intl` | Fails when this Node lacks full ICU or cannot format Georgian, Russian and English (dates, plurals, relative time, lists); CI runs it before the build, and the cabinet's image before `next build` |
+| `npm test` | Vitest: the `unit` project (`src/**/*.test.ts` and the e2e suite's own helpers `e2e/**/*.test.ts`, in Node) and the `components` project (`src/**/*.test.tsx`: React components in jsdom with Testing Library and user-event; helpers in `src/test/`). Property tests (`*.property.test.ts`, fast-check) run with a fixed seed; `FC_SEED=<n>` replays another |
+| `npm run knip` | Unused files, exports and dependencies (`knip.config.ts`); CI fails on any |
+| `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
+| `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |
+| `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file |
+| `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
+| `npm run gen:currencies` | Regenerate `src/lib/currencyDigits.generated.ts`: the digits after the decimal point of every currency, from the backend's CLDR data (Babel). Money is converted between minor and major units with this table, not with the browser's Intl data, which differs between browser versions. A backend test fails when the file is stale. |
+| `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
+
+All of `npm run lint && npm run typecheck && npm test && npm run build` must pass
+(CI job "web-checks" runs the checks with `npm run knip`, job "web-build" builds
+next to it and keeps the build); the CI job "e2e" then runs `npm run e2e` in
+eight shards that start that build (`docs/operations/ci.md`).
+
+## End-to-end tests
+
+`web/e2e/` drives the built cabinet in Chromium against the real Python API:
+
+```bash
+cd web
+npx playwright install chromium   # once (CI: --with-deps)
+npm run e2e                       # builds the cabinet, starts API + cabinet, runs e2e/*.spec.ts
+E2E_SKIP_BUILD=1 npm run e2e      # reuse the last `next build`
+npm run e2e -- onboarding         # one file
+E2E_SHARD=2/8 npm run e2e         # one CI shard's spec files
+npm run e2e:durations             # measure every spec again (e2e/durations.json)
+```
+
+- `e2e/playwright.config.ts` starts the API from the repository root
+  (`uv run uvicorn …`, `APP_ENV=development`, in-memory storage, login-code
+  providers blanked, `SEED_DEMO_DATA=true`) with its output in
+  `e2e/.artifacts/api.log`, and the cabinet with `next build && next start`.
+  Each run starts with only the demo businesses; every test other than
+  `e2e/live.spec.ts` signs up its own owner. `PLATFORM_ADMIN_EMAILS` names
+  one platform admin (`PLATFORM_ADMIN_EMAIL` of `e2e/support/env.ts`), whom
+  `e2e/encryption-keys.spec.ts` signs in once per worker.
+- Sign-in codes are read from that log (`e2e/support/login-codes.ts`); the
+  `account` and `owner` fixtures (`e2e/support/fixtures.ts`) sign up through
+  the API and put the session cookie into the browser, so only the sign-in
+  tests type codes.
+- The console-clean gate (`e2e/support/consoleClean.ts`, automatic): a test
+  fails when any page of its browser context throws or logs a console error
+  it did not accept (`consoleErrors.allow(/…/)` accepts one a test provokes
+  on purpose), and always on a hydration failure (React #418/#423), which
+  `allow` cannot hide. `cyrillicCheck` (on by default; `E2E_CYRILLIC_CHECK=0`
+  or `test.use({ cyrillicCheck: false })` turns it off) also fails an
+  English or Georgian page that shows interface text in Cyrillic at the end
+  of a test: an untranslated text. User content is left out: elements
+  marked `data-user-content`, form fields, code and text marked with
+  another `lang`. The cabinet marks the business's, its team's and its
+  customers' own words (names, messages, knowledge, notes, quick replies,
+  topic labels…) where it renders them: `CustomerName`, the transcript, the
+  inbox row and the UI kit's `UserContent`; a translated sentence that
+  names such words ("Handled by {name}") keeps its placeholder in `t(key)`
+  and shows the value with `UserSentence` (or, from a hook or a model, a
+  `SentenceWithUserValues` of `src/i18n/userValues.ts`, which toasts take
+  as a title), so the sentence itself is still checked. Never mark the
+  interface's own text.
+- The cabinet's server runs with `TZ=UTC` while the browser reads in
+  Europe/Berlin; the `tz-tbilisi` project (`e2e/tour-*.spec.ts` with
+  `e2e/support/tour.ts`, run by `npm run e2e` like the rest) opens every
+  route of the screenshot tour from
+  Asia/Tbilisi, first without and then with the remembered reader's zone, so
+  a date formatted without its zone fails on the hydration error.
+- A business page keeps its live event stream open, so
+  `waitForLoadState("networkidle")` never comes there: wait with
+  `waitForNetworkQuiet(page)` (`e2e/support/network.ts`, every other request
+  of the page settled).
+- The browser prefers reduced motion (`contextOptions.reducedMotion`), so
+  animations end at once and the landing shows its still hero; a test about
+  motion opts out with `test.use({ contextOptions: { reducedMotion: "no-preference" } })`.
+- Selectors are roles and labels with texts from the cabinet's own
+  dictionaries (`e2e/support/messages.ts`), so rewording a text does not break
+  a test. Prefer `getByRole`/`getByLabel`; avoid CSS classes.
+- Scenarios that need the voice platform or Meta (a call recording, a WhatsApp chat past its
+  24-hour window) answer the card's own BFF calls with `page.route`
+  (`e2e/card-recordings.spec.ts`, `e2e/card-whatsapp.spec.ts`, served by
+  `e2e/support/conversation-card.ts`); the widget tests run the API's
+  `/widget.js` on a fake host site (`e2e/support/widget-site.ts`).
+- Fixtures: `newOwner` has a business whose assistant does not exist yet (the
+  cabinet shows "Create an AI assistant"; its setup is the tunnel at
+  `/b/{id}/setup`); `owner` is the same with its first
+  version built through the API (`createAssistant`), so the five sections are
+  open.
+- The cabinet's service worker is blocked (`serviceWorkers: "block"`): it
+  would take requests out of reach of `page.route()`; `e2e/pwa.spec.ts` opts in.
+- Scenarios: the landing page (prices of a chosen country, theme and language
+  kept after a reload, signed-in users sent to their businesses, the still
+  hero with reduced motion and the 3D one without, every section revealed),
+  the public site (`e2e/public-site.spec.ts`, `public-demo.spec.ts`,
+  `public-a11y.spec.ts`: the live demo answers in sandbox, the value
+  calculator, niche pages in every cabinet language with hreflang and JSON-LD, every
+  footer link opens, the legal pages' draft banner, the sitemap, no raw
+  "$1,145.97" conversions, axe in both themes),
+  sign-in with a German number and with e-mail (and a wrong code),
+  the whole "Create an AI assistant" tunnel on a desktop and on a phone, from
+  sign-in to a live assistant and the cabinet (`e2e/setup-tunnel.spec.ts`, the
+  launch's progress played by the test since the suite's API has no language
+  model), a reload and a later visit continuing where the owner left off,
+  a business in Turkey with Turkish, English and Arabic, a failed creation
+  keeping every answer, the business profile's section editors (`e2e/profile-edit.spec.ts` in
+  ru/en/ka: a new closing time saves itself and the banner counts one change;
+  `e2e/profile-sections.spec.ts`), every section and page from
+  the sidebar (`e2e/navigation.spec.ts`: the open section's pages under it,
+  Advanced, folding the sidebar, the user menu) and on a phone from the tab
+  bar and "More" (no sideways scrolling at 390 px, 44 px targets), the setup
+  invitation before the assistant exists and the cabinet after
+  (`e2e/setup.spec.ts`), what staff see and owner pages explaining themselves
+  (`e2e/roles.spec.ts`), old addresses redirected with their query
+  (`e2e/redirects.spec.ts`), the manifest, icons, service worker and offline
+  page (`e2e/pwa.spec.ts`), an axe audit of every page in both themes and on
+  a phone (`e2e/a11y*.spec.ts`), switching the interface language ru/ka/en
+  from the user menu, the website chat demo page of the API, going back to a
+  section showing its data from the cache (no skeleton, no spinner), a
+  request's status changing at once on its conversation, rolling back on a
+  500 and being undone (`e2e/instant.spec.ts`, the request served by
+  `e2e/support/leads.ts`), the team inbox (`e2e/inbox.spec.ts`: a staff
+  member opens a notification's link on a 390 px phone, replies without
+  scrolling and resolves the handoff; two people take a conversation at
+  once and the second is told; notes never reach the customer's chat or the
+  transcript; the demo restaurant's helpers in `e2e/support/demo.ts`), a
+  customer who needs a person appearing in an open tab without a reload, with
+  its badge, the tab title count and a toast elsewhere (`e2e/live.spec.ts`:
+  the demo restaurant's real widget API and event stream), every page in
+  the pseudo-locale at 1440 and 390 px without sideways scrolling or a cut
+  control (`e2e/pseudo-locale-ltr.spec.ts` and `-rtl.spec.ts`, both from
+  `e2e/support/long-texts.ts`; the suite starts the cabinet with
+  `PSEUDO_LOCALE=true`), a 45-minute service performed by one master added
+  in the knowledge base, booked by hand and listed with its value, and the
+  demo salon counting clients, not guests (`e2e/services.spec.ts`), a
+  page's "?" opening its guide in a drawer (links between guides in place,
+  Back, the support team's Telegram), the inbox tip shown once across
+  reloads, the public help center's search, "What's new" with its dot in
+  the account menu, the phone's "?" in the top bar and an axe audit of the
+  help center and status page (`e2e/help-center.spec.ts`), an outage
+  announced on the System page reaching the public status page and every
+  cabinet until it is resolved, a notice hidden by an owner
+  (`e2e/status-page.spec.ts`; the suite's API has `SUPPORT_TELEGRAM` and
+  `SUPPORT_EMAIL`), and the owner's exports: tables as CSV from Settings →
+  Privacy, Bookings and the Inbox with their filters, the full export built
+  by the worker and downloaded through one-time links (asked for per
+  download, bound to the owner's session, three downloads at most), no
+  export buttons for staff (`e2e/data-exports.spec.ts`), the settings that
+  save themselves (`e2e/settings.spec.ts`: the time zone in Russian saved
+  without a button and kept after a reload, stale saves rebased), and times
+  that read "08:00" with no AM/PM in Russian and Georgian (the tunnel's
+  hours in `e2e/setup-tunnel.spec.ts`, the new booking in
+  `e2e/booking-time.spec.ts`).
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `E2E_API_PORT` / `E2E_WEB_PORT` | `8010` / `3010` | Ports of the API and the cabinet under test |
+| `E2E_SKIP_BUILD` | — | `1`: start the existing `.next` build |
+| `E2E_SHARD` | — | `N/M`: run only shard N of M (`e2e/support/shards.ts`: spec files go, longest first, to the shard with the least measured work, by `e2e/durations.json`) |
+| `E2E_CYRILLIC_CHECK` | on | `0`: no test fails on interface text in Cyrillic on an English or Georgian page |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` | — | A Chromium already on the machine instead of Playwright's download (the suite pins `@playwright/test` 1.63.0, which downloads Chromium 153; it also drives the Chromium 141 of older machine images) |
+
+Failures leave screenshots and traces in `e2e/.artifacts/results/`
+(`npx playwright show-trace <trace.zip>`); CI uploads them with the HTML report
+and the API log as the `e2e-report-<shard>` artifact.
+
+CI runs the suite in eight shards, each with its own API, balanced by the
+seconds each spec file takes on CI's runners (`e2e/durations.json`, written
+by Playwright's JSON reporter; an idle four-core machine measures about
+the same); a spec without a measurement counts as the mean, and
+`e2e/support/shards.test.ts` fails until it is measured or while a shard
+would run over its budget. After adding, splitting or slowing down specs:
+
+```bash
+npm run e2e:durations                         # the whole suite, rewrites e2e/durations.json
+npm run e2e:durations -- inbox.spec.ts        # these files; the other entries stay
+npm run e2e:durations -- --from report.json   # JSON reports of a CI run (e2e-report-* artifacts)
+```
+
+A spec file over half a shard's budget is split into several files (as
+the route tour `tour-*.spec.ts`, the section audits `a11y-sections-*.spec.ts`
+and the long texts `pseudo-locale-*.spec.ts` are); `docs/operations/ci.md`
+has the budgets and the CI layout.
+
+A test that passes only on a retry (CI retries once) is flaky: the reporter
+`e2e/reporters/flakyReporter.ts` writes it to `e2e/flaky.json` and the job
+summary. On `main` a flaky test that `e2e/flaky-known.json` does not list fails
+the job: open an issue and add `{"file", "title", "issue"}` there, or fix it.
+
+## Structure
+
+```text
+web/
+  openapi.json                 API description exported from the backend (generated)
+  e2e/                         Playwright end-to-end tests (playwright.config.ts, *.spec.ts, support/)
+  public/                      sw.js (the service worker: offline page, build files, push), icons/
+                               (the installed app's PNG icons, `npm run gen:icons`)
+  scripts/                     measure-first-load.mjs, render-app-icons.mjs, check-intl.mjs,
+                               rtl-codemod.mjs, translation-status.mjs
+  content/changelog/           "What's new": one entry per file (key = the day it shipped + a name,
+                               title and paragraphs in en/ru/ka), listed in index.ts
+  src/
+    proxy.ts                   runs before pages: sign-in redirects, current path header, language cookie;
+                               the hosted chat page's lookup and policy (server/hostedChatProxy.ts)
+    app/                       routes (App Router)
+      layout.tsx               <html lang data-theme> from the cookies, I18nProvider, ThemeProvider,
+                               MotionProvider, ToastProvider; the browser's theme-color
+      globals.css              design tokens (colours of both themes, radii, shadows), `dark:` variant;
+                               imports src/styles/motion.css, landing.css and shell.css
+      manifest.ts              /manifest.webmanifest: the installed app (name in the interface language,
+                               colours of the theme, icons); apple-icon.png for iOS home screens
+      offline/                 the page the service worker shows without a connection
+      help/                    the public help center (see Help and support): page.tsx (topics and
+                               search), [slug]/ (one article), whats-new/ ("What's new", marks it read)
+      status/                  the public status page: overall state, announcements, five parts of the
+                               platform with 90 days of history, past incidents
+      c/[slug]/                the public hosted chat page and its default privacy notice (/privacy),
+                               for customers: their language, system colours, src/styles/hostedChat.css
+                               and, as a link in bio, the business's hours, address and Book beside the
+                               chat (HostedInfoPanel, src/styles/hostedInfo.css)
+      r/[token]/               a guest's booking page behind the link of a written confirmation (no
+                               account): details, .ics, cancel, move to a free time, "Write to us"; the
+                               guest's language (lib/bookingPage/), system colours (bookingPage.css)
+      */template.tsx           business, admin, login, businesses: each page rises in (PageTransition)
+      page.tsx                 "/": signed-in users go to /businesses, visitors to the public site in
+                               their language (/en, /ru, /ka; the query is kept)
+      [locale]/                the public site, one address per language (lib/publicSite/paths.ts; the
+                               proxy renders the page in its path's language): page.tsx the landing page,
+                               for/[niche]/ a kind of business from the niche catalog, terms/, privacy/,
+                               dpa/, security/ (texts from GET /v1/legal/*, a draft banner while
+                               LEGAL_TEXTS_FINAL is off, noindex until then), contact/ (operator and
+                               support); every page has its canonical address, hreflang alternates and
+                               JSON-LD. /privacy and the other legal pages without a language redirect
+      _landing/                the public site's parts: LandingPage (the landing's sections in order),
+                               Hero with the live sandbox demo (DemoChat, useDemoChat, DemoTranscript;
+                               DemoSample when no demo answers), Facts, Demo (an example conversation),
+                               Steps, Features, Channels, Niches, Roi (+ roi/: the value calculator),
+                               World, Pricing (+ PlanCard, CountryPicker: honest prices), SetupOptions
+                               (self-serve against done-for-you), Testimonials (src/content/
+                               testimonials.ts, hidden while empty), Faq, FinalCta, header, footer
+                               (legal links, kinds of business); niche/ and legal/ (the other public
+                               pages); publicMetadata.ts, JsonLd; Section (heading reveal, depth glow);
+                               scene/ (the lazy react-three-fiber hero: HeroScene, AssistantOrb +
+                               orbShader, ChannelBubbles, SceneAtmosphere, sceneTextures, scenePalette);
+                               landingData.ts reads the public catalog and the demos on the server
+      robots.ts, sitemap.ts    robots.txt (the cabinet is private) and sitemap.xml (every public page in
+                               every language with its alternates; legal pages once they are final),
+                               both on SITE_URL
+      login/                   sign-in by phone (country picker, only the code channels that work now)
+                               or e-mail, 6-digit code: LoginScreen (layout), _components/ (DestinationForm,
+                               PhoneFields, CodeForm, SecondStepForm: the authenticator or recovery code,
+                               an admin's first setup), _lib/ (useLoginFlow, useSecondStep, useDestination,
+                               loginTexts, loginOptions)
+      account/security/        Account → Security: the authenticator app (QR, recovery codes once,
+                               turning it off), new recovery codes, how this session is signed in
+      businesses/              the list of businesses and "New assistant" (an account without one goes
+                               straight to /create); a business still being set up opens its tunnel
+      create/                  "Create an AI assistant" for a new business: the tunnel's first two
+                               screens (components/setup/create/), then /b/{id}/setup
+      b/[businessId]/          one business: layout.tsx loads it + the user and renders the frame
+                               (the five sections, or "Create an AI assistant" before the assistant
+                               exists); /b/{id} redirects to its overview (next.config.ts)
+        setup/                 "Create an AI assistant" for an existing business: the full-screen tunnel
+                               (components/setup/flow/SetupTunnel), ?step= opens a screen
+        onboarding/            the old setup address: into the tunnel before the assistant exists,
+                               to assistant/profile after (an old ?step= opens the section that edits it)
+        overview/              layout.tsx: the Overview frame (tabs for owners); the dashboard: the owner's
+                               value hero (bookings ≈ money, after hours, staff time, average check edited
+                               in place), next step, staff "Your queue today", KPI tiles with change chips
+                               for a period (?period=), daily trend chart (plain SVG), package meters,
+                               breakdowns
+          reports/             owners: the month so far, stored monthly/weekly/daily reports (?kind=,
+                               ?report= opens one from a digest's link), the owner's summaries
+        inbox/                 the team inbox (see [Inbox](#inbox)): layout.tsx keeps the list (views
+                               Needs a person, Requests, Mine, Unassigned, All with live counts, search
+                               and filters, a sheet on phones) beside the conversation; page.tsx when
+                               none is open; [conversationId]/ the phone-first conversation (folded
+                               header, transcript, sticky reply box with Resolve, Call, Book, quick
+                               replies after "/", assign menu, notes and details in a panel or sheet)
+        bookings/              server-paged bookings by day ("show more") with each booking's service
+                               and value; manual booking with a service (its length filled in, only
+                               those who perform it offered, the value shown before booking) and free
+                               slots (whole-day mode), details, edit, move, cancel; party sizes in the
+                               niche's words (guests, clients, participants: lib/partyNoun.ts)
+        assistant/             layout.tsx: the Assistant frame (live or not, "Apply changes", tabs);
+                               page.tsx: the test chat ("Try it": "What customers get now" or "With
+                               your changes"; `?version=…` from History adds that update)
+          knowledge/           items (layout.tsx: pill tabs; server-paged, filtered by the API; a
+                               service's or package's length, break and who performs it, a room
+                               type's rooms and seasonal nightly rates: lib/offers.ts,
+                               lib/knowledge/offerFields.ts, seasons.ts) + questions/ (unanswered,
+                               server-paged), import/ (menu photo, PDF or link; discard a whole batch),
+                               resources/ (bookable resources with their services or room type,
+                               special days: lib/resources.ts, lib/specialDays.ts; calendar/: a
+                               resource's calendars sheet, lib/resourceCalendar.ts)
+          profile/             "Business profile": six section cards (what each holds, what is left to add);
+                               [section]/ opens the tunnel's screen of that section in its edit mode
+                               (components/setup, mode="edit"), saving as the owner types
+          channels/            chat channels (with the platform's last error; WhatsApp's template for
+                               staff replies), website chat code and look, call forwarding, Google
+                               Calendar (state, last sync), staff Telegram link; website/, calls/, share/:
+                               the phone's pages of their own for the chat's look and code, forwarding
+                               codes and sharing (the same components)
+          versions/            Advanced → History: every update, versions/[versionId]/ (go-live checklist,
+                               autotests with live progress, the owner's failed checks named by their
+                               question, publish, rollback; publishing without checks is a platform
+                               admin's tool behind the typed business name)
+          checks/              Advanced: "My checks" (the owner's questions every "Apply changes"
+                               asks, "Check now" against what customers get now, `#check-…` lands on
+                               one; dialogs and hooks in components/teaching, rules in lib/teaching*)
+        settings/              layout.tsx: the Settings frame and tabs; page.tsx: business (old
+                               #team-style links move to their page), team/, notifications/,
+                               quick-replies/ (owners: the replies staff insert with "/", a text per
+                               language, variables), billing/ (plan, trial, usage, plans of the
+                               country, invoices, payment), privacy/, audit/
+      admin/                   platform admin (System also holds the status page's announcements:
+                               AnnouncementsCard, AnnouncementDialog, _lib/announcementForm);
+                               clients (filters, sorts) and clients/[businessId]/;
+                               security/ (encryption keys: the key ring and re-encryption runs)
+      api/
+        auth/start|verify|logout|expired   sign-in route handlers (cookie handling);
+                               auth/mfa/verify|enroll: the second step (server/sessionOpening.ts)
+        backend/[...path]      BFF proxy: /api/backend/v1/... -> BACKEND_URL/v1/... (JSON, and audio
+                               of call recordings streamed with its type and length; Range and
+                               If-Range go up, Accept-Ranges and Content-Range come back; the live
+                               event stream passed on chunk by chunk, src/server/eventStream.ts)
+        locale                 switch the interface language (cookie + PATCH /v1/me)
+    api/                       typed API access
+      schema.d.ts              generated by openapi-typescript (do not edit)
+      types.ts                 named types: Schema<"BookingView">, RequestBody<path, method>, aliases
+      client.ts                `api`: openapi-fetch client for Client Components (via the BFF)
+      queryCache.ts            the client data cache (one entry per key, read through
+                               useSyncExternalStore) and `invalidate(prefix)`; queryKey.ts, querySnapshot.ts
+      queryKeys.ts             every query key, by section: queryKeys.leads.list(businessId, tab, test)
+      useQuery.ts              useQuery (stale-while-revalidate), prefetchQuery
+      useCursorPage.ts         paged lists ({items, next_cursor}) with "show more", prefetchCursorPage
+      useMutation.ts           useMutation (optimistic change, rollback, invalidation); mutations.ts
+      paging.ts                page sizes, reload length, appending pages
+      sectionQueries.ts        the first queries the sidebar prefetches (shared with the screens)
+      events.ts                LiveEventStream: the business's event stream (SSE over fetch),
+                               reconnecting with backoff and Last-Event-ID; eventStreamParser.ts
+      liveEvents.ts            event names and which query keys each event invalidates;
+                               liveInvalidation.ts batches them (hidden tabs catch up on return)
+      catalog.ts               useCountries / useCountryProfile / useNiches / useNiche / usePlans
+      errors.ts                ApiError, error codes, localized messages
+      result.ts                unwrap(): data or a thrown ApiError
+      auth.ts                  startLogin / verifyLogin / verifySecondStep (browser)
+      stepUp.ts                "Confirm it is you": a 401 step-up challenge waits for the dialog
+                               (components/security/StepUpDialog, in the root layout), then the
+                               request runs again
+    server/                    server-only code
+      api.ts                   getServerApi(), serverFetch(), getCurrentUser(), getBusiness()
+      theme.ts                 getTheme(): the aw_theme cookie of the request
+      backend.ts               BACKEND_URL, cookies, header allow-lists, CSRF check
+      relay.ts                 streaming relay used by the route handlers
+      eventStream.ts           the live event stream through the BFF (no time limit, no buffering)
+      sessionCookie.ts         the __Host- session cookie (read, set, clear, migrate)
+      contentSecurityPolicy.ts the per-page nonce and Content Security Policy (and the hosted chat's stricter one)
+      hostedChat.ts            the hosted chat page's lookup (GET /v1/public/chat/{address}) and its hand-over header
+      managedBooking.ts        the booking page's lookup (GET /v1/public/bookings/{token}) and its language
+      bodyLimits.ts            request body limits of the BFF (413)
+    i18n/                      config.ts (locales, negotiation), translate.ts, server.ts, client.tsx
+      messages/en.ts ru.ts ka.ts he.ts de.ts   shared texts (common, auth, nav, theme, errors …); English is the reference
+      messages/onboarding/     the business profile's texts (profileEdit.*), one file per language
+      messages/landing/        the landing page's texts, one file per language
+      messages/sections/       section texts, spread into every dictionary: insights.ts (dashboard, conversations,
+                               bookings, leads, handoffs), content.ts (knowledge, assistant),
+                               workspace.ts (channels, billing, settings, admin), shell.ts (navigation,
+                               account, setup, app); each composes one file per namespace and language
+                               from its folder (insights/bookings.ru.ts)
+    components/
+      ui/                      the UI kit (import from "@/components/ui"): Button, ButtonLink, Input,
+                               Select, Textarea, Checkbox, Radio, Field, Fieldset, Card, Table, Badge,
+                               Modal, Drawer, useModalDialog, ConfirmDialog (optionally a typed
+                               confirmation), InlineError, Toast (with an Undo action), EmptyState,
+                               ErrorState, Skeleton kit (Skeleton, SkeletonText, SkeletonRows,
+                               SkeletonCard, SkeletonCardList, SkeletonPageHeader, LoadingRegion),
+                               Spinner, LoadingBlock, PageHeader, Alert, TimeField, DateField,
+                               DateTimeField (the cabinet's clock and calendar, see Forms)
+      forms/                   settings forms that save themselves: useAutosaveForm (the save loop in
+                               autosaveEngine.ts), SavePill (a field's "Saved"), AutosaveHint (the
+                               form's line), saveTracking (the counter SaveTracker shares)
+      motion/                  motion primitives (import from "@/components/motion"): MotionProvider,
+                               Reveal, FadeIn, Stagger/StaggerItem, PageTransition, TiltCard/TiltLayer,
+                               AnimatedNumber, AnimatedPresenceList, MagneticButton, Parallax
+      icons/                   the one icon set (import from "@/components/icons"): interface, sections,
+                               brands (channel marks shared with the 3D scene: lib/channelMarks.ts)
+      shell/                   the frame (see Navigation): ShellFrame, Sidebar (+ SidebarNav, UserMenu,
+                               AccountPanel), PhoneTopBar, PhoneTabBar, MoreSheet, SectionFrame (a
+                               section's title and tabs), BusinessShell (sections, roles, badges, the
+                               setup gate; the tunnel is drawn without it), setup/ (SetupEntry, SetupHero,
+                               SetupStages), OwnersOnlyPage,
+                               LiveEvents (the live stream, attention counts, tab title count, toast
+                               and chime), LiveStatus ("Live · Updated just now"), ChimeSetting,
+                               ServiceWorker (registration), useInstallPrompt,
+                               AdminShell, TopBar (pages outside a business), Brand, SignOutButton
+      setup/                   "Create an AI assistant" (see the section of that name): the frame
+                               (TunnelFrame, TunnelBackdrop, TunnelRail, TunnelHeader, TunnelStage,
+                               StepScreen, SaveTracker, useAutosave, useTunnelPlace, QrImage), create/
+                               (/create), flow/ (/b/{id}/setup: SetupTunnel, the step context, saving),
+                               steps/ and fields/ (the first two screens), offer/, hours/, people/,
+                               channels/, try/, launch/ (useStagedApply: "Apply changes" as staged
+                               progress, shared with the cabinet), finale/
+      assistant/               "Apply changes" in the daily cabinet: ApplyChangesProvider (in
+                               BusinessShell, owners), PendingChangesBanner over every page ("2 changes
+                               are not with your customers yet · Review and apply"), ApplyChangesSheet
+                               (the changes in the owner's words, the owner's checks not asked yet,
+                               drafts with "Discard", the launch's stages, why it stopped with the page
+                               that fixes it; a failed check of the owner's named by its question with
+                               "Fix the answer" and "Open the check": OwnerCheckFailure), usePendingChanges
+      security/                two-factor sign-in: AuthenticatorSetup, TotpQrCode (drawn in the browser),
+                               RecoveryCodesPanel, OneTimeCodeField, StepUpDialog (its StepUpForm loads
+                               only when a confirmation is asked for)
+      theme/                   ThemeProvider (useTheme), ThemeSwitcher (dark / light / system),
+                               useResolvedScheme (the scheme showing now, for the WebGL scene)
+      business/                BusinessContext (useBusiness, useBusinessFormat, isSetUp), status badges,
+                               pageMetadata (page titles), SectionLoading (a page's loading.tsx)
+      value/                   what the assistant is worth (dashboard and Reports): valueModel (changes,
+                               staff time, whole money, report periods), DeltaChip (a change in words for
+                               screen readers), AverageCheckEditor (in place), useValueQueries
+      insights/                shared by dashboard … handoffs: status badges and label maps, segmented
+                               control, customer-message dialog, LoadMore, business-local dates, useToday (moves on at the business's
+                               midnight), replaceUrlQuery, useAutoReload (lists whose every load
+                               is audited pass `intervalMs: null` and reload only on return)
+      content/                 shared by knowledge and assistant: SectionTabs (route tabs with a gliding
+                               marker; pills inside a section frame), Tabs, Switch
+      knowledge/websiteImport/ WebsiteImportPanel (import from the business's website: address, live
+                               progress, what was found; `bare` for a host's card, the drafts go to
+                               the host's review through `onReview`), useWebsiteImport, its form,
+                               progress and outcome
+      workspace/               shared by channels, billing, settings, admin: CopyButton,
+                               UsageMeter, Facts, OwnerOnly notes, channel names,
+                               MarkdownDocument (renders the DPA text without HTML), helpers (zoned
+                               dates, usage)
+      help/                    help and support: HelpProvider + HelpDrawer (an article over the page),
+                               HelpLink (the "?", put beside a page's title through PageHelp in the UI
+                               kit), HelpMarkdown, CoachMarkSlot (the one-time tips), HelpSupportSection
+                               and ChangelogDot (account menu), SupportContacts, AnnouncementBanner,
+                               PublicPageFrame (/help and /status), useHelp, usePlatformStatus
+      BusinessSwitcher.tsx LanguageSwitcher.tsx CountrySelect.tsx
+    lib/                       pure helpers with unit tests (*.test.ts): navigation (pages, paths,
+                               where a path is, safeNextPath), sections (the five sections, their pages,
+                               roles, titles), legacyRoutes (old addresses), inboxBadges, shellPreferences
+                               (sidebar cookie), installPrompt, serviceWorker.test.ts (public/sw.js), format (Intl, money units),
+                               intl/ (Intl factories; Georgian dates, numbers, lists from CLDR tables), countries (phone/country),
+                               hours (opening hours), wizard/ (niche answers, offers, FAQ), knowledge/
+                               (kinds, item form, menu import, websiteImport), resources, assistant/ (versions,
+                               autotests, go-live, test chat), validation (zod), classMerge (className
+                               overrides), cn, theme (cookie, theme colours), landing (country guess,
+                               plan prices), motion (motion tokens), motionMath (springs, tilt, count-up),
+                               heroScene (3D hero: device check, orbits, camera), channelMarks, tunnel/
+                               (the tunnel's steps and resume place, launch stages, the /create
+                               draft, offer rows, booking choices, contacts, test questions, depth
+                               and confetti math), help/ (helpTopics: which article a page opens, the
+                               tips; helpMarkdown: the articles' Markdown as data; changelog: unread
+                               entries; platformStatus: colours, good days, the banner's choice)
+    styles/                    motion.css (motion tokens, keyframes, press/lift/shimmer/dialog motion),
+                               landing.css (backdrop, hero entrance, the still hero picture), shell.css
+                               (the phone sheet, the user menu, the setup entry's running light),
+                               tunnel.css (the tunnel's rings, glow, burst and rail)
+```
+
+## Navigation
+
+The cabinet is six places, the same on every screen size
+(`src/lib/sections.ts` is the one table; the sidebar, the phone tab bar, the
+section tabs, page titles and the e2e suite read it):
+
+| Section | Pages (`/b/{id}/…`) | Who |
+| --- | --- | --- |
+| Overview | `overview?period=…` (dashboard), `overview/reports?kind=…&report=…` | owners; staff: the dashboard only |
+| Inbox | `inbox[?view=needs_person\|requests\|mine\|unassigned\|all]` (one page, its views; `needs_person` without a query), `inbox/{conversationId}` | owners, staff |
+| Bookings | `bookings` | owners, staff |
+| Customers | `customers?q=…&tag=…&show=vip\|blocked` (the list), `customers/{contactId}` (one customer), `customers/segments` | owners, staff (phones masked unless an owner allows them); Segments: owners |
+| Assistant | `assistant` ("Try it", the test chat), `assistant/knowledge[/questions\|/import\|/resources]`, `assistant/profile[/business\|/place\|/offer\|/hours\|/people\|/rules]` ("Business profile"), `assistant/channels[/website\|/calls\|/share]` (the three are a phone's pages of their own); under Advanced `assistant/versions[/{versionId}]` and `assistant/checks` | staff: "Try it" only |
+| Settings | `settings` (business), `settings/team`, `settings/notifications`, `settings/quick-replies`, `settings/calls`, `settings/integrations`, `settings/billing`, `settings/privacy`, `settings/audit` | owners; staff: Notifications only (their own devices, events and quiet hours) |
+
+- **Sidebar** (large screens): the mark, the business switcher (it keeps the
+  page when switching), the sections with icons and a marker that glides to
+  the open one, the open section's pages under it (Advanced as a disclosure),
+  and the user menu at the bottom: who is signed in, the interface language,
+  the theme, "Install the app", all businesses, the platform admin, sign out
+  (a native popover). The arrow folds the sidebar to a rail of icons; the
+  choice lives in the `aw_sidebar` cookie, so the server draws it right.
+- **Phones**: a calm top bar (the mark, the business, where you are), the
+  bottom tab bar (Overview, Inbox, Bookings, Assistant, More; places of at
+  least 56 px, above the home indicator) and "More", a sheet with Customers,
+  Settings and their pages, the business switcher and the account panel.
+  The top bar's search button opens the command palette. An open
+  conversation takes the whole screen (no tab bar, the frame steps aside).
+  Below `lg` a page's header folds into that top bar (see
+  [Front desk on a phone](#front-desk-on-a-phone)).
+- **Section frames** (`components/shell/SectionFrame.tsx`): Assistant and
+  Settings show the section's `<h1>`, what it is for and the
+  tabs of its pages; a page's own `PageHeader` inside becomes an `<h2>` for
+  screen readers and shows only its description and actions (`SubPages`).
+- **Command palette** (`components/CommandPalette*.tsx`, `lib/commandPalette.ts`):
+  Cmd+K / Ctrl+K on any page of the frame (mounted by `ShellFrame`), or the
+  search button in the phone's top bar. With nothing typed it offers the
+  pages of the navigation; typing narrows them and, inside a business,
+  searches its customers, conversations and bookings
+  (`GET /v1/businesses/{id}/search?q=`, two characters or more, grouped).
+  The focus stays in the text box (a combobox with `aria-activedescendant`):
+  ↑/↓/Home/End move, Enter opens, Escape closes. "/" is left to the inbox's
+  own search.
+- **Roles**: staff see Overview, Inbox, Bookings, Customers and the test chat; a page
+  their role does not open (an old link to settings) explains itself
+  (`OwnersOnlyPage`) instead of failing. Platform admins see what owners see.
+- **Badges**: what waits for a person, from
+  `GET /v1/businesses/{id}/attention-counts` (counts only, not audited): open
+  handoffs and new requests on Inbox, upcoming bookings to
+  confirm on Bookings, channels in error on Assistant → Channels (owners).
+  Every live event reloads them (polled every minute only while the stream is
+  down); the tab title starts with their sum ("(3) Bookings · …"). The
+  overview's "open handoffs" tile reads the same counts.
+- **Before the assistant exists** (`business.status` is `onboarding`): the
+  sidebar holds one big "Create an AI assistant" entry, every page shows the
+  invitation (`SetupHero`: the assistant's orb among its channels in a
+  tilting card, a floor of light running towards the viewer, the three
+  stages, progress once a step is done, one button), and the setup flow is
+  the full-screen tunnel at `/b/{id}/setup` (see
+  [Create an AI assistant](#create-an-ai-assistant)). Staff read that the
+  owner is setting it up. "New assistant" in the business switcher and on
+  the businesses page opens `/create`.
+- **Old addresses** (`src/lib/legacyRoutes.ts`, 307 redirects in
+  `next.config.ts`, the query kept): `dashboard` → `overview`,
+  `conversations[/…]` and `messages[/…]` → `inbox[/…]`, `handoffs` and
+  `messages/handoffs` → `inbox?view=needs_person`, `leads` and
+  `messages/leads` → `inbox?view=requests`, `knowledge[/…]` → `assistant/knowledge[/…]`,
+  `channels` → `assistant/channels`, `billing` → `settings/billing`, `/b/{id}`
+  → `overview`; `settings#team` (a hash never reaches the server) is moved by
+  the settings page, and `onboarding?step=…` by the old setup page: into the
+  tunnel before the assistant exists, afterwards to the section of the
+  business profile that edits the step (`assistant/profile?step=…` too).
+
+### What each page does
+
+| Page | What the owner does there |
+| --- | --- |
+| Overview | What the assistant is worth (owners: its bookings times the average check, after-hours conversations, staff time saved, against the period before; the average check is edited in place), the setup guide (owners: the setup steps into the tunnel before the launch, then a test from the phone with a QR code, a second channel and the link for customers; skippable optional steps; a short "All set" card to put away; the status card stays only for an unpaid plan or a pause, and for staff), open handoffs and unanswered questions (staff: their queue of the day), KPI tiles with change chips, a daily trend chart with a table view, package minutes and dialogs (staff too, without prices), languages/channels/handoff reasons |
+| Overview → Reports | The month so far, stored monthly reports and weekly/daily digests with every number against the period before, the owner's choice of summaries (monthly, weekly, daily) |
+| Inbox | The team's one list: views Needs a person, Requests, Mine, Unassigned and All with live counts; a search and the history filters (period, status, test conversations) look through All; who handles each conversation, its notes, what waits. See [Inbox](#inbox) |
+| Inbox → a conversation | Made for a phone: the transcript under a folded header (customer, channel, who handles it; the rest in Details), what waits above it (the handoff's reason and urgency, open requests with their status), a sticky reply box with Resolve, Call and Book and quick replies after "/"; the assign menu; notes and details in a side panel (a column of their own from 1536 px, a sheet below). Calls with their summary and recording (downloaded once and audited when "Play recording" is pressed), rating, linked bookings, staff reply (after the WhatsApp 24-hour window: in the owner's approved template, or a pointer to Channels), booking for the customer with the confirmation prefilled. Model, tokens, cost and tool calls stay behind "Technical details" (open by default for platform admins) |
+| Customers | Everyone who wrote, called or booked, latest activity first: search by name, phone or ID, a tag, VIPs or blocked ones (in the address); channels, counts, last activity, the first tags; staff see `+995 ••• ••• •56` unless an owner turns on "Staff see customers' phone numbers" under the list (audited) |
+| Customers → a customer | Their standing ("Regular customer · 4 visits"), phone, channels, since when, last visit; the history across channels (conversations, bookings, requests, calls; upcoming bookings lead) with links to the conversations; tags (suggested from the business's own) and the VIP mark for anyone in the team; for owners **Block** (asks first: the assistant stops answering them and sends them nothing, their messages still reach the inbox) and the data requests moved from Settings → Privacy (export as JSON, erase after typing the name). Each opening is an audited view |
+| Customers → Segments (owners) | Saved groups by tag, last visit more than N days ago, at least / at most so many bookings and VIPs only, with a live count while editing (blocked and erased customers never belong), their customers a page at a time and **Download CSV** (headings in the interface language, step-up when the sign-in is old, audited); at most 50 per business |
+| A conversation's header | "Regular customer · 4 visits" (`GET …/contacts/{id}/standing`) under the customer's name, a link to their page; nothing for test chats |
+| Bookings | Server-paged day groups with place and order filters, manual booking with free slots (whole day), edit, confirm / complete / no-show / move / cancel and the customer text; every status change and cancellation has Undo for 5 seconds (the API takes it back within 10 minutes). Phones open on **Today** (`?view=all` is the list): today's arrivals by time with a "now" line and large Arrived / No-show buttons that wait for the start time. The calendar (`?view=day|week|nights&date=`, `components/bookings/calendar/`): **Day** puts the places booked by time in columns over their opening hours, bookings coloured by status in lanes; drag one (a finger after a long press) or focus it and use the arrows (a quarter of an hour, the next place), Enter moves it and Escape cancels; the move shows at once in every list and window, the API checks it from the start the calendar showed (409 `booking_changed`), and the toast's Undo moves it back; a click on free space opens a new booking with the date, time and place filled in. **Week** is a heatmap of how full each place is per day (one call without the bookings, not audited); a cell opens that day. **Nights** (rooms booked by the night) shows two weeks of rooms × nights with the stays as bars, moved the same way. One `GET …/bookings/grid` per window |
+| Assistant → Try it | Test chat with tool calls, talking to "What customers get now" or "With your changes" (an update opened from History adds that one); "Apply changes" opens the sheet with what customers do not get yet, the owner's new checks and drafts included |
+| Every page (owners) | The banner "N changes are not with your customers yet · Review and apply" while the profile, knowledge, hours, prices or booking rules differ from what customers get (`GET …/assistant/pending-changes`); its sheet lists them in the owner's words and applies them: the tunnel's three stages over `POST`/`GET …/assistant/apply` and the live event stream, a quick check of what changed, then the toast "Your assistant now knows: …"; a stop says why in plain words with the page that fixes it and the conversation that failed (`versions/{id}?checks=problems`) |
+| Assistant → Knowledge | Server-paged items and search, unanswered questions to FAQ, menu import with review and batch discard, import from the business's website (queued, live progress, same review; `?source=website`), resources and special days |
+| Knowledge → Resources → Calendars (owners) | Each resource row says how its calendars stand ("2 calendars block its times", "1 calendar needs attention", from `GET …/integrations`) and opens a sheet: the Google calendar to read busy times from (the connected account's list; its own calendar is sent as `primary`; Channels when Google is not connected), imported iCal addresses (Airbnb, Booking.com, Vrbo: checked before sending, shown by site only, at most 5), a booking system (Cal.com event type and API key, never shown again), the shared iCal address of the resource's bookings (shown once with Copy; a new address or stopping asks first), each source's last read or problem in plain words, the busy times ahead and **Sync now** |
+| Settings → Integrations (owners) | Google Calendar, imported and shared iCal calendars and Cal.com with their state (off, on, needs attention, unavailable), how many resources use each and the last read; the resources with calendars and a link to Resources and hours |
+| Assistant → Business profile | Six cards (Business, Place, Offer, Hours and bookings, People, Rules) with what each holds and what is left to add; each opens the tunnel's screen in its edit mode: no step counter, no Save, every change saved as the owner types ("Saving…", "Saved") and counted by the banner over the page. The offer is a compact table (name, kind, price, minutes; Enter adds a line, lines pasted from a spreadsheet, "From your website" and "From a menu photo or file" beside it); the niche's usual hours, booking rules and ready answers are only offered until the owner takes or changes them |
+| Assistant → Channels | Connect messengers (Telegram step by step with the bot shown before connecting; Meta's ids behind "Enter details manually"), how each channel is doing (last message each way, a problem in plain words with its fix), WhatsApp templates for late staff replies per language, website chat colour and corner with a live preview, its code with steps for WordPress, Wix, Tilda and Shopify, call forwarding codes, Google Calendar state and last sync, staff Telegram link |
+| Assistant → Channels → Share | The hosted chat page's link (copy, open, a new address for owners: old addresses keep working) and a link per switched-on channel, tagged with where it goes (`?src=`); a QR code made in the browser (`uqr`) as PNG or SVG, and a printable A6 table card in a business language (an iframe preview printed as is) |
+| Hosted chat page (`/c/{address}`) | Public, for customers: the widget in page mode, full screen on phones, in the visitor's language (Accept-Language among the business's), the business's colour; older addresses and the business id move to the current one; `noindex`, a policy that allows only the API; texts in all widget languages (`lib/hostedChat/`); `/c/{address}/privacy` is the platform's default privacy notice (ka, ru, en); with hours, an address or bookings, a link-in-bio panel: open now, the week, the address and map, Book (the business's booking page, or a first line in the chat) — beside the chat on wide screens, a bar with a toggle on phones |
+| Guest booking page (`/r/{token}`) | Public, for the guest of a booking (the link of the written confirmation): the booking in the guest's language (15 languages, `lib/bookingPage/`, right to left for Hebrew and Arabic), its .ics file, a move to another free time (the address takes the new link), a cancellation and the ways to write to the business; `noindex`, `Referrer-Policy: no-referrer`, `no-store`; a refused link explains why (expired, moved, not ours) |
+| Assistant → Advanced | Versions (and building one by hand), go-live checklist with fix links, autotests with live progress, publish and rollback with reasons; drafts a newer live version left behind are discarded |
+| Teaching from conversations (owners) | "Fix answer" under every assistant answer (and the reply guard's chip when it rewrote or held one back): the customer's question, the suggested kind (answer, price, hours, rule) and what the assistant knows now; saving becomes knowledge that waits for "Apply changes", then "Save as a check". A bad rating asks what was wrong (wrong information, should have passed it to a person, tone, too long) and offers the fix. **My checks** (`assistant/checks`): the question, what the answer must do (mention or not mention words, pass it to a person, take a request), pause, change, delete and how it did in the latest "Apply changes" with its answer. The Overview's **Answers worth improving** lists bad ratings and questions without an answer (`components/teaching/`, `lib/teaching.ts`, `lib/teachingChecks.ts`) |
+| Settings → Plan and billing | Trial (it starts by itself at the first go-live; the card says so until then, and the owner may start it earlier), subscribe with payment (after the trial, an overdue payment or a cancellation), plan change, usage meters, invoices (number, VAT, paid date; **Download invoice** and **Receipt** fetch the PDF through the BFF in the interface language and save it under the API's file name; each download is audited, and an invoice issued before numbering gets its number then), **Billing details** ("Реквизиты для счетов": legal name, tax ID, country, e-mail for invoices, legal address, and the VAT they lead to), payment |
+| Settings → Quick replies | Owners: the replies the team sends often, each with a name, a shortcut typed after "/" and a text per language of the business; buttons insert the variables the API fills (`{name}`, `{booking_time}`, `{business_name}`) and a preview shows how a customer reads it; a shortcut already taken or too many replies are said in the form |
+| Settings → Notifications | For everyone: **On this device** (Web Push: the browser asks for permission, subscribes with the server's VAPID key and the subscription goes to the API; "Send a test" answers whether it arrived; "Turn off"; my other devices), **What reaches me** (events and quiet hours of my devices, in the business time zone). For the staff contacts: how notifications reach each one (channel without a provider on the server, the latest one delivered, waiting or failed with the reason), the linked Telegram chat's @username, and for owners "Send a test" (at most 5 per contact and hour) and each contact's events and quiet hours in its dialog |
+| Notification links (`/n/{token}`) | The link at the end of every staff e-mail, SMS, chat message and device notification: signed in first (the proxy sends visitors to `/login?next=…`), then the API says where it leads (a conversation, the requests, the bookings of the booking's day, the notification settings) and the page opens there; an expired (7 days), altered or foreign link says so (`app/n/[token]/page.tsx`, `lib/notificationLinks.ts`) |
+| Settings → Calls | Owners: **Call summaries** after every call (on by default; who gets them is the staff contacts in Notifications), **Text back missed callers** (off by default: the approved WhatsApp utility template's name, checked like Meta does, and the SMS fallback, with what a caller who did not get through would get now: the template, an SMS or nothing yet and why), **Template text** (the body to register with Meta in each language of the business, with Copy, and what callers read) and **Latest text-backs** (the last 20 callers who did not get through: number, when, why, Sent/Sending/Not delivered/Not sent with the reason, the channel and a link to the WhatsApp conversation their reply continues in). A conversation's calls show each summary in the reader's language |
+| Settings → Privacy (owners) | A link to the customers' data requests (now on each customer's page); the data processing agreement and, over every page while a new version waits, a banner with its due day (`components/shell/DpaBanner.tsx`, `lib/dpaNotice.ts`); retention periods and the switch that keeps real conversations out of the nightly quality sample (`quality_sampling_allowed`); the full export: each download asks `POST …/business-exports/{id}/download-link` for a one-time link (step-up when the sign-in is old, 10 minutes, this owner's session only) and the browser fetches it through the proxy; the row shows the downloads left of three, and every owner is told of each download (a notification link opens this page) |
+| Settings → the rest | Business settings and pause, team with owner/staff roles, manager contacts, reading and accepting the data processing agreement, the audit log with server filters (every entity named in en/ru/ka; repeated views within five minutes read as one entry with a count). Business and Notifications save with the business `revision` they showed (`expected_revision`); when someone saved since (another owner, the Telegram bot adding a manager), the API answers 409 `stale_revision` and the page reloads and says so instead of overwriting. Business starts from the business as stored when it opens, and after a stale refusal keeps what was typed: fields nobody else changed are saved again at once, fields changed on both sides show the stored value |
+| Account → Security (`/account/security`, account panel) | Everyone: set up an authenticator app (QR code or key, its first code, then ten recovery codes shown once: copy, download, "I saved them"), turn it off, get new recovery codes, see how this session is signed in; a business that requires two factors and the admin pages send people here (`?reason=&next=`). Settings → Team: owners require the app for the whole team (their own two-factor session first) and see who has none |
+| Admin (`/admin`, `/admin/clients/{id}`) | Platform admins: all clients (server filters, sorts and paging, totals), health, opening a client's cabinet; on a client, "Account actions" for roles that manage client billing (a longer trial, a discount, credit, the setup fee waived, a payment recorded by hand, a plan set by hand; each asks why), what the team granted, the done-for-you request with "Mark as done", the team's notes (pinned first) and the client's timeline (30 lines at a time) |
+| Admin → Metrics (`/admin/metrics`) | Platform admins (under More on phones): the founder's growth numbers from `GET /v1/admin/metrics` with the filters in the address (`?from=&to=&country=&niche=&source=&include_admins=`, period presets or chosen days): key numbers, the funnel as bars on one scale with both shares as text, the setup tunnel per screen, the MRR bridge (start, signed movements with their accounts, end; the rates it was converted with named under it, currencies without a rate named), every business created in the period (an owner's second one included) as a funnel and a setup tunnel next to the owners', the platform admins left out with "Count them" (`&include_admins=true`), gross margin, a cohort grid that prints every share over a light accent, sources and Web Vitals (p75 with Google's rating) |
+| Admin → Encryption keys (`/admin/security`) | Platform admins: how many keys `ENCRYPTION_KEYS` holds (never the keys), the latest re-encryption run (status, tokens checked, already current, sealed again, unreadable, Telegram webhooks registered again or not) with what it means, and **Re-encrypt stored tokens** after a confirmation (one run at a time; the page follows it until the worker is done). The runbook: `docs/operations/backup-restore.md` |
+| Invitations (owners) | "Invite a business — a month free" (`GET …/referrals`): the owner's link with `?ref=` (copy, share, QR) and how many businesses signed up, paid and how many months were earned; a card on the Overview from the business's tenth booking (`overview/_components/InviteCard.tsx`) and "Invite a business" in the account menu at any time (`components/referrals/`). The "Powered by" link with the business's code on the widget, the chat page and the A6 table card; Channels → Share has the switch that hides it, on Plus only (`PUT …/referrals/powered-by`) |
+| Partner portal (`/partner`) | Partners only (everyone else gets a 404 from the layout): the commission rate, businesses brought and paying, commissions to be paid and paid out per currency, a link per place the partner shares it (`&src=`, Latin letters, digits, dots, dashes, underscores; copy and QR), the businesses brought and the commission of every invoice (cursor pages); the contract and payout method are agreed outside the cabinet |
+| Admin → Partners (`/admin/partners`) | Platform admins who see clients: partners with codes, rates, businesses and totals; those who manage client billing add a partner (phone or e-mail, rate, first code), change the rate, pause or resume one, add a code, and mark a month paid with the transfer's reference from the month's payout report (UTC months) |
+
+### Inbox
+
+One list for the whole team (`app/b/[businessId]/inbox/`), replacing the
+separate Messages, Needs a person and Requests pages (their addresses
+redirect):
+
+- **Views** (`?view=`, `lib/navigation.ts` `inboxPath`): Needs a person
+  (the default, no query), Requests, Mine, Unassigned, All. The first three
+  stay in the row; Unassigned and All sit under "More ▾", and one chosen
+  there takes the More button's place in full (`_lib/viewTabs.ts`). Beside
+  a conversation at 1440 px the whole row fits in English and Russian (the
+  list column is up to 26.5rem from `xl`); in Georgian and on a phone the
+  three scroll sideways with the chosen one in sight. The four work
+  views come from `GET …/inbox` with live counts from `GET …/inbox/counts`
+  (not audited, kept fresh by every live event); a search or a history
+  filter (period, status, test conversations) belongs to All and is answered
+  by the conversation feed `GET …/conversations` (`_lib/inboxModel.ts`
+  decides). Both lists are audited reads, so they reload on a live event
+  only while shown. On phones the filters are a sheet; from `lg` the list
+  stays beside the open conversation.
+- **Rows** (`_components/list/InboxRowItem.tsx`, `rowParts.tsx`): the
+  customer, then one line with why it waits (the reason chip) and the
+  beginning of the last message; the channel's icon and the age ("5 min",
+  "3 h", a date from a week) at the end; the urgency colours the edge. Who
+  handles it, where the customer came from, after hours, notes and the exact
+  time are the row's details: a card beside the list when the pointer rests
+  on a row (`RowHint`, a manual popover in the top layer; only with a real
+  hover) or the focus is on it, inside the link for screen readers, and in
+  the conversation's Details ("Came from"). **Comfortable** or **Compact**
+  (one line per conversation) in the bar above the rows, remembered per
+  person in this browser (`lib/useUserPreference.ts`,
+  `aw.pref.inbox-density:{userId}`); a laptop at 1440×900 shows nine whole
+  rows of All, Compact fifteen.
+- **The list's width** (`ListResizer`, from `lg`): drag the edge between the
+  list and the conversation, or focus it and use ←/→ (16 px), Home and End:
+  320–520 px, never leaving the conversation less than 460 px; a double
+  click goes back to the usual width. Remembered like the density
+  (`inbox-list-width`); `_lib/inboxLayout.ts` holds the rules.
+- **Keyboard** (`_lib/inboxShortcuts.ts`, `_lib/useInboxTriage.ts`), while
+  nobody types and no dialog is open: J/K move the cursor (and the focus)
+  through the rows, Enter opens, **E** marks resolved, **A** takes the
+  conversation (as the assign menu does, with its revision), **X** selects,
+  **/** goes to the search, **?** lists the keys (`ShortcutsSheet`, also the
+  keyboard button in the bar), Escape clears the selection. Resolved means:
+  an open handoff goes back to the assistant (`POST …/handoffs/{id}/resolve`)
+  and otherwise an open request is marked won (`PATCH …/leads/{id}`); a
+  conversation with neither has nothing to resolve. The toast's Undo reopens
+  the handoff (`…/reopen`) or gives the request its earlier status. After E
+  the cursor goes on to the next row.
+- **Several at once**: a row with something to resolve shows a checkbox in
+  its avatar's place (under the pointer, while anything is selected, or
+  with X); the bar's box selects all of them. With a selection the bar says
+  how many and offers **Mark resolved** (each through its own endpoint
+  above, one toast with one Undo for all; "2 of 3 resolved" when someone
+  changed the rest meanwhile) and clearing it. Resolved rows leave Needs a
+  person and Requests at once; the counts and the Overview refresh.
+- **A conversation** (`[conversationId]/`, `ConversationView`): a phone
+  first layout. The header is folded (customer, channel, who handles it);
+  the transcript fills the screen; the reply box with Resolve, Call and Book
+  sticks to the bottom, so a notification's link (`/n/{token}`) leads
+  straight to a reply. Details (customer, calls, bookings, requests, rating)
+  and notes open in a panel: a sheet below 1536 px, a column of its own
+  above.
+- **Assigning** (`AssignMenu`, `_lib/useAssign.ts`): the team with avatars
+  and how many waiting conversations each handles, me first. The choice
+  shows at once and is sent with the `assignment_revision` the screen saw;
+  when someone changed it meanwhile (409 `assignment_changed`) the card and
+  the list reload and a toast says so. Staff may take or hand on a
+  conversation nobody (or they) handle; a colleague's stays theirs until an
+  owner moves it. Test conversations are not team work.
+- **Notes** (`notes/NotesPanel.tsx`): internal to the team, on a dashed
+  amber card with "Only your team sees this"; they live only in the notes
+  panel, never in the transcript, and the API never sends them to the
+  customer or the assistant (`e2e/inbox.spec.ts` checks the widget's poll).
+- **Quick replies**: typing "/" in the reply box (or the "/" button) opens
+  a picker of the business's replies, filled by the API for this
+  conversation (`GET …/conversations/{id}/quick-replies`: customer's name,
+  booking time, business name, in the conversation's language); a variable
+  it could not fill stays in braces with a field to fill it before sending.
+  Owners edit them in Settings → Quick replies.
+- **Technical details**: model, tokens, cost and tool calls of an assistant
+  message stay behind a "Technical details" disclosure (open by default for
+  platform admins); under each message the requests to the business's data
+  read as plain chips with what the assistant did (`TOOL_LABELS`).
+
+### Front desk on a phone
+
+What the front desk does between customers, one-handed: see who comes, mark
+them, answer a person, and take back a wrong tap.
+
+- **Compact chrome** below `lg` (`components/ui/PhoneChrome.tsx`, the store
+  in `lib/phoneChrome.ts`; `ShellFrame` provides it): a page's `PageHeader`
+  puts its title in the top bar (the `<h1>` stays for screen readers), its
+  description behind an (i) button in the top bar (a sheet with the
+  descriptions of the section and the page and the live status line), and
+  its `status` (`LiveStatus`) becomes a dot beside the title. Its
+  `primaryAction` becomes the floating button above the tab bar (`Fab`: the
+  label folds away while scrolling down); the deepest page wins, so
+  Knowledge's "Add an item" replaces the Assistant's "Apply changes" (the
+  banner still offers it). From `lg` the header is the usual row.
+- **Filters** (`FilterSheet`): on phones one "Filters" button with a chip of
+  how many are set opens a sheet with the same fields, "Clear filters" and
+  "Show"; filters apply as they change. Bookings (status, place, test
+  bookings; the dates stay in sight) and Knowledge (kind, status) use it;
+  Inbox has its own sheet; Channels has nothing to filter.
+- **Today** (`bookings/_components/TodayAgenda.tsx`, `_lib/todayAgenda.ts`):
+  phones open Bookings on today's arrivals by time in the business's zone,
+  with the day's tally (to come, arrived, missed, cancelled) and a "now"
+  line. Each card opens the booking, calls the customer, and has large
+  **Arrived** and **No-show** buttons that wait for the start time (a hint
+  says from when; the clock moves every minute). A marked card folds to its
+  result. "All bookings" is the list with its filters (`?view=all`); a link
+  with list filters opens the list.
+- **Undo**: every booking status change and cancellation from the cabinet
+  shows a toast with Undo (5 seconds). Undo calls
+  `POST …/bookings/{id}/revert-status` with the status it undoes; the API
+  accepts it within 10 minutes of a change made in the cabinet and checks
+  under the booking lock that the time is still free, and refuses with a
+  reason the toast reads out: the time was taken (`slot_taken`), too late
+  (`undo_expired`), changed since (`status_changed`, `nothing_to_undo`), the
+  place is gone (`place_gone`). Resolving a handoff shows Undo too:
+  `POST …/handoffs/{id}/reopen` gives it back its earlier status and the
+  conversation goes back to Needs a person (`handoff.reopened` live event).
+  Both are audited.
+- **Channels** (`assistant/channels/`): a phone keeps the channel cards
+  with their health on the page and opens the rest as pages of their own,
+  listed under "Set up": `channels/website` (the website chat's look, code
+  and allowed sites), `channels/calls` (forwarding codes) and
+  `channels/share` (links, QR code, table card), each with "All channels"
+  to go back (`_lib/channelPages.ts`, `ChannelSubpageFrame`). An old
+  `channels#share` link opens `channels/share` on a phone; large screens
+  keep everything on the one page (the sub-pages work there too).
+- **Overview** (`overview/DashboardScreen.tsx`): a phone starts with
+  **Today** (`TodayBlock`: waiting for a person, today's bookings with how
+  many are still to come, questions without an answer; staff see their own
+  and the unassigned instead), then the value hero. Statistics, the chart by
+  day, the package, languages, channels, bookings by status, why
+  conversations went to a person, answers to improve and topics are folded
+  rows with their leading number (`PhoneFold`); which ones a person opened
+  is remembered for them in this browser (`overview-open`). From `lg` the
+  folds take no box and the page is as before.
+- **Offer lines** (`components/setup/offer/OfferLine.tsx`, the tunnel's
+  offer step and Profile → What you offer): the name and the price share one
+  row, an example's tag sits on the line's frame and removing is in the
+  line's "⋯" menu; the kind and the minutes (profile) go to a second row.
+- **Tests**: `e2e/phone-loop.spec.ts` at 390×844 (the first card's top above
+  35% of the screen, Undo after Arrived, Undo after Resolve),
+  `e2e/phone-layout.spec.ts` (Inbox, Bookings, Channels and the Overview:
+  the first conversation, booking, channel card or Today block in the top
+  half, no page taller than four screens; the Channels sub-pages; a fold
+  remembered across a reload), `e2e/inbox-triage.spec.ts` at 1440×900 (at
+  least eight rows, Compact and the width kept, J/E/Undo, ?, /, X and Mark
+  resolved with Undo) and the phone pages in `e2e/a11y.spec.ts`.
+
+#### Real-device runbook
+
+Push, home-screen apps and the on-screen keyboard cannot be checked in
+Playwright. Run this on a real iPhone and a real Android phone before a
+release that changes the phone chrome, notifications or the inbox, and note
+the device, OS and browser versions and each step's result in the release's
+PR.
+
+Before you start: a deployment over HTTPS (a service worker and push need
+it) with `WEB_PUSH_VAPID_*` set (see the root README and `docs/LAUNCH.md`),
+a live assistant, a signed-in owner or staff member, and a second device or
+a desktop browser to play the customer on the hosted chat page
+(`/c/{address}`, Assistant → Channels → Share).
+
+1. **Install.** iPhone (iOS 16.4 or later): Safari → the cabinet → Share →
+   Add to Home Screen, then open it from the icon (push works only there).
+   Android: Chrome → More → "Install the app" (or Chrome's menu → Install
+   app). The app opens in its own window on the businesses page.
+2. **Turn on push.** Settings → Notifications → On this device → Enable
+   notifications; allow when asked (Android 13+ asks too). "Send a test"
+   arrives with the screen locked and with the app closed.
+3. **A customer asks for a person.** On the hosted chat page: "I want to
+   talk to a person" (or press "Talk to a person"). A notification arrives
+   within seconds.
+4. **Open it.** Tap the notification: the app opens `/n/{token}` and lands
+   in that conversation (after signing in when the session ended; the link
+   keeps going). The reply box sits above the keyboard and the home
+   indicator.
+5. **Reply.** Send a reply; the customer's page shows it.
+6. **Resolve and Undo.** Press Resolve and confirm; the toast offers Undo.
+   Undo within 5 seconds: the conversation is back under Needs a person and
+   Resolve shows again. Resolve once more and let the toast go.
+7. **Today.** Open Bookings: the first arrival is in the top third of the
+   screen, Arrived and No-show wait for the start time, a tap marks it and
+   Undo puts it back. The floating "New booking" stays above the tab bar,
+   the (i) opens the page's description, the live dot is beside the title.
+8. **Both themes.** Switch the phone to dark and light mode and look again
+   at steps 4 and 7.
+
+### Create an AI assistant
+
+One full-screen tunnel from a new business to a live assistant: one
+question per screen in big type, a progress rail of eight steps (any step
+can be opened from it), Enter to go on (except in a multi-line field, a
+button, or a box that keeps Enter for itself: the offer table, the test
+chat), Back and "Skip for now" (remembered by the API for the offer, the
+channels and the test). Screens move with depth (`TunnelStage`: the next one
+comes out of the distance, small and blurred; going back, the other way)
+over a tunnel of rings in pure CSS 3D (`TunnelBackdrop`,
+`src/styles/tunnel.css`: no WebGL, nothing per frame); with reduced motion
+they only cross-fade and the rings stand still.
+
+1. **Your business** (`/create`): the name, the kind of business as cards,
+   the kind's required questions.
+2. **Where you are** (`/create?step=place`): the country (from the sign-in
+   phone, else the browser), city, address (required for kinds that take
+   bookings), languages and time zone prefilled from the country. Continue
+   creates the business and its assistant (`POST /v1/assistants`); the
+   first two answers live in this browser until then (`lib/tunnel/draft.ts`),
+   so a reload keeps them.
+3. **What you offer** (`/b/{id}/setup?step=offer`): a name-and-price table
+   prefilled with the kind's examples (saved only once priced), or an
+   import from the website or a menu photo.
+4. **Hours and bookings**: the kind's usual week and booking rules, a first
+   bookable place, the kind's hour questions; Continue also accepts the
+   kind's starter answers (who to call when, what never to promise, tone,
+   ready answers) where the owner wrote nothing.
+5. **Who helps**: the owner in one tap (sign-in phone by WhatsApp or SMS,
+   e-mail, or Telegram through a one-time link with a QR code), or someone
+   else.
+6. **Where customers write**: the website chat and the business's own chat
+   page (on by default), a Telegram bot in three steps, WhatsApp, Instagram
+   and Messenger after launch.
+7. **Try it**: a test chat with questions to tap.
+8. **Launch**: what is ready (each step with "Fix"), the data processing
+   agreement, the free trial, then "Apply changes" played out on screen
+   (getting ready → trying test conversations → switching on, read every
+   1.5 s); anything that stops it is listed with where to fix it.
+
+The **finale**: confetti (none with reduced motion), the assistant's card,
+its chat page link to copy and open, a QR code to try it from a phone, next
+steps and "Open my assistant" into the cabinet. Answers save as the owner
+goes (the top bar says "Saving…" / "Saved"); `?step=` keeps the screen in
+the address, and `/b/{id}/setup` without it opens the first step not done
+(`resumePlace` in `lib/tunnel/steps.ts`). The tunnel is owners' only; the
+business frame draws it without the sidebar.
+
+### Setup guide and milestones
+
+The Overview's **setup guide** (`overview/_components/setupGuide/`, rules in
+`lib/setupGuide/guide.ts`) reads `GET …/setup` (`guide`): before the launch
+the setup's steps, each opening the tunnel at its screen ("Continue setup"
+resumes where the owner left off), and the three steps after it waiting;
+once live, "Try it from your phone" (the chat page's QR code; the card
+listens for the owner's message, `POST …/setup/phone-check`, and polls
+until it arrives), "Add a second channel" and "Show customers where to
+write" (a printed table card or a downloaded QR code marks it,
+`useShareMark`). A finished guide shows "All set" once, then the owner puts
+it away. Until then a **progress ring** sits at the top of the sidebar and in
+the phone's top bar (`components/setupGuide/SetupRing.tsx`), linking back to
+`#setup-guide`. **Milestones** (first conversation, first booking, first
+booking after hours) show a toast with a small burst once
+(`MilestoneCelebrations`, acknowledged with `POST …/celebrate`; old ones and
+the owner's own phone test are acknowledged quietly). The subscribe dialog
+offers both setup options (`SetupOptionPicker`), and Settings → Notifications
+has the owner's switch for the setup reminders (`SetupRemindersCard`).
+
+### Help and support
+
+- **The "?" beside a page's title** opens the article that explains the
+  page in a drawer (`lib/help/helpTopics.ts` `PAGE_HELP`; the frame puts a
+  `HelpLink` into `PageHelpProvider`, which `PageHeader`, the inbox's title
+  and the phone's top bar show). Links in an article open another article
+  in place (Back returns), cabinet links (`cabinet:assistant/channels`) lead
+  into the business that is open, and "Open in the help center" goes to
+  `/help/{slug}`. The articles are Markdown files of the API (`docs/help/{en,ru,ka}`,
+  served by `GET /v1/help/{language}/{slug}`); `helpTopics.test.ts` fails when
+  a file, a link or a cabinet page does not exist.
+- **The help center** (`/help`, public): the articles by topic and a search
+  (`GET /v1/help/{language}/search`); someone signed in can bring back the
+  tips they closed.
+- **Tips** on the Inbox, the Assistant's test page and Channels show once
+  per person, on any device: "Got it" or "Read the guide" stores it
+  (`PUT /v1/me/help/coach-marks/{key}`). On a phone a tip is one line above
+  the tab bar (above the floating action when the page has one) and counts
+  as seen once it has been on screen for a moment.
+- **Still stuck?** names the support team's channels (`SUPPORT_*` on the
+  API); with none set it points at the status page instead.
+- **"What's new"** (`/help/whats-new`): entries in `content/changelog/`; the
+  account button has a dot and "Help and support" counts the entries
+  newer than the last one read (a new account sees only the newest).
+  Add an entry: a file named by its key with en, ru and ka texts, listed in
+  `content/changelog/index.ts`.
+- **Help and support** in the account menu (and "More" on phones): the help
+  center, "What's new", the status page and the support team's WhatsApp,
+  Telegram and e-mail (`SUPPORT_*` on the API; a channel left unset is not
+  shown).
+- **The status page** (`/status`, public, rendered with what the server read
+  and polled every minute past the browser's cache): the overall state,
+  the team's announcements, chat, WhatsApp/Instagram/Messenger, Telegram,
+  calls and the cabinet with 90 days of history, past incidents, and a
+  plain notice when the platform cannot be reached.
+- **Announcements** (Admin → System, "Status page announcements"): a
+  notice, planned maintenance, a slowdown or an outage with the parts it
+  affects, texts in English (required), Georgian and Russian, an optional
+  start and expected end; updates and "Resolve" are audited. Every cabinet
+  shows the active ones above the page (`AnnouncementBanner`); an owner may
+  hide a notice, maintenance or a slowdown in this browser until it changes,
+  never an outage.
+
+### Installable app
+
+- `app/manifest.ts` (`/manifest.webmanifest`): the app opens on the
+  businesses in its own window; name, short name and language follow the
+  interface language, colours the theme; icons in `public/icons/` (192 and
+  512, plain and maskable) and `app/apple-icon.png`, drawn from `icon.svg` by
+  `npm run gen:icons`.
+- `public/sw.js`, registered on signed-in pages of a production build
+  (`components/shell/ServiceWorker.tsx`): keeps the offline page
+  (`/offline`, in the language and theme of the moment, kept again when they
+  change) with its build files and the icons; pages always come from the
+  network and are never stored (they hold personal data), the offline page
+  answers when there is none; build files (`/_next/static/`) are served from
+  the cache once loaded; API calls (`/api/*`) and other sites pass straight
+  through. It shows a pushed `{title, body, url, tag}` as a notification and
+  opens its (same-site) url when pressed. "Enable notifications on this
+  device" (`lib/webPush.ts`) subscribes through it; on a development server
+  (no worker registered) it registers `/sw.js?push-only=1`, which only shows
+  notifications and keeps nothing. Which device in the list is this browser
+  is remembered per business in localStorage; a browser has one push
+  subscription for the cabinet, so turning one business off keeps it for
+  the others. `e2e/notifications.spec.ts` mocks the browser's Push API and
+  starts a local push service (`e2e/support/push.ts`) that decrypts what the
+  API posts (RFC 8291), so no real push service is ever called.
+- "Install the app" in the user menu (and "More" on phones): the browser's
+  own prompt where there is one (`beforeinstallprompt`), the Share → Add to
+  Home Screen steps on iPhone and iPad, nothing once installed.
+- A Content Security Policy must allow `worker-src 'self'` and
+  `manifest-src 'self'` (both follow `default-src 'self'`).
+
+### Accessibility
+
+- `e2e/a11y-sections-en.spec.ts` and `e2e/a11y-sections-he.spec.ts`
+  (`e2e/support/axe.ts`) run axe-core (WCAG 2.1 A and AA rules) on every page
+  of a business in the dark and the light theme; `e2e/a11y.spec.ts` on the
+  setup invitation, every
+  screen of the tunnel, `/create`, the businesses, sign-in and the offline page, and on a phone
+  with the "More" sheet open; any serious or critical violation fails it.
+- Landmarks: one `<h1>` per page (the section's, inside a section frame),
+  the main navigation, the tab bar and the section tabs are named `<nav>`s,
+  `aria-current="page"` marks where you are everywhere, badges read as "3
+  waiting", folded icons keep their names, and touch targets are at least
+  44 px on coarse pointers.
+- What axe cannot check needs a person: a screen reader pass of the
+  sidebar, the user menu popover and the "More" sheet (VoiceOver on macOS
+  and iOS Safari) after changing the frame.
+
+### Polish sweep (wave 7): before and after
+
+What the screenshot tour of wave 6 showed, and what the cabinet does now.
+Each line has a test (`e2e/` or a unit test) that fails if it comes back.
+
+| Screen | Before | After |
+| --- | --- | --- |
+| Tunnel | The backdrop's rings and floor lines ran through the finale's title and the cards; on a phone the floor lines crossed every card | A veil of the page colour sits behind each screen's content (`TunnelVeil`); the floor shows from md up (`setup-tunnel.spec`, elementFromPoint) |
+| Tunnel rail | The step's name was centred under the rail, not under its dot; "Saved" appearing pushed the rail | The name sits under the active dot (aligned to the end for the first and last); the save status has a slot as wide as its longest text |
+| Offer step | A revisit listed saved lines newest first and brought back examples the owner had replaced or removed | Saved lines keep the order they were added; replaced and removed examples are remembered per business (`lib/tunnel/offerMemory.ts`) |
+| Finale | "Connect WhatsApp and Instagram" even when they were connected | Next steps come from the setup and the channels: a skipped offer step, only the messengers still missing (`lib/tunnel/finale.ts`) |
+| Tunnel, phone | The offer-source tabs were cut off; "Someone else" stayed open after adding a person | The tabs scroll with a fade; the form closes and the person shows in the list |
+| Overview | A business not live yet saw "No active plan" and no way back into setup; chips showed the whole total as growth ("+1 920 GEL") against an empty period; a lone "·" started the phone's date line | "Continue setup", "Your free trial starts at launch"; "first period" chips; the dates take their own line |
+| Conversation | The sticky date chip covered messages; Hebrew and Arabic names jumped to the far end of the bar; admins saw raw tool JSON open on phones; the views wrapped onto two rows | The chip stays in the flow; the name sits in a `<bdi>` at the start; technical details start closed below lg and remember each person's choice; the views are one scrolling segmented row |
+| Booking dialog | Five buttons that wrapped ("Состоялась" alone on a row); "Не пришёл" and "Состоялась" before the booking started | One main action and "More"; completed and no-show wait for the start time; "Гость не пришёл" |
+| Channels | The embed code broke inside `</script>`; the share address was cut to "loc…" | One sideways-scrolling code block with its Copy button; the address keeps the page's name (a middle ellipsis) |
+| Settings | The SMS fallback stayed editable with text-backs off; "Send a test" worked for channels the server cannot send by | Both are disabled with the reason read out |
+| Copy | "ассистент" on Share, "Сообщения → Нужен человек", "код … через почту", "Цены в валюте грузинский лари", "русский (ru)", two Georgian words for Inbox, "six steps" on the landing page, raw E.164 numbers split over two lines, "Asia/Tbilisi (UTC+04:00)" in the zone list and the bookings and notifications notes | "помощник", "Входящие → Нужен человек", "по почте / по SMS / в WhatsApp", "Валюта цен: грузинский лари (GEL)", "Русский", "შემოსული", eight steps, "+995 555 00 00 01" on one line, "Тбилиси (UTC+4)" |
+
+## Conventions
+
+### Adding a business page
+
+1. Prefer a page inside one of the five sections over a new section (see
+   [Navigation](#navigation)). A new page gets its folder
+   (`src/app/b/[businessId]/<section>/<page>/page.tsx`), its path in
+   `BUSINESS_PAGES` (`src/lib/navigation.ts`) and an entry with its label and
+   roles in `SECTION_PAGES` (`src/lib/sections.ts`); the sidebar, the tabs,
+   the titles and the e2e suite then pick it up. A new section also needs an
+   icon in `SECTION_ICONS` (`src/components/shell/BusinessShell.tsx`) and,
+   when it has several pages, a `layout.tsx` with `<SectionFrame section=…>`.
+2. Keep `page.tsx` a small Server Component: metadata + one client screen.
+
+   ```tsx
+   // src/app/b/[businessId]/bookings/page.tsx
+   import { pageMetadata } from "@/components/business/pageMetadata";
+   import { BookingsScreen } from "./BookingsScreen";
+
+   export const generateMetadata = pageMetadata("bookings");
+
+   export default function BookingsPage() {
+     return <BookingsScreen />;
+   }
+   ```
+
+3. Put interactive parts in `"use client"` components next to the page
+   (`BookingsScreen.tsx`; its parts in a `_components/` folder, its hooks and
+   pure helpers with their tests in `_lib/`). Keep files small: one screen,
+   card, dialog, hook or helper group per file, at most 300 lines (`npm run
+   lint` fails on a longer one). They get the
+   business and the user from the layout:
+
+   ```tsx
+   const { business, me, isOwner, isPlatformAdmin } = useBusiness();
+   const format = useBusinessFormat(); // format.dateTime(us), format.money(minor), format.date, format.time
+   ```
+
+4. Start the screen with `<PageHeader title=… description=… actions=… />`, use
+   `Card`, `Table`, `Badge`, `EmptyState`, `ErrorState` and the skeletons from
+   `@/components/ui`. While data loads, show skeletons shaped like the content
+   (`<LoadingRegion label=…><SkeletonCardList /></LoadingRegion>`), not a
+   spinner, and give the route a `loading.tsx` with the same shapes
+   (`SectionLoading` keeps the real title). Owner-only actions: hide or disable them unless `isOwner`
+   (the API answers 403 anyway). Reuse the section folders in `components/`
+   (`insights`, `content`, `workspace`) before writing another dialog or badge.
+5. Filters and tabs that belong in the address: write the query with
+   `replaceUrlQuery` (`components/insights/urlQuery.ts`) or
+   `window.history.replaceState(null, "", url)` and read it with
+   `useSearchParams()`. Never pass `window.history.state`: it carries Next's
+   own marker and the router then ignores the change.
+
+### UI kit notes
+
+- `Modal` and `Drawer` (side panel) are native modal `<dialog>`s driven by
+  `open`. `onClose` runs only when the person closes them (Escape, close
+  button, backdrop), not when `open` turns false, so one dialog can replace
+  another. Own `<dialog>`s use `useModalDialog(open, onClose)` for the same.
+- Toasts move into the topmost open modal dialog, so a failed save inside a
+  dialog is visible and can be dismissed. `toast.undoable(title, onUndo)`
+  adds an Undo button for 5 seconds (the window runs down under the toast
+  and stops while it is pointed at or focused); offer it only where the API
+  has the inverse call (a lead's status, a booking's status through
+  `revert-status`, a resolved handoff through `reopen`), never by faking the
+  change.
+- `ConfirmDialog` asks before what cannot be undone or reaches customers;
+  `confirmationText` makes the person type a word first. Cancel takes the
+  focus; Enter confirms.
+- Icons come from `@/components/icons` only (24×24 outline, `currentColor`).
+- Motion is part of the kit (see [Motion](#motion)): buttons give a little
+  and spring back, `Card interactive` and link tiles lift under the pointer
+  (`motion-lift`), Modal, Drawer and the phone menu spring in and fade out
+  (keeping their content while they fade), toasts rise in and make room for
+  each other, skeletons shimmer and data settles in (`animate-settle`).
+- `Alert`'s `action` sits beside the text when the alert is wide and under it
+  when it is narrow (a container query).
+- `className` on `Button`, `ButtonLink`, `Input` and `Textarea` replaces the
+  component's own width, height, padding, radius, font size and colour
+  classes of the same kind (`w-40`, `text-danger`, `hover:bg-…`; see
+  `lib/classMerge.ts`). Destructive quiet buttons: `variant="danger-ghost"`.
+- `Button` and `ButtonLink` take `leadingIcon` and `trailingIcon` (an arrow
+  after the label); sizes `sm` 32 px, `md` 36 px (like inputs), `lg` 44 px.
+- Customer texts (names, messages, questions) get `dir="auto"`; so do
+  `Input` (text and search) and `Textarea`, so a name typed in Arabic reads
+  right to left in any interface language. A name in a heading or a row
+  next to an avatar goes in a `<bdi>` inside a `text-start` element: it keeps
+  its own direction but stays beside the avatar.
+- Words that belong to the business, its team or its customers (names,
+  messages, knowledge items, notes, quick replies, topic labels, the
+  business's name) carry `data-user-content` on the element that holds
+  exactly them: `UserContent` wraps them in a span (with `dir="auto"`),
+  `CustomerName` and the avatars mark themselves. A translated sentence that
+  names them keeps the placeholder (`t(key)` without the value) and shows it
+  with `<UserSentence text={t(key)} values={{ name }} />`; toasts take
+  `{ text, values }` as a title. The e2e suite's Cyrillic check skips that
+  content and still reads every text of the interface around it.
+- `ScrollRow` holds a row that may not fit (tabs, the inbox views): it never
+  wraps, scrolls sideways and fades out the side with more to see.
+- `OverflowMenu` ("More") keeps one main action in sight and puts the rest in
+  a menu (arrow keys, Escape gives the focus back); the booking dialog uses it.
+- A control that cannot be used yet says why: a disabled switch points at
+  its hint (`Switch describedBy`), a button that stays focusable uses
+  `aria-disabled` with `aria-describedby` on the reason.
+
+### Calling the API
+
+Client Components use the typed `api` client (requests go to `/api/backend/*`,
+the BFF adds the token). Paths, parameters and bodies are checked against
+`openapi.json`. Reads go through the cabinet's data cache, so a page opened
+again shows its data at once while a fresh copy loads behind it:
+
+```tsx
+import { api } from "@/api/client";
+import { queryCache } from "@/api/queryCache";
+import { queryKeys } from "@/api/queryKeys";
+import { useCursorPage } from "@/api/useCursorPage";
+import { useMutation } from "@/api/useMutation";
+import { useQuery } from "@/api/useQuery";
+
+const resources = useQuery(queryKeys.resources.list(business.id), () =>
+  api.GET("/v1/businesses/{business_id}/resources", { params: { path: { business_id: business.id } } }),
+);
+// resources.data, .isLoading (nothing yet: show a skeleton), .isFetching, .error, .reload(), .setData()
+
+const leads = useCursorPage(queryKeys.leads.list(business.id, tab, includeTest), ({ cursor, limit }) =>
+  api.GET("/v1/businesses/{business_id}/leads", {
+    params: { path: { business_id: business.id }, query: { limit: String(limit), cursor: cursor ?? undefined } },
+  }),
+);
+// leads.items, .page (totals), .hasMore, .loadMore(), .isPlaceholder (other filters' rows while new ones load)
+
+const setStatus = useMutation(
+  (lead: Lead, status: LeadStatus) => api.PATCH(…, { body: { status } }),
+  {
+    optimistic: (lead, status) => queryCache.update(listKey, (list) => …), // shown at once, undone on failure
+    invalidate: [queryKeys.dashboard.all(business.id)], // reloaded after it settles
+    stale: [queryKeys.leads.all(business.id)], // reloaded when shown next
+    errorMessages: { conflict: "leads.conflict" }, // optional context texts
+  },
+);
+const result = await setStatus.run(lead, "won"); // failures are shown as a localized toast
+```
+
+- Keys come from `queryKeys` only (section first, then the business), so
+  `invalidate(queryKeys.leads.all(businessId))` reaches every leads list of
+  the business. `invalidate(prefix)` (`src/api/queryCache.ts`) is public: the
+  live event stream calls it when the server reports a change.
+- What the assistant knows changed? The changes not live yet
+  (`usePendingChanges`) read themselves again whenever a key of the
+  business, profile, knowledge, resources or billing sections is marked out
+  of date (`queryCache.onInvalidate`); a save that touches none of them
+  adds `invalidate: [queryKeys.assistant.pendingAll(businessId)]`.
+- Data counts as fresh for 30 s (`staleMs`); `staleMs: 0` reloads on every
+  mount (free slots, go-live checks). Forms that save with the revision they
+  start from use `requireFresh: true`: they never start from a cached copy.
+- Lists written to the audit log (conversations, bookings, leads, handoffs,
+  customers) are not prefetched and, after a local change, are marked `stale`
+  rather than reloaded on screen, so no view is recorded that nobody made.
+  A live event reloads such a list only while it is on a visible screen (the
+  person sees the change), never on a timer.
+- The sidebar prefetches a section's first data on hover and focus
+  (`app/b/[businessId]/_components/useSectionPrefetch.ts`, queries shared
+  through `src/api/sectionQueries.ts`).
+- Types: `Schema<"BookingView">`, aliases in `src/api/types.ts`,
+  `RequestBody<"/v1/businesses/{business_id}/bookings", "post">` for bodies.
+- Timestamps from the API are UNIX **microseconds**; money is an integer in
+  **minor units** of the business currency (`format.money(minor)`,
+  `majorToMinor` / `minorToMajor` in `src/lib/format.ts`).
+- Anything that is not a single call: `await unwrap(api.GET(...))` returns the
+  data or throws `ApiError` (`status`, `code`, `detail`, `requestId`).
+- Server Components: `const api = await getServerApi(); const data = await
+  serverFetch(api.GET(...));` (`src/server/api.ts`). 401 sends the user to sign
+  in, 404 shows the not-found page. `getCurrentUser()` and `getBusiness(id)`
+  are cached per request.
+- Never call `BACKEND_URL` from the browser and never put the token in client
+  code; new server-side endpoints go into `src/app/api/*` route handlers using
+  `src/server/relay.ts`.
+- After a backend change: `npm run gen:api`, then fix the type errors it shows.
+
+### Live updates
+
+Pages update by themselves; there are no Refresh buttons. Each business tab
+opens one Server-Sent Events stream, `GET /v1/businesses/{id}/events`,
+through the BFF (`LiveEventsProvider` in `components/shell/LiveEvents.tsx`):
+
+- An event names what changed by id only (`handoff.created`,
+  `booking.changed`, `conversation.message` …; never customer text);
+  `invalidationsFor` in `src/api/liveEvents.ts` maps it to query-key
+  prefixes, and shown lists reload through their normal, audited routes.
+  Changes arriving together are batched (200 ms); a hidden tab reloads when
+  it is shown again, except the badge counts. A new kind of event: add it to
+  `LIVE_EVENT_NAMES` and `invalidationsFor` (with a test).
+- `src/api/events.ts` reconnects with growing pauses (1 s … 30 s, jitter,
+  never sooner than Retry-After), at once after the API ends a stream (every
+  15 minutes) or when the browser comes back online, and when no byte arrived
+  for 2.5 heartbeats. The last event id goes along, so the API replays what
+  was missed or answers `stream.resync` (everything shown reloads). 401, 403
+  and 404 stop it.
+- Where a Refresh button was, `<LiveStatus updatedAt={query.updatedAt}
+  isFetching={query.isFetching} />` shows "Live · Updated just now" (amber
+  "Reconnecting…" with "Try now" while the stream is down).
+- A customer who needs a person (`handoff.created`) brings a toast with
+  "Open" (the inbox on Needs a person) unless the inbox list is already
+  open, and a short chime when the
+  person turned it on (account panel; kept per device in `localStorage`, see
+  `src/lib/chimePreference.ts`; the sound is unlocked by the first click).
+- The BFF passes the stream on unbuffered (`no-cache, no-transform`,
+  `X-Accel-Buffering: no`); a proxy in front of the cabinet must not buffer
+  `text/event-stream` either.
+
+### Errors
+
+The backend answers `{"error": "<code>", "message": "<English>"}`. The UI shows
+the localized text of the code (`errors.codes.*`): `toast.error(error)` or
+`<ErrorState error={error} onRetry={reload} />`. For context-specific wording
+pass overrides: `toast.error(error, { access_denied: "auth.errors.countryRestricted" })`.
+The English backend message is shown as a detail only for `validation_failed`
+and `conflict`.
+
+Some refusals also carry machine-readable reasons, kept as
+`ApiError.reasons` (`[{code, message, details}]`): a refused publish or
+rollback names the failed go-live checks (`subscription_or_trial`, `dpa`,
+`profile_gaps`, `staff_contact`, `autotests`, `voice_configuration`) or the
+version state, and a menu link the API cannot read is `menu_link_invalid`,
+`menu_link_unreachable` or `menu_link_unreadable`. A refused booking names
+why (`closed`, `too_soon`, `time_required`, `taken`, `party_too_large`,
+`no_seating_resource`; the numbers and days are in `details`). Screens map these
+codes to their own texts (`refusalReasons` in `src/lib/assistant/goLive.ts`,
+`menuLinkProblem` in `src/lib/knowledge/menuImport.ts`, `BOOKING_REFUSAL_MESSAGES` passed
+as `reasonMessages` to `useMutation`); never match the English message.
+
+### Translations
+
+- Shared texts (common, auth, nav, theme, pages, errors, validation) live
+  in `src/i18n/messages/{en,ru,ka,he,de}.ts`; section texts in
+  `src/i18n/messages/sections/{insights,content,workspace}.ts`, whose
+  `*En`/`*Ru`/`*Ka`/`*He`/`*De` objects are spread into those files; each is
+  composed of one file per namespace and language in its folder
+  (`sections/insights/bookings.en.ts`, `bookings.ru.ts`, `bookings.ka.ts`,
+  `bookings.he.ts`, `bookings.de.ts`; a large namespace in a few parts); the business profile's and the landing page's in
+  `messages/onboarding/` and `messages/landing/` (one file per language).
+  Translations are typed `Translation<typeof …En>`. English is the
+  reference; the other dictionaries are typed as `Messages`, so a key added in
+  English and missing in another language fails `npm run typecheck` (and a unit
+  test). At runtime a missing text falls back to English, then to the key.
+- Languages (`src/i18n/config.ts`): `LOCALES` are those with a dictionary,
+  `CABINET_LANGUAGES` those owners can pick (the language switcher, the
+  public site, the sitemap and hreflang, notification languages; the backend
+  keeps the same list), `NEEDS_REVIEW_LOCALES` the drafts no native speaker has
+  read yet (`he`, `de`). A new language joins `LOCALES` while it is translated
+  and `CABINET_LANGUAGES` once every text is there: `i18n.test.ts` fails when
+  the picker and completeness disagree.
+  `node --no-warnings scripts/translation-status.mjs` prints each locale's
+  share of texts and help articles; `--missing he` gives the English texts a
+  locale lacks as JSON (the brief for a translator), `--check` fails like the
+  test.
+- Right to left: `LOCALE_DIRECTION` sets `<html dir>` (Hebrew `rtl`). Use
+  logical classes (`ms-2`, `ps-3`, `start-0`, `text-start`, `border-s`,
+  `rounded-e-lg`), never physical ones: `logicalClasses.policy.test.ts` fails on
+  `ml-2`, `left-0` or `text-left`, and `node --no-warnings scripts/rtl-codemod.mjs`
+  rewrites a file. A direction a person chose stays physical under `rtl:`
+  (the sliding knob `translate-x-5 rtl:-translate-x-5`, the toast's
+  `rtl:origin-right`); a directional icon (arrow, chevron) gets
+  `rtl:-scale-x-100`; charts, phone numbers, codes and times keep `dir="ltr"`,
+  a customer's text `dir="auto"`. In Hebrew texts wrap a Latin fragment that
+  starts or ends with punctuation (`@BotFather`, `</body>`) in U+200E marks.
+- Top-level keys are namespaces and must not clash between the files. An
+  object with a key named `other` is read as plural forms, so do not use
+  `other` as an ordinary key (e.g. `leads.type.otherRequest`).
+- Client Components: `const { t, tp, locale } = useI18n();` —
+  `t("bookings.title")`, `t("tunnel.stepOf", { number: 2, total: 8 })`,
+  plurals `tp("onboarding.gaps.times", count)` with Intl plural categories
+  (`one`/`two`/`few`/`many`/`other`; Russian needs `few` and `many`, Hebrew
+  `two`).
+- Server Components: `const { t } = await getI18n();` (`@/i18n/server`).
+- The public site (`/en`, `/ru/for/hotel`, `/ka/terms`…) renders its texts on
+  the server; its client components get only their own share of the
+  dictionary (`PUBLIC_CLIENT_TEXTS`, `src/i18n/publicScope.ts`), not the
+  cabinet's 280 KB. `publicScope.test.ts` walks the imports of the public
+  pages' client modules and fails when the list misses a key they name or
+  keeps one nobody reads. A link from the public site to a cabinet page is
+  a plain anchor (`CabinetButtonLink` in `src/app/_landing/CabinetLink.tsx`,
+  or `<a>`), so the browser loads that page in full, with its whole
+  dictionary and the motion library.
+- Keys are checked by TypeScript (`MessageKey`); for keys built at runtime
+  keep a `Record<EnumValue, MessageKey>` map (see `BusinessStatusBadge.tsx`).
+- Add a section's texts under its own namespace (`bookings.*`, `leads.*`) in
+  its section file, sidebar labels under `nav.*`, page descriptions under
+  `pages.*`.
+- Pass `language: locale` to API calls that return display texts (catalog,
+  wizard, gaps); the BFF also sends `Accept-Language` with the interface language.
+- Dates, times, numbers and money: `src/lib/format.ts` and
+  `useBusinessFormat()`, in the business time zone and currency
+  (`formatDateTime`, `formatDate` and `formatTime` require the zone). Pages
+  without a business (Account → Security, the status page, the platform
+  admin, the announcement banner, the live status line) use
+  `useViewerFormat()` (`src/components/time/ViewerTimeZone.tsx`): the
+  reader's zone, which the browser keeps in the `aw_tz` cookie so the server
+  renders the same text; before the first visit times read "… UTC" until
+  hydration ends. ESLint forbids `new Intl.DateTimeFormat` and
+  `toLocale*String` outside `src/lib/intl/` (fixed-locale calendar fields
+  come from `src/lib/intl/calendarFields.ts`); other
+  formats in a UI language (lists, relative times, plural forms) through the
+  factories of `src/lib/intl/formatters.ts`, never `new Intl.*(locale)`
+  (`intlUsage.test.ts`). Chrome's Intl has no Georgian (it writes "ka" as
+  American English, "8 hours ago") while the server's Node writes Georgian,
+  so Georgian is formatted from our own CLDR tables (`src/lib/intl/georgian*.ts`)
+  on both sides; their tests compare every pattern with Node's ICU.
+
+Words follow the glossary (`docs/glossary.md`): "Needs a person", updates
+and checks, Platform; staff never see an English system text in a Russian or
+Georgian cabinet, and no sentence ends on a formatted date (a unit test).
+`src/i18n/glossary.test.ts` checks the dictionaries themselves: every text
+in its own script (no Cyrillic in English, Georgian, Hebrew or German, no
+Georgian or Hebrew in the others, no Russian, Georgian or Hebrew text made
+mostly of Latin words beyond brand names), "помощник" and never "ассистент" in the Russian cabinet (the
+product's name aside), and version and autotest words only on the
+Assistant's advanced pages and the platform's. It replaces the screenshot
+tour's text lint.
+
+Phone numbers are shown with `formatPhone` (`src/lib/phone.ts`,
+libphonenumber-js with its small "min" metadata): "+995 555 00 00 01", always
+inside `dir="ltr"`. Time zones read "Тбилиси (UTC+4)" (`src/lib/timeZones.ts`):
+the city from `src/lib/zoneCities.generated.ts` (the backend's CLDR exemplar
+cities, written by `npm run gen:names`; browsers have no Georgian ones), the
+offset in force at the moment.
+
+**Pseudo-locale.** Russian and Georgian run 20–40 % longer than English. Start
+the cabinet with `PSEUDO_LOCALE=true` and set the cookie in the browser
+(`document.cookie = "aw_locale=en-XA; path=/"`): every text becomes
+`[Šáṽé ẋẋ]`, accented, 40 % longer and in brackets, so a cut text (no closing
+bracket), a hard-coded string (no accents) and an overflowing layout stand
+out. `e2e/pseudo-locale-ltr.spec.ts` opens every page this way at 1440 and 390 px
+and fails on a page that scrolls sideways or a button, tab or link whose
+text does not fit. Dates and numbers stay English. Its right-to-left twin
+`ar-XB` (the usual tag of the bidi pseudo-locale) has the same texts on pages
+laid out right to left, as for Hebrew; `e2e/pseudo-locale-rtl.spec.ts` runs
+every page in it (both from `e2e/support/long-texts.ts`).
+
+The interface language is chosen by the `aw_locale` cookie (set at sign-in from
+the account language, by the language switcher, or by the proxy from
+`GET /v1/me`), else the browser's `Accept-Language`, else English. The
+language switcher (a native select showing each language by its own name)
+is in the user menu of the cabinet (the sidebar's bottom, "More" on phones),
+in the top bar of the pages outside a business and in the "New business"
+dialog; it keeps the current page and re-renders it in the new language.
+
+### Forms
+
+- Wrap controls in `<Field label hint error required>{(control) => <Input {...control} />}</Field>`
+  (labels, `aria-describedby` and `aria-invalid` are wired for you); groups of
+  checkboxes or radios go in `<Fieldset legend>`.
+- Validate with zod; messages are i18n keys (`messageKey("validation.required")`,
+  `fieldErrors(result)` in `src/lib/validation.ts`).
+- Phone numbers of any country are sent as typed with the country as a hint
+  (`country_hint`); the API parses them. `CountrySelect` lists countries from
+  `GET /v1/catalog/countries` in the interface language.
+- Times and dates never use the browser's own `<input type="time|date">`
+  (it follows the browser's language: AM/PM and mm/dd/yyyy in a Russian
+  cabinet on an English Chrome). `TimeField` has hours and minutes (and
+  AM/PM only where the cabinet's language has a 12-hour clock: English),
+  arrows step by `step` minutes, typing "0830" fills both; `DateField` shows
+  the date in the cabinet's language and opens a calendar whose week starts
+  where the language's region starts it; both store "HH:MM" and
+  "YYYY-MM-DD" (`DateTimeField`: "YYYY-MM-DDTHH:MM"). The clock and week
+  rules are in `lib/intl/localeCalendar.ts` (Georgian has its own tables),
+  the parsing in `lib/timeInput.ts`, `lib/timeSegments.ts`, `lib/dateInput.ts`.
+- A settings form saves itself (`useAutosaveForm`): choices at once, typed
+  text a moment after the last key and when the field is left, one save at
+  a time; each field says "Saved" (`SavePill` in the Field's `status`), a
+  lost connection is retried, a refusal says why in a toast, a save refused
+  as stale is rebased on what is stored (the fields someone else changed
+  show the stored value). Switching something off offers Undo (`undo`);
+  what deletes data still asks first (`needsConfirmation`: a shorter
+  retention period), and billing keeps its own buttons.
+  e2e tests wait for the save with `nextSave` (`e2e/support/autosave.ts`)
+  and type times with `typeTime` (`e2e/support/timeField.ts`).
+
+### Styling
+
+Tailwind CSS v4 with semantic tokens defined in `src/app/globals.css`:
+
+| Token | Use |
+| --- | --- |
+| `bg-canvas`, `bg-surface`, `bg-surface-muted` | page, cards and dialogs, quiet fills (table heads, chips, inactive tracks) |
+| `text-ink`, `text-ink-muted`, `text-ink-subtle` | text, secondary text, hints and meta |
+| `border-line`, `border-line-strong` | 1px hairlines between blocks; borders of form controls |
+| `bg-accent-solid` (+ `-hover`, `text-on-accent`), `text-accent`, `bg-accent-soft` + `text-accent-ink` | the one accent colour: primary buttons, links, selected items |
+| `text-success|warning|danger|info` and `bg-…-soft`, `bg-danger-solid` | statuses (olive-khaki "done", ochre, brick, slate), alerts, badges, destructive buttons |
+| `text-chart-1|2|3` | chart series (clay, slate, ochre) |
+| `outline-focus` | focus rings (`:focus-visible` gets one everywhere) |
+
+Each token holds a light and a dark value, `light-dark(<light>, <dark>)`, and
+`color-scheme` picks one, so pages never need `dark:` variants (the variant
+exists and follows the theme). Both themes are checked for WCAG AA: text
+tokens ≥ 4.5:1 on canvas, surface and surface-muted; status colours ≥ 4.5:1
+on their `-soft` backgrounds; `line-strong`, `focus` and the chart colours
+≥ 3:1. The palette is warm graphite and paper with one clay accent: no
+green, mint, cyan, indigo or purple anywhere the browser sees it (the
+cabinet, its public files, the widget and its demo page, the demo seeds),
+which `tests/platform/test_palette_guard.py` enforces. The look is flat: blocks are separated by hairlines, not shadows
+(`shadow-sm` is none and the larger shadows are faint), corners are
+restrained (`rounded-xl` 10 px, `rounded-2xl` 12 px). Fonts are the system's
+(Georgian, Cyrillic and Latin), nothing is downloaded. Layouts are
+mobile-first: the sidebar becomes a drawer below `lg`. Use semantic HTML,
+visible focus, and labels for icon-only buttons.
+
+### Theme
+
+`<html data-theme="dark | light | system">` is rendered by the root layout
+from the `aw_theme` cookie (dark when there is none), so the first paint has
+the right colours; "system" is `color-scheme: light dark` and follows the
+operating system live. `ThemeSwitcher` (a radio group of three icons with
+their names for screen readers and as tooltips) sits in the user menu of the
+cabinet and in the top bar of the landing, sign-in and business list pages; it rewrites
+the attribute, the cookie (a year) and `<meta name="theme-color">` without a
+reload. `useTheme()` gives `{ theme, setTheme }`.
+
+### Motion
+
+The site moves with one set of tokens: subtle and quick in the cabinet,
+expressive on the landing page, and still for anyone who asks for less
+motion.
+
+- **Tokens** (`src/lib/motion.ts`): durations, easings, springs (`press`,
+  `snappy`, `layout`, `gentle`, `bouncy`), rise distances, stagger steps,
+  tilt angles. `src/styles/motion.css` declares the same values for CSS,
+  springs sampled into `linear()` easings with the duration they need
+  (`ease-spring-snappy` + `duration-(--motion-spring-snappy)`);
+  `src/lib/motion.test.ts` fails when the two drift (paste the new values
+  from `cssMotionTokens()`).
+- **Primitives** (`@/components/motion`): `FadeIn` (on mount),
+  `Stagger`/`StaggerItem`, `PageTransition` (CSS, used by the route
+  templates), `TiltCard`/`TiltLayer` (3D tilt with glare and layers at
+  depth; mouse only), `AnimatedNumber` (counts up when seen, rewrites the
+  text node only), `AnimatedPresenceList` (items arrive and leave, the rest
+  slide), `MagneticButton`, `Burst`. The animation code of `m.*` elements
+  loads after the page (LazyMotion + domMax, `strict`: use `m.div`, never
+  `motion.div`).
+- **Public site primitives** (`@/components/siteMotion`): `Reveal` (on
+  scroll), `Stagger`/`StaggerItem`, `TiltCard`/`TiltLayer`,
+  `MagneticButton` and `Parallax` (depth layers drifting with the scroll),
+  with the cabinet primitives' props but moved by CSS alone
+  (`src/styles/siteMotion.css`): reveals with the `gentle` spring once one
+  shared IntersectionObserver marks them `data-revealed`, tilt and magnetic
+  pull with the `bouncy` spring from custom properties the pointer writes
+  (no render per move), parallax as a scroll-driven animation
+  (`animation-timeline: view()`, still where unsupported). So a public page
+  carries no animation library: there `MotionProvider` gets
+  `animates={false}` (no domMax is fetched), and the toasts' animated list
+  (`components/ui/ToastList.tsx`) is its own chunk, fetched with the first
+  toast into a live region that is always on the page.
+  `app/_landing/publicBundle.test.ts` walks the public pages' imports and
+  fails when their first load reaches `motion` or three.js.
+- **Cabinet**: page rise per route, the sidebar's active marker glides
+  between sections and a thinner one between the open section's pages, which
+  unfold under it (`layoutId`, one LayoutGroup per menu); the section tabs'
+  underline (or pill) and the phone tab bar's pill glide too; the sidebar
+  folds with a width transition; "More" rises from the bottom and the user
+  menu springs up from its button (CSS, `src/styles/shell.css`); badges pop
+  in; dashboard numbers count up, handoff and lead lists animate removals,
+  dialogs and toasts as above.
+- **Setup invitation**: the landing's still orb among its channels in a
+  tilting card (`TiltCard`), aurora and the floor of light running towards
+  the viewer behind it, the stages standing in perspective and rising one
+  after another, a magnetic main button, and a light running around the
+  sidebar's "Create an AI assistant".
+- **Landing**: the hero headline is there at the first paint (a light
+  sweeps across its gradient, the rest rises in with CSS); beside it the
+  hero poster, and on capable wide screens the 3D hero (react-three-fiber,
+  `_landing/scene/`) later: the assistant's orb with the six channels'
+  bubbles orbiting it and sending it messages, mouse parallax, a camera that
+  pulls back while the hero scrolls away. Every section reveals on scroll,
+  glows drift as depth layers, steps stand like a corridor, plan and world
+  cards tilt, the final card has a running edge light; a backdrop of aurora
+  clouds, a floor grid running towards the viewer and grain.
+- **Reduced motion**: MotionConfig `reducedMotion="user"` drops transforms
+  and layout animations (fades stay, short); every CSS animation and
+  transition ends at once (globals.css), so the public site's reveals simply
+  appear; tilt, magnetic pull and parallax stay still; numbers show their
+  value; the hero keeps its poster and never loads the 3D chunk. The markup
+  is the same on the server and in the browser whatever the setting (no
+  hydration mismatch); without scripts a `<noscript>` style shows every
+  revealed block.
+- **3D hero rules** (`HeroVisual`): the server sends the poster
+  (`HeroFallback`, HTML and CSS in `src/styles/heroPoster.css`: the orb
+  among its channels, rings turning in 3D with a comet of light, a breathing
+  glow), so the largest paint never waits for script or WebGL, and phones
+  keep it as their moving picture. After the first paint `heroPlan`
+  (`lib/heroDevice.ts`) decides: reduced motion, Save-Data, a narrow screen
+  (under 64rem), a 2g/3g connection or a low-power device (under 4 cores or
+  4 GB; with a touch screen under 6 and 6) keep the poster, marked
+  `data-scene-reason`. Otherwise the scene's chunk is fetched once the page
+  has loaded, the browser is idle and the hero is (nearly) on screen
+  (`_landing/heroWaits.ts`, one after another by `lib/waits.ts`), only with
+  WebGL, and fades in over the poster in the same box after its first frame
+  (no layout shift). It stops drawing off screen, lowers its resolution when
+  frames are slow and hands back to the poster if they stay slow, the WebGL
+  context is lost or setup fails. `data-scene="static" | "3d"` on the hero
+  tells which one shows. Nothing is downloaded at run time: bubble textures
+  are drawn on canvases, reflections come from a generated studio
+  environment.
+- **e2e**: `playwright.config.ts` runs every test with
+  `contextOptions.reducedMotion: "reduce"` (and SwiftShader for WebGL);
+  `e2e/landing-motion.spec.ts` checks the poster with reduced motion, with
+  Save-Data and on a phone (moving, no canvas), the poster in the server's
+  HTML and then the canvas on a capable desktop (no layout shift), the
+  switch back when reduced motion is turned on, the reveals, and that
+  three.js is never downloaded there nor on a niche page, a legal page or
+  `/login`.
+First load, measured with `npm run build && npm run measure:first-load`
+(gzipped JavaScript a first visit downloads, with the API running for the
+niche pages):
+
+| Page | First load |
+| --- | --- |
+| `/en` (landing) | 189.0 KB |
+| `/ru/for/restaurant`, `/ka/for/hotel` (niche pages) | 186.6 KB |
+| `/ka/terms` (legal pages) | 177.3 KB |
+| `/login` (the cabinet: its pages carry the motion library) | 312.8 KB |
+| 3D chunk (three.js 0.182 + react-three-fiber + the scene), fetched later on capable wide screens only | 241.1 KB |
+
+Lighthouse on `/en` (phone profile, three runs; `lighthouserc.json`):
+performance 0.96–0.99, LCP 2.1–2.7 s, blocking time 84–115 ms, CLS 0,
+196 KB of script and 285 KB in all; before the poster, the CSS motion and
+the slimmer public bundle it was 0.49–0.67, LCP 5.8 s, 414–454 ms, CLS 0.36,
+527 KB and 705 KB.
+
+No layout shift (the e2e test asserts CLS = 0 with the scene). The scene is
+one draw call per object (orb, shell, halo, six bubbles, six message
+lights, three rings, 220 dust points): 60 fps on a laptop GPU; three.js
+stays at 0.182 because react-three-fiber 9 still uses `THREE.Clock`, which
+logs a deprecation warning from r183. `@react-three/drei` is not used: the
+scene needs nothing from it (three's own RoomEnvironment and PMREM give the
+reflections, the floating and billboarding are a few lines in `useFrame`).
+
+### Landing page
+
+The public site lives under its language: `/en`, `/ru`, `/ka` (the landing
+page), `/ru/for/restaurant` (a kind of business, from the niche catalog) and
+`/ka/terms`, `/privacy`, `/dpa`, `/security`, `/contact`. `/` sends a
+signed-in user to `/businesses` and a visitor to the page in their language
+(cookie, else Accept-Language), keeping the query; `/privacy` without a
+language does the same (the proxy). The proxy sets the request's language
+from the path (`x-aw-path-locale`, never from the browser), so the page,
+`<html lang>` and its texts follow the address, and a first visit starts
+the cabinet in that language too. The language switch opens the same page
+at the other language's address.
+
+Every public page has its canonical address, hreflang alternates for the
+every cabinet language and `x-default`, Open Graph and JSON-LD (`Organization`,
+`SoftwareApplication` with the plans' prices, `FAQPage` on the landing;
+`Service` on a niche page). `sitemap.xml` lists every page in every language
+with its alternates (the legal pages only once `LEGAL_TEXTS_FINAL` is on:
+until then they are `noindex` and show a "Draft" banner); both it and
+`robots.txt` name `SITE_URL`.
+
+The data comes from the public API on the server (`_landing/landingData.ts`):
+countries, niches, `GET /v1/public-demos` and `GET /v1/catalog/plans` for the
+country in `?country=` (else the visitor's country from `x-vercel-ip-country`
+/ `cf-ipcountry`, else a guess from Accept-Language, both only among the
+countries with a price book, else Georgia). Honest prices
+(`lib/publicSite/prices.ts`): the price a plan is billed at comes first (the
+price book's lari, else euros), a conversion second and rounded to whole
+units ("≈ $199"), and the note under the cards names who set its rate (the
+National Bank of Georgia, the ECB, or the platform's planning rate).
+
+- **Live demo**: the hero chats with the demo businesses
+  (`PUBLIC_DEMO_BUSINESS_IDS`; in development the seeded ones) in sandbox:
+  a booking or a request is only shown as one ("Here a booking would be
+  made"), never made. The starters are the demo's own in the visitor's
+  language, else three generic ones; when no demo answers the hero shows an
+  example conversation labelled as one.
+- **Value calculator** (`lib/publicSite/roi.ts`): missed requests × the
+  after-hours share × the share that books × the average check, against the
+  chosen plan's billed price, with the arithmetic shown; the check starts at
+  the niche's typical one scaled to the plan's price level.
+- **Setup options** and **testimonials**: self-serve (free) against
+  done-for-you (its one-time fee in the billed currency); owners' quotes from
+  `src/content/testimonials.ts` (only real ones, with consent; the section is
+  hidden while a language has none).
+- **Lighthouse**: `.github/workflows/lighthouse.yml` runs Lighthouse CI
+  (`lighthouserc.json`) on `/en` and two niche pages of a production build,
+  three runs each on a phone profile: SEO and accessibility (≥ 0.95), layout
+  shift (≤ 0.1), hreflang, canonical, title and description fail the job
+  everywhere; so do performance below 0.85 and more than 350 KB of
+  JavaScript or 600 KB in all, and on the landing page an LCP over 2.5 s or
+  a blocking time over 300 ms (elsewhere those two warn). The phone profile
+  gets the hero's poster, so the 3D scene never counts.
+
+Its motion and 3D hero: see [Motion](#motion).
+
+## Channels and sign-in
+
+- `/b/[businessId]/channels`: channel cards with how each is doing (the last
+  customer message and the last reply, a problem in plain words with the
+  button that fixes it, what the platform said one click away), Telegram
+  guided through @BotFather (copyable `/newbot`, name and suggested username,
+  the pasted key checked with `POST …/channels/telegram/validate-token` to show
+  the bot's name and photo before connecting), Meta's channels explained in
+  plain words with their ids behind "Enter details manually", WhatsApp
+  templates for late replies per language under "For advanced users", the
+  website chat's look (colour, corner) beside a live preview — the hosted chat
+  page `/c/{business}?preview=1` framed from the same origin, in the owner's
+  language when the assistant speaks it, following every choice by
+  `postMessage` before saving (`src/lib/hostedChat/preview.ts`; only that page
+  may be framed, by the cabinet: `frame-ancestors 'self'` and
+  `X-Frame-Options: SAMEORIGIN`) — and the code with steps for any site,
+  WordPress, Wix, Tilda and Shopify, call forwarding, Google Calendar (connection, calendar, last sync
+  and its error) and staff Telegram links. Google's consent page returns
+  (through the API's public callback) to `/integrations/google-calendar/callback`,
+  a route handler that finishes connecting with the owner's session (only the
+  user who started can finish) and then opens `?calendar=connected` or
+  `?calendar=error&reason=…`; `page.tsx` reads it, the screen shows it once and
+  removes it from the address. The API needs `CABINET_BASE_URL` set to this
+  cabinet's public address; without it Google Calendar cannot be connected.
+- The proxy answers a plain form POST to a page (the payment page returns the
+  payer that way, without the SameSite=Lax session cookie) with a 303 to the same
+  address, so the browser repeats it as a GET that carries the session.
+- `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
+  switch hides e-mail when it cannot deliver codes, the phone form offers a
+  channel choice when several work, and explains when none does. The code
+  screen offers the country's other channels ("No code? Send by SMS instead":
+  a number without WhatsApp is reported only later), which the API allows at
+  once. Phone numbers and codes typed in any script (Arabic-Indic, Persian,
+  full-width digits, direction marks of copied numbers) are read as ASCII
+  digits (`toAsciiDigits`). Helpers with tests are in
+  `src/app/login/_lib/loginOptions.ts` and `src/lib/countries.ts`.
+
+## Telemetry and attribution
+
+- `lib/track.ts` queues reports for `POST /v1/telemetry/events` and sends
+  them together (after 5 seconds, at 50, or with `keepalive` when the page
+  is hidden or left); after a 429 nothing is sent until its Retry-After.
+- `components/telemetry/WebVitalsReporter.tsx` (in the root layout) reports
+  LCP, INP and CLS of signed-in pages only, as route templates
+  (`/b/[businessId]/inbox`; `lib/vitals.ts`) with the device class by
+  viewport width. The tunnel reports the screens entered and, going deeper,
+  completed (`components/setup/useTunnelTelemetry.ts`).
+- First touch: the proxy sets the httpOnly `aw_attr` cookie (90 days, never
+  replaced) on a visitor's first landing or hosted chat page without a
+  session: utm_*, `ref`, `src`, the referring host and the path
+  (`lib/attribution.ts`, `server/attributionCookie.ts`). `/api/auth/verify`
+  sends it as `signup_attribution` (whatever the browser put there is
+  dropped), and removes the cookie after a sign-in. Values the API would
+  refuse are left out, so a strange link never breaks a sign-in.
+
+## Security notes
+
+- Session: an httpOnly, `SameSite=Lax` cookie holding the API bearer token,
+  `__Host-aw_session` over HTTPS (Secure, `Path=/`, no `Domain`: no subdomain
+  or plain-HTTP page can set or shadow it) and `aw_session` when
+  `COOKIE_SECURE=false`; expires with the API session. A 401 from the API
+  clears it. A browser that still has the old `aw_session` keeps its session:
+  it is read as a fallback and moved to the new name on the next page view
+  (`src/server/sessionCookie.ts`).
+- Content Security Policy (`src/server/contentSecurityPolicy.ts`, set by the
+  proxy on every page view with a fresh nonce that Next.js puts on its own
+  scripts): scripts only with the nonce or loaded by a trusted script
+  (`'strict-dynamic'`), Cloudflare Turnstile allowed, no framing
+  (`frame-ancestors 'none'`), `base-uri 'none'`, forms only to the cabinet or
+  the Flitt checkout, `upgrade-insecure-requests` over HTTPS; `'unsafe-eval'`
+  only under `next dev`. Zod's JIT would need eval: import `z` from
+  `@/lib/zod` (jitless; ESLint refuses `"zod"`). `e2e/security.spec.ts`
+  fails when any page reports a violation.
+- Every answer sends `nosniff`, `X-Frame-Options: DENY`,
+  `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy:
+  same-origin`, and production builds HSTS (`next.config.ts`).
+- The BFF refuses a request body over the API's limit with 413
+  `payload_too_large` (256 KB, 21 MB for a menu import), before reading it
+  when the length is declared and as soon as a streamed body grows over it
+  (`src/server/bodyLimits.ts`).
+- Sign-in: when the API asks for a bot check (403, reason
+  `challenge_required` with the site key), the page loads Cloudflare
+  Turnstile, shows "One more step" and sends the request again with the
+  check's token (`src/app/login/_lib/botCheck.ts`, `useTurnstile.ts`).
+- The BFF forwards only `/v1/*` paths, an allow-list of headers (never the
+  browser's cookies), and refuses cross-site state-changing requests
+  (`Origin`/`Sec-Fetch-Site` check) on top of `SameSite=Lax`.
+- Two-factor sign-in: after the login code, people with an authenticator app
+  (and every platform admin, who sets one up at the first sign-in) enter its
+  code or a recovery code (`app/login/_components/SecondStepForm.tsx`); the
+  admin pages want a two-factor session. A sensitive action (exporting or
+  erasing a contact's data, team changes, connecting a channel, the admin's
+  actions) answered with 401 and `WWW-Authenticate: Bearer
+  error="insufficient_user_authentication"` keeps the session cookie: the
+  "Confirm it is you" dialog asks for the app's code (or a login code) and
+  the request runs again (`src/api/stepUp.ts`, `lib/stepUpChallenge.ts`).
+  The e2e suite plays the authenticator (`e2e/support/totp.ts`,
+  `e2e/support/admin.ts`).
+- After sign-in the cabinet only redirects to same-site paths (`safeNextPath`).

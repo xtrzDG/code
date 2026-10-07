@@ -1,0 +1,18 @@
+# A worker hung or crashed for good: its pulse is more than 10 minutes old
+# while another worker of the same release beats, and no worker started
+# after it went silent (a restart or deploy replaced it). Pulses are kept a
+# day. When no worker runs at all this check cannot run: the API's pipeline
+# watchdog pages instead (worker_down.yaml), and the external uptime
+# monitor's second check, GET /healthz/pipeline, answers 503 (its first,
+# GET /readyz, stays 200 while the API itself serves). The Sentry Crons
+# monitor of `platform_alerts` is the third line.
+code: stale_worker
+severity: sev2
+summary: A worker of the current release stopped writing its pulse.
+measure: stuck workers of the current release
+threshold: 0
+unit: count
+window_minutes: 1440
+volume_floor: 0
+source: worker_heartbeats (beat_at), migration 1030
+runbook: docs/operations/runbooks/stuck-worker.md

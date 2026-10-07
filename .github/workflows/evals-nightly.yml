@@ -1,0 +1,134 @@
+name: Evals nightly
+
+# Every night and on demand: the evaluation datasets (evals/datasets) played
+# against real models, the AI customer and the judge from the other model
+# family, three samples per scenario (pass^3), compared with
+# evals/baselines/<model>.json. The run fails when pass^k, or the pass rate
+# of any deterministic criterion (language identity, memory, leaks, tool
+# calls, ...), drops by more than 3 points; summary.md becomes the job
+# summary, and the report (JSON, HTML, Markdown) and the recorded cassettes
+# are kept as an artifact. Without OPENAI_API_KEY and ANTHROPIC_API_KEY the benchmark is
+# skipped with a notice. Pull requests replay the committed cassettes
+# offline instead (tests/evals). evals/README.md explains both.
+on:
+  schedule:
+    - cron: "23 2 * * *"
+  workflow_dispatch:
+    inputs:
+      niches:
+        description: "Niches to play, space-separated (empty: every dataset)"
+        type: string
+        default: ""
+      samples:
+        description: "Samples per scenario (the k of pass^k)"
+        type: number
+        default: 3
+      tolerance:
+        description: "Allowed pass^k drop against the baseline (0.03 = 3 points)"
+        type: string
+        default: "0.03"
+      criterion_tolerance:
+        description: "Allowed drop of any criterion's pass rate (0.03 = 3 points)"
+        type: string
+        default: "0.03"
+      update_baseline:
+        description: "Store this run as the model's baseline (artifact; commit it in a PR)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evals-nightly
+  cancel-in-progress: false
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release).
+jobs:
+  live:
+    name: Live benchmark (${{ matrix.model }}, judged by ${{ matrix.judge }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - model: gpt-5-mini
+            judge: claude-opus-5-5
+          - model: claude-opus-5-5
+            judge: gpt-5-mini
+    env:
+      UV_FROZEN: "1"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_PROJECT_ID: ${{ secrets.OPENAI_PROJECT_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      NICHES: ${{ inputs.niches || '' }}
+      SAMPLES: ${{ inputs.samples || 3 }}
+      TOLERANCE: ${{ inputs.tolerance || '0.03' }}
+      CRITERION_TOLERANCE: ${{ inputs.criterion_tolerance || '0.03' }}
+      UPDATE_BASELINE: ${{ inputs.update_baseline && '--update-baseline' || '' }}
+      MODEL: ${{ matrix.model }}
+      JUDGE: ${{ matrix.judge }}
+    steps:
+      - name: Provider keys
+        id: keys
+        shell: bash
+        run: |
+          if [ -z "$OPENAI_API_KEY" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::OPENAI_API_KEY and ANTHROPIC_API_KEY are not both set; the live benchmark is skipped (evals/README.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ steps.keys.outputs.enabled == 'true' }}
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        if: ${{ steps.keys.outputs.enabled == 'true' }}
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        if: ${{ steps.keys.outputs.enabled == 'true' }}
+        run: uv sync --frozen
+
+      # Exit code 1: pass^k or a criterion's pass rate fell by more than its
+      # tolerance (only scenarios both runs played are compared).
+      - name: Play the datasets and compare with the baseline
+        if: ${{ steps.keys.outputs.enabled == 'true' }}
+        shell: bash
+        run: |
+          niche_arguments=()
+          for niche in $NICHES; do niche_arguments+=(--niche "$niche"); done
+          mkdir -p "reports/evals/$MODEL"
+          set +e
+          uv run python -m scripts.run_evals --record \
+            --model "$MODEL" --judge-model "$JUDGE" \
+            --samples "$SAMPLES" --tolerance "$TOLERANCE" \
+            --criterion-tolerance "$CRITERION_TOLERANCE" --workers 8 \
+            --cassettes "reports/evals/$MODEL/cassettes" --out "reports/evals/$MODEL" \
+            "${niche_arguments[@]}" $UPDATE_BASELINE 2>&1 | tee "reports/evals/$MODEL/run.log"
+          status=${PIPESTATUS[0]}
+          if [ -f "reports/evals/$MODEL/summary.md" ]; then
+            cat "reports/evals/$MODEL/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            tail -n 6 "reports/evals/$MODEL/run.log" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
+
+      - name: Keep the report, the cassettes and the baseline
+        if: ${{ always() && steps.keys.outputs.enabled == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: evals-${{ matrix.model }}
+          path: |
+            reports/evals/${{ matrix.model }}
+            evals/baselines/${{ matrix.model }}.json
+          if-no-files-found: ignore
+          retention-days: 30

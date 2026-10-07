@@ -1,0 +1,140 @@
+"""
+The explicit tables of the authorization matrix. Every other business
+operation is held to the default rules: a stranger gets 404, a caller
+without a token 401, staff are let through, and the request runs only in
+the storage scope of its business.
+"""
+
+from tests.platform.authorization_calendars import OWNER_ONLY_CALENDAR_OPERATIONS
+from tests.platform.authorization_customers import OWNER_ONLY_CUSTOMER_OPERATIONS
+from tests.platform.authorization_integrations import (
+    OWNER_ONLY_INTEGRATION_OPERATIONS,
+)
+from tests.platform.authorization_requests import BUSINESS_PREFIX as B
+
+CORRECTION: str = (
+    f"{B}/conversations/{{conversation_id}}/messages/{{message_id}}/correction"
+)
+
+# Operations only owners may use; staff get 403 (AuthorizeBusinessAccess
+# with required_role=OWNER): settings, team, billing, publishing, channels,
+# the customers' personal data (export, erasure, blocking, segments), the
+# owner's invitation and "Powered by" link, and the audit log. Staff read
+# the customers with their phone numbers masked.
+OWNER_ONLY_OPERATIONS: frozenset[str] = frozenset(
+    {
+        f"PATCH {B}",
+        f"GET {B}/exports/{{table}}",
+        f"GET {B}/business-exports",
+        f"POST {B}/business-exports",
+        f"POST {B}/business-exports/{{export_id}}/download-link",
+        f"POST {B}/assistant-versions",
+        f"POST {B}/assistant-versions/{{version_id}}/autotests",
+        f"POST {B}/assistant-versions/{{version_id}}/publish",
+        f"POST {B}/assistant-versions/{{version_id}}/rollback",
+        f"POST {B}/assistant/apply",
+        f"DELETE {B}/assistant/drafts/{{version_id}}",
+        f"GET {B}/audit-log",
+        f"GET {B}/autotest-cases",
+        f"POST {B}/autotest-cases",
+        f"PATCH {B}/autotest-cases/{{case_id}}",
+        f"DELETE {B}/autotest-cases/{{case_id}}",
+        f"POST {B}/autotest-cases/{{case_id}}/check",
+        f"GET {B}/billing",
+        f"GET {B}/billing/invoices/{{invoice_id}}/documents/{{document_kind}}",
+        f"GET {B}/billing/profile",
+        f"PUT {B}/billing/profile",
+        f"POST {B}/billing/cancel",
+        f"POST {B}/billing/checkout",
+        f"GET {B}/billing/lifecycle",
+        f"POST {B}/billing/offers/accept",
+        f"POST {B}/billing/pause",
+        f"POST {B}/billing/resume",
+        f"POST {B}/billing/plan",
+        f"PUT {B}/assistant-settings",
+        f"PUT {B}/campaign-settings",
+        f"GET {B}/campaign-messages",
+        f"POST {B}/billing/subscribe",
+        f"POST {B}/billing/trial",
+        f"GET {B}/call-settings",
+        f"PUT {B}/call-settings",
+        f"POST {B}/channels/telegram/validate-token",
+        f"PUT {B}/channels/web/allowed-origins",
+        f"PUT {B}/channels/whatsapp/staff-template",
+        f"PUT {B}/channels/whatsapp/staff-templates",
+        f"PUT {B}/channels/{{channel}}",
+        f"DELETE {B}/channels/{{channel}}",
+        f"GET {CORRECTION}",
+        f"POST {CORRECTION}",
+        f"DELETE {B}/contacts/{{contact_id}}",
+        f"GET {B}/contacts/{{contact_id}}/export",
+        f"POST {B}/dpa",
+        f"GET {B}/privacy-settings",
+        f"PUT {B}/privacy-settings",
+        f"GET {B}/feedback-requests",
+        f"PUT {B}/inbox/settings",
+        f"DELETE {B}/integrations/google-calendar",
+        f"GET {B}/integrations/google-calendar/connect-url",
+        f"POST {B}/manager-contacts/telegram-link",
+        f"POST {B}/members",
+        f"POST {B}/notification-contacts/{{contact_key}}/test",
+        f"PATCH {B}/members/{{user_id}}",
+        f"DELETE {B}/members/{{user_id}}",
+        f"PUT {B}/profile",
+        f"POST {B}/quick-replies",
+        f"PUT {B}/quick-replies/{{quick_reply_id}}",
+        f"DELETE {B}/quick-replies/{{quick_reply_id}}",
+        f"PATCH {B}/profile",
+        f"PUT {B}/profile/steps/{{step}}",
+        f"PUT {B}/public-slug",
+        f"GET {B}/referrals",
+        f"PUT {B}/referrals/powered-by",
+        f"GET {B}/review-settings",
+        f"PUT {B}/review-settings",
+        f"GET {B}/review-stats",
+        f"PUT {B}/security",
+        f"PUT {B}/support-access/write-access",
+        f"DELETE {B}/support-access",
+        f"POST {B}/setup/starter-answers/apply",
+        f"PUT {B}/setup/skipped-steps/{{setup_step}}",
+        f"DELETE {B}/setup/skipped-steps/{{setup_step}}",
+        f"PUT {B}/setup/guide-dismissal",
+        f"DELETE {B}/setup/guide-dismissal",
+        f"PUT {B}/setup/reminders",
+        f"GET {B}/text-backs",
+        f"POST {B}/unanswered-questions/{{question_id}}/answer",
+        f"GET {B}/digest-preferences",
+        f"PUT {B}/digest-preferences",
+        f"GET {B}/value-reports",
+        f"GET {B}/value-reports/{{report_id}}",
+        f"GET {B}/value/settings",
+        f"GET {B}/value/sources",
+        f"PUT {B}/value/settings",
+        f"PUT {B}/waitlist-settings",
+        *OWNER_ONLY_CUSTOMER_OPERATIONS,
+        *OWNER_ONLY_CALENDAR_OPERATIONS,
+        *OWNER_ONLY_INTEGRATION_OPERATIONS,
+    }
+)
+
+# Operations that may look across businesses inside a business request,
+# each explicitly with platform_wide(), and why.
+PLATFORM_WIDE_LOOKUPS: dict[str, str] = {
+    f"PUT {B}/channels/{{channel}}": (
+        "a messaging account may serve only one business: the connect "
+        "checks every business for it"
+    ),
+}
+
+# Deviations from the default refusals (status for a stranger or without a
+# token), each with its reason. Keep it empty unless a route truly cannot
+# follow the rules.
+REFUSAL_EXCEPTIONS: dict[str, str] = {}
+
+# Reads whose record of business B has nothing to show even to its owner
+# (the matrix still proves strangers get 404 there).
+READS_WITHOUT_CONTENT: dict[str, str] = {
+    f"GET {B}/calls/{{call_id}}/recording": (
+        "the demo calls keep no recording (callers did not agree to one)"
+    ),
+}

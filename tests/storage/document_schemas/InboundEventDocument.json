@@ -1,0 +1,426 @@
+{
+  "collection": "inbound_events",
+  "document_type": "InboundEventDocument",
+  "schema_version": 7,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "attempts": {
+        "default": 0,
+        "maximum": 1000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "business_id": {
+        "anyOf": [
+          {
+            "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "channel": {
+        "enum": [
+          "phone",
+          "whatsapp",
+          "instagram",
+          "messenger",
+          "telegram",
+          "web_chat",
+          "viber",
+          "owner_test"
+        ],
+        "type": "string"
+      },
+      "channel_id": {
+        "anyOf": [
+          {
+            "pattern": "^channel_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "conversation_id": {
+        "anyOf": [
+          {
+            "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "customer_channel_user_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "customer_message": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "acquisition_source": {
+                "anyOf": [
+                  {
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "attachments": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "caption": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "declared_bytes": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "duration_seconds": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "kind": {
+                      "enum": [
+                        "audio",
+                        "image",
+                        "location",
+                        "contact",
+                        "sticker",
+                        "other"
+                      ],
+                      "type": "string"
+                    },
+                    "location": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "address": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null
+                            },
+                            "latitude": {
+                              "maximum": 90.0,
+                              "minimum": -90.0,
+                              "type": "number"
+                            },
+                            "longitude": {
+                              "maximum": 180.0,
+                              "minimum": -180.0,
+                              "type": "number"
+                            },
+                            "name": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "default": null
+                            }
+                          },
+                          "required": [
+                            "latitude",
+                            "longitude"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "mime_type": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "provider_media_id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "channel_user_id": {
+                "type": "string"
+              },
+              "contact_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "contact_phone_number": {
+                "anyOf": [
+                  {
+                    "maxLength": 16,
+                    "minLength": 8,
+                    "pattern": "^\\+[1-9][0-9]{6,14}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "context_note": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "story_reply",
+                      "story_mention"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel_user_id",
+              "text"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "customer_message_id": {
+        "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "handoff_requested_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "holder_job_id": {
+        "anyOf": [
+          {
+            "pattern": "^queued_job_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^inbound_event_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "customer_message",
+          "platform_bot_update",
+          "voice_post_call"
+        ],
+        "type": "string"
+      },
+      "last_error": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "lease_until": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "outbound_message_id": {
+        "anyOf": [
+          {
+            "pattern": "^outbound_message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "payload": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "processed_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "provider_message_id": {
+        "type": "string"
+      },
+      "queue_to_claim_ms": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "reply_message_id": {
+        "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "7",
+        "type": "string"
+      },
+      "status": {
+        "default": "received",
+        "enum": [
+          "received",
+          "processing",
+          "answered",
+          "handed_off",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "channel",
+      "provider_message_id"
+    ],
+    "type": "object"
+  }
+}

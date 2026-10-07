@@ -1,0 +1,7 @@
+{
+  "response": {
+    "response_status": "success",
+    "checkout_url": "https://pay.flitt.com/merchants/test/default/index.html?token=checkout-token-0000",
+    "payment_id": 802345671
+  }
+}

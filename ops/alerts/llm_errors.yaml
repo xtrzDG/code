@@ -1,0 +1,15 @@
+# The language model fails: of the model calls of the last 15 to 30
+# minutes (the signal window filling now and the one before), more than
+# 5% failed at the provider (outages, timeouts, rate limits; refusals are
+# answers), once at least 20 calls were made. Counted by every process in
+# the shared rate-limit buckets (platform signals llm_call, llm_error).
+code: llm_errors
+severity: sev1
+summary: Language model calls fail.
+measure: failed / all model calls, in percent
+threshold: 5
+unit: percent
+window_minutes: 15
+volume_floor: 20
+source: rate_limit_buckets (platform-signal:llm_call, platform-signal:llm_error)
+runbook: docs/operations/runbooks/llm-outage.md

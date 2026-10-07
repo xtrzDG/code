@@ -1,0 +1,232 @@
+from dependency_injector import containers
+from dependency_injector.providers import DependenciesContainer, Factory
+
+from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.config import ConfigContainer
+from app.containers.facilitators import FacilitatorsContainer
+from app.containers.registries import RegistriesContainer
+from app.containers.repositories import RepositoriesContainer
+from app.containers.time_provider import TimeProviderContainer
+from app.containers.use_cases.billing_use_cases import BillingUseCasesContainer
+from app.containers.utilities import UtilitiesContainer
+from app.contracts.platform_admins import PlatformAdminCheck
+from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.admin import (
+    AdminClientPage,
+    AdminClientQuery,
+    AdminClientsQuery,
+    AdminClientSummary,
+    ClientCabinetAccess,
+    ClientHealthView,
+    ClientSummarySource,
+    OpenClientCabinetCommand,
+)
+from app.schemas.dto.admin_jobs import (
+    AdminJobActionResult,
+    AdminJobCommand,
+    AdminJobsQuery,
+    QueuedJobPage,
+)
+from app.schemas.dto.health import ReadinessQuery, ReadinessReport
+from app.schemas.dto.jobs import JobReport, JobTick
+from app.schemas.dto.widget_errors import WidgetErrorCommand
+from app.use_cases.admin.authorize_platform_admin_use_case import (
+    AuthorizePlatformAdminUseCase,
+)
+from app.use_cases.admin.get_client_health_use_case import GetClientHealthUseCase
+from app.use_cases.admin.jobs.discard_queued_job_use_case import (
+    DiscardQueuedJobUseCase,
+)
+from app.use_cases.admin.jobs.list_queued_jobs_use_case import ListQueuedJobsUseCase
+from app.use_cases.admin.jobs.retry_queued_job_use_case import RetryQueuedJobUseCase
+from app.use_cases.admin.list_clients_use_case import ListClientsUseCase
+from app.use_cases.admin.open_client_cabinet_use_case import OpenClientCabinetUseCase
+from app.use_cases.admin.refresh_client_standings_use_case import (
+    RefreshClientStandingsUseCase,
+)
+from app.use_cases.admin.summarize_client_use_case import SummarizeClientUseCase
+from app.use_cases.jobs.purge_finished_jobs_use_case import PurgeFinishedJobsUseCase
+from app.use_cases.maintenance.purge_stale_rows_use_case import PurgeStaleRowsUseCase
+from app.use_cases.maintenance.sweep_rate_limit_buckets_use_case import (
+    SweepRateLimitBucketsUseCase,
+)
+from app.use_cases.observability.check_readiness_use_case import (
+    CheckReadinessUseCase,
+)
+from app.use_cases.observability.flush_llm_traces_use_case import FlushLlmTracesUseCase
+from app.use_cases.observability.report_widget_error_use_case import (
+    ReportWidgetErrorUseCase,
+)
+
+
+class PlatformUseCasesContainer(containers.DeclarativeContainer):
+    """
+    The platform's own work: the platform admin's client views and job
+    queue, flushing LLM traces to the quality journal and purging finished
+    jobs.
+    """
+
+    adapters: AdaptersContainer = DependenciesContainer()  # type: ignore[assignment]
+    config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
+    facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
+    registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
+    repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
+    time_provider: TimeProviderContainer = DependenciesContainer()  # type: ignore[assignment]
+    utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
+    billing_use_cases: BillingUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+
+    # --- Platform admin.
+    authorize_platform_admin_use_case: Factory[PlatformAdminCheck] = Factory(
+        AuthorizePlatformAdminUseCase,
+        user_repo=repositories.user_repo,
+        session_assurance=utilities.session_assurance,
+        platform_admins=registries.platform_admin_registry,
+    )
+    summarize_client_use_case: Factory[
+        UseCaseContract[ClientSummarySource, AdminClientSummary]
+    ] = Factory(
+        SummarizeClientUseCase,
+        subscription_repo=repositories.subscription_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        handoff_repo=repositories.handoff_repo,
+        unanswered_question_repo=repositories.unanswered_question_repo,
+        message_repo=repositories.message_repo,
+        usage_event_repo=repositories.usage_event_repo,
+        onboarding_request_repo=repositories.onboarding_request_repo,
+        plan_registry=registries.plan_registry,
+        compute_client_cost=billing_use_cases.compute_client_cost_use_case,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    list_clients_use_case: Factory[
+        UseCaseContract[AdminClientsQuery, AdminClientPage]
+    ] = Factory(
+        ListClientsUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        client_standing_repo=repositories.client_standing_repo,
+        business_repo=repositories.business_repo,
+        summarize_client=summarize_client_use_case,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    refresh_client_standings_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            RefreshClientStandingsUseCase,
+            business_repo=repositories.business_repo,
+            summarize_client=summarize_client_use_case,
+            client_standing_repo=repositories.client_standing_repo,
+            wall_clock=time_provider.microsecond_wall_clock,
+            client_health_change_repo=repositories.client_health_change_repo,
+        )
+    )
+    get_client_health_use_case: Factory[
+        UseCaseContract[AdminClientQuery, ClientHealthView]
+    ] = Factory(
+        GetClientHealthUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        business_repo=repositories.business_repo,
+        assistant_version_repo=repositories.assistant_version_repo,
+        autotest_run_repo=repositories.autotest_run_repo,
+        invoice_repo=repositories.invoice_repo,
+        payment_order_repo=repositories.payment_order_repo,
+        summarize_client=summarize_client_use_case,
+        subscription_repo=repositories.subscription_repo,
+        billing_credit_repo=repositories.billing_credit_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    open_client_cabinet_use_case: Factory[
+        UseCaseContract[OpenClientCabinetCommand, ClientCabinetAccess]
+    ] = Factory(
+        OpenClientCabinetUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        platform_admins=registries.platform_admin_registry,
+        business_repo=repositories.business_repo,
+        grant_repo=repositories.support_access_grant_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        staff_alerts=facilitators.staff_alert_facilitator,
+        localized_text_resolver=utilities.localized_text_resolver,
+        wall_clock=time_provider.microsecond_wall_clock,
+        step_up=utilities.step_up_guard,
+    )
+
+    # --- Observability.
+    flush_llm_traces_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
+        FlushLlmTracesUseCase,
+        trace_facilitator=adapters.llm_trace_facilitator,
+    )
+
+    # --- Storage retention.
+    purge_stale_rows_use_case: Factory[UseCaseContract[JobTick, JobReport]] = Factory(
+        PurgeStaleRowsUseCase,
+        user_session_repo=repositories.user_session_repo,
+        otp_challenge_repo=repositories.otp_challenge_repo,
+        channel_message_receipt_repo=repositories.channel_message_receipt_repo,
+        inbound_event_repo=repositories.inbound_event_repo,
+        outbound_message_repo=repositories.outbound_message_repo,
+        missed_call_repo=repositories.missed_call_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+        mfa_challenge_repo=repositories.mfa_challenge_repo,
+    )
+    sweep_rate_limit_buckets_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            SweepRateLimitBucketsUseCase,
+            rate_limit_registry=registries.request_rate_limit_registry,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )
+    # --- The job queue: the admin's dead letters and the purge job.
+    list_queued_jobs_use_case: Factory[
+        UseCaseContract[AdminJobsQuery, QueuedJobPage]
+    ] = Factory(
+        ListQueuedJobsUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        job_repo=repositories.queued_job_repo,
+    )
+    retry_queued_job_use_case: Factory[
+        UseCaseContract[AdminJobCommand, AdminJobActionResult]
+    ] = Factory(
+        RetryQueuedJobUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        job_repo=repositories.queued_job_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        job_wakeup=adapters.job_wakeup,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    discard_queued_job_use_case: Factory[
+        UseCaseContract[AdminJobCommand, AdminJobActionResult]
+    ] = Factory(
+        DiscardQueuedJobUseCase,
+        authorize_platform_admin=authorize_platform_admin_use_case,
+        job_repo=repositories.queued_job_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    purge_finished_jobs_use_case: Factory[UseCaseContract[JobTick, JobReport]] = (
+        Factory(
+            PurgeFinishedJobsUseCase,
+            job_repo=repositories.queued_job_repo,
+            periodic_run_repo=repositories.periodic_job_run_repo,
+        )
+    )
+
+    # --- Health and client errors.
+    check_readiness_use_case: Factory[
+        UseCaseContract[ReadinessQuery, ReadinessReport]
+    ] = Factory(
+        CheckReadinessUseCase,
+        database_probe=adapters.database_probe,
+        migration_source=adapters.migration_source,
+        worker_heartbeat_repo=repositories.worker_heartbeat_repo,
+        storage_scope=utilities.storage_scope,
+        wall_clock=time_provider.microsecond_wall_clock,
+        memory=utilities.readiness_memory,
+        data_task_registry=registries.data_task_registry,
+        data_task_state_repo=repositories.data_task_state_repo,
+    )
+    report_widget_error_use_case: Factory[UseCaseContract[WidgetErrorCommand, None]] = (
+        Factory(
+            ReportWidgetErrorUseCase,
+            client_error_reporter=facilitators.error_reporter,
+            rate_limit_registry=registries.request_rate_limit_registry,
+            wall_clock=time_provider.microsecond_wall_clock,
+        )
+    )

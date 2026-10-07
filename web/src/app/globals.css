@@ -1,0 +1,196 @@
+@import "tailwindcss";
+@import "../styles/motion.css";
+@import "../styles/siteMotion.css";
+@import "../styles/landing.css";
+@import "../styles/shell.css";
+@import "../styles/tunnel.css";
+
+/*
+ * Design tokens. Components use the semantic utilities below (bg-canvas,
+ * bg-surface, text-ink-muted, border-line, bg-accent-solid, text-danger…),
+ * never raw colours, so every page follows the theme by itself.
+ *
+ * The theme is <html data-theme="dark | light | system">, rendered by the
+ * root layout from the `aw_theme` cookie (dark when there is none). Each
+ * token holds both values, light first: light-dark(<light>, <dark>), and
+ * `color-scheme` picks one. "system" is `color-scheme: light dark`, which
+ * follows the operating system live. Native controls (selects, scrollbars,
+ * date pickers) follow the same color-scheme.
+ *
+ * Contrast (WCAG AA) is checked in both schemes: ink, ink-muted and
+ * ink-subtle ≥ 4.5:1 on canvas, surface and surface-muted; status colours
+ * ≥ 4.5:1 on their -soft backgrounds; line-strong (control borders), focus
+ * and chart colours ≥ 3:1 against the surfaces they sit on.
+ */
+
+/* `dark:` utilities follow the theme, not only the operating system. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
+
+:root,
+[data-color-scheme="system"] {
+  color-scheme: dark;
+
+  /* Warm neutrals (graphite and paper): the page, cards, quiet fills. */
+  --canvas: light-dark(#f6f5f2, #141311);
+  --surface: light-dark(#ffffff, #1b1a18);
+  --surface-muted: light-dark(#f0eee9, #24221f);
+  --ink: light-dark(#1d1c1a, #ecebe6);
+  --ink-muted: light-dark(#57544e, #aca79e);
+  --ink-subtle: light-dark(#67635c, #959087);
+  /* Hairlines between blocks, and the borders of form controls. */
+  --line: light-dark(#e4e1da, #2d2b28);
+  --line-strong: light-dark(#8e897f, #6f6a62);
+
+  /* The one accent colour (soft clay); every text use is AA on every surface. */
+  --accent: light-dark(#a5512e, #e19a75);
+  --accent-solid: #ad5732;
+  --accent-solid-hover: light-dark(#974a29, #b35a35);
+  --on-accent: #ffffff;
+  --accent-soft: light-dark(#f6e9e2, rgb(225 154 117 / 0.14));
+  --accent-ink: light-dark(#8a4224, #f0b899);
+  --focus: light-dark(#ad5732, #e19a75);
+  /* Quiet companions of the accent for gradients and decoration only. */
+  --tone-sand: light-dark(#c48d4e, #d9a86c);
+  --tone-rose: light-dark(#a8685a, #b8796a);
+
+  /*
+   * Muted states: olive, ochre, brick, slate. "Done" is a desaturated warm
+   * olive-khaki that sits with the clay accent and never reads as green
+   * (the palette guard, tests/platform/test_palette_guard.py, keeps every
+   * hue of the green, cyan, indigo and purple families out).
+   */
+  --success: light-dark(#5c5a2e, #c2bd8c);
+  --success-soft: light-dark(#f0efe2, rgb(194 189 140 / 0.12));
+  --warning: light-dark(#86570f, #e3b469);
+  --warning-soft: light-dark(#f8eedb, rgb(227 180 105 / 0.12));
+  --danger: light-dark(#b0362b, #f0918a);
+  --danger-solid: light-dark(#b3382c, #c0453a);
+  --danger-soft: light-dark(#f9e9e6, rgb(240 145 138 / 0.12));
+  --info: light-dark(#3d5c79, #98b0c8);
+  --info-soft: light-dark(#e8edf2, rgb(152 176 200 / 0.12));
+
+  /* Categorical chart series (clay, slate, ochre), ≥ 3:1 on surfaces. */
+  --chart-1: light-dark(#ad5732, #e19a75);
+  --chart-2: light-dark(#4e6c88, #98b0c8);
+  --chart-3: light-dark(#8f7438, #d4b878);
+
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="system"] {
+  color-scheme: light dark;
+}
+
+/*
+ * A page for a business's customers (a guest's booking page) follows the
+ * visitor's system colours whatever the cabinet's theme cookie says: the
+ * tokens above are declared again on it, so light-dark() reads its scheme.
+ */
+[data-color-scheme="system"] {
+  color-scheme: light dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-focus: var(--focus);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-tone-sand: var(--tone-sand);
+  --color-tone-rose: var(--tone-rose);
+
+  /* System fonts cover Georgian (Mkhedruli), Cyrillic and Latin; nothing is downloaded. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Noto Sans Georgian",
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+}
+
+/*
+ * Restrained corners and flat surfaces: blocks are separated by 1px
+ * hairlines, so the kit's and the pages' shadow and radius utilities are
+ * toned down here rather than in every file.
+ */
+@theme {
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+  --shadow-sm: 0 0 #0000;
+  --shadow: 0 0 #0000;
+  --shadow-md: 0 4px 12px -4px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px -8px rgb(0 0 0 / 0.18);
+  --shadow-2xl: 0 24px 64px -16px rgb(0 0 0 / 0.35);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--canvas);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent-solid) 35%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Native dialogs (Modal, Drawer, the phone menu). */
+dialog::backdrop {
+  background: rgb(10 10 12 / 0.5);
+  backdrop-filter: blur(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,17 @@
+# Build context of the cabinet image.
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+.vercel
+.env
+.env.*
+!.env.example
+.DS_Store
+Dockerfile
+.dockerignore
+e2e

@@ -1,0 +1,45 @@
+{
+  "collection": "admin_digest_states",
+  "document_type": "AdminDigestStateDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "covered_until": {
+        "type": "integer"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "kind": {
+        "enum": [
+          "critical_clients"
+        ],
+        "type": "string"
+      },
+      "last_sent_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "kind",
+      "covered_until"
+    ],
+    "type": "object"
+  }
+}

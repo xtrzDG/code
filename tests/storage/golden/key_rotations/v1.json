@@ -1,0 +1,18 @@
+{
+  "created_at": 1790000000000000,
+  "finished_at": 1790000000000000,
+  "id": "key_rotation_5b670327-9eb3-4fd8-af03-3edadb5d6ddc",
+  "key_count": 1,
+  "last_error": "Sample JobErrorText",
+  "requested_by": "user_cfe4ba2b-b9b9-4284-8057-252c1e579a99",
+  "schema_version": "1",
+  "secrets_current": 1,
+  "secrets_rotated": 1,
+  "secrets_total": 1,
+  "secrets_unreadable": 1,
+  "started_at": 1790000000000000,
+  "status": "queued",
+  "updated_at": 1790000000000000,
+  "webhooks_failed": 1,
+  "webhooks_renewed": 1
+}

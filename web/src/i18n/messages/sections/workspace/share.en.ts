@@ -1,0 +1,61 @@
+/**
+ * `share.*`: Channels → Share: the hosted chat page's address, a link per
+ * channel, QR codes and the printable table card. English is the reference
+ * that ru and ka are typed against.
+ */
+
+export const shareEn = {
+  title: "Share your assistant",
+  description: "Links and QR codes that open a chat with your assistant: for your Instagram bio, Google profile, tables, windows and flyers.",
+  pageLabel: "Chat page",
+  pageHint: "Your chat on a page of its own: no website needed. Customers write there like in a messenger.",
+  webChatOff: "The chat page uses the website chat. Turn the website chat on above, and the page starts working.",
+  notConfigured: "The chat page is not set up on this server yet (the cabinet's public address, CABINET_BASE_URL, is missing).",
+  open: "Open",
+  changeAddress: "Change address",
+  addressLabel: "Address of the chat page",
+  addressHint: "3 to 40 characters: lower-case Latin letters, digits and hyphens. Old addresses and printed QR codes keep working.",
+  saveAddress: "Save address",
+  cancel: "Cancel",
+  addressSaved: "The chat page has a new address.",
+  addressInvalid: "Use 3 to 40 lower-case Latin letters, digits and hyphens, without a hyphen at the start or end.",
+  addressTaken: "This address is taken. Try another one.",
+  addressReserved: "This address is reserved. Try another one.",
+  sourceLabel: "Where will you put it?",
+  sourceHint: "The links and the QR code get a tag (Telegram and WhatsApp links carry it too), so Reports show where customers came from.",
+  sources: {
+    none: "Anywhere (no tag)",
+    table: "Table card",
+    window: "Window or poster",
+    flyer: "Flyer or business card",
+    instagram: "Instagram bio",
+    google: "Google Maps profile",
+    website: "Website",
+    email: "E-mail signature",
+  },
+  linksTitle: "Links",
+  kinds: {
+    hosted_chat: "Chat page",
+    whatsapp: "WhatsApp",
+    telegram: "Telegram",
+    messenger: "Messenger",
+    instagram: "Instagram",
+    phone: "Phone call",
+  },
+  gaps: {
+    reconnect_channel: "Reconnect {channel} to get its link: its public address is not known yet.",
+    not_configured: "Not available on this server yet.",
+  },
+  showQr: "QR code for {link}",
+  qrTitle: "QR code",
+  qrAlt: "QR code that opens {link}",
+  downloadPng: "PNG",
+  downloadSvg: "SVG",
+  downloadLabel: "Download the QR code as {format}",
+  cardTitle: "Table card",
+  cardHint: "An A6 card (105 × 148 mm) with your name and the QR code. Print it and put it in a stand on each table.",
+  cardLanguage: "Card language",
+  cardPreview: "Preview of the table card",
+  printCard: "Print table card",
+  printFailed: "Printing could not start. Download the PNG and print it instead.",
+} as const;

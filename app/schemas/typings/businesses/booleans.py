@@ -1,9 +1,10 @@
 """Keep abc order.
 
 Example:
-    is_channel_enabled: IsChannelEnabled = True
+    is_recording_notice_enabled: IsRecordingNoticeEnabled = True
 """
 
-IsChannelEnabled = bool
+IsOpenNow = bool
+IsRecordingNoticeEnabled = bool
 IsVoiceEnabled = bool
 # Keep abc order for all non example types, if possible.

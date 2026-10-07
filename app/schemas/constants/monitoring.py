@@ -1,0 +1,116 @@
+from enum import StrEnum
+
+
+class PlatformAlertCode(StrEnum):
+    """
+    What the platform alerts job watches (ops/alerts/*.yaml has each rule's
+    threshold, window and runbook).
+
+    DEAD_JOBS: queued jobs ran out of attempts. INBOUND_BACKLOG: a customer
+    message waits for a worker. OUTBOUND_FAILURES: replies and staff
+    notifications fail for good. LLM_ERRORS: model calls fail. HANDOFF_SPIKE:
+    far more conversations go to people than usual. TOOL_ERRORS: assistant
+    tools fail. STALE_WORKER: a worker of the current release stopped
+    beating. OTP_CAP_TRIPS: a platform cap refused login codes.
+    QUALITY_DROP: the judge's scores of real conversations fell against the
+    week before (production quality). SPEND_SPIKE: today's provider spend
+    is far above the daily mean of the week before. SPEND_BUDGET: today's
+    provider spend passed 80 % of the platform's daily budget.
+    BACKFILL_STALLED: a post-deploy data task has not finished within a
+    day of becoming due (docs/operations/deploys.md).
+    ANSWER_BUDGET_FAST_BURN, ANSWER_BUDGET_SLOW_BURN: the error budget of
+    "answered within 60 s" burns 14.4 times too fast over 1 h and 5 min, or
+    6 times over 6 h and 30 min; API_BUDGET_FAST_BURN, API_BUDGET_SLOW_BURN
+    the same for API availability (docs/operations/slo.md).
+    WORKER_DOWN: no background worker wrote its pulse for five minutes,
+    seen from outside the workers too (the API's pipeline watchdog and
+    GET /healthz/pipeline): customers' messages are not answered.
+    """
+
+    DEAD_JOBS = "dead_jobs"
+    INBOUND_BACKLOG = "inbound_backlog"
+    OUTBOUND_FAILURES = "outbound_failures"
+    LLM_ERRORS = "llm_errors"
+    HANDOFF_SPIKE = "handoff_spike"
+    TOOL_ERRORS = "tool_errors"
+    STALE_WORKER = "stale_worker"
+    OTP_CAP_TRIPS = "otp_cap_trips"
+    QUALITY_DROP = "quality_drop"
+    SPEND_SPIKE = "spend_spike"
+    SPEND_BUDGET = "spend_budget"
+    BACKFILL_STALLED = "backfill_stalled"
+    ANSWER_BUDGET_FAST_BURN = "answer_budget_fast_burn"
+    ANSWER_BUDGET_SLOW_BURN = "answer_budget_slow_burn"
+    API_BUDGET_FAST_BURN = "api_budget_fast_burn"
+    API_BUDGET_SLOW_BURN = "api_budget_slow_burn"
+    WORKER_DOWN = "worker_down"
+
+
+class PlatformAlertStatus(StrEnum):
+    """Whether a platform alert fires right now or its last episode is over."""
+
+    FIRING = "firing"
+    RESOLVED = "resolved"
+
+
+class AlertUnit(StrEnum):
+    """
+    What a platform alert's figure and threshold count. RATIO is a rule's
+    multiple of a usual level (the handoff spike: three times the hourly
+    mean of the week); its checks compare counts.
+    """
+
+    COUNT = "count"
+    SECONDS = "seconds"
+    PERCENT = "percent"
+    RATIO = "ratio"
+
+
+class PlatformSignal(StrEnum):
+    """
+    Events every process counts in shared windows for the platform alerts:
+    model calls, the failed ones among them, and login codes a platform cap
+    refused.
+    """
+
+    LLM_CALL = "llm_call"
+    LLM_ERROR = "llm_error"
+    OTP_CAP_TRIP = "otp_cap_trip"
+
+
+class MaintenanceRunKind(StrEnum):
+    """What a recorded maintenance run did: an off-site backup or a restore drill."""
+
+    BACKUP = "backup"
+    RESTORE_DRILL = "restore_drill"
+
+
+class MaintenanceRunOutcome(StrEnum):
+    """How a backup or a restore drill ended."""
+
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class AlertNoticeKind(StrEnum):
+    """
+    Why the team gets a platform alert message: an episode started, it
+    still fires after the cooldown, or it is over.
+    """
+
+    FIRING = "firing"
+    STILL_FIRING = "still_firing"
+    RESOLVED = "resolved"
+
+
+class PlatformMonitor(StrEnum):
+    """
+    Who watches the platform, each with a mark of its last look
+    (`platform_monitors`, 1173): ALERT_CHECKS is the workers'
+    `platform_alerts` job (the status page trusts its levels only while
+    this mark is fresh); PIPELINE_WATCHDOG is the API's watchdog, whose
+    mark also holds the lease of the API instance that leads it.
+    """
+
+    ALERT_CHECKS = "alert_checks"
+    PIPELINE_WATCHDOG = "pipeline_watchdog"

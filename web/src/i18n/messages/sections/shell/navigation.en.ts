@@ -1,0 +1,74 @@
+/**
+ * `navigation.*` texts: the sections of a business, their pages, the
+ * sidebar and the phone tab bar, in English: the reference that ru and ka
+ * are typed against.
+ */
+
+export const navigationEn = {
+  sections: {
+    overview: "Overview",
+    inbox: "Inbox",
+    bookings: "Bookings",
+    customers: "Customers",
+    assistant: "Assistant",
+    settings: "Settings",
+  },
+  /** Shorter names for the phone tab bar, where a long word would not fit a fifth of the screen. */
+  tabLabels: {
+    inbox: "Inbox",
+  },
+  descriptions: {
+    overview: "How your assistant is doing and what needs you today.",
+    inbox: "Every conversation in one place: the customers waiting for a person, requests, and who of the team handles what.",
+    bookings: "Every booking, and the waitlist for days that are full.",
+    bookingsWaitlist: "Customers waiting for a full day; a freed place is held for the first one it fits.",
+    bookingsReturnVisits: "One message that brings customers back: after a visit, when a check is due, or before arrival.",
+    customers: "Everyone who wrote, called or booked: their history across channels, tags, VIPs and saved groups.",
+    customersList: "Find a customer by name, phone or tag and open their history across channels.",
+    customersSegments: "Saved groups of customers by tag, last visit and bookings, with a CSV for your campaigns.",
+    assistant: "Try your assistant, teach it, choose where it answers and apply your changes.",
+    settings: "Your business, team, notifications, quick replies, calls, reviews, plan, privacy and the audit log.",
+    assistantTest: "Write as a customer would. Nothing reaches real customers.",
+    assistantProfile: "What your assistant knows about the business: the place, the offer, hours and bookings, people and rules. Changes save as you type.",
+    assistantVersions: "Every update of the assistant: when customers got it, its checks and a way back.",
+    assistantChecks: "Questions with what the answer must do, asked in every “Apply changes”.",
+  },
+  pages: {
+    overviewDashboard: "Dashboard",
+    overviewReports: "Reports",
+    assistantTest: "Try it",
+    assistantKnowledge: "Knowledge",
+    assistantProfile: "Business profile",
+    assistantChannels: "Channels",
+    assistantVersions: "History",
+    assistantChecks: "My checks",
+    bookingsList: "All bookings",
+    bookingsWaitlist: "Waitlist",
+    bookingsReturnVisits: "Return visits",
+    customersList: "All customers",
+    customersSegments: "Segments",
+    settingsGeneral: "Business",
+    settingsTeam: "Team",
+    settingsNotifications: "Notifications",
+    settingsQuickReplies: "Quick replies",
+    settingsCalls: "Calls",
+    settingsReviews: "Reviews",
+    settingsIntegrations: "Integrations",
+    settingsBilling: "Plan and billing",
+    settingsPrivacy: "Privacy",
+    settingsAudit: "Audit log",
+  },
+  sectionPages: "Pages of {section}",
+  advanced: "Advanced",
+  collapse: "Collapse the menu",
+  expand: "Expand the menu",
+  tabBar: "Sections",
+  more: "More",
+  waiting: {
+    one: "{count} waiting",
+    other: "{count} waiting",
+  },
+  ownerOnlyTitle: "This page is for owners",
+  ownerOnlyDescription: "Your role in {business} does not include it. Ask an owner if something here needs changing.",
+  toOverview: "Go to the overview",
+} as const;

@@ -1,0 +1,14 @@
+# A platform-wide cap of login code sends refused a send (per country, new
+# destinations, verified users): SMS pumping or a login flood. Every
+# refusal is counted by the process that refused it (platform signal
+# otp_cap_trip); the platform admins also get one e-mail per cap an hour.
+code: otp_cap_trips
+severity: sev2
+summary: A platform cap refused login codes (SMS pumping or a login flood).
+measure: login codes refused by a platform cap in the last 15 to 30 minutes
+threshold: 0
+unit: count
+window_minutes: 15
+volume_floor: 0
+source: rate_limit_buckets (platform-signal:otp_cap_trip)
+runbook: docs/operations/runbooks/sms-pumping.md

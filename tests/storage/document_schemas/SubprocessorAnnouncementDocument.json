@@ -1,0 +1,84 @@
+{
+  "collection": "subprocessor_announcements",
+  "document_type": "SubprocessorAnnouncementDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "change_key": {
+        "maxLength": 80,
+        "minLength": 16,
+        "pattern": "^[a-z][a-z0-9_]*-(added|removed)-[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+        "type": "string"
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "effective_on": {
+        "maxLength": 10,
+        "minLength": 10,
+        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+        "type": "string"
+      },
+      "id": {
+        "pattern": "^subprocessor_announcement_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "added",
+          "removed"
+        ],
+        "type": "string"
+      },
+      "notified_business_count": {
+        "default": 0,
+        "maximum": 100000000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "recipient_count": {
+        "default": 0,
+        "maximum": 1000000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "started_at": {
+        "type": "integer"
+      },
+      "subprocessor": {
+        "maxLength": 40,
+        "minLength": 2,
+        "pattern": "^[a-z][a-z0-9_]*$",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "change_key",
+      "kind",
+      "subprocessor",
+      "effective_on",
+      "started_at"
+    ],
+    "type": "object"
+  }
+}

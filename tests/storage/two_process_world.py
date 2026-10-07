@@ -1,0 +1,222 @@
+"""
+The world of the two-process test: a restaurant published on the test
+database (seeded in this process, on the real clock) and two API processes
+(`two_process_api`) serving it from the same database.
+"""
+
+import os
+import socket
+import subprocess
+import sys
+import time
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+
+import httpx
+from typed_time_provider import Microseconds, WallClock
+
+from app.containers.app import AppContainer
+from tests.e2e.harness import bearer, start_workshop
+from tests.e2e.harness_settings import E2E_ENVIRONMENT
+from tests.e2e.journeys import open_restaurant
+from tests.e2e.workshop_container import replace_provider
+from tests.storage.storage_testing import PROJECT_ROOT_DIRECTORY
+
+STARTUP_SECONDS: float = 90.0
+# The subprocesses get only what they need: no provider keys (no network),
+# no platform bot to register at startup.
+PROCESS_ENVIRONMENT_KEYS: tuple[str, ...] = ("APP_ENV", "ENCRYPTION_KEY")
+
+
+@dataclass(frozen=True)
+class SeededRestaurant:
+    """A published restaurant: its id and its owner's bearer headers."""
+
+    business_id: str
+    headers: dict[str, str]
+
+    @property
+    def base(self) -> str:
+        return f"/v1/businesses/{self.business_id}"
+
+
+def use_the_real_clock(container: AppContainer) -> None:
+    """Seed on the wall clock the API processes use, not the e2e clock."""
+
+    replace_provider(
+        container.time_provider.microsecond_wall_clock,
+        WallClock(preferred_time_unit_type=Microseconds),
+    )
+
+
+def seed_restaurant(database_url: str) -> SeededRestaurant:
+    """Open the e2e restaurant (profile, table, trial, DPA, published)."""
+
+    workshop = start_workshop(
+        {**E2E_ENVIRONMENT, "DATABASE_URL": database_url},
+        prepare=use_the_real_clock,
+    )
+    with workshop.client as client:
+        restaurant = open_restaurant(workshop)
+        connected = client.put(
+            f"/v1/businesses/{restaurant.business_id}/channels/web",
+            json={},
+            headers=bearer(restaurant.owner_token),
+        )
+        assert connected.status_code == 200, connected.text
+
+    return SeededRestaurant(
+        business_id=restaurant.business_id,
+        headers=bearer(restaurant.owner_token),
+    )
+
+
+def free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
+def process_environment(database_url: str) -> dict[str, str]:
+    return {
+        "PATH": os.environ.get("PATH", ""),
+        **{key: E2E_ENVIRONMENT[key] for key in PROCESS_ENVIRONMENT_KEYS},
+        "DATABASE_URL": database_url,
+        "LLM_PROVIDER": "scripted",
+        # Each message answered on its own, at once: these tests time the
+        # pickup and the order of turns, not the grouping of quick messages.
+        "MESSAGE_COALESCE_SECONDS": "0",
+        "DB_POOL_SIZE": "12",
+        "THREADPOOL_SIZE": "12",
+    }
+
+
+def worker_environment(
+    database_url: str, extra: Mapping[str, str] | None = None
+) -> dict[str, str]:
+    """A worker process: JSON logs, so the test can read their fields."""
+
+    return {
+        **process_environment(database_url),
+        "LOG_FORMAT": "json",
+        **({} if extra is None else dict(extra)),
+    }
+
+
+@contextmanager
+def worker_processes(
+    database_url: str,
+    call_log: Path | None,
+    log_directory: Path,
+    count: int = 1,
+    extra_environment: Mapping[str, str] | None = None,
+) -> Generator[list[Path]]:
+    """
+    Start `count` worker processes; yield the files of their logs. With a
+    model call log they answer with the logging stand-in model, without
+    one they are the real `workshop worker` (its scripted model).
+    """
+
+    environment = worker_environment(database_url, extra_environment)
+    logs: list[Path] = [log_directory / f"worker-{index}.log" for index in range(count)]
+    handles = [log.open("wb") for log in logs]
+    command: list[str] = (
+        [sys.executable, "-m", "app.worker_main"]
+        if call_log is None
+        else [sys.executable, "-m", "tests.storage.two_process_worker", str(call_log)]
+    )
+    processes = [
+        subprocess.Popen(
+            command,
+            cwd=PROJECT_ROOT_DIRECTORY,
+            env=environment,
+            stderr=handle,
+            stdout=handle,
+        )
+        for handle in handles
+    ]
+    try:
+        yield logs
+    finally:
+        stop_processes(processes)
+        for handle in handles:
+            handle.close()
+
+
+def stop_processes(processes: list[subprocess.Popen[bytes]]) -> None:
+    for process in processes:
+        process.terminate()
+    for process in processes:
+        try:
+            process.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+
+
+def wait_until_ready(process: subprocess.Popen[bytes], url: str) -> None:
+    deadline = time.monotonic() + STARTUP_SECONDS
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            raise AssertionError(f"The API process at {url} exited early.")
+        try:
+            if httpx.get(f"{url}/healthz", timeout=2).status_code == 200:
+                return
+        except httpx.TransportError:
+            pass
+        time.sleep(0.2)
+
+    raise AssertionError(f"The API process at {url} did not start.")
+
+
+@contextmanager
+def api_processes(
+    database_url: str,
+    call_log: Path,
+    count: int = 2,
+    extra_environment: Mapping[str, str] | None = None,
+) -> Generator[list[str]]:
+    """Start `count` API processes on the database; yield their base URLs."""
+
+    environment: Mapping[str, str] = {
+        **process_environment(database_url),
+        **({} if extra_environment is None else dict(extra_environment)),
+    }
+    ports: list[int] = [free_port() for _ in range(count)]
+    processes = [
+        subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tests.storage.two_process_api",
+                str(port),
+                str(call_log),
+            ],
+            cwd=PROJECT_ROOT_DIRECTORY,
+            env=dict(environment),
+        )
+        for port in ports
+    ]
+    urls = [f"http://127.0.0.1:{port}" for port in ports]
+    try:
+        for process, url in zip(processes, urls, strict=True):
+            wait_until_ready(process, url)
+        yield urls
+    finally:
+        stop_processes(processes)
+
+
+def read_model_calls(call_log: Path) -> list[tuple[int, float, float]]:
+    """(pid, started, ended) of every model call, in start order."""
+
+    if not call_log.exists():
+        return []
+
+    calls: list[tuple[int, float, float]] = []
+    for line in call_log.read_text(encoding="utf-8").splitlines():
+        pid, started, ended = line.split()
+        calls.append((int(pid), float(started), float(ended)))
+
+    return sorted(calls, key=lambda call: call[1])

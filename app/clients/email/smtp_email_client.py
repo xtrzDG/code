@@ -1,0 +1,193 @@
+import smtplib
+import ssl
+from collections.abc import Callable, Iterable, Sequence
+from contextlib import suppress
+from email import policy
+from email.message import EmailMessage
+from email.utils import formatdate, make_msgid, parseaddr
+
+from app.contracts.messaging_clients import EmailSenderClientContract
+from app.schemas.constants.messaging import SmtpSecurity
+from app.schemas.dto.messaging import EmailAttachment
+from app.schemas.exceptions.application_errors import (
+    DeliveryNotConfiguredError,
+    ExternalServiceError,
+    ProviderRejectedMessageError,
+)
+from app.schemas.typings.messaging.constrained_integers import SmtpPort
+from app.schemas.typings.messaging.constrained_strings import (
+    EmailSenderAddress,
+    SmtpHost,
+)
+from app.schemas.typings.messaging.strings import (
+    EmailBodyText,
+    EmailSubject,
+    SmtpUsername,
+)
+from app.schemas.typings.platform.strings import PlatformSecret
+from app.schemas.typings.users.constrained_strings import EmailAddress
+
+CONNECT_TIMEOUT_SECONDS: float = 15.0
+# Bodies go out base64 or quoted-printable when not plain ASCII: 8-bit data
+# needs BODY=8BITMIME (RFC 6152), which smtplib does not send by itself.
+SEVEN_BIT_POLICY = policy.default.clone(cte_type="7bit")
+
+# Opens a connection: (host, port, security, TLS context) -> connected client.
+type SmtpConnector = Callable[
+    [SmtpHost, SmtpPort, SmtpSecurity, ssl.SSLContext],
+    smtplib.SMTP,
+]
+
+
+def connect_to_smtp_server(
+    host: SmtpHost,
+    port: SmtpPort,
+    security: SmtpSecurity,
+    tls_context: ssl.SSLContext,
+) -> smtplib.SMTP:
+    """A connected client; TLS from the start for SMTP_SECURITY=ssl."""
+
+    if security is SmtpSecurity.SSL:
+        return smtplib.SMTP_SSL(
+            str(host),
+            int(port),
+            timeout=CONNECT_TIMEOUT_SECONDS,
+            context=tls_context,
+        )
+
+    return smtplib.SMTP(str(host), int(port), timeout=CONNECT_TIMEOUT_SECONDS)
+
+
+class SmtpEmailClient(EmailSenderClientContract):
+    """
+    Platform e-mail over SMTP (any provider: Mailgun, Postmark, SES, a
+    mailbox): one connection per message, STARTTLS or TLS with certificate
+    checks, optional login.
+
+    The password is only handed to smtplib (debug output stays off); errors
+    name the failure kind, never the password, the recipient or the body.
+    A refused login, sender or STARTTLS is a setting to fix
+    (DeliveryNotConfiguredError), a refused recipient is final
+    (ProviderRejectedMessageError), anything else - a 4xx refusal of the
+    sender or the recipient included - may pass on another try.
+    """
+
+    def __init__(
+        self,
+        host: SmtpHost,
+        port: SmtpPort,
+        security: SmtpSecurity,
+        sender: EmailSenderAddress,
+        username: SmtpUsername | None = None,
+        password: PlatformSecret | None = None,
+        connector: SmtpConnector = connect_to_smtp_server,
+        tls_context: ssl.SSLContext | None = None,
+    ) -> None:
+        self._host: SmtpHost = host
+        self._port: SmtpPort = port
+        self._security: SmtpSecurity = security
+        self._sender: EmailSenderAddress = sender
+        self._username: SmtpUsername | None = username
+        self._password: PlatformSecret | None = password
+        self._connector: SmtpConnector = connector
+        self._tls_context: ssl.SSLContext = (
+            ssl.create_default_context() if tls_context is None else tls_context
+        )
+
+    def send_email(
+        self,
+        recipient: EmailAddress,
+        subject: EmailSubject,
+        text_body: EmailBodyText,
+        html_body: EmailBodyText | None,
+        attachments: Sequence[EmailAttachment] = (),
+    ) -> None:
+        message: EmailMessage = self._build_message(
+            recipient, subject, text_body, html_body
+        )
+        for attachment in attachments:
+            main_type, _, sub_type = str(attachment.media_type).partition("/")
+            message.add_attachment(
+                attachment.content,
+                maintype=main_type,
+                subtype=sub_type,
+                filename=str(attachment.file_name),
+            )
+
+        try:
+            connection: smtplib.SMTP = self._connector(
+                self._host,
+                self._port,
+                self._security,
+                self._tls_context,
+            )
+            try:
+                if self._security is SmtpSecurity.STARTTLS:
+                    connection.starttls(context=self._tls_context)
+
+                if self._username is not None and self._password is not None:
+                    connection.login(str(self._username), str(self._password))
+
+                connection.send_message(message)
+            finally:
+                with suppress(smtplib.SMTPException, OSError):
+                    connection.quit()
+        except smtplib.SMTPAuthenticationError:
+            raise DeliveryNotConfiguredError(
+                "The SMTP server rejected the login; check SMTP_USERNAME and "
+                "SMTP_PASSWORD."
+            ) from None
+        except smtplib.SMTPNotSupportedError:
+            raise DeliveryNotConfiguredError(
+                "The SMTP server does not offer STARTTLS; set SMTP_SECURITY=ssl "
+                "(port 465)."
+            ) from None
+        except smtplib.SMTPRecipientsRefused as error:
+            if is_transient(code for code, _ in error.recipients.values()):
+                raise ExternalServiceError(
+                    "The SMTP server put the recipient off for now (4xx)."
+                ) from None
+            raise ProviderRejectedMessageError(
+                "The SMTP server refused the recipient address."
+            ) from None
+        except smtplib.SMTPSenderRefused as error:
+            if is_transient([error.smtp_code]):
+                raise ExternalServiceError(
+                    "The SMTP server put the message off for now (4xx)."
+                ) from None
+            raise DeliveryNotConfiguredError(
+                "The SMTP server refused the sender; check SMTP_FROM."
+            ) from None
+        except (smtplib.SMTPException, OSError) as error:
+            raise ExternalServiceError(
+                f"E-mail delivery failed: {type(error).__name__}."
+            ) from None
+
+    def _build_message(
+        self,
+        recipient: EmailAddress,
+        subject: EmailSubject,
+        text_body: EmailBodyText,
+        html_body: EmailBodyText | None,
+    ) -> EmailMessage:
+        sender_address: str = parseaddr(str(self._sender))[1]
+        message = EmailMessage(policy=SEVEN_BIT_POLICY)
+        message["From"] = str(self._sender)
+        message["To"] = str(recipient)
+        message["Subject"] = str(subject)
+        message["Date"] = formatdate(localtime=False)
+        message["Message-ID"] = make_msgid(domain=sender_address.rpartition("@")[2])
+        # Out-of-office robots do not answer automatic messages.
+        message["Auto-Submitted"] = "auto-generated"
+        message.set_content(str(text_body))
+        if html_body is not None:
+            message.add_alternative(str(html_body), subtype="html")
+
+        return message
+
+
+def is_transient(reply_codes: Iterable[int]) -> bool:
+    """4xx replies (RFC 5321, 4.2.1): the same message may pass later."""
+
+    codes: list[int] = list(reply_codes)
+    return bool(codes) and all(400 <= code < 500 for code in codes)

@@ -1,0 +1,12 @@
+{
+  "created_at": 1790000000000000,
+  "expires_at": 1790000000000000,
+  "failed_attempts": 1,
+  "id": "mfa_challenge_301bb5c6-c144-4a69-ba94-f292b94a71e3",
+  "is_consumed": true,
+  "is_new_user": true,
+  "requested_from_ip": "203.0.113.7",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "user_id": "user_ccc30ab1-7505-4198-a556-1e6e4a6111ce"
+}

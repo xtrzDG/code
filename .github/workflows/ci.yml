@@ -1,0 +1,578 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release);
+# Dependabot (.github/dependabot.yml) proposes updates weekly. Downloaded
+# tools are pinned by version and checked against their SHA-256.
+#
+# Kept under eight minutes from push to the last job by running in parallel
+# (docs/operations/ci.md): the backend tests in parts balanced by measured
+# duration (tests/durations.json) whose coverage is combined; the cabinet's
+# checks next to its build; the end-to-end suite in shards balanced by
+# measured duration (web/e2e/durations.json) that start that build. The last
+# job writes every job's duration to the run summary and warns above 8 minutes.
+env:
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+  PIP_AUDIT_VERSION: "2.10.1"
+
+jobs:
+  backend-checks:
+    name: Backend checks (ruff, mypy, pyright, legal texts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Type check (mypy)
+        run: uv run mypy .
+
+      - name: Type check (pyright)
+        run: uv run pyright
+
+      # Counts the fields in square brackets of the legal texts in force;
+      # fails only once the repository variable LEGAL_TEXTS_FINAL says the
+      # lawyer-reviewed texts are final (docs/legal/README.md).
+      - name: Legal texts (fields to fill in)
+        env:
+          LEGAL_TEXTS_FINAL: ${{ vars.LEGAL_TEXTS_FINAL || 'false' }}
+        run: uv run python -m scripts.check_legal_texts
+
+  backend-tests:
+    name: Backend tests (${{ matrix.group }} ${{ matrix.part }}/${{ matrix.parts }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # tests/conftest.py marks the tests that run on Postgres and keeps
+        # the test files tests/part_plan.py gives part k of n (TEST_PART),
+        # balanced by tests/durations.json.
+        include:
+          - { group: postgres, part: 1, parts: 2 }
+          - { group: postgres, part: 2, parts: 2 }
+          - { group: rest, part: 1, parts: 4 }
+          - { group: rest, part: 2, parts: 4 }
+          - { group: rest, part: 3, parts: 4 }
+          - { group: rest, part: 4, parts: 4 }
+    env:
+      # The storage tests start a throwaway Postgres 16 from these binaries
+      # (tests/storage/postgres_server.py); they are skipped without them, so
+      # the postgres parts check they are present.
+      POSTGRES_BIN_DIRECTORY: /usr/lib/postgresql/16/bin
+      UV_FROZEN: "1"
+      COVERAGE_FILE: .coverage.${{ matrix.group }}-${{ matrix.part }}
+      MARKERS: ${{ matrix.group == 'postgres' && 'postgres and not perf' || 'not postgres and not perf' }}
+      TEST_PART: ${{ matrix.part }}/${{ matrix.parts }}
+      # How long each test file took, to refresh tests/durations.json from
+      # CI's own machines (docs/operations/ci.md).
+      TEST_DURATIONS_REPORT: durations-${{ matrix.group }}-${{ matrix.part }}.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install PostgreSQL 16 binaries
+        if: ${{ matrix.group == 'postgres' }}
+        run: |
+          if [ ! -x "$POSTGRES_BIN_DIRECTORY/initdb" ]; then
+            sudo apt-get update
+            sudo apt-get install --yes --no-install-recommends postgresql-16
+          fi
+          "$POSTGRES_BIN_DIRECTORY/postgres" --version
+
+      # Backups must open with the age tool (tests/backups/test_age_cli_interop.py);
+      # the invoice and receipt PDFs (WeasyPrint) lay text out with Pango.
+      - name: Install age and the PDF engine's libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            age libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
+          age --version
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # In parallel (pytest-xdist) with line and branch coverage of app/; the
+      # 95 % floor applies to all parts together (job "coverage"). The rest
+      # includes the architecture policies: role layers (.importlinter), dead
+      # code (vulture), at most 300 lines per file in app/, scripts/, tests/
+      # and web/src/, typed domain primitives, the API changelog.
+      - name: Tests with coverage
+        run: >-
+          uv run pytest -ra -n auto -m "$MARKERS"
+          --cov=app --cov-branch --cov-report= --cov-fail-under=0
+
+      - name: Keep the coverage data and the durations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-${{ matrix.group }}-${{ matrix.part }}
+          path: |
+            ${{ env.COVERAGE_FILE }}
+            ${{ env.TEST_DURATIONS_REPORT }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  coverage:
+    name: Backend coverage (every part, at least 95 %)
+    needs: backend-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Download every part's coverage data
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: coverage-*
+          path: coverage-parts
+          merge-multiple: true
+
+      # Line and branch coverage of app/ may not fall below 95 %
+      # ([tool.coverage] in pyproject.toml; relative paths combine across jobs).
+      - name: Combine and check the floor
+        run: |
+          uv run --frozen --only-group dev coverage combine coverage-parts
+          uv run --frozen --only-group dev coverage report
+          echo "Backend line and branch coverage: $(uv run --frozen --only-group dev coverage report --format=total) %" >> "$GITHUB_STEP_SUMMARY"
+
+      # tests/durations.json as measured by this run's parts, ready to
+      # commit when the parts drift apart (docs/operations/ci.md).
+      - name: Merge the parts' test durations
+        run: uv run --no-project python -m scripts.backend_test_durations coverage-parts/durations-*.json
+
+      - name: Keep the merged test durations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-test-durations
+          path: tests/durations.json
+          if-no-files-found: error
+          retention-days: 7
+
+  web-build:
+    name: Cabinet build (for the end-to-end shards)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Turbopack keeps its build cache in .next/cache: a build after a small
+      # change starts warm. A new key per lockfile and source; the newest
+      # cache of the same lockfile seeds it.
+      - name: Restore the build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}-${{ hashFiles('web/src/**', 'web/public/**', 'web/next.config.ts') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}-
+
+      - name: Build
+        run: npm run build
+
+      # The end-to-end shards start this build instead of each building it.
+      - name: Keep the build for the end-to-end shards
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cabinet-build
+          path: |
+            web/.next
+            !web/.next/cache
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  web-checks:
+    name: Cabinet checks (lint, knip, typecheck, tests with coverage, generated client)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Georgian and Russian dates, plurals and lists need Node with full ICU.
+      - name: Node formats Georgian, Russian and English (full ICU)
+        run: npm run check:intl
+
+      # Includes max-lines: at most 300 lines per file in src/ and e2e/.
+      - name: Lint
+        run: npm run lint
+
+      # Unused files, exports and dependencies (knip.config.ts).
+      - name: Unused code (knip)
+        run: npm run knip
+
+      - name: Type check
+        run: npm run typecheck
+
+      # Coverage floors of src/lib and the routes' _lib (vitest.config.mts);
+      # the components project renders React in jsdom. The e2e suite's own
+      # helpers run here too: its shard plan, durations and flaky reporter.
+      - name: Tests with coverage
+        run: npm run test:coverage
+
+      # The typed client must be generated from the committed openapi.json
+      # (which the backend tests compare with the API itself).
+      - name: Generated API client is current
+        run: |
+          npm run gen:api:types
+          git diff --exit-code -- src/api/schema.d.ts \
+            || { echo "::error::Run 'cd web && npm run gen:api' and commit src/api/schema.d.ts."; exit 1; }
+
+      # Readable cabinet stack traces in Sentry: on main, with the
+      # SENTRY_AUTH_TOKEN secret (and the SENTRY_ORG / SENTRY_PROJECT
+      # variables), build with the source maps, upload them for the commit's
+      # release and delete them (src/lib/monitoring/sourceMaps.ts). The token
+      # reaches this step only; the shards' build (job "web-build") has none.
+      - name: Upload the cabinet's source maps to Sentry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          APP_RELEASE: ${{ github.sha }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "No SENTRY_AUTH_TOKEN secret: the source maps are not uploaded."
+            exit 0
+          fi
+          npm run build
+
+  security:
+    name: Security (dependencies, secrets, static analysis)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # gitleaks reads the whole history, not only the last commit.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # Known vulnerabilities in the locked Python dependencies (PyPI and
+      # OSV advisories); --strict fails when a package cannot be audited.
+      - name: Python dependencies (pip-audit)
+        run: >-
+          uv export --frozen --no-emit-project --format requirements-txt
+          | uvx "pip-audit==${PIP_AUDIT_VERSION}" --strict --disable-pip
+          --requirement /dev/stdin
+
+      # Runtime dependencies of the cabinet; dev tools never reach users.
+      - name: Cabinet dependencies (npm audit)
+        working-directory: web
+        run: npm audit --omit=dev --audit-level=high
+
+      # Reviewed false positives are listed by fingerprint in .gitleaksignore.
+      - name: Secrets in the whole history (gitleaks)
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check
+          tar --extract --gzip --file "$RUNNER_TEMP/$archive" --directory "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git --redact --no-banner --log-opts="--all" .
+
+      # Static analysis of the backend; bandit-baseline.json holds the
+      # findings reviewed on its date (SECURITY.md), new ones fail.
+      - name: Python static analysis (bandit)
+        run: uv run --frozen --only-group dev bandit -c pyproject.toml -r app scripts -b bandit-baseline.json
+
+  images:
+    name: Docker images (build, smoke test, Trivy, SBOM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Build the backend image
+        run: docker build --tag assistant-workshop-backend:ci .
+
+      - name: Build the cabinet image
+        run: docker build --tag assistant-workshop-web:ci web
+
+      - name: Smoke test the backend image
+        run: |
+          # Without DATABASE_URL the migration and backfill runners refuse with exit code 2.
+          for runner in migrate migrate-documents backfill-lookup; do
+            status=0
+            docker run --rm assistant-workshop-backend:ci "$runner" --dry-run || status=$?
+            test "$status" -eq 2
+          done
+          docker run --detach --name api --publish 8000:8000 \
+            --env APP_ENV=development --env LLM_PROVIDER=scripted \
+            assistant-workshop-backend:ci api
+          # The checks that run after every deploy (docs/operations/deploys.md).
+          if ! SMOKE_WAIT_SECONDS=30 scripts/smoke.sh http://127.0.0.1:8000; then
+            docker logs api
+            exit 1
+          fi
+          docker rm --force api
+          # The image lays out a Georgian invoice PDF with its own fonts.
+          docker run --rm --entrypoint python assistant-workshop-backend:ci -c \
+            "from weasyprint import HTML; assert HTML(string='<p>ინვოისი Счёт</p>').write_pdf().startswith(b'%PDF')"
+          docker run --rm --entrypoint fc-list assistant-workshop-backend:ci \
+            ':lang=ka' family | grep -q 'Noto Sans Georgian'
+
+      # Fails on HIGH and CRITICAL vulnerabilities that have a fix; reviewed
+      # exceptions go to .trivyignore with a reason and an expiry date.
+      - name: Scan the backend image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: assistant-workshop-backend:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+
+      - name: Scan the cabinet image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: assistant-workshop-web:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+          skip-setup-trivy: true
+
+      - name: SBOM of the backend image (syft)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: assistant-workshop-backend:ci
+          format: spdx-json
+          artifact-name: sbom-backend.spdx.json
+          upload-artifact-retention: 30
+
+      - name: SBOM of the cabinet image (syft)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: assistant-workshop-web:ci
+          format: spdx-json
+          artifact-name: sbom-web.spdx.json
+          upload-artifact-retention: 30
+
+  e2e:
+    name: End-to-end (${{ matrix.shard }}/8)
+    needs: web-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # e2e/support/shards.ts balances the spec files by their measured
+        # durations (e2e/durations.json); support/shards.test.ts keeps every
+        # shard within its budget for this count.
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # The invoice and receipt downloads render PDFs (WeasyPrint, Pango).
+      - name: Install the PDF engine's libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
+
+      - name: Install API dependencies
+        working-directory: .
+        run: uv sync --frozen
+
+      - name: Install Node 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install cabinet dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Download the cabinet build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cabinet-build
+          path: web/.next
+
+      # Starts the downloaded build and an API of its own (in-memory, demo
+      # data, development login codes) and runs this shard's spec files
+      # (e2e/support/shards.ts). A test that passes only on a retry is listed
+      # in the summary and in e2e/flaky.json; on main a new one fails the job.
+      - name: End-to-end tests
+        env:
+          E2E_SKIP_BUILD: "1"
+          E2E_SHARD: ${{ matrix.shard }}/8
+        run: npm run e2e
+
+      # A failed test's page snapshot and the API's last lines, readable in
+      # the log itself: the artifact below has to be downloaded first.
+      - name: Show the failed tests' page snapshots and the API log's end
+        if: ${{ failure() }}
+        run: |
+          find e2e/.artifacts/results -name error-context.md -print0 2>/dev/null |
+            while IFS= read -r -d '' context; do
+              echo "::group::${context}"
+              head -c 20000 "${context}"
+              echo "::endgroup::"
+            done
+          echo "::group::api.log, last 300 lines"
+          tail -n 300 e2e/.artifacts/api.log 2>/dev/null || true
+          echo "::endgroup::"
+
+      # report.json gives each spec's duration on CI's machines
+      # (`npm run e2e:durations -- --from …`, docs/operations/ci.md).
+      - name: Keep the report, traces, API log and flaky tests
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-report-${{ matrix.shard }}
+          path: |
+            web/e2e/.artifacts/report
+            web/e2e/.artifacts/report.json
+            web/e2e/.artifacts/results
+            web/e2e/.artifacts/api.log
+            web/e2e/flaky.json
+          # Everything but flaky.json sits in the hidden .artifacts folder.
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
+
+  durations:
+    name: CI job durations
+    needs: [backend-checks, backend-tests, coverage, web-build, web-checks, security, images, e2e]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+
+      # A table in the run summary, slowest first, and a warning for every
+      # job over 8 minutes (scripts/ci_job_durations.py).
+      - name: Every job's duration to the summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100" \
+            | uv run --no-project python -m scripts.ci_job_durations --summary "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,101 @@
+name: Lighthouse
+
+# The public site's search and speed budgets (web/lighthouserc.json): the
+# landing page and two niche pages, three runs each on a phone profile,
+# against a production build of the cabinet and the API with the demo
+# data (development login codes, the rehearsal model). SEO, accessibility,
+# performance, layout shift and the JavaScript and page weight budgets
+# fail the job, and on the landing page so do LCP (2.5 s) and blocking
+# time (300 ms); elsewhere those two and best practices only warn. The
+# reports are kept as an artifact.
+on:
+  pull_request:
+    paths:
+      - "web/**"
+      - "app/gateways/http/**"
+      - "app/use_cases/catalog/**"
+      - "app/use_cases/demo/**"
+      - "app/use_cases/legal/**"
+      - ".github/workflows/lighthouse.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every `uses:` is pinned to a commit SHA (the comment names the release).
+jobs:
+  lighthouse:
+    name: Public site budgets (Lighthouse CI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      UV_FROZEN: "1"
+      LHCI_VERSION: "0.15.1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install API dependencies
+        working-directory: .
+        run: uv sync --frozen
+
+      - name: Install Node 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install cabinet dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build the cabinet
+        run: npm run build
+
+      # In memory, with the demo businesses as the landing page's demos.
+      - name: Start the API
+        working-directory: .
+        run: |
+          APP_ENV=development SEED_DEMO_DATA=true LLM_PROVIDER=scripted \
+            nohup uv run uvicorn app.main:create_application --factory --host 127.0.0.1 --port 8020 > api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl --silent --fail http://127.0.0.1:8020/healthz > /dev/null && exit 0
+            sleep 2
+          done
+          cat api.log
+          exit 1
+
+      # Starts `next start` itself (lighthouserc.json) and checks the budgets.
+      - name: Lighthouse CI
+        env:
+          BACKEND_URL: http://127.0.0.1:8020
+          COOKIE_SECURE: "false"
+          SITE_URL: http://localhost:3020
+        run: npx --yes "@lhci/cli@${LHCI_VERSION}" autorun --config=lighthouserc.json
+
+      - name: Keep the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lighthouse-reports
+          path: web/e2e/.artifacts/lighthouse
+          if-no-files-found: ignore
+          retention-days: 14

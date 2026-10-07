@@ -25,7 +25,7 @@ def test_schema_domain_fields_use_project_primitives() -> None:
 
     for schema_directory_path in SCHEMA_DIRECTORY_PATHS:
         absolute_schema_directory_path: Path = project_root_path / schema_directory_path
-        for schema_module_path in sorted(absolute_schema_directory_path.glob("*.py")):
+        for schema_module_path in sorted(absolute_schema_directory_path.rglob("*.py")):
             if schema_module_path.name == "__init__.py":
                 continue
 

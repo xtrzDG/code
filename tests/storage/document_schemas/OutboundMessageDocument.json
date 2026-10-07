@@ -1,0 +1,583 @@
+{
+  "collection": "outbound_messages",
+  "document_type": "OutboundMessageDocument",
+  "schema_version": 7,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "attempts": {
+        "default": 0,
+        "maximum": 1000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "billing_documents": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "invoice_id": {
+                "pattern": "^invoice_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "kinds": {
+                "items": {
+                  "enum": [
+                    "invoice",
+                    "receipt"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "language": {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "invoice_id",
+              "kinds",
+              "language"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "booking_id": {
+        "anyOf": [
+          {
+            "pattern": "^booking_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "call_id": {
+        "anyOf": [
+          {
+            "pattern": "^call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "choices": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "language": {
+                "anyOf": [
+                  {
+                    "maxLength": 16,
+                    "minLength": 2,
+                    "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "options": {
+                "items": {
+                  "maxLength": 20,
+                  "minLength": 1,
+                  "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "minItems": 2,
+                "type": "array"
+              },
+              "prompt": {
+                "maxLength": 200,
+                "minLength": 1,
+                "pattern": "^\\S(?:[^\\x00-\\x1f\\x7f]*\\S)?\\Z",
+                "type": "string"
+              }
+            },
+            "required": [
+              "prompt",
+              "options"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "conversation_id": {
+        "anyOf": [
+          {
+            "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "customer": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "channel": {
+                "enum": [
+                  "phone",
+                  "whatsapp",
+                  "instagram",
+                  "messenger",
+                  "telegram",
+                  "web_chat",
+                  "viber",
+                  "owner_test"
+                ],
+                "type": "string"
+              },
+              "channel_id": {
+                "pattern": "^channel_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "channel_user_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "channel_id",
+              "channel",
+              "channel_user_id"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "delivered_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "delivered_parts": {
+        "default": 0,
+        "maximum": 1000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "feedback_request_id": {
+        "anyOf": [
+          {
+            "pattern": "^feedback_request_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "handoff_id": {
+        "anyOf": [
+          {
+            "pattern": "^handoff_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "id": {
+        "pattern": "^outbound_message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "idempotency_key": {
+        "maxLength": 300,
+        "minLength": 1,
+        "type": "string"
+      },
+      "kind": {
+        "enum": [
+          "customer_reply",
+          "staff_notification",
+          "staff_reply",
+          "booking_reminder",
+          "call_confirmation",
+          "call_links",
+          "text_back",
+          "booking_confirmation"
+        ],
+        "type": "string"
+      },
+      "last_error": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_failure_reason": {
+        "anyOf": [
+          {
+            "enum": [
+              "rate_limited",
+              "provider_unavailable",
+              "recipient_refused",
+              "template_rejected",
+              "channel_disconnected",
+              "credential_rejected",
+              "not_configured",
+              "expired"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "missed_call_id": {
+        "anyOf": [
+          {
+            "pattern": "^missed_call_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "next_attempt_at": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "provider_message_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "push": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "subscription_id": {
+                "pattern": "^push_subscription_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "tag": {
+                "anyOf": [
+                  {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "pattern": "^[a-z_]+:[A-Za-z0-9_:-]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "title": {
+                "type": "string"
+              },
+              "urgency": {
+                "default": "normal",
+                "enum": [
+                  "normal",
+                  "high"
+                ],
+                "type": "string"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "minLength": 10,
+                    "pattern": "^https?://[^\\s/]+/n/[A-Za-z0-9_-]+$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "user_id": {
+                "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "subscription_id",
+              "user_id",
+              "title"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "recipient_key": {
+        "maxLength": 400,
+        "minLength": 1,
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "7",
+        "type": "string"
+      },
+      "send_before": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "source_message_id": {
+        "anyOf": [
+          {
+            "pattern": "^message_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "staff_contact": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "channel": {
+                "enum": [
+                  "telegram",
+                  "whatsapp",
+                  "email",
+                  "sms"
+                ],
+                "type": "string"
+              },
+              "language": {
+                "maxLength": 16,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "preferences": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "events": {
+                        "items": {
+                          "enum": [
+                            "handoff",
+                            "lead",
+                            "booking"
+                          ],
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "quiet_hours": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": false,
+                            "properties": {
+                              "ends_at": {
+                                "maxLength": 5,
+                                "minLength": 5,
+                                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                                "type": "string"
+                              },
+                              "starts_at": {
+                                "maxLength": 5,
+                                "minLength": 5,
+                                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "starts_at",
+                              "ends_at"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "telegram_username": {
+                "anyOf": [
+                  {
+                    "maxLength": 32,
+                    "minLength": 4,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_]{3,31}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "name",
+              "channel",
+              "address",
+              "language"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "status": {
+        "default": "pending",
+        "enum": [
+          "pending",
+          "delivered",
+          "dead"
+        ],
+        "type": "string"
+      },
+      "template": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "body_parameters": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "language_code": {
+                "maxLength": 8,
+                "minLength": 2,
+                "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$",
+                "type": "string"
+              },
+              "name": {
+                "maxLength": 512,
+                "minLength": 1,
+                "pattern": "^[a-z0-9_]{1,512}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "language_code"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "text": {
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "kind",
+      "idempotency_key",
+      "recipient_key",
+      "text"
+    ],
+    "type": "object"
+  }
+}

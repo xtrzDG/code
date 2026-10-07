@@ -1,0 +1,60 @@
+{
+  "collection": "llm_turns",
+  "document_type": "LlmTurnDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "canonical_payload": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "conversation_id": {
+        "pattern": "^conversation_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^llm_turn_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "payload": {
+        "type": "string"
+      },
+      "role": {
+        "enum": [
+          "user",
+          "assistant"
+        ],
+        "type": "string"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "sequence_number": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "conversation_id",
+      "sequence_number",
+      "role",
+      "payload"
+    ],
+    "type": "object"
+  }
+}

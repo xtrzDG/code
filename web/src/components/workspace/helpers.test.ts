@@ -1,0 +1,83 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  decodeHash,
+  formatMicroUsd,
+  isoDay,
+  safeFileName,
+  shortId,
+  usageBarWidth,
+  usagePercent,
+  zonedDayStartUs,
+} from "./helpers";
+
+describe("usage", () => {
+  it("computes whole percents and empty packages", () => {
+    expect(usagePercent(320, 400)).toBe(80);
+    expect(usagePercent(1, 3)).toBe(33);
+    expect(usagePercent(5, 0)).toBeNull();
+    expect(usagePercent(-1, 10)).toBe(0);
+  });
+
+  it("caps the bar width", () => {
+    expect(usageBarWidth(140)).toBe(100);
+    expect(usageBarWidth(null)).toBe(0);
+    expect(usageBarWidth(42)).toBe(42);
+  });
+});
+
+describe("formatMicroUsd", () => {
+  it("shows small costs with four decimals", () => {
+    expect(formatMicroUsd(1_234_567, "en")).toBe("$1.2346");
+    expect(formatMicroUsd(0, "en")).toBe("$0.00");
+    expect(formatMicroUsd(54_900_000, "en")).toBe("$54.90");
+  });
+});
+
+describe("ids and files", () => {
+  it("shortens prefixed ids", () => {
+    expect(shortId("contact_639833a1-4f05-440f-bbab-540dca7ac3b8")).toBe("639833a1");
+    expect(shortId("plain")).toBe("plain");
+    expect(shortId("dpa_acceptance_92bc0277-7156")).toBe("92bc0277");
+  });
+
+  it("builds safe file names", () => {
+    expect(safeFileName("contact data/ნინო 2026.json")).toBe("contact-data-2026.json");
+    expect(safeFileName("///")).toBe("download");
+    expect(isoDay(new Date(Date.UTC(2026, 9, 1, 23, 0)))).toBe("2026-10-01");
+  });
+});
+
+describe("zonedDayStartUs", () => {
+  it("finds local midnight in any time zone", () => {
+    expect(zonedDayStartUs("2026-10-01", "Asia/Tbilisi")).toBe(Date.UTC(2026, 8, 30, 20) * 1000);
+    expect(zonedDayStartUs("2026-10-01", "UTC")).toBe(Date.UTC(2026, 9, 1) * 1000);
+    expect(zonedDayStartUs("2026-03-29", "Europe/Berlin")).toBe(Date.UTC(2026, 2, 28, 23) * 1000);
+    expect(zonedDayStartUs("2026-07-01", "America/New_York")).toBe(Date.UTC(2026, 6, 1, 4) * 1000);
+    expect(zonedDayStartUs("yesterday", "UTC")).toBeNull();
+  });
+
+  it("starts the day at the clock jump where midnight does not exist", () => {
+    // Chile and Cuba move their clocks from 00:00 to 01:00.
+    expect(zonedDayStartUs("2026-09-06", "America/Santiago")).toBe(Date.UTC(2026, 8, 6, 4) * 1000);
+    expect(zonedDayStartUs("2026-03-08", "America/Havana")).toBe(Date.UTC(2026, 2, 8, 5) * 1000);
+  });
+
+  it("takes the midnight after the clocks went back", () => {
+    // Santiago goes from 24:00 back to 23:00: the day starts at the later offset.
+    expect(zonedDayStartUs("2026-04-05", "America/Santiago")).toBe(Date.UTC(2026, 3, 5, 4) * 1000);
+  });
+});
+
+describe("decodeHash", () => {
+  it("strips # and decodes", () => {
+    expect(decodeHash("#team")).toBe("team");
+    expect(decodeHash("#t%65am")).toBe("team");
+    expect(decodeHash("")).toBe("");
+  });
+
+  it("never throws on malformed escapes", () => {
+    expect(decodeHash("#%")).toBe("");
+    expect(decodeHash("#%E0%A4%A")).toBe("");
+  });
+});

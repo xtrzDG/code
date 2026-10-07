@@ -1,0 +1,16 @@
+{
+  "successes": [
+    {
+      "id": "event-0000-0001",
+      "status": 201
+    }
+  ],
+  "errors": [
+    {
+      "id": "event-0000-0002",
+      "status": 400,
+      "message": "Invalid request data",
+      "error": "body.usage.unit: Invalid enum value"
+    }
+  ]
+}

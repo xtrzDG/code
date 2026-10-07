@@ -1,0 +1,85 @@
+{
+  "access_programs": null,
+  "id": "resp_0contract0001",
+  "object": "response",
+  "created_at": 1790845200,
+  "status": "completed",
+  "background": false,
+  "error": null,
+  "incomplete_details": null,
+  "instructions": "You are the AI assistant of Sakhli.",
+  "max_output_tokens": 4000,
+  "max_tool_calls": null,
+  "model": "gpt-5-mini-2025-08-07",
+  "output": [
+    {
+      "id": "rs_0contract0001",
+      "type": "reasoning",
+      "summary": [],
+      "encrypted_content": "gAAAAA-encrypted-reasoning-0001"
+    },
+    {
+      "id": "fc_0contract0001",
+      "type": "function_call",
+      "status": "completed",
+      "arguments": "{\"item_name\":\"ხაჭაპური\"}",
+      "call_id": "call_0contract0001",
+      "name": "get_price"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "reasoning": {
+    "effort": "low",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_price",
+      "description": "Look up a price.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "item_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_name"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 1.0,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 1500,
+    "input_tokens_details": {
+      "cached_tokens": 1024,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 60,
+    "output_tokens_details": {
+      "reasoning_tokens": 16
+    },
+    "total_tokens": 1560
+  },
+  "user": null,
+  "metadata": {}
+}

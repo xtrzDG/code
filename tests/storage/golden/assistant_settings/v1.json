@@ -1,0 +1,9 @@
+{
+  "business_id": "business_a0bee4b6-d392-447a-b9d4-06f496ed438d",
+  "created_at": 1790000000000000,
+  "id": "assistant_settings_1ee41605-79e4-5daa-98bb-c03e137790e3",
+  "remembers_customers": true,
+  "schema_version": "1",
+  "shares_team_notes": true,
+  "updated_at": 1790000000000000
+}

@@ -1,0 +1,226 @@
+"""Cal.com as a booking-system connector: event types as resources."""
+
+from app.clients.cal_com.cal_com_client import CalComClient, iso_instant
+from app.clients.cal_com.cal_com_responses import (
+    is_busy_booking,
+    read_instant,
+    read_object,
+    read_text,
+)
+from app.contracts.calendar_sync import BookingSystemConnectorContract
+from app.schemas.constants.calendar_sync import BookingSystemKind, CalendarSyncProblem
+from app.schemas.dto.calendar_sync.busy_reads import (
+    BookingSystemBookingCreated,
+    BookingSystemBookingDraft,
+    BookingSystemCredentials,
+    BookingSystemRead,
+    BookingSystemResource,
+    BusyPeriod,
+    BusyWindow,
+)
+from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
+from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
+from app.schemas.typings.calendar_sync.constrained_integers import (
+    BusyEndsAtUnixSeconds,
+    BusyStartsAtUnixSeconds,
+)
+from app.schemas.typings.calendar_sync.strings import (
+    BookingSystemBookingId,
+    BookingSystemResourceTitle,
+)
+from app.utilities.calendar_sync.busy_periods import (
+    clip_to_window,
+    merge_busy_periods,
+    new_period,
+)
+
+MAX_TITLE_LENGTH: int = 120
+# The metadata that marks a booking the platform wrote (Cal.com keeps it).
+PLATFORM_SOURCE: str = "assistant-workshop"
+SOURCE_KEY: str = "source"
+BOOKING_KEY: str = "booking_id"
+FIND_MARGIN_SECONDS: int = 60 * 60
+SECONDS_PER_MINUTE: int = 60
+# The attendee languages Cal.com accepts (API v2, 2024-08-13); it refuses a
+# booking with any other, so another language (Georgian) is left out and
+# Cal.com writes to the guest in English.
+CAL_COM_LANGUAGES: frozenset[str] = frozenset(
+    {
+        "ar", "az", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
+        "es-419", "et", "eu", "fi", "fr", "he", "hr", "hu", "id", "it", "iw",
+        "ja", "km", "ko", "lv", "nl", "no", "pl", "pt", "pt-BR", "ro", "ru",
+        "sk", "sr", "sv", "ta", "th", "tr", "uk", "vi", "zh-CN", "zh-TW",
+    }
+)  # fmt: skip
+
+
+class CalComBookingSystemAdapter(BookingSystemConnectorContract):
+    """
+    Cal.com (API v2): a resource is an event type (its id); its accepted
+    and pending bookings make the resource busy, except the ones the
+    platform wrote (marked in their metadata: the platform's own booking
+    already takes the place); a booking the platform takes is written there
+    with the guest's name, e-mail when known, zone and language, so the time
+    is taken on the business's Cal.com page too.
+    """
+
+    kind: BookingSystemKind = BookingSystemKind.CAL_COM
+
+    def __init__(self, client: CalComClient) -> None:
+        self._client: CalComClient = client
+
+    def describe(
+        self, credentials: BookingSystemCredentials, timeout: BusyTimeFetchSeconds
+    ) -> BookingSystemResource:
+        fields: dict[str, object] = self._client.get_event_type(
+            credentials.api_key, credentials.external_resource_id, timeout
+        )
+        title: str | None = read_text(fields, "title")
+        return BookingSystemResource(
+            external_resource_id=credentials.external_resource_id,
+            title=(
+                None
+                if title is None
+                else BookingSystemResourceTitle(title[:MAX_TITLE_LENGTH])
+            ),
+        )
+
+    def list_busy(self, read: BookingSystemRead) -> list[BusyPeriod]:
+        periods: list[BusyPeriod] = []
+        for fields in self._client.list_bookings(
+            read.credentials.api_key,
+            read.credentials.external_resource_id,
+            read.window,
+            read.timeout,
+        ):
+            start: int | None = read_instant(fields, "start")
+            end: int | None = read_instant(fields, "end")
+            if (
+                not is_busy_booking(fields)
+                or is_platform_booking(fields)
+                or start is None
+                or end is None
+            ):
+                continue
+
+            period: BusyPeriod | None = new_period(start, end)
+            clipped: BusyPeriod | None = (
+                None if period is None else clip_to_window(period, read.window)
+            )
+            if clipped is not None:
+                periods.append(clipped)
+
+        return merge_busy_periods(periods)
+
+    def create_booking(
+        self,
+        credentials: BookingSystemCredentials,
+        draft: BookingSystemBookingDraft,
+        timeout: BusyTimeFetchSeconds,
+    ) -> BookingSystemBookingCreated:
+        attendee: dict[str, object] = {
+            "name": str(draft.guest_name),
+            "timeZone": str(draft.time_zone),
+        }
+        language: str | None = cal_com_language(str(draft.language))
+        if language is not None:
+            attendee["language"] = language
+        if draft.guest_email is not None:
+            attendee["email"] = str(draft.guest_email)
+        fields: dict[str, object] = self._client.create_booking(
+            credentials.api_key,
+            {
+                "start": iso_instant(int(draft.starts_at)),
+                "eventTypeId": event_type_number(credentials),
+                "lengthInMinutes": (int(draft.ends_at) - int(draft.starts_at))
+                // SECONDS_PER_MINUTE,
+                "attendee": attendee,
+                "metadata": platform_metadata(draft),
+            },
+            timeout,
+        )
+        uid: str | None = read_text(fields, "uid")
+        if uid is None:
+            raise BusyTimeSourceError(
+                "Cal.com created a booking without its uid.",
+                CalendarSyncProblem.PROVIDER_ERROR,
+            )
+
+        return BookingSystemBookingCreated(booking_id=BookingSystemBookingId(uid))
+
+    def find_booking(
+        self,
+        credentials: BookingSystemCredentials,
+        draft: BookingSystemBookingDraft,
+        timeout: BusyTimeFetchSeconds,
+    ) -> BookingSystemBookingId | None:
+        if draft.platform_booking_id is None:
+            return None
+
+        marker: str = str(draft.platform_booking_id)
+        for fields in self._client.list_bookings(
+            credentials.api_key,
+            credentials.external_resource_id,
+            # A margin around the booking, whatever edges the filter keeps.
+            BusyWindow(
+                starts_at=BusyStartsAtUnixSeconds(
+                    max(int(draft.starts_at) - FIND_MARGIN_SECONDS, 0)
+                ),
+                ends_at=BusyEndsAtUnixSeconds(int(draft.ends_at) + FIND_MARGIN_SECONDS),
+            ),
+            timeout,
+        ):
+            uid: str | None = read_text(fields, "uid")
+            metadata: dict[str, object] = read_object(fields.get("metadata"))
+            if (
+                uid is not None
+                and is_busy_booking(fields)
+                and read_text(metadata, BOOKING_KEY) == marker
+            ):
+                return BookingSystemBookingId(uid)
+
+        return None
+
+    def cancel_booking(
+        self,
+        credentials: BookingSystemCredentials,
+        booking_id: BookingSystemBookingId,
+        timeout: BusyTimeFetchSeconds,
+    ) -> None:
+        try:
+            self._client.cancel_booking(credentials.api_key, booking_id, timeout)
+        except BusyTimeSourceError as error:
+            if error.problem is not CalendarSyncProblem.NOT_FOUND:
+                raise
+
+
+def platform_metadata(draft: BookingSystemBookingDraft) -> dict[str, object]:
+    """The marks of a booking the platform writes (Cal.com wants strings)."""
+
+    metadata: dict[str, object] = {SOURCE_KEY: PLATFORM_SOURCE}
+    if draft.platform_booking_id is not None:
+        metadata[BOOKING_KEY] = str(draft.platform_booking_id)
+    return metadata
+
+
+def is_platform_booking(fields: dict[str, object]) -> bool:
+    """A booking the platform wrote (its metadata names the platform)."""
+
+    return read_text(read_object(fields.get("metadata")), SOURCE_KEY) == PLATFORM_SOURCE
+
+
+def event_type_number(credentials: BookingSystemCredentials) -> int | str:
+    """Cal.com wants the event type id as a number when it is one."""
+
+    text: str = str(credentials.external_resource_id)
+    return int(text) if text.isdigit() else text
+
+
+def cal_com_language(language_tag: str) -> str | None:
+    """Cal.com's code of the guest's language ("pt-BR", "ru"), when it has one."""
+
+    if language_tag in CAL_COM_LANGUAGES:
+        return language_tag
+
+    language: str = language_tag.split("-")[0]
+    return language if language in CAL_COM_LANGUAGES else None

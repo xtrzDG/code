@@ -1,0 +1,14 @@
+{
+  "business_id": "business_2b53cfd7-9918-4546-ba9b-47143784d32f",
+  "code_hash": "Sample ManagerLinkCodeHash",
+  "created_at": 1790000000000000,
+  "created_by": "user_88e112a0-aa48-483d-af0e-9429fc42f8ec",
+  "expires_at": 1790000000000000,
+  "id": "manager_telegram_link_7949b83e-e1be-486a-bf81-90d4d7d468eb",
+  "language": "ka",
+  "linked_chat_id": "Sample ManagerContactAddress",
+  "manager_name": "Sample ManagerName",
+  "schema_version": "1",
+  "updated_at": 1790000000000000,
+  "used_at": 1790000000000000
+}

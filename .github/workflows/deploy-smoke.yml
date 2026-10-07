@@ -1,0 +1,154 @@
+name: Deploy smoke test
+
+# After every Render deploy of the API: scripts/smoke.sh against it. A green
+# staging smoke test fast-forwards the `release` branch, which production
+# deploys (render.yaml); a red production smoke test is the signal to roll
+# back (docs/operations/deploys.md).
+#
+# Setup: GitHub environments `staging` and `production`, each with the
+# variables API_URL (and optionally CABINET_URL, SMOKE_WIDGET_BUSINESS_ID,
+# SMOKE_EXPECT_REPLY). Render reports deploys to GitHub as deployments of
+# the service's name; a Render deploy webhook relayed as a repository
+# dispatch works too. Repository variable PROMOTE_AFTER_STAGING_SMOKE=false
+# turns the automatic promotion off. The promotion waits until production has
+# finished the post-deploy data tasks of the release it runs (repository
+# variable PRODUCTION_API_URL, scripts/check_data_tasks.sh): re-run the
+# promote job once they are done.
+on:
+  deployment_status:
+  repository_dispatch:
+    # {"event_type": "render-deploy-succeeded",
+    #  "client_payload": {"service": "workshop-staging-api", "sha": "<commit>"}}
+    types: [render-deploy-succeeded]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment to test
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  target:
+    name: Which deployment
+    if: >-
+      github.event_name != 'deployment_status'
+      || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      environment: ${{ steps.pick.outputs.environment }}
+      sha: ${{ steps.pick.outputs.sha }}
+    steps:
+      - name: Pick the environment and commit
+        id: pick
+        env:
+          SERVICE: >-
+            ${{ github.event.deployment.environment
+            || github.event.client_payload.service
+            || inputs.environment }}
+          DEPLOYED_SHA: >-
+            ${{ github.event.deployment.sha
+            || github.event.client_payload.sha
+            || github.sha }}
+        run: |
+          # Only the API's deploys are smoke-tested (the test covers the
+          # cabinet too); the worker's and cabinet's own deploys are skipped.
+          case "$SERVICE" in
+            staging | *staging-api*) environment=staging ;;
+            production | *workshop-api*) environment=production ;;
+            *) environment="" ;;
+          esac
+          if ! printf '%s' "$DEPLOYED_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Not a commit: $DEPLOYED_SHA" >&2
+            exit 1
+          fi
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "sha=$DEPLOYED_SHA" >> "$GITHUB_OUTPUT"
+          echo "Deployment of '$SERVICE' -> '${environment:-skipped}' at $DEPLOYED_SHA"
+
+  smoke:
+    name: Smoke test (${{ needs.target.outputs.environment }})
+    needs: target
+    if: needs.target.outputs.environment != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ needs.target.outputs.environment }}
+    concurrency:
+      group: deploy-smoke-${{ needs.target.outputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.target.outputs.sha }}
+          persist-credentials: false
+
+      - name: Smoke test the deployment
+        env:
+          API_URL: ${{ vars.API_URL }}
+          CABINET_URL: ${{ vars.CABINET_URL }}
+          SMOKE_WIDGET_BUSINESS_ID: ${{ vars.SMOKE_WIDGET_BUSINESS_ID }}
+          SMOKE_EXPECT_REPLY: ${{ vars.SMOKE_EXPECT_REPLY }}
+          SMOKE_WAIT_SECONDS: "180"
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "Set the variable API_URL of this GitHub environment." >&2
+            exit 1
+          fi
+          scripts/smoke.sh "$API_URL" ${CABINET_URL:+"$CABINET_URL"}
+
+  promote:
+    name: Promote to production (release branch)
+    needs: [target, smoke]
+    if: >-
+      needs.target.outputs.environment == 'staging'
+      && vars.PROMOTE_AFTER_STAGING_SMOKE != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: promote-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Wait for production's post-deploy data tasks
+        env:
+          PRODUCTION_API_URL: ${{ vars.PRODUCTION_API_URL }}
+        run: |
+          # The next release may stop reading what production's tasks are
+          # still rewriting or filling (docs/operations/deploys.md).
+          if [ -z "$PRODUCTION_API_URL" ]; then
+            echo "Set the repository variable PRODUCTION_API_URL (the production API's address): promotion waits for its data tasks." >&2
+            exit 1
+          fi
+          scripts/check_data_tasks.sh "$PRODUCTION_API_URL"
+
+      - name: Fast-forward release to the smoke-tested commit
+        env:
+          SHA: ${{ needs.target.outputs.sha }}
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "$SHA is not on main: not promoted."
+            exit 0
+          fi
+          if git fetch --no-tags origin release 2>/dev/null; then
+            if git merge-base --is-ancestor "$SHA" origin/release; then
+              echo "release already contains $SHA."
+              exit 0
+            fi
+            if ! git merge-base --is-ancestor origin/release "$SHA"; then
+              echo "release has commits that $SHA lacks (a hotfix?): merge them into main first." >&2
+              exit 1
+            fi
+          fi
+          # Never forced: only a fast-forward to a commit staging accepted.
+          git push origin "$SHA:refs/heads/release"
+          echo "release -> $SHA: production deploys it once its checks pass."

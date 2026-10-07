@@ -1,0 +1,95 @@
+{
+  "collection": "digest_preferences",
+  "document_type": "DigestPreferencesDocument",
+  "schema_version": 2,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "channels": {
+        "anyOf": [
+          {
+            "items": {
+              "enum": [
+                "email",
+                "push",
+                "telegram",
+                "whatsapp"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^digest_preferences_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_daily_digest_on": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_monthly_report_on": {
+        "default": true,
+        "type": "boolean"
+      },
+      "is_weekly_digest_on": {
+        "default": true,
+        "type": "boolean"
+      },
+      "schema_version": {
+        "default": "2",
+        "type": "string"
+      },
+      "telegram_chat": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "updated_at": {
+        "type": "integer"
+      },
+      "user_id": {
+        "pattern": "^user_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "whatsapp_number": {
+        "anyOf": [
+          {
+            "maxLength": 16,
+            "minLength": 8,
+            "pattern": "^\\+[1-9][0-9]{6,14}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "id",
+      "business_id",
+      "user_id"
+    ],
+    "type": "object"
+  }
+}

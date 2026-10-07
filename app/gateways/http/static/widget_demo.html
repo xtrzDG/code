@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<title>${title}</title>
+<style>
+  /* The cabinet's tokens (web/src/app/globals.css): warm paper and graphite, one clay accent. */
+  :root { color-scheme: light dark;
+    --canvas: #f6f5f2; --surface: #ffffff; --surface-muted: #f0eee9; --ink: #1d1c1a;
+    --ink-muted: #57544e; --line: #e4e1da; --line-strong: #8e897f;
+    --accent-solid: #ad5732; --accent-solid-hover: #974a29; --on-accent: #ffffff; --focus: #ad5732; }
+  @media (prefers-color-scheme: dark) {
+    :root { --canvas: #141311; --surface: #1b1a18; --surface-muted: #24221f; --ink: #ecebe6;
+      --ink-muted: #aca79e; --line: #2d2b28; --line-strong: #6f6a62;
+      --accent-solid-hover: #b35a35; --focus: #e19a75; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink);
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
+      "Noto Sans Georgian", sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 140px; }
+  h1 { font-size: 28px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+  p { color: var(--ink-muted); margin: 0 0 16px; }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin-top: 24px; }
+  h2 { font-size: 18px; margin: 0 0 8px; }
+  pre { background: var(--surface-muted); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px; overflow-x: auto; font-size: 13.5px; margin: 0; white-space: pre-wrap;
+    word-break: break-all; }
+  ul { margin: 0; padding-inline-start: 20px; color: var(--ink-muted); }
+  li { margin: 4px 0; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  input { width: 100%; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 10px;
+    font: inherit; background: var(--surface); color: inherit; }
+  button { margin-top: 12px; padding: 10px 18px; border: 0; border-radius: 10px;
+    background: var(--accent-solid); color: var(--on-accent); font: inherit; font-weight: 600;
+    cursor: pointer; }
+  button:hover { background: var(--accent-solid-hover); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  code { font: 14px/1.5 ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+  <h1>${heading}</h1>
+  <p>${intro}</p>
+${content}
+</main>
+${widget}
+</body>
+</html>

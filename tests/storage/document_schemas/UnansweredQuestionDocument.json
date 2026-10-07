@@ -1,0 +1,72 @@
+{
+  "collection": "unanswered_questions",
+  "document_type": "UnansweredQuestionDocument",
+  "schema_version": 1,
+  "shape": {
+    "additionalProperties": false,
+    "properties": {
+      "business_id": {
+        "pattern": "^business_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "created_at": {
+        "type": "integer"
+      },
+      "id": {
+        "pattern": "^unanswered_question_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "is_resolved": {
+        "default": false,
+        "type": "boolean"
+      },
+      "is_sandbox": {
+        "default": false,
+        "type": "boolean"
+      },
+      "language": {
+        "maxLength": 16,
+        "minLength": 2,
+        "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+        "type": "string"
+      },
+      "last_seen_at": {
+        "type": "integer"
+      },
+      "occurrence_count": {
+        "default": 1,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "question": {
+        "type": "string"
+      },
+      "resolved_knowledge_item_id": {
+        "anyOf": [
+          {
+            "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "schema_version": {
+        "default": "1",
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "business_id",
+      "question",
+      "language",
+      "last_seen_at"
+    ],
+    "type": "object"
+  }
+}
