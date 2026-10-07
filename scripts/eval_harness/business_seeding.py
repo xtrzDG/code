@@ -53,8 +53,10 @@ from app.schemas.typings.localization.constrained_strings import (
     LanguageTag,
     TimezoneName,
 )
+from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.money.money_math import build_money_from_major_units
 from scripts.eval_harness.booked_up_days import book_up
+from scripts.eval_harness.catalog_seeding import build_catalog
 from scripts.eval_harness.dataset_models import BusinessSpec
 
 STARTER_SEED: str = "starter"
@@ -85,6 +87,12 @@ class EvalBusinessSeeder:
         )
         with self._scope.platform_wide():
             container.repositories.user_repo().save(self._owner)
+
+    @property
+    def owner_id(self) -> UserId:
+        """The owner of every business this seeder builds (author of team notes)."""
+
+        return self._owner.id
 
     def seed(self, niche: NicheKey, spec: BusinessSpec) -> SeededBusiness:
         """A fresh business of the niche with its assembled assistant version."""
@@ -220,6 +228,12 @@ class EvalBusinessSeeder:
                     ),
                 )
             )
+
+        if spec.catalog is not None and starters.offers:
+            for item in build_catalog(
+                business, spec.catalog, starters.offers[0].kind, now
+            ):
+                knowledge_repo.save(item)
 
         for faq in starters.faq:
             answer: str | None = spec.answers.get(str(faq.key))

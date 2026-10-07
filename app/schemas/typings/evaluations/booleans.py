@@ -6,3 +6,4 @@ Example:
 
 IsEvalCriterionPassed = bool
 IsHandoffExpected = bool
+IsLeakChecked = bool

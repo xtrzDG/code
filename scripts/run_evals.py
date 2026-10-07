@@ -6,10 +6,11 @@ The evaluation harness (evals/README.md):
     uv run python -m scripts.run_evals --record --model gpt-5-mini \\
         --judge-model claude-opus-5-5 --samples 3 --cassettes reports/evals/cassettes
 
-Writes reports/evals/report.json and report.html and compares the run with
-evals/baselines/<model>.json. Exit code 1: the pass rate fell by more than
-the tolerance, a replayed cassette is stale, or (with --require-pass) a
-scenario failed.
+Writes reports/evals/report.json, report.html and summary.md (the job
+summary of the nightly run) and compares the run with
+evals/baselines/<model>.json. Exit code 1: the pass rate or a criterion's
+pass rate fell by more than its tolerance, a replayed cassette is stale,
+or (with --require-pass) a scenario failed.
 """
 
 import sys
@@ -51,7 +52,11 @@ def main(arguments: list[str] | None = None) -> int:
         None
         if baseline is None
         else compare_with_baseline(
-            baseline, summary, outcome.scenarios, options.tolerance
+            baseline,
+            summary,
+            outcome.scenarios,
+            options.tolerance,
+            options.criterion_tolerance,
         )
     )
     report = EvalReport(
@@ -98,6 +103,12 @@ def main(arguments: list[str] | None = None) -> int:
             f"baseline {diff.baseline_pass_rate:.1%} -> {diff.pass_rate:.1%} "
             f"({diff.delta * 100:+.1f} pt, tolerance {diff.tolerance * 100:.1f} pt)"
         )
+        for criterion in diff.regressed_criteria:
+            print(
+                f"criterion {criterion} fell "
+                f"{diff.criteria_deltas[criterion] * 100:+.1f} pt (tolerance "
+                f"{diff.criterion_tolerance * 100:.1f} pt)"
+            )
 
     print("Report: " + ", ".join(str(item) for item in written))
     failed: bool = (

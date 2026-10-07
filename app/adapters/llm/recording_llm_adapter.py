@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from typed_time_provider import MonotonicClock, Nanoseconds
 
 from app.contracts.llm import LlmAdapterContract
@@ -7,6 +9,7 @@ from app.contracts.llm_cassettes import (
 )
 from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
 from app.schemas.dto.llm_cassettes import LlmCassetteRequest, LlmCassetteTake
+from app.schemas.dto.media import LlmImageInput
 from app.schemas.typings.conversations.strings import LlmProviderPayload, MessageText
 from app.schemas.typings.evaluations.constrained_integers import (
     LlmCassetteSampleIndex,
@@ -43,6 +46,13 @@ class RecordingLlmAdapter(LlmAdapterContract):
 
     def build_user_text_turn(self, text: MessageText) -> LlmProviderPayload:
         return self._inner_adapter.build_user_text_turn(text)
+
+    def build_user_media_turn(
+        self,
+        text: MessageText,
+        images: Sequence[LlmImageInput],
+    ) -> LlmProviderPayload:
+        return self._inner_adapter.build_user_media_turn(text, images)
 
     def build_tool_results_turn(
         self,

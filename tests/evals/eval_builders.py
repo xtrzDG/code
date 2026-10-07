@@ -46,6 +46,7 @@ SCRIPTS: dict[str, tuple[str, str]] = {
     "ka": ("Georgian", "Geor"),
     "ru": ("Russian", "Cyrl"),
     "he": ("Hebrew", "Hebr"),
+    "es": ("Spanish", "Latn"),
 }
 
 

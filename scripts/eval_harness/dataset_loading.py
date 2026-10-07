@@ -11,23 +11,32 @@ from typing import cast
 import yaml
 from pydantic import ValidationError
 
-from app.schemas.constants.assistants import AssistantToolName, AutotestScenarioKind
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.dto.billing import Money
 from app.schemas.dto.evaluations import (
     EvalExpectations,
     ExpectedToolCall,
+    RememberedFactGroup,
     RequiredFactGroup,
 )
-from app.schemas.typings.evaluations.booleans import IsHandoffExpected
+from app.schemas.typings.evaluations.booleans import IsHandoffExpected, IsLeakChecked
 from app.schemas.typings.evaluations.constrained_strings import ToolInputFieldName
 from app.schemas.typings.evaluations.strings import (
     ExpectedToolFieldValue,
     ForbiddenReplyValue,
+    PrivateSeedValue,
+    RememberedReplyFact,
     RequiredReplyFact,
 )
 from app.schemas.typings.localization.constrained_strings import CurrencyCode
 from app.utilities.money.money_math import build_money_from_major_units
 from scripts.eval_harness.dataset_models import EvalDataset, ScenarioSpec
+from scripts.eval_harness.dataset_setup_models import SetupSpec
+from scripts.eval_harness.dataset_validation import (
+    ScenarioError,
+    check_scenario,
+    media_directory,
+)
 
 DATASET_SUFFIX: str = ".yaml"
 
@@ -54,9 +63,9 @@ def list_dataset_paths(directory: Path, niches: Sequence[str] = ()) -> list[Path
 
 def load_dataset(path: Path) -> EvalDataset:
     """
-    One dataset, validated: unique scenario ids, scenario languages among
-    the business languages when it lists them (a foreign-language scenario
-    in a language it does not list), a file named after its niche.
+    One dataset, validated: a file named after its niche, unique scenario
+    ids, and every scenario playable as written (`check_scenario`: its
+    language, goal, channel, media and memory facts).
     """
 
     try:
@@ -74,14 +83,10 @@ def load_dataset(path: Path) -> EvalDataset:
             raise DatasetError(f"{path}: scenario {scenario.id} appears twice.")
 
         seen.add(scenario.id)
-        languages: list[str] = dataset.business.languages
-        is_foreign: bool = scenario.kind is AutotestScenarioKind.FOREIGN_LANGUAGE
-        if languages and (scenario.language in languages) is is_foreign:
-            raise DatasetError(
-                f"{path}: scenario {scenario.id} is in {scenario.language}; "
-                f"the business speaks {', '.join(languages)}, and only a "
-                "foreign-language scenario is in a language it does not speak."
-            )
+        try:
+            check_scenario(scenario, dataset.business.languages, media_directory(path))
+        except ScenarioError as error:
+            raise DatasetError(f"{path}: {error}") from error
 
     return dataset
 
@@ -129,7 +134,36 @@ def build_expectations(
         is_handoff_expected=(
             None if expect.handoff is None else IsHandoffExpected(expect.handoff)
         ),
+        remembered_facts=[
+            RememberedFactGroup(
+                values=[
+                    RememberedReplyFact(value)
+                    for value in (fact if isinstance(fact, list) else [fact])
+                ]
+            )
+            for fact in expect.memory
+        ],
+        is_leak_checked=IsLeakChecked(expect.no_leak),
+        private_values=[
+            PrivateSeedValue(value) for value in private_texts(scenario.setup)
+        ],
     )
+
+
+def private_texts(setup: SetupSpec | None) -> list[str]:
+    """What the scenario seeded that no reply may give away."""
+
+    if setup is None:
+        return []
+
+    texts: list[str] = []
+    if setup.earlier is not None and setup.earlier.note is not None:
+        texts.append(setup.earlier.note)
+
+    if setup.other_customer is not None:
+        texts.extend([setup.other_customer.name, setup.other_customer.phone])
+
+    return texts
 
 
 def acceptable_values(values: object) -> list[object]:

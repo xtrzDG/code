@@ -11,8 +11,10 @@ from app.adapters.llm.replay_llm_adapter import ReplayLlmAdapter
 from app.adapters.llm.scripted_llm_adapter import ScriptedLlmAdapter
 from app.schemas.dto.conversations import LlmRequest, LlmResponse, LlmToolResult
 from app.schemas.dto.llm_scripts import ScriptedLlmTurn
+from app.schemas.dto.media import LlmImageInput, MediaLocation
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.evaluation_errors import LlmCassetteMissError
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.strings import (
     LlmToolCallId,
     LlmToolResultJson,
@@ -21,6 +23,8 @@ from app.schemas.typings.conversations.strings import (
 from app.schemas.typings.evaluations.constrained_integers import (
     LlmCassetteSampleIndex,
 )
+from app.schemas.typings.media.constrained_strings import MessageMediaType
+from app.schemas.typings.media.strings import MediaStoragePath
 from app.schemas.typings.platform.constrained_integers import ElapsedMilliseconds
 from app.utilities.llm_cassettes.cassette_keys import build_cassette_request
 from tests.evals.eval_builders import llm_request, user_turn
@@ -136,3 +140,21 @@ def test_both_adapters_build_canonical_turns(tmp_path: Path) -> None:
     assert replay.build_tool_results_turn(results) == (
         recording.build_tool_results_turn(results)
     )
+
+
+def test_both_adapters_show_a_photo_in_the_same_turn(tmp_path: Path) -> None:
+    store = LlmCassetteFileStore(tmp_path / "c.json")
+    photo = LlmImageInput(
+        location=MediaLocation(
+            business_id=BusinessId(), path=MediaStoragePath("evals/restaurant.png")
+        ),
+        media_type=MessageMediaType("image/png"),
+    )
+    replayed = ReplayLlmAdapter(store, LlmCassetteSampleIndex(0)).build_user_media_turn(
+        MessageText("How much is this?"), [photo]
+    )
+
+    assert replayed == recorder(store, 0).build_user_media_turn(
+        MessageText("How much is this?"), [photo]
+    )
+    assert "evals/restaurant.png" in str(replayed)

@@ -3,6 +3,7 @@ An evaluation run over datasets: one container and one cassette per niche,
 every selected scenario played `samples` times.
 """
 
+import logging
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from scripts.eval_harness.business_seeding import EvalBusinessSeeder
 from scripts.eval_harness.dataset_loading import list_dataset_paths, load_dataset
 from scripts.eval_harness.dataset_models import EvalDataset, ScenarioSpec
+from scripts.eval_harness.dataset_validation import media_directory
 from scripts.eval_harness.eval_container import (
     SteppingClock,
     SwitchableLlmAdapter,
@@ -29,6 +31,7 @@ from scripts.eval_harness.scenario_player import (
 )
 
 SCRIPTED_MODEL: LlmModelId = LlmModelId("scripted")
+APPLICATION_LOGGER: str = "app"
 DEFAULT_TURN_LIMIT: int = 6
 
 type ProgressReporter = Callable[[ScenarioResult], None]
@@ -95,6 +98,9 @@ def run_niche(
 ) -> NicheOutcome | None:
     """One dataset's selected scenarios; None when none is selected."""
 
+    # A customer scenario books and hands off for real: the staff alerts it
+    # cannot deliver in a harness without channels are expected, not news.
+    logging.getLogger(APPLICATION_LOGGER).setLevel(logging.ERROR)
     dataset: EvalDataset = load_dataset(path)
     selected: list[ScenarioSpec] = select_scenarios(dataset, options)
     if not selected:
@@ -188,4 +194,5 @@ def open_session(
         mode=options.mode,
         models=models,
         turn_limit=options.turn_limit,
+        media_dir=media_directory(options.datasets_dir / f"{dataset.niche.value}.yaml"),
     )
