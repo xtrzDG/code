@@ -3,13 +3,18 @@ The customer list and the knowledge list on the trigger-kept lookups of
 migration 1122, and the index each statement must use.
 """
 
+from app.schemas.constants.bookings import BookingStatus
 from app.schemas.constants.client_health import AdminClientSort, ClientHealthStatus
 from app.schemas.constants.knowledge import KnowledgeItemKind
 from app.schemas.dto.client_standings import ClientStandingFilter
+from app.schemas.dto.customer_bookings import ContactBookingLookup
+from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.businesses.constrained_integers import BusinessBatchSize
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.contacts.strings import FoldedContactName
+from app.schemas.typings.conversations.booleans import IsSandboxConversation
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from tests.storage.list_query_plans import (
     BUSINESS,
     FIRST_PAGE,
@@ -47,6 +52,21 @@ LOOKUP_LIST_QUERIES: tuple[ListQuery, ...] = (
         "bookings_doc_contact_id_idx",
         ("conversations_doc_contact_idx", "leads_doc_contact_id_idx"),
         ("conversations", "leads"),
+    ),
+    ListQuery(
+        "a customer's own bookings not over yet (list_my_bookings)",
+        lambda r: r.bookings.list_for_contacts(
+            BUSINESS,
+            ContactBookingLookup(
+                contact_ids=(ContactId(), ContactId()),
+                statuses=(BookingStatus.PENDING, BookingStatus.CONFIRMED),
+                is_sandbox=IsSandboxConversation(False),
+                ends_after=BookingSearchBoundSeconds(1_806_200_000),
+                limit=DocumentQueryLimit(10),
+            ),
+        ),
+        "bookings",
+        "bookings_doc_contact_id_ends_at_idx",
     ),
     ListQuery(
         "knowledge base, last changed first",

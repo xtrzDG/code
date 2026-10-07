@@ -15,6 +15,7 @@ from app.schemas.dto.customer_bookings import CustomerBookingList, CustomerBooki
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.constrained_integers import BookingSearchBoundSeconds
 from app.schemas.typings.contacts.prefixed_id import ContactId
+from app.schemas.typings.storage.constrained_integers import DocumentQueryLimit
 from app.use_cases.shared.customer_bookings import find_customer_bookings
 from app.utilities.scheduling.zoned_time import microseconds_to_seconds
 
@@ -22,7 +23,7 @@ from app.utilities.scheduling.zoned_time import microseconds_to_seconds
 LISTED_STATUSES: frozenset[BookingStatus] = frozenset(
     {BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.CANCELLED}
 )
-MAX_LISTED_BOOKINGS: int = 10
+MAX_LISTED_BOOKINGS: DocumentQueryLimit = DocumentQueryLimit(10)
 
 
 class ListCustomerBookingsUseCase(
@@ -73,7 +74,8 @@ class ListCustomerBookingsUseCase(
                 ends_after=BookingSearchBoundSeconds(
                     microseconds_to_seconds(int(self._wall_clock.now_unix()))
                 ),
-            )[:MAX_LISTED_BOOKINGS]
+                limit=MAX_LISTED_BOOKINGS,
+            )
         )
 
     def _customer_contact_ids(self, query: CustomerBookingsQuery) -> set[ContactId]:
