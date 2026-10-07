@@ -88,7 +88,7 @@ class ClaimIdempotencyKeyUseCase(
         self, claim: IdempotencyClaim, now: Microseconds
     ) -> IdempotencyKeyDocument:
         return IdempotencyKeyDocument(
-            id=idempotency_record_id(claim.user_id, claim.key),
+            id=idempotency_record_id(claim.user_id, claim.key, claim.api_key_id),
             user_id=claim.user_id,
             operation=claim.operation,
             fingerprint=claim.fingerprint,

@@ -15,16 +15,22 @@ from app.schemas.typings.idempotency.prefixed_id import (
     IdempotencyRecordId,
 )
 from app.schemas.typings.idempotency.strings import StoredResponseBody
+from app.schemas.typings.integrations.prefixed_id import ApiKeyId
 from app.schemas.typings.users.prefixed_id import UserId
 
 
 class IdempotencyClaim(ImmutableDTO):
-    """A signed-in user's creating request with an Idempotency-Key, before it runs."""
+    """
+    A signed-in user's creating request with an Idempotency-Key, before it
+    runs. `api_key_id`: the key a public API request came with; each key
+    keeps its own Idempotency-Keys (its owner's other keys never meet them).
+    """
 
     user_id: UserId
     key: IdempotencyKey
     operation: IdempotentOperation
     fingerprint: IdempotencyRequestFingerprint
+    api_key_id: ApiKeyId | None = None
 
 
 class StoredResponse(ImmutableDTO):

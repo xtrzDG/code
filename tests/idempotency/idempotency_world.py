@@ -26,6 +26,7 @@ from app.schemas.typings.idempotency.constrained_strings import (
     IdempotencyRequestFingerprint,
     IdempotentOperation,
 )
+from app.schemas.typings.integrations.prefixed_id import ApiKeyId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.idempotency.claim_idempotency_key_use_case import (
     ClaimIdempotencyKeyUseCase,
@@ -41,6 +42,8 @@ from tests.e2e.edge_fakes import MovableClock
 START: datetime = datetime(2026, 10, 6, 9, 0, tzinfo=UTC)
 OWNER: UserId = UserId("user_00000000-0000-4000-8000-000000000001")
 OTHER_OWNER: UserId = UserId("user_00000000-0000-4000-8000-000000000002")
+WRITER_KEY: ApiKeyId = ApiKeyId("api_key_00000000-0000-4000-8000-000000000003")
+SECOND_KEY: ApiKeyId = ApiKeyId("api_key_00000000-0000-4000-8000-000000000004")
 BOOKINGS: IdempotentOperation = IdempotentOperation(
     "POST /v1/businesses/{business_id}/bookings"
 )
@@ -109,7 +112,12 @@ def claim_of(
     user_id: UserId = OWNER,
     operation: IdempotentOperation = BOOKINGS,
     key: IdempotencyKey = KEY,
+    api_key_id: ApiKeyId | None = None,
 ) -> IdempotencyClaim:
     return IdempotencyClaim(
-        user_id=user_id, key=key, operation=operation, fingerprint=fingerprint
+        user_id=user_id,
+        key=key,
+        operation=operation,
+        fingerprint=fingerprint,
+        api_key_id=api_key_id,
     )

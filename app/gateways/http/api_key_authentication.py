@@ -21,6 +21,7 @@ from app.schemas.dto.public_api.access import ApiKeyCredentials, ApiKeyPrincipal
 from app.schemas.dto.spend_guard import ApiRequestAdmission
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
 from app.schemas.typings.integrations.constrained_strings import ApiKeyToken
+from app.schemas.typings.integrations.prefixed_id import ApiKeyId
 from app.schemas.typings.users.prefixed_id import UserId
 
 type ApiKeyAuthentication = Callable[
@@ -86,7 +87,7 @@ def build_api_key_authentication(
     return resolve_api_key, resolve_key_owner
 
 
-def api_key_partition(request: Request) -> str:
+def request_api_key_id(request: Request) -> ApiKeyId | None:
     """
     The key a request was authenticated with: its Idempotency-Keys and
     their stored answers are its own, not shared with the owner's other
@@ -94,7 +95,7 @@ def api_key_partition(request: Request) -> str:
     """
 
     known: object = getattr(request.state, PRINCIPAL_STATE, None)
-    return str(known.api_key_id) if isinstance(known, ApiKeyPrincipal) else ""
+    return known.api_key_id if isinstance(known, ApiKeyPrincipal) else None
 
 
 def parse_api_key(authorization: str | None) -> ApiKeyToken:

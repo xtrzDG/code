@@ -5,6 +5,7 @@ frees up again (released by a failure, past the lease, after its day).
 """
 
 import threading
+from uuid import uuid5
 
 import pytest
 
@@ -24,11 +25,20 @@ from app.schemas.typings.idempotency.constrained_strings import (
     IdempotentOperation,
     StoredResponseMediaType,
 )
+from app.schemas.typings.idempotency.prefixed_id import IdempotencyRecordId
 from app.schemas.typings.idempotency.strings import StoredResponseBody
 from app.schemas.typings.platform.constrained_strings import JobName
+from app.utilities.idempotency.idempotency_records import (
+    IDEMPOTENCY_RECORD_NAMESPACE,
+    idempotency_record_id,
+)
 from tests.idempotency.idempotency_world import (
+    KEY,
     OTHER_BODY,
     OTHER_OWNER,
+    OWNER,
+    SECOND_KEY,
+    WRITER_KEY,
     IdempotencyWorld,
     claim_of,
 )
@@ -129,6 +139,27 @@ def test_keys_of_different_users_never_meet() -> None:
 
     assert other.verdict is IdempotencyClaimVerdict.PROCEED
     assert len(world.records()) == 2
+
+
+def test_keys_of_different_api_keys_of_one_owner_never_meet() -> None:
+    world = IdempotencyWorld()
+    first = world.claim_use_case().run(claim_of(api_key_id=WRITER_KEY))
+    cabinet = world.claim_use_case().run(claim_of())
+
+    other = world.claim_use_case().run(claim_of(api_key_id=SECOND_KEY))
+
+    assert first.verdict is IdempotencyClaimVerdict.PROCEED
+    assert cabinet.verdict is IdempotencyClaimVerdict.PROCEED
+    assert other.verdict is IdempotencyClaimVerdict.PROCEED
+    assert len({first.record_id, cabinet.record_id, other.record_id}) == 3
+
+
+def test_a_cabinet_key_keeps_the_record_id_it_had_before_api_keys() -> None:
+    """Records stored before API keys were scoped are still found."""
+
+    assert str(idempotency_record_id(OWNER, KEY)) == str(
+        IdempotencyRecordId(uuid5(IDEMPOTENCY_RECORD_NAMESPACE, f"{OWNER}\n{KEY}"))
+    )
 
 
 def test_a_failed_request_releases_its_key_and_the_retry_runs_again() -> None:

@@ -7,8 +7,8 @@ from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.api_key_authentication import (
-    api_key_partition,
     build_api_key_authentication,
+    request_api_key_id,
 )
 from app.gateways.http.api_key_routes import build_api_key_router
 from app.gateways.http.idempotency.idempotency_dependency import (
@@ -72,7 +72,7 @@ def build_integration_routers(
                 key_owner,
                 operators.idempotency.claim_idempotency_key_operator(),
                 operators.idempotency.finish_idempotent_request_operator(),
-                partition=api_key_partition,
+                request_api_key=request_api_key_id,
             ),
         ),
     ]
