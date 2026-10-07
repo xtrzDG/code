@@ -18,17 +18,21 @@ export function placeDayShare(placeDay: GridPlaceDay): number | null {
   return open === 0 ? null : Math.min((placeDay.booked_unit_minutes ?? 0) / open, 1);
 }
 
+/**
+ * A share's step: a place is rarely booked all day, so the steps are finer
+ * at the low end (a tenth of the day is already a busy table).
+ */
 export function loadLevel(share: number | null): LoadLevel {
   if (share === null || share <= 0) {
     return 0;
   }
-  if (share < 0.25) {
+  if (share < 0.15) {
     return 1;
   }
-  if (share < 0.5) {
+  if (share < 0.35) {
     return 2;
   }
-  return share < 0.8 ? 3 : 4;
+  return share < 0.6 ? 3 : 4;
 }
 
 /** How much of the accent a level mixes into the surface (text stays AA on every step). */

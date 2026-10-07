@@ -29,7 +29,7 @@ describe("the week's heatmap", () => {
   });
 
   it("colours in five steps", () => {
-    expect([null, 0, 0.1, 0.3, 0.6, 0.9].map(loadLevel)).toEqual([0, 0, 1, 2, 3, 4]);
+    expect([null, 0, 0.1, 0.3, 0.5, 0.9].map(loadLevel)).toEqual([0, 0, 1, 2, 3, 4]);
   });
 
   it("adds up a day: time slots by minutes, else rooms", () => {
@@ -65,7 +65,8 @@ describe("the nights grid", () => {
       endsAfter: true,
     });
     expect(stayNights(stay("2026-10-01", "2026-10-06"), "2026-10-06", 14)).toBeNull();
-    expect(stayNights({ ...stay("2026-10-06", "2026-10-06"), time: "10:00" }, "2026-10-06", 14)).toBeNull();
+    // A stay keeps its check-in time; its nights count all the same.
+    expect(stayNights({ date: "2026-10-06", end_date: "2026-10-07" }, "2026-10-06", 14)?.count).toBe(1);
   });
 
   it("stacks the stays of a room type in at least as many lanes as it has rooms", () => {

@@ -56,8 +56,9 @@ export function DayView({
   const day = grid.days.find((item) => item.date === date) ?? grid.days[0];
   const places = grid.places.filter((place) => place.booking_unit === "time_slot");
   const placeDays = new Map((day?.places ?? []).map((placeDay) => [placeDay.resource_id, placeDay]));
+  const placeIds = new Set(places.map((place) => place.id));
   const entries = grid.bookings.flatMap((booking) => {
-    const span = booking.status === "cancelled" ? null : daySpan(booking, date);
+    const span = booking.status === "cancelled" || !placeIds.has(booking.resource_id) ? null : daySpan(booking, date);
     return span ? [{ item: booking, span }] : [];
   });
   const ranges = [...(day?.business_ranges ?? []), ...places.flatMap((place) => placeDays.get(place.id)?.open_ranges ?? [])];
@@ -109,7 +110,10 @@ export function DayView({
         data-calendar-day={date}
         className="relative max-h-[min(70vh,46rem)] overflow-auto overscroll-contain rounded-2xl border border-line bg-surface"
       >
-        <div className="grid w-full min-w-max" style={{ gridTemplateColumns: `3.25rem repeat(${places.length}, minmax(9rem, 1fr))` }}>
+        <div
+          className="grid w-full"
+          style={{ gridTemplateColumns: `4rem repeat(${places.length}, minmax(9rem, 1fr))`, minWidth: `calc(4rem + ${places.length} * 9rem)` }}
+        >
           <div className="sticky start-0 top-0 z-40 border-e border-b border-line bg-surface" />
           {places.map((place) => {
             const placeDay = placeDays.get(place.id);

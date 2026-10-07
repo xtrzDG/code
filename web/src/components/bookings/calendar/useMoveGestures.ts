@@ -54,14 +54,18 @@ export function useMoveGestures({
   places,
   bounds,
   forwardKey,
+  moves = "time",
 }: {
   onMove: (booking: BookingView, target: MoveTarget) => Promise<boolean>;
+  /** "time": a booking moves by quarters of an hour; "nights": a stay moves by nights. */
+  moves?: "time" | "nights";
   places: readonly MovePlace[];
   bounds: { firstMinute: number; lastMinute: number; firstDate: string; lastDate: string };
   /** The arrow that points to the next place in reading order ("ArrowLeft" right to left). */
   forwardKey: "ArrowRight" | "ArrowLeft";
 }) {
   const [preview, setPreview] = useState<MovePreview | null>(null);
+  const origin = (booking: BookingView) => placeOf(booking, moves === "nights");
   const [isCancelled, setCancelled] = useState(false);
   const session = useRef<Session | null>(null);
   const suppressClick = useRef(false);
@@ -100,7 +104,7 @@ export function useMoveGestures({
     current.isActive = true;
     suppressClick.current = true;
     setCancelled(false);
-    setPreview({ booking: current.booking, target: current.locate(x, y) ?? placeOf(current.booking), source: "drag" });
+    setPreview({ booking: current.booking, target: current.locate(x, y) ?? origin(current.booking), source: "drag" });
   };
 
   const commit = (booking: BookingView, target: MoveTarget, source: MovePreview["source"]) => {
@@ -159,7 +163,7 @@ export function useMoveGestures({
         }
         return;
       }
-      const target = current.locate(event.clientX, event.clientY) ?? placeOf(current.booking);
+      const target = current.locate(event.clientX, event.clientY) ?? origin(current.booking);
       setPreview((shown) =>
         shown?.source === "drag" && sameTarget(shown.target, target) ? shown : { booking: current.booking, target, source: "drag" },
       );
@@ -171,7 +175,7 @@ export function useMoveGestures({
       }
       endSession();
       if (current.isActive) {
-        commit(current.booking, current.locate(event.clientX, event.clientY) ?? placeOf(current.booking), "drag");
+        commit(current.booking, current.locate(event.clientX, event.clientY) ?? origin(current.booking), "drag");
       }
     },
     onPointerCancel: () => {
@@ -212,7 +216,7 @@ export function useMoveGestures({
         return;
       }
       event.preventDefault();
-      const next = keyboardTarget(pending?.target ?? placeOf(booking), event.key, places, bounds, forwardKey);
+      const next = keyboardTarget(pending?.target ?? origin(booking), event.key, places, bounds, forwardKey);
       if (next) {
         setCancelled(false);
         setPreview(isSameSpot(booking, next) ? null : { booking, target: next, source: "keys" });

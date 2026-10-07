@@ -27,6 +27,14 @@ describe("a moved booking", () => {
     ]);
   });
 
+  it("finds a stay by its room and first night, whatever its check-in time", () => {
+    const checkIn = { ...stay, time: "14:00", end_time: "12:00" };
+    expect(placeOf(checkIn, true)).toEqual({ resourceId: "res_deluxe", resourceName: "Deluxe", date: "2026-10-06", time: null });
+    expect(isSameSpot(checkIn, placeOf(checkIn, true))).toBe(true);
+    const moved = movedView(checkIn, { ...placeOf(checkIn, true), date: "2026-10-09" });
+    expect([moved.date, moved.time, moved.end_date]).toEqual(["2026-10-09", "14:00", "2026-10-11"]);
+  });
+
   it("keeps a stay's nights", () => {
     const moved = movedView(stay, { resourceId: "res_standard", resourceName: "Standard", date: "2026-10-10", time: null });
     expect([moved.resource_id, moved.date, moved.end_date, moved.time]).toEqual(["res_standard", "2026-10-10", "2026-10-12", null]);

@@ -27,7 +27,7 @@ function ghostFor(roomId: string, preview: MovePreview | null, from: string, day
     return null;
   }
   const nights = Math.max(daysBetween(preview.booking.date, preview.booking.end_date), 1);
-  return stayNights({ date: preview.target.date, end_date: addDays(preview.target.date, nights), time: null }, from, days);
+  return stayNights({ date: preview.target.date, end_date: addDays(preview.target.date, nights) }, from, days);
 }
 
 /**
@@ -62,6 +62,7 @@ export function NightsView({
     places: rooms.map((room) => ({ id: room.id, name: room.name })),
     bounds: { firstMinute: 0, lastMinute: 0, firstDate: from, lastDate: grid.date_to },
     forwardKey: localeDirection(locale) === "rtl" ? "ArrowLeft" : "ArrowRight",
+    moves: "nights",
   });
   const announcement = useMoveAnnouncement(gestures.preview, gestures.isCancelled);
 
@@ -93,7 +94,7 @@ export function NightsView({
         data-calendar-nights={from}
         className="overflow-x-auto overscroll-x-contain rounded-2xl border border-line bg-surface"
       >
-        <div className="min-w-max">
+        <div style={{ minWidth: `calc(8.5rem + ${dates.length} * 3.5rem)` }}>
           <div className="grid border-b border-line" style={{ gridTemplateColumns: template }}>
             <div className="sticky start-0 z-20 flex items-end border-e border-line bg-surface px-3 py-2 text-xs font-medium text-ink-subtle">
               {t("bookingCalendar.nights.room")}

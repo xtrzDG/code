@@ -42,9 +42,10 @@ export function movedView(booking: BookingView, target: MoveTarget): BookingView
   return { ...booking, ...place, date: target.date, time: target.time, end_date: end.date, end_time: end.time };
 }
 
-/** Whether the target is where the booking already is. */
+/** Whether the target is where the booking already is (a stay by its room and first night). */
 export function isSameSpot(booking: BookingView, target: MoveTarget): boolean {
-  return booking.resource_id === target.resourceId && booking.date === target.date && (booking.time ?? null) === target.time;
+  const sameTime = target.time === null || (booking.time ?? null) === target.time;
+  return booking.resource_id === target.resourceId && booking.date === target.date && sameTime;
 }
 
 /** The reschedule body: the new place and start, and the start the calendar showed. */
@@ -58,9 +59,17 @@ export function moveBody(booking: BookingView, target: MoveTarget): RescheduleBo
   };
 }
 
-/** Where Undo puts a moved booking back: its place and start before the move. */
-export function placeOf(booking: BookingView): MoveTarget {
-  return { resourceId: booking.resource_id, resourceName: booking.resource_name, date: booking.date, time: booking.time ?? null };
+/**
+ * Where a booking is (and where Undo puts it back): its place and start;
+ * a stay by its first night only (`asStay`), its check-in time aside.
+ */
+export function placeOf(booking: BookingView, asStay: boolean = false): MoveTarget {
+  return {
+    resourceId: booking.resource_id,
+    resourceName: booking.resource_name,
+    date: booking.date,
+    time: asStay ? null : (booking.time ?? null),
+  };
 }
 
 /** A place of the calendar in its order (a column of the day, a row of the nights). */

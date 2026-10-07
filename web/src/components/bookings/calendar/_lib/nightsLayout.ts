@@ -20,11 +20,8 @@ export interface StayNights {
   endsAfter: boolean;
 }
 
-/** The nights of the window a stay takes; null when none (or for a booking by time). */
-export function stayNights(booking: Pick<BookingView, "date" | "end_date" | "time">, from: string, days: number): StayNights | null {
-  if (booking.time) {
-    return null;
-  }
+/** The nights of the window a stay takes (its check-in and check-out times aside); null when none. */
+export function stayNights(booking: Pick<BookingView, "date" | "end_date">, from: string, days: number): StayNights | null {
   const start = daysBetween(from, booking.date);
   const end = daysBetween(from, booking.end_date);
   const first = Math.max(start, 0);

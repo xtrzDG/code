@@ -76,7 +76,10 @@ export function HeatCell({
       )}
     >
       <span className="text-sm font-semibold tabular-nums">{isClosed ? t("bookingCalendar.week.closed") : rooms ? `${rooms.booked}/${rooms.open}` : percent}</span>
-      {isClosed ? null : <span className="text-[11px] text-ink-muted tabular-nums">{countText}</span>}
+      {isClosed ? null : (
+        // The muted ink keeps AA on the lighter steps only; the deeper ones take the full ink.
+        <span className={cn("text-[11px] tabular-nums", level >= 3 ? "text-ink" : "text-ink-muted")}>{countText}</span>
+      )}
     </button>
   );
 }

@@ -54,16 +54,16 @@ export function useCalendarMove() {
     },
   );
 
-  const movedTitle = (moved: BookingView): ToastTitle =>
-    moved.time
+  const movedTitle = (moved: BookingView, asStay: boolean): ToastTitle =>
+    moved.time && !asStay
       ? { text: t("bookingCalendar.move.moved", { time: formatLocalTime(moved.time, locale) }), values: { place: moved.resource_name } }
       : {
           text: t("bookingCalendar.move.movedStay", { date: formatLocalDate(moved.date, locale, { day: "numeric", month: "short" }) }),
           values: { place: moved.resource_name },
         };
 
-  const moveBack = async (moved: BookingView, original: BookingView) => {
-    const result = await reschedule.run(moved, placeOf(original));
+  const moveBack = async (moved: BookingView, original: BookingView, asStay: boolean) => {
+    const result = await reschedule.run(moved, placeOf(original, asStay));
     if (result.ok) {
       replaceInLists(businessId, result.data.booking);
       toast.success(t("bookingCalendar.move.undone"));
@@ -81,7 +81,7 @@ export function useCalendarMove() {
     }
     const moved = result.data.booking;
     replaceInLists(businessId, moved);
-    toast.undoable(movedTitle(moved), () => void moveBack(moved, booking));
+    toast.undoable(movedTitle(moved, target.time === null), () => void moveBack(moved, booking, target.time === null));
     return true;
   };
 

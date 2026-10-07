@@ -15,7 +15,7 @@ import type { StayNights } from "../_lib/nightsLayout";
 import { CLOSED_STYLE, GHOST_CLASS, STATUS_STYLE } from "../calendarStyles";
 import type { Locate } from "../useMoveGestures";
 
-/** One lane of stays is this tall. */
+/** One lane of stays is this tall; under the lanes, a slim line shows the rooms taken each night. */
 const LANE_HEIGHT = "2.375rem";
 
 export interface ShownStay {
@@ -66,9 +66,9 @@ export function NightsRow({
       data-calendar-room={room.id}
       data-place-name={room.name}
       className="grid border-b border-line last:border-b-0"
-      style={{ gridTemplateColumns: template, gridTemplateRows: `repeat(${lanes}, ${LANE_HEIGHT})` }}
+      style={{ gridTemplateColumns: template, gridTemplateRows: `repeat(${lanes}, ${LANE_HEIGHT}) 1rem` }}
     >
-      <div className="sticky start-0 z-20 flex flex-col justify-center border-e border-line bg-surface px-3" style={{ gridRow: `1 / span ${lanes}` }}>
+      <div className="sticky start-0 z-20 flex flex-col justify-center border-e border-line bg-surface px-3" style={{ gridRow: "1 / -1" }}>
         <UserContent className="truncate text-sm font-semibold text-ink">{room.name}</UserContent>
         {room.unit_count > 1 ? <span className="text-xs text-ink-subtle tabular-nums">×{room.unit_count}</span> : null}
       </div>
@@ -77,7 +77,7 @@ export function NightsRow({
         const open = placeDay?.open_units ?? 0;
         const booked = placeDay?.booked_units ?? 0;
         const taken = t("bookingCalendar.nights.taken", { booked: String(booked), open: String(open) });
-        const position = { gridColumn: index + 2, gridRow: `1 / span ${lanes}` };
+        const position = { gridColumn: index + 2, gridRow: "1 / -1" };
         return open === 0 ? (
           <div
             key={date}
@@ -119,6 +119,7 @@ export function NightsRow({
               status: t(BOOKING_STATUS[booking.status].label),
             })}
             aria-describedby={hintId}
+            title={name}
             style={{ gridColumn: `${nights.first + 2} / span ${nights.count}`, gridRow: laned.lane + 1 }}
             className={cn(
               "relative z-10 my-0.5 flex min-w-0 cursor-grab items-center gap-1.5 overflow-hidden rounded-md border ps-3 pe-2 text-start text-xs shadow-sm",

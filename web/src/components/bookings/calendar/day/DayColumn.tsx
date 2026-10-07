@@ -82,7 +82,6 @@ export function DayColumn({
       data-calendar-column={place.id}
       data-place-name={place.name}
       onClick={create}
-      title={t("bookingCalendar.day.newAt", { place: place.name })}
       className="relative cursor-cell border-e border-line bg-surface-muted last:border-e-0"
       style={{ height, ...CLOSED_STYLE }}
     >
