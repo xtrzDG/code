@@ -33,6 +33,19 @@ the p95 in milliseconds:
 | dashboard | `GET /v1/businesses/{id}/dashboard` (last 30 days) | 300 ms |
 | widget poll | `GET /v1/widget/{id}/messages?after=…` | 60 ms |
 
+`tests/perf/test_reply_budget.py` times a customer's reply end to end on
+the game days' two-process world (an API and a worker process, WhatsApp
+through Meta's signed webhook, fake Meta and OpenAI on 127.0.0.1, a model
+that answers after 2 s, lane polls a minute apart so only wake-ups count):
+a finished question is taken at the API's commit (`queue_to_claim_ms`
+under 1 s) and answered within 3 s of the claim and 6 s of the webhook;
+a fragment is taken by the due-time timer after `MESSAGE_COALESCE_SECONDS`
+and stays within the same budget. The first question is the fresh
+worker's first turn: the worker loads the reply guard's CLDR data before
+its lanes start (otherwise the first customer after a deploy waited
+1.4 s longer). It asserts its budgets itself and writes nothing to the
+report.
+
 `PERF_SCALE` picks the dataset: `full` (the weekly run: 500 businesses,
 2,000,000 messages, 200,000 bookings, 1,000 widget visitors), `medium` (a
 tenth) or `small` (default: 10 businesses, 20,000 messages). `PERF_REPORT`
@@ -495,7 +508,19 @@ logs for `pickup_delay_ms`). The SLI is the p95 of `pickup_delay_ms` of
   connection (`application_name` `assistant-workshop-job-wakeup`, on
   `LIVE_EVENTS_DATABASE_URL` or `DATABASE_URL`; it reconnects with
   backoff like the API's live events listener) and wakes the lane's idle
-  threads at once.
+  threads at once. A job queued for later within 10 minutes (a burst of
+  customer messages answered once the customer is quiet, a retry after
+  its backoff) notifies `<lane>@<run_at in µs>`: the worker arms a timer
+  (`JobWakeupTimer`, one thread per listening worker) and wakes the lane
+  when the job is due, not at its next poll; a worker of an older release
+  ignores such a notification and its poll finds the job.
+- **Customer messages.** Each inbox event records `queue_to_claim_ms`,
+  from being stored to being taken for an answer (the grouping wait
+  included), and the claim logs it with the burst's size ("Customer
+  messages taken to answer"). A finished message (over 12 characters,
+  ending in `.`, `?` or `!`) is due at once: expect tens of
+  milliseconds. A short fragment waits `MESSAGE_COALESCE_SECONDS` (3;
+  1.5 s on Telegram) for the rest of the thought.
 - **The safety net.** Lane threads still poll: the `inbound` lane every
   `WORKER_INBOUND_POLL_SECONDS` (2), the others every
   `WORKER_POLL_SECONDS` (15). The first polls are staggered (thread i of

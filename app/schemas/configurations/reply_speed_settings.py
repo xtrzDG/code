@@ -13,11 +13,13 @@ DEFAULT_CHAT_TURN_DEADLINE_SECONDS: int = 20
 class ReplySpeedSettings(ImmutableDTO):
     """
     How fast and how reliably customers of the messaging channels hear
-    back: quick messages in a row wait MESSAGE_COALESCE_SECONDS of quiet and
-    get one reply; a turn still running CHAT_TURN_DEADLINE_SECONDS after the
-    customer's first message sends a short "one moment" once; and a model
-    whose provider fails (or whose circuit is open) is replaced for the
-    call by LLM_FALLBACK_MODEL_ID of the other provider (None: no failover).
+    back: a finished message is answered at once, a short fragment waits
+    MESSAGE_COALESCE_SECONDS of quiet (1.5 s on Telegram) so quick messages
+    in a row get one reply; a turn still running CHAT_TURN_DEADLINE_SECONDS
+    after the customer's first message sends a short "one moment" once; and
+    a model whose provider fails (or whose circuit is open) is replaced for
+    the call by LLM_FALLBACK_MODEL_ID of the other provider (None: no
+    failover).
     """
 
     message_coalesce_seconds: MessageCoalesceSeconds = MessageCoalesceSeconds(
