@@ -1,4 +1,4 @@
-"""Marks the tests that run against a throwaway Postgres server; keeps a CI part's files.
+"""Marks the tests that reach a throwaway Postgres server; keeps a CI part's files.
 
 CI runs them in jobs of their own (`pytest -m postgres`) next to the rest
 (`pytest -m "not postgres"`) and combines the coverage files of every job
@@ -48,7 +48,9 @@ def runs_on_postgres(item: pytest.Item) -> bool:
 
 
 def group_and_file(item: pytest.Item) -> tuple[str, str]:
-    group: str = POSTGRES_GROUP if item.get_closest_marker(POSTGRES_MARK) else REST_GROUP
+    group: str = (
+        POSTGRES_GROUP if item.get_closest_marker(POSTGRES_MARK) else REST_GROUP
+    )
     return group, item.nodeid.split("::", 1)[0]
 
 
@@ -56,7 +58,9 @@ def pytest_configure(config: pytest.Config) -> None:
     report_path: str = os.environ.get(DURATIONS_REPORT_VARIABLE, "")
     # Under xdist only the controller sees every report; workers have `workerinput`.
     if report_path and not hasattr(config, "workerinput"):
-        config.pluginmanager.register(DurationRecorder(Path(report_path)), "duration-recorder")
+        config.pluginmanager.register(
+            DurationRecorder(Path(report_path)), "duration-recorder"
+        )
 
 
 @pytest.hookimpl(wrapper=True)
@@ -77,7 +81,9 @@ def pytest_collection_modifyitems(
         return
     weighed = weigh_files((group_and_file(item) for item in items), load_durations())
     kept_files: set[tuple[str, str]] = files_of_part(weighed, part)
-    kept: list[pytest.Item] = [item for item in items if group_and_file(item) in kept_files]
+    kept: list[pytest.Item] = [
+        item for item in items if group_and_file(item) in kept_files
+    ]
     deselected: list[pytest.Item] = [
         item for item in items if group_and_file(item) not in kept_files
     ]

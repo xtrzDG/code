@@ -20,6 +20,7 @@ import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 DURATIONS_PATH: Path = Path(__file__).with_name("durations.json")
 POSTGRES_GROUP: str = "postgres"
@@ -58,7 +59,9 @@ def parse_part(value: str | None) -> Part | None:
         return None
     match = PART_PATTERN.match(value.strip())
     if match is None or not 1 <= int(match.group(1)) <= int(match.group(2)):
-        raise ValueError(f'TEST_PART must look like "2/4" (part 1..total), not "{value}".')
+        raise ValueError(
+            f'TEST_PART must look like "2/4" (part 1..total), not "{value}".'
+        )
     return Part(index=int(match.group(1)), total=int(match.group(2)))
 
 
@@ -67,15 +70,22 @@ def load_durations(path: Path = DURATIONS_PATH) -> dict[str, dict[str, float]]:
     if not path.exists():
         return {group: {} for group in GROUPS}
     raw: object = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict) or set(raw) != set(GROUPS):
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path} must have exactly the groups {', '.join(GROUPS)}.")
+    table = cast(dict[object, object], raw)
+    if set(table) != set(GROUPS):
         raise ValueError(f"{path} must have exactly the groups {', '.join(GROUPS)}.")
     durations: dict[str, dict[str, float]] = {}
-    for group, files in raw.items():
+    for group, files in table.items():
         if not isinstance(files, dict):
             raise ValueError(f"{path}: {group} must map test files to seconds.")
         durations[str(group)] = {}
-        for name, seconds in files.items():
-            if not isinstance(seconds, int | float) or isinstance(seconds, bool) or seconds < 0:
+        for name, seconds in cast(dict[object, object], files).items():
+            if (
+                not isinstance(seconds, int | float)
+                or isinstance(seconds, bool)
+                or seconds < 0
+            ):
                 raise ValueError(f"{path}: {group} {name} must be a number of seconds.")
             durations[str(group)][str(name)] = float(seconds)
     return durations
@@ -90,7 +100,9 @@ def weigh_files(
     for group in sorted({group for group, _ in keys}):
         measured_seconds: Mapping[str, float] = durations.get(group, {})
         paths: list[str] = [path for key_group, path in keys if key_group == group]
-        known: list[float] = [measured_seconds[path] for path in paths if path in measured_seconds]
+        known: list[float] = [
+            measured_seconds[path] for path in paths if path in measured_seconds
+        ]
         mean: float = sum(known) / len(known) if known else UNMEASURED_SECONDS
         weighed.extend(
             TestFile(group, path, measured_seconds[path], True)
@@ -105,7 +117,9 @@ def plan_parts(files: Iterable[TestFile], total: int) -> list[list[TestFile]]:
     """Every part's files, longest first to the part with the least work."""
     parts: list[list[TestFile]] = [[] for _ in range(total)]
     loads: list[float] = [0.0] * total
-    for test_file in sorted(files, key=lambda item: (-item.seconds, item.group, item.path)):
+    for test_file in sorted(
+        files, key=lambda item: (-item.seconds, item.group, item.path)
+    ):
         lightest: int = min(range(total), key=lambda index: (loads[index], index))
         parts[lightest].append(test_file)
         loads[lightest] += test_file.seconds
@@ -114,4 +128,7 @@ def plan_parts(files: Iterable[TestFile], total: int) -> list[list[TestFile]]:
 
 def files_of_part(files: Iterable[TestFile], part: Part) -> set[tuple[str, str]]:
     """The (group, path) pairs the given part runs."""
-    return {(item.group, item.path) for item in plan_parts(files, part.total)[part.index - 1]}
+    return {
+        (item.group, item.path)
+        for item in plan_parts(files, part.total)[part.index - 1]
+    }

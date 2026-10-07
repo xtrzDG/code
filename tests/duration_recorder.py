@@ -27,7 +27,7 @@ class DurationRecorder:
         self._seconds: defaultdict[tuple[str, str], float] = defaultdict(float)
 
     def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
-        # tests/conftest.py names each test's group; xdist hands it over with the report.
+        # tests/conftest.py names each test's group; xdist hands it over in the report.
         group: str = str(dict(report.user_properties).get(GROUP_PROPERTY, REST_GROUP))
         self._seconds[(group, report.nodeid.split("::", 1)[0])] += report.duration
 
@@ -36,4 +36,6 @@ class DurationRecorder:
         for (group, path), seconds in sorted(self._seconds.items()):
             by_group[group][path] = round(seconds, 2)
         self._report_path.parent.mkdir(parents=True, exist_ok=True)
-        self._report_path.write_text(json.dumps(by_group, indent=2) + "\n", encoding="utf-8")
+        self._report_path.write_text(
+            json.dumps(by_group, indent=2) + "\n", encoding="utf-8"
+        )

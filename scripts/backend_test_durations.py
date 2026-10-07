@@ -19,27 +19,36 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 GROUPS: tuple[str, ...] = ("postgres", "rest")
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[1]
 DURATIONS_PATH: Path = PROJECT_ROOT / "tests" / "durations.json"
 EXIT_OK: int = 0
 EXIT_UNUSABLE: int = 2
+DESCRIPTION: str = "Merges backend test duration reports into tests/durations.json."
 
 
 def read_report(path: Path) -> dict[str, dict[str, float]]:
     """A report's seconds per file, by group; ValueError when it is not one."""
     raw: object = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict) or not set(raw) <= set(GROUPS):
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path} must map the groups {', '.join(GROUPS)} to files.")
+    table = cast(dict[object, object], raw)
+    if not set(table) <= set(GROUPS):
         raise ValueError(f"{path} must map the groups {', '.join(GROUPS)} to files.")
     report: dict[str, dict[str, float]] = {group: {} for group in GROUPS}
-    for group, files in raw.items():
+    for group, files in table.items():
         if not isinstance(files, dict):
             raise ValueError(f"{path}: {group} must map test files to seconds.")
-        for name, seconds in files.items():
-            if isinstance(seconds, bool) or not isinstance(seconds, int | float) or seconds < 0:
+        for name, seconds in cast(dict[object, object], files).items():
+            if (
+                isinstance(seconds, bool)
+                or not isinstance(seconds, int | float)
+                or seconds < 0
+            ):
                 raise ValueError(f"{path}: {group} {name} must be a number of seconds.")
-            report[group][str(name)] = float(seconds)
+            report[str(group)][str(name)] = float(seconds)
     return report
 
 
@@ -64,12 +73,17 @@ def merge_durations(
 
 def existing_test_files(root: Path) -> set[str]:
     """Every test module under tests/, as the paths reports name them."""
-    return {path.relative_to(root).as_posix() for path in (root / "tests").rglob("test_*.py")}
+    return {
+        path.relative_to(root).as_posix()
+        for path in (root / "tests").rglob("test_*.py")
+    }
 
 
 def main(arguments: list[str]) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n", 1)[0])
-    parser.add_argument("reports", nargs="+", type=Path, help="duration reports to merge")
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument(
+        "reports", nargs="+", type=Path, help="duration reports to merge"
+    )
     parser.add_argument("--output", type=Path, default=DURATIONS_PATH)
     options = parser.parse_args(arguments)
 

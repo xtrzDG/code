@@ -32,10 +32,12 @@ class FakeReport:
 
     nodeid: str
     duration: float
-    user_properties: list[Any] = field(default_factory=list)
+    user_properties: list[Any] = field(default_factory=list[Any])
 
 
-def test_the_recorder_adds_up_each_files_setup_call_and_teardown_by_group(tmp_path: Path) -> None:
+def test_the_recorder_adds_up_each_files_setup_call_and_teardown_by_group(
+    tmp_path: Path,
+) -> None:
     report_path = tmp_path / "reports" / "durations-rest-1.json"
     recorder = DurationRecorder(report_path)
     for report in (
@@ -71,10 +73,18 @@ def test_a_report_must_map_the_groups_to_seconds(tmp_path: Path) -> None:
     assert read_report(path) == {"postgres": {}, "rest": {"tests/a.py": 2.0}}
 
 
-def test_measured_files_replace_their_entries_and_files_that_are_gone_are_dropped() -> None:
+def test_measured_files_replace_their_entries_and_files_that_are_gone_are_dropped() -> (
+    None
+):
     merged = merge_durations(
-        {"rest": {"tests/a.py": 30.0, "tests/b.py": 6.0, "tests/gone.py": 12.0}, "postgres": {"tests/a.py": 1.0}},
-        [{"rest": {"tests/a.py": 4.567}, "postgres": {}}, {"rest": {"tests/c.py": 2.0}, "postgres": {}}],
+        {
+            "rest": {"tests/a.py": 30.0, "tests/b.py": 6.0, "tests/gone.py": 12.0},
+            "postgres": {"tests/a.py": 1.0},
+        },
+        [
+            {"rest": {"tests/a.py": 4.567}, "postgres": {}},
+            {"rest": {"tests/c.py": 2.0}, "postgres": {}},
+        ],
         {"tests/a.py", "tests/b.py", "tests/c.py"},
     )
 
@@ -84,19 +94,31 @@ def test_measured_files_replace_their_entries_and_files_that_are_gone_are_droppe
     }
 
 
-def test_the_script_merges_reports_into_the_output(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_the_script_merges_reports_into_the_output(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     output = tmp_path / "durations.json"
-    output.write_text(json.dumps({"postgres": {}, "rest": {EXISTING_FILE: 9.0, "tests/gone.py": 1.0}}), encoding="utf-8")
+    output.write_text(
+        json.dumps(
+            {"postgres": {}, "rest": {EXISTING_FILE: 9.0, "tests/gone.py": 1.0}}
+        ),
+        encoding="utf-8",
+    )
     report = tmp_path / "durations-rest-1.json"
     report.write_text(json.dumps({"rest": {EXISTING_FILE: 0.5}}), encoding="utf-8")
 
     assert main([str(report), "--output", str(output)]) == EXIT_OK
 
-    assert json.loads(output.read_text(encoding="utf-8")) == {"postgres": {}, "rest": {EXISTING_FILE: 0.5}}
+    assert json.loads(output.read_text(encoding="utf-8")) == {
+        "postgres": {},
+        "rest": {EXISTING_FILE: 0.5},
+    }
     assert "1 measured entries merged" in capsys.readouterr().out
 
 
-def test_the_script_refuses_an_unreadable_report(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_the_script_refuses_an_unreadable_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     output = tmp_path / "durations.json"
     report = tmp_path / "broken.json"
     report.write_text("{not json", encoding="utf-8")

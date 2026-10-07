@@ -63,7 +63,10 @@ def test_the_backend_tests_run_in_parts_of_each_group() -> None:
     assert "postgres and not perf" in tests["env"]["MARKERS"]
     assert "not postgres and not perf" in tests["env"]["MARKERS"]
     assert tests["env"]["TEST_PART"] == "${{ matrix.part }}/${{ matrix.parts }}"
-    assert tests["env"]["COVERAGE_FILE"] == ".coverage.${{ matrix.group }}-${{ matrix.part }}"
+    assert (
+        tests["env"]["COVERAGE_FILE"]
+        == ".coverage.${{ matrix.group }}-${{ matrix.part }}"
+    )
     run = steps_text(tests)
     assert '-m "$MARKERS"' in run
     assert "--cov-fail-under=0" in run
@@ -128,7 +131,10 @@ def test_the_end_to_end_shards_follow_the_shard_plan() -> None:
     assert total >= 6
     assert e2e["name"] == f"End-to-end (${{{{ matrix.shard }}}}/{total})"
     tests = next(step for step in e2e["steps"] if step.get("run") == "npm run e2e")
-    assert tests["env"] == {"E2E_SKIP_BUILD": "1", "E2E_SHARD": f"${{{{ matrix.shard }}}}/{total}"}
+    assert tests["env"] == {
+        "E2E_SKIP_BUILD": "1",
+        "E2E_SHARD": f"${{{{ matrix.shard }}}}/{total}",
+    }
     # web/e2e/support/shards.test.ts reads the same count to check the budget.
     assert (PROJECT_ROOT / "web" / "e2e" / "durations.json").exists()
 
