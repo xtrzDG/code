@@ -8,7 +8,7 @@ import type { BookingView } from "@/components/insights/types";
 export type BookingGrid = Schema<"BookingGrid">;
 export type GridPlace = Schema<"BookingGridPlace">;
 export type GridPlaceDay = Schema<"BookingGridPlaceDay">;
-export type GridDay = Schema<"BookingGridDay">;
+type GridDay = Schema<"BookingGridDay">;
 export type GridOpenRange = Schema<"GridOpenRange">;
 
 /** A day of the window with its lists filled in (the API leaves empty ones out). */
@@ -37,7 +37,7 @@ export function filledGrid(grid: BookingGrid): CalendarGrid {
 /** Day: places as columns over the hours; Week: the load heatmap; Nights: rooms × nights. */
 export type CalendarView = "day" | "week" | "nights";
 
-export const CALENDAR_VIEWS: readonly CalendarView[] = ["day", "week", "nights"];
+const CALENDAR_VIEWS: readonly CalendarView[] = ["day", "week", "nights"];
 
 export function isCalendarView(value: string | null | undefined): value is CalendarView {
   return (CALENDAR_VIEWS as readonly string[]).includes(value ?? "");

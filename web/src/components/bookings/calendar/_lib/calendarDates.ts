@@ -10,7 +10,7 @@ import type { IsoWeekday } from "@/lib/intl/localeCalendar";
 import type { CalendarView } from "./calendarTypes";
 
 /** Nights shown by the hotel grid: two weeks, the usual horizon of a front desk. */
-export const NIGHTS_SHOWN = 14;
+const NIGHTS_SHOWN = 14;
 
 /** The ISO weekday (1 = Monday … 7 = Sunday) of a local date. */
 export function isoWeekdayOf(date: LocalDateText): IsoWeekday {
