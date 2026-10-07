@@ -74,6 +74,9 @@ or split the slow files) and warns about files without a duration.
 cache; key: the lockfile and a hash of `web/src`, `web/public` and
 `next.config.ts`, falling back to the newest cache of the same lockfile),
 runs `next build` and keeps `.next` without its cache as `cabinet-build`.
+Locally the first build of this worktree took 1:44, a later one of the
+same sources 13 seconds from that cache (about 260 MB); after a change only
+what it touched compiles again.
 The e2e shards need only this job. `web-checks` runs everything else at
 the same time and holds the Sentry token on `main`, so the shards' build
 never sees it. npm's download cache comes from `setup-node`, uv's from
