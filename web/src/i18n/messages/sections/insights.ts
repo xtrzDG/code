@@ -11,6 +11,11 @@
  */
 
 import type { Translation } from "../../translate";
+import { bookingCalendarDe } from "./insights/bookingCalendar.de";
+import { bookingCalendarEn } from "./insights/bookingCalendar.en";
+import { bookingCalendarHe } from "./insights/bookingCalendar.he";
+import { bookingCalendarKa } from "./insights/bookingCalendar.ka";
+import { bookingCalendarRu } from "./insights/bookingCalendar.ru";
 import { bookingsEn } from "./insights/bookings.en";
 import { bookingsKa } from "./insights/bookings.ka";
 import { bookingsRu } from "./insights/bookings.ru";
@@ -109,6 +114,7 @@ export const insightsEn = {
   conversationMedia: conversationMediaEn,
   messageDelivery: messageDeliveryEn,
   bookings: bookingsEn,
+  bookingCalendar: bookingCalendarEn,
   leads: leadsEn,
   handoffs: handoffsEn,
   value: valueEn,
@@ -130,6 +136,7 @@ export const insightsRu: Translation<typeof insightsEn> = {
   conversationMedia: conversationMediaRu,
   messageDelivery: messageDeliveryRu,
   bookings: bookingsRu,
+  bookingCalendar: bookingCalendarRu,
   leads: leadsRu,
   handoffs: handoffsRu,
   value: valueRu,
@@ -151,6 +158,7 @@ export const insightsKa: Translation<typeof insightsEn> = {
   conversationMedia: conversationMediaKa,
   messageDelivery: messageDeliveryKa,
   bookings: bookingsKa,
+  bookingCalendar: bookingCalendarKa,
   leads: leadsKa,
   handoffs: handoffsKa,
   value: valueKa,
@@ -172,6 +180,7 @@ export const insightsHe: Translation<typeof insightsEn> = {
   conversationMedia: conversationMediaHe,
   messageDelivery: messageDeliveryHe,
   bookings: bookingsHe,
+  bookingCalendar: bookingCalendarHe,
   leads: leadsHe,
   handoffs: handoffsHe,
   value: valueHe,
@@ -193,6 +202,7 @@ export const insightsDe: Translation<typeof insightsEn> = {
   conversationMedia: conversationMediaDe,
   messageDelivery: messageDeliveryDe,
   bookings: bookingsDe,
+  bookingCalendar: bookingCalendarDe,
   leads: leadsDe,
   handoffs: handoffsDe,
   value: valueDe,

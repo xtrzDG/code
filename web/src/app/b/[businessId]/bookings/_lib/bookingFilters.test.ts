@@ -95,3 +95,18 @@ describe("list query", () => {
     });
   });
 });
+
+describe("the calendar in the address", () => {
+  it("opens a view at a date and keeps both in the URL", () => {
+    const filters = parseBookingFilters({ view: "week", date: "2026-10-07", test: "1" });
+    expect([filters.calendar, filters.date, filters.includeTest]).toEqual(["week", "2026-10-07", true]);
+    expect(bookingFiltersQuery(filters)).toBe("test=1&view=week&date=2026-10-07");
+    expect(bookingFiltersQuery({ ...DEFAULT_BOOKING_FILTERS, calendar: "nights" })).toBe("view=nights");
+  });
+
+  it("ignores an unknown view or date and goes back to the list", () => {
+    const filters = parseBookingFilters({ view: "month", date: "2026-02-30" });
+    expect([filters.calendar, filters.date, filters.phoneView]).toEqual([null, null, "today"]);
+    expect(bookingFiltersQuery({ ...DEFAULT_BOOKING_FILTERS, calendar: null, date: "2026-10-07" })).toBe("");
+  });
+});

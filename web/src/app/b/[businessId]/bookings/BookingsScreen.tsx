@@ -1,8 +1,8 @@
 "use client";
 
+import { BookingCalendar } from "@/components/bookings/calendar/BookingCalendar";
 import { IconCalendar, IconPlus } from "@/components/icons";
 import { RefreshFailed } from "@/components/insights/common";
-import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { useBusiness } from "@/components/business/BusinessContext";
 import { ExportCsvButton } from "@/components/exports/ExportCsvButton";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
@@ -15,8 +15,9 @@ import { BookingDialogs } from "./_components/BookingDialogs";
 import { BookingFiltersBar } from "./_components/BookingFiltersBar";
 import { BookingDays } from "./_components/BookingList";
 import { BookingDaysSkeleton } from "./_components/BookingsSkeleton";
+import { BookingsViewSwitch } from "./_components/BookingsViewSwitch";
 import { TodayAgenda } from "./_components/TodayAgenda";
-import { bookingApiQuery, type BookingFilters, type PhoneBookingsView } from "./_lib/bookingFilters";
+import { bookingApiQuery, type BookingFilters } from "./_lib/bookingFilters";
 import { useBookingsPage } from "./_lib/useBookingsPage";
 
 /**
@@ -25,6 +26,8 @@ import { useBookingsPage } from "./_lib/useBookingsPage";
  * with free slots, status changes with Undo, edits (party, place, notes,
  * name), moving and cancelling with the text for the customer. A phone
  * opens on today's agenda for the front desk ("All bookings" is the list).
+ * The calendar (Day by place, the Week's load, Nights for rooms) shows the
+ * same bookings on a grid where they move by drag or by keyboard.
  */
 export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilters }) {
   const { t, locale } = useI18n();
@@ -45,7 +48,7 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         status={<LiveStatus updatedAt={shown.updatedAt} isFetching={shown.isFetching && shown.items !== undefined} />}
         actions={
           // Today's agenda on a phone keeps its first arrival high under the section's tabs; the list exports.
-          isOwner && !(page.isCompact && isToday) ? (
+          isOwner && !(page.isCompact && isToday) && !filters.calendar ? (
             <ExportCsvButton
               table="bookings"
               query={bookingApiQuery(filters, page.range)}
@@ -57,22 +60,29 @@ export function BookingsScreen({ initialFilters }: { initialFilters: BookingFilt
         primaryAction={{ label: t("bookings.newBooking"), icon: IconPlus, onClick: openCreate, opensDialog: true }}
       />
 
-      <SegmentedControl<PhoneBookingsView>
-        label={t("bookings.views.label")}
-        value={filters.phoneView}
-        onChange={page.setPhoneView}
-        options={[
-          { value: "today", label: t("bookings.views.today") },
-          { value: "all", label: t("bookings.views.all") },
-        ]}
-        className="mb-4 lg:hidden"
+      <BookingsViewSwitch
+        filters={filters}
+        resources={resources}
+        onPhoneView={page.setPhoneView}
+        onCalendar={(view) => page.showCalendar({ view })}
       />
 
-      <div className={cn("lg:hidden", !isToday && "hidden")}>
+      {filters.calendar ? (
+        <BookingCalendar
+          view={filters.calendar}
+          anchor={filters.date ?? page.today}
+          includeTest={filters.includeTest}
+          onNavigate={({ view, anchor, includeTest }) => page.showCalendar({ view, anchor, includeTest })}
+          onOpen={(booking) => setDialog({ kind: "details", booking })}
+          onCreate={page.createAt}
+        />
+      ) : null}
+
+      <div className={cn("lg:hidden", (!isToday || filters.calendar) && "hidden")}>
         <TodayAgenda page={page} />
       </div>
 
-      <div className={cn("space-y-5", isToday && "max-lg:hidden")}>
+      <div className={cn("space-y-5", isToday && "max-lg:hidden", filters.calendar && "hidden")}>
         <BookingFiltersBar
           filters={filters}
           resources={resources}

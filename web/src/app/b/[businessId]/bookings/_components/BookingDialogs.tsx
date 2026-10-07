@@ -1,5 +1,8 @@
 "use client";
 
+import { queryCache } from "@/api/queryCache";
+import { queryKeys } from "@/api/queryKeys";
+import { useBusiness } from "@/components/business/BusinessContext";
 import { CustomerName } from "@/components/insights/common";
 import { ConfirmDialog } from "@/components/ui";
 import { CustomerMessageModal } from "@/components/insights/CustomerMessageModal";
@@ -22,6 +25,7 @@ import { RescheduleForm } from "./RescheduleForm";
 export function BookingDialogs({ page }: { page: BookingsPage }) {
   const { t } = useI18n();
   const toast = useToast();
+  const { business } = useBusiness();
   const when = useBookingWhen();
   const { dialog, setDialog, dialogBooking, close, closeIf, isStay, replaceBooking, resources, defaultDate } = page;
   const { cancelLanguage, setCancelLanguage, runCancel, runStatus } = page;
@@ -50,9 +54,11 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
         <BookingForm
           resources={resources}
           defaultDate={defaultDate}
+          initialValues={dialog.kind === "create" ? dialog.initial : undefined}
           onCancel={close}
           onCreated={(result) => {
             page.bookings.reload();
+            queryCache.invalidate(queryKeys.bookings.grids(business.id));
             toast.success(t("bookings.created"));
             setDialog({ kind: "message", title: t("bookings.created"), text: result.confirmation_text });
           }}

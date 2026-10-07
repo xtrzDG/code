@@ -2,10 +2,11 @@
 
 import { api } from "@/api/client";
 import type { PagedData } from "@/api/paging";
-import { queryCache } from "@/api/queryCache";
+import { queryCache, type Rollback } from "@/api/queryCache";
 import { queryKeys } from "@/api/queryKeys";
 import { useMutation } from "@/api/useMutation";
 import { useBusiness } from "@/components/business/BusinessContext";
+import { replaceInGrids } from "@/components/bookings/calendar/calendarCache";
 import { BOOKING_STATUS } from "@/components/insights/labels";
 import type { BookingPage, BookingStatus, BookingView } from "@/components/insights/types";
 import { useToast, type ToastTitle } from "@/components/ui";
@@ -20,9 +21,17 @@ function withBooking(data: BookingList, booking: BookingView): BookingList {
   return { ...data, items: data.items.map((item) => (item.id === booking.id ? booking : item)) };
 }
 
-/** Every loaded bookings list (each range and filter, and today's agenda) with the booking replaced. */
-export function replaceInLists(businessId: string, booking: BookingView) {
-  return queryCache.update<BookingList>(["bookings", businessId, "list"], (data) => withBooking(data, booking));
+/**
+ * Every loaded bookings list (each range and filter, and today's agenda)
+ * and calendar window with the booking replaced; returns how to undo it.
+ */
+export function replaceInLists(businessId: string, booking: BookingView): Rollback {
+  const lists = queryCache.update<BookingList>(["bookings", businessId, "list"], (data) => withBooking(data, booking));
+  const grids = replaceInGrids(businessId, booking);
+  return () => {
+    grids();
+    lists();
+  };
 }
 
 /**
