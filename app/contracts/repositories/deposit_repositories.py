@@ -37,6 +37,10 @@ class DepositSettingsRepoContract(RepoContract, Protocol):
     def save(self, settings: DepositSettingsDocument) -> None:
         raise NotImplementedError
 
+    def create_if_absent(self, settings: DepositSettingsDocument) -> None:
+        """Store the settings unless the business has some already (atomic)."""
+        raise NotImplementedError
+
     def update(
         self, business_id: BusinessId, change: DepositSettingsChange
     ) -> DepositSettingsDocument | None:

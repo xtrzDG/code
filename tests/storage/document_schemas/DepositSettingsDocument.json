@@ -74,6 +74,9 @@
               "type": "string"
             },
             "label": {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "\\S",
               "type": "string"
             },
             "preview": {

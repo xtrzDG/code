@@ -8,7 +8,7 @@ from app.containers.provider_chains import orchestrator_pipeline
 
 
 class GrowthPipelinesContainer(containers.DeclarativeContainer):
-    """Pipelines of the waitlist and the rebooking campaigns."""
+    """Pipelines of the waitlist, the rebooking campaigns and the deposits."""
 
     growth: GrowthOrchestratorsContainer = DependenciesContainer()  # type: ignore[assignment]
 
@@ -40,3 +40,28 @@ class GrowthPipelinesContainer(containers.DeclarativeContainer):
     list_campaign_messages_pipeline = orchestrator_pipeline(
         growth.list_campaign_messages_orchestrator
     )
+    get_deposit_settings_pipeline = orchestrator_pipeline(
+        growth.get_deposit_settings_orchestrator
+    )
+    update_deposit_settings_pipeline = orchestrator_pipeline(
+        growth.update_deposit_settings_orchestrator
+    )
+    add_payment_link_pipeline = orchestrator_pipeline(
+        growth.add_payment_link_orchestrator
+    )
+    remove_payment_link_pipeline = orchestrator_pipeline(
+        growth.remove_payment_link_orchestrator
+    )
+    set_deposit_policy_pipeline = orchestrator_pipeline(
+        growth.set_deposit_policy_orchestrator
+    )
+    get_deposit_request_pipeline = orchestrator_pipeline(
+        growth.get_deposit_request_orchestrator
+    )
+    mark_deposit_paid_pipeline = orchestrator_pipeline(
+        growth.mark_deposit_paid_orchestrator
+    )
+    get_deposit_report_pipeline = orchestrator_pipeline(
+        growth.get_deposit_report_orchestrator
+    )
+    sweep_deposits_pipeline = orchestrator_pipeline(growth.sweep_deposits_orchestrator)

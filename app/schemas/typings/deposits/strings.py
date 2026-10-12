@@ -3,12 +3,15 @@
 from base_typed_string import BaseTypedString
 
 
+class DepositHoldEndText(BaseTypedString):
+    """
+    When a held place (or a banquet's payment link) lapses, in the
+    business's time and the customer's language ("19:30", "Tue 14 Oct, 11:00").
+    """
+
+
 class PaymentLinkHost(BaseTypedString):
     """The host of an owner's payment page, shown in the cabinet (pay.flitt.com)."""
-
-
-class PaymentLinkLabel(BaseTypedString):
-    """The owner's name for one payment page ("Flitt, table deposit")."""
 
 
 class PaymentLinkPreview(BaseTypedString):

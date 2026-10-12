@@ -32,6 +32,24 @@ class PaymentLinkAddress(BaseConstrainedTypedString):
     pattern = r"^https://[^\s/?#]+([/?#][^\s]*)?$"
 
 
+class PaymentLinkAddressInput(BaseConstrainedTypedString):
+    """
+    A payment page as the owner typed it, before it is vetted (https, a
+    public host, the placeholders) and becomes a `PaymentLinkAddress`.
+    """
+
+    min_length = 1
+    max_length = 2048
+
+
+class PaymentLinkLabel(BaseConstrainedTypedString):
+    """The owner's name for one payment page ("Flitt, table deposit")."""
+
+    min_length = 1
+    max_length = 80
+    pattern = r"\S"
+
+
 class PaymentLinkUrl(BaseConstrainedTypedString):
     """
     The payment link one customer receives: the owner's page with the

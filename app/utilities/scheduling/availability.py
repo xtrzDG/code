@@ -20,8 +20,9 @@ from app.utilities.scheduling.overlap import BlockedTime, BusyRange
 from app.utilities.scheduling.zoned_time import SECONDS_PER_MINUTE
 
 DEFAULT_SLOT_MINUTES: int = 60
+# A booking waiting for its deposit holds its place too (PENDING_DEPOSIT).
 BLOCKING_BOOKING_STATUSES: frozenset[BookingStatus] = frozenset(
-    {BookingStatus.PENDING, BookingStatus.CONFIRMED}
+    {BookingStatus.PENDING, BookingStatus.PENDING_DEPOSIT, BookingStatus.CONFIRMED}
 )
 
 

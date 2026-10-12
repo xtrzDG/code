@@ -96,3 +96,27 @@ class DepositNoticeKind(StrEnum):
 
     REMINDER = "reminder"
     RELEASED = "released"
+
+
+class PaymentLinkOutcome(StrEnum):
+    """
+    What send_payment_link did: sent the payment line (SENT; a deposit
+    already waiting is sent again as it is), found that no deposit applies
+    to this booking or request (NOT_REQUIRED, with the reason), or that it
+    is paid already (ALREADY_PAID).
+    """
+
+    SENT = "sent"
+    NOT_REQUIRED = "not_required"
+    ALREADY_PAID = "already_paid"
+
+
+class DepositExemption(StrEnum):
+    """Why no deposit is asked of a booking or a banquet request."""
+
+    DEPOSITS_OFF = "deposits_off"
+    NO_POLICY = "no_policy"
+    SMALL_PARTY = "small_party"
+    VALUE_UNKNOWN = "value_unknown"
+    NOT_A_BANQUET = "not_a_banquet"
+    NOTHING_OPEN = "nothing_open"

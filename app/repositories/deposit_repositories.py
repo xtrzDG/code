@@ -57,6 +57,9 @@ class DepositSettingsRepository(
     def save(self, settings: DepositSettingsDocument) -> None:
         self._store(str(settings.id), settings)
 
+    def create_if_absent(self, settings: DepositSettingsDocument) -> None:
+        self._collection.insert_if_absent(str(settings.id), settings)
+
     def update(
         self, business_id: BusinessId, change: DepositSettingsChange
     ) -> DepositSettingsDocument | None:

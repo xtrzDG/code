@@ -34,17 +34,14 @@ from app.schemas.typings.deposits.constrained_integers import (
 from app.schemas.typings.deposits.constrained_strings import (
     DepositReference,
     PaymentLinkAddress,
+    PaymentLinkLabel,
 )
 from app.schemas.typings.deposits.prefixed_id import (
     DepositRequestId,
     DepositSettingsId,
     PaymentLinkId,
 )
-from app.schemas.typings.deposits.strings import (
-    PaymentLinkHost,
-    PaymentLinkLabel,
-    PaymentLinkPreview,
-)
+from app.schemas.typings.deposits.strings import PaymentLinkHost, PaymentLinkPreview
 from app.schemas.typings.knowledge.prefixed_id import KnowledgeItemId
 from app.schemas.typings.localization.constrained_strings import (
     CurrencyCode,
@@ -75,7 +72,6 @@ class BookingDepositPolicy(PersistentDocument):
     payment_link_id: PaymentLinkId | None = None
 
 
-
 class TargetedDepositPolicy(PersistentDocument):
     """
     A policy and what it applies to: one resource (`resource_id`), one
@@ -87,7 +83,6 @@ class TargetedDepositPolicy(PersistentDocument):
     resource_id: ResourceId | None = None
     service_item_id: KnowledgeItemId | None = None
     policy: BookingDepositPolicy
-
 
 
 class PaymentLink(PersistentDocument):
@@ -108,7 +103,6 @@ class PaymentLink(PersistentDocument):
     host: PaymentLinkHost
     preview: PaymentLinkPreview
     added_at: Microseconds
-
 
 
 class DepositSettingsDocument(BaseDocument):

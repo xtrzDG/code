@@ -18,6 +18,9 @@ from app.registries.tools.join_waitlist_specification import (
 from app.registries.tools.offer_choices_specification import (
     OFFER_CHOICES_SPECIFICATION,
 )
+from app.registries.tools.send_payment_link_specification import (
+    SEND_PAYMENT_LINK_SPECIFICATION,
+)
 from app.registries.tools.tool_schema_parts import (
     DATE_HINT,
     PHONE_HINT,
@@ -229,6 +232,7 @@ TOOL_SPECIFICATIONS: dict[AssistantToolName, tuple[str, JsonSchema]] = {
         ),
     ),
     AssistantToolName.OFFER_CHOICES: OFFER_CHOICES_SPECIFICATION,
+    AssistantToolName.SEND_PAYMENT_LINK: SEND_PAYMENT_LINK_SPECIFICATION,
 }
 
 

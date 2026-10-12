@@ -16,7 +16,9 @@ ALLOWED_TRANSITIONS: dict[BookingStatus, frozenset[BookingStatus]] = {
     BookingStatus.COMPLETED: BLOCKING_BOOKING_STATUSES,
     BookingStatus.NO_SHOW: BLOCKING_BOOKING_STATUSES,
     BookingStatus.CANCELLED: BLOCKING_BOOKING_STATUSES,
-    BookingStatus.CONFIRMED: frozenset({BookingStatus.PENDING}),
+    BookingStatus.CONFIRMED: frozenset(
+        {BookingStatus.PENDING, BookingStatus.PENDING_DEPOSIT}
+    ),
 }
 
 

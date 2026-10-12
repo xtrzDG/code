@@ -46,3 +46,31 @@ class GrowthOrchestratorsContainer(containers.DeclarativeContainer):
     list_campaign_messages_orchestrator = use_case_orchestrator(
         campaign_use_cases.list_campaign_messages_use_case
     )
+    # Deposits and prepayment links (1190), one use case each.
+    get_deposit_settings_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.get_deposit_settings_use_case
+    )
+    update_deposit_settings_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.update_deposit_settings_use_case
+    )
+    add_payment_link_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.add_payment_link_use_case
+    )
+    remove_payment_link_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.remove_payment_link_use_case
+    )
+    set_deposit_policy_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.set_deposit_policy_use_case
+    )
+    get_deposit_request_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.get_deposit_request_use_case
+    )
+    mark_deposit_paid_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.mark_deposit_paid_use_case
+    )
+    get_deposit_report_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.get_deposit_report_use_case
+    )
+    sweep_deposits_orchestrator = use_case_orchestrator(
+        waitlist_use_cases.sweep_deposits_use_case
+    )

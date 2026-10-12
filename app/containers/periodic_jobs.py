@@ -31,6 +31,7 @@ from app.gateways.worker.periodic.growth_analytics import (
 from app.gateways.worker.periodic.growth_jobs import (
     expire_waitlist_offers_job,
     run_rebooking_campaigns_job,
+    sweep_deposits_job,
 )
 from app.gateways.worker.periodic.platform_alerts import platform_alerts_job
 from app.gateways.worker.periodic.purge_business_exports import (
@@ -276,6 +277,7 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
             run_rebooking_campaigns_job,
             operator=operators.growth.run_rebooking_campaigns_operator,
         ),
+        Factory(sweep_deposits_job, operator=operators.growth.sweep_deposits_operator),
         # Owners who cancelled hear from us on days 14 and 30 (1161).
         Factory(
             send_win_back_messages_job,

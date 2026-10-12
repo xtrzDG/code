@@ -104,6 +104,8 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         handoff_to_human=follow_up_use_cases.handoff_to_human_use_case,
         record_unanswered_question=follow_up_use_cases.record_unanswered_question_use_case,
         join_waitlist=waitlist_use_cases.join_waitlist_use_case,
+        send_payment_link=waitlist_use_cases.send_payment_link_use_case,
+        quote_deposit=waitlist_use_cases.quote_deposit_use_case,
         phone_number_parser=utilities.phone_number_parser,
         wall_clock=time_provider.microsecond_wall_clock,
         send_booking_confirmation=booking_use_cases.send_booking_confirmation_use_case,

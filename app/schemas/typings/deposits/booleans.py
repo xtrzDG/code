@@ -7,4 +7,5 @@ Example:
 AreDepositsEnabled = bool
 HasEnoughDepositData = bool
 IsPaymentLinkSealed = bool
+IsStaffCancellation = bool
 # Keep abc order for all non example types, if possible.

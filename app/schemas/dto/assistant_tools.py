@@ -17,6 +17,7 @@ from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.handoffs import HandoffReason, HandoffUrgency
 from app.schemas.domain.reply_choices import MAX_CHOICES, MIN_CHOICES, ReplyChoices
 from app.schemas.dto.conversations import LlmToolCall, LlmToolResult
+from app.schemas.dto.deposits.deposit_amounts import IssuedDepositLine
 from app.schemas.typings.bookings.constrained_integers import (
     BookingDurationMinutes,
     NightCount,
@@ -245,7 +246,8 @@ class AssistantToolOutcome(ImmutableDTO):
     `booking_id` is set only for a new booking, `lead_id` for a new lead and
     `handoff_id` for a new handoff. `confirmed_booking_id` names the booking
     a call made or moved: its guest gets a written confirmation. `choices`
-    are the options offer_choices put under the reply.
+    are the options offer_choices put under the reply, `deposit_line` the
+    payment line send_payment_link puts under it.
     """
 
     tool_name: AssistantToolName
@@ -255,3 +257,4 @@ class AssistantToolOutcome(ImmutableDTO):
     lead_id: LeadId | None = None
     handoff_id: HandoffId | None = None
     choices: ReplyChoices | None = None
+    deposit_line: IssuedDepositLine | None = None
