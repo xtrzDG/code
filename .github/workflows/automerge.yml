@@ -71,9 +71,19 @@ jobs:
           fi
           if gh api "repos/${GH_REPO}/commits/${HEAD_SHA}" --jq '.commit.message' \
               | uv run --no-project python -m scripts.dependabot_automerge; then
-            gh pr merge "$pr" --squash --match-head-commit "$HEAD_SHA"
+            base="$(gh pr view "$pr" --json baseRefName --jq '.baseRefName')"
+            if ! gh pr merge "$pr" --squash --match-head-commit "$HEAD_SHA"; then
+              # GitHub can lose the answer to a merge it made (a 502): the
+              # merge went through when the base's head is this pull
+              # request's squash commit, and that head needs CI as well.
+              sleep 15
+              subject="$(gh api "repos/${GH_REPO}/commits/${base}" --jq '.commit.message | split("\n")[0]')"
+              case "$subject" in
+                *"(#${pr})") echo "::warning::The merge of #${pr} answered with an error but went through." ;;
+                *) exit 1 ;;
+              esac
+            fi
             # A merge made with this job's token starts no workflow on the
             # base branch, so its new head would carry no CI: ask for it.
-            base="$(gh pr view "$pr" --json baseRefName --jq '.baseRefName')"
             gh workflow run ci.yml --ref "$base"
           fi

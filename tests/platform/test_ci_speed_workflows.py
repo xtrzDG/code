@@ -192,6 +192,11 @@ def test_only_a_green_dependabot_run_can_merge_and_only_its_head() -> None:
     assert run.index('"$mergeable" = "CONFLICTING"') < run.index("gh pr merge")
     # A merge pushed with the job's token starts no CI: the job dispatches it.
     assert run.index("gh pr merge") < run.index('gh workflow run ci.yml --ref "$base"')
+    # A merge whose answer was lost still counts when the base's head is its
+    # squash commit, so that head gets CI too; any other failure fails.
+    lost_answer = run[run.index("if ! gh pr merge") : run.index("gh workflow run")]
+    assert '*"(#${pr})")' in lost_answer
+    assert "*) exit 1 ;;" in lost_answer
     assert "workflow_dispatch" in triggers(CI)
     # The pull request's code is never checked out.
     checkout = next(step for step in merge["steps"] if "uses" in step)
