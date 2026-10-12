@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.inbox_repositories import (
     ConversationTeamRepoContract,
@@ -9,7 +10,7 @@ from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.inbox import InboxRefusalCode
 from app.schemas.constants.live_events import LiveEventKind
-from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.inbox.assignment import (
@@ -31,6 +32,7 @@ from app.use_cases.inbox.inbox_support import (
     require_members,
 )
 from app.use_cases.shared.assignment_views import build_assignment_view
+from app.use_cases.shared.brand_reach import business_team
 
 
 class AssignConversationUseCase(
@@ -44,11 +46,13 @@ class AssignConversationUseCase(
     taking the same conversation at once never both win.
 
     Access goes through `AuthorizeBusinessAccessUseCase` (members, and
-    audited platform admins). Owners change any assignment. Staff (and
+    audited platform admins). Owners (a brand owner too) change any
+    assignment. Staff (and
     admins, who are not members) take or pass on conversations that are
     unassigned or assigned to them, and release their own; a colleague's
     conversation stays theirs (403 `assigned_to_colleague`) until an owner
-    reassigns it. Only members can be assigned (422 `not_a_member`), and
+    reassigns it. Only the team can be assigned (422 `not_a_member`): the
+    business's members and the brand's team that reaches it, and
     sandbox conversations are not part of the inbox. The same assignee
     again is answered as it is, without a write. Each change is audited
     and announced (`conversation.assigned`).
@@ -59,6 +63,7 @@ class AssignConversationUseCase(
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         conversation_repo: ConversationTeamRepoContract,
         audit_log_repo: AuditLogRepoContract,
         live_events: EventPublisherFacilitatorContract,
@@ -67,6 +72,7 @@ class AssignConversationUseCase(
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._conversation_repo: ConversationTeamRepoContract = conversation_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._live_events: EventPublisherFacilitatorContract = live_events
@@ -86,15 +92,16 @@ class AssignConversationUseCase(
                 "Test conversations are not part of the team inbox."
             )
 
+        team: list[BusinessMember] = business_team(self._brand_repo, business)
         if input_data.assignee_user_id is not None:
-            require_members(business, [input_data.assignee_user_id])
+            require_members(team, [input_data.assignee_user_id])
 
         if conversation.assignment_revision != input_data.expected_revision:
             raise assignment_changed()
 
         current = conversation.assignee_user_id
         if current not in (None, input_data.user_id) and not is_owner(
-            business, input_data.user_id
+            team, input_data.user_id
         ):
             raise AccessDeniedError(
                 "Only an owner can take over a colleague's conversation.",

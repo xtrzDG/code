@@ -27,6 +27,7 @@ from app.schemas.typings.notifications.constrained_strings import (
 )
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.notifications.staff_delivery_keys import push_subscription_id
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.notifications.staff_alert_fakes import (
     RecordingPushQueue,
     build_staff_alerts,
@@ -86,6 +87,7 @@ class AlertWorld:
         self.push_queue = RecordingPushQueue()
         self.subscriptions = push_subscription_repo()
         self.preferences = preferences_repo()
+        self.brands = in_memory_brand_repo()
         self.settings = settings or settings_without_cabinet().model_copy(
             update={"cabinet_base_url": CABINET}
         )
@@ -97,6 +99,7 @@ class AlertWorld:
             push_queue=self.push_queue,
             subscriptions=self.subscriptions,
             preferences=self.preferences,
+            brands=self.brands,
         )
 
     def add_device(self, user: UserId, language: str) -> PushSubscriptionDocument:

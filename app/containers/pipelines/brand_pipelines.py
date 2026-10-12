@@ -54,3 +54,9 @@ class BrandPipelinesContainer(containers.DeclarativeContainer):
     override_brand_knowledge_pipeline = orchestrator_pipeline(
         brands.override_brand_knowledge_orchestrator
     )
+    list_location_shared_knowledge_pipeline = orchestrator_pipeline(
+        brands.list_location_shared_knowledge_orchestrator
+    )
+    quote_location_plans_pipeline = orchestrator_pipeline(
+        brands.quote_location_plans_orchestrator
+    )

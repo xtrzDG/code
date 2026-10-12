@@ -144,6 +144,7 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         GetSupportAccessUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         grant_repo=repositories.support_access_grant_repo,
         user_repo=repositories.user_repo,
         platform_admins=registries.platform_admin_registry,
@@ -154,6 +155,7 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         UpdateSupportWriteAccessUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         grant_repo=repositories.support_access_grant_repo,
         audit_log_repo=repositories.audit_log_repo,
         user_repo=repositories.user_repo,
@@ -166,6 +168,7 @@ class AccessUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         EndSupportAccessUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         grant_repo=repositories.support_access_grant_repo,
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=time_provider.microsecond_wall_clock,

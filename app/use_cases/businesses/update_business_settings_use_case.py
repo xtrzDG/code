@@ -5,6 +5,7 @@ from typed_time_provider import Microseconds, WallClock
 from app.contracts.localization_utilities import PhoneNumberParserContract
 from app.contracts.registries import LanguageRegistryContract
 from app.contracts.repositories.billing_repositories import SubscriptionRepoContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -15,7 +16,6 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.businesses import (
     BusinessSettingsChanges,
@@ -34,6 +34,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityReference,
 )
 from app.use_cases.businesses.business_status_switch import check_status_switch
+from app.use_cases.businesses.business_view_sources import business_view_source
 from app.use_cases.businesses.manager_contact_rules import (
     limit_manager_contacts,
     validate_manager_contact,
@@ -88,6 +89,7 @@ class UpdateBusinessSettingsUseCase(
         ],
         business_repo: BusinessRepoContract,
         user_repo: UserRepoContract,
+        brand_repo: BrandRepoContract,
         subscription_repo: SubscriptionRepoContract,
         language_registry: LanguageRegistryContract,
         phone_number_parser: PhoneNumberParserContract,
@@ -106,6 +108,7 @@ class UpdateBusinessSettingsUseCase(
         ] = authorize_business_access
         self._business_repo: BusinessRepoContract = business_repo
         self._user_repo: UserRepoContract = user_repo
+        self._brand_repo: BrandRepoContract = brand_repo
         self._subscription_repo: SubscriptionRepoContract = subscription_repo
         self._language_registry: LanguageRegistryContract = language_registry
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
@@ -197,16 +200,9 @@ class UpdateBusinessSettingsUseCase(
 
         if contacts_audit_entry is not None:
             self._audit_log_repo.append(contacts_audit_entry)
-        member_users: list[UserDocument] = [
-            user
-            for member in business.members
-            if (user := self._user_repo.get(member.user_id)) is not None
-        ]
         return self._business_view_transformer.transform(
-            BusinessViewSource(
-                business=business,
-                member_users=member_users,
-                viewer_id=input_data.user_id,
+            business_view_source(
+                business, input_data.user_id, self._user_repo, self._brand_repo
             )
         )
 

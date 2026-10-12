@@ -3,6 +3,7 @@ import logging
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import (
     BusinessProfileRepoContract,
 )
@@ -23,6 +24,7 @@ from app.schemas.dto.assistants.assistant_commands import (
 from app.schemas.dto.assistants.assistant_views import AssistantVersionDetails
 from app.schemas.dto.conversation_feed.owner_test_chat import OwnerTestChatCommand
 from app.schemas.exceptions.base_exception import ApplicationError
+from app.use_cases.shared.brand_reach import acting_role
 from app.use_cases.shared.test_chat_versions import is_chosen_for_test_chat
 from app.utilities.setup.pending_changes import has_unapplied_changes
 
@@ -39,7 +41,8 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
     only a preview: nothing is checked or published, and the next "Apply
     changes" builds its own version.
 
-    Building a version is an owner's action, so for staff, a test of a
+    Building a version is an owner's action (a brand owner's too), so for
+    staff, a test of a
     chosen version, or a profile that cannot be built from yet (blocking
     gaps), the test chat goes on with the versions there are.
     """
@@ -50,6 +53,7 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
             BusinessAccessRequest,
             BusinessDocument,
         ],
+        brand_repo: BrandRepoContract,
         assemble_assistant_version: UseCaseContract[
             AssembleAssistantVersionCommand,
             AssistantVersionDetails,
@@ -64,6 +68,7 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
             BusinessAccessRequest,
             BusinessDocument,
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._assemble_assistant_version: UseCaseContract[
             AssembleAssistantVersionCommand,
             AssistantVersionDetails,
@@ -87,10 +92,9 @@ class PrepareTestChatVersionUseCase(UseCaseContract[OwnerTestChatCommand, None])
                 user_id=input_data.user_id, business_id=input_data.business_id
             )
         )
-        is_owner: bool = any(
-            member.user_id == input_data.user_id
-            and member.role is BusinessMemberRole.OWNER
-            for member in business.members
+        is_owner: bool = (
+            acting_role(self._brand_repo, business, input_data.user_id)
+            is BusinessMemberRole.OWNER
         )
         if not is_owner or self._is_up_to_date(business):
             return

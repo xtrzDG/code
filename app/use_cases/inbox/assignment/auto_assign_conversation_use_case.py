@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.inbox_repositories import (
@@ -22,6 +23,7 @@ from app.schemas.dto.inbox.assignment import (
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.inbox.inbox_support import ASSIGNMENT_ENTITY, append_audit
 from app.use_cases.shared.assignment_views import build_assignment_view
+from app.use_cases.shared.brand_reach import business_team
 from app.utilities.inbox.auto_assignment import auto_assign_candidates, pick_assignee
 
 
@@ -44,6 +46,7 @@ class AutoAssignConversationUseCase(
     def __init__(
         self,
         business_repo: BusinessRepoContract,
+        brand_repo: BrandRepoContract,
         conversation_repo: ConversationTeamRepoContract,
         inbox_settings_repo: InboxSettingsRepoContract,
         audit_log_repo: AuditLogRepoContract,
@@ -51,6 +54,7 @@ class AutoAssignConversationUseCase(
         wall_clock: WallClock[Microseconds],
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
+        self._brand_repo: BrandRepoContract = brand_repo
         self._conversation_repo: ConversationTeamRepoContract = conversation_repo
         self._inbox_settings_repo: InboxSettingsRepoContract = inbox_settings_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
@@ -82,7 +86,11 @@ class AutoAssignConversationUseCase(
             return AutoAssignResult()
 
         chosen: UserId | None = pick_assignee(
-            auto_assign_candidates(business.members, settings.auto_assign_user_ids),
+            auto_assign_candidates(
+                business.members,
+                business_team(self._brand_repo, business),
+                settings.auto_assign_user_ids,
+            ),
             self._conversation_repo.count_awaiting_by_assignee(business.id),
             settings.last_auto_assigned_user_id,
         )

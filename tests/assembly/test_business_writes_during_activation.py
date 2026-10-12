@@ -40,6 +40,7 @@ from app.utilities.security.session_assurance_context import SessionAssuranceCon
 from tests.assembly.georgian_restaurant_seed import seed_georgian_restaurant
 from tests.assembly.testbed import AssemblyTestbed
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.users.accounts_testbed import PhonenumbersParser
 
@@ -93,6 +94,7 @@ def build_settings(testbed: AssemblyTestbed) -> UpdateBusinessSettingsUseCase:
         ),
         business_repo=testbed.business_repo,
         user_repo=testbed.user_repo,
+        brand_repo=in_memory_brand_repo(),
         subscription_repo=testbed.subscription_repo,
         language_registry=testbed.language_registry,
         phone_number_parser=PhonenumbersParser(),

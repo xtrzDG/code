@@ -160,9 +160,11 @@ class LogoutCommand(ImmutableDTO):
 class UserMembershipView(ImmutableDTO):
     """
     A business the user works in and the role they act with there (their
-    own, or the one their brand gives them). `brand_id` and `brand_name`
-    name the business's brand when the user is on its team, so the
-    cabinet groups the brand's locations; None otherwise.
+    own, or the one their brand gives them). `brand_id` is the brand the
+    business is a location of (None outside any brand), so the cabinet
+    never offers it for another brand; `brand_name` names the brand only
+    to its team (the cabinet groups the brand's locations under it and
+    links its brand page), None for everyone else.
     """
 
     business_id: BusinessId

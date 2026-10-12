@@ -10,6 +10,7 @@ from app.contracts.notifications import (
     StaffAlertFacilitatorContract,
     StaffAlertTextsContract,
 )
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.notification_repositories import (
     NotificationPreferencesRepoContract,
     PushSubscriptionRepoContract,
@@ -19,6 +20,7 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.handoffs import ManagerContactChannel
 from app.schemas.constants.notifications import StaffTextStyle
 from app.schemas.constants.users import BusinessMemberRole
+from app.schemas.domain.brands import BrandDocument
 from app.schemas.domain.businesses import BusinessDocument, ManagerContact
 from app.schemas.domain.notification_preferences import (
     StaffNotificationPreferences,
@@ -38,6 +40,7 @@ from app.schemas.typings.handoffs.constrained_integers import (
 )
 from app.schemas.typings.notifications.constrained_strings import CabinetDeepLink
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.brands.brand_access import acting_team
 from app.utilities.notifications.cabinet_links import build_cabinet_link, link_expiry
 from app.utilities.notifications.quiet_hours import quiet_hours_end
 from app.utilities.scheduling.zoned_time import load_time_zone
@@ -60,9 +63,11 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
       e-mail and SMS the brief (no customer details); every text ends with
       a signed link to the page, valid for 7 days and opened only after
       sign-in.
-    - The devices of the business's members (Web Push) that want this
-      event: title, line and link in the language each device was turned
-      on in. A device of someone no longer in the team is removed.
+    - The devices of the business's team (Web Push; its members and the
+      brand's team that reaches it, each with the role they act with)
+      that want this event: title, line and link in the language each
+      device was turned on in. A device of someone no longer in the team
+      is removed.
     - Quiet hours (in the business time zone) hold a notification until
       they end; urgent handoffs come through.
     - An alert that names a subject (a call's summary) reaches each
@@ -79,6 +84,7 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         manager_notifier: ManagerNotificationFacilitatorContract,
         push_queue: PushNotificationQueueContract,
         push_subscription_repo: PushSubscriptionRepoContract,
+        brand_repo: BrandRepoContract,
         notification_preferences_repo: NotificationPreferencesRepoContract,
         link_signer: StaffLinkSignerContract,
         text_transformer: TransformerContract[StaffNotificationTextInput, MessageText],
@@ -92,6 +98,7 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         self._push_subscription_repo: PushSubscriptionRepoContract = (
             push_subscription_repo
         )
+        self._brand_repo: BrandRepoContract = brand_repo
         self._notification_preferences_repo: NotificationPreferencesRepoContract = (
             notification_preferences_repo
         )
@@ -176,8 +183,13 @@ class StaffAlertFacilitator(StaffAlertFacilitatorContract):
         zone: ZoneInfo,
         now: Microseconds,
     ) -> int:
+        brand: BrandDocument | None = (
+            None
+            if business.brand_id is None
+            else self._brand_repo.get(business.brand_id)
+        )
         roles: dict[UserId, BusinessMemberRole] = {
-            member.user_id: member.role for member in business.members
+            member.user_id: member.role for member in acting_team(business, brand)
         }
         preferences_by_user: dict[UserId, StaffNotificationPreferences] = {}
         queued: int = 0

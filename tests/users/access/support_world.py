@@ -41,6 +41,7 @@ from app.utilities.localization.localized_text_resolver import LocalizedTextReso
 from app.utilities.security.platform_admin_ids import derive_platform_admin_id
 from tests.compliance.two_tenants import TwoTenants, seed_two_tenants
 from tests.foundation.access_support import AllowStepUp
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import RecordingStaffAlerts, as_request
 
 SUPPORT_EMAIL: str = "support@platform.example"
@@ -85,6 +86,7 @@ class SupportWorld:
         )
         self.get_access = GetSupportAccessUseCase(
             testbed.authorize_business_access,
+            in_memory_brand_repo(),
             testbed.grant_repo,
             testbed.user_repo,
             testbed.platform_admins,
@@ -92,6 +94,7 @@ class SupportWorld:
         )
         self.update_write_access = UpdateSupportWriteAccessUseCase(
             testbed.authorize_business_access,
+            in_memory_brand_repo(),
             testbed.grant_repo,
             testbed.audit_log_repo,
             testbed.user_repo,
@@ -101,6 +104,7 @@ class SupportWorld:
         )
         self.end_access = EndSupportAccessUseCase(
             testbed.authorize_business_access,
+            in_memory_brand_repo(),
             testbed.grant_repo,
             testbed.audit_log_repo,
             wall_clock,

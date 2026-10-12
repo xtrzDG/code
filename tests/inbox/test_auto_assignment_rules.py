@@ -21,19 +21,34 @@ def load(**counts: int) -> dict[UserId, AwaitingConversationCount]:
     }
 
 
+# Ana reaches the business through its brand (a regional manager).
+BRAND_TEAM: list[BusinessMember] = [
+    *TEAM,
+    BusinessMember(user_id=ANA, role=BusinessMemberRole.STAFF),
+]
+
+
 def test_without_a_choice_the_staff_take_turns() -> None:
-    assert auto_assign_candidates(TEAM, []) == [NINO, GIORGI]
+    assert auto_assign_candidates(TEAM, TEAM, []) == [NINO, GIORGI]
 
 
 def test_a_choice_keeps_its_order_drops_strangers_and_repeats() -> None:
-    assert auto_assign_candidates(TEAM, [GIORGI, ANA, OWNER, GIORGI]) == [
+    assert auto_assign_candidates(TEAM, TEAM, [GIORGI, ANA, OWNER, GIORGI]) == [
         GIORGI,
         OWNER,
     ]
 
 
 def test_without_staff_the_owners_take_new_work() -> None:
-    assert auto_assign_candidates(TEAM[:1], []) == [OWNER]
+    assert auto_assign_candidates(TEAM[:1], TEAM[:1], []) == [OWNER]
+
+
+def test_a_chosen_member_of_the_brand_takes_turns() -> None:
+    assert auto_assign_candidates(TEAM, BRAND_TEAM, [ANA, NINO]) == [ANA, NINO]
+
+
+def test_without_a_choice_the_brand_team_is_left_out() -> None:
+    assert auto_assign_candidates(TEAM, BRAND_TEAM, []) == [NINO, GIORGI]
 
 
 def test_the_least_busy_candidate_is_picked() -> None:

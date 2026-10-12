@@ -4,6 +4,7 @@ from dependency_injector.providers import DependenciesContainer, Factory
 from app.containers.provider_chains import use_case_orchestrator
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.brand_use_cases import BrandUseCasesContainer
+from app.containers.use_cases.catalog_use_cases import CatalogUseCasesContainer
 from app.containers.use_cases.inbox_use_cases import InboxUseCasesContainer
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
@@ -17,9 +18,16 @@ from app.orchestrators.brands.brand_knowledge_orchestrator import (
 from app.orchestrators.brands.clone_brand_location_orchestrator import (
     CloneBrandLocationOrchestrator,
 )
+from app.orchestrators.brands.location_plan_quotes_orchestrator import (
+    LocationPlanQuotesOrchestrator,
+)
 from app.schemas.dto.brands.brand_commands import BrandQuery, CloneBrandLocationCommand
 from app.schemas.dto.brands.brand_dashboard import BrandDashboard, BrandDashboardQuery
 from app.schemas.dto.brands.brand_knowledge import BrandKnowledgeList
+from app.schemas.dto.brands.location_plans import (
+    LocationPlanQuery,
+    LocationPlanQuoteList,
+)
 from app.schemas.dto.businesses import BusinessView
 
 
@@ -34,6 +42,7 @@ class BrandOrchestratorsContainer(containers.DeclarativeContainer):
     account_use_cases: AccountUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     value_use_cases: ValueUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     inbox_use_cases: InboxUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
+    catalog_use_cases: CatalogUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     utilities: UtilitiesContainer = DependenciesContainer()  # type: ignore[assignment]
     cases = brand_use_cases
 
@@ -69,6 +78,16 @@ class BrandOrchestratorsContainer(containers.DeclarativeContainer):
     )
     override_brand_knowledge_orchestrator = use_case_orchestrator(
         cases.override_brand_knowledge_use_case
+    )
+    list_location_shared_knowledge_orchestrator = use_case_orchestrator(
+        cases.list_location_shared_knowledge_use_case
+    )
+    quote_location_plans_orchestrator: Factory[
+        OrchestratorContract[LocationPlanQuery, LocationPlanQuoteList]
+    ] = Factory(
+        LocationPlanQuotesOrchestrator,
+        describe_pricing=cases.describe_location_pricing_use_case,
+        quote_plans=catalog_use_cases.quote_plans_use_case,
     )
     get_brand_dashboard_orchestrator: Factory[
         OrchestratorContract[BrandDashboardQuery, BrandDashboard]

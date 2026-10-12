@@ -29,13 +29,16 @@ def support_access_view(
     business: BusinessDocument,
     grants: list[SupportAccessGrantDocument],
     viewer_id: UserId,
+    viewer_role: BusinessMemberRole | None,
     user_repo: UserRepoContract,
     platform_admins: PlatformAdminRegistryContract,
     now: Microseconds,
 ) -> SupportAccessView:
     """
     The open looks into the cabinet (newest first, with the admins' names),
-    the owner's consent, and the viewer's own position.
+    the owner's consent, and the viewer's own position: `viewer_role` is
+    the role they act with in the business (`acting_role`: their own, or
+    the one their brand gives them), None for platform support.
     """
 
     sessions: list[SupportAccessGrantDocument] = sorted(
@@ -48,7 +51,7 @@ def support_access_view(
         )
     }
     consent: SupportAccessGrantDocument | None = live_write_consent(grants, now)
-    is_member: bool = any(member.user_id == viewer_id for member in business.members)
+    is_member: bool = viewer_role is not None
     viewer: UserDocument | None = None if is_member else user_repo.get(viewer_id)
     return SupportAccessView(
         sessions=[
@@ -73,16 +76,14 @@ def support_access_view(
     )
 
 
-def require_owner_member(business: BusinessDocument, user_id: UserId) -> None:
+def require_owner_member(role: BusinessMemberRole | None) -> None:
     """
-    Only an owner who is a member decides: platform support passes the
-    owner-only reads of the access check, never these.
+    Only someone who acts as an owner of the business decides (its own
+    owner, or an owner of its brand; `role` from `acting_role`): platform
+    support passes the owner-only reads of the access check, never these.
     """
 
-    if not any(
-        member.user_id == user_id and member.role is BusinessMemberRole.OWNER
-        for member in business.members
-    ):
+    if role is not BusinessMemberRole.OWNER:
         raise AccessDeniedError(OWNERS_ONLY_MESSAGE)
 
 

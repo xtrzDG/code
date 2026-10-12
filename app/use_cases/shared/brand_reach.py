@@ -10,12 +10,13 @@ from app.contracts.repositories.business_repositories import BusinessRepoContrac
 from app.schemas.constants.brands import BrandMemberRole
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.brands import BrandDocument, BrandMember
-from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.dto.brands.brand_reach import BusinessReach
 from app.schemas.typings.brands.prefixed_id import BrandId
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.brands.brand_access import (
+    acting_team,
     brand_grant,
     direct_role,
     effective_role,
@@ -50,6 +51,21 @@ def acting_role(
     return effective_role(
         direct_role(business, user_id), brand_role_in(brand_repo, business, user_id)
     )
+
+
+def business_team(
+    brand_repo: BrandRepoContract,
+    business: BusinessDocument,
+) -> list[BusinessMember]:
+    """
+    Everyone who acts in the business with the role they act with: its own
+    team, then the brand's team that reaches it (`acting_team`).
+    """
+
+    brand: BrandDocument | None = (
+        None if business.brand_id is None else brand_repo.get(business.brand_id)
+    )
+    return acting_team(business, brand)
 
 
 def brand_locations_of(

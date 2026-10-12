@@ -11,6 +11,31 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-12 — brands: a location's plan prices and shared answers, the brand team at work
+
+Spec: `ff07adf5309530b0`
+
+- **Added** `GET /v1/businesses/{business_id}/billing/plans?language=`
+  (owners): every plan priced as this business is billed for it. A further
+  location of a brand is quoted the additional-location price a month (and
+  the annual price that follows from it); a location whose brand's one setup
+  fee another location carries is quoted no setup fee. `is_additional_location`
+  and `is_setup_fee_covered` say which applies. The cabinet's billing page
+  uses it instead of the country catalog.
+- **Added** `GET /v1/businesses/{business_id}/brand/knowledge` (owners and
+  staff): the facts the location's brand shares, each with `own_item_id`, the
+  location's own item that replaces it there (none outside a brand).
+- **Changed** (additive) `GET /v1/me`: `brand_id` names the brand of every
+  location in one, also for its own team; `brand_name` stays for the brand's
+  team.
+- **Changed** (behaviour) a brand's team acts with the role the brand gives
+  it everywhere: brand owners decide about platform support access, take over
+  and delete like owners in the inbox, and every member of the brand team who
+  reaches a location can be assigned conversations there (and is never shown
+  as platform support). `PATCH /v1/businesses/{business_id}` and the team
+  routes answer with the same `viewer_role` as `GET`. Editing a location's own
+  version of a shared answer keeps its `shared_key`.
+
 ## 2026-10-12 — brands: chains of locations, shared answers, the additional-location price
 
 Spec: `0a773ddac5f2ce41`

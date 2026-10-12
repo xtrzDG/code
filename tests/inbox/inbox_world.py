@@ -64,6 +64,7 @@ class InboxWorld(InboxStore):
             wall_clock=self.wall_clock,
             session_assurance=SessionAssuranceContext(),
             app_settings=ACCESS_SETTINGS,
+            brand_repo=self.brand_repo,
         )
 
     def list_inbox(self) -> ListInboxUseCase:
@@ -90,6 +91,7 @@ class InboxWorld(InboxStore):
     def list_assignees(self) -> ListInboxAssigneesUseCase:
         return ListInboxAssigneesUseCase(
             authorize_business_access=self.authorize(),
+            brand_repo=self.brand_repo,
             conversation_repo=self.conversation_repo,
             user_repo=self.user_repo,
         )
@@ -97,6 +99,7 @@ class InboxWorld(InboxStore):
     def assign(self) -> AssignConversationUseCase:
         return AssignConversationUseCase(
             authorize_business_access=self.authorize(),
+            brand_repo=self.brand_repo,
             conversation_repo=self.conversation_repo,
             audit_log_repo=self.audit_log_repo,
             live_events=self.live_events,
@@ -106,6 +109,7 @@ class InboxWorld(InboxStore):
     def auto_assign(self) -> AutoAssignConversationUseCase:
         return AutoAssignConversationUseCase(
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
             conversation_repo=self.conversation_repo,
             inbox_settings_repo=self.settings_repo,
             audit_log_repo=self.audit_log_repo,
@@ -129,6 +133,7 @@ class InboxWorld(InboxStore):
     def update_settings(self) -> UpdateInboxSettingsUseCase:
         return UpdateInboxSettingsUseCase(
             authorize_business_access=self.authorize(),
+            brand_repo=self.brand_repo,
             inbox_settings_repo=self.settings_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=self.wall_clock,
@@ -148,6 +153,7 @@ class InboxWorld(InboxStore):
     def list_notes(self) -> ListConversationNotesUseCase:
         return ListConversationNotesUseCase(
             authorize_business_access=self.authorize(),
+            brand_repo=self.brand_repo,
             conversation_repo=self.conversation_repo,
             note_repo=self.note_repo,
             user_repo=self.user_repo,
@@ -158,6 +164,7 @@ class InboxWorld(InboxStore):
     def delete_note(self) -> DeleteConversationNoteUseCase:
         return DeleteConversationNoteUseCase(
             authorize_business_access=self.authorize(),
+            brand_repo=self.brand_repo,
             note_repo=self.note_repo,
             audit_log_repo=self.audit_log_repo,
             live_events=self.live_events,

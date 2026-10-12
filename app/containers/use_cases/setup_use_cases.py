@@ -180,6 +180,7 @@ class SetupUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         PrepareTestChatVersionUseCase,
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
+        brand_repo=repositories.brand_repo,
         assemble_assistant_version=assistant_use_cases.assemble_assistant_version_use_case,
         assistant_version_repo=repositories.assistant_version_repo,
         business_profile_repo=repositories.business_profile_repo,

@@ -1,5 +1,7 @@
 """Shared steps of the team inbox use cases: audit entries and lookups."""
 
+from collections.abc import Sequence
+
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
@@ -9,7 +11,7 @@ from app.contracts.repositories.inbox_repositories import (
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.inbox import InboxRefusalCode
 from app.schemas.constants.users import BusinessMemberRole
-from app.schemas.domain.businesses import BusinessDocument, BusinessMember
+from app.schemas.domain.businesses import BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import ConversationDocument
 from app.schemas.dto.errors import ErrorReason
@@ -78,27 +80,31 @@ def require_conversation(
     return conversation
 
 
-def member_of(business: BusinessDocument, user_id: UserId) -> BusinessMember | None:
-    for member in business.members:
+def member_of(team: Sequence[BusinessMember], user_id: UserId) -> BusinessMember | None:
+    """The person's place in the team acting in the business
+    (`business_team`: its own members and the brand's team that reaches
+    it), or None."""
+
+    for member in team:
         if member.user_id == user_id:
             return member
 
     return None
 
 
-def is_owner(business: BusinessDocument, user_id: UserId) -> bool:
-    member: BusinessMember | None = member_of(business, user_id)
+def is_owner(team: Sequence[BusinessMember], user_id: UserId) -> bool:
+    member: BusinessMember | None = member_of(team, user_id)
     return member is not None and member.role is BusinessMemberRole.OWNER
 
 
 def require_members(
-    business: BusinessDocument,
+    team: Sequence[BusinessMember],
     user_ids: list[UserId],
 ) -> None:
-    """ValidationFailedError (`not_a_member`) unless every user is a member."""
+    """ValidationFailedError (`not_a_member`) unless everyone is in the team."""
 
     strangers: list[UserId] = [
-        user_id for user_id in user_ids if member_of(business, user_id) is None
+        user_id for user_id in user_ids if member_of(team, user_id) is None
     ]
     if strangers:
         raise ValidationFailedError(

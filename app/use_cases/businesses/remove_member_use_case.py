@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -10,7 +11,6 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
-from app.schemas.domain.users import UserDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.businesses import (
     BusinessView,
@@ -22,6 +22,7 @@ from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
+from app.use_cases.businesses.business_view_sources import business_view_source
 
 
 class RemoveMemberUseCase(UseCaseContract[RemoveMemberCommand, BusinessView]):
@@ -40,6 +41,7 @@ class RemoveMemberUseCase(UseCaseContract[RemoveMemberCommand, BusinessView]):
         ],
         business_repo: BusinessRepoContract,
         user_repo: UserRepoContract,
+        brand_repo: BrandRepoContract,
         audit_log_repo: AuditLogRepoContract,
         business_view_transformer: TransformerContract[
             BusinessViewSource,
@@ -55,6 +57,7 @@ class RemoveMemberUseCase(UseCaseContract[RemoveMemberCommand, BusinessView]):
         ] = authorize_business_access
         self._business_repo: BusinessRepoContract = business_repo
         self._user_repo: UserRepoContract = user_repo
+        self._brand_repo: BrandRepoContract = brand_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._business_view_transformer: TransformerContract[
             BusinessViewSource,
@@ -117,15 +120,8 @@ class RemoveMemberUseCase(UseCaseContract[RemoveMemberCommand, BusinessView]):
                 updated_at=now,
             )
         )
-        member_users: list[UserDocument] = [
-            user
-            for member in business.members
-            if (user := self._user_repo.get(member.user_id)) is not None
-        ]
         return self._business_view_transformer.transform(
-            BusinessViewSource(
-                business=business,
-                member_users=member_users,
-                viewer_id=input_data.user_id,
+            business_view_source(
+                business, input_data.user_id, self._user_repo, self._brand_repo
             )
         )

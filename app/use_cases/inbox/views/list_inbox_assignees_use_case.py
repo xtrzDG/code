@@ -1,3 +1,4 @@
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.inbox_repositories import (
     ConversationTeamRepoContract,
 )
@@ -13,14 +14,17 @@ from app.schemas.dto.inbox.inbox_views import (
     InboxAssigneeView,
 )
 from app.schemas.typings.inbox.constrained_integers import AwaitingConversationCount
+from app.use_cases.shared.brand_reach import business_team
 
 
 class ListInboxAssigneesUseCase(
     UseCaseContract[InboxAssigneesQuery, InboxAssigneeList]
 ):
     """
-    The members a conversation can be assigned to, for the assign menu of
-    every member (staff included): name, role and how many conversations
+    The team a conversation can be assigned to (the business's members and
+    the brand's team that reaches it, each with the role they act with),
+    for the assign menu of every member (staff included): name, role and
+    how many conversations
     waiting for the team each has now. No phone or e-mail: staff need
     names to pass work on, not their colleagues' contacts. Owners come
     first, then everyone by name.
@@ -31,12 +35,14 @@ class ListInboxAssigneesUseCase(
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         conversation_repo: ConversationTeamRepoContract,
         user_repo: UserRepoContract,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._conversation_repo: ConversationTeamRepoContract = conversation_repo
         self._user_repo: UserRepoContract = user_repo
 
@@ -48,7 +54,7 @@ class ListInboxAssigneesUseCase(
         )
         loads = self._conversation_repo.count_awaiting_by_assignee(business.id)
         assignees: list[InboxAssigneeView] = []
-        for member in business.members:
+        for member in business_team(self._brand_repo, business):
             user: UserDocument | None = self._user_repo.get(member.user_id)
             assignees.append(
                 InboxAssigneeView(

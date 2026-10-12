@@ -672,5 +672,6 @@ _.business_ranges  # app/schemas/dto/booking_grid.py (BookingGridDay)
 # what each further location of a brand pays a month).
 _.is_locked  # app/schemas/dto/brands/brand_dashboard.py (BrandLocationDashboard)
 _.brand_name  # app/schemas/dto/users.py (UserMembershipView)
+_.own_item_id  # app/schemas/dto/brands/brand_knowledge.py (LocationSharedItemView)
 _.additional_location_price  # app/schemas/dto/catalog/plan_quotes.py (PlanQuote)
 _.local_additional_location_price  # app/schemas/dto/catalog/plan_quotes.py

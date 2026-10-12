@@ -69,7 +69,7 @@ class GetCurrentUserUseCase(UseCaseContract[UserId, CurrentUserView]):
                 role=item.role,
                 business_status=item.business.status,
                 country_code=item.business.country_code,
-                brand_id=None if item.brand is None else item.brand.id,
+                brand_id=item.business.brand_id,
                 brand_name=None if item.brand is None else item.brand.name,
             )
             for item in reach

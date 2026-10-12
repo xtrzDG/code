@@ -5,6 +5,7 @@ Example:
 """
 
 IsAdditionalLocation = bool
+IsBrandSetupFeeCovered = bool
 IsLocationLocked = bool
 IsPrimaryBrandLocation = bool
 IsSisterStayFree = bool

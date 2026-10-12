@@ -172,6 +172,7 @@ class AssistantUseCasesContainer(containers.DeclarativeContainer):
         authorize_business_access=account_use_cases.authorize_business_access_use_case,
         business_repo=repositories.business_repo,
         user_repo=repositories.user_repo,
+        brand_repo=repositories.brand_repo,
         subscription_repo=repositories.subscription_repo,
         language_registry=registries.language_registry,
         phone_number_parser=utilities.phone_number_parser,

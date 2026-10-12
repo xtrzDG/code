@@ -22,8 +22,10 @@ from app.schemas.dto.brands.brand_knowledge import (
     BrandKnowledgeList,
     LocationOverrides,
     LocationOverridesQuery,
+    LocationSharedKnowledge,
     OverrideBrandKnowledgeCommand,
 )
+from app.schemas.dto.brands.location_plans import LocationPlanQuery, LocationPricing
 from app.schemas.dto.brands.location_templates import (
     ClonedLocationRequest,
     LocationTemplate,
@@ -47,10 +49,16 @@ from app.use_cases.brands import (
     delete_brand_knowledge_item_use_case as delete_item,
 )
 from app.use_cases.brands import (
+    describe_location_pricing_use_case as describe_pricing,
+)
+from app.use_cases.brands import (
     list_brand_knowledge_use_case as list_knowledge,
 )
 from app.use_cases.brands import (
     list_location_overrides_use_case as list_overrides,
+)
+from app.use_cases.brands import (
+    list_location_shared_knowledge_use_case as list_location_shared,
 )
 from app.use_cases.brands import (
     override_brand_knowledge_use_case as override,
@@ -129,6 +137,22 @@ class BrandContentUseCasesContainer(containers.DeclarativeContainer):
         list_overrides.ListLocationOverridesUseCase,
         authorize_business_access=business_access,
         knowledge_item_repo=repos.knowledge_item_repo,
+    )
+    list_location_shared_knowledge_use_case: Factory[
+        UseCaseContract[LocationOverridesQuery, LocationSharedKnowledge]
+    ] = Factory(
+        list_location_shared.ListLocationSharedKnowledgeUseCase,
+        authorize_business_access=business_access,
+        brand_knowledge_item_repo=repos.brand_knowledge_item_repo,
+        knowledge_item_repo=repos.knowledge_item_repo,
+    )
+    describe_location_pricing_use_case: Factory[
+        UseCaseContract[LocationPlanQuery, LocationPricing]
+    ] = Factory(
+        describe_pricing.DescribeLocationPricingUseCase,
+        authorize_business_access=business_access,
+        brand_repo=repos.brand_repo,
+        business_repo=repos.business_repo,
     )
     override_brand_knowledge_use_case: Factory[
         UseCaseContract[OverrideBrandKnowledgeCommand, KnowledgeItemDetails]

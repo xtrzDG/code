@@ -11,8 +11,9 @@ class BrandOperatorsContainer(containers.DeclarativeContainer):
     Operators of brands (1192). A brand request names no business, so it
     runs unscoped: it reaches only platform collections (brands,
     businesses, users, the audit log) until a step enters a location's
-    own scope. Leaving a brand and overriding a shared fact are a
-    location's own routes and run in its scope.
+    own scope. Leaving a brand, overriding a shared fact, the location's
+    view of its brand's shared facts and its plan prices are a location's
+    own routes and run in its scope.
     """
 
     brand_pipelines: BrandPipelinesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -71,4 +72,10 @@ class BrandOperatorsContainer(containers.DeclarativeContainer):
     )
     override_brand_knowledge_operator = pipeline_operator(
         pipelines.override_brand_knowledge_pipeline, storage_scope
+    )
+    list_location_shared_knowledge_operator = pipeline_operator(
+        pipelines.list_location_shared_knowledge_pipeline, storage_scope
+    )
+    quote_location_plans_operator = pipeline_operator(
+        pipelines.quote_location_plans_pipeline, storage_scope
     )

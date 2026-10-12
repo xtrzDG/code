@@ -114,3 +114,31 @@ class OverrideBrandKnowledgeCommand(ImmutableDTO):
     business_id: BusinessId
     request: OverrideBrandKnowledgeRequest
     client_ip_address: ClientIpAddress | None = None
+
+
+class LocationSharedItemView(ImmutableDTO):
+    """
+    A fact the location's brand shares, as the location sees it.
+    `own_item_id` is the location's own knowledge item that replaces it
+    there (edited like any other item); None while the brand's answer
+    stands in this location.
+    """
+
+    shared_key: KnowledgeShareKey
+    kind: KnowledgeItemKind
+    title: KnowledgeTitle
+    body: KnowledgeBody | None = None
+    price_minor: MoneyAmountMinor | None = None
+    currency_code: CurrencyCode | None = None
+    is_active: IsKnowledgeItemActive
+    own_item_id: KnowledgeItemId | None = None
+
+
+class LocationSharedKnowledge(ImmutableDTO):
+    """The facts a location's brand shares (none outside a brand)."""
+
+    business_id: BusinessId
+    brand_id: BrandId | None = None
+    items: list[LocationSharedItemView] = Field(
+        default_factory=list[LocationSharedItemView]
+    )

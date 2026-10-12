@@ -12,7 +12,7 @@ staff of the locations assigned to them, and nowhere else.
 from app.schemas.constants.brands import BrandMemberRole
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.brands import BrandDocument, BrandMember
-from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.users.prefixed_id import UserId
 
@@ -76,6 +76,40 @@ def effective_role(
         return granted
 
     return direct if direct is not None else granted
+
+
+def acting_team(
+    business: BusinessDocument,
+    brand: BrandDocument | None,
+) -> list[BusinessMember]:
+    """
+    Everyone who acts in the business, each once with the role they act
+    with: the business's own team in its order (a brand owner among them
+    as an owner), then the brand's team that reaches it (brand owners as
+    owners, its regional managers as staff), in the brand's order.
+    `brand` is the business's brand as stored now, or None.
+    """
+
+    team: list[BusinessMember] = []
+    seen: set[UserId] = set()
+    for member in business.members:
+        granted: BusinessMemberRole | None = (
+            None if brand is None else brand_grant(brand, business, member.user_id)
+        )
+        role: BusinessMemberRole | None = effective_role(member.role, granted)
+        team.append(BusinessMember(user_id=member.user_id, role=role or member.role))
+        seen.add(member.user_id)
+
+    if brand is None:
+        return team
+
+    for brand_member in brand.members:
+        granted = brand_grant(brand, business, brand_member.user_id)
+        if granted is not None and brand_member.user_id not in seen:
+            team.append(BusinessMember(user_id=brand_member.user_id, role=granted))
+            seen.add(brand_member.user_id)
+
+    return team
 
 
 def visible_location_ids(

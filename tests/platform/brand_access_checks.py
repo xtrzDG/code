@@ -19,15 +19,13 @@ from tests.platform.brand_matrix_world import BrandWorld
 B: str = "/v1/businesses/{business_id}"
 LEAVE_BRAND: str = f"DELETE {B}/brand"
 
-# The rules a brand role never lifts: a note is deleted by its author or an
-# owner (B's own staff member wrote it), and support access is the
-# location's own owners' consent, given and ended by them alone.
+# The rule a regional manager keeps as staff: a note is deleted by its
+# author or an owner (B's own staff member wrote it). A brand owner acts as
+# an owner everywhere, support access decisions included.
 KEPT_REFUSALS: dict[str, Expectation] = {
     f"DELETE {B}/conversations/{{conversation_id}}/notes/{{note_id}}": expect_error(
         403, "access_denied"
     ),
-    f"PUT {B}/support-access/write-access": expect_error(403, "access_denied"),
-    f"DELETE {B}/support-access": expect_error(403, "access_denied"),
 }
 
 

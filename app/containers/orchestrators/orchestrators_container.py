@@ -211,6 +211,7 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
         account_use_cases=CoreOrchestratorsContainer.use_cases.accounts,
         value_use_cases=CoreOrchestratorsContainer.use_cases.value,
         inbox_use_cases=CoreOrchestratorsContainer.use_cases.inbox,
+        catalog_use_cases=CoreOrchestratorsContainer.use_cases.catalog,
         utilities=CoreOrchestratorsContainer.utilities,
     )
     public_api: PublicApiOrchestratorsContainer = Container(  # type: ignore[assignment]

@@ -1,6 +1,7 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.platform_admins import PlatformAdminRegistryContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
 from app.contracts.session_assurance import StepUpGuardContract
@@ -21,6 +22,7 @@ from app.use_cases.businesses.support_access.support_access_views import (
     require_owner_member,
     support_access_view,
 )
+from app.use_cases.shared.brand_reach import acting_role
 from app.use_cases.shared.support_access import (
     DEFAULT_WRITE_ACCESS_HOURS,
     MICROSECONDS_PER_MINUTE,
@@ -37,7 +39,8 @@ class UpdateSupportWriteAccessUseCase(
     The owner lets platform support change things in the cabinet for some
     hours (a day by default, a week at most), or stops it at once.
 
-    Only an owner of the business decides (never support itself). Turning
+    Only an owner of the business decides (an owner of its brand too;
+    never support itself). Turning
     it on needs a fresh confirmation (step-up) and replaces an earlier
     consent; turning it off ends any. Each is audited (UPDATE of
     `support_write_access`, with the address). Support with a SUPER role
@@ -49,6 +52,7 @@ class UpdateSupportWriteAccessUseCase(
         authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ],
+        brand_repo: BrandRepoContract,
         grant_repo: SupportAccessGrantRepoContract,
         audit_log_repo: AuditLogRepoContract,
         user_repo: UserRepoContract,
@@ -59,6 +63,7 @@ class UpdateSupportWriteAccessUseCase(
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
         ] = authorize_business_access
+        self._brand_repo: BrandRepoContract = brand_repo
         self._grant_repo: SupportAccessGrantRepoContract = grant_repo
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._user_repo: UserRepoContract = user_repo
@@ -74,7 +79,10 @@ class UpdateSupportWriteAccessUseCase(
                 required_role=BusinessMemberRole.OWNER,
             )
         )
-        require_owner_member(business, input_data.user_id)
+        role: BusinessMemberRole | None = acting_role(
+            self._brand_repo, business, input_data.user_id
+        )
+        require_owner_member(role)
         if input_data.is_allowed:
             self._step_up.require_recent_authentication()
 
@@ -100,6 +108,7 @@ class UpdateSupportWriteAccessUseCase(
             business,
             self._grant_repo.list_open(business.id),
             input_data.user_id,
+            role,
             self._user_repo,
             self._platform_admins,
             now,

@@ -79,6 +79,7 @@ class OperationsWorld(OperationsBookingFactories):
     def auto_assign(self) -> AutoAssignConversationUseCase:
         return AutoAssignConversationUseCase(
             business_repo=self.business_repo,
+            brand_repo=in_memory_brand_repo(),
             conversation_repo=self.conversation_repo,
             inbox_settings_repo=self.inbox_settings_repo,
             audit_log_repo=self.audit_repo,

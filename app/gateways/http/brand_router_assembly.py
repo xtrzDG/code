@@ -1,9 +1,11 @@
-"""Routers of brands (1192): the brand and its locations, its team, its knowledge."""
+"""Routers of brands (1192): the brand and its locations, its team, its knowledge,
+and what a location sees of its brand."""
 
 from fastapi import APIRouter
 
 from app.containers.operators.operators_container import OperatorsContainer
 from app.gateways.http.brand_knowledge_routes import build_brand_knowledge_router
+from app.gateways.http.brand_location_routes import build_brand_location_router
 from app.gateways.http.brand_routes import build_brand_router
 from app.gateways.http.brand_team_routes import build_brand_team_router
 from app.gateways.http.idempotency.idempotency_wiring import idempotency_of
@@ -42,5 +44,10 @@ def build_brand_routers(
             delete_item=brands.delete_brand_knowledge_item_operator(),
             override_item=brands.override_brand_knowledge_operator(),
             leave_brand=brands.leave_brand_operator(),
+        ),
+        build_brand_location_router(
+            current_user=current_user,
+            list_shared_knowledge=brands.list_location_shared_knowledge_operator(),
+            quote_plans=brands.quote_location_plans_operator(),
         ),
     ]

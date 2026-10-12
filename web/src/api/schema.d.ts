@@ -1516,6 +1516,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/billing/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quote Location Plans */
+        get: operations["brands_quote_location_plans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/billing/profile": {
         parameters: {
             query?: never;
@@ -1715,6 +1732,23 @@ export interface paths {
         post?: never;
         /** Leave Brand Route */
         delete: operations["brands_leave_brand"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/brand/knowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Location Shared Knowledge */
+        get: operations["brands_list_location_shared_knowledge"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -12251,6 +12285,73 @@ export interface components {
             step: components["schemas"]["ProfileWizardStep"];
         };
         /**
+         * LocationPlanQuoteList
+         * @description Every plan priced for one business, as it would be billed: a further
+         *     location of a brand pays the additional-location price a month (the
+         *     annual price follows from it), and a location whose brand's setup fee
+         *     another location carries pays no setup fee. The flags say which of
+         *     the two applies, so the cabinet can explain the price.
+         */
+        LocationPlanQuoteList: {
+            /** Business Id */
+            business_id: string;
+            /** Country Code */
+            country_code: string;
+            /** Display Language */
+            display_language: string;
+            exchange_rate?: components["schemas"]["ExchangeRateQuote"] | null;
+            /**
+             * Is Additional Location
+             * @default false
+             */
+            is_additional_location: boolean;
+            /**
+             * Is Setup Fee Covered
+             * @default false
+             */
+            is_setup_fee_covered: boolean;
+            /** Local Currency Code */
+            local_currency_code: string;
+            /** Quotes */
+            quotes: components["schemas"]["PlanQuote"][];
+        };
+        /**
+         * LocationSharedItemView
+         * @description A fact the location's brand shares, as the location sees it.
+         *     `own_item_id` is the location's own knowledge item that replaces it
+         *     there (edited like any other item); None while the brand's answer
+         *     stands in this location.
+         */
+        LocationSharedItemView: {
+            /** Body */
+            body?: string | null;
+            /** Currency Code */
+            currency_code?: string | null;
+            /** Is Active */
+            is_active: boolean;
+            kind: components["schemas"]["KnowledgeItemKind"];
+            /** Own Item Id */
+            own_item_id?: string | null;
+            /** Price Minor */
+            price_minor?: number | null;
+            /** Shared Key */
+            shared_key: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * LocationSharedKnowledge
+         * @description The facts a location's brand shares (none outside a brand).
+         */
+        LocationSharedKnowledge: {
+            /** Brand Id */
+            brand_id?: string | null;
+            /** Business Id */
+            business_id: string;
+            /** Items */
+            items?: components["schemas"]["LocationSharedItemView"][];
+        };
+        /**
          * LoginMethod
          * @description Identifier a user signs in with.
          * @enum {string}
@@ -16459,9 +16560,11 @@ export interface components {
         /**
          * UserMembershipView
          * @description A business the user works in and the role they act with there (their
-         *     own, or the one their brand gives them). `brand_id` and `brand_name`
-         *     name the business's brand when the user is on its team, so the
-         *     cabinet groups the brand's locations; None otherwise.
+         *     own, or the one their brand gives them). `brand_id` is the brand the
+         *     business is a location of (None outside any brand), so the cabinet
+         *     never offers it for another brand; `brand_name` names the brand only
+         *     to its team (the cabinet groups the brand's locations under it and
+         *     links its brand page), None for everyone else.
          */
         UserMembershipView: {
             /** Brand Id */
@@ -27783,6 +27886,95 @@ export interface operations {
             };
         };
     };
+    brands_quote_location_plans: {
+        parameters: {
+            query?: {
+                language?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationPlanQuoteList"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     billing_get_billing_profile: {
         parameters: {
             query?: never;
@@ -29014,6 +29206,93 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    brands_list_location_shared_knowledge: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationSharedKnowledge"];
+                };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */
             401: {

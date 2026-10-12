@@ -174,6 +174,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         manager_notifier=manager_notification_facilitator,
         push_queue=push_notification_queue,
         push_subscription_repo=repositories.push_subscription_repo,
+        brand_repo=repositories.brand_repo,
         notification_preferences_repo=repositories.notification_preferences_repo,
         link_signer=staff_link_signer,
         text_transformer=transformers.staff_notification_text_transformer,
