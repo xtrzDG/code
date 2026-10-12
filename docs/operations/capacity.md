@@ -338,6 +338,26 @@ previous commit on a busier machine).
   psycopg pool), so a poll needs no hop and no thread wake-up.
 - Sentry's wrapping of every request (about 260 µs with Sentry on).
 
+### The weekly run of 2026-10-12: a slow runner and a longer seed
+
+The weekly run of `d3b71d6` failed `widget_polling.js` (poll p95 195 ms
+against 150 ms), yet every request of the run was 5 to 10 times slower
+than the week before (cabinet pages p95 236–381 ms against 43–74 ms on
+2026-10-07), and so were steps the code never touches there: seeding the
+same dataset took 170 s against 97 s. The same latency budgets run on one
+machine for both commits (`fa1132e`, the last green load run, and
+`d3b71d6`) gave the same p95s, the poll 14–22 ms on both: the runner was
+slow, not the code.
+
+The full-scale budgets job of that run hit its 120-minute timeout (it took
+106 minutes on 2026-10-05). On one machine at the medium scale, seeding
+took 160 s at `a410fb0` (2026-10-05) and 180 s at `d3b71d6`, and owner
+requests grew by about 5 ms at p50: every one now passes the generic API
+limit (`count_request_within_limits`, the spend guard), `/v1/me` reads the
+partner flag, availability reads the calendar links, busy times and the
+waitlist, the conversation list one more audit row. The job now allows
+180 minutes; the budgets and the baseline are unchanged.
+
 ## What one process carries
 
 - **Request threads.** An API instance answers `THREADPOOL_SIZE` (64 by
