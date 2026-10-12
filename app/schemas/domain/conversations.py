@@ -202,10 +202,11 @@ class MessageDocument(BaseDocument):
     their prompt), and a customer message may say what it refers to
     (`context_note`, e.g. a reply to the business's Instagram story). Both
     optional. `tool_calls` may name offer_choices once its release gate is
-    open (a new value).
+    open (a new value). Version 8 (W19): they may name send_payment_link
+    once its release gate is open (a new value; version 7 rows read as is).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("7")
+    schema_version: SchemaVersion = SchemaVersion("8")
     id: MessageId = Field(default_factory=MessageId)
     conversation_id: ConversationId
     business_id: BusinessId

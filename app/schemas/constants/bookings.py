@@ -21,9 +21,15 @@ class BookingUnit(StrEnum):
 
 
 class BookingStatus(StrEnum):
-    """Lifecycle of a booking."""
+    """
+    Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the
+    customer pays a deposit (W19, written once the release gate
+    `booking_deposits` opens; until then such a booking is PENDING with a
+    deposit that waits).
+    """
 
     PENDING = "pending"
+    PENDING_DEPOSIT = "pending_deposit"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
     NO_SHOW = "no_show"

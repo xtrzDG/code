@@ -19,6 +19,7 @@ from app.schemas.dto.storage_queries import DocumentLookupField
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.calendar_sync_collections import CALENDAR_SYNC_LOOKUP_FIELDS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_LOOKUP_FIELDS
+from app.utilities.storage.deposit_collections import DEPOSIT_LOOKUP_FIELDS
 from app.utilities.storage.growth_collections import GROWTH_LOOKUP_FIELDS
 from app.utilities.storage.integration_collections import INTEGRATION_LOOKUP_FIELDS
 from app.utilities.storage.lookup_field_builders import (
@@ -155,6 +156,8 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         filter_field("source_channel"),
         # The waitlist's and the campaigns' bookings of a period (1151).
         filter_field("origin"),
+        # Bookings with and without a paid deposit, for the reports (1190).
+        filter_field("deposit_status"),
     ),
     DocumentCollectionName("leads"): (
         text_field("conversation_id"),
@@ -280,6 +283,7 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
     **GROWTH_LOOKUP_FIELDS,
     **CALENDAR_SYNC_LOOKUP_FIELDS,  # Two-way availability (1160).
     **INTEGRATION_LOOKUP_FIELDS,  # Webhooks and API keys (1181).
+    **DEPOSIT_LOOKUP_FIELDS,  # Deposits and prepayment links (1190).
     # The platform's own records.
     **PLATFORM_LOOKUP_FIELDS,
 }

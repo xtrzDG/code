@@ -32,6 +32,9 @@ SPEND_GUARD: SchemaMigrationName = SchemaMigrationName(
 WAITLIST: SchemaMigrationName = SchemaMigrationName(
     "1151_waitlist_and_rebooking_campaigns"
 )
+DEPOSITS: SchemaMigrationName = SchemaMigrationName(
+    "1190_deposits_and_prepayment_links"
+)
 
 
 def backfill(
@@ -103,6 +106,13 @@ LOOKUP_COLUMNS_WITHOUT_BACKFILL: tuple[LookupColumnWithoutBackfill, ...] = (
         WAITLIST,
         "Bookings written before 1151 came from neither the waitlist nor a "
         "campaign, which is what an empty origin means.",
+    ),
+    without_backfill(
+        "bookings",
+        "deposit_status",
+        DEPOSITS,
+        "Bookings written before 1190 never had a deposit asked, which is what "
+        "an empty deposit status means.",
     ),
 )
 

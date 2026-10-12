@@ -106,7 +106,9 @@ class AssistantVersionDocument(BaseDocument):
     # 7: the tool join_waitlist in `tools` (a new value, no upcaster).
     # 8: the tool offer_choices may appear in `tools` once its release gate
     #    is open (a new value, no upcaster).
-    schema_version: SchemaVersion = SchemaVersion("8")
+    # 9: the tool send_payment_link may appear in `tools` once its release
+    #    gate is open (a new value, no upcaster).
+    schema_version: SchemaVersion = SchemaVersion("9")
     id: AssistantVersionId = Field(default_factory=AssistantVersionId)
     business_id: BusinessId
     version_number: AssistantVersionNumber

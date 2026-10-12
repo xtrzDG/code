@@ -10,13 +10,15 @@ from app.schemas.domain.campaigns import (
     CampaignMessageDocument,
     CampaignSettingsDocument,
 )
+from app.schemas.domain.deposits import DepositRequestDocument, DepositSettingsDocument
 from app.schemas.domain.waitlist import WaitlistEntryDocument, WaitlistSettingsDocument
 
 
 class GrowthCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections of the revenue features (migration 1151): the
-    waitlist's settings and entries, the campaigns' settings and messages.
+    waitlist's settings and entries, the campaigns' settings and messages;
+    and the deposits' settings and requests (1190).
     A sibling of DocumentCollectionsContainer with the same storage factory
     (Postgres with DATABASE_URL, else in memory).
     """
@@ -53,6 +55,22 @@ class GrowthCollectionsContainer(containers.DeclarativeContainer):
     campaign_message_collection = document_collection(
         CampaignMessageDocument,
         "campaign_messages",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    deposit_settings_collection = document_collection(
+        DepositSettingsDocument,
+        "deposit_settings",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    deposit_request_collection = document_collection(
+        DepositRequestDocument,
+        "deposit_requests",
         config,
         clients,
         utilities,

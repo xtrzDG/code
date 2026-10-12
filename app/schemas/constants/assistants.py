@@ -32,6 +32,9 @@ class AssistantToolName(StrEnum):
     # The customer's options as buttons, quick replies or chips (chat
     # channels only; offered by the conversation, never stored in a version).
     OFFER_CHOICES = "offer_choices"
+    # The deposit's payment link for a booking or a banquet request (chat
+    # channels only; offered by the conversation, never stored in a version).
+    SEND_PAYMENT_LINK = "send_payment_link"
 
 
 class AutotestRunStatus(StrEnum):

@@ -9,7 +9,9 @@ from app.schemas.constants.bookings import (
     LeadType,
 )
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.deposits import DepositStatus
 from app.schemas.domain.calendar_sync import BookingSystemBookingRef
+from app.schemas.domain.deposits import BookingDeposit
 from app.schemas.typings.bookings.constrained_integers import (
     BookingEndsAtUnixSeconds,
     BookingStartsAtUnixSeconds,
@@ -69,13 +71,18 @@ class BookingDocument(BaseDocument):
 
     `booking_system_booking` is the booking as the platform wrote it to the
     booking system its resource follows (Cal.com), None until written.
+
+    `deposit` is the deposit asked for the booking (`DepositRequestDocument`
+    holds the rest), None when none was; `deposit_status` repeats its state
+    at the top level, where the reports' grouped counts read it (1190).
     """
 
     # 2: `service_item_id`, `buffer_minutes`, `value_minor` and
     # `currency_code` (optional). 3: `last_status_change` (optional).
     # 4: `origin` (optional). 5: `booking_system_booking` (optional; the
-    # upcaster writes it empty on older rows).
-    schema_version: SchemaVersion = SchemaVersion("5")
+    # upcaster writes it empty on older rows). 6: `deposit` and
+    # `deposit_status` (optional; no deposit was ever asked of older rows).
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: BookingId = Field(default_factory=BookingId)
     business_id: BusinessId
     resource_id: ResourceId
@@ -99,6 +106,8 @@ class BookingDocument(BaseDocument):
     last_status_change: BookingStatusChange | None = None
     origin: BookingOrigin | None = None
     booking_system_booking: BookingSystemBookingRef | None = None
+    deposit: BookingDeposit | None = None
+    deposit_status: DepositStatus | None = None
 
 
 class LeadDocument(BaseDocument):
