@@ -226,6 +226,8 @@ export const queryKeys = {
   settings: {
     dpa: (businessId: Id) => ["settings", businessId, "dpa"] as const,
     audit: (businessId: Id, filters: string) => ["settings", businessId, "audit", filters] as const,
+    /** Settings → Audit: what the daily tamper check found in the log (owners). */
+    auditChain: (businessId: Id) => ["settings", businessId, "auditChain"] as const,
     /** Settings → Team: whether the team must sign in with two factors. */
     security: (businessId: Id) => ["settings", businessId, "security"] as const,
     /** Settings → Privacy: the latest full exports of the business. */

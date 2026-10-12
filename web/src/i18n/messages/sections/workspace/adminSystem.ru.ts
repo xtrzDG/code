@@ -69,6 +69,10 @@ export const adminSystemRu: Translation<typeof adminSystemEn> = {
       api_budget_fast_burn: "Бюджет API быстро тает",
       api_budget_slow_burn: "Бюджет API тает",
       worker_down: "Ни один обработчик не отвечает",
+      bulk_personal_data: "Массовые выгрузки персональных данных",
+      tenant_hopping: "Админ во многих аккаунтах клиентов",
+      failed_sign_in_checks: "Подбор кодов входа",
+      audit_chain_broken: "Журнал аудита изменён",
     },
   },
   errorBudget: {

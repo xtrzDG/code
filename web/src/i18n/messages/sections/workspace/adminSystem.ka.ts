@@ -65,6 +65,10 @@ export const adminSystemKa: Translation<typeof adminSystemEn> = {
       api_budget_fast_burn: "API-ის ბიუჯეტი სწრაფად იხარჯება",
       api_budget_slow_burn: "API-ის ბიუჯეტი იხარჯება",
       worker_down: "არცერთი დამმუშავებელი არ პასუხობს",
+      bulk_personal_data: "პერსონალური მონაცემების მასობრივი ექსპორტი",
+      tenant_hopping: "ადმინი კლიენტების ბევრ ანგარიშში",
+      failed_sign_in_checks: "შესვლის კოდების შერჩევა",
+      audit_chain_broken: "აუდიტის ჟურნალი შეიცვალა",
     },
   },
   errorBudget: {

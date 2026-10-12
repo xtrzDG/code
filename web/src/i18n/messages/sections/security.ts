@@ -3,7 +3,9 @@
  * "confirm it is you" dialog (`mfa`), Account → Security and a business's
  * requirement for its team (`security`), the signed-in devices
  * (`devices`), platform support's access to a cabinet (`supportAccess`) and
- * the terms a person accepts by signing in (`legalConsent`).
+ * the terms a person accepts by signing in (`legalConsent`), and the
+ * audit log's tamper check (`auditChain`) with the platform admin's Audit
+ * page (`adminAudit`).
  *
  * Top-level keys are namespaces, spread into the dictionaries of every
  * locale; the other languages are type-checked against `en`. Each namespace lives in its own
@@ -11,6 +13,16 @@
  */
 
 import type { Translation } from "../../translate";
+import { adminAuditDe } from "./security/adminAudit.de";
+import { adminAuditEn } from "./security/adminAudit.en";
+import { adminAuditHe } from "./security/adminAudit.he";
+import { adminAuditKa } from "./security/adminAudit.ka";
+import { adminAuditRu } from "./security/adminAudit.ru";
+import { auditChainDe } from "./security/auditChain.de";
+import { auditChainEn } from "./security/auditChain.en";
+import { auditChainHe } from "./security/auditChain.he";
+import { auditChainKa } from "./security/auditChain.ka";
+import { auditChainRu } from "./security/auditChain.ru";
 import { devicesEn } from "./security/devices.en";
 import { devicesKa } from "./security/devices.ka";
 import { devicesRu } from "./security/devices.ru";
@@ -43,6 +55,8 @@ export const securityFlowEn = {
   devices: devicesEn,
   supportAccess: supportAccessEn,
   legalConsent: legalConsentEn,
+  auditChain: auditChainEn,
+  adminAudit: adminAuditEn,
 } as const;
 
 export const securityFlowRu: Translation<typeof securityFlowEn> = {
@@ -51,6 +65,8 @@ export const securityFlowRu: Translation<typeof securityFlowEn> = {
   devices: devicesRu,
   supportAccess: supportAccessRu,
   legalConsent: legalConsentRu,
+  auditChain: auditChainRu,
+  adminAudit: adminAuditRu,
 };
 
 export const securityFlowKa: Translation<typeof securityFlowEn> = {
@@ -59,6 +75,8 @@ export const securityFlowKa: Translation<typeof securityFlowEn> = {
   devices: devicesKa,
   supportAccess: supportAccessKa,
   legalConsent: legalConsentKa,
+  auditChain: auditChainKa,
+  adminAudit: adminAuditKa,
 };
 
 export const securityFlowHe: Translation<typeof securityFlowEn> = {
@@ -67,6 +85,8 @@ export const securityFlowHe: Translation<typeof securityFlowEn> = {
   devices: devicesHe,
   supportAccess: supportAccessHe,
   legalConsent: legalConsentHe,
+  auditChain: auditChainHe,
+  adminAudit: adminAuditHe,
 };
 
 export const securityFlowDe: Translation<typeof securityFlowEn> = {
@@ -75,4 +95,6 @@ export const securityFlowDe: Translation<typeof securityFlowEn> = {
   devices: devicesDe,
   supportAccess: supportAccessDe,
   legalConsent: legalConsentDe,
+  auditChain: auditChainDe,
+  adminAudit: adminAuditDe,
 };
