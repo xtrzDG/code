@@ -110,7 +110,6 @@ class AuditViewCounting:
             return stored.model_copy(
                 update={
                     "view_count": AuditViewCount(int(stored.view_count) + 1),
-                    "last_viewed_at": now,
                     "updated_at": now,
                 }
             )
@@ -126,7 +125,6 @@ class AuditViewCounting:
                 business_id=business_id,
                 # An entry from before the chain may hold its count still.
                 view_count=AuditViewCount(int(first.record_count or 1) + 1),
-                last_viewed_at=now,
                 created_at=now,
                 updated_at=now,
             ),

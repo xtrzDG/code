@@ -16,9 +16,6 @@
         "pattern": "^audit_log_entry_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "type": "string"
       },
-      "last_viewed_at": {
-        "type": "integer"
-      },
       "schema_version": {
         "default": "1",
         "type": "string"
@@ -34,8 +31,7 @@
     "required": [
       "id",
       "business_id",
-      "view_count",
-      "last_viewed_at"
+      "view_count"
     ],
     "type": "object"
   }

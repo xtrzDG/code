@@ -27,13 +27,13 @@ class AuditViewCountDocument(BaseDocument):
     `audit_view_counts`, stored under the entry's id). A VIEW identical to
     one written in the last 5 minutes (same business, person, entity,
     record and address) raises this count instead of adding an entry: the
-    chained entry itself never changes. No document means one view.
+    chained entry itself never changes; `updated_at` is the latest view. No
+    document means one view.
     """
 
     id: AuditLogEntryId
     business_id: BusinessId
     view_count: AuditViewCount
-    last_viewed_at: Microseconds
 
 
 class AuditChainCheckpointDocument(BaseDocument):
