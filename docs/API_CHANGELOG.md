@@ -21,7 +21,8 @@ Spec: `0a773ddac5f2ce41`
   Members (`/members`, `/members/{user_id}`), locations (`/locations`,
   `/locations/{business_id}`), "New location from…" (`/locations/clone`:
   profile, resources, knowledge and channel settings; never channel tokens,
-  payment settings, API keys, webhooks or customer data) and the combined
+  payment settings, API keys, webhooks or customer data; like `POST
+  /v1/brands` it takes an `Idempotency-Key`) and the combined
   overview (`/dashboard?period=`: a regional manager gets only the
   locations assigned to them, with counts and no amounts; a location whose
   access check refuses comes back with `is_locked` and no figures).

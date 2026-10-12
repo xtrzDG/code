@@ -63,6 +63,8 @@ it document the header:
 - `POST /v1/businesses/{business_id}/conversations/{conversation_id}/messages`
   (a staff message);
 - `POST /v1/businesses/{business_id}/billing/checkout` and `…/subscribe`.
+- `POST /v1/brands` (create a brand) and
+  `POST /v1/brands/{brand_id}/locations/clone` ("New location from…").
 - `POST /v1/public-api/bookings`, `POST /v1/public-api/leads` and
   `POST /v1/public-api/webhooks` (the public API; the keys belong to the
   user who created the API key).
