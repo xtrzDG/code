@@ -16,7 +16,7 @@ const ENTER = { opacity: 0, y: -10, scale: 0.985 } as const;
 const PRESENT = { opacity: 1, y: 0, scale: 1 } as const;
 const EXIT = { opacity: 0, scale: 0.98, transition: tweenTransition("fast", "exit") } as const;
 
-export const ROW_LAYOUT_TRANSITION: Transition = { layout: springTransition("layout"), default: springTransition("snappy") };
+const ROW_LAYOUT_TRANSITION: Transition = { layout: springTransition("layout"), default: springTransition("snappy") };
 
 export interface RowMotionProps {
   initial: typeof ENTER | false;

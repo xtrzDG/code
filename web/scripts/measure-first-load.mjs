@@ -8,7 +8,11 @@
  *
  *   npm run build && npm run measure:first-load            # "/" and "/login"
  *   npm run measure:first-load -- / /businesses           # other pages
+ *   npm run measure:first-load -- --check                 # the budget's pages, against it
  *   MEASURE_VERBOSE=1 npm run measure:first-load            # and every file
+ *
+ * `--check` measures the pages of first-load-budget.json and exits with 1
+ * when one is over its budget or the lazy 3D chunk is (first-load-budget.mjs).
  *
  * The API does not have to run: the landing renders without the catalog.
  */
@@ -19,10 +23,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
+import { overBudget, parseBudget } from "./first-load-budget.mjs";
+
 const WEB_DIRECTORY = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const PORT = Number(process.env.MEASURE_PORT ?? 3899);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
-const pages = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["/", "/login"];
+const BUDGET_PATH = path.join(WEB_DIRECTORY, "first-load-budget.json");
+const isCheck = process.argv.includes("--check");
+const budget = isCheck ? parseBudget(JSON.parse(readFileSync(BUDGET_PATH, "utf8"))) : null;
+const requested = process.argv.slice(2).filter((argument) => argument !== "--check");
+const pages = requested.length > 0 ? requested : budget ? Object.keys(budget.pages) : ["/", "/login"];
 
 const kilobytes = (bytes) => `${(bytes / 1024).toFixed(1)} KB`;
 const gzipSize = (buffer) => gzipSync(buffer, { level: 6 }).length;
@@ -95,15 +105,30 @@ const server = spawn("npx", ["next", "start", "--port", String(PORT), "--hostnam
   detached: true,
 });
 
+const measured = { pages: [], lazyChunks: [] };
 try {
   await waitForServer(Date.now() + 60_000);
   for (const page of pages) {
     const result = await measurePage(page);
+    measured.pages.push(result);
     process.stdout.write(`${result.page}: ${result.scripts} scripts, ${kilobytes(result.raw)} raw, ${kilobytes(result.gzip)} gzip\n`);
   }
   for (const chunk of lazyThreeChunks()) {
+    measured.lazyChunks.push(chunk);
     process.stdout.write(`lazy 3D chunk ${chunk.name}: ${kilobytes(chunk.raw)} raw, ${kilobytes(chunk.gzip)} gzip\n`);
   }
 } finally {
   process.kill(-server.pid, "SIGTERM");
+}
+
+if (budget) {
+  const problems = overBudget(budget, measured);
+  for (const problem of problems) {
+    process.stderr.write(`Over the first-load budget: ${problem}\n`);
+  }
+  if (problems.length > 0) {
+    process.stderr.write(`The budget is ${path.relative(process.cwd(), BUDGET_PATH)}; see web/README.md, "Motion".\n`);
+    process.exit(1);
+  }
+  process.stdout.write("Within the first-load budget.\n");
 }

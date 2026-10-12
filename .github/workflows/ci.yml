@@ -236,6 +236,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The gzipped first-load JavaScript of the landing, a legal page, the
+      # cabinet and the offline page, and the lazy 3D chunk, against
+      # web/first-load-budget.json (scripts/first-load-budget.mjs).
+      - name: Check the first-load budget
+        run: npm run measure:first-load -- --check
+
       # The end-to-end shards start this build instead of each building it.
       - name: Keep the build for the end-to-end shards
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

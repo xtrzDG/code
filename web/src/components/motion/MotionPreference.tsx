@@ -40,7 +40,7 @@ function subscribeDevice(onChange: () => void): () => void {
 }
 
 /** The device's "reduce motion" setting, live (false on the server and in the first render). */
-export function useDeviceReducesMotion(): boolean {
+function useDeviceReducesMotion(): boolean {
   return useSyncExternalStore(
     subscribeDevice,
     () => window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false,

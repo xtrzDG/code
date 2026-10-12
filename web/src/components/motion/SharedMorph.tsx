@@ -26,7 +26,7 @@ import { useMotionPreference } from "./MotionPreference";
 const subscribeNothing = () => () => undefined;
 
 /** Whether this browser can morph between pages (false on the server and in the first render). */
-export function useViewTransitionsSupported(): boolean {
+function useViewTransitionsSupported(): boolean {
   return useSyncExternalStore(
     subscribeNothing,
     () => typeof document !== "undefined" && typeof document.startViewTransition === "function",
