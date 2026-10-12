@@ -133,14 +133,16 @@ def test_a_window_starts_where_the_last_purge_ended_and_cutoffs_never_move_back(
 
 
 class CountingConnectionPool(PostgresConnectionPoolClient):
-    """The pool, counting the transactions it opens."""
+    """The pool, counting the transactions it opens (one borrow each)."""
 
     transactions: int = 0
 
     @contextmanager
-    def transaction(self) -> Generator[PostgresConnection]:
+    def connection(
+        self, acquire_timeout_seconds: float | None = None
+    ) -> Generator[PostgresConnection]:
         self.transactions += 1
-        with super().transaction() as connection:
+        with super().connection(acquire_timeout_seconds) as connection:
             yield connection
 
 

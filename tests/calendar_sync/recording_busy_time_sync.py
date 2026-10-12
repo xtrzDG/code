@@ -10,16 +10,21 @@ from app.schemas.dto.calendar_sync.busy_reads import (
     GoogleCalendarList,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calendar_sync.booleans import HasLinkedCalendars
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.calendar_sync.constrained_strings import CalendarFeedUrl
 
 
 class RecordingBusyTimeSync(BusyTimeSyncFacilitatorContract):
-    """Records stale refreshes (business, time limit); reads nothing."""
+    """
+    Records stale refreshes (business, time limit); reads nothing, and says
+    the business links calendars (`has_linked_calendars`) unless told not.
+    """
 
     def __init__(self) -> None:
         self.stale_refreshes: list[tuple[BusinessId, float]] = []
         self.synced: list[ResourceDocument] = []
+        self.has_linked_calendars: HasLinkedCalendars = True
 
     def sync_resource(
         self, resource: ResourceDocument, timeout: BusyTimeFetchSeconds
@@ -29,8 +34,9 @@ class RecordingBusyTimeSync(BusyTimeSyncFacilitatorContract):
 
     def refresh_stale(
         self, business_id: BusinessId, timeout: BusyTimeFetchSeconds
-    ) -> None:
+    ) -> HasLinkedCalendars:
         self.stale_refreshes.append((business_id, float(timeout)))
+        return self.has_linked_calendars
 
     def list_google_calendars(
         self, business_id: BusinessId, timeout: BusyTimeFetchSeconds

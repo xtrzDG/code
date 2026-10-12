@@ -11,6 +11,7 @@ from app.clients.postgres.idle_connections import (
     is_usable,
 )
 from app.clients.postgres.pinned_connections import (
+    ConnectionLender,
     PinnedConnections,
     PostgresConnection,
     build_session_options,
@@ -44,25 +45,21 @@ class PostgresConnectionPoolClient(ClientContract):
     before reuse and replaced when the server dropped it (restart, idle
     timeout), so a stale connection rarely fails a request.
 
-    The pool shrinks after a burst: whenever it is used (a request, the
-    readiness probe, a worker's poll), connections idle for
-    `max_idle_seconds` are closed while more than `min_size` are open, so a
-    process does not keep its peak and a deploy's overlap fits the server's
-    connection limit.
-
-    Prepared statements are off by default: transaction poolers in front of
-    managed Postgres (PgBouncer, Supavisor) do not support them.
+    The pool shrinks after a burst: whenever it is used, connections idle
+    for `max_idle_seconds` are closed while more than `min_size` are open,
+    so a deploy's overlap fits the server's connection limit. Prepared
+    statements are off by default: transaction poolers in front of managed
+    Postgres (PgBouncer, Supavisor) do not support them.
 
     `statement_timeout_seconds` and `idle_in_transaction_timeout_seconds`
-    become the server settings of every connection (startup options), so a
-    runaway query or a transaction left open by a stuck thread is ended by
-    the server instead of holding locks and a connection for minutes.
+    become server settings of every connection (startup options): the
+    server ends a runaway query or a transaction a stuck thread left open.
 
     `pinned_connection()` keeps one connection for a block of a thread
-    (a session advisory lock, a unit of work): inside it, `connection()`
-    and `transaction()` of that thread use the pinned connection, and a
-    nested `transaction()` becomes a savepoint. `instruments` measure waits
-    and connections in use, and trace statements.
+    (a session advisory lock, a unit of work, a read session): inside it,
+    `connection()` and `transaction()` of that thread use the pinned
+    connection (a nested `transaction()` is a savepoint). `instruments`
+    measure waits and connections in use, and trace statements.
     """
 
     def __init__(
@@ -129,15 +126,15 @@ class PostgresConnectionPoolClient(ClientContract):
         self, acquire_timeout_seconds: float | None = None
     ) -> Generator[PostgresConnection]:
         """
-        Borrow one connection (autocommit) for the duration of the block,
-        waiting at most `acquire_timeout_seconds` (default: the pool's) for
-        a free one. Inside a pin of this thread, the pinned connection.
+        Borrow one connection (autocommit) for the block, waiting at most
+        `acquire_timeout_seconds` (default: the pool's) for a free one.
+        Inside a pin of this thread, the pinned connection.
         """
 
-        pinned_connection: PostgresConnection | None = self._pins.current()
-        if pinned_connection is not None:
-            yield pinned_connection
-            return
+        with self._pins.lent() as pinned_connection:
+            if pinned_connection is not None:
+                yield pinned_connection
+                return
 
         started: float = time.monotonic()
         connection: PostgresConnection = self._acquire(
@@ -164,19 +161,22 @@ class PostgresConnectionPoolClient(ClientContract):
             yield connection
 
     @contextmanager
-    def pinned_connection(self) -> Generator[PostgresConnection]:
+    def pinned_connection(
+        self, lender: ConnectionLender | None = None
+    ) -> Generator[PostgresConnection]:
         """
         Keep one connection for this thread for the whole block (see the
-        class doc); a nested pin reuses the outer one. The connection goes
-        back to the pool when the outermost pin ends.
+        class doc) until the outermost pin ends; a nested pin reuses it.
+        The `lender` of the outermost pin hands it to the thread's other
+        users of the pool (`ConnectionLender`).
         """
 
-        pinned_connection: PostgresConnection | None = self._pins.current()
-        if pinned_connection is not None:
-            yield pinned_connection
-            return
+        with self._pins.lent() as pinned_connection:
+            if pinned_connection is not None:
+                yield pinned_connection
+                return
 
-        with self.connection() as connection, self._pins.pinned(connection):
+        with self.connection() as connection, self._pins.pinned(connection, lender):
             yield connection
 
     def close(self) -> None:

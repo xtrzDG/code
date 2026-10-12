@@ -11,6 +11,8 @@ is kept. Stamps are activity, not settings: `updated_at` stays, and no live
 event is published for them.
 """
 
+from collections.abc import Callable
+
 from typed_time_provider import Microseconds
 
 from app.contracts.repositories.business_repositories import ChannelRepoContract
@@ -53,6 +55,14 @@ def stamp_channel_activity(
     if not is_stamp_due(stamped_at(channel, direction), now):
         return
 
+    channel_repo.modify(channel.business_id, channel.id, stamp_change(direction, now))
+
+
+def stamp_change(
+    direction: MessageDirection, now: Microseconds
+) -> Callable[[ChannelDocument], ChannelDocument | None]:
+    """The change that stamps a channel as stored, unless done this minute."""
+
     def change(current: ChannelDocument) -> ChannelDocument | None:
         if not is_stamp_due(stamped_at(current, direction), now):
             return None
@@ -63,20 +73,28 @@ def stamp_channel_activity(
             current.last_outbound_at = now
         return current
 
-    channel_repo.modify(channel.business_id, channel.id, change)
+    return change
 
 
-def stamp_channel_activity_by_id(
+def stamp_routed_channel_activity(
     channel_repo: ChannelRepoContract,
+    business_id: BusinessId,
     channel_id: ChannelId,
-    direction: MessageDirection,
+    stamp: Microseconds | None,
     now: Microseconds,
 ) -> None:
-    """The same for a channel known by its id (a webhook's routed message)."""
+    """
+    The same for a customer message's channel whose `last_inbound_at` was
+    read with it just now (a webhook's routed message): nothing more is
+    read while that stamp is of this minute.
+    """
 
-    channel: ChannelDocument | None = channel_repo.get(channel_id)
-    if channel is not None:
-        stamp_channel_activity(channel_repo, channel, direction, now)
+    if not is_stamp_due(stamp, now):
+        return
+
+    channel_repo.modify(
+        business_id, channel_id, stamp_change(MessageDirection.INBOUND, now)
+    )
 
 
 def stamp_business_channel_activity(

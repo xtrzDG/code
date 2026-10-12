@@ -47,6 +47,7 @@ from app.schemas.dto.calendar_sync.busy_reads import (
 )
 from app.schemas.exceptions.calendar_sync_errors import BusyTimeSourceError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.calendar_sync.booleans import HasLinkedCalendars
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
 from app.schemas.typings.calendar_sync.constrained_strings import CalendarFeedUrl
 from app.schemas.typings.calendar_sync.prefixed_id import IcalImportFeedId
@@ -122,11 +123,12 @@ class BusyTimeSyncFacilitator(BusyTimeSyncFacilitatorContract):
 
     def refresh_stale(
         self, business_id: BusinessId, timeout: BusyTimeFetchSeconds
-    ) -> None:
+    ) -> HasLinkedCalendars:
         try:
-            self._refresh_stale(business_id, float(timeout))
+            return self._refresh_stale(business_id, float(timeout))
         except Exception:  # noqa: BLE001 - availability is shown with what is cached
             LOGGER.exception("Refreshing stale busy times of %s failed.", business_id)
+            return True
 
     def list_google_calendars(
         self, business_id: BusinessId, timeout: BusyTimeFetchSeconds
@@ -203,10 +205,15 @@ class BusyTimeSyncFacilitator(BusyTimeSyncFacilitatorContract):
         if stale_ids:
             self._busy_times_repo.delete(link.business_id, stale_ids)
 
-    def _refresh_stale(self, business_id: BusinessId, budget: float) -> None:
+    def _refresh_stale(
+        self, business_id: BusinessId, budget: float
+    ) -> HasLinkedCalendars:
         started: int = int(self._wall_clock.now_unix())
         stale_before: int = started - STALE_AFTER_SECONDS * MICROSECONDS_PER_SECOND
-        for link in self._link_repo.list_by_business(business_id):
+        links: list[ResourceCalendarLinkDocument] = self._link_repo.list_by_business(
+            business_id
+        )
+        for link in links:
             if link.next_sync_at is None or int(link.next_sync_at) > stale_before:
                 continue
 
@@ -218,6 +225,8 @@ class BusyTimeSyncFacilitator(BusyTimeSyncFacilitatorContract):
                 business_id, link.resource_id
             )
             if remaining < MIN_READ_SECONDS:
-                return
+                break
             if resource is not None:
                 self.sync_resource(resource, BusyTimeFetchSeconds(remaining))
+
+        return len(links) > 0

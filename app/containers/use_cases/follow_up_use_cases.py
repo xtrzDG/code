@@ -1,6 +1,8 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.adapters.adapters_container import AdaptersContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -66,6 +68,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
     human, unanswered questions, and the dashboard that counts the work.
     """
 
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
     repositories: RepositoriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -199,6 +202,7 @@ class FollowUpUseCasesContainer(containers.DeclarativeContainer):
         plan_registry=registries.plan_registry,
         activation_event_repo=repositories.activation_event_repo,
         wall_clock=time_provider.microsecond_wall_clock,
+        read_session=adapters.storage_read_session,
     )
     # Every handoff (model tool, reply guard, calls) goes through the team
     # inbox's automatic assignment.

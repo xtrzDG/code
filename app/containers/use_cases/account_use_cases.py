@@ -1,7 +1,9 @@
 from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Factory
 
+from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
+from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
@@ -69,6 +71,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     `authorize_business_access_use_case` first.
     """
 
+    adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
     config: ConfigContainer = DependenciesContainer()  # type: ignore[assignment]
     facilitators: FacilitatorsContainer = DependenciesContainer()  # type: ignore[assignment]
     registries: RegistriesContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -163,6 +166,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
         platform_admins=registries.platform_admin_registry,
         app_settings=config.app_settings,
+        read_session=adapters.storage_read_session,
     )
     logout_use_case: Factory[UseCaseContract[LogoutCommand, None]] = Factory(
         LogoutUseCase,
@@ -177,6 +181,7 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
             session_assurance=utilities.session_assurance,
             platform_admins=registries.platform_admin_registry,
             partner_repo=repositories.partner_repo,
+            read_session=adapters.storage_read_session,
         )
     )
     update_current_user_use_case: Factory[

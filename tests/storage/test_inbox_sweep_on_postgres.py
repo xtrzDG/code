@@ -7,10 +7,8 @@ have a job (on either storage).
 """
 
 from collections.abc import Generator
-from typing import LiteralString, cast
 
 import pytest
-from psycopg.rows import TupleRow
 from typed_time_provider import Microseconds
 
 from app.adapters.storage.postgres.postgres_unit_of_work_adapter import (
@@ -44,7 +42,11 @@ from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.platform.worker_fakes import JobStores
 from tests.storage.conftest import PostgresCollectionFactory
 from tests.storage.hot_path_queries import INDEX_NODE_TYPES
-from tests.storage.hot_path_seeding import RecordingConnectionPool, plan_nodes
+from tests.storage.hot_path_seeding import (
+    RecordingConnectionPool,
+    plan_nodes,
+    replay,
+)
 from tests.storage.job_stores import build_postgres_job_stores, job_stores_for
 from tests.storage.storage_testing import build_fixed_wall_clock
 
@@ -215,20 +217,12 @@ def sweep_plan_indexes(
         with recording_pool.transaction() as connection:
             connection.execute("set local enable_seqscan = off")
             for statement, parameters in recording_pool.transactions[0]:
-                # Replays SQL the application composed itself (sql.SQL objects).
-                replayed: LiteralString = statement  # pyright: ignore[reportAssignmentType]
-                if "set_config" in statement:
-                    connection.execute(replayed, parameters or None)
-                    continue
-
-                row: TupleRow | None = connection.execute(
-                    f"explain (format json) {replayed}", parameters or None
-                ).fetchone()
-                assert row is not None
-                plan = cast(list[dict[str, object]], row[0])[0]["Plan"]
+                plan: dict[str, object] | None = replay(
+                    connection, statement, parameters
+                )
                 indexes.update(
                     str(node["Index Name"])
-                    for node in plan_nodes(cast(dict[str, object], plan))
+                    for node in ([] if plan is None else plan_nodes(plan))
                     if node["Node Type"] in INDEX_NODE_TYPES
                 )
         return indexes

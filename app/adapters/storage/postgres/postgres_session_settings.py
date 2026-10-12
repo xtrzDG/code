@@ -7,8 +7,10 @@ Every collection table has the policy (see migrations/0001):
     or current_setting('app.bypass_rls', true) = 'on'
 
 The adapter sets both values with `set_config(..., is_local => true)` (the
-parameterized form of SET LOCAL) at the start of each transaction, so they
-end with it and never leak to the next user of a pooled connection. With no
+parameterized form of SET LOCAL) at the start of each transaction, in the
+same round trip as its `begin` (or its savepoint inside a unit of work),
+so they end with it and never leak to the next user of a pooled
+connection. With no
 settings at all, and in the UNSCOPED scope, a session sees and writes no
 tenant row (default deny); only the PLATFORM scope turns the bypass on.
 """
@@ -53,17 +55,36 @@ def begin_in_scope(connection: PostgresConnection, scope: StorageScope) -> None:
     Begin a transaction and set its RLS settings for `scope` in one round
     trip: the settings travel as literals (quoted by libpq, and a business
     id is a validated typed id), so `begin` and the `set_config` select go
-    as one simple-protocol message. The caller ends the transaction.
+    as one simple-protocol message, ahead of every statement of the
+    transaction. The caller ends the transaction.
+    """
+
+    connection.execute(sql.SQL("begin; {}").format(scope_settings(scope)))
+
+
+def savepoint_in_scope(
+    connection: PostgresConnection, scope: StorageScope, savepoint: sql.Identifier
+) -> None:
+    """
+    Inside an open transaction: set a savepoint and the RLS settings for
+    `scope` in one round trip, as `begin_in_scope` does for a transaction.
+    Rolled back to, the savepoint restores the settings before it.
     """
 
     connection.execute(
-        sql.SQL(
-            "begin; select set_config('app.business_id', {}, true), "
-            "set_config('app.bypass_rls', {}, true)"
-        ).format(
-            sql.Literal("" if scope.business_id is None else str(scope.business_id)),
-            sql.Literal("on" if scope.kind is StorageScopeKind.PLATFORM else "off"),
-        )
+        sql.SQL("savepoint {}; {}").format(savepoint, scope_settings(scope))
+    )
+
+
+def scope_settings(scope: StorageScope) -> sql.Composed:
+    """The `set_config` select of `scope`, its values as quoted literals."""
+
+    return sql.SQL(
+        "select set_config('app.business_id', {}, true), "
+        "set_config('app.bypass_rls', {}, true)"
+    ).format(
+        sql.Literal("" if scope.business_id is None else str(scope.business_id)),
+        sql.Literal("on" if scope.kind is StorageScopeKind.PLATFORM else "off"),
     )
 
 

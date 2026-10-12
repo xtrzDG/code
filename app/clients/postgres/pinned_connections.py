@@ -12,9 +12,10 @@ second connection that other lock holders keep busy.
 
 import threading
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
+from typing import Protocol
 
 import psycopg
 from psycopg import pq
@@ -23,14 +24,28 @@ from psycopg.rows import TupleRow
 type PostgresConnection = psycopg.Connection[TupleRow]
 
 
+class ConnectionLender(Protocol):
+    """
+    The owner of a pin that keeps something open on its connection between
+    its own statements (a read session's transaction): before any other
+    code of the thread uses the pinned connection, `lend` ends it, so that
+    code finds the connection as a freshly borrowed one.
+    """
+
+    def lend(self) -> AbstractContextManager[None]:
+        """The block in which other code uses the pinned connection."""
+        ...
+
+
 @dataclass(frozen=True)
 class ConnectionPin:
     """A connection pinned by one thread (a copied context in another
     thread does not share it: psycopg connections are not shared by
-    concurrent statements)."""
+    concurrent statements), and the pin's lender, if any."""
 
     connection: PostgresConnection
     thread_id: int
+    lender: ConnectionLender | None = None
 
 
 class PinnedConnections:
@@ -45,21 +60,46 @@ class PinnedConnections:
     def current(self) -> PostgresConnection | None:
         """The connection this thread pinned, or None outside a pin."""
 
-        pin: ConnectionPin | None = self._current_pin.get()
-        if pin is None or pin.thread_id != threading.get_ident():
-            return None
-
-        return pin.connection
+        pin: ConnectionPin | None = self._pin_of_thread()
+        return None if pin is None else pin.connection
 
     @contextmanager
-    def pinned(self, connection: PostgresConnection) -> Generator[None]:
+    def lent(self) -> Generator[PostgresConnection | None]:
+        """
+        The connection this thread pinned, for a block of other code (None
+        outside a pin): the pin's lender first ends what it keeps open.
+        """
+
+        pin: ConnectionPin | None = self._pin_of_thread()
+        if pin is None or pin.lender is None:
+            yield None if pin is None else pin.connection
+            return
+
+        with pin.lender.lend():
+            yield pin.connection
+
+    @contextmanager
+    def pinned(
+        self, connection: PostgresConnection, lender: ConnectionLender | None = None
+    ) -> Generator[None]:
         token: Token[ConnectionPin | None] = self._current_pin.set(
-            ConnectionPin(connection=connection, thread_id=threading.get_ident())
+            ConnectionPin(
+                connection=connection,
+                thread_id=threading.get_ident(),
+                lender=lender,
+            )
         )
         try:
             yield
         finally:
             self._current_pin.reset(token)
+
+    def _pin_of_thread(self) -> ConnectionPin | None:
+        pin: ConnectionPin | None = self._current_pin.get()
+        if pin is None or pin.thread_id != threading.get_ident():
+            return None
+
+        return pin
 
 
 def build_session_options(

@@ -9,6 +9,7 @@ from app.contracts.repositories.conversation_repositories import (
     ConversationRepoContract,
     MessageRepoContract,
 )
+from app.contracts.storage import StorageReadSessionContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
@@ -30,6 +31,7 @@ from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.platform.constrained_strings import PageCursor
 from app.use_cases.conversations.feed.conversation_rows import build_view_sources
 from app.use_cases.conversations.feed.feed_search_scan import SearchScan, scan_feed
+from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.paging.keyset_paging import finish_page, read_slice
 from app.utilities.scheduling.zoned_time import (
     load_time_zone,
@@ -59,7 +61,8 @@ class ListConversationsUseCase(
 
     The rows show customers' names, phones and messages, so every page is
     audited as a view of "conversation" (the search text is not stored: it
-    may itself be personal data).
+    may itself be personal data). The reads share one read session; the
+    audit entry commits on its own, as without one.
     """
 
     def __init__(
@@ -75,6 +78,7 @@ class ListConversationsUseCase(
         ],
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        read_session: StorageReadSessionContract | None = None,
     ) -> None:
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest, BusinessDocument
@@ -87,8 +91,13 @@ class ListConversationsUseCase(
         ] = summary_transformer
         self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._read_session: StorageReadSessionContract | None = read_session
 
     def run(self, input_data: ConversationListQuery) -> ConversationPage:
+        with in_read_session(self._read_session):
+            return self._run(input_data)
+
+    def _run(self, input_data: ConversationListQuery) -> ConversationPage:
         business: BusinessDocument = self._authorize_business_access.run(
             BusinessAccessRequest(
                 user_id=input_data.user_id,

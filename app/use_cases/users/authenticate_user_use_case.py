@@ -5,6 +5,7 @@ from app.contracts.repositories.user_repositories import (
     UserRepoContract,
     UserSessionRepoContract,
 )
+from app.contracts.storage import StorageReadSessionContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.mfa import AuthLevel
@@ -12,6 +13,7 @@ from app.schemas.domain.users import UserDocument, UserSessionDocument
 from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.sessions import SessionActivity, SessionCheck
 from app.schemas.exceptions.application_errors import AuthenticationRequiredError
+from app.use_cases.shared.storage_transaction import in_read_session
 from app.utilities.security.access_tokens import hash_access_token
 from app.utilities.security.session_expiry import (
     is_session_over,
@@ -38,6 +40,8 @@ class AuthenticateUserUseCase(UseCaseContract[SessionCheck, SessionAssurance]):
     forward (a week, or twelve hours for platform admins, whose sessions
     also end a day after sign-in). A session from before two-factor
     sign-in (no `auth_level`) counts as one factor, not recently confirmed.
+    The session and its person are read in one read session (every cabinet
+    request authenticates, so its round trips count).
     """
 
     def __init__(
@@ -47,14 +51,20 @@ class AuthenticateUserUseCase(UseCaseContract[SessionCheck, SessionAssurance]):
         wall_clock: WallClock[Microseconds],
         platform_admins: PlatformAdminRegistryContract,
         app_settings: AppSettings,
+        read_session: StorageReadSessionContract | None = None,
     ) -> None:
         self._user_session_repo: UserSessionRepoContract = user_session_repo
         self._user_repo: UserRepoContract = user_repo
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._platform_admins: PlatformAdminRegistryContract = platform_admins
         self._app_settings: AppSettings = app_settings
+        self._read_session: StorageReadSessionContract | None = read_session
 
     def run(self, input_data: SessionCheck) -> SessionAssurance:
+        with in_read_session(self._read_session):
+            return self._run(input_data)
+
+    def _run(self, input_data: SessionCheck) -> SessionAssurance:
         session: UserSessionDocument | None = (
             self._user_session_repo.find_by_token_hash(
                 hash_access_token(input_data.access_token)
