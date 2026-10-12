@@ -44,6 +44,14 @@ OLD_RELEASE_UPSERT: LiteralString = (
     "business_id = excluded.business_id, document = excluded.document, "
     "updated_at = excluded.updated_at"
 )
+# Every way the application's role could change a written entry; a `%s`
+# takes the entry's key.
+FORBIDDEN_CHANGES: tuple[LiteralString, ...] = (
+    CHANGE_COUNT,
+    "update workshop.audit_log_entries set created_at = 0",
+    "delete from workshop.audit_log_entries where document_key = %s",
+    "truncate workshop.audit_log_entries",
+)
 
 
 @pytest.fixture
@@ -72,15 +80,8 @@ def test_the_application_role_cannot_change_delete_or_empty_entries(
     stored = entry(BUSINESS)
     process.log.append(stored)
 
-    for statement, parameters in (
-        (CHANGE_COUNT, (str(stored.id),)),
-        ("update workshop.audit_log_entries set created_at = 0", ()),
-        (
-            "delete from workshop.audit_log_entries where document_key = %s",
-            (str(stored.id),),
-        ),
-        ("truncate workshop.audit_log_entries", ()),
-    ):
+    for statement in FORBIDDEN_CHANGES:
+        parameters = (str(stored.id),) if "%s" in statement else ()
         with pytest.raises(errors.InsufficientPrivilege):
             app_role.execute(statement, parameters)
 
