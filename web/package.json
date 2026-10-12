@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@react-three/fiber": "9.8.1",
-    "@sentry/nextjs": "11.3.0",
+    "@sentry/nextjs": "11.5.0",
     "clsx": "2.1.1",
     "libphonenumber-js": "1.13.14",
     "motion": "13.4.6",
