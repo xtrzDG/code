@@ -38,11 +38,11 @@ async function failOneSignIn(request: APIRequestContext): Promise<void> {
 test("the owner sees the tamper check above the audit log", async ({ page, owner }) => {
   await page.goto(`/b/${owner.businessId}/settings/audit`);
 
-  const log = page.getByRole("region", { name: en.settings.audit.title });
-  await expect(log.getByText(chain.title, { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: en.settings.audit.title })).toBeVisible();
+  await expect(page.getByText(chain.title, { exact: true })).toBeVisible();
   // A new business's log waits for the next daily check.
-  await expect(log.getByText(new RegExp(`^(${chain.status.unchecked}|${chain.status.intact})$`))).toBeVisible();
-  await expect(log.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByText(new RegExp(`^(${chain.status.unchecked}|${chain.status.intact})$`))).toBeVisible();
+  await expect(page.getByText(new RegExp(`^(${chain.verdict.unchecked}|${chain.verdict.intact})$`))).toBeVisible();
 });
 
 test("the owner reads the tamper check in Russian", async ({ page, owner }) => {
