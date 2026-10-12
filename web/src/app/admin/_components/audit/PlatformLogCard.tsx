@@ -94,8 +94,15 @@ function PlatformLogTable({ entries, caption }: { entries: readonly PlatformAudi
         {shortReference(value)}
       </span>
     ) : null;
+  // A wrong code for an address nobody owns names no one; anything else without a person ran by itself.
   const who = (entry: PlatformAuditEntry) =>
-    entry.actor_id ? <span className="font-mono text-xs">{shortReference(entry.actor_id)}</span> : t("adminAudit.log.system");
+    entry.actor_id ? (
+      <span className="font-mono text-xs">{shortReference(entry.actor_id)}</span>
+    ) : entry.action === "login" ? (
+      t("adminAudit.log.unknownPerson")
+    ) : (
+      t("adminAudit.log.system")
+    );
 
   return (
     <>

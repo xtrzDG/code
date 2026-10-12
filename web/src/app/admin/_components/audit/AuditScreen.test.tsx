@@ -56,6 +56,7 @@ describe("AuditScreen: the tamper check and the platform's own log", () => {
     expect(within(table).getByText(t("adminAudit.events.otp_locked"))).toBeTruthy();
     expect(within(table).getByText(t("adminAudit.entities.login_destination"))).toBeTruthy();
     expect(within(table).getByText("dest_01234567")).toBeTruthy();
+    expect(within(table).getByText(t("adminAudit.log.unknownPerson"))).toBeTruthy();
   });
 
   it("filters the log by security event on the server", async () => {
