@@ -9,6 +9,9 @@ from app.containers.orchestrators.billing_orchestrators import (
 from app.containers.orchestrators.booking_link_orchestrators import (
     BookingLinkOrchestratorsContainer,
 )
+from app.containers.orchestrators.brand_orchestrators import (
+    BrandOrchestratorsContainer,
+)
 from app.containers.orchestrators.calendar_sync_orchestrators import (
     CalendarSyncOrchestratorsContainer,
 )
@@ -201,6 +204,14 @@ class OrchestratorsContainer(CoreOrchestratorsContainer):
     webhooks: WebhookOrchestratorsContainer = Container(  # type: ignore[assignment]
         WebhookOrchestratorsContainer,
         webhook_use_cases=CoreOrchestratorsContainer.use_cases.webhooks,
+    )
+    brands: BrandOrchestratorsContainer = Container(  # type: ignore[assignment]
+        BrandOrchestratorsContainer,
+        brand_use_cases=CoreOrchestratorsContainer.use_cases.brands,
+        account_use_cases=CoreOrchestratorsContainer.use_cases.accounts,
+        value_use_cases=CoreOrchestratorsContainer.use_cases.value,
+        inbox_use_cases=CoreOrchestratorsContainer.use_cases.inbox,
+        utilities=CoreOrchestratorsContainer.utilities,
     )
     public_api: PublicApiOrchestratorsContainer = Container(  # type: ignore[assignment]
         PublicApiOrchestratorsContainer,

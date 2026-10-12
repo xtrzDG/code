@@ -52,10 +52,10 @@ from app.utilities.security.require_recent_authentication import (
 )
 from tests.analytics.recording_product_events import RecordingProductEvents
 from tests.foundation.access_support import AllowStepUp
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import (
     RecordingSignInNotices,
     build_authorize_business_access,
-    in_memory_brand_repo,
     in_memory_platform_admins,
 )
 from tests.referrals.referral_parts import ReferralRepositories

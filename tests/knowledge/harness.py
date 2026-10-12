@@ -48,6 +48,7 @@ from app.use_cases.resources.update_resource_use_case import UpdateResourceUseCa
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.data_tasks.data_task_support import data_task_states, no_data_tasks
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_knowledge_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.knowledge.knowledge_store import KnowledgeStore
 
@@ -149,13 +150,16 @@ class KnowledgeHarness(KnowledgeStore):
             niche_template_registry=self.niche_template_registry,
             wall_clock=self.wall_clock,
         )
+        self.brand_knowledge_repo = in_memory_brand_knowledge_repo()
         self.search_knowledge = SearchKnowledgeUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
         )
         self.get_price = GetPriceUseCase(
             business_repo=self.business_repo,
             knowledge_item_repo=self.knowledge_item_repo,
+            brand_knowledge_item_repo=self.brand_knowledge_repo,
         )
         self.send_link = SendLinkUseCase(
             business_profile_repo=self.business_profile_repo,

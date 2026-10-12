@@ -8,7 +8,7 @@ from app.contracts.session_assurance import StepUpGuardContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.compliance import AuditAction
-from app.schemas.constants.users import BusinessMemberRole, LoginMethod
+from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.businesses import BusinessDocument, BusinessMember
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.users import UserDocument
@@ -19,20 +19,16 @@ from app.schemas.dto.businesses import (
     InviteStaffCommand,
     InviteStaffRequest,
 )
-from app.schemas.dto.localization import PhoneNumberDetails
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    ValidationFailedError,
-)
+from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
 )
-from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.strings import UserDisplayName
-from app.utilities.security.email_addresses import parse_email_address
-
-MAX_DISPLAY_NAME_LENGTH: int = 100
+from app.use_cases.shared.team_invitations import (
+    clean_display_name,
+    find_or_create_invited_user,
+)
 
 
 class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
@@ -87,21 +83,17 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
         )
         self._step_up.require_recent_authentication()
         invitation: InviteStaffRequest = input_data.invitation
-        display_name: UserDisplayName | None = invitation.display_name
-        if display_name is not None:
-            if len(display_name) > MAX_DISPLAY_NAME_LENGTH:
-                raise ValidationFailedError(
-                    "Display name must be at most "
-                    f"{MAX_DISPLAY_NAME_LENGTH} characters."
-                )
-
-            if display_name.strip() == "":
-                display_name = None
-
+        display_name: UserDisplayName | None = clean_display_name(
+            invitation.display_name
+        )
         now: Microseconds = self._wall_clock.now_unix()
-        staff_user: UserDocument = self._find_or_create_user(
-            invitation,
-            business,
+        staff_user: UserDocument = find_or_create_invited_user(
+            self._user_repo,
+            self._phone_number_parser,
+            invitation.phone_number,
+            invitation.email,
+            invitation.country_hint or business.country_code,
+            business.owner_language,
             display_name,
             now,
         )
@@ -143,54 +135,3 @@ class InviteStaffUseCase(UseCaseContract[InviteStaffCommand, BusinessView]):
                 viewer_id=input_data.user_id,
             )
         )
-
-    def _find_or_create_user(
-        self,
-        invitation: InviteStaffRequest,
-        business: BusinessDocument,
-        display_name: UserDisplayName | None,
-        now: Microseconds,
-    ) -> UserDocument:
-        if invitation.phone_number is not None and invitation.email is None:
-            phone_number: PhoneNumberDetails = self._phone_number_parser.parse(
-                invitation.phone_number,
-                invitation.country_hint or business.country_code,
-            )
-            existing_user: UserDocument | None = self._user_repo.find_by_phone_number(
-                phone_number.e164
-            )
-            if existing_user is not None:
-                return existing_user
-
-            new_user = UserDocument(
-                login_method=LoginMethod.PHONE,
-                phone_number=phone_number.e164,
-                country_code=phone_number.country_code,
-                locale=business.owner_language,
-                display_name=display_name,
-                created_at=now,
-                updated_at=now,
-            )
-            self._user_repo.save(new_user)
-            return new_user
-
-        if invitation.email is not None and invitation.phone_number is None:
-            email: EmailAddress = parse_email_address(invitation.email)
-            existing_email_user: UserDocument | None = self._user_repo.find_by_email(
-                email
-            )
-            if existing_email_user is not None:
-                return existing_email_user
-
-            new_email_user = UserDocument(
-                login_method=LoginMethod.EMAIL,
-                email=email,
-                locale=business.owner_language,
-                display_name=display_name,
-                created_at=now,
-                updated_at=now,
-            )
-            self._user_repo.save(new_email_user)
-            return new_email_user
-
-        raise ValidationFailedError("Enter either a phone number or an e-mail.")

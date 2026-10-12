@@ -26,6 +26,7 @@ from app.transformers.billing.billing_notice_transformer import (
 from app.transformers.billing.invoice_description_transformer import (
     InvoiceDescriptionTransformer,
 )
+from app.transformers.brands.brand_view_transformer import BrandViewTransformer
 from app.transformers.businesses.business_view_transformer import (
     BusinessViewTransformer,
 )
@@ -114,6 +115,9 @@ class TransformersContainer(containers.DeclarativeContainer):
     )
     business_view_transformer: Singleton[BusinessViewTransformer] = Singleton(
         BusinessViewTransformer
+    )
+    brand_view_transformer: Singleton[BrandViewTransformer] = Singleton(
+        BrandViewTransformer
     )
 
     # --- Assembly and autotests.

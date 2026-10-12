@@ -28,6 +28,7 @@ from app.utilities.conversations.offer_payloads import (
     render_seasons,
     render_stay_quote,
 )
+from app.utilities.conversations.sister_payloads import render_sister_locations
 from app.utilities.conversations.untrusted_text import wrap_untrusted
 from app.utilities.money.money_math import (
     convert_money_to_major_units,
@@ -136,6 +137,9 @@ def render_availability(
 
     if result.is_waitlist_open:
         payload["waitlist_open"] = True
+
+    if result.sister_locations:
+        payload["sister_locations"] = render_sister_locations(result.sister_locations)
 
     return render(with_business_today(payload, business_today))
 

@@ -12,6 +12,7 @@ from app.containers.operators.billing_operators import BillingOperatorsContainer
 from app.containers.operators.booking_link_operators import (
     BookingLinkOperatorsContainer,
 )
+from app.containers.operators.brand_operators import BrandOperatorsContainer
 from app.containers.operators.calendar_sync_operators import (
     CalendarSyncOperatorsContainer,
 )
@@ -261,6 +262,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     webhooks: WebhookOperatorsContainer = Container(  # type: ignore[assignment]
         WebhookOperatorsContainer,
         webhook_pipelines=pipelines.webhooks,
+        utilities=utilities,
+    )
+    brands: BrandOperatorsContainer = Container(  # type: ignore[assignment]
+        BrandOperatorsContainer,
+        brand_pipelines=pipelines.brands,
         utilities=utilities,
     )
     public_api: PublicApiOperatorsContainer = Container(  # type: ignore[assignment]

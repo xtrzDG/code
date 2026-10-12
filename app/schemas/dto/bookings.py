@@ -11,6 +11,7 @@ from app.schemas.constants.bookings import (
 )
 from app.schemas.constants.channels import ChannelKind
 from app.schemas.dto.bookable_offers import BookableOfferView, StayQuote
+from app.schemas.dto.brands.sister_locations import SisterLocationOption
 from app.schemas.typings.bookings.booleans import (
     IsFullDayAvailability,
     IsOpenOnDate,
@@ -126,6 +127,10 @@ class AvailabilityResult(ImmutableDTO):
     services: list[BookableOfferView] = Field(default_factory=list[BookableOfferView])
     # Nothing free, and the business keeps a waitlist (join_waitlist).
     is_waitlist_open: IsWaitlistEnabled = False
+    # Nothing free here, and the brand's other locations are (R17-BRANDS).
+    sister_locations: list[SisterLocationOption] = Field(
+        default_factory=list[SisterLocationOption]
+    )
 
 
 class CreateBookingCommand(ImmutableDTO):

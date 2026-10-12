@@ -8,6 +8,9 @@ from app.schemas.constants.billing import PlanKey
 from app.schemas.constants.brands import BrandMemberRole
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.niches import NicheKey
+from app.schemas.domain.brands import BrandDocument
+from app.schemas.domain.businesses import BusinessDocument
+from app.schemas.domain.users import UserDocument
 from app.schemas.typings.brands.booleans import IsPrimaryBrandLocation
 from app.schemas.typings.brands.prefixed_id import BrandId
 from app.schemas.typings.brands.strings import BrandName
@@ -68,3 +71,15 @@ class BrandView(ImmutableDTO):
     locations: list[BrandLocationView] = Field(default_factory=list[BrandLocationView])
     members: list[BrandMemberView] = Field(default_factory=list[BrandMemberView])
     created_at: Microseconds
+
+
+class BrandViewSource(ImmutableDTO):
+    """
+    A brand as `viewer_id` sees it: every location of the brand, oldest
+    first (the first is the primary one), and the users behind its team.
+    """
+
+    brand: BrandDocument
+    locations: list[BusinessDocument]
+    member_users: list[UserDocument] = Field(default_factory=list[UserDocument])
+    viewer_id: UserId

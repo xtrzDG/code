@@ -58,6 +58,7 @@ modules =
     app.use_cases.assistants
     app.use_cases.autotests
     app.use_cases.billing
+    app.use_cases.brands
     app.use_cases.bookings
     app.use_cases.businesses
     app.use_cases.calendar

@@ -28,7 +28,6 @@ from app.contracts.support_access import (
     SupportAccessGrantRepoContract,
 )
 from app.registries.access.platform_admin_registry import PlatformAdminRegistry
-from app.repositories.brand_repositories import BrandRepository
 from app.repositories.platform_admin_repository import PlatformAdminRepository
 from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
@@ -36,7 +35,6 @@ from app.repositories.support_access_grant_repository import (
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.access import BusinessAccessMode, SupportAccessKind
 from app.schemas.constants.mfa import AuthLevel
-from app.schemas.domain.brands import BrandDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
@@ -57,6 +55,7 @@ from app.use_cases.authorize_support_access_use_case import (
     AuthorizeSupportAccessUseCase,
 )
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_repo
 
 HOUR_MICROSECONDS: int = 60 * 60 * 1_000_000
 
@@ -66,12 +65,6 @@ def in_memory_grant_repo() -> SupportAccessGrantRepository:
         InMemoryDocumentCollectionAdapter[SupportAccessGrantDocument](
             SupportAccessGrantDocument
         )
-    )
-
-
-def in_memory_brand_repo() -> BrandRepository:
-    return BrandRepository(
-        InMemoryDocumentCollectionAdapter[BrandDocument](BrandDocument)
     )
 
 

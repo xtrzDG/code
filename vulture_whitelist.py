@@ -666,3 +666,8 @@ _.booked_unit_minutes  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
 _.open_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
 _.booked_units  # app/schemas/dto/booking_grid.py (BookingGridPlaceDay)
 _.business_ranges  # app/schemas/dto/booking_grid.py (BookingGridDay)
+
+# Brands (R17-BRANDS, 1192): response fields the cabinet reads (a brand's
+# location the session may not open, the brand a membership belongs to).
+_.is_locked  # app/schemas/dto/brands/brand_dashboard.py (BrandLocationDashboard)
+_.brand_name  # app/schemas/dto/users.py (UserMembershipView)

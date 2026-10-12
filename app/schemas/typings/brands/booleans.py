@@ -4,5 +4,6 @@ Example:
     is_primary: IsPrimaryBrandLocation = False
 """
 
+IsLocationLocked = bool
 IsPrimaryBrandLocation = bool
-IsSisterLocationOpen = bool
+IsSisterStayFree = bool

@@ -80,13 +80,13 @@ def reachable_businesses(
         business.id: business for business in business_repo.list_by_member(user_id)
     }
     brands: dict[BrandId, BrandDocument] = {}
-    for brand in brand_repo.list_by_member(user_id):
-        member: BrandMember | None = find_brand_member(brand, user_id)
+    for listed in brand_repo.list_by_member(user_id):
+        member: BrandMember | None = find_brand_member(listed, user_id)
         if member is None:
             continue
 
-        brands[brand.id] = brand
-        for location in brand_locations_of(business_repo, brand, member):
+        brands[listed.id] = listed
+        for location in brand_locations_of(business_repo, listed, member):
             found.setdefault(location.id, location)
 
     reach: list[BusinessReach] = []

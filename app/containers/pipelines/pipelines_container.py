@@ -15,6 +15,7 @@ from app.containers.pipelines.billing_pipelines import BillingPipelinesContainer
 from app.containers.pipelines.booking_link_pipelines import (
     BookingLinkPipelinesContainer,
 )
+from app.containers.pipelines.brand_pipelines import BrandPipelinesContainer
 from app.containers.pipelines.calendar_sync_pipelines import (
     CalendarSyncPipelinesContainer,
 )
@@ -238,6 +239,9 @@ class PipelinesContainer(containers.DeclarativeContainer):
     )
     webhooks: WebhookPipelinesContainer = Container(  # type: ignore[assignment]
         WebhookPipelinesContainer, webhooks=orchestrators.webhooks
+    )  # fmt: skip
+    brands: BrandPipelinesContainer = Container(  # type: ignore[assignment]
+        BrandPipelinesContainer, brands=orchestrators.brands
     )  # fmt: skip
     public_api: PublicApiPipelinesContainer = Container(  # type: ignore[assignment]
         PublicApiPipelinesContainer, public_api=orchestrators.public_api

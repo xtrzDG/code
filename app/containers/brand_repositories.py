@@ -1,20 +1,20 @@
-from dependency_injector import containers
 from dependency_injector.providers import DependenciesContainer, Singleton
 
 from app.containers.adapters.brand_collections_container import (
     BrandCollectionsContainer,
 )
+from app.containers.integration_repositories import IntegrationRepositoriesContainer
 from app.repositories.brand_repositories import (
     BrandKnowledgeItemRepository,
     BrandRepository,
 )
 
 
-class BrandRepositoriesContainer(containers.DeclarativeContainer):
+class BrandRepositoriesContainer(IntegrationRepositoriesContainer):
     """
-    The repositories of brands (migration 1192). `RepositoriesContainer`
-    extends it, so they are read as `repositories.brand_repo` like every
-    other repository.
+    The repositories of brands (migration 1192), on top of the public API's
+    and the webhooks' (1181). `RepositoriesContainer` extends it, so they
+    are read as `repositories.brand_repo` like every other repository.
     """
 
     brand_collections: BrandCollectionsContainer = DependenciesContainer()  # type: ignore[assignment]

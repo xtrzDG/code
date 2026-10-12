@@ -2,6 +2,7 @@ from dependency_injector.providers import Container, Factory
 
 from app.containers.use_cases.admin_action_use_cases import AdminActionUseCasesContainer
 from app.containers.use_cases.analytics_use_cases import AnalyticsUseCasesContainer
+from app.containers.use_cases.brand_use_cases import BrandUseCasesContainer
 from app.containers.use_cases.business_use_cases_container import (
     BusinessUseCasesContainer,
 )
@@ -219,6 +220,16 @@ class UseCasesContainer(BusinessUseCasesContainer):
         registries=CoreUseCasesContainer.registries,
         repositories=CoreUseCasesContainer.repositories,
         time_provider=CoreUseCasesContainer.time_provider,
+        utilities=CoreUseCasesContainer.utilities,
+        account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    # Brands: chains of locations, their team and shared knowledge (1192).
+    brands: BrandUseCasesContainer = Container(  # type: ignore[assignment]
+        BrandUseCasesContainer,
+        facilitators=CoreUseCasesContainer.facilitators,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
+        transformers=CoreUseCasesContainer.transformers,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
     )

@@ -54,6 +54,7 @@ class PendingChangeUseCasesContainer(containers.DeclarativeContainer):
         BuildAssistantDraftUseCase,
         business_profile_repo=repositories.business_profile_repo,
         knowledge_item_repo=repositories.knowledge_item_repo,
+        brand_knowledge_item_repo=repositories.brand_knowledge_item_repo,
         resource_repo=repositories.resource_repo,
         schedule_exception_repo=repositories.schedule_exception_repo,
         country_registry=registries.country_registry,

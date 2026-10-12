@@ -1,3 +1,6 @@
+from app.contracts.repositories.brand_repositories import (
+    BrandKnowledgeItemRepoContract,
+)
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.knowledge_repositories import KnowledgeItemRepoContract
 from app.contracts.use_case_contract import UseCaseContract
@@ -8,6 +11,7 @@ from app.schemas.dto.bookable_offers import StayQuote
 from app.schemas.dto.knowledge import PriceLookupQuery, PriceLookupResult
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.bookings.constrained_integers import NightCount
+from app.use_cases.shared.assistant_knowledge import load_active_knowledge
 from app.utilities.bookings.stay_quotes import quote_stay
 from app.utilities.knowledge.knowledge_item_views import to_item_view
 from app.utilities.knowledge.ranking.price_matching import rank_price_matches
@@ -34,9 +38,13 @@ class GetPriceUseCase(UseCaseContract[PriceLookupQuery, PriceLookupResult]):
         self,
         business_repo: BusinessRepoContract,
         knowledge_item_repo: KnowledgeItemRepoContract,
+        brand_knowledge_item_repo: BrandKnowledgeItemRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._knowledge_item_repo: KnowledgeItemRepoContract = knowledge_item_repo
+        self._brand_knowledge_item_repo: BrandKnowledgeItemRepoContract = (
+            brand_knowledge_item_repo
+        )
 
     def run(self, input_data: PriceLookupQuery) -> PriceLookupResult:
         business: BusinessDocument | None = self._business_repo.get(
@@ -47,8 +55,10 @@ class GetPriceUseCase(UseCaseContract[PriceLookupQuery, PriceLookupResult]):
 
         priced_items: list[KnowledgeItemDocument] = [
             item
-            for item in self._knowledge_item_repo.list_by_business(business.id)
-            if item.is_active and (item.price_minor is not None or item.seasonal_rates)
+            for item in load_active_knowledge(
+                self._knowledge_item_repo, self._brand_knowledge_item_repo, business
+            )
+            if item.price_minor is not None or item.seasonal_rates
         ]
         matches: list[KnowledgeItemDocument] = [
             ranked_item.item

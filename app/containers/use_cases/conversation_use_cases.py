@@ -19,6 +19,7 @@ from app.schemas.dto.assistant_tools import (
     AssistantToolInvocation,
     AssistantToolOutcome,
 )
+from app.schemas.dto.bookings import AvailabilityQuery, AvailabilityResult
 from app.schemas.dto.conversation_engine import (
     GeneratedReply,
     PreparedTurn,
@@ -40,6 +41,9 @@ from app.schemas.dto.customer_memory.returning_customers import (
 from app.schemas.dto.media import (
     VoiceNoteTranscription,
     VoiceNoteTranscriptionRequest,
+)
+from app.use_cases.brands.check_availability_with_sisters_use_case import (
+    CheckAvailabilityWithSistersUseCase,
 )
 from app.use_cases.conversations.build_call_greeting_use_case import (
     BuildCallGreetingUseCase,
@@ -88,6 +92,18 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
     follow_up_use_cases: FollowUpUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
     waitlist_use_cases: WaitlistUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
+    # The assistant's check_availability: a brand's location offers its
+    # sister locations when it is full (R17-BRANDS).
+    customer_availability_use_case: Factory[
+        UseCaseContract[AvailabilityQuery, AvailabilityResult]
+    ] = Factory(
+        CheckAvailabilityWithSistersUseCase,
+        check_availability=booking_use_cases.check_availability_use_case,
+        business_repo=repositories.business_repo,
+        business_profile_repo=repositories.business_profile_repo,
+        storage_scope=utilities.storage_scope,
+        app_settings=config.app_settings,
+    )
     run_assistant_tool_use_case: Factory[
         UseCaseContract[AssistantToolInvocation, AssistantToolOutcome]
     ] = Factory(
@@ -95,7 +111,7 @@ class ConversationUseCasesContainer(containers.DeclarativeContainer):
         search_knowledge=knowledge_use_cases.search_knowledge_use_case,
         get_price=knowledge_use_cases.get_price_use_case,
         send_link=knowledge_use_cases.send_link_use_case,
-        check_availability=booking_use_cases.check_availability_use_case,
+        check_availability=customer_availability_use_case,
         create_booking=booking_use_cases.create_booking_use_case,
         cancel_booking=booking_use_cases.cancel_booking_use_case,
         reschedule_booking=booking_use_cases.reschedule_booking_use_case,
