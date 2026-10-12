@@ -166,6 +166,8 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       waitlist_entry: "Лист ожидания",
       resource_calendar: "Календари ресурса",
       waitlist_settings: "Настройки листа ожидания",
+      deposit_settings: "Настройки депозитов",
+      deposit_request: "Депозит",
       campaign_settings: "Настройки повторных визитов",
       campaign_message: "Сообщения о повторных визитах",
       spend_limits: "Дневные лимиты расходов",

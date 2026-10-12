@@ -2047,7 +2047,8 @@
           "handoff_to_human",
           "send_link",
           "record_unanswered_question",
-          "offer_choices"
+          "offer_choices",
+          "send_payment_link"
         ],
         "title": "AssistantToolName",
         "type": "string"
@@ -3755,9 +3756,97 @@
         "title": "BookedValueTotal",
         "type": "object"
       },
+      "BookingDeposit": {
+        "additionalProperties": false,
+        "description": "The deposit of a booking as its list shows it: the request, its state,\nthe amount and, while it waits, when the held place is released.",
+        "properties": {
+          "amount_minor": {
+            "minimum": 1.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "hold_expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expires At"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DepositStatus"
+          }
+        },
+        "required": [
+          "request_id",
+          "status",
+          "amount_minor",
+          "currency_code"
+        ],
+        "title": "BookingDeposit",
+        "type": "object"
+      },
+      "BookingDepositView": {
+        "additionalProperties": false,
+        "description": "The deposit on a booking's row: which request, its state, the amount\nand, while it waits, when the held place is released.",
+        "properties": {
+          "amount_minor": {
+            "minimum": 1.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "hold_expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Expires At"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DepositStatus"
+          }
+        },
+        "required": [
+          "request_id",
+          "status",
+          "amount_minor",
+          "currency_code"
+        ],
+        "title": "BookingDepositView",
+        "type": "object"
+      },
       "BookingDocument": {
         "additionalProperties": false,
-        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).\n\n`last_status_change` is the last status change staff made in the\ncabinet, which they may undo for a short while; any other change of\nthe status (the customer cancelling, an undo) clears it.\n\n`origin` marks a booking the waitlist filled (a freed place a waiting\ncustomer took) or one a rebooking campaign brought back, for the\nrevenue lines of the value report; None for every other booking.\n\n`booking_system_booking` is the booking as the platform wrote it to the\nbooking system its resource follows (Cal.com), None until written.",
+        "description": "Booking of a resource (concept table `bookings`); times are UTC.\n\nA booking of a service, package or room type names it\n(`service_item_id`) and keeps what it was booked with: the\n`buffer_minutes` its resource stays blocked after `ends_at`, and its\nvalue (`value_minor` in `currency_code`: the service price, or the\nnightly rates of the stay's nights). Without a priced item the value\nis unknown (None).\n\n`last_status_change` is the last status change staff made in the\ncabinet, which they may undo for a short while; any other change of\nthe status (the customer cancelling, an undo) clears it.\n\n`origin` marks a booking the waitlist filled (a freed place a waiting\ncustomer took) or one a rebooking campaign brought back, for the\nrevenue lines of the value report; None for every other booking.\n\n`booking_system_booking` is the booking as the platform wrote it to the\nbooking system its resource follows (Cal.com), None until written.\n\n`deposit` is the deposit asked for the booking (`DepositRequestDocument`\nholds the rest), None when none was; `deposit_status` repeats its state\nat the top level, where the reports' grouped counts read it (1190).",
         "properties": {
           "booking_system_booking": {
             "anyOf": [
@@ -3819,6 +3908,26 @@
               }
             ],
             "title": "Currency Code"
+          },
+          "deposit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingDeposit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deposit_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DepositStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "ends_at": {
             "minimum": 0.0,
@@ -3901,7 +4010,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "5",
+            "default": "6",
             "title": "Schema Version",
             "type": "string"
           },
@@ -4466,9 +4575,10 @@
         "type": "object"
       },
       "BookingStatus": {
-        "description": "Lifecycle of a booking.",
+        "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19, written once the release gate\n`booking_deposits` opens; until then such a booking is PENDING with a\ndeposit that waits).",
         "enum": [
           "pending",
+          "pending_deposit",
           "confirmed",
           "cancelled",
           "no_show",
@@ -4681,7 +4791,7 @@
       },
       "BookingView": {
         "additionalProperties": false,
-        "description": "Booking rendered in the business time zone.\n\n`conversation_id` is the conversation it was made in (the assistant's\ntools, or staff booking from a conversation card). `language` is the\ncustomer's language for texts about it. `reminder_sent_at` is when the\ncustomer's reminder went out (None: not yet). A booking of a service,\npackage or room type names it and carries its value (`value_minor` in\n`currency_code`).",
+        "description": "Booking rendered in the business time zone.\n\n`conversation_id` is the conversation it was made in (the assistant's\ntools, or staff booking from a conversation card). `language` is the\ncustomer's language for texts about it. `reminder_sent_at` is when the\ncustomer's reminder went out (None: not yet). A booking of a service,\npackage or room type names it and carries its value (`value_minor` in\n`currency_code`). `deposit` is the deposit asked for it, if any.",
         "properties": {
           "business_id": {
             "title": "Business Id",
@@ -4751,6 +4861,16 @@
             "pattern": "^(19|20|21)[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
             "title": "Date",
             "type": "string"
+          },
+          "deposit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookingDepositView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "end_date": {
             "maxLength": 10,
@@ -12160,6 +12280,483 @@
         "title": "DeliveryFailureReason",
         "type": "string"
       },
+      "DepositMoney": {
+        "additionalProperties": false,
+        "description": "Deposits of one currency: kept by the business, and still to refund.",
+        "properties": {
+          "collected_minor": {
+            "minimum": 0.0,
+            "title": "Collected Minor",
+            "type": "integer"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "currency_digits": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Currency Digits",
+            "type": "integer"
+          },
+          "refund_due_minor": {
+            "minimum": 0.0,
+            "title": "Refund Due Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currency_code",
+          "currency_digits",
+          "collected_minor",
+          "refund_due_minor"
+        ],
+        "title": "DepositMoney",
+        "type": "object"
+      },
+      "DepositPolicyView": {
+        "additionalProperties": false,
+        "description": "One policy and what it applies to (amounts in minor units).",
+        "properties": {
+          "amount_minor": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Minor"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "min_party_size": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Party Size"
+          },
+          "payment_link_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Link Id"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/DepositRule"
+          },
+          "service_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Item Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/DepositTarget"
+          }
+        },
+        "required": [
+          "target",
+          "rule",
+          "currency_code"
+        ],
+        "title": "DepositPolicyView",
+        "type": "object"
+      },
+      "DepositReport": {
+        "additionalProperties": false,
+        "description": "The last `days` until now: the deposits asked, paid and released, the\nmoney collected per currency (paid and kept; returned ones apart), and\nthe no-show rate of bookings that started in the window with a paid\ndeposit and without one. A booking still waiting for its outcome (not\nmarked arrived or no-show) counts in neither.",
+        "properties": {
+          "awaiting_count": {
+            "minimum": 0.0,
+            "title": "Awaiting Count",
+            "type": "integer"
+          },
+          "days": {
+            "maximum": 366.0,
+            "minimum": 7.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "ends_at": {
+            "title": "Ends At",
+            "type": "integer"
+          },
+          "expired_count": {
+            "minimum": 0.0,
+            "title": "Expired Count",
+            "type": "integer"
+          },
+          "is_enabled": {
+            "title": "Is Enabled",
+            "type": "boolean"
+          },
+          "min_sample": {
+            "minimum": 0.0,
+            "title": "Min Sample",
+            "type": "integer"
+          },
+          "money": {
+            "items": {
+              "$ref": "#/components/schemas/DepositMoney"
+            },
+            "title": "Money",
+            "type": "array"
+          },
+          "paid_count": {
+            "minimum": 0.0,
+            "title": "Paid Count",
+            "type": "integer"
+          },
+          "requested_count": {
+            "minimum": 0.0,
+            "title": "Requested Count",
+            "type": "integer"
+          },
+          "starts_at": {
+            "title": "Starts At",
+            "type": "integer"
+          },
+          "with_deposit": {
+            "$ref": "#/components/schemas/NoShowRate"
+          },
+          "without_deposit": {
+            "$ref": "#/components/schemas/NoShowRate"
+          }
+        },
+        "required": [
+          "is_enabled",
+          "days",
+          "starts_at",
+          "ends_at",
+          "requested_count",
+          "paid_count",
+          "expired_count",
+          "awaiting_count",
+          "with_deposit",
+          "without_deposit",
+          "min_sample"
+        ],
+        "title": "DepositReport",
+        "type": "object"
+      },
+      "DepositRequestView": {
+        "additionalProperties": false,
+        "description": "One deposit asked: of which booking or banquet request, how much, under\nwhich reference and page, its state, and when it was asked, is held\nuntil, was paid (and by whose mark) or is to be refunded.",
+        "properties": {
+          "amount_minor": {
+            "minimum": 1.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "booking_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Booking Id"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "string"
+          },
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "hold_expires_at": {
+            "title": "Hold Expires At",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Id"
+          },
+          "marked_paid_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked Paid By"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "payment_link_label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Link Label"
+          },
+          "reference": {
+            "maxLength": 8,
+            "minLength": 8,
+            "pattern": "^[ACDEFHJKLMNPQRTUVWXY3479]{8}$",
+            "title": "Reference",
+            "type": "string"
+          },
+          "reminder_sent_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminder Sent At"
+          },
+          "requested_at": {
+            "title": "Requested At",
+            "type": "integer"
+          },
+          "settled_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settled At"
+          },
+          "source_channel": {
+            "$ref": "#/components/schemas/ChannelKind"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DepositStatus"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/DepositSubject"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "contact_id",
+          "source_channel",
+          "status",
+          "amount_minor",
+          "currency_code",
+          "reference",
+          "requested_at",
+          "hold_expires_at"
+        ],
+        "title": "DepositRequestView",
+        "type": "object"
+      },
+      "DepositRule": {
+        "description": "How a deposit policy counts the amount: a fixed sum for the booking\n(FIXED), a fixed sum for each guest (PER_GUEST), or a percent of the\nbooking's value (PERCENT_OF_VALUE; a booking without a known value asks\nnone).",
+        "enum": [
+          "fixed",
+          "per_guest",
+          "percent_of_value"
+        ],
+        "title": "DepositRule",
+        "type": "string"
+      },
+      "DepositSettingsView": {
+        "additionalProperties": false,
+        "description": "A business's deposits, with its currency and that currency's digits so\nthe cabinet turns minor units into the amounts people type.",
+        "properties": {
+          "currency_code": {
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency Code",
+            "type": "string"
+          },
+          "currency_digits": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Currency Digits",
+            "type": "integer"
+          },
+          "default_payment_link_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Payment Link Id"
+          },
+          "hold_minutes": {
+            "maximum": 1440.0,
+            "minimum": 15.0,
+            "title": "Hold Minutes",
+            "type": "integer"
+          },
+          "is_enabled": {
+            "title": "Is Enabled",
+            "type": "boolean"
+          },
+          "payment_links": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentLinkView"
+            },
+            "title": "Payment Links",
+            "type": "array"
+          },
+          "policies": {
+            "items": {
+              "$ref": "#/components/schemas/DepositPolicyView"
+            },
+            "title": "Policies",
+            "type": "array"
+          },
+          "refund_cutoff_hours": {
+            "maximum": 720.0,
+            "minimum": 0.0,
+            "title": "Refund Cutoff Hours",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "is_enabled",
+          "hold_minutes",
+          "refund_cutoff_hours",
+          "currency_code",
+          "currency_digits"
+        ],
+        "title": "DepositSettingsView",
+        "type": "object"
+      },
+      "DepositStatus": {
+        "description": "Lifecycle of one deposit request.\n\nAWAITING: the link went to the customer; a booking keeps its place until\nthe hold ends. PAID: staff marked it paid (the merchant's own account is\nthe proof). EXPIRED: the hold ended unpaid and the booking was released.\nCANCELLED: the booking or request ended before anything was paid.\nREFUND_DUE: a paid booking was cancelled in time under the policy; staff\nreturn the money in their merchant account. KEPT: a paid booking was\ncancelled too late or the guest did not come; the deposit stays.",
+        "enum": [
+          "awaiting",
+          "paid",
+          "expired",
+          "cancelled",
+          "refund_due",
+          "kept"
+        ],
+        "title": "DepositStatus",
+        "type": "string"
+      },
+      "DepositSubject": {
+        "description": "What a deposit request secures: a booking or a banquet request.",
+        "enum": [
+          "booking",
+          "banquet"
+        ],
+        "title": "DepositSubject",
+        "type": "string"
+      },
+      "DepositTarget": {
+        "description": "What a deposit policy applies to: a bookable place (RESOURCE: a table, a\nroom, a master), a service or package (SERVICE: its policy wins over the\nplace's), or the banquet requests the assistant takes (BANQUET).",
+        "enum": [
+          "resource",
+          "service",
+          "banquet"
+        ],
+        "title": "DepositTarget",
+        "type": "string"
+      },
       "DeviceClass": {
         "description": "The kind of screen a page was used on (by viewport width).",
         "enum": [
@@ -18581,7 +19178,7 @@
       },
       "MessageDocument": {
         "additionalProperties": false,
-        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value).",
+        "description": "Stored message with model usage and cost (concept table `messages`).\n\n`sent_by` is the owner or staff member who wrote a STAFF message from\nthe cabinet. `text` is what the author wrote (for a customer, the typed\ntext and captions); `attachments` are the voice notes, photos, places\nand other files of a customer message, with the transcript of a voice\nnote.\n\nVersion 2: `attachments` (optional, so version 1 rows read as they are).\n\nVersion 3: how an assistant reply was made, for reply-speed metrics:\n`channel` (the conversation's, so latency groups per channel in the\ndatabase), `reply_latency_ms` (from the platform delivering the\ncustomer's first unanswered message to the reply being stored; None\nwhen not measured, e.g. test chats and older rows), `llm_round_count`\nand `is_fallback_model` (a model of the other provider answered because\nthe version's own failed). All optional, so version 2 rows read as they\nare.\n\nVersion 4: what the reply guard did (R10). On an assistant reply:\n`guard_verdict` (clean, rewritten once, handed to staff; None on other\nmessages and older rows), `guard_reasons` (why it was held back),\n`unverified_values` (values the evidence did not back, as written) and\n`claim_findings` (each policy or availability claim the verifier\nchecked). On a customer message: `injection_flag`, the kind of prompt\ninjection it looked like (None: none). All optional, so version 3 rows\nread as they are.\n\nVersion 5: `tool_calls` may name the tool list_my_bookings (a new\nvalue; version 4 rows read as they are). Version 6: they may name the\ntool join_waitlist (a new value; version 5 rows read as they are).\n\nVersion 7 (R14): an assistant reply may offer `choices` (the options\nshown as buttons, quick replies or chips; its text already ends with\ntheir prompt), and a customer message may say what it refers to\n(`context_note`, e.g. a reply to the business's Instagram story). Both\noptional. `tool_calls` may name offer_choices once its release gate is\nopen (a new value). Version 8 (W19): they may name send_payment_link\nonce its release gate is open (a new value; version 7 rows read as is).",
         "properties": {
           "attachments": {
             "items": {
@@ -18747,7 +19344,7 @@
             "title": "Reply Latency Ms"
           },
           "schema_version": {
-            "default": "7",
+            "default": "8",
             "title": "Schema Version",
             "type": "string"
           },
@@ -19627,6 +20224,46 @@
           "requires_legal_review"
         ],
         "title": "NicheSummaryView",
+        "type": "object"
+      },
+      "NoShowRate": {
+        "additionalProperties": false,
+        "description": "Finished bookings of one group (the guest came or did not), how many did\nnot come, and their share once the group reaches the sample the report\ntrusts (`has_enough_data`; below it `no_show_percent` is None).",
+        "properties": {
+          "finished_count": {
+            "minimum": 0.0,
+            "title": "Finished Count",
+            "type": "integer"
+          },
+          "has_enough_data": {
+            "title": "Has Enough Data",
+            "type": "boolean"
+          },
+          "no_show_count": {
+            "minimum": 0.0,
+            "title": "No Show Count",
+            "type": "integer"
+          },
+          "no_show_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Show Percent"
+          }
+        },
+        "required": [
+          "finished_count",
+          "no_show_count",
+          "has_enough_data"
+        ],
+        "title": "NoShowRate",
         "type": "object"
       },
       "NotificationCheckResult": {
@@ -21042,6 +21679,57 @@
         ],
         "title": "PauseUnavailableReason",
         "type": "string"
+      },
+      "PaymentLinkKind": {
+        "description": "An owner's payment page: one fixed address that charges one amount\n(STATIC, named by the policies it fits), or an address template the\nplatform fills with the amount and the reference (TEMPLATE).",
+        "enum": [
+          "static",
+          "template"
+        ],
+        "title": "PaymentLinkKind",
+        "type": "string"
+      },
+      "PaymentLinkView": {
+        "additionalProperties": false,
+        "description": "A payment page as the cabinet shows it: one that carries a key is\n`is_sealed` and shows only its host and path.",
+        "properties": {
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_sealed": {
+            "title": "Is Sealed",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PaymentLinkKind"
+          },
+          "label": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Label",
+            "type": "string"
+          },
+          "preview": {
+            "title": "Preview",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "kind",
+          "host",
+          "preview",
+          "is_sealed"
+        ],
+        "title": "PaymentLinkView",
+        "type": "object"
       },
       "PaymentStatus": {
         "description": "Status of a payment as the provider reports it (Flitt `order_status`).\n\nAPPROVED pays the invoices; DECLINED fails them; EXPIRED means the owner\nleft the payment page unpaid; REVERSED is a refund of an approved payment.",
@@ -47082,9 +47770,10 @@
                   "status": {
                     "anyOf": [
                       {
-                        "description": "Lifecycle of a booking.",
+                        "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19, written once the release gate\n`booking_deposits` opens; until then such a booking is PENDING with a\ndeposit that waits).",
                         "enum": [
                           "pending",
+                          "pending_deposit",
                           "confirmed",
                           "cancelled",
                           "no_show",
@@ -47607,9 +48296,10 @@
                 "description": "Body of an Undo of a booking's status change: `status` is the status\nthe change set (the one being undone), so an Undo never reverts a later\nchange it did not see.",
                 "properties": {
                   "status": {
-                    "description": "Lifecycle of a booking.",
+                    "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19, written once the release gate\n`booking_deposits` opens; until then such a booking is PENDING with a\ndeposit that waits).",
                     "enum": [
                       "pending",
+                      "pending_deposit",
                       "confirmed",
                       "cancelled",
                       "no_show",
@@ -55136,6 +55826,1202 @@
         "summary": "Get Dashboard",
         "tags": [
           "operations"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposit-report": {
+      "get": {
+        "operationId": "deposits_get_deposit_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Days"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Deposit Report",
+        "tags": [
+          "deposits"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposit-settings": {
+      "get": {
+        "operationId": "deposits_get_deposit_settings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Deposit Settings",
+        "tags": [
+          "deposits"
+        ]
+      },
+      "put": {
+        "operationId": "deposits_update_deposit_settings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "The owner's choices: deposits on or off, how long a held place waits,\nuntil when before the start a cancellation is refunded, and the\ntemplate that serves policies naming no page.",
+                "properties": {
+                  "default_payment_link_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Default Payment Link Id"
+                  },
+                  "hold_minutes": {
+                    "default": 60,
+                    "maximum": 1440,
+                    "minimum": 15,
+                    "title": "Hold Minutes",
+                    "type": "integer"
+                  },
+                  "is_enabled": {
+                    "default": false,
+                    "title": "Is Enabled",
+                    "type": "boolean"
+                  },
+                  "refund_cutoff_hours": {
+                    "default": 24,
+                    "maximum": 720,
+                    "minimum": 0,
+                    "title": "Refund Cutoff Hours",
+                    "type": "integer"
+                  }
+                },
+                "title": "DepositSettingsRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Update Deposit Settings",
+        "tags": [
+          "deposits"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposit-settings/payment-links": {
+      "post": {
+        "operationId": "deposits_add_payment_link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "A payment page to add: its name, whether it is fixed or a template.",
+                "properties": {
+                  "address": {
+                    "maxLength": 2048,
+                    "minLength": 1,
+                    "title": "Address",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "description": "An owner's payment page: one fixed address that charges one amount\n(STATIC, named by the policies it fits), or an address template the\nplatform fills with the amount and the reference (TEMPLATE).",
+                    "enum": [
+                      "static",
+                      "template"
+                    ],
+                    "title": "PaymentLinkKind",
+                    "type": "string"
+                  },
+                  "label": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "title": "Label",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "label",
+                  "kind",
+                  "address"
+                ],
+                "title": "PaymentLinkInput",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Add Payment Link",
+        "tags": [
+          "deposits"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposit-settings/payment-links/{link_id}": {
+      "delete": {
+        "operationId": "deposits_remove_payment_link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "link_id",
+            "required": true,
+            "schema": {
+              "title": "Link Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Remove Payment Link",
+        "tags": [
+          "deposits"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposit-settings/policies": {
+      "put": {
+        "operationId": "deposits_set_deposit_policy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "description": "Set (or, with `policy` null, remove) the policy of a resource, a\nservice or the banquets; the target decides which id is needed.",
+                "properties": {
+                  "policy": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "description": "A policy as the owner sets it, in the business currency's minor units.",
+                        "properties": {
+                          "amount_minor": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Amount Minor"
+                          },
+                          "min_party_size": {
+                            "anyOf": [
+                              {
+                                "maximum": 10000,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Min Party Size"
+                          },
+                          "payment_link_id": {
+                            "anyOf": [
+                              {
+                                "pattern": "^payment_link_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Payment Link Id"
+                          },
+                          "percent": {
+                            "anyOf": [
+                              {
+                                "maximum": 100,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "title": "Percent"
+                          },
+                          "rule": {
+                            "description": "How a deposit policy counts the amount: a fixed sum for the booking\n(FIXED), a fixed sum for each guest (PER_GUEST), or a percent of the\nbooking's value (PERCENT_OF_VALUE; a booking without a known value asks\nnone).",
+                            "enum": [
+                              "fixed",
+                              "per_guest",
+                              "percent_of_value"
+                            ],
+                            "title": "DepositRule",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "rule"
+                        ],
+                        "title": "DepositPolicyInput",
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "resource_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^resource_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Resource Id"
+                  },
+                  "service_item_id": {
+                    "anyOf": [
+                      {
+                        "pattern": "^knowledge_item_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Service Item Id"
+                  },
+                  "target": {
+                    "description": "What a deposit policy applies to: a bookable place (RESOURCE: a table, a\nroom, a master), a service or package (SERVICE: its policy wins over the\nplace's), or the banquet requests the assistant takes (BANQUET).",
+                    "enum": [
+                      "resource",
+                      "service",
+                      "banquet"
+                    ],
+                    "title": "DepositTarget",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "target"
+                ],
+                "title": "DepositPolicyRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Set Deposit Policy",
+        "tags": [
+          "deposits"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposits/{deposit_id}": {
+      "get": {
+        "operationId": "deposits_get_booking_deposit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "deposit_id",
+            "required": true,
+            "schema": {
+              "title": "Deposit Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Get Booking Deposit",
+        "tags": [
+          "deposits"
+        ]
+      }
+    },
+    "/v1/businesses/{business_id}/deposits/{deposit_id}/paid": {
+      "post": {
+        "operationId": "deposits_mark_deposit_paid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_id",
+            "required": true,
+            "schema": {
+              "title": "Business Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "deposit_id",
+            "required": true,
+            "schema": {
+              "title": "Deposit Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositRequestView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Sign-in required: the bearer token is missing, invalid or expired."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not found, or not visible to the caller: another business and its data are reported as not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflicts with the current state (stale revision, slot taken)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too many requests; Retry-After, when present, says when to retry."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "A provider (model, messaging, payments, telephony) failed."
+          }
+        },
+        "summary": "Mark Deposit Paid",
+        "tags": [
+          "deposits"
         ]
       }
     },

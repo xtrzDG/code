@@ -30,6 +30,7 @@ from tests.operations.fake_google import FakeGoogle
 from tests.platform.authorization_billing import billing_path_values
 from tests.platform.authorization_calendars import calendar_path_values
 from tests.platform.authorization_customers import customer_path_values
+from tests.platform.authorization_deposits import deposit_path_values
 from tests.platform.authorization_inbox import inbox_path_values
 from tests.platform.authorization_integrations import integration_path_values
 from tests.platform.authorization_notifications import notification_path_values
@@ -214,15 +215,13 @@ def discover_path_values(
             world.workshop, world.storage_scope, world.business_b, world.owner_b
         )
     )
-    values.update(
-        value_path_values(world.workshop, world.storage_scope, world.business_b)
-    )
-    values.update(
-        billing_path_values(world.workshop, world.storage_scope, world.business_b)
-    )
-    values.update(
-        privacy_path_values(world.workshop, world.storage_scope, world.business_b)
-    )
+    for seeded in (
+        value_path_values,
+        billing_path_values,
+        privacy_path_values,
+        deposit_path_values,
+    ):
+        values.update(seeded(world.workshop, world.storage_scope, world.business_b))
     values.update(
         inbox_path_values(
             world.workshop,

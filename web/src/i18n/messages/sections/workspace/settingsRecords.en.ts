@@ -149,6 +149,8 @@ export const settingsRecordsEn = {
       waitlist_entry: "Waitlist",
       resource_calendar: "Resource calendars",
       waitlist_settings: "Waitlist settings",
+      deposit_settings: "Deposit settings",
+      deposit_request: "Deposit",
       campaign_settings: "Return visit settings",
       campaign_message: "Return visit messages",
       spend_limits: "Daily spend limits",

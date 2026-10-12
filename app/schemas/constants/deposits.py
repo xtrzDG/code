@@ -83,8 +83,6 @@ class DepositRefusalCode(StrEnum):
     CURRENCY_MISMATCH = "currency_mismatch"
     # The deposit already moved on (paid, released, refunded).
     STATUS_CHANGED = "status_changed"
-    # The booking or request is gone, or is no longer waiting.
-    BOOKING_CLOSED = "booking_closed"
 
 
 class DepositNoticeKind(StrEnum):

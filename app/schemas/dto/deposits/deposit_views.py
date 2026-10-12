@@ -45,6 +45,19 @@ class DepositRequestView(ImmutableDTO):
     settled_at: Microseconds | None = None
 
 
+class BookingDepositView(ImmutableDTO):
+    """
+    The deposit on a booking's row: which request, its state, the amount
+    and, while it waits, when the held place is released.
+    """
+
+    request_id: DepositRequestId
+    status: DepositStatus
+    amount_minor: DepositDueMinor
+    currency_code: CurrencyCode
+    hold_expires_at: Microseconds | None = None
+
+
 class DepositRequestQuery(ImmutableDTO):
     user_id: UserId
     business_id: BusinessId

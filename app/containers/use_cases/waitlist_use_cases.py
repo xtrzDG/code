@@ -1,5 +1,5 @@
 from dependency_injector import containers
-from dependency_injector.providers import Container, DependenciesContainer, Factory
+from dependency_injector.providers import DependenciesContainer, Factory
 
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.config import ConfigContainer
@@ -10,7 +10,6 @@ from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.booking_use_cases import BookingUseCasesContainer
-from app.containers.use_cases.deposit_use_cases import DepositUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.dto.conversation_engine import PreparedTurn
@@ -55,9 +54,7 @@ class WaitlistUseCasesContainer(containers.DeclarativeContainer):
     """
     The waitlist (1151): the assistant's join_waitlist tool, the offer of a
     freed place (queued job), the customer's yes or no (before the
-    assistant), the hold's expiry (periodic job), Bookings → Waitlist. The
-    deposits (1190), the other place a booking is held, are its child
-    (`deposits`), reached through the same edges.
+    assistant), the hold's expiry (periodic job), Bookings → Waitlist.
     """
 
     adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
@@ -192,21 +189,3 @@ class WaitlistUseCasesContainer(containers.DeclarativeContainer):
         audit_log_repo=repositories.audit_log_repo,
         wall_clock=wall_clock,
     )
-    deposits: DepositUseCasesContainer = Container(  # type: ignore[assignment]
-        DepositUseCasesContainer, adapters=adapters, facilitators=facilitators,
-        registries=registries, repositories=repositories,
-        time_provider=time_provider, utilities=utilities,
-        account_use_cases=account_use_cases,
-    )  # fmt: skip
-    # The deposits' use cases, named flat for the containers that compose this one.
-    send_payment_link_use_case = deposits.send_payment_link_use_case
-    quote_deposit_use_case = deposits.quote_deposit_use_case
-    get_deposit_settings_use_case = deposits.get_deposit_settings_use_case
-    update_deposit_settings_use_case = deposits.update_deposit_settings_use_case
-    add_payment_link_use_case = deposits.add_payment_link_use_case
-    remove_payment_link_use_case = deposits.remove_payment_link_use_case
-    set_deposit_policy_use_case = deposits.set_deposit_policy_use_case
-    get_deposit_request_use_case = deposits.get_deposit_request_use_case
-    mark_deposit_paid_use_case = deposits.mark_deposit_paid_use_case
-    get_deposit_report_use_case = deposits.get_deposit_report_use_case
-    sweep_deposits_use_case = deposits.sweep_deposits_use_case

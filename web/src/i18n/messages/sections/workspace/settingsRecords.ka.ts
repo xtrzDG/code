@@ -151,6 +151,8 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       waitlist_entry: "მოლოდინის სია",
       resource_calendar: "რესურსის კალენდრები",
       waitlist_settings: "მოლოდინის სიის პარამეტრები",
+      deposit_settings: "დეპოზიტის პარამეტრები",
+      deposit_request: "დეპოზიტი",
       campaign_settings: "განმეორებითი ვიზიტების პარამეტრები",
       campaign_message: "განმეორებითი ვიზიტების შეტყობინებები",
       spend_limits: "ხარჯების დღიური ლიმიტები",

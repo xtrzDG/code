@@ -2163,6 +2163,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/businesses/{business_id}/deposit-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Deposit Report */
+        get: operations["deposits_get_deposit_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/deposit-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Deposit Settings */
+        get: operations["deposits_get_deposit_settings"];
+        /** Update Deposit Settings */
+        put: operations["deposits_update_deposit_settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/deposit-settings/payment-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Payment Link */
+        post: operations["deposits_add_payment_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/deposit-settings/payment-links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Payment Link */
+        delete: operations["deposits_remove_payment_link"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/deposit-settings/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Deposit Policy */
+        put: operations["deposits_set_deposit_policy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/deposits/{deposit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Booking Deposit */
+        get: operations["deposits_get_booking_deposit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/businesses/{business_id}/deposits/{deposit_id}/paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Deposit Paid */
+        post: operations["deposits_mark_deposit_paid"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/businesses/{business_id}/digest-preferences": {
         parameters: {
             query?: never;
@@ -5754,7 +5874,7 @@ export interface components {
          * @description Tool the language model may call (concept section 5).
          * @enum {string}
          */
-        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices";
+        AssistantToolName: "search_knowledge" | "get_price" | "check_availability" | "create_booking" | "cancel_booking" | "reschedule_booking" | "list_my_bookings" | "join_waitlist" | "create_lead" | "handoff_to_human" | "send_link" | "record_unanswered_question" | "offer_choices" | "send_payment_link";
         /**
          * AssistantVersionDetails
          * @description An assistant version with its frozen instructions and fact table: the
@@ -6351,6 +6471,38 @@ export interface components {
             value_minor: number;
         };
         /**
+         * BookingDeposit
+         * @description The deposit of a booking as its list shows it: the request, its state,
+         *     the amount and, while it waits, when the held place is released.
+         */
+        BookingDeposit: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency Code */
+            currency_code: string;
+            /** Hold Expires At */
+            hold_expires_at?: number | null;
+            /** Request Id */
+            request_id: string;
+            status: components["schemas"]["DepositStatus"];
+        };
+        /**
+         * BookingDepositView
+         * @description The deposit on a booking's row: which request, its state, the amount
+         *     and, while it waits, when the held place is released.
+         */
+        BookingDepositView: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency Code */
+            currency_code: string;
+            /** Hold Expires At */
+            hold_expires_at?: number | null;
+            /** Request Id */
+            request_id: string;
+            status: components["schemas"]["DepositStatus"];
+        };
+        /**
          * BookingDocument
          * @description Booking of a resource (concept table `bookings`); times are UTC.
          *
@@ -6371,6 +6523,10 @@ export interface components {
          *
          *     `booking_system_booking` is the booking as the platform wrote it to the
          *     booking system its resource follows (Cal.com), None until written.
+         *
+         *     `deposit` is the deposit asked for the booking (`DepositRequestDocument`
+         *     holds the rest), None when none was; `deposit_status` repeats its state
+         *     at the top level, where the reports' grouped counts read it (1190).
          */
         BookingDocument: {
             booking_system_booking?: components["schemas"]["BookingSystemBookingRef"] | null;
@@ -6389,6 +6545,8 @@ export interface components {
             created_at?: number;
             /** Currency Code */
             currency_code?: string | null;
+            deposit?: components["schemas"]["BookingDeposit"] | null;
+            deposit_status?: components["schemas"]["DepositStatus"] | null;
             /** Ends At */
             ends_at: number;
             /** Id */
@@ -6412,7 +6570,7 @@ export interface components {
             resource_id: string;
             /**
              * Schema Version
-             * @default 5
+             * @default 6
              */
             schema_version: string;
             /** Service Item Id */
@@ -6618,10 +6776,13 @@ export interface components {
         };
         /**
          * BookingStatus
-         * @description Lifecycle of a booking.
+         * @description Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the
+         *     customer pays a deposit (W19, written once the release gate
+         *     `booking_deposits` opens; until then such a booking is PENDING with a
+         *     deposit that waits).
          * @enum {string}
          */
-        BookingStatus: "pending" | "confirmed" | "cancelled" | "no_show" | "completed";
+        BookingStatus: "pending" | "pending_deposit" | "confirmed" | "cancelled" | "no_show" | "completed";
         /**
          * BookingStatusChange
          * @description The last status change staff made in the cabinet (`changed_by`, at
@@ -6718,7 +6879,7 @@ export interface components {
          *     customer's language for texts about it. `reminder_sent_at` is when the
          *     customer's reminder went out (None: not yet). A booking of a service,
          *     package or room type names it and carries its value (`value_minor` in
-         *     `currency_code`).
+         *     `currency_code`). `deposit` is the deposit asked for it, if any.
          */
         BookingView: {
             /** Business Id */
@@ -6737,6 +6898,7 @@ export interface components {
             currency_code?: string | null;
             /** Date */
             date: string;
+            deposit?: components["schemas"]["BookingDepositView"] | null;
             /** End Date */
             end_date: string;
             /** End Time */
@@ -9684,6 +9846,175 @@ export interface components {
          */
         DeliveryFailureReason: "rate_limited" | "provider_unavailable" | "recipient_refused" | "template_rejected" | "channel_disconnected" | "credential_rejected" | "not_configured" | "expired";
         /**
+         * DepositMoney
+         * @description Deposits of one currency: kept by the business, and still to refund.
+         */
+        DepositMoney: {
+            /** Collected Minor */
+            collected_minor: number;
+            /** Currency Code */
+            currency_code: string;
+            /** Currency Digits */
+            currency_digits: number;
+            /** Refund Due Minor */
+            refund_due_minor: number;
+        };
+        /**
+         * DepositPolicyView
+         * @description One policy and what it applies to (amounts in minor units).
+         */
+        DepositPolicyView: {
+            /** Amount Minor */
+            amount_minor?: number | null;
+            /** Currency Code */
+            currency_code: string;
+            /** Min Party Size */
+            min_party_size?: number | null;
+            /** Payment Link Id */
+            payment_link_id?: string | null;
+            /** Percent */
+            percent?: number | null;
+            /** Resource Id */
+            resource_id?: string | null;
+            rule: components["schemas"]["DepositRule"];
+            /** Service Item Id */
+            service_item_id?: string | null;
+            target: components["schemas"]["DepositTarget"];
+        };
+        /**
+         * DepositReport
+         * @description The last `days` until now: the deposits asked, paid and released, the
+         *     money collected per currency (paid and kept; returned ones apart), and
+         *     the no-show rate of bookings that started in the window with a paid
+         *     deposit and without one. A booking still waiting for its outcome (not
+         *     marked arrived or no-show) counts in neither.
+         */
+        DepositReport: {
+            /** Awaiting Count */
+            awaiting_count: number;
+            /** Days */
+            days: number;
+            /** Ends At */
+            ends_at: number;
+            /** Expired Count */
+            expired_count: number;
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Min Sample */
+            min_sample: number;
+            /** Money */
+            money?: components["schemas"]["DepositMoney"][];
+            /** Paid Count */
+            paid_count: number;
+            /** Requested Count */
+            requested_count: number;
+            /** Starts At */
+            starts_at: number;
+            with_deposit: components["schemas"]["NoShowRate"];
+            without_deposit: components["schemas"]["NoShowRate"];
+        };
+        /**
+         * DepositRequestView
+         * @description One deposit asked: of which booking or banquet request, how much, under
+         *     which reference and page, its state, and when it was asked, is held
+         *     until, was paid (and by whose mark) or is to be refunded.
+         */
+        DepositRequestView: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Booking Id */
+            booking_id?: string | null;
+            /** Cancelled At */
+            cancelled_at?: number | null;
+            /** Contact Id */
+            contact_id: string;
+            /** Currency Code */
+            currency_code: string;
+            /** Hold Expires At */
+            hold_expires_at: number;
+            /** Id */
+            id: string;
+            /** Lead Id */
+            lead_id?: string | null;
+            /** Marked Paid By */
+            marked_paid_by?: string | null;
+            /** Paid At */
+            paid_at?: number | null;
+            /** Payment Link Label */
+            payment_link_label?: string | null;
+            /** Reference */
+            reference: string;
+            /** Reminder Sent At */
+            reminder_sent_at?: number | null;
+            /** Requested At */
+            requested_at: number;
+            /** Settled At */
+            settled_at?: number | null;
+            source_channel: components["schemas"]["ChannelKind"];
+            status: components["schemas"]["DepositStatus"];
+            subject: components["schemas"]["DepositSubject"];
+        };
+        /**
+         * DepositRule
+         * @description How a deposit policy counts the amount: a fixed sum for the booking
+         *     (FIXED), a fixed sum for each guest (PER_GUEST), or a percent of the
+         *     booking's value (PERCENT_OF_VALUE; a booking without a known value asks
+         *     none).
+         * @enum {string}
+         */
+        DepositRule: "fixed" | "per_guest" | "percent_of_value";
+        /**
+         * DepositSettingsView
+         * @description A business's deposits, with its currency and that currency's digits so
+         *     the cabinet turns minor units into the amounts people type.
+         */
+        DepositSettingsView: {
+            /** Currency Code */
+            currency_code: string;
+            /** Currency Digits */
+            currency_digits: number;
+            /** Default Payment Link Id */
+            default_payment_link_id?: string | null;
+            /** Hold Minutes */
+            hold_minutes: number;
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Payment Links */
+            payment_links?: components["schemas"]["PaymentLinkView"][];
+            /** Policies */
+            policies?: components["schemas"]["DepositPolicyView"][];
+            /** Refund Cutoff Hours */
+            refund_cutoff_hours: number;
+        };
+        /**
+         * DepositStatus
+         * @description Lifecycle of one deposit request.
+         *
+         *     AWAITING: the link went to the customer; a booking keeps its place until
+         *     the hold ends. PAID: staff marked it paid (the merchant's own account is
+         *     the proof). EXPIRED: the hold ended unpaid and the booking was released.
+         *     CANCELLED: the booking or request ended before anything was paid.
+         *     REFUND_DUE: a paid booking was cancelled in time under the policy; staff
+         *     return the money in their merchant account. KEPT: a paid booking was
+         *     cancelled too late or the guest did not come; the deposit stays.
+         * @enum {string}
+         */
+        DepositStatus: "awaiting" | "paid" | "expired" | "cancelled" | "refund_due" | "kept";
+        /**
+         * DepositSubject
+         * @description What a deposit request secures: a booking or a banquet request.
+         * @enum {string}
+         */
+        DepositSubject: "booking" | "banquet";
+        /**
+         * DepositTarget
+         * @description What a deposit policy applies to: a bookable place (RESOURCE: a table, a
+         *     room, a master), a service or package (SERVICE: its policy wins over the
+         *     place's), or the banquet requests the assistant takes (BANQUET).
+         * @enum {string}
+         */
+        DepositTarget: "resource" | "service" | "banquet";
+        /**
          * DeviceClass
          * @description The kind of screen a page was used on (by viewport width).
          * @enum {string}
@@ -12264,7 +12595,8 @@ export interface components {
          *     their prompt), and a customer message may say what it refers to
          *     (`context_note`, e.g. a reply to the business's Instagram story). Both
          *     optional. `tool_calls` may name offer_choices once its release gate is
-         *     open (a new value).
+         *     open (a new value). Version 8 (W19): they may name send_payment_link
+         *     once its release gate is open (a new value; version 7 rows read as is).
          */
         MessageDocument: {
             /** Attachments */
@@ -12324,7 +12656,7 @@ export interface components {
             reply_latency_ms?: number | null;
             /**
              * Schema Version
-             * @default 7
+             * @default 8
              */
             schema_version: string;
             /** Sent By */
@@ -12664,6 +12996,22 @@ export interface components {
             takes_bookings: boolean;
             typical_check?: components["schemas"]["Money"] | null;
             wave: components["schemas"]["LaunchWave"];
+        };
+        /**
+         * NoShowRate
+         * @description Finished bookings of one group (the guest came or did not), how many did
+         *     not come, and their share once the group reaches the sample the report
+         *     trusts (`has_enough_data`; below it `no_show_percent` is None).
+         */
+        NoShowRate: {
+            /** Finished Count */
+            finished_count: number;
+            /** Has Enough Data */
+            has_enough_data: boolean;
+            /** No Show Count */
+            no_show_count: number;
+            /** No Show Percent */
+            no_show_percent?: number | null;
         };
         /**
          * NotificationCheckResult
@@ -13202,6 +13550,32 @@ export interface components {
          * @enum {string}
          */
         PauseUnavailableReason: "feature_off" | "not_active" | "not_monthly" | "already_paused" | "allowance_used";
+        /**
+         * PaymentLinkKind
+         * @description An owner's payment page: one fixed address that charges one amount
+         *     (STATIC, named by the policies it fits), or an address template the
+         *     platform fills with the amount and the reference (TEMPLATE).
+         * @enum {string}
+         */
+        PaymentLinkKind: "static" | "template";
+        /**
+         * PaymentLinkView
+         * @description A payment page as the cabinet shows it: one that carries a key is
+         *     `is_sealed` and shows only its host and path.
+         */
+        PaymentLinkView: {
+            /** Host */
+            host: string;
+            /** Id */
+            id: string;
+            /** Is Sealed */
+            is_sealed: boolean;
+            kind: components["schemas"]["PaymentLinkKind"];
+            /** Label */
+            label: string;
+            /** Preview */
+            preview: string;
+        };
         /**
          * PaymentStatus
          * @description Status of a payment as the provider reports it (Flitt `order_status`).
@@ -26677,7 +27051,7 @@ export interface operations {
                     party_size?: number | null;
                     /** Resource Id */
                     resource_id?: string | null;
-                    status?: ("pending" | "confirmed" | "cancelled" | "no_show" | "completed") | null;
+                    status?: ("pending" | "pending_deposit" | "confirmed" | "cancelled" | "no_show" | "completed") | null;
                 };
             };
         };
@@ -26968,10 +27342,13 @@ export interface operations {
                 "application/json": {
                     /**
                      * BookingStatus
-                     * @description Lifecycle of a booking.
+                     * @description Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the
+                     *     customer pays a deposit (W19, written once the release gate
+                     *     `booking_deposits` opens; until then such a booking is PENDING with a
+                     *     deposit that waits).
                      * @enum {string}
                      */
-                    status: "pending" | "confirmed" | "cancelled" | "no_show" | "completed";
+                    status: "pending" | "pending_deposit" | "confirmed" | "cancelled" | "no_show" | "completed";
                 };
             };
         };
@@ -31604,6 +31981,780 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardStats"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_get_deposit_report: {
+        parameters: {
+            query?: {
+                days?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositReport"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_get_deposit_settings: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_update_deposit_settings: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Default Payment Link Id */
+                    default_payment_link_id?: string | null;
+                    /**
+                     * Hold Minutes
+                     * @default 60
+                     */
+                    hold_minutes?: number;
+                    /**
+                     * Is Enabled
+                     * @default false
+                     */
+                    is_enabled?: boolean;
+                    /**
+                     * Refund Cutoff Hours
+                     * @default 24
+                     */
+                    refund_cutoff_hours?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_add_payment_link: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Address */
+                    address: string;
+                    /**
+                     * PaymentLinkKind
+                     * @description An owner's payment page: one fixed address that charges one amount
+                     *     (STATIC, named by the policies it fits), or an address template the
+                     *     platform fills with the amount and the reference (TEMPLATE).
+                     * @enum {string}
+                     */
+                    kind: "static" | "template";
+                    /** Label */
+                    label: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_remove_payment_link: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_set_deposit_policy: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    policy?: {
+                        /** Amount Minor */
+                        amount_minor?: number | null;
+                        /** Min Party Size */
+                        min_party_size?: number | null;
+                        /** Payment Link Id */
+                        payment_link_id?: string | null;
+                        /** Percent */
+                        percent?: number | null;
+                        /**
+                         * DepositRule
+                         * @description How a deposit policy counts the amount: a fixed sum for the booking
+                         *     (FIXED), a fixed sum for each guest (PER_GUEST), or a percent of the
+                         *     booking's value (PERCENT_OF_VALUE; a booking without a known value asks
+                         *     none).
+                         * @enum {string}
+                         */
+                        rule: "fixed" | "per_guest" | "percent_of_value";
+                    } | null;
+                    /** Resource Id */
+                    resource_id?: string | null;
+                    /** Service Item Id */
+                    service_item_id?: string | null;
+                    /**
+                     * DepositTarget
+                     * @description What a deposit policy applies to: a bookable place (RESOURCE: a table, a
+                     *     room, a master), a service or package (SERVICE: its policy wins over the
+                     *     place's), or the banquet requests the assistant takes (BANQUET).
+                     * @enum {string}
+                     */
+                    target: "resource" | "service" | "banquet";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositSettingsView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_get_booking_deposit: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                deposit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositRequestView"];
+                };
+            };
+            /** @description Sign-in required: the bearer token is missing, invalid or expired. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Signed in, but not allowed: staff on an owner-only action, or a country or plan that does not allow it. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not found, or not visible to the caller: another business and its data are reported as not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflicts with the current state (stale revision, slot taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description The request is invalid: a missing or malformed parameter, header or body (`reasons` name the fields), or a broken business rule. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Too many requests; Retry-After, when present, says when to retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description A provider (model, messaging, payments, telephony) failed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    deposits_mark_deposit_paid: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                business_id: string;
+                deposit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DepositRequestView"];
                 };
             };
             /** @description Sign-in required: the bearer token is missing, invalid or expired. */

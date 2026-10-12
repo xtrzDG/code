@@ -148,6 +148,8 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       waitlist_entry: "Warteliste",
       resource_calendar: "Ressourcenkalender",
       waitlist_settings: "Einstellungen der Warteliste",
+      deposit_settings: "Anzahlungseinstellungen",
+      deposit_request: "Anzahlung",
       campaign_settings: "Einstellungen für Wiederbesuche",
       campaign_message: "Nachrichten für Wiederbesuche",
       spend_limits: "Tageslimits für Kosten",

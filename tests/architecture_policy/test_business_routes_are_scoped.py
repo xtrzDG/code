@@ -61,6 +61,7 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "feedback.request_visit_feedback_operator": "periodic job over every business",
     "growth.expire_waitlist_offers_operator": "periodic job over every business",
     "growth.run_rebooking_campaigns_operator": "periodic job over every business",
+    "growth.sweep_deposits_operator": "periodic job: deposit holds of every business",
     "lifecycle.run_subscription_pauses_operator": "periodic job over every business",
     "lifecycle.send_win_back_messages_operator": "periodic job over cancellations",
     "operations.complete_google_calendar_connection_operator": "consent state",

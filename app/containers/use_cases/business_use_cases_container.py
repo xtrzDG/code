@@ -47,6 +47,7 @@ class BusinessUseCasesContainer(CoreUseCasesContainer):
         booking_use_cases=CoreUseCasesContainer.bookings,
         follow_up_use_cases=CoreUseCasesContainer.follow_ups,
         waitlist_use_cases=CoreUseCasesContainer.waitlist,
+        deposit_use_cases=CoreUseCasesContainer.deposits,
     )
     conversation_feed: ConversationFeedUseCasesContainer = Container(  # type: ignore[assignment]
         ConversationFeedUseCasesContainer,
