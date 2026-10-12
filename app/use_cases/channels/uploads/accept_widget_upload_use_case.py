@@ -77,7 +77,7 @@ class AcceptWidgetUploadUseCase(
             else self._media_settings.max_voice_bytes
         )
         if len(content) > int(limit):
-            raise upload_refused(WidgetUploadRefusal.FILE_TOO_LARGE, limit)
+            raise upload_refused(WidgetUploadRefusal.FILE_TOO_LARGE, int(limit))
 
         duration: AudioDurationSeconds | None = None
         if kind is AttachmentKind.AUDIO:
@@ -106,12 +106,12 @@ class AcceptWidgetUploadUseCase(
     ) -> AudioDurationSeconds:
         seconds: int | None = measure_voice_note(content, media_type)
         if seconds is None or seconds <= 0:
-            raise upload_refused(WidgetUploadRefusal.UNREADABLE_FILE, media_type)
+            raise upload_refused(WidgetUploadRefusal.UNREADABLE_FILE, str(media_type))
 
         if seconds > int(self._media_settings.max_voice_seconds):
             raise upload_refused(
                 WidgetUploadRefusal.VOICE_TOO_LONG,
-                self._media_settings.max_voice_seconds,
+                int(self._media_settings.max_voice_seconds),
             )
 
         return AudioDurationSeconds(seconds)
@@ -121,7 +121,7 @@ class AcceptWidgetUploadUseCase(
             return strip_image_metadata(content, media_type)
         except MalformedMediaFileError as error:
             raise upload_refused(
-                WidgetUploadRefusal.UNREADABLE_FILE, media_type
+                WidgetUploadRefusal.UNREADABLE_FILE, str(media_type)
             ) from error
 
     def _keep(

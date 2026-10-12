@@ -108,6 +108,7 @@ export const settingsRecordsEn = {
       messages: "Messages",
       llm_turns: "AI call records",
       message_media: "Customer files",
+      widget_upload: "Website chat uploads",
       missed_call: "Missed calls",
       call_recording: "Call recording",
       privacy_settings: "Data retention",

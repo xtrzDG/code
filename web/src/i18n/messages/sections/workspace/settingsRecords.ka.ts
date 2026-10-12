@@ -110,6 +110,7 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       messages: "შეტყობინებები",
       llm_turns: "AI მიმართვების ჩანაწერები",
       message_media: "კლიენტების ფაილები",
+      widget_upload: "საიტის ჩატში ატვირთული ფაილები",
       missed_call: "გამოტოვებული ზარები",
       call_recording: "ზარის ჩანაწერი",
       privacy_settings: "მონაცემების შენახვის ვადები",

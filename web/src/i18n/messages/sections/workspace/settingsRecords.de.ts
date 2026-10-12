@@ -107,6 +107,7 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       messages: "Nachrichten",
       llm_turns: "Protokolle der KI-Aufrufe",
       message_media: "Dateien von Kunden",
+      widget_upload: "Uploads im Website-Chat",
       missed_call: "Verpasste Anrufe",
       call_recording: "Anrufaufnahme",
       privacy_settings: "Datenaufbewahrung",

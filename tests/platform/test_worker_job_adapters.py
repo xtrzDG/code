@@ -65,13 +65,17 @@ class CountingTraceFacilitator:
 def test_retention_job_purges_every_business_and_reports_purged_items() -> None:
     purge = RecordingPurge()
     media_purge = MediaPurge()
+    upload_purge = MediaPurge()
 
-    report = PurgeExpiredRecordingsJobOrchestrator(purge, media_purge).execute(TICK)
+    report = PurgeExpiredRecordingsJobOrchestrator(
+        purge, media_purge, upload_purge
+    ).execute(TICK)
 
     assert purge.commands == [PurgeExpiredRecordingsCommand(business_id=None)]
     assert media_purge.commands == [PurgeExpiredRecordingsCommand(business_id=None)]
-    # Three purged calls and five customer files.
-    assert report.processed_count == 8
+    assert upload_purge.commands == [PurgeExpiredRecordingsCommand(business_id=None)]
+    # Three purged calls, five customer files and five website uploads.
+    assert report.processed_count == 13
 
 
 def test_trace_flush_job_flushes_the_journal() -> None:

@@ -30,7 +30,7 @@ REFUSAL_MESSAGES: dict[WidgetUploadRefusal, str] = {
 
 
 def upload_refused(
-    refusal: WidgetUploadRefusal, detail: object | None = None
+    refusal: WidgetUploadRefusal, detail: str | int | None = None
 ) -> ValidationFailedError:
     """
     The 422 of a refused upload; `detail` (a media type, a cap) goes with
