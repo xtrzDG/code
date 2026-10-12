@@ -32,6 +32,7 @@ SPEND_GUARD: SchemaMigrationName = SchemaMigrationName(
 WAITLIST: SchemaMigrationName = SchemaMigrationName(
     "1151_waitlist_and_rebooking_campaigns"
 )
+BRANDS: SchemaMigrationName = SchemaMigrationName("1192_brands_and_shared_knowledge")
 
 
 def backfill(
@@ -103,6 +104,12 @@ LOOKUP_COLUMNS_WITHOUT_BACKFILL: tuple[LookupColumnWithoutBackfill, ...] = (
         WAITLIST,
         "Bookings written before 1151 came from neither the waitlist nor a "
         "campaign, which is what an empty origin means.",
+    ),
+    without_backfill(
+        "businesses",
+        "brand_id",
+        BRANDS,
+        "Businesses written before 1192 belong to no brand: brands came with it.",
     ),
 )
 

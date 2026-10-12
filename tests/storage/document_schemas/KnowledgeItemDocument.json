@@ -1,7 +1,7 @@
 {
   "collection": "knowledge_items",
   "document_type": "KnowledgeItemDocument",
-  "schema_version": 3,
+  "schema_version": 4,
   "shape": {
     "additionalProperties": false,
     "properties": {
@@ -159,7 +159,7 @@
         "default": null
       },
       "schema_version": {
-        "default": "3",
+        "default": "4",
         "type": "string"
       },
       "seasonal_rates": {
@@ -202,6 +202,20 @@
           "type": "object"
         },
         "type": "array"
+      },
+      "shared_key": {
+        "anyOf": [
+          {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9_\\-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "source": {
         "default": "owner",

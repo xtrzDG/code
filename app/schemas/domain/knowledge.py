@@ -14,6 +14,7 @@ from app.schemas.typings.knowledge.constrained_integers import (
 )
 from app.schemas.typings.knowledge.constrained_strings import (
     KnowledgeAttributeKey,
+    KnowledgeShareKey,
     KnowledgeTag,
     SeasonDay,
 )
@@ -74,7 +75,9 @@ class KnowledgeItemDocument(BaseDocument):
     # ones of version 1 move to an attribute (upcaster).
     # 3: `correction_of`, the assistant answer an owner corrected with this
     # item ("Fix this answer"; optional, None for every other item).
-    schema_version: SchemaVersion = SchemaVersion("3")
+    # 4: `shared_key`, the brand's shared item this location item replaces
+    # (R17-BRANDS; optional, None for every older item).
+    schema_version: SchemaVersion = SchemaVersion("4")
     id: KnowledgeItemId = Field(default_factory=KnowledgeItemId)
     business_id: BusinessId
     kind: KnowledgeItemKind
@@ -97,3 +100,4 @@ class KnowledgeItemDocument(BaseDocument):
     is_active: IsKnowledgeItemActive = True
     import_batch_id: MenuImportBatchId | None = None
     correction_of: MessageId | None = None
+    shared_key: KnowledgeShareKey | None = None

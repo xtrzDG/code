@@ -8,6 +8,7 @@ from app.containers.adapters.notification_collections_container import (
 )
 from app.containers.analytics_repositories import AnalyticsRepositoriesContainer
 from app.containers.billing_repositories import BillingRepositoriesContainer
+from app.containers.brand_repositories import BrandRepositoriesContainer
 from app.containers.calendar_sync_repositories import CalendarSyncRepositoriesContainer
 from app.containers.call_repositories import CallRepositoriesContainer
 from app.containers.client_care_repositories import ClientCareRepositoriesContainer
@@ -114,6 +115,7 @@ class RepositoriesContainer(
     GrowthRepositoriesContainer,
     CalendarSyncRepositoriesContainer,
     IntegrationRepositoriesContainer,
+    BrandRepositoriesContainer,
 ):
     """The repositories (singletons); those of each later module: the bases."""
 

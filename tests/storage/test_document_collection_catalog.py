@@ -13,6 +13,9 @@ from app.containers.adapters import invoicing_collections_container as invoicing
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
+from app.containers.adapters.brand_collections_container import (
+    BrandCollectionsContainer,
+)
 from app.containers.adapters.calendar_sync_collections_container import (
     CalendarSyncCollectionsContainer,
 )
@@ -129,6 +132,7 @@ COLLECTION_CONTAINERS = (
     # Two-way availability (1160).
     CalendarSyncCollectionsContainer,
     IntegrationCollectionsContainer,
+    BrandCollectionsContainer,  # Brands and their shared knowledge (1192).
 )
 
 

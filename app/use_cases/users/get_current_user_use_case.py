@@ -1,4 +1,5 @@
 from app.contracts.platform_admins import PlatformAdminRegistryContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.referral_repositories import PartnerRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -6,20 +7,22 @@ from app.contracts.session_assurance import SessionAssuranceContract
 from app.contracts.transformer_contract import TransformerContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.access import PlatformAdminRole
-from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.dto.brands.brand_reach import BusinessReach
 from app.schemas.dto.mfa import SessionAssurance
 from app.schemas.dto.users import CurrentUserView, UserMembershipView, UserView
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.users.prefixed_id import UserId
+from app.use_cases.shared.brand_reach import reachable_businesses
 from app.utilities.referrals.partner_identity import find_partner_of
 from app.utilities.security.admin_permissions import permissions_of
 
 
 class GetCurrentUserUseCase(UseCaseContract[UserId, CurrentUserView]):
     """
-    Return the signed-in user and their businesses, oldest business first,
-    and how the current session is signed in. `is_platform_admin`, the
+    Return the signed-in user and their businesses, oldest business first
+    (those their brands give them too, named with the brand), and how the
+    current session is signed in. `is_platform_admin`, the
     admin role and its permissions follow the admin team of now, so the
     cabinet stops offering the admin pages to someone taken off it and
     shows each admin only the pages their role opens. `is_partner` says
@@ -31,6 +34,7 @@ class GetCurrentUserUseCase(UseCaseContract[UserId, CurrentUserView]):
         self,
         user_repo: UserRepoContract,
         business_repo: BusinessRepoContract,
+        brand_repo: BrandRepoContract,
         user_view_transformer: TransformerContract[UserDocument, UserView],
         session_assurance: SessionAssuranceContract,
         platform_admins: PlatformAdminRegistryContract,
@@ -39,6 +43,7 @@ class GetCurrentUserUseCase(UseCaseContract[UserId, CurrentUserView]):
         self._partner_repo: PartnerRepoContract = partner_repo
         self._user_repo: UserRepoContract = user_repo
         self._business_repo: BusinessRepoContract = business_repo
+        self._brand_repo: BrandRepoContract = brand_repo
         self._user_view_transformer: TransformerContract[UserDocument, UserView] = (
             user_view_transformer
         )
@@ -54,21 +59,20 @@ class GetCurrentUserUseCase(UseCaseContract[UserId, CurrentUserView]):
         user: UserDocument = stored.model_copy(
             update={"is_platform_admin": role is not None}
         )
-        businesses: list[BusinessDocument] = sorted(
-            self._business_repo.list_by_member(user.id),
-            key=lambda business: business.created_at,
+        reach: list[BusinessReach] = reachable_businesses(
+            self._business_repo, self._brand_repo, user.id
         )
         memberships: list[UserMembershipView] = [
             UserMembershipView(
-                business_id=business.id,
-                business_name=business.name,
-                role=member.role,
-                business_status=business.status,
-                country_code=business.country_code,
+                business_id=item.business.id,
+                business_name=item.business.name,
+                role=item.role,
+                business_status=item.business.status,
+                country_code=item.business.country_code,
+                brand_id=None if item.brand is None else item.brand.id,
+                brand_name=None if item.brand is None else item.brand.name,
             )
-            for business in businesses
-            for member in business.members
-            if member.user_id == user.id
+            for item in reach
         ]
         assurance: SessionAssurance | None = self._session_assurance.current()
         return CurrentUserView(

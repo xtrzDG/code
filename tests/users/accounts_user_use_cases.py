@@ -55,6 +55,7 @@ from tests.foundation.access_support import AllowStepUp
 from tests.foundation.support_access_builders import (
     RecordingSignInNotices,
     build_authorize_business_access,
+    in_memory_brand_repo,
     in_memory_platform_admins,
 )
 from tests.referrals.referral_parts import ReferralRepositories
@@ -85,7 +86,9 @@ class AccountsUserUseCases(AccountsRepositories):
             wall_clock, self.settings, self.platform_admin_repo
         )
         self.sign_in_notices = RecordingSignInNotices()
+        self.brand_repo = in_memory_brand_repo()
         self.authorize_business_access = build_authorize_business_access(
+            brand_repo=self.brand_repo,
             business_repo=self.business_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
@@ -184,6 +187,7 @@ class AccountsUserUseCases(AccountsRepositories):
         self.get_current_user = GetCurrentUserUseCase(
             user_repo=self.user_repo,
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
             user_view_transformer=user_view_transformer,
             session_assurance=self.session_assurance,
             platform_admins=self.platform_admins,
@@ -212,11 +216,13 @@ class AccountsUserUseCases(AccountsRepositories):
         )
         self.list_my_businesses = ListMyBusinessesUseCase(
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
             user_repo=self.user_repo,
             business_view_transformer=business_view_transformer,
         )
         self.get_business = GetBusinessUseCase(
             authorize_business_access=self.authorize_business_access,
+            brand_repo=self.brand_repo,
             user_repo=self.user_repo,
             business_view_transformer=business_view_transformer,
         )

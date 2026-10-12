@@ -64,6 +64,7 @@ from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
 from app.utilities.storage.activation_collections import ACTIVATION_COLLECTIONS
+from app.utilities.storage.brand_collections import BRAND_COLLECTIONS
 from app.utilities.storage.calendar_sync_collections import CALENDAR_COLLECTIONS
 from app.utilities.storage.client_care_collections import CLIENT_CARE_COLLECTIONS
 from app.utilities.storage.customer_collections import CUSTOMER_COLLECTIONS
@@ -275,6 +276,7 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     *GROWTH_COLLECTIONS,  # The waitlist and rebooking campaigns (1151).
     *IDEMPOTENCY_COLLECTIONS,  # Idempotency keys of creating requests (1174).
     *INTEGRATION_COLLECTIONS,  # Webhooks and API keys (1181).
+    *BRAND_COLLECTIONS,  # Brands and their shared knowledge (1192).
 )
 
 

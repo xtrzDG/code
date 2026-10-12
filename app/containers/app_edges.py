@@ -5,6 +5,9 @@ from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.adapters.analytics_collections_container import (
     AnalyticsCollectionsContainer,
 )
+from app.containers.adapters.brand_collections_container import (
+    BrandCollectionsContainer,
+)
 from app.containers.adapters.feedback_collections_container import (
     FeedbackCollectionsContainer,
 )
@@ -186,6 +189,14 @@ class AppEdgesContainer(containers.DeclarativeContainer):
     # The public API and outbound webhooks: endpoints, deliveries, keys (1181).
     integration_collections: IntegrationCollectionsContainer = Container(  # type: ignore[assignment]
         IntegrationCollectionsContainer,
+        clients=clients,
+        config=config,
+        time_provider=time_provider,
+        utilities=utilities,
+    )
+    # Brands: chains of locations and their shared knowledge (1192).
+    brand_collections: BrandCollectionsContainer = Container(  # type: ignore[assignment]
+        BrandCollectionsContainer,
         clients=clients,
         config=config,
         time_provider=time_provider,

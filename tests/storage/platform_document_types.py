@@ -8,6 +8,7 @@ from base_pydantic_schemas import PersistentDocument
 
 from app.schemas.domain import help_progress, platform_status
 from app.schemas.domain.billing_profiles import InvoiceCounterDocument
+from app.schemas.domain.brands import BrandDocument, BrandKnowledgeItemDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.client_health_changes import AdminDigestStateDocument
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -102,5 +103,8 @@ PLATFORM_DOCUMENT_TYPES: frozenset[type[PersistentDocument]] = frozenset(
         ServiceLevelHourDocument,
         # Idempotency keys belong to a signed-in user, not a business (1174).
         IdempotencyKeyDocument,
+        # A brand spans its locations (1192): its team and shared knowledge.
+        BrandDocument,
+        BrandKnowledgeItemDocument,
     }
 )

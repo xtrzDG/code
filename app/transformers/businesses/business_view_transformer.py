@@ -16,7 +16,8 @@ class BusinessViewTransformer(TransformerContract[BusinessViewSource, BusinessVi
     Shape a business for the cabinet.
 
     Members keep their stored order; a member whose user record is missing
-    is still listed with the id and role only.
+    is still listed with the id and role only. The viewer's role is the one
+    they act with (`acting_role`, counting their brand) when given.
     """
 
     def transform(self, input_data: BusinessViewSource) -> BusinessView:
@@ -72,6 +73,7 @@ class BusinessViewTransformer(TransformerContract[BusinessViewSource, BusinessVi
             ],
             published_assistant_version_id=business.published_assistant_version_id,
             revision=business.revision,
-            viewer_role=viewer_role,
+            viewer_role=input_data.acting_role or viewer_role,
             created_at=business.created_at,
+            brand_id=business.brand_id,
         )

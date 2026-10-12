@@ -18,6 +18,7 @@ from app.contracts.notifications import (
     StaffAlertTextsContract,
 )
 from app.contracts.platform_admins import PlatformAdminRegistryContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
@@ -27,6 +28,7 @@ from app.contracts.support_access import (
     SupportAccessGrantRepoContract,
 )
 from app.registries.access.platform_admin_registry import PlatformAdminRegistry
+from app.repositories.brand_repositories import BrandRepository
 from app.repositories.platform_admin_repository import PlatformAdminRepository
 from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
@@ -34,6 +36,7 @@ from app.repositories.support_access_grant_repository import (
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.access import BusinessAccessMode, SupportAccessKind
 from app.schemas.constants.mfa import AuthLevel
+from app.schemas.domain.brands import BrandDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.platform_admins import PlatformAdminDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
@@ -66,6 +69,12 @@ def in_memory_grant_repo() -> SupportAccessGrantRepository:
     )
 
 
+def in_memory_brand_repo() -> BrandRepository:
+    return BrandRepository(
+        InMemoryDocumentCollectionAdapter[BrandDocument](BrandDocument)
+    )
+
+
 def in_memory_platform_admin_repo() -> PlatformAdminRepository:
     return PlatformAdminRepository(
         InMemoryDocumentCollectionAdapter[PlatformAdminDocument](PlatformAdminDocument)
@@ -95,11 +104,13 @@ def build_authorize_business_access(
     app_settings: AppSettings = ACCESS_SETTINGS,
     grant_repo: SupportAccessGrantRepoContract | None = None,
     platform_admins: PlatformAdminRegistryContract | None = None,
+    brand_repo: BrandRepoContract | None = None,
 ) -> AuthorizeBusinessAccessUseCase:
     """The production access check over these repositories."""
 
     return AuthorizeBusinessAccessUseCase(
         business_repo=business_repo,
+        brand_repo=brand_repo or in_memory_brand_repo(),
         session_assurance=session_assurance,
         authorize_support_access=AuthorizeSupportAccessUseCase(
             user_repo=user_repo,

@@ -8,6 +8,8 @@ from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.mfa import AuthLevel
 from app.schemas.constants.users import BusinessMemberRole, LoginMethod
 from app.schemas.domain.signup_attribution import SignupAttribution
+from app.schemas.typings.brands.prefixed_id import BrandId
+from app.schemas.typings.brands.strings import BrandName
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.compliance.strings import ClientIpAddress
@@ -156,13 +158,20 @@ class LogoutCommand(ImmutableDTO):
 
 
 class UserMembershipView(ImmutableDTO):
-    """A business the user belongs to and the role there."""
+    """
+    A business the user works in and the role they act with there (their
+    own, or the one their brand gives them). `brand_id` and `brand_name`
+    name the business's brand when the user is on its team, so the
+    cabinet groups the brand's locations; None otherwise.
+    """
 
     business_id: BusinessId
     business_name: BusinessName
     role: BusinessMemberRole
     business_status: BusinessStatus
     country_code: CountryCode
+    brand_id: BrandId | None = None
+    brand_name: BrandName | None = None
 
 
 class CurrentUserView(ImmutableDTO):

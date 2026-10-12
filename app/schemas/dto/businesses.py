@@ -12,6 +12,7 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.notification_preferences import StaffNotificationPreferences
 from app.schemas.domain.users import UserDocument
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
+from app.schemas.typings.brands.prefixed_id import BrandId
 from app.schemas.typings.businesses.constrained_integers import (
     BusinessRevision,
     RecordingRetentionDays,
@@ -90,9 +91,12 @@ class BusinessView(ImmutableDTO):
     """
     A business (tenant) as shown in the cabinet.
 
-    `viewer_role` is the role of the user who asked; it is None for a
-    platform admin who is not a member. `revision` grows with every save:
-    send it back as `expected_revision` of a settings change.
+    `viewer_role` is the role of the user who asked (their own, or the one
+    their brand gives them: a brand owner owns every location, a regional
+    manager is staff of the assigned ones); it is None for a platform admin
+    who is not a member. `revision` grows with every save: send it back as
+    `expected_revision` of a settings change. `brand_id` is the brand
+    (chain of locations) the business is a location of.
     """
 
     id: BusinessId
@@ -118,14 +122,20 @@ class BusinessView(ImmutableDTO):
     viewer_role: BusinessMemberRole | None = None
     revision: BusinessRevision
     created_at: Microseconds
+    brand_id: BrandId | None = None
 
 
 class BusinessViewSource(ImmutableDTO):
-    """A business with the users behind its members, as seen by one viewer."""
+    """
+    A business with the users behind its members, as seen by one viewer.
+    `acting_role` is the role the viewer acts with, counting their brand
+    (None: read from the business's own team).
+    """
 
     business: BusinessDocument
     member_users: list[UserDocument]
     viewer_id: UserId
+    acting_role: BusinessMemberRole | None = None
 
 
 class CreateBusinessRequest(ImmutableDTO):
