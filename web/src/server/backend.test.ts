@@ -188,6 +188,9 @@ describe("navigation", () => {
     expect(isProtectedPath("/b/x/dashboard")).toBe(true);
     expect(isProtectedPath("/integrations/google-calendar/callback")).toBe(true);
     expect(isProtectedPath("/admin")).toBe(true);
+    expect(isProtectedPath("/brands")).toBe(true);
+    expect(isProtectedPath("/brands/brand_1/team")).toBe(true);
+    expect(isProtectedPath("/brandsX")).toBe(false);
     expect(isProtectedPath("/create")).toBe(true);
     expect(isProtectedPath("/created")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);

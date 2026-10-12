@@ -158,6 +158,7 @@ export const brandsEn = {
     },
   },
   manage: {
+    menu: "Brand actions",
     rename: "Rename",
     renameTitle: "Rename the brand",
     renamed: "Brand renamed",

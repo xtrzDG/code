@@ -161,6 +161,7 @@ export const brandsRu: Translation<typeof brandsEn> = {
     },
   },
   manage: {
+    menu: "Действия с сетью",
     rename: "Переименовать",
     renameTitle: "Новое название сети",
     renamed: "Сеть переименована",

@@ -61,6 +61,14 @@ export const ADMIN_TEAM_PATH = "/admin/team";
 export const ADMIN_PARTNERS_PATH = "/admin/partners";
 /** A partner's own portal: their links, businesses and commissions. */
 export const PARTNER_PATH = "/partner";
+/** Brands: chains of locations run as one (overview, team, shared answers). */
+export const BRANDS_PATH = "/brands";
+
+/** `/brands/{id}` (the overview), or one of its pages. */
+export function brandPath(brandId: string, page?: "team" | "knowledge"): string {
+  const base = `${BRANDS_PATH}/${encodeURIComponent(brandId)}`;
+  return page ? `${base}/${page}` : base;
+}
 
 /** A client's page in the admin area (where an admin opens their cabinet with a reason). */
 export function adminClientPath(businessId: string): string {
@@ -73,7 +81,17 @@ export const ACCOUNT_SECURITY_PATH = "/account/security";
 const NOTIFICATION_LINK_PREFIX = "/n/";
 
 /** Pages that need a session (the proxy sends visitors to /login). */
-const PROTECTED_PREFIXES = [HOME_PATH, CREATE_PATH, "/b/", ADMIN_PATH, PARTNER_PATH, "/account/", "/integrations/", NOTIFICATION_LINK_PREFIX] as const;
+const PROTECTED_PREFIXES = [
+  HOME_PATH,
+  CREATE_PATH,
+  "/b/",
+  ADMIN_PATH,
+  PARTNER_PATH,
+  BRANDS_PATH,
+  "/account/",
+  "/integrations/",
+  NOTIFICATION_LINK_PREFIX,
+] as const;
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(

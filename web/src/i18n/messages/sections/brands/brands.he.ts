@@ -159,6 +159,7 @@ export const brandsHe: Translation<typeof brandsEn> = {
     },
   },
   manage: {
+    menu: "פעולות על הרשת",
     rename: "שינוי שם",
     renameTitle: "שם חדש לרשת",
     renamed: "שם הרשת שונה",

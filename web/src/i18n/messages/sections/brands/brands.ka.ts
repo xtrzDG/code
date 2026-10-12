@@ -157,6 +157,7 @@ export const brandsKa: Translation<typeof brandsEn> = {
     },
   },
   manage: {
+    menu: "ქსელის მოქმედებები",
     rename: "სახელის შეცვლა",
     renameTitle: "ქსელის ახალი სახელი",
     renamed: "ქსელს სახელი შეეცვალა",

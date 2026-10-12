@@ -157,6 +157,7 @@ export const brandsDe: Translation<typeof brandsEn> = {
     },
   },
   manage: {
+    menu: "Aktionen für die Kette",
     rename: "Umbenennen",
     renameTitle: "Neuer Name der Kette",
     renamed: "Kette umbenannt",

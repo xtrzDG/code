@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useNiches } from "@/api/catalog";
 import type { BusinessView } from "@/api/types";
 import { BusinessStatusBadge, MemberRoleBadge } from "@/components/business/BusinessStatusBadge";
-import { IconChevronRight, IconPlus, IconSparkles } from "@/components/icons";
+import { IconBuilding, IconChevronRight, IconPlus, IconSparkles } from "@/components/icons";
 import { ButtonLink, Card, EmptyState, PageHeader } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { countryFlag, countryName } from "@/lib/countries";
-import { businessPath, CREATE_PATH, setupPath } from "@/lib/navigation";
+import { BRANDS_PATH, businessPath, CREATE_PATH, setupPath } from "@/lib/navigation";
 
 /** An owner's business not live yet (never launched): its card leads back into the tunnel. */
 function isBeingSetUp(business: Pick<BusinessView, "status" | "viewer_role">): boolean {
@@ -26,10 +26,19 @@ export function BusinessesScreen({ businesses }: { businesses: BusinessView[] })
   const { t, locale } = useI18n();
   const niches = useNiches();
   const nicheName = (key: string) => niches.data?.niches.find((niche) => niche.key === key)?.name ?? "";
+  // Chains: anyone in a brand, or an owner who could start one.
+  const showsBrands = businesses.some((business) => business.brand_id || business.viewer_role === "owner");
   const create = (
-    <ButtonLink href={CREATE_PATH} leadingIcon={<IconPlus className="size-4" aria-hidden />}>
-      {t("tunnel.newAssistant")}
-    </ButtonLink>
+    <div className="flex flex-wrap gap-2">
+      {showsBrands ? (
+        <ButtonLink href={BRANDS_PATH} variant="secondary" leadingIcon={<IconBuilding className="size-4" aria-hidden />}>
+          {t("brands.nav")}
+        </ButtonLink>
+      ) : null}
+      <ButtonLink href={CREATE_PATH} leadingIcon={<IconPlus className="size-4" aria-hidden />}>
+        {t("tunnel.newAssistant")}
+      </ButtonLink>
+    </div>
   );
 
   return (
