@@ -3,8 +3,8 @@ A new location's own copies of another location's profile, resources,
 knowledge and channel settings: new ids, the links between resources and
 knowledge items mapped onto the copies, and nothing that names an outside
 account (calendar links, channel accounts and tokens), a conversation (an
-owner's answer correction) or the other location's place (its address
-and review page).
+owner's answer correction) or the other location's place and people (its
+address, review page and phone numbers, the handoff number included).
 """
 
 from dataclasses import dataclass, field
@@ -14,7 +14,7 @@ from typed_time_provider import Microseconds
 from app.schemas.constants.channels import ChannelStatus
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.domain.knowledge import KnowledgeItemDocument
-from app.schemas.domain.profiles import BusinessProfileDocument
+from app.schemas.domain.profiles import BusinessContacts, BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument
 from app.schemas.dto.brands.location_templates import (
     ChannelSettingsTemplate,
@@ -54,9 +54,11 @@ def copy_location(
         else template.profile.model_copy(
             update={
                 "business_id": business_id,
-                # Where this location is and its own review page are its own.
+                # Where this location is, its review page and the numbers
+                # customers and handoffs reach are its own.
                 "address": None,
                 "google_review_url": None,
+                "contacts": BusinessContacts(),
                 "created_at": now,
                 "updated_at": now,
             },

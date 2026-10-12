@@ -4,6 +4,8 @@ from app.contracts.billing_credits import BillingCreditLockRegistryContract
 from app.contracts.invoicing import InvoiceIssuingFacilitatorContract
 from app.contracts.registries import PlanRegistryContract
 from app.contracts.repositories.billing_repositories import InvoiceRepoContract
+from app.contracts.repositories.brand_repositories import BrandRepoContract
+from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.client_care_repositories import (
     BillingCreditRepoContract,
 )
@@ -31,6 +33,7 @@ from app.use_cases.billing.invoice_period_terms import (
     period_price,
 )
 from app.use_cases.shared.billing_records import OPEN_INVOICE_STATUSES
+from app.use_cases.shared.brand_billing import owes_brand_setup_fee
 from app.use_cases.shared.invoice_payments import record_invoice_payment
 from app.use_cases.shared.subscription_pricing import price_setup_fee
 
@@ -67,6 +70,10 @@ class IssueDueInvoicesUseCase(
     A month of a seasonal pause (R14, `pause_price_percent`) is invoiced
     like a period, at its share of the monthly price and worded as a
     pause, and never brings the setup fee (`invoice_period_terms.py`).
+
+    A brand (R17) pays one setup fee: its first location carries it, by
+    claiming it on the brand last of all, and no other location is ever
+    invoiced one (`brand_billing.py`).
     """
 
     def __init__(
@@ -85,7 +92,11 @@ class IssueDueInvoicesUseCase(
         ],
         billing_credit_repo: BillingCreditRepoContract,
         credit_lock: BillingCreditLockRegistryContract,
+        brand_repo: BrandRepoContract,
+        business_repo: BusinessRepoContract,
     ) -> None:
+        self._brand_repo: BrandRepoContract = brand_repo
+        self._business_repo: BusinessRepoContract = business_repo
         self._adjustments: InvoiceIssuingAdjustments = InvoiceIssuingAdjustments(
             invoice_repo, billing_credit_repo, credit_lock
         )
@@ -130,7 +141,7 @@ class IssueDueInvoicesUseCase(
         ):
             return False
 
-        return not any(
+        if any(
             (
                 invoice.kind is InvoiceKind.SETUP_FEE
                 and invoice.status is not InvoiceStatus.VOID
@@ -140,6 +151,11 @@ class IssueDueInvoicesUseCase(
                 and invoice.status is InvoiceStatus.PAID
             )
             for invoice in business_invoices
+        ):
+            return False
+
+        return owes_brand_setup_fee(
+            self._brand_repo, self._business_repo, input_data.business
         )
 
     def _issue_setup_fee(

@@ -74,6 +74,7 @@ class BillingUseCases(BillingInfrastructure):
         wall_clock: WallClock[Microseconds] = self.clock.wall_clock
         authorize = build_authorize_business_access(
             business_repo=self.business_repo,
+            brand_repo=self.brand_repo,
             user_repo=self.user_repo,
             audit_log_repo=self.audit_log_repo,
             wall_clock=wall_clock,
@@ -100,6 +101,8 @@ class BillingUseCases(BillingInfrastructure):
             invoice_line_texts_transformer=self.invoice_line_texts_transformer,
             billing_credit_repo=self.billing_credit_repo,
             credit_lock=self.credit_lock,
+            brand_repo=self.brand_repo,
+            business_repo=self.business_repo,
         )
         self.get_overview = GetBillingOverviewUseCase(
             authorize_business_access=authorize,

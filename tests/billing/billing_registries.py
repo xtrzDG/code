@@ -53,6 +53,13 @@ class PriceBookPlanRegistry(PlanRegistryContract):
 
         return Money(amount_minor=MoneyAmountMinor(amount), currency_code=currency_code)
 
+    def find_local_additional_location_price(
+        self,
+        plan_key: PlanKey,
+        currency_code: CurrencyCode,
+    ) -> Money | None:
+        return self._plans.find_local_additional_location_price(plan_key, currency_code)
+
     def find_setup_fee(
         self,
         plan_key: PlanKey,

@@ -80,6 +80,17 @@ class PlanRegistryContract(RegistryContract, Protocol):
         """The DONE_FOR_YOU setup fee in a price-book currency, if set."""
         raise NotImplementedError
 
+    def find_local_additional_location_price(
+        self,
+        plan_key: PlanKey,
+        currency_code: CurrencyCode,
+    ) -> Money | None:
+        """
+        What each further location of a brand pays a month, in a
+        price-book currency, if set.
+        """
+        raise NotImplementedError
+
     def find_setup_fee(
         self,
         plan_key: PlanKey,

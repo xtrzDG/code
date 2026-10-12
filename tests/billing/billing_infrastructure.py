@@ -81,6 +81,7 @@ from tests.billing.billing_settings import (
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
 from tests.billing.invoicing_parts import InvoicingParts, build_invoicing_parts
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.referrals.referral_parts import ReferralRepositories
 
 
@@ -111,6 +112,7 @@ class BillingInfrastructure:
         self.business_repo = BusinessRepository(
             InMemoryDocumentCollectionAdapter[BusinessDocument](BusinessDocument)
         )
+        self.brand_repo = in_memory_brand_repo()
         self.subscription_repo = SubscriptionRepository(
             InMemoryDocumentCollectionAdapter[SubscriptionDocument](
                 SubscriptionDocument
