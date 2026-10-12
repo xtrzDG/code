@@ -1,9 +1,10 @@
 /**
  * Automated accessibility audit (axe-core, WCAG 2.1 A and AA rules) of the
- * setup, the businesses, sign-in, the offline page and the phone layout in
- * both themes and in Hebrew (right to left): no serious or critical
- * violation is allowed. Every section of a business is audited in
- * a11y-sections-en.spec.ts and a11y-sections-he.spec.ts (support/axe.ts).
+ * setup, the businesses, sign-in, the offline page, the account menu (its
+ * Reduce motion setting) and the phone layout in both themes and in Hebrew
+ * (right to left): no serious or critical violation is allowed. Every
+ * section of a business is audited in a11y-sections-en.spec.ts and
+ * a11y-sections-he.spec.ts (support/axe.ts).
  */
 
 import { audit, seriousViolations } from "./support/axe";
@@ -35,6 +36,17 @@ test("the setup invitation, the tunnel, the businesses, sign-in and the offline 
   await audit(page, "/offline");
   await page.context().clearCookies();
   await audit(page, "/login");
+});
+
+test("the account menu, with its Reduce motion setting, passes the audit", async ({
+  page,
+  owner,
+}) => {
+  await audit(page, `/b/${owner.businessId}/overview`);
+  await page.getByRole("button", { name: en.account.menu }).click();
+  const menu = page.getByRole("dialog", { name: en.account.menu });
+  await expect(menu.getByRole("checkbox", { name: en.account.motion })).toBeVisible();
+  expect(await seriousViolations(page)).toEqual([]);
 });
 
 test.describe("on a phone", () => {
