@@ -7,6 +7,8 @@
  * minutes, in English, Georgian and Hebrew.
  */
 
+import type { Page } from "@playwright/test";
+
 import { expect, test } from "./support/fixtures";
 import { FakeMediaWidgetApi, PNG_PHOTO } from "./support/widget-media";
 import { SITE, ask, chat, loadWidgetSource, serveSite } from "./support/widget-site";
@@ -120,35 +122,45 @@ test("in Hebrew the thumbs show after two quiet minutes, right to left", async (
   expect(api.ratings.map(({ rating, reason }) => [rating, reason])).toEqual([["good", undefined]]);
 });
 
-test.describe("with a microphone", () => {
-  test.use({
-    launchOptions: {
-      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
-        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
-        : {}),
-      args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
-    },
+/**
+ * A microphone for the page: a steady tone from Web Audio stands in for
+ * getUserMedia, so the browser's own MediaRecorder records it (no device
+ * or permission prompt in a headless run).
+ */
+async function lendMicrophone(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    if (!navigator.mediaDevices) {
+      return;
+    }
+    navigator.mediaDevices.getUserMedia = async () => {
+      const context = new AudioContext();
+      const tone = context.createOscillator();
+      const output = context.createMediaStreamDestination();
+      tone.connect(output);
+      tone.start();
+      return output.stream;
+    };
   });
+}
 
-  test("holding the microphone records a voice message, letting go uploads it", async ({ page }) => {
-    const api = new FakeMediaWidgetApi();
-    await page.context().grantPermissions(["microphone"], { origin: SITE });
-    await serveSite(page.context(), api, { dataOpen: true });
-    await page.goto(`${SITE}/`);
-    const mic = chat(page).getByRole("button", { name: "Hold to record a voice message" });
-    await expect(mic).toBeVisible();
+test("holding the microphone records a voice message, letting go uploads it", async ({ page }) => {
+  const api = new FakeMediaWidgetApi();
+  await lendMicrophone(page);
+  await serveSite(page.context(), api, { dataOpen: true });
+  await page.goto(`${SITE}/`);
+  const mic = chat(page).getByRole("button", { name: "Hold to record a voice message" });
+  await expect(mic).toBeVisible();
 
-    await mic.hover();
-    await page.mouse.down();
-    await expect(chat(page).getByText(/Recording… Release to send, slide away to cancel\. 0:01/)).toBeVisible();
-    await page.mouse.up();
+  await mic.hover();
+  await page.mouse.down();
+  await expect(chat(page).getByText(/Recording… Release to send, slide away to cancel\. 0:01/)).toBeVisible();
+  await page.mouse.up();
 
-    await expect(chat(page).locator(".aw-tray").getByText(/Voice message 0:0[1-2]/)).toBeVisible();
-    await expect.poll(() => api.uploads.length).toBe(1);
-    expect(api.uploads[0]?.contentType).toMatch(/^audio\/(webm|ogg|mp4)/);
-    await chat(page).getByRole("button", { name: "Send" }).click();
+  await expect(chat(page).locator(".aw-tray").getByText(/Voice message 0:0[1-2]/)).toBeVisible();
+  await expect.poll(() => api.uploads.length).toBe(1);
+  expect(api.uploads[0]?.contentType).toMatch(/^audio\/(webm|ogg|mp4)/);
+  await chat(page).getByRole("button", { name: "Send" }).click();
 
-    await expect(chat(page).locator(".aw-visitor").getByText(/Voice message/)).toBeVisible();
-    expect(api.sentAttachments).toHaveLength(1);
-  });
+  await expect(chat(page).locator(".aw-visitor").getByText(/Voice message/)).toBeVisible();
+  expect(api.sentAttachments).toHaveLength(1);
 });
