@@ -168,11 +168,15 @@ def check_members_reach_only_their_locations(brand: BrandWorld) -> list[str]:
         brand_operations(brand.world.workshop.application),
         key=lambda item: (item.method != "get", item.key == f"DELETE {BR}"),
     )
-    runs: list[tuple[Headers, MatrixOperation, set[str] | None]] = [
+    manager_runs: list[tuple[Headers, MatrixOperation, set[str] | None]] = [
         (brand.manager, operation, {brand.location_c})
         for operation in operations
         if operation.key not in BRAND_OWNER_ONLY
-    ] + [(brand.world.owner_b, operation, None) for operation in operations]
+    ]
+    owner_runs: list[tuple[Headers, MatrixOperation, set[str] | None]] = [
+        (brand.world.owner_b, operation, None) for operation in operations
+    ]
+    runs = manager_runs + owner_runs
     failures: list[str] = []
     for headers, operation, allowed in runs:
         reachable: set[str] = allowed or brand_locations(brand)

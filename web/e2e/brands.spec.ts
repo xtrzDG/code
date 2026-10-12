@@ -89,7 +89,7 @@ test("a regional manager reaches only their locations, and nothing once removed"
   await page.getByRole("button", { name: en.brands.team.invite }).click();
   const invite = page.getByRole("dialog", { name: en.brands.team.inviteTitle });
   await invite.getByRole("radio", { name: en.brands.team.methodEmail }).check();
-  await invite.getByLabel(en.brands.team.email).fill(managerEmail);
+  await invite.getByRole("textbox", { name: en.brands.team.email }).fill(managerEmail);
   await invite.getByRole("button", { name: en.brands.team.send }).click();
   await expect(invite.getByText(en.brands.team.errors.locations)).toBeVisible();
   await invite.getByRole("checkbox", { name: /Salon Morgenrot Potsdam/ }).check();
