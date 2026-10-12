@@ -18,8 +18,10 @@
 --   (doc_status, doc_reminder_due_at)        across businesses: reminders due
 --   (doc_settle_after)                       across businesses: cancelled
 --                                            paid bookings to settle
---   (business_id, doc_status, doc_paid_at)   the reports' collected sums
---                                            (doc_amount_minor summed)
+--   (business_id, doc_status, doc_paid_at)   the reports' collected sums,
+--     include (doc_currency_code,            summed per currency from the
+--              doc_amount_minor,             index alone (as 1083 does for
+--              doc_is_sandbox)               booking values)
 --   (business_id, doc_requested_at)          the reports' requests of a period
 --
 -- bookings (version 6): (doc_deposit_status), a trigger-filled FILTER_TEXT
@@ -52,7 +54,8 @@ create index if not exists deposit_requests_doc_reminder_due_at_idx
 create index if not exists deposit_requests_doc_settle_after_idx
     on workshop.deposit_requests (doc_settle_after);
 create index if not exists deposit_requests_doc_paid_at_idx
-    on workshop.deposit_requests (business_id, doc_status, doc_paid_at);
+    on workshop.deposit_requests (business_id, doc_status, doc_paid_at)
+    include (doc_currency_code, doc_amount_minor, doc_is_sandbox);
 create index if not exists deposit_requests_doc_requested_at_idx
     on workshop.deposit_requests (business_id, doc_requested_at, row_sequence);
 
