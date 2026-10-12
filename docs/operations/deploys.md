@@ -252,6 +252,31 @@ same address and secret); an old instance ignores a tap, so a customer who
 taps during the overlap (or after a rollback) gets no answer to it and
 types instead. Nothing needs cleaning after a rollback.
 
+The release with deposits (W19-DEPOSITS, migration 1190;
+`BookingDocument` version 6, `MessageDocument` version 8,
+`AssistantVersionDocument` version 9) follows the enum rule below with
+two closed release gates. `booking_deposits` covers the booking status
+`pending_deposit`: until it opens, a booking held for its deposit is
+stored as `pending` with its deposit waiting (`deposit_status`
+`awaiting`), and the cabinet shows the deposit chip on it.
+`send_payment_link_tool` covers the model tool `send_payment_link`: the
+model is offered it in every chat of a version that books or takes
+requests, but no version lists it and no stored tool call names it; the
+reply keeps the payment line the platform wrote. The next release opens
+both gates. The new fields (a booking's `deposit` and `deposit_status`)
+and the new collections (`deposit_settings`, `deposit_requests`) are
+unknown to the old release, which ignores them: during the overlap an old
+instance asks no deposit, a booking an old instance saves drops its
+deposit fields (the deposit request keeps them; "Paid" or the sweep
+writes them back), and a booking an old instance cancels leaves its
+deposit to the new `sweep_deposits` job, which runs only on new workers:
+it settles a paid deposit (a refund due within the owner's cutoff, kept
+after it) and ends an unpaid one when its hold runs out. After a
+rollback, the deposits already asked stay in `deposit_requests`, unread;
+settle the paid ones in the merchant account; nothing needs cleaning.
+A payment is confirmed by hand ("Paid" in the cabinet): no merchant
+webhook is read.
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

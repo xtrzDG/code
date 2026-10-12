@@ -104,6 +104,31 @@ def test_a_page_with_a_key_is_sealed_and_shown_without_it(
     assert after["payment_links"] == []
 
 
+def test_turning_deposits_on_keeps_the_default_page(
+    owner: tuple[Workshop, str, dict[str, str]],
+) -> None:
+    workshop, base, headers = owner
+    added = workshop.client.post(
+        f"{base}/deposit-settings/payment-links",
+        json={
+            "label": "Bank",
+            "kind": "template",
+            "address": "https://pay.example.com/d?sum={amount}&ref={reference}",
+        },
+        headers=headers,
+    )
+    assert added.status_code == 201, added.text
+    page_id = added.json()["default_payment_link_id"]
+
+    turned_on = workshop.client.put(
+        f"{base}/deposit-settings", json={"is_enabled": True}, headers=headers
+    )
+
+    assert turned_on.status_code == 200, turned_on.text
+    assert turned_on.json()["is_enabled"] is True
+    assert turned_on.json()["default_payment_link_id"] == page_id
+
+
 def test_the_owner_sets_the_deposit_of_a_table(
     owner: tuple[Workshop, str, dict[str, str]],
 ) -> None:

@@ -15,6 +15,7 @@ from app.schemas.constants.deposits import (
     PaymentLinkOutcome,
 )
 from app.schemas.exceptions.application_errors import NotFoundError
+from app.utilities.conversations.deposit_payloads import render_payment_link_receipt
 from app.utilities.deposits.booking_deposit_state import held_status
 from tests.deposits.deposit_world import DepositWorld
 
@@ -39,6 +40,22 @@ def test_the_link_carries_the_policy_amount_and_the_reference() -> None:
     assert request.status is DepositStatus.AWAITING
     assert int(request.amount_minor) == 12000
     assert str(request.currency_code) == "GEL"
+
+
+def test_the_model_reads_neither_the_link_nor_the_reference() -> None:
+    world = DepositWorld()
+    world.take_deposits()
+    nino = world.guest("Nino", "ru")
+    chat = world.telegram_conversation(nino)
+    world.big_table_booking(nino, chat)
+
+    receipt = world.ask_deposit(nino, chat)
+    result = str(render_payment_link_receipt(receipt))
+
+    assert receipt.reference is not None
+    assert str(receipt.reference) not in result
+    assert "pay.example.com" not in result
+    assert "120,00" in result and "13:00" in result
 
 
 def test_the_booking_is_held_with_its_deposit_on_its_row() -> None:

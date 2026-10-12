@@ -1,8 +1,9 @@
 """
 The deposit as the language model reads it: what send_payment_link did,
 and the hint a new booking or banquet request carries when it needs one.
-The link itself is never in a tool result (it may carry the owner's key,
-and the model must not write it): the payment line goes under the reply.
+The link and the payment reference are never in a tool result (the link
+may carry the owner's key, and the model must write neither): the payment
+line with both goes under the reply.
 """
 
 import json
@@ -57,7 +58,6 @@ def render_payment_link_receipt(receipt: PaymentLinkReceipt) -> LlmToolResultJso
                 if receipt.held_until_text is None
                 else str(receipt.held_until_text)
             ),
-            "reference": None if receipt.reference is None else str(receipt.reference),
             "note": SENT_NOTE,
         }
     )

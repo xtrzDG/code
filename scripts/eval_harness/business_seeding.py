@@ -3,9 +3,10 @@ The business an evaluation dataset plays against, built the way an owner
 builds it: the business with its owner, the niche's starter answers
 applied by the product's own use case (hours, booking rules, the first
 resource, ready FAQ answers), the offer examples priced by the dataset,
-the owner's answers to the open questions, and finally an assistant
-version assembled like the owner's "assemble". The Tbilisi demo
-restaurant (the demo builders) can stand in for a starter business.
+the owner's answers to the open questions, the deposits the dataset
+turns on (deposit_seeding), and finally an assistant version assembled
+like the owner's "assemble". The Tbilisi demo restaurant (the demo
+builders) can stand in for a starter business.
 
 Every scenario sample gets a fresh business, so bookings of one scenario
 never change what another one sees.
@@ -58,6 +59,7 @@ from app.utilities.money.money_math import build_money_from_major_units
 from scripts.eval_harness.booked_up_days import book_up
 from scripts.eval_harness.catalog_seeding import build_catalog
 from scripts.eval_harness.dataset_models import BusinessSpec
+from scripts.eval_harness.deposit_seeding import seed_deposits
 
 STARTER_SEED: str = "starter"
 DEMO_RESTAURANT_SEED: str = "demo_tbilisi_restaurant"
@@ -112,6 +114,8 @@ class EvalBusinessSeeder:
         )
         with self._scope.scoped_to_business(business.id):
             book_up(self._container, business, spec.booked_up, now)
+            if spec.deposits is not None:
+                seed_deposits(self._container, self._owner.id, business, spec.deposits)
             details = assemble().run(
                 AssembleAssistantVersionCommand(
                     user_id=self._owner.id, business_id=business.id

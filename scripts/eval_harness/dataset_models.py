@@ -26,6 +26,7 @@ from scripts.eval_harness.dataset_setup_models import (
     ScenarioChannel,
     SetupSpec,
 )
+from scripts.eval_harness.deposit_seeding import DepositSpec
 from scripts.eval_harness.strict_model import StrictModel
 
 type ToolInput = dict[str, object]
@@ -58,6 +59,8 @@ class BusinessSpec(StrictModel):
     booked_up: list[str] = Field(default_factory=list[str])
     # Generated items beyond the fact table's limit (catalog_seeding).
     catalog: CatalogSpec | None = None
+    # Deposits on, with a payment page and a deposit per guest (deposit_seeding).
+    deposits: DepositSpec | None = None
 
 
 class PersonaSpec(StrictModel):

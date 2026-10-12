@@ -3,13 +3,19 @@
 # languages it does not list (the platform reads any language), and the last
 # scenarios are a German guest and guests typing Georgian and Russian in
 # Latin letters. Eight scenarios per language, and in ka, ru and en a
-# guest asking for the fully booked Friday who joins the waitlist, and a
-# guest who books by tapping the offered times and yes (offer_choices). `customer` and `assistant` are the reference
+# guest asking for the fully booked Friday who joins the waitlist, a
+# guest who books by tapping the offered times and yes (offer_choices), and
+# a party of six whose table asks a deposit (send_payment_link: the
+# restaurant takes 20 GEL a guest from six guests through its payment page,
+# and the platform writes the payment line under the reply). `customer` and `assistant` are the reference
 # conversation the scripted model plays (the seeded cassettes); a live model
 # improvises from the persona and goal and is scored by `expect`
 # (evals/README.md describes every field).
 niche: restaurant
-business: {seed: demo_tbilisi_restaurant, booked_up: ['2026-10-09']}
+business:
+  seed: demo_tbilisi_restaurant
+  booked_up: ['2026-10-09']
+  deposits: {page: 'https://pay.example.com/deposit?sum={amount}&ref={reference}', per_guest: '20', min_party_size: 6}
 scenarios:
 - id: price__ka
   language: ka
@@ -1431,4 +1437,85 @@ scenarios:
         party_size: 2
         date: '2026-10-08'
         time: '20:00'
+    handoff: false
+- id: deposit__ka
+  language: ka
+  kind: booking
+  persona: {name: ნინო, phone: '+995555100201'}
+  goal: Book a table for 6 people on Thursday at 19:00. Give your name and phone number and confirm. The restaurant asks a deposit for big tables; accept it and pay nothing in the chat.
+  customer: ['გამარჯობა! ხუთშაბათს 19:00-ზე 6 ადამიანისთვის მაგიდა მინდა. მე ვარ ნინო, ტელეფონი +995 555 10 02 01.', 'დიახ, დაჯავშნეთ.']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-08', time: '19:00', party_size: 6, nights: null, resource_type: null, duration_minutes: null}
+  - {say: 'ხუთშაბათს 19:00-ზე 6 ადამიანისთვის მაგიდა თავისუფალია. დავჯავშნო სახელზე ნინო?'}
+  - call:
+      create_booking: {name: ნინო, phone: '+995555100201', resource_type: null, date: '2026-10-08', time: '19:00', party_size: 6, duration_minutes: null, nights: null, notes: null}
+  - call:
+      send_payment_link: {booking_id: null, lead_id: null}
+  - {say: 'მზადაა, ნინო! ხუთშაბათს, 19:00-ზე 6 ადამიანისთვის მაგიდას თქვენთვის ვინახავთ. ჯავშანი დადასტურდება, როგორც კი დეპოზიტს გადაიხდით.'}
+  expect:
+    tools:
+    - check_availability
+    - create_booking:
+        phone: '+995555100201'
+        party_size: 6
+        date: '2026-10-08'
+        time: '19:00'
+    - send_payment_link
+    prices: ['120']
+    facts: [pay.example.com]
+    handoff: false
+- id: deposit__ru
+  language: ru
+  kind: booking
+  persona: {name: Анна, phone: '+79161234567'}
+  goal: Book a table for 6 people on Thursday at 19:00. Give your name and phone number and confirm. The restaurant asks a deposit for big tables; accept it and pay nothing in the chat.
+  customer: ['Здравствуйте! Нужен столик на 6 человек в четверг в 19:00. Меня зовут Анна, телефон +7 916 123-45-67.', 'Да, бронируйте.']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-08', time: '19:00', party_size: 6, nights: null, resource_type: null, duration_minutes: null}
+  - {say: 'В четверг в 19:00 есть свободный столик на 6 человек. Забронировать на имя Анна?'}
+  - call:
+      create_booking: {name: Анна, phone: '+79161234567', resource_type: null, date: '2026-10-08', time: '19:00', party_size: 6, duration_minutes: null, nights: null, notes: null}
+  - call:
+      send_payment_link: {booking_id: null, lead_id: null}
+  - {say: 'Готово, Анна! Столик на 6 человек в четверг в 19:00 держим для вас. Бронь подтвердится, как только депозит будет оплачен.'}
+  expect:
+    tools:
+    - check_availability
+    - create_booking:
+        phone: '+79161234567'
+        party_size: 6
+        date: '2026-10-08'
+        time: '19:00'
+    - send_payment_link
+    prices: ['120']
+    facts: [pay.example.com]
+    handoff: false
+- id: deposit__en
+  language: en
+  kind: booking
+  persona: {name: Emma, phone: '+447911123456'}
+  goal: Book a table for 6 people on Thursday at 19:00. Give your name and phone number and confirm. The restaurant asks a deposit for big tables; accept it and pay nothing in the chat.
+  customer: ['Hi! I would like a table for 6 on Thursday at 19:00. I am Emma, phone +44 7911 123456.', 'Yes, please book it.']
+  assistant:
+  - call:
+      check_availability: {date: '2026-10-08', time: '19:00', party_size: 6, nights: null, resource_type: null, duration_minutes: null}
+  - {say: 'A table for 6 is free on Thursday at 19:00. Shall I book it for Emma?'}
+  - call:
+      create_booking: {name: Emma, phone: '+447911123456', resource_type: null, date: '2026-10-08', time: '19:00', party_size: 6, duration_minutes: null, nights: null, notes: null}
+  - call:
+      send_payment_link: {booking_id: null, lead_id: null}
+  - {say: 'Done, Emma! We are holding a table for 6 on Thursday at 19:00 for you. The booking is confirmed as soon as the deposit is paid.'}
+  expect:
+    tools:
+    - check_availability
+    - create_booking:
+        phone: '+447911123456'
+        party_size: 6
+        date: '2026-10-08'
+        time: '19:00'
+    - send_payment_link
+    prices: ['120']
+    facts: [pay.example.com]
     handoff: false

@@ -37,8 +37,10 @@ pull request (offline, from recorded model answers) and every night
   letters (`transliterated`).
 
 The restaurant also has a fully booked Friday whose guests join the
-waitlist, owner checks (`owner_check`) and a menu link (`send_link`); the
-online shop has a 90-item catalog beyond the instruction's fact table
+waitlist, owner checks (`owner_check`), a menu link (`send_link`) and a
+party of six whose table asks a deposit (`send_payment_link`: the
+platform writes the payment line, with the amount and the owner's page,
+under the reply); the online shop has a 90-item catalog beyond the instruction's fact table
 (`search_knowledge`). Each scenario is played against a fresh business
 through the real conversation engine (`ConversationTurnOrchestrator`), in
 an in-memory `AppContainer` with a fixed clock (Monday 5 October 2026,
@@ -52,6 +54,7 @@ business:                         # seed: starter (default) or demo_tbilisi_rest
   prices: {standard_room: '180'}  # starter offer key -> amount in major units
   answers: {breakfast: '...'}     # frequent questions only the owner can answer
   catalog: {title: 'Blend No. {n}', body: '...', price: '12', count: 90}  # optional
+  deposits: {page: 'https://pay.example.com/d?sum={amount}&ref={reference}', per_guest: '20', min_party_size: 6}  # optional
 scenarios:
 - id: stay__en                    # unique per dataset; the report key is niche/id
   language: en                    # the reply language every answer must use

@@ -15,7 +15,9 @@ from app.schemas.typings.deposits.prefixed_id import DepositRequestId, DepositSe
 # A fixed namespace of derived ids (never change it: stored ids depend on it).
 DEPOSIT_SETTINGS_NAMESPACE: UUID = UUID("8f2d6c41-3b7e-4a95-9e0c-5d1a7b3f6e28")
 # Letters and digits no one confuses when reading a code aloud (no 0/O, 1/I).
-REFERENCE_ALPHABET: str = "ACDEFHJKLMNPQRTUVWXY3479"
+REFERENCE_LETTERS: str = "ACDEFHJKLMNPQRTUVWXY"
+REFERENCE_DIGITS: str = "3479"
+REFERENCE_ALPHABET: str = REFERENCE_LETTERS + REFERENCE_DIGITS
 REFERENCE_LENGTH: int = 8
 
 
@@ -26,10 +28,23 @@ def deposit_settings_id_of(business_id: BusinessId) -> DepositSettingsId:
 
 
 def new_deposit_reference() -> DepositReference:
-    """A fresh payment reference (24^8, about 1.1e11 codes)."""
+    """
+    A fresh payment reference (about 8.4e10 codes): letters and at least
+    one digit, so it never reads as a word or a number and a transcript
+    can tell it apart (the evaluations' cassette keys do).
+    """
 
-    return DepositReference(
-        "".join(secrets.choice(REFERENCE_ALPHABET) for _ in range(REFERENCE_LENGTH))
+    while True:
+        code: str = "".join(
+            secrets.choice(REFERENCE_ALPHABET) for _ in range(REFERENCE_LENGTH)
+        )
+        if is_mixed_reference(code):
+            return DepositReference(code)
+
+
+def is_mixed_reference(code: str) -> bool:
+    return any(char in REFERENCE_DIGITS for char in code) and any(
+        char in REFERENCE_LETTERS for char in code
     )
 
 

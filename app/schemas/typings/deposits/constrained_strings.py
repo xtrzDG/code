@@ -9,7 +9,7 @@ class DepositReference(BaseConstrainedTypedString):
     payment in their merchant account to the booking (no look-alike letters).
 
     Example:
-        reference = DepositReference("DK7Q2M9X")
+        reference = DepositReference("DK7Q3M9X")
     """
 
     min_length = 8

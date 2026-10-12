@@ -79,7 +79,8 @@ class DepositSettingsRequest(ImmutableDTO):
     """
     The owner's choices: deposits on or off, how long a held place waits,
     until when before the start a cancellation is refunded, and the
-    template that serves policies naming no page.
+    template that serves policies naming no page (null keeps the current
+    one).
     """
 
     is_enabled: AreDepositsEnabled = False

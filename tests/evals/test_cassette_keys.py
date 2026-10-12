@@ -4,6 +4,10 @@ import json
 
 from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.typings.conversations.strings import LlmProviderPayload
+from app.utilities.deposits.deposit_keys import (
+    is_mixed_reference,
+    new_deposit_reference,
+)
 from app.utilities.llm_cassettes.cassette_keys import (
     build_cassette_request,
     canonicalize_transcript,
@@ -51,6 +55,34 @@ def test_random_ids_fence_keys_and_call_ids_become_numbered_placeholders() -> No
     # The same booking keeps its placeholder; another call id gets a new one.
     assert canonical[1].count("booking_<id:") == canonical[2].count("booking_<id:")
     assert "<call:" in canonical[1] and "<call:" in canonical[2]
+
+
+def test_deposit_references_become_placeholders_and_words_stay() -> None:
+    first, second = (
+        canonicalize_transcript(
+            [
+                LlmProviderPayload(
+                    user_turn(
+                        f"Payment reference: {reference}. "
+                        f"https://pay.example.com/d?ref={reference} ACCEPTED 34793479"
+                    )
+                )
+            ]
+        )
+        for reference in ("NN4KCF9C", "Y3Q3FMQJ")
+    )
+
+    assert first == second
+    assert "Payment reference: <reference:1>." in first[0]
+    assert "ref=<reference:1>" in first[0]
+    assert "ACCEPTED 34793479" in first[0]
+
+
+def test_a_fresh_reference_has_letters_and_a_digit() -> None:
+    codes = [str(new_deposit_reference()) for _ in range(200)]
+
+    assert all(is_mixed_reference(code) for code in codes)
+    assert len(set(codes)) == len(codes)
 
 
 def test_the_key_ignores_ids_but_not_which_record_is_which() -> None:
