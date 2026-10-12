@@ -44,6 +44,7 @@ export function BrandLocations() {
 
   return (
     <Card
+      aria-label={t("brands.locations.title")}
       title={t("brands.locations.title")}
       description={t("brands.locations.description")}
       actions={

@@ -59,6 +59,7 @@ export function BrandTeam() {
 
   return (
     <Card
+      aria-label={t("brands.team.title")}
       title={t("brands.team.title")}
       description={t("brands.team.description")}
       actions={

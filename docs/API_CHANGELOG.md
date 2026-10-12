@@ -11,6 +11,29 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-12 — brands: chains of locations, shared answers, the additional-location price
+
+Spec: `0a773ddac5f2ce41`
+
+- **Added** brands (`/v1/brands`, `/v1/brands/{brand_id}`): a chain of
+  locations with one team. `BRAND_OWNER` runs every location as its owner;
+  `REGIONAL_MANAGER` works as staff in the locations assigned to them only.
+  Members (`/members`, `/members/{user_id}`), locations (`/locations`,
+  `/locations/{business_id}`), "New location from…" (`/locations/clone`:
+  profile, resources, knowledge and channel settings; never channel tokens,
+  payment settings, API keys, webhooks or customer data) and the combined
+  overview (`/dashboard?period=`, a location the viewer does not run comes
+  back with `is_locked` and no figures).
+- **Added** shared answers (`/v1/brands/{brand_id}/knowledge`,
+  `/knowledge/{shared_key}`) and a location's own answer in place of one
+  (`POST /v1/businesses/{business_id}/knowledge/brand-overrides`); a
+  location leaves its brand with `DELETE /v1/businesses/{business_id}/brand`.
+- **Changed** (additive) `GET /v1/me`: each membership names its brand
+  (`brand_id`, `brand_name`), including the locations a brand gives.
+- **Changed** (additive) `BusinessView.brand_id`, the plan catalog's
+  `additional_location_price` and `local_additional_location_price` (each
+  further location of a chain), and the setup fee charged once per brand.
+
 ## 2026-10-07 — webhook switch-off notices, bookings written to Cal.com
 
 Spec: `ed36493999d9107b`

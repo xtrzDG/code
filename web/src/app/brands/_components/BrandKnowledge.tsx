@@ -94,7 +94,7 @@ export function BrandKnowledge() {
   }
 
   return (
-    <Card title={t("brands.knowledge.title")} description={t("brands.knowledge.description")} actions={add}>
+    <Card aria-label={t("brands.knowledge.title")} title={t("brands.knowledge.title")} description={t("brands.knowledge.description")} actions={add}>
       {body}
       {isOwner ? (
         <>
