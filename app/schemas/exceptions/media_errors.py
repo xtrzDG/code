@@ -22,3 +22,11 @@ class TranscriptionNotConfiguredError(ExternalServiceError):
     No speech-to-text service is configured (OPENAI_API_KEY missing, or an
     offline model): voice notes are answered with a request to write.
     """
+
+
+class MalformedMediaFileError(ValidationFailedError):
+    """
+    A file's structure does not add up (segments or chunks that run past
+    its end, a missing end marker): it is not the picture or recording it
+    claims to be.
+    """

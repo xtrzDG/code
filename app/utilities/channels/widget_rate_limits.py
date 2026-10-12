@@ -79,6 +79,27 @@ WIDGET_HANDOFF_LIMITS: WidgetRateLimits = WidgetRateLimits(
     refusal="Too many requests for a person; wait a moment and try again.",
 )
 
+# A photo or a voice note: a person sends a few in a conversation, each
+# stored (and read by the model) once its message is sent.
+WIDGET_UPLOAD_LIMITS: WidgetRateLimits = WidgetRateLimits(
+    key_prefix="widget-upload",
+    per_visitor_per_minute=6,
+    per_address_per_minute=30,
+    per_business_per_minute=120,
+    per_platform_per_minute=1_200,
+    refusal="Too many files; wait a moment before sending another.",
+)
+# Thumbs up or down on an answer: a visitor changes their mind once or
+# twice; nothing above that is a person.
+WIDGET_RATING_LIMITS: WidgetRateLimits = WidgetRateLimits(
+    key_prefix="widget-rating",
+    per_visitor_per_minute=6,
+    per_address_per_minute=60,
+    per_business_per_minute=600,
+    per_platform_per_minute=6_000,
+    refusal="Too many ratings; wait a moment and try again.",
+)
+
 
 def describe_client_network(client_ip_address: ClientIpAddress) -> str:
     """

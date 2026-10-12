@@ -5,23 +5,27 @@ from app.contracts.repositories.business_repositories import (
     BusinessRepoContract,
     ChannelRepoContract,
 )
+from app.contracts.repositories.media_repositories import WidgetUploadRepoContract
 from app.contracts.use_case_contract import UseCaseContract
-from app.schemas.constants.businesses import BusinessStatus
-from app.schemas.constants.channels import ChannelKind, ChannelStatus, MessageDirection
+from app.schemas.constants.channels import ChannelKind, MessageDirection
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.channels import ChannelDocument
+from app.schemas.domain.widget_uploads import WidgetUploadDocument
 from app.schemas.dto.channels.widget import WidgetMessageCommand
+from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.dto.conversations import InboundMessage
-from app.schemas.exceptions.application_errors import (
-    ConflictError,
-    NotFoundError,
-    ValidationFailedError,
-)
+from app.schemas.exceptions.application_errors import ValidationFailedError
 from app.schemas.typings.channels.strings import WidgetContactNameInput
 from app.schemas.typings.contacts.strings import ContactName
 from app.schemas.typings.conversations.strings import ChannelUserId, MessageText
+from app.use_cases.channels.uploads.message_uploads import (
+    inbound_attachment_of,
+    read_message_uploads,
+)
+from app.use_cases.shared.widget_chats import (
+    find_open_widget_chat,
+    require_live_assistant,
+)
 from app.utilities.channels.channel_activity import stamp_channel_activity
-from app.utilities.channels.delivery_targets import find_business_channel
 from app.utilities.channels.widget_rate_limits import (
     WIDGET_MESSAGE_LIMITS,
     refuse_too_frequent_widget_requests,
@@ -31,9 +35,12 @@ from app.utilities.sharing.acquisition_sources import normalize_source
 MAX_CONTACT_NAME_LENGTH: int = 100
 
 
-class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMessage]):
+class AcceptWidgetMessageUseCase(
+    UseCaseContract[WidgetMessageCommand, AcceptedWidgetMessage]
+):
     """
-    Turn a website widget message into the engine's InboundMessage.
+    Turn a website widget message into the engine's InboundMessage, with
+    the photos and voice notes it names.
 
     The business must exist and have the widget switched on; otherwise the
     chat is reported as unavailable (the same answer for both, so business
@@ -41,7 +48,10 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
     turn would refuse it): the widget hears it at once instead of waiting
     for an answer that never comes. The visitor is identified by the
     widget's random session key; the page's source tag, cut to a tag (or
-    dropped), goes with the message.
+    dropped), goes with the message. A message has text, uploads
+    (`attachment_ids`, POST .../attachments) or both; each upload must be
+    the visitor's own, not attached to a message yet and at most a day
+    old (404 otherwise); queueing the message claims it.
 
     The endpoint is public and every message costs a model call, so
     messages are limited per visitor, per client network (an IPv6 /64), per
@@ -57,6 +67,7 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
         channel_repo: ChannelRepoContract,
         rate_limit_registry: RequestRateLimitRegistryContract,
         wall_clock: WallClock[Microseconds],
+        widget_upload_repo: WidgetUploadRepoContract,
     ) -> None:
         self._business_repo: BusinessRepoContract = business_repo
         self._channel_repo: ChannelRepoContract = channel_repo
@@ -64,49 +75,52 @@ class AcceptWidgetMessageUseCase(UseCaseContract[WidgetMessageCommand, InboundMe
             rate_limit_registry
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
+        self._widget_upload_repo: WidgetUploadRepoContract = widget_upload_repo
 
-    def run(self, input_data: WidgetMessageCommand) -> InboundMessage:
+    def run(self, input_data: WidgetMessageCommand) -> AcceptedWidgetMessage:
+        now: Microseconds = self._wall_clock.now_unix()
         refuse_too_frequent_widget_requests(
             self._rate_limit_registry,
             WIDGET_MESSAGE_LIMITS,
             business_id=input_data.business_id,
             session_key=input_data.request.session_key,
             client_ip_address=input_data.client_ip_address,
-            now=self._wall_clock.now_unix(),
+            now=now,
         )
-        business: BusinessDocument | None = self._business_repo.get(
-            input_data.business_id
-        )
-        channel: ChannelDocument | None = (
-            None
-            if business is None
-            else find_business_channel(
-                self._channel_repo,
-                business.id,
-                ChannelKind.WEB_CHAT,
-            )
-        )
-        if (
-            business is None
-            or channel is None
-            or channel.status is not ChannelStatus.CONNECTED
-        ):
-            raise NotFoundError("This chat is not available.")
+        if input_data.request.text is None and not input_data.request.attachment_ids:
+            raise ValidationFailedError("A message needs text or an attachment.")
 
-        if business.status is not BusinessStatus.LIVE:
-            raise ConflictError(f"The assistant of {business.name} is not live.")
-
+        business, channel = find_open_widget_chat(
+            self._business_repo, self._channel_repo, input_data.business_id
+        )
+        require_live_assistant(business)
+        uploads: list[WidgetUploadDocument] = read_message_uploads(
+            self._widget_upload_repo,
+            business.id,
+            input_data.request.session_key,
+            input_data.request.attachment_ids,
+            now,
+        )
         stamp_channel_activity(
-            self._channel_repo,
-            channel,
-            MessageDirection.INBOUND,
-            self._wall_clock.now_unix(),
+            self._channel_repo, channel, MessageDirection.INBOUND, now
+        )
+        return AcceptedWidgetMessage(
+            message=self._inbound_message(business, input_data),
+            upload_ids=[upload.id for upload in uploads],
+            attachments=[inbound_attachment_of(upload) for upload in uploads],
+        )
+
+    def _inbound_message(
+        self, business: BusinessDocument, input_data: WidgetMessageCommand
+    ) -> InboundMessage:
+        text: str = (
+            "" if input_data.request.text is None else str(input_data.request.text)
         )
         return InboundMessage(
             business_id=business.id,
             channel=ChannelKind.WEB_CHAT,
             channel_user_id=ChannelUserId(str(input_data.request.session_key)),
-            text=MessageText(str(input_data.request.text)),
+            text=MessageText(text),
             contact_name=read_contact_name(input_data.request.contact_name),
             acquisition_source=normalize_source(
                 None

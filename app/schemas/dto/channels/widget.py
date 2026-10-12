@@ -8,6 +8,7 @@ from app.schemas.constants.channels import WidgetPosition
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.constants.localization import TextDirection
 from app.schemas.constants.sharing import ShareLinkKind
+from app.schemas.dto.channels.widget_uploads import WidgetAttachmentRulesView
 from app.schemas.typings.businesses.constrained_strings import WebLink
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
@@ -37,9 +38,13 @@ from app.schemas.typings.conversations.prefixed_id import MessageId
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import LanguageDisplayName
+from app.schemas.typings.media.prefixed_id import WidgetUploadId
 from app.schemas.typings.referrals.constrained_strings import ReferralLink
 from app.schemas.typings.sharing.constrained_strings import ShareLinkUrl
 from app.schemas.typings.users.prefixed_id import UserId
+
+# The photos and voice notes one widget message may carry.
+MAX_MESSAGE_ATTACHMENTS: int = 4
 
 
 class WidgetLanguageView(ImmutableDTO):
@@ -90,6 +95,8 @@ class WidgetConfigView(ImmutableDTO):
     footer; `contact_links` are the other channels, offered on the hosted
     chat page. `powered_by_url` is the footer's "Powered by" link with the
     business's referral code (None when a Plus owner switched it off).
+    `attachments` says which photos and voice notes the visitor may send
+    and how large or long they may be.
     """
 
     business_id: BusinessId
@@ -108,6 +115,7 @@ class WidgetConfigView(ImmutableDTO):
     contact_links: list[WidgetContactLinkView] = Field(
         default_factory=list[WidgetContactLinkView]
     )
+    attachments: WidgetAttachmentRulesView | None = None
 
 
 class WidgetMessageRequest(ImmutableDTO):
@@ -115,12 +123,18 @@ class WidgetMessageRequest(ImmutableDTO):
     HTTP body of a visitor message typed into the widget. `source` is where
     the visitor came from as the widget read it (data-source, `?src=` or
     `?utm_source=` of the page); a conversation the message starts keeps it.
+    `attachment_ids` name the photos and voice notes the visitor uploaded
+    for this message (POST .../attachments, at most four); a message with
+    attachments may have no text.
     """
 
     session_key: WidgetSessionKey
-    text: WidgetMessageText
+    text: WidgetMessageText | None = None
     contact_name: WidgetContactNameInput | None = None
     source: WidgetSourceInput | None = None
+    attachment_ids: list[WidgetUploadId] = Field(
+        default_factory=list[WidgetUploadId], max_length=MAX_MESSAGE_ATTACHMENTS
+    )
 
 
 class WidgetMessageCommand(ImmutableDTO):

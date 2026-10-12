@@ -21,6 +21,9 @@ from app.adapters.media.voice_transcriber_factory import build_voice_transcriber
 from app.adapters.media.whatsapp_media_fetcher_adapter import (
     WhatsAppMediaFetcherAdapter,
 )
+from app.adapters.media.widget_upload_fetcher_adapter import (
+    WidgetUploadFetcherAdapter,
+)
 from app.containers.clients import ClientsContainer
 from app.containers.config import ConfigContainer
 from app.contracts.channel_media import (
@@ -68,6 +71,10 @@ class MediaAdaptersContainer(containers.DeclarativeContainer):
                 ),
                 ChannelKind.MESSENGER: meta_page_media_fetcher,
                 ChannelKind.INSTAGRAM: meta_page_media_fetcher,
+                # Photos and voice notes website visitors uploaded (1191).
+                ChannelKind.WEB_CHAT: Singleton(
+                    WidgetUploadFetcherAdapter, media_storage=media_storage
+                ),
             }
         ),
     )

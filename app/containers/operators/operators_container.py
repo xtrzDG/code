@@ -62,6 +62,9 @@ from app.containers.operators.subscription_lifecycle_operators import (
 from app.containers.operators.telemetry_operators import TelemetryOperatorsContainer
 from app.containers.operators.value_operators import ValueOperatorsContainer
 from app.containers.operators.webhook_operators import WebhookOperatorsContainer
+from app.containers.operators.widget_visitor_operators import (
+    WidgetVisitorOperatorsContainer,
+)
 from app.containers.pipelines.pipelines_container import PipelinesContainer
 from app.containers.utilities import UtilitiesContainer
 
@@ -266,5 +269,10 @@ class OperatorsContainer(containers.DeclarativeContainer):
     public_api: PublicApiOperatorsContainer = Container(  # type: ignore[assignment]
         PublicApiOperatorsContainer,
         public_api_pipelines=pipelines.public_api,
+        utilities=utilities,
+    )
+    widget_visitors: WidgetVisitorOperatorsContainer = Container(  # type: ignore[assignment]
+        WidgetVisitorOperatorsContainer,
+        widget_visitor_pipelines=pipelines.widget_visitors,
         utilities=utilities,
     )

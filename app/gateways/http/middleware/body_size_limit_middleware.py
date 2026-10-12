@@ -27,7 +27,12 @@ WEBHOOK_BODY_LIMIT_BYTES: int = MEBIBYTE
 POST_CALL_BODY_LIMIT_BYTES: int = 5 * MEBIBYTE
 # A 15 MB menu photo or PDF as base64 (4 characters per 3 bytes) in JSON.
 MENU_IMPORT_BODY_LIMIT_BYTES: int = 21 * MEBIBYTE
+# A website visitor's photo or voice note: the largest cap a file kind may
+# have (MEDIA_MAX_*_BYTES, at most 25 MiB) and its form; the route itself
+# stops reading at the cap configured for the business's files.
+WIDGET_UPLOAD_BODY_LIMIT_BYTES: int = 26 * MEBIBYTE
 BODY_LIMITS: tuple[tuple[re.Pattern[str], int], ...] = (
+    (re.compile(r"^/v1/widget/[^/]+/attachments$"), WIDGET_UPLOAD_BODY_LIMIT_BYTES),
     (
         re.compile(r"^/v1/businesses/[^/]+/knowledge/import$"),
         MENU_IMPORT_BODY_LIMIT_BYTES,
@@ -54,10 +59,11 @@ class BodySizeLimitMiddleware:
     """
     Refuses a request body over the limit of its route with 413
     `payload_too_large`: 256 KB by default, 1 MB for platform webhooks,
-    5 MB for the post-call report and 21 MB for a menu import (a 15 MB file
-    in base64). A declared Content-Length over the limit is refused before
-    any byte is read; a chunked or understated body is counted as it
-    streams, and reading stops at the limit.
+    5 MB for the post-call report, 21 MB for a menu import (a 15 MB file
+    in base64) and 26 MB for a website visitor's upload. A declared
+    Content-Length over the limit is refused before any byte is read; a
+    chunked or understated body is counted as it streams, and reading
+    stops at the limit.
     """
 
     def __init__(self, app: ASGIApp) -> None:

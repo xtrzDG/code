@@ -65,6 +65,9 @@ from app.containers.pipelines.subscription_lifecycle_pipelines import (
 from app.containers.pipelines.telemetry_pipelines import TelemetryPipelinesContainer
 from app.containers.pipelines.value_pipelines import ValuePipelinesContainer
 from app.containers.pipelines.webhook_pipelines import WebhookPipelinesContainer
+from app.containers.pipelines.widget_visitor_pipelines import (
+    WidgetVisitorPipelinesContainer,
+)
 from app.containers.registries import RegistriesContainer
 from app.containers.use_cases.use_cases_container import UseCasesContainer
 
@@ -242,3 +245,7 @@ class PipelinesContainer(containers.DeclarativeContainer):
     public_api: PublicApiPipelinesContainer = Container(  # type: ignore[assignment]
         PublicApiPipelinesContainer, public_api=orchestrators.public_api
     )  # fmt: skip
+    widget_visitors: WidgetVisitorPipelinesContainer = Container(  # type: ignore[assignment]
+        WidgetVisitorPipelinesContainer,
+        orchestrators=orchestrators.widget_visitors,
+    )

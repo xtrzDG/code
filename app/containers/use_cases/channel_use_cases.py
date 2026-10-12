@@ -44,7 +44,7 @@ from app.schemas.dto.channels.widget import (
     WidgetSnippetView,
 )
 from app.schemas.dto.channels.widget_streams import WidgetStreamTicketRequest
-from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.dto.deliveries import RoutedInboundMessage
 from app.schemas.dto.staff_reply_templates import (
     SetWhatsAppStaffTemplateCommand,
@@ -246,13 +246,14 @@ class ChannelUseCasesContainer(containers.DeclarativeContainer):
         wall_clock=time_provider.microsecond_wall_clock,
     )
     accept_widget_message_use_case: Factory[
-        UseCaseContract[WidgetMessageCommand, InboundMessage]
+        UseCaseContract[WidgetMessageCommand, AcceptedWidgetMessage]
     ] = Factory(
         AcceptWidgetMessageUseCase,
         business_repo=repositories.business_repo,
         channel_repo=repositories.channel_repo,
         rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
+        widget_upload_repo=repositories.widget_upload_repo,
     )
     get_widget_snippet_use_case: Factory[
         UseCaseContract[WidgetSnippetQuery, WidgetSnippetView]

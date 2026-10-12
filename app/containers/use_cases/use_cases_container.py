@@ -29,6 +29,9 @@ from app.containers.use_cases.subscription_lifecycle_use_cases import (
 from app.containers.use_cases.telemetry_use_cases import TelemetryUseCasesContainer
 from app.containers.use_cases.value_use_cases import ValueUseCasesContainer
 from app.containers.use_cases.webhook_use_cases import WebhookUseCasesContainer
+from app.containers.use_cases.widget_visitor_use_cases import (
+    WidgetVisitorUseCasesContainer,
+)
 from app.use_cases.example_use_case import ExampleUseCase
 
 
@@ -221,6 +224,15 @@ class UseCasesContainer(BusinessUseCasesContainer):
         time_provider=CoreUseCasesContainer.time_provider,
         utilities=CoreUseCasesContainer.utilities,
         account_use_cases=CoreUseCasesContainer.accounts,
+    )
+    # A website chat visitor's photos and voice notes (1191).
+    widget_visitors: WidgetVisitorUseCasesContainer = Container(  # type: ignore[assignment]
+        WidgetVisitorUseCasesContainer,
+        adapters=CoreUseCasesContainer.adapters,
+        config=CoreUseCasesContainer.config,
+        registries=CoreUseCasesContainer.registries,
+        repositories=CoreUseCasesContainer.repositories,
+        time_provider=CoreUseCasesContainer.time_provider,
     )
 
     # --- Template example (keeps its concrete type).

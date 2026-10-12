@@ -60,6 +60,7 @@ from app.schemas.domain.setup import (
 from app.schemas.domain.staff_deliveries import StaffDeliveryStateDocument
 from app.schemas.domain.web_vitals import WebVitalSampleDocument
 from app.schemas.domain.website_imports import WebsiteImportDocument
+from app.schemas.domain.widget_uploads import WidgetUploadDocument
 from app.schemas.exceptions.application_errors import NotFoundError
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.utilities.storage.access_collections import ACCESS_COLLECTIONS
@@ -115,6 +116,10 @@ DOCUMENT_COLLECTIONS: tuple[DocumentCollectionDefinition, ...] = (
     DocumentCollectionDefinition(DocumentCollectionName("llm_turns"), LlmTurnDocument),
     DocumentCollectionDefinition(
         DocumentCollectionName("message_media"), MessageMediaDocument
+    ),
+    # Files website chat visitors upload before their message (1191).
+    DocumentCollectionDefinition(
+        DocumentCollectionName("widget_uploads"), WidgetUploadDocument
     ),
     DocumentCollectionDefinition(DocumentCollectionName("calls"), CallDocument),
     # Bookings, leads, handoffs and open questions.

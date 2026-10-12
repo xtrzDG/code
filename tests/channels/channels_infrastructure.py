@@ -51,6 +51,7 @@ from app.repositories.knowledge_repositories import (
     ScheduleExceptionRepository,
 )
 from app.repositories.user_repositories import UserRepository
+from app.repositories.widget_upload_repository import WidgetUploadRepository
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.domain.assistants import AssistantVersionDocument
 from app.schemas.domain.billing import UsageEventDocument
@@ -73,6 +74,7 @@ from app.schemas.domain.outbound_messages import OutboundMessageDocument
 from app.schemas.domain.profiles import BusinessProfileDocument
 from app.schemas.domain.resources import ResourceDocument, ScheduleExceptionDocument
 from app.schemas.domain.users import UserDocument
+from app.schemas.domain.widget_uploads import WidgetUploadDocument
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.utilities.conversations.language_detector import LanguageDetector
 from app.utilities.localization.localized_text_resolver import LocalizedTextResolver
@@ -168,6 +170,9 @@ class ChannelsInfrastructure:
         )
         self.link_repo = ManagerTelegramLinkRepository(
             InMemoryDocumentCollectionAdapter(ManagerTelegramLinkDocument)
+        )
+        self.widget_upload_repo = WidgetUploadRepository(
+            InMemoryDocumentCollectionAdapter(WidgetUploadDocument)
         )
 
         self.secret_cipher = FakeSecretCipher()

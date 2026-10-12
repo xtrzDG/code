@@ -18,4 +18,13 @@ class MessageMediaId(BasePrefixedTypedId):
     uuid_version: ClassVar[Literal[1, 3, 4, 5, 6, 7, 8] | None] = 5
 
 
+class WidgetUploadId(BasePrefixedTypedId):
+    """
+    Random identifier of one file a website chat visitor uploaded (a photo
+    or a voice note) before the message that carries it was sent.
+    """
+
+    prefix = "widget_upload"
+
+
 # Keep abc order for all non example types, if possible.

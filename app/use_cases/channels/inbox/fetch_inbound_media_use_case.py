@@ -148,6 +148,7 @@ class FetchInboundMediaUseCase(
                     provider_media_id=attachment.provider_media_id,
                     credential=credential,
                     max_bytes=limit,
+                    business_id=business_id,
                 )
             )
         except MediaTooLargeError:

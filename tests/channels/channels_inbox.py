@@ -106,7 +106,10 @@ class ChannelsInbox(ChannelsUseCases):
             self.inbound_event_repo, self.job_queue, self.wall_clock
         )
         self.queue_widget_message = QueueWidgetMessageUseCase(
-            self.inbound_event_repo, self.job_queue, self.wall_clock
+            self.inbound_event_repo,
+            self.job_queue,
+            self.wall_clock,
+            self.widget_upload_repo,
         )
         self.claim_inbound_event = ClaimInboundEventUseCase(
             self.inbound_event_repo, self.job_queue, self.wall_clock

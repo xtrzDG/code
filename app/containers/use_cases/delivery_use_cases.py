@@ -17,7 +17,7 @@ from app.schemas.dto.channels.staff_links import (
     PlatformBotWebhookRequest,
 )
 from app.schemas.dto.channels.widget_turns import WidgetMessageAcceptedView
-from app.schemas.dto.conversations import InboundMessage
+from app.schemas.dto.channels.widget_uploads import AcceptedWidgetMessage
 from app.schemas.dto.deliveries import (
     InboundAnswer,
     InboundEventClaim,
@@ -139,12 +139,13 @@ class DeliveryUseCasesContainer(containers.DeclarativeContainer):
     # The website widget's messages: into the inbox and queued in one
     # transaction; a worker answers them like every channel's.
     queue_widget_message_use_case: Factory[
-        UseCaseContract[InboundMessage, WidgetMessageAcceptedView]
+        UseCaseContract[AcceptedWidgetMessage, WidgetMessageAcceptedView]
     ] = Factory(
         QueueWidgetMessageUseCase,
         inbound_event_repo=repositories.inbound_event_repo,
         job_queue=facilitators.job_queue_facilitator,
         wall_clock=time_provider.microsecond_wall_clock,
+        widget_upload_repo=repositories.widget_upload_repo,
         unit_of_work=adapters.storage_unit_of_work,
     )
 

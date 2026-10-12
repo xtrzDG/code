@@ -34,3 +34,20 @@ class AttachmentProblem(StrEnum):
     UNAVAILABLE = "unavailable"
     UNRECOGNIZED_FORMAT = "unrecognized_format"
     NOT_UNDERSTOOD = "not_understood"
+
+
+class WidgetUploadRefusal(StrEnum):
+    """
+    Why the website chat refused a file a visitor uploaded (the `code` of
+    the refusal's reason, which the widget turns into a sentence): not a
+    photo or voice note the chat takes, bytes that are not the type the
+    browser declared, over the size cap of its kind, a voice note over
+    MEDIA_MAX_VOICE_SECONDS, or a file whose structure does not add up (or
+    whose length cannot be read).
+    """
+
+    UNSUPPORTED_TYPE = "unsupported_type"
+    TYPE_MISMATCH = "type_mismatch"
+    FILE_TOO_LARGE = "file_too_large"
+    VOICE_TOO_LONG = "voice_too_long"
+    UNREADABLE_FILE = "unreadable_file"
