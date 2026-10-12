@@ -402,6 +402,9 @@ every request the generic API limit counted it still counts.
   and wake-up stay one transaction, acknowledged after it commits.
 - *Seeding* stores four businesses at a time and writes a month of demo
   activity in one batch per kind (above).
+- *The weekly run says what it ran on.* Each k6 scenario starts once the
+  worker drained the customer lanes of the scenario before (bounded), and
+  the job summary names the runner's CPUs and the seed time (above).
 
 Round trips per request, counted from libpq's protocol trace (the same on
 any machine; `tests/storage/test_request_statement_counts.py` fails a
@@ -450,9 +453,9 @@ requests' p50 medians moved by under 15 % either way (authenticate 16.8 →
 each pair the new build was faster for every kind in the two busiest
 pairs (availability 77 → 56 and 107 → 50 ms, the dashboard 134 → 100 and
 147 → 100 ms), mixed in the quietest and slower for every kind in one
-pair, the widget poll's included, which this change barely touched. Wall-clock time on a shared machine
-cannot settle a few milliseconds; the round-trip counts above and the
-CPU per request are the measure.
+pair, the widget poll's included, which this change barely touched.
+Wall-clock time on a shared machine cannot settle a few milliseconds; the
+round-trip counts above and the CPU per request are the measure.
 
 What the counts leave: the conversation list spends its time decoding
 150 documents a page (typed fields validate one by one), not on the
