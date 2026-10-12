@@ -10,9 +10,7 @@
  * operating system for less motion gets more from the cabinet.
  */
 
-const MOTION_PREFERENCES = ["system", "reduce"] as const;
-
-export type MotionPreference = (typeof MOTION_PREFERENCES)[number];
+export type MotionPreference = "system" | "reduce";
 
 export const DEFAULT_MOTION_PREFERENCE: MotionPreference = "system";
 
