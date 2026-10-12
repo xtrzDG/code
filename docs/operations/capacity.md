@@ -95,7 +95,11 @@ conversation, ten-message conversations over the last four months (model
 usage and cost on the assistant's messages), bookings from ten months
 ago to two months ahead (upcoming ones with their reminder already sent)
 and website-widget visitors chatting right now. The same `--seed` builds
-the same shape.
+the same shape. Four businesses are stored at a time (`STORING_THREADS`
+of `SeedLoadOrchestrator`): building and encoding documents is Python
+work, writing them the database's, and on four threads the two overlap
+instead of taking turns; the manifest keeps the plan's order. A month of
+demo activity writes each kind of document in one batch.
 
 The manifest lists, per business, its id, the owner's bearer token (a
 real session for 30 days), 20 recent conversations, the widget visitors
@@ -125,11 +129,24 @@ $C up --detach --build --wait api   # the worker has no health check to wait for
 $C up --detach worker
 $C run --rm -T api seed-load --businesses 50 --messages 200000 \
     --bookings 20000 --visitors 1000 --manifest - > perf/manifest.json
+perf/wait-for-drain.sh "before cabinet browsing"
 $C --profile load run --rm k6 run /perf/k6/cabinet_browsing.js
+perf/wait-for-drain.sh "before widget polling"
 $C --profile load run --rm k6 run /perf/k6/widget_polling.js
+perf/wait-for-drain.sh "before the webhook burst"
 $C --profile load run --rm k6 run /perf/k6/webhook_burst.js
 $C down --volumes
 ```
+
+Before each scenario `perf/wait-for-drain.sh` polls the database until the
+worker has drained the customer lanes (no `inbound` or `outbound` job due
+or running; a send queued for a later attempt does not count), at most 10
+minutes, then goes on with a warning: the widget visitors' messages are
+answered by one worker for minutes after their scenario, and that backlog
+would otherwise load the webhook burst. Both jobs of `perf.yml` write the
+runner's CPUs, CPU model and memory and the seed time into the job
+summary (`scripts/perf_runner.py`), and every wait its outcome, so a slow
+runner shows next to its numbers.
 
 | Scenario | Load | Thresholds (the run fails above them) |
 | --- | --- | --- |
@@ -357,6 +374,92 @@ limit (`count_request_within_limits`, the spend guard), `/v1/me` reads the
 partner flag, availability reads the calendar links, busy times and the
 waitlist, the conversation list one more audit row. The job now allows
 180 minutes; the budgets and the baseline are unchanged.
+
+**Headroom (H6, the same day).** The code then got the headroom back
+without touching a gate: the k6 thresholds, the rates, visitor counts and
+durations, `BUDGETS_MS` and `perf/baseline.json` are as they were, and
+every request the generic API limit counted it still counts.
+
+- *A transaction opens with its scope.* `begin; select set_config(...)`
+  goes as one message, and so does a unit of work's savepoint with its
+  scope (`scoped_transactions.py`): no statement of the block runs before
+  its row-level security scope, one round trip earlier than before.
+- *Read sessions pin their connection and lend it.* A session's reads
+  share one transaction begun at the first read with that read's scope;
+  a read in another scope sets its scope first. Other work in the block
+  (a write, a unit of work, a lock, the rate-limit count) gets the same
+  connection after the session committed its reads, so a write commits
+  on its own at once, as before, and a session never waits for a second
+  connection (`test_read_session_lending_on_postgres.py` proves it on a
+  pool of one). Authentication, `/v1/me` (with the partner flag), the
+  conversation list and card, availability and the dashboard each read
+  in one session.
+- *Reads whose answer was unused.* Availability reads no busy times for a
+  business that links no calendar (only a link brings them; the stale
+  refresh already read the links). A Telegram webhook reads its channel
+  once: the activity stamp comes from that read, and only a button tap
+  reads the channel again to answer it. A webhook's dedupe, inbox row, job
+  and wake-up stay one transaction, acknowledged after it commits.
+- *Seeding* stores four businesses at a time and writes a month of demo
+  activity in one batch per kind (above).
+
+Round trips per request, counted from libpq's protocol trace (the same on
+any machine; `tests/storage/test_request_statement_counts.py` fails a
+request over its count):
+
+| Request | Before | After |
+| --- | ---: | ---: |
+| `GET /v1/me` (authentication, the limit, the user) | 25 | 11 |
+| Conversation list | 42 | 22 |
+| Conversation card | 78 | 31 |
+| Availability | 49 | 21 |
+| Dashboard | 81 | 28 |
+| Widget poll | 9 | 8 |
+| Telegram webhook (transactions) | 27 (4) | 14 (2) |
+
+Timings, before and after alternating on one machine (other jobs kept
+its load at 9–16 on 4 vCPU, so single runs vary by a fifth; medians of
+the pairs):
+
+| Measured | Before | After |
+| --- | ---: | ---: |
+| In-process (3 businesses, 300 requests, 3 pairs), CPU per request: `/v1/me` | 12.4 ms | 10.0 ms |
+| the same, availability | 23.1 ms | 20.8 ms |
+| the same, conversation list | 46.4 ms | 44.1 ms |
+| the same, Telegram webhook | 12.1 ms | 9.9 ms |
+| In-process p50 / p95: `/v1/me` | 21.6 / 59.2 ms | 14.3 / 41.2 ms |
+| the same, availability | 54.9 / 112.8 ms | 41.8 / 92.5 ms |
+| the same, Telegram webhook | 27.9 / 79.0 ms | 16.2 / 50.8 ms |
+| `workshop seed-load` operator, small scale (3 pairs) | 41.9 s | 22.6 s |
+| `tests/perf` small: seed_seconds (3 pairs) | 30.7 s | 19.3 s |
+
+`tests/perf` at the small scale (3 pairs; p50 / p95 in ms): before, one
+run of three failed two budgets on the busy machine (authenticate p95
+39.6 ms over its 25, the conversation list 160.5 over 150); after, every
+run met every budget. Medians: authenticate 12.2 / 21.8 → 10.1 / 20.2,
+conversation list 74.3 / 132.3 → 64.8 / 104.5, conversation card 34.7 /
+80.5 → 28.7 / 56.6, availability 30.8 / 72.5 → 33.2 / 76.2, dashboard
+74.1 / 125.1 → 64.8 / 118.1, widget poll 9.2 / 18.0 → 11.3 / 18.1. The
+kinds whose round trips fell most got faster; availability and the poll
+moved within the machine's noise (in-process, availability's CPU fell by
+a tenth). At the medium scale (4 pairs) the machine's load rose
+from 6 to 23 while they ran, more than any change measured here: seeding
+took 207–406 s before and 119–231 s after (median 295 → 166 s); the
+requests' p50 medians moved by under 15 % either way (authenticate 16.8 →
+14.5 ms, availability 55.7 → 51.5 ms, the others within 1 ms), and within
+each pair the new build was faster for every kind in the two busiest
+pairs (availability 77 → 56 and 107 → 50 ms, the dashboard 134 → 100 and
+147 → 100 ms), mixed in the quietest and slower for every kind in one
+pair, the widget poll's included, which this change barely touched. Wall-clock time on a shared machine
+cannot settle a few milliseconds; the round-trip counts above and the
+CPU per request are the measure.
+
+What the counts leave: the conversation list spends its time decoding
+150 documents a page (typed fields validate one by one), not on the
+database; a webhook's unit of work still opens a savepoint per write and
+one for the job queue's own unit (11 of its 14 round trips); the
+waitlist's held places are read for every availability, as only a read
+shows whether there are any.
 
 ## What one process carries
 
