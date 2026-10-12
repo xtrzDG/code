@@ -5,9 +5,15 @@ their thresholds.
 """
 
 from base_pydantic_schemas import ImmutableDTO
+from typed_time_provider import Microseconds
 
 from app.schemas.constants.compliance import AuditAction, AuditSecurityEvent
 from app.schemas.typings.businesses.prefixed_id import BusinessId
+from app.schemas.typings.compliance.constrained_integers import (
+    AuditChainCount,
+    AuditChainEntryCount,
+    AuditPurgeBatchSize,
+)
 from app.schemas.typings.compliance.strings import (
     AuditEntityName,
     AuditEntityReference,
@@ -47,3 +53,21 @@ class FailedCheckCount(ImmutableDTO):
     entity: AuditEntityName
     entity_id: AuditEntityReference
     failure_count: DocumentCount
+
+
+class AuditLogPurgeCommand(ImmutableDTO):
+    """
+    An operator removes the audit entries written before `created_before`
+    from every chain (`workshop purge-audit-log`), `batch_size` per
+    statement.
+    """
+
+    created_before: Microseconds
+    batch_size: AuditPurgeBatchSize
+
+
+class AuditLogPurgeReport(ImmutableDTO):
+    """How many chains lost entries, and how many entries went in all."""
+
+    chains_purged: AuditChainCount
+    entries_removed: AuditChainEntryCount

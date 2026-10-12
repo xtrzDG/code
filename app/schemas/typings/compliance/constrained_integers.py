@@ -24,6 +24,13 @@ class AuditChainPosition(BaseConstrainedTypedInt):
     ge = 1
 
 
+class AuditPurgeBatchSize(BaseConstrainedTypedInt):
+    """How many audit entries one purge statement removes at most."""
+
+    ge = 1
+    le = 10_000
+
+
 class AuditRecordCount(BaseConstrainedTypedInt):
     """
     How many records one audited operation covered, when it covered many

@@ -14,6 +14,11 @@
 #                      their migration (one-shot, after the deploy that added
 #                      them), e.g. --collection contacts --field last_seen_at
 #                      --batch 5000 --dry-run (migrations/README.md)
+#   workshop purge-audit-log
+#                      remove audit entries older than the retention period
+#                      from every hash chain, keeping each verifiable (one-shot,
+#                      the migration role's DATABASE_URL), e.g.
+#                      --older-than-days 1095 --batch 1000
 #   workshop backup    dump the database in one snapshot, encrypt it with age
 #                      and upload it to the EU backup bucket, then apply the
 #                      retention (Render cron, daily); --work-directory DIR
@@ -73,6 +78,9 @@ case "$role" in
     ;;
   seed-load)
     exec python -m app.gateways.cli.seed_load "$@"
+    ;;
+  purge-audit-log)
+    exec python -m app.gateways.cli.purge_audit_log "$@"
     ;;
   backup)
     exec python -m app.gateways.cli.backup "$@"

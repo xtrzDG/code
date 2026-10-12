@@ -14,6 +14,7 @@ from app.schemas.dto.audit_chain_views import (
     PlatformAuditLogPage,
     PlatformAuditLogQuery,
 )
+from app.schemas.dto.audit_trail import AuditLogPurgeCommand, AuditLogPurgeReport
 from app.schemas.dto.jobs import JobReport, JobTick
 from app.use_cases.admin.audit.get_audit_chain_overview_use_case import (
     GetAuditChainOverviewUseCase,
@@ -27,6 +28,7 @@ from app.use_cases.compliance.audit_chain.get_audit_chain_status_use_case import
 from app.use_cases.compliance.audit_chain.verify_audit_chains_use_case import (
     VerifyAuditChainsUseCase,
 )
+from app.use_cases.maintenance.purge_audit_log_use_case import PurgeAuditLogUseCase
 
 
 class AuditTrailUseCasesContainer(containers.DeclarativeContainer):
@@ -70,4 +72,14 @@ class AuditTrailUseCasesContainer(containers.DeclarativeContainer):
             chain_repo=repositories.audit_chain_repo,
             wall_clock=time_provider.microsecond_wall_clock,
         )
+    )
+    # `workshop purge-audit-log`, an operator's command.
+    purge_audit_log_use_case: Factory[
+        UseCaseContract[AuditLogPurgeCommand, AuditLogPurgeReport]
+    ] = Factory(
+        PurgeAuditLogUseCase,
+        purges=repositories.audit_chain_purges,
+        business_repo=repositories.business_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )

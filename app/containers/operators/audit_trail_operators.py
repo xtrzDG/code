@@ -33,3 +33,6 @@ class AuditTrailOperatorsContainer(containers.DeclarativeContainer):
     verify_audit_chains_operator = pipeline_operator(
         audit_trail_pipelines.verify_audit_chains_pipeline, storage_scope
     )
+    purge_audit_log_operator = pipeline_operator(
+        audit_trail_pipelines.purge_audit_log_pipeline, storage_scope
+    )

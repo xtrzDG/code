@@ -24,3 +24,6 @@ class AuditTrailPipelinesContainer(containers.DeclarativeContainer):
     verify_audit_chains_pipeline = orchestrator_pipeline(
         audit_trail.verify_audit_chains_orchestrator
     )
+    purge_audit_log_pipeline = orchestrator_pipeline(
+        audit_trail.purge_audit_log_orchestrator
+    )

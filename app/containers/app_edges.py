@@ -201,4 +201,5 @@ class AppEdgesContainer(containers.DeclarativeContainer):
         config=config,
         time_provider=time_provider,
         utilities=utilities,
+        audit_entry_collections=adapters.collections,
     )
