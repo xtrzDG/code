@@ -12,11 +12,12 @@ const BUBBLES = [
 /**
  * The conversation card while it loads: the customer header (or `header`,
  * the real one drawn from the inbox list: ConversationHeaderPreview) and a
- * transcript of bubbles.
+ * transcript of bubbles. Its own block (flow-root) keeps the header's
+ * pull upwards on phones (shell.css) inside it, so the inbox around it stays put.
  */
 export function ConversationDetailSkeleton({ label, header }: { label: string; header?: ReactNode }) {
   return (
-    <LoadingRegion label={label} className="space-y-4">
+    <LoadingRegion label={label} className="flow-root space-y-4">
       {header}
       <div aria-hidden className="rounded-2xl border border-line bg-surface p-5 [[data-conversation-preview]+&]:hidden">
         <div className="flex items-start gap-4">

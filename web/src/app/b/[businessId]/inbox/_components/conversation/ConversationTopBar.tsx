@@ -62,6 +62,7 @@ export function ConversationTopBar({
 
   return (
     <header
+      data-conversation-header=""
       className={cn(
         "sticky top-0 z-20 -mx-4 -mt-6 flex items-center gap-2 border-b border-line bg-canvas/85 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-2 backdrop-blur-xl sm:-mx-6 sm:px-5",
         "lg:static lg:mx-0 lg:mt-0 lg:rounded-t-2xl lg:border lg:bg-surface lg:px-4 lg:py-3 lg:backdrop-blur-none",

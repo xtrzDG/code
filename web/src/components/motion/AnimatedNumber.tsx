@@ -9,6 +9,11 @@
  * frames, without React renders. With `countIn={false}` the first value
  * simply shows and only later changes count (a badge: 3 → 4).
  *
+ * The count never moves the text around it (no layout shift, CLS 0): it
+ * runs inside the final number's width, so the layout changes once, when
+ * the value does, as it would without the count. A number that would have
+ * to start wider than it ends (16 → 4) does not count; it changes at once.
+ *
  *     <AnimatedNumber value={stats.conversations} format={(n) => numberFormat.format(n)} />
  */
 
@@ -19,6 +24,20 @@ import { countUpValue, fractionDigitsOf } from "@/lib/motionMath";
 import { prefersCalmMotion } from "@/lib/motionPreference";
 
 const DEFAULT_DURATION_MS = 900;
+
+/** Rounding of the browser's widths: a smaller difference is no change. */
+const WIDTH_TOLERANCE_PX = 0.5;
+
+/** Holds the span at `width` (the final number's) while the count runs; null lets it size itself again. */
+function holdWidth(node: HTMLElement, width: number | null): void {
+  if (width === null) {
+    node.style.removeProperty("width");
+    node.style.removeProperty("text-align");
+    return;
+  }
+  node.style.width = `${width}px`;
+  node.style.textAlign = "end";
+}
 
 export function AnimatedNumber({
   value,
@@ -52,13 +71,26 @@ export function AnimatedNumber({
     const write = (current: number) => {
       node.textContent = formatRef.current(current);
     };
+    const settle = () => {
+      shown.current = value;
+      holdWidth(node, null);
+      write(value);
+    };
     const cannotCount = typeof IntersectionObserver === "undefined" || !Number.isFinite(from) || !Number.isFinite(value);
     if (from === value || cannotCount || prefersCalmMotion()) {
-      shown.current = value;
-      write(value);
+      settle();
       return;
     }
+    // The final number's width holds the count; a start wider than that would push the text after it.
+    holdWidth(node, null);
+    write(value);
+    const finalWidth = node.getBoundingClientRect().width;
     write(from);
+    if (node.getBoundingClientRect().width > finalWidth + WIDTH_TOLERANCE_PX) {
+      settle();
+      return;
+    }
+    holdWidth(node, finalWidth);
     const digits = fractionDigitsOf(value);
     let frame = 0;
     let started: number | null = null;
@@ -67,7 +99,9 @@ export function AnimatedNumber({
       const current = countUpValue(from, value, now - started, durationMs, digits);
       shown.current = current;
       write(current);
-      if (current !== value) {
+      if (current === value) {
+        holdWidth(node, null);
+      } else {
         frame = window.requestAnimationFrame(tick);
       }
     };
@@ -87,7 +121,7 @@ export function AnimatedNumber({
   }, [value, durationMs]);
 
   return (
-    <span ref={element} className={cn("tabular-nums", className)}>
+    <span ref={element} className={cn("inline-block whitespace-nowrap tabular-nums", className)}>
       {format(value)}
     </span>
   );

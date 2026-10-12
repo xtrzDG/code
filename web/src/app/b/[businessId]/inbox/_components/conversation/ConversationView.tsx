@@ -92,7 +92,7 @@ export function ConversationView({ conversationId }: { conversationId: string })
     <article
       aria-labelledby="conversation-title"
       className={cn(
-        "flex min-h-[calc(100dvh-3rem)] flex-col lg:grid lg:h-full lg:min-h-0 lg:gap-4",
+        "flex min-h-[calc(100dvh-3rem-var(--phone-top-bar-height))] flex-col lg:grid lg:h-full lg:min-h-0 lg:gap-4",
         isWide ? "lg:grid-cols-[minmax(0,1fr)_22rem]" : "lg:grid-cols-1",
       )}
     >

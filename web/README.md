@@ -1526,6 +1526,13 @@ motion.
   "More" opens and closes the same way (`afterNextPaint`). Next.js applies a
   history change (`replaceUrlQuery`) in a microtask, which inside a tap's
   event would render the whole page at the tap's urgent priority.
+- **Nothing shifts**: a counting number (`AnimatedNumber`) counts inside
+  the final number's width, so the text beside it stays put (a count that
+  would start wider than it ends changes at once); on a phone the top bar
+  stays when a conversation opens and yields to its header, hidden under it
+  (`data-yields`, `src/styles/shell.css`), so the page never moves as the
+  conversation opens and closes; with a banner above the page the bar
+  shows and the header keeps below the banner.
 - **Setup invitation**: the landing's still orb among its channels in a
   tilting card (`TiltCard`), aurora and the floor of light running towards
   the viewer behind it, the stages standing in perspective and rising one

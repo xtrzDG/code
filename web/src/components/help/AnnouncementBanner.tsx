@@ -74,7 +74,7 @@ export function AnnouncementBanner() {
     return null;
   }
   return (
-    <section aria-label={t("platformStatus.banner.region")} className="space-y-2 px-4 pt-3 sm:px-6 lg:px-8 lg:pt-4">
+    <section data-shell-banner="" aria-label={t("platformStatus.banner.region")} className="space-y-2 px-4 pt-3 sm:px-6 lg:px-8 lg:pt-4">
       {shown.map((announcement) => (
         <AnnouncementRow key={announcement.id} announcement={announcement} />
       ))}

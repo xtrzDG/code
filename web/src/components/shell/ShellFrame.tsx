@@ -84,7 +84,11 @@ export function ShellFrame({
   initialCollapsed: boolean;
   /** False before the assistant exists and on an open conversation (its reply box needs the space). */
   showTabBar?: boolean;
-  /** False on an open conversation: its own bar (back, customer, actions) is the top of the phone screen. */
+  /**
+   * False on an open conversation: its own bar (back, customer, actions) is the top of the phone
+   * screen. The top bar still keeps its room, hidden under that bar (it yields), so opening and
+   * closing a conversation never moves the page.
+   */
   showPhoneTopBar?: boolean;
   /** The page uses the full width of large screens (the inbox: a list beside a conversation). */
   isWide?: boolean;
@@ -118,7 +122,7 @@ export function ShellFrame({
     <CommandPaletteProvider links={items.filter((item) => !item.secondary)} searchScope={searchScope}>
     <PageHelpProvider help={pageHelp}>
     <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
-    <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
+    <div data-shell-frame="" className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
       <ServiceWorker />
       <a
         href="#main"
@@ -149,11 +153,11 @@ export function ShellFrame({
       </aside>
 
       <div className="transition-[padding] duration-(--motion-base) ease-(--ease-emphasized) lg:ps-(--sidebar-width)">
-        {showPhoneTopBar ? (
         <PhoneTopBar
           title={title}
           context={context}
           ring={ring?.(true)}
+          yields={!showPhoneTopBar}
           action={
             showTabBar ? undefined : (
               <button
@@ -169,7 +173,6 @@ export function ShellFrame({
             )
           }
         />
-        ) : null}
         <AnnouncementBanner />
         <ShellMain isWide={isWide} showTabBar={showTabBar}>
           {children}
