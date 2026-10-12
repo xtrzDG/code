@@ -22,8 +22,9 @@ Spec: `0a773ddac5f2ce41`
   `/locations/{business_id}`), "New location from…" (`/locations/clone`:
   profile, resources, knowledge and channel settings; never channel tokens,
   payment settings, API keys, webhooks or customer data) and the combined
-  overview (`/dashboard?period=`, a location the viewer does not run comes
-  back with `is_locked` and no figures).
+  overview (`/dashboard?period=`: a regional manager gets only the
+  locations assigned to them, with counts and no amounts; a location whose
+  access check refuses comes back with `is_locked` and no figures).
 - **Added** shared answers (`/v1/brands/{brand_id}/knowledge`,
   `/knowledge/{shared_key}`) and a location's own answer in place of one
   (`POST /v1/businesses/{business_id}/knowledge/brand-overrides`); a

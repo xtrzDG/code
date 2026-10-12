@@ -50,6 +50,7 @@ from app.utilities.notifications.staff_link_signer import StaffLinkSigner
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.foundation.access_support import ACCESS_SETTINGS
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.foundation.support_access_builders import build_authorize_business_access
 from tests.notifications.staff_alert_fakes import (
     TEST_ENCRYPTION_KEY,
@@ -137,6 +138,7 @@ class ValueWorld(OperationsWorld):
     def business_value(self) -> GetBusinessValueUseCase:
         return GetBusinessValueUseCase(
             authorize_business_access=self.authorize(),
+            brand_repo=in_memory_brand_repo(),
             compute_value_model=self.compute_value(),
             activation_event_repo=self.activation_event_repo,
             wall_clock=self.clock.wall_clock,

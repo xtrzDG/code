@@ -1,5 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
+from app.contracts.repositories.brand_repositories import BrandRepoContract
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.contact_activity_repositories import (
     ContactActivityRepoContract,
@@ -64,7 +65,9 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
         customer_settings_repo: CustomerSettingsRepoContract,
         audit_log_repo: AuditLogRepoContract,
         wall_clock: WallClock[Microseconds],
+        brand_repo: BrandRepoContract,
     ) -> None:
+        self._brand_repo: BrandRepoContract = brand_repo
         self._authorize_business_access: UseCaseContract[
             BusinessAccessRequest,
             BusinessDocument,
@@ -109,7 +112,10 @@ class GetContactUseCase(UseCaseContract[ContactQuery, ContactDetailView]):
         summary: ContactSummaryView = protect_phone(
             summarize_contact(contact, activity),
             sees_phone_numbers(
-                business, input_data.user_id, self._customer_settings_repo
+                self._brand_repo,
+                business,
+                input_data.user_id,
+                self._customer_settings_repo,
             ),
         )
         self._audit_log_repo.append(

@@ -10,7 +10,6 @@ export type BrandView = Schema<"BrandView">;
 export type BrandLocationView = Schema<"BrandLocationView">;
 export type BrandMemberView = Schema<"BrandMemberView">;
 export type BrandMemberRole = Schema<"BrandMemberRole">;
-export type BrandDashboard = Schema<"BrandDashboard">;
 export type BrandLocationDashboard = Schema<"BrandLocationDashboard">;
 export type BrandKnowledgeItem = Schema<"BrandKnowledgeItemView">;
 

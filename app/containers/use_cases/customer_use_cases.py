@@ -221,6 +221,7 @@ class CustomerUseCasesContainer(containers.DeclarativeContainer):
     ] = Factory(
         SearchBusinessUseCase,
         authorize_business_access=authorize,
+        brand_repo=repositories.brand_repo,
         contact_repo=repositories.contact_repo,
         conversation_repo=repositories.conversation_repo,
         booking_repo=repositories.booking_repo,

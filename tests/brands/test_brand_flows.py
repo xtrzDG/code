@@ -139,3 +139,26 @@ def test_a_location_override_replaces_the_shared_fact_there_only(
         headers=world.owner_b,
     )
     assert again.status_code == 409, again.text
+
+
+def test_a_regional_manager_counts_without_money_and_a_co_owner_sees_all(
+    brand: BrandWorld,
+) -> None:
+    value_path = f"/v1/businesses/{brand.location_c}/value"
+    managed: Json = read(brand, value_path, brand.manager)
+    owned: Json = read(brand, value_path, brand.co_owner)
+
+    # The manager works as staff there: the counts, never an amount.
+    assert managed["average_check_source"] == "none"
+    assert managed["plan_cost_minor"] is None
+    assert managed["current"]["estimated_revenue_minor"] is None
+    assert owned["average_check_source"] != "none"
+    assert owned["plan_cost_minor"] is not None
+
+    # A brand owner sees customers' phone numbers as the location's owner does.
+    contacts_path = f"/v1/businesses/{brand.world.business_b}/contacts"
+    as_owner: list[Json] = read(brand, contacts_path, brand.world.owner_b)["items"]
+    as_co_owner: list[Json] = read(brand, contacts_path, brand.co_owner)["items"]
+    phones = [item.get("phone_number") for item in as_co_owner]
+    assert phones == [item.get("phone_number") for item in as_owner]
+    assert any(phone and "•" not in str(phone) for phone in phones)

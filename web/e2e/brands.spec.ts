@@ -104,9 +104,10 @@ test("a regional manager reaches only their locations, and nothing once removed"
   await signInContext(context, managerToken);
   const managerPage = await context.newPage();
   await managerPage.goto(`/brands/${brandId}`);
-  // Berlin is the brand's, not the manager's: locked, with no link into it.
-  await expect(managerPage.getByText(en.brands.overview.locked)).toBeVisible();
+  // Only Potsdam: the brand's other location is not even named, and no money shows.
   await expect(managerPage.getByRole("link", { name: /Salon Morgenrot Potsdam/ })).toBeVisible();
+  await expect(managerPage.getByText(`${owner.businessName} · Berlin`)).toHaveCount(0);
+  await expect(managerPage.getByText(en.brands.overview.noMoney)).toBeVisible();
   await expect(managerPage.getByRole("link", { name: en.brands.tabs.team })).toHaveCount(0);
   expect((await request.get(`${API_URL}/v1/businesses/${potsdamId}`, { headers: asManager })).status()).toBe(200);
   expect([403, 404]).toContain((await request.get(`${API_URL}/v1/businesses/${owner.businessId}`, { headers: asManager })).status());

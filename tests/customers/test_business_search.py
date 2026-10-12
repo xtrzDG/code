@@ -16,6 +16,7 @@ from app.schemas.typings.search.constrained_strings import CabinetSearchText
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.search.search_business_use_case import SearchBusinessUseCase
 from tests.customers.customer_bed import CLIENT_IP, CustomerBed, names_of
+from tests.foundation.brand_repositories import in_memory_brand_repo
 from tests.users.accounts_phones import USA_MOBILE
 
 
@@ -25,6 +26,7 @@ class SearchBed(CustomerBed):
         testbed = self.customers.testbed
         self.search_business = SearchBusinessUseCase(
             authorize_business_access=testbed.authorize_business_access,
+            brand_repo=in_memory_brand_repo(),
             contact_repo=testbed.contact_repo,
             conversation_repo=testbed.conversation_repo,
             booking_repo=testbed.booking_repo,
