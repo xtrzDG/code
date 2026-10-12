@@ -36,6 +36,7 @@ import { DetailsPanel } from "../details/DetailsPanel";
 import { NotesPanel } from "../notes/NotesPanel";
 import { AssignMenu } from "./AssignMenu";
 import { ConversationDetailSkeleton } from "./ConversationDetailSkeleton";
+import { ConversationHeaderPreview } from "./ConversationHeaderPreview";
 import { ConversationPanel, type PanelTab } from "./ConversationPanel";
 import { ConversationTopBar } from "./ConversationTopBar";
 import { Transcript } from "./Transcript";
@@ -72,7 +73,10 @@ export function ConversationView({ conversationId }: { conversationId: string })
         <ErrorState error={detail.error} onRetry={detail.reload} />
       </Card>
     ) : (
-      <ConversationDetailSkeleton label={t("conversations.loadingOne")} />
+      <ConversationDetailSkeleton
+        label={t("conversations.loadingOne")}
+        header={<ConversationHeaderPreview conversationId={conversationId} />}
+      />
     );
   }
 

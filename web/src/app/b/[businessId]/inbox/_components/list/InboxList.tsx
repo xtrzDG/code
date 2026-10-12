@@ -6,9 +6,11 @@
  * "show more" for the next page. While another view loads, the previous
  * rows stay dimmed. Above the rows a bar with the density, the keyboard
  * shortcuts and, once rows are selected, "Mark resolved"; beside a row
- * resting under the pointer, its details.
+ * resting under the pointer, its details. While the list is live, rows
+ * arrive, leave and move with a short animation (rowMotion.ts).
  */
 
+import { AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { InboxCalmIllustration } from "@/components/illustrations";
@@ -27,6 +29,7 @@ import type { InboxTriage } from "../../_lib/useInboxTriage";
 import type { Team } from "../../_lib/useTeam";
 import { InboxRowItem } from "./InboxRowItem";
 import { ListHeader } from "./ListHeader";
+import { nextPresenceKey } from "./rowMotion";
 import { RowHint, type HintTarget } from "./RowHint";
 
 /** Ages on the rows move on once a minute. */
@@ -91,6 +94,12 @@ export function InboxList({
   const { rows, page } = list;
   const nowMs = useMinuteClock();
   const [hint, setHint] = useState<HintTarget | null>(null);
+  // The list the rows on screen belong to (rowMotion.ts): a new view starts without animating.
+  const [presenceKey, setPresenceKey] = useState(linkQuery);
+  const nextKey = nextPresenceKey(presenceKey, linkQuery, page.isPlaceholder);
+  if (nextKey !== presenceKey) {
+    setPresenceKey(nextKey);
+  }
 
   if (rows === undefined) {
     return page.error ? (
@@ -173,30 +182,33 @@ export function InboxList({
           {t("inboxTriage.keys.listHint")}
         </p>
         <ul
-          className="divide-y divide-line"
+          className="relative divide-y divide-line"
           aria-label={t("inbox.listLabel")}
           aria-describedby="inbox-keys-hint"
           aria-keyshortcuts={ARIA_KEY_SHORTCUTS}
         >
-          {rows.map((row) => (
-            <InboxRowItem
-              key={row.id}
-              row={row}
-              member={team.find(row.assigneeUserId)}
-              state={{
-                density,
-                isOpen: row.id === selectedId,
-                isCursor: row.id === triage.cursorId,
-                isChecked: triage.selection.has(row.id),
-                isSelectable: isResolvable(row),
-                isSelecting,
-                isBusy: triage.busyIds.has(row.id),
-              }}
-              events={events}
-              linkQuery={linkQuery}
-              nowMs={nowMs}
-            />
-          ))}
+          <AnimatePresence key={presenceKey} initial={false} mode="popLayout">
+            {rows.map((row, position) => (
+              <InboxRowItem
+                key={row.id}
+                row={row}
+                position={position}
+                member={team.find(row.assigneeUserId)}
+                state={{
+                  density,
+                  isOpen: row.id === selectedId,
+                  isCursor: row.id === triage.cursorId,
+                  isChecked: triage.selection.has(row.id),
+                  isSelectable: isResolvable(row),
+                  isSelecting,
+                  isBusy: triage.busyIds.has(row.id),
+                }}
+                events={events}
+                linkQuery={linkQuery}
+                nowMs={nowMs}
+              />
+            ))}
+          </AnimatePresence>
         </ul>
         <LoadMore hasMore={page.hasMore} isLoading={page.isLoadingMore} error={page.moreError} onMore={page.loadMore} />
       </div>
