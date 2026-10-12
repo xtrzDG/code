@@ -138,6 +138,8 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       platform_admin: "מנהל פלטפורמה",
       platform_announcement: "הודעת פלטפורמה",
       encryption_keys: "מפתחות הצפנה",
+      audit_log_entry: "רשומות יומן הביקורת",
+      login_destination: "כתובת כניסה",
       inbound_event: "אירוע הודעה נכנסת",
       outbound_message: "הודעה יוצאת",
       channel_message_receipt: "אישור מסירה",

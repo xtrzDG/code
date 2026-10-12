@@ -43,11 +43,4 @@ export const adminAuditDe: Translation<typeof adminAuditEn> = {
     logout: "Abgemeldet",
     key_rotation: "Schlüsselwechsel",
   },
-  entities: {
-    login_destination: "Anmeldeadresse",
-    user: "Person",
-    user_session: "Sitzung",
-    encryption_keys: "Verschlüsselungsschlüssel",
-    audit_log_entry: "Audit-Einträge",
-  },
 };

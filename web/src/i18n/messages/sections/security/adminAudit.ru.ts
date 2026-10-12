@@ -43,11 +43,4 @@ export const adminAuditRu: Translation<typeof adminAuditEn> = {
     logout: "Выход",
     key_rotation: "Смена ключа",
   },
-  entities: {
-    login_destination: "Адрес для входа",
-    user: "Человек",
-    user_session: "Сеанс",
-    encryption_keys: "Ключи шифрования",
-    audit_log_entry: "Записи аудита",
-  },
 };

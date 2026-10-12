@@ -156,6 +156,8 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       platform_admin: "Администратор платформы",
       platform_announcement: "Объявление платформы",
       encryption_keys: "Ключи шифрования",
+      audit_log_entry: "Записи журнала действий",
+      login_destination: "Адрес для входа",
       inbound_event: "Входящее событие",
       outbound_message: "Исходящее сообщение",
       channel_message_receipt: "Отчёт о доставке",

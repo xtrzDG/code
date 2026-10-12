@@ -139,6 +139,8 @@ export const settingsRecordsEn = {
       platform_admin: "Platform admin",
       platform_announcement: "Platform announcement",
       encryption_keys: "Encryption keys",
+      audit_log_entry: "Audit log entries",
+      login_destination: "Sign-in address",
       inbound_event: "Incoming message event",
       outbound_message: "Outgoing message",
       channel_message_receipt: "Delivery receipt",

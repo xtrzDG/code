@@ -13,7 +13,7 @@ import { useI18n } from "@/i18n/client";
 import {
   PLATFORM_AUDIT_PAGE_SIZE,
   platformAuditQuery,
-  platformEntityKeys,
+  platformEntityKey,
   SECURITY_EVENT_TONES,
   SECURITY_EVENTS,
   shortReference,
@@ -84,10 +84,7 @@ function PlatformLogTable({ entries, caption }: { entries: readonly PlatformAudi
     ) : (
       <Badge tone="neutral">{tDynamic(`settings.audit.actions.${entry.action}`, entry.action)}</Badge>
     );
-  const entityText = (entity: string) => {
-    const [own, owners] = platformEntityKeys(entity);
-    return tDynamic(own, tDynamic(owners, entity));
-  };
+  const entityText = (entity: string) => tDynamic(platformEntityKey(entity), entity);
   const reference = (value: string | null | undefined) =>
     value ? (
       <span className="ms-2 font-mono text-xs text-ink-subtle" title={value}>

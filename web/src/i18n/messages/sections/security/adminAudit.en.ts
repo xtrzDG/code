@@ -45,11 +45,4 @@ export const adminAuditEn = {
     logout: "Signed out",
     key_rotation: "Key rotation",
   },
-  entities: {
-    login_destination: "Sign-in address",
-    user: "Person",
-    user_session: "Session",
-    encryption_keys: "Encryption keys",
-    audit_log_entry: "Audit entries",
-  },
 } as const;

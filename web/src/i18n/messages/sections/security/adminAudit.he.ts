@@ -43,11 +43,4 @@ export const adminAuditHe: Translation<typeof adminAuditEn> = {
     logout: "יציאה",
     key_rotation: "החלפת מפתח",
   },
-  entities: {
-    login_destination: "כתובת כניסה",
-    user: "אדם",
-    user_session: "הפעלה",
-    encryption_keys: "מפתחות הצפנה",
-    audit_log_entry: "רשומות ביקורת",
-  },
 };

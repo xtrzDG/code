@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { platformAuditQuery, platformEntityKeys, SECURITY_EVENT_TONES, SECURITY_EVENTS, shortReference } from "./audit";
+import { platformAuditQuery, platformEntityKey, SECURITY_EVENT_TONES, SECURITY_EVENTS, shortReference } from "./audit";
 
 describe("platformAuditQuery", () => {
   it("asks for a page without a filter", () => {
@@ -16,13 +16,10 @@ describe("platformAuditQuery", () => {
   });
 });
 
-describe("platformEntityKeys", () => {
-  it("tries the platform's own name first, then the owners' one", () => {
-    expect(platformEntityKeys("user_session")).toEqual(["adminAudit.entities.user_session", "settings.audit.entities.user_session"]);
-    expect(platformEntityKeys("business_profile.contacts")).toEqual([
-      "adminAudit.entities.business_profile_contacts",
-      "settings.audit.entities.business_profile_contacts",
-    ]);
+describe("platformEntityKey", () => {
+  it("names an entity as the owners' Audit tab does", () => {
+    expect(platformEntityKey("user_session")).toBe("settings.audit.entities.user_session");
+    expect(platformEntityKey("business_profile.contacts")).toBe("settings.audit.entities.business_profile_contacts");
   });
 });
 

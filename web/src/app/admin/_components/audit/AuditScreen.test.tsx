@@ -54,7 +54,7 @@ describe("AuditScreen: the tamper check and the platform's own log", () => {
     expect(within(chains).getByText(new RegExp(t("auditChain.problems.hash_mismatch")))).toBeTruthy();
     const table = await screen.findByRole("table", { name: t("adminAudit.log.title") });
     expect(within(table).getByText(t("adminAudit.events.otp_locked"))).toBeTruthy();
-    expect(within(table).getByText(t("adminAudit.entities.login_destination"))).toBeTruthy();
+    expect(within(table).getByText(t("settings.audit.entities.login_destination"))).toBeTruthy();
     expect(within(table).getByText("dest_01234567")).toBeTruthy();
     expect(within(table).getByText(t("adminAudit.log.unknownPerson"))).toBeTruthy();
   });

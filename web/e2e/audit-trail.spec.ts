@@ -69,7 +69,7 @@ test("the platform admin finds a failed sign-in in the platform's log", async ({
   await page.getByLabel(texts.log.event).selectOption("login_failed");
   const table = page.getByRole("table", { name: texts.log.title });
   await expect(table.getByText(texts.events.login_failed).first()).toBeVisible();
-  await expect(table.getByText(texts.entities.login_destination).first()).toBeVisible();
+  await expect(table.getByText(en.settings.audit.entities.login_destination).first()).toBeVisible();
   await expect(table.getByText(/^dest_[0-9a-f]{8}$/).first()).toBeVisible();
   await expect(table.getByText(/@/)).toHaveCount(0);
   await context.close();

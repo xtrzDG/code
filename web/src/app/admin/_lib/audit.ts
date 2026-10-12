@@ -36,13 +36,11 @@ export function platformAuditQuery(
 }
 
 /**
- * The message key of an entity's name on the admin page: the platform's
- * own entities first ("adminAudit.entities.user_session"), then the names
- * the owners' Audit tab uses; a dotted name reads as one key.
+ * The message key of an entity's name: the one the owners' Audit tab uses
+ * ("settings.audit.entities.user_session"); a dotted name reads as one key.
  */
-export function platformEntityKeys(entity: string): readonly [string, string] {
-  const key = entity.replaceAll(".", "_");
-  return [`adminAudit.entities.${key}`, `settings.audit.entities.${key}`];
+export function platformEntityKey(entity: string): string {
+  return `settings.audit.entities.${entity.replaceAll(".", "_")}`;
 }
 
 /** "a1b2c3d4": the start of a long id (a digest keeps its "dest_" prefix). */

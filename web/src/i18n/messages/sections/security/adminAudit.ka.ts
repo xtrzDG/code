@@ -43,11 +43,4 @@ export const adminAuditKa: Translation<typeof adminAuditEn> = {
     logout: "გასვლა",
     key_rotation: "გასაღების შეცვლა",
   },
-  entities: {
-    login_destination: "შესვლის მისამართი",
-    user: "ადამიანი",
-    user_session: "სესია",
-    encryption_keys: "დაშიფვრის გასაღებები",
-    audit_log_entry: "აუდიტის ჩანაწერები",
-  },
 };
