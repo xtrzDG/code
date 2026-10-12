@@ -9,6 +9,7 @@ import { securityFlowDe } from "./sections/security";
 import { helpDe } from "./sections/help";
 import { siteDe } from "./sections/site";
 import { customersSectionDe } from "./sections/customers";
+import { brandsSectionDe } from "./sections/brands";
 import { referralsSectionDe } from "./sections/referrals";
 import { growthSectionDe } from "./sections/growth";
 import { onboardingDe } from "./onboarding/de";
@@ -194,5 +195,6 @@ export const de: Messages = {
   ...siteDe,
   ...customersSectionDe,
   ...referralsSectionDe,
+  ...brandsSectionDe,
   ...growthSectionDe,
 };

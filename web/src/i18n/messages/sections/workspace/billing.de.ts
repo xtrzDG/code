@@ -90,6 +90,7 @@ export const billingDe: Translation<typeof billingEn> = {
     noVoice: "Nur Chats, keine Telefonanrufe",
     dialogs: "{count} Dialoge pro Monat",
     setupFee: "Einrichtung: kostenlos mit der Anleitung, {price} durch unser Team",
+    additionalLocation: "Jeder weitere Standort einer Kette: {price} im Monat",
     setupFeeAnnual: "Einrichtung: kostenlos mit der Anleitung, durch unser Team inklusive",
     overage: "Zusätzliche Minute: {price}",
     trial: { one: "{count} Tag kostenlos testen", other: "{count} Tage kostenlos testen" },

@@ -100,6 +100,8 @@ export const settingsRecordsRu: Translation<typeof settingsRecordsEn> = {
       manager_contacts: "Контакты для уведомлений",
       channel: "Канал",
       call: "Звонок",
+      brand_location: "Точка сети",
+      brand_member: "Участник команды сети",
       business_member: "Участник команды",
       user: "Пользователь",
       lead: "Заявка",

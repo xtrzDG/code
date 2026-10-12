@@ -83,6 +83,8 @@ export const settingsRecordsEn = {
       manager_contacts: "Notification contacts",
       channel: "Channel",
       call: "Call",
+      brand_location: "Brand location",
+      brand_member: "Brand team member",
       business_member: "Team member",
       user: "User",
       lead: "Lead",

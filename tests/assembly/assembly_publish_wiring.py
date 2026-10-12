@@ -194,7 +194,6 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.apply_events,
                 self.wall_clock,
                 product_events=self.product_events,
-                business_repo=self.business_repo,
             ),
             select_smoke_checks=self.select_smoke_checks_use_case,
             start_autotest_run=self.start_autotest_run_use_case,
@@ -205,7 +204,6 @@ class AssemblyPublishWiring(AssemblyAutotestWiring):
                 self.apply_events,
                 self.wall_clock,
                 product_events=self.product_events,
-                business_repo=self.business_repo,
             ),
             get_apply_changes=self.get_apply_use_case,
         )

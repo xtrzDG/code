@@ -85,6 +85,8 @@ export const settingsRecordsKa: Translation<typeof settingsRecordsEn> = {
       manager_contacts: "შეტყობინებების კონტაქტები",
       channel: "არხი",
       call: "ზარი",
+      brand_location: "ქსელის ფილიალი",
+      brand_member: "ქსელის გუნდის წევრი",
       business_member: "გუნდის წევრი",
       user: "მომხმარებელი (კაბინეტი)",
       lead: "მოთხოვნა",

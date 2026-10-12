@@ -53,6 +53,8 @@ export interface PlanPriceLines {
   setupFee: string;
   /** An extra voice minute, in the same currency. */
   overage: string;
+  /** What each further location of a chain pays a month, in the same currency. */
+  additionalLocation: string;
   /** The billed currency (EUR or the price book's). */
   currency: string;
   /**
@@ -77,6 +79,10 @@ export function planPriceLines(quote: PlanQuote, locale: string): PlanPriceLines
     annual: moneyLabel(billed(quote.local_annual_price, quote.annual_price).money, locale),
     setupFee: moneyLabel(billed(quote.local_setup_fee, quote.setup_fee).money, locale),
     overage: moneyLabel(billed(quote.local_overage_price_per_minute, quote.overage_price_per_minute).money, locale),
+    additionalLocation: moneyLabel(
+      billed(quote.local_additional_location_price, quote.additional_location_price).money,
+      locale,
+    ),
     currency: monthly.money.currency_code,
     secondary,
   };

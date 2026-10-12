@@ -8,6 +8,7 @@ import { securityFlowEn } from "./sections/security";
 import { helpEn } from "./sections/help";
 import { siteEn } from "./sections/site";
 import { customersSectionEn } from "./sections/customers";
+import { brandsSectionEn } from "./sections/brands";
 import { referralsSectionEn } from "./sections/referrals";
 import { growthSectionEn } from "./sections/growth";
 import { onboardingEn } from "./onboarding/en";
@@ -198,6 +199,7 @@ export const en = {
   ...siteEn,
   ...customersSectionEn,
   ...referralsSectionEn,
+  ...brandsSectionEn,
   ...growthSectionEn,
 } as const satisfies NestedMessages;
 

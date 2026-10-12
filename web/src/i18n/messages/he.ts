@@ -9,6 +9,7 @@ import { securityFlowHe } from "./sections/security";
 import { helpHe } from "./sections/help";
 import { siteHe } from "./sections/site";
 import { customersSectionHe } from "./sections/customers";
+import { brandsSectionHe } from "./sections/brands";
 import { referralsSectionHe } from "./sections/referrals";
 import { growthSectionHe } from "./sections/growth";
 import { onboardingHe } from "./onboarding/he";
@@ -194,5 +195,6 @@ export const he: Messages = {
   ...siteHe,
   ...customersSectionHe,
   ...referralsSectionHe,
+  ...brandsSectionHe,
   ...growthSectionHe,
 };

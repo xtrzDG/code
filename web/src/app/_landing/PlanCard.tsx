@@ -26,6 +26,7 @@ export function PlanCard({ quote, translator }: { quote: PlanQuote; translator: 
     t("billing.plans.dialogs", { count: number.format(quote.included_dialogs) }),
     quote.is_voice_included ? t("billing.plans.overage", { price: prices.overage }) : null,
     t("billing.plans.setupFee", { price: prices.setupFee }),
+    t("billing.plans.additionalLocation", { price: prices.additionalLocation }),
     quote.trial_days > 0 ? tp("billing.plans.trial", quote.trial_days) : null,
   ].filter((feature): feature is string => feature !== null);
   const channels = listFormat(locale, { type: "conjunction" }).format(

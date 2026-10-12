@@ -82,6 +82,8 @@ export const settingsRecordsDe: Translation<typeof settingsRecordsEn> = {
       manager_contacts: "Kontakte für Benachrichtigungen",
       channel: "Kanal",
       call: "Anruf",
+      brand_location: "Standort der Kette",
+      brand_member: "Mitglied des Kettenteams",
       business_member: "Teammitglied",
       user: "Benutzer",
       lead: "Anfrage",

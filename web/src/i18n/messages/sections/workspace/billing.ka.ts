@@ -93,6 +93,7 @@ export const billingKa: Translation<typeof billingEn> = {
     noVoice: "მხოლოდ ჩატები, ზარების გარეშე",
     dialogs: "{count} დიალოგი თვეში",
     setupFee: "ჩართვა: დამოუკიდებლად უფასოა, „ჩვენ მოვარგებთ“ — {price}",
+    additionalLocation: "ქსელის ყოველი მომდევნო ფილიალი: {price} თვეში",
     setupFeeAnnual: "ჩართვა: დამოუკიდებლად უფასოა, „ჩვენ მოვარგებთ“ შედის წლიურ გადახდაში",
     overage: "დამატებითი წუთი: {price}",
     trial: { one: "{count} დღე უფასოდ", other: "{count} დღე უფასოდ" },

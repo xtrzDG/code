@@ -90,6 +90,7 @@ export const billingEn = {
     noVoice: "Chats only, no phone calls",
     dialogs: "{count} dialogs a month",
     setupFee: "Setup: free with the guide, {price} done for you",
+    additionalLocation: "Each further location of a chain: {price} a month",
     setupFeeAnnual: "Setup: free with the guide, done for you included",
     overage: "Extra minute: {price}",
     trial: { one: "{count}-day free trial", other: "{count}-day free trial" },

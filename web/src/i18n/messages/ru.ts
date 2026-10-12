@@ -9,6 +9,7 @@ import { securityFlowRu } from "./sections/security";
 import { helpRu } from "./sections/help";
 import { siteRu } from "./sections/site";
 import { customersSectionRu } from "./sections/customers";
+import { brandsSectionRu } from "./sections/brands";
 import { referralsSectionRu } from "./sections/referrals";
 import { growthSectionRu } from "./sections/growth";
 import { onboardingRu } from "./onboarding/ru";
@@ -191,5 +192,6 @@ export const ru: Messages = {
   ...siteRu,
   ...customersSectionRu,
   ...referralsSectionRu,
+  ...brandsSectionRu,
   ...growthSectionRu,
 };

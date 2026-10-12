@@ -100,6 +100,7 @@ export const billingRu: Translation<typeof billingEn> = {
     noVoice: "Только чаты, без звонков",
     dialogs: "{count} диалогов в месяц",
     setupFee: "Подключение: самостоятельно бесплатно, «Настроим за вас» — {price}",
+    additionalLocation: "Каждая следующая точка сети: {price} в месяц",
     setupFeeAnnual: "Подключение: самостоятельно бесплатно, «Настроим за вас» входит в оплату за год",
     overage: "Минута сверх пакета: {price}",
     trial: {

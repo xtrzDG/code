@@ -82,6 +82,8 @@ export const settingsRecordsHe: Translation<typeof settingsRecordsEn> = {
       manager_contacts: "אנשי קשר להתראות",
       channel: "ערוץ",
       call: "שיחת טלפון",
+      brand_location: "סניף ברשת",
+      brand_member: "חבר בצוות הרשת",
       business_member: "חבר צוות",
       user: "משתמש",
       lead: "פנייה",
