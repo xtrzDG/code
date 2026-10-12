@@ -277,11 +277,11 @@ CPU per poll, mean of two back-to-back rounds:
 - Read sessions (`StorageReadSessionContract`): the poll's reads share
   one connection and one transaction begun together with its row-level
   security settings in one round trip, so each read is one statement.
-  Writes and reads in another scope inside a session keep their own
-  connections, so nothing else runs on its transaction; each statement
-  still sees what was committed when it ran (read committed), as before.
-  The count stays outside, alone, so its row locks last only while it
-  runs.
+  (Since 2026-10-12 a session pins its connection, and writes inside it
+  run after the session committed its reads, on the same connection: see
+  "The weekly run of 2026-10-12".) Each statement still sees what was
+  committed when it ran (read committed), as before. The count stays
+  outside, alone, so its row locks last only while it runs.
 - The newest ten messages are read as positions (id and time from the
   index columns, `page_positions_by`); only the messages after the
   cursor are read in full, none when nothing is new.

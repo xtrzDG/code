@@ -21,12 +21,13 @@ import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TextIO
+from typing import TextIO, cast
 
 CPU_INFO: Path = Path("/proc/cpuinfo")
 MEMORY_INFO: Path = Path("/proc/meminfo")
 UNKNOWN: str = "unknown"
 KIB_PER_GIB: int = 1024 * 1024
+DESCRIPTION: str = "The runner of a perf run, as Markdown for the job summary."
 
 
 def cpu_model(cpu_info: Path = CPU_INFO) -> str:
@@ -73,15 +74,18 @@ def read_report(path: Path) -> tuple[str | None, float | None]:
     if not isinstance(document, dict):
         return None, None
 
-    scale: object = document.get("scale")
-    seconds: object = document.get("seed_seconds")
+    report: dict[str, object] = cast(dict[str, object], document)
+    scale: object = report.get("scale")
+    seconds: object = report.get("seed_seconds")
     return (
-        describe_scale(scale) if isinstance(scale, dict) else None,
+        describe_scale(cast(dict[str, object], scale))
+        if isinstance(scale, dict)
+        else None,
         float(seconds) if isinstance(seconds, int | float) else None,
     )
 
 
-def describe_scale(scale: dict[object, object]) -> str:
+def describe_scale(scale: dict[str, object]) -> str:
     parts: list[str] = [str(scale.get("name", UNKNOWN))]
     for key, label in (("businesses", "businesses"), ("messages", "messages")):
         value: object = scale.get(key)
@@ -112,7 +116,7 @@ def render(
 
 
 def main(arguments: Sequence[str] | None = None, output: TextIO | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument("--report", type=Path, help="the latency budgets' report")
     parser.add_argument("--seed-seconds", type=float, help="seeding took this long")
     parser.add_argument("--dataset", help="what was seeded (without a report)")
