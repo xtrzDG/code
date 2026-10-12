@@ -25,10 +25,9 @@ from app.utilities.deposits.deposit_reminder_texts import (
     DEPOSIT_BOOKING_RELEASED,
     DEPOSIT_BOOKING_REMINDER,
 )
-from app.utilities.deposits.deposit_times import hold_end_text
+from app.utilities.deposits.deposit_times import day_month_text, hold_end_text
 from app.utilities.scheduling.localized_formatting import (
     choose_template_language,
-    format_full_date,
     isolate,
 )
 from app.utilities.scheduling.zoned_time import load_time_zone, to_local_moment
@@ -114,6 +113,6 @@ def booking_moment(
 
     starts: datetime = to_local_moment(int(booking.starts_at), zone)
     return {
-        "date": format_full_date(starts.date(), language),
+        "date": day_month_text(starts.date(), language),
         "time": isolate(starts.strftime("%H:%M"), language),
     }

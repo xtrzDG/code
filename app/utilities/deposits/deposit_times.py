@@ -4,7 +4,7 @@ is today at the business, else the short date with the time, in the
 customer's language (CLDR, Latin digits), in the business's time zone.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 from babel.dates import format_skeleton
@@ -21,6 +21,9 @@ from app.utilities.scheduling.zoned_time import (
 MICROSECONDS_PER_MINUTE: int = 60 * 1_000_000
 # Weekday, day and abbreviated month ("Tue, Oct 14" / "вт, 14 окт.").
 SHORT_DATE_SKELETON: str = "MMMEd"
+# Day and month, no weekday ("October 7" / "7 октября"), so a sentence
+# such as "your booking on {date}" keeps its grammar in every language.
+DAY_MONTH_SKELETON: str = "MMMMd"
 
 
 def hold_end_text(
@@ -36,6 +39,12 @@ def hold_end_text(
 
     day: str = format_skeleton(SHORT_DATE_SKELETON, end, locale=find_locale(language))
     return DepositHoldEndText(isolate(f"{day}, {clock}", language))
+
+
+def day_month_text(value: date, language: LanguageTag) -> str:
+    """The day and month of a booking in the customer's language."""
+
+    return format_skeleton(DAY_MONTH_SKELETON, value, locale=find_locale(language))
 
 
 def local_moment(moment: Microseconds, zone: ZoneInfo) -> datetime:
