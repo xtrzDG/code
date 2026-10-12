@@ -68,7 +68,7 @@ Behind a reverse proxy, run the API with
 | `npm run knip` | Unused files, exports and dependencies (`knip.config.ts`); CI fails on any |
 | `npm run e2e` | Playwright end-to-end tests against the real API (see [End-to-end tests](#end-to-end-tests)) |
 | `npm run gen:icons` | Draw the installed app's PNG icons (`public/icons/`, `src/app/apple-icon.png`) from `src/app/icon.svg` in Chromium; run after changing the mark and commit the files |
-| `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file |
+| `npm run measure:first-load` | After `npm run build`: the gzipped first-load JavaScript of `/` and `/login` (or the pages given) as a browser downloads it, and the size of the lazy 3D chunk (see [Motion](#motion)); `MEASURE_VERBOSE=1` lists every file. With `--check` it measures the pages of `first-load-budget.json` and fails when one of them, or the 3D chunk, is over its budget (CI job "web-build", after the build) |
 | `npm run gen:api` | Regenerate `openapi.json` from the backend (`uv run python -m scripts.export_openapi`) and `src/api/schema.d.ts` from it (openapi-typescript). Run after any backend API change and commit both files. It also runs `gen:currencies` and `gen:names`. |
 | `npm run gen:currencies` | Regenerate `src/lib/currencyDigits.generated.ts`: the digits after the decimal point of every currency, from the backend's CLDR data (Babel). Money is converted between minor and major units with this table, not with the browser's Intl data, which differs between browser versions. A backend test fails when the file is stale. |
 | `npm run gen:names` | Regenerate `src/lib/displayNames.generated.ts`: country and language names in Georgian, Russian and English from the backend's CLDR data. `countryName` and `languageName` read it before Intl: Chrome has no Georgian display names, so the server and the browser would disagree (a hydration error) and Georgian owners would see codes. A backend test fails when the file is stale. |
@@ -1406,10 +1406,51 @@ green, mint, cyan, indigo or purple anywhere the browser sees it (the
 cabinet, its public files, the widget and its demo page, the demo seeds),
 which `tests/platform/test_palette_guard.py` enforces. The look is flat: blocks are separated by hairlines, not shadows
 (`shadow-sm` is none and the larger shadows are faint), corners are
-restrained (`rounded-xl` 10 px, `rounded-2xl` 12 px). Fonts are the system's
-(Georgian, Cyrillic and Latin), nothing is downloaded. Layouts are
+restrained (`rounded-xl` 10 px, `rounded-2xl` 12 px). The type is one
+self-hosted family in every language (see [Typeface](#typeface)). Layouts are
 mobile-first: the sidebar becomes a drawer below `lg`. Use semantic HTML,
-visible focus, and labels for icon-only buttons.
+visible focus, and labels for icon-only buttons. Empty and quiet states draw
+a spot illustration (`@/components/illustrations`: the calm inbox, day 0 of
+the Overview, no bookings, no invoices, offline, the assistant's orb) in the
+theme's own tokens, so it changes with the theme like the text around it;
+`EmptyState` takes one as its `illustration`.
+
+### Typeface
+
+Noto Sans, a variable font (weights 100–900), with Noto Sans Georgian and
+Noto Sans Hebrew of the same family: Latin, German, Cyrillic, Georgian and
+Hebrew look alike on every system. The files are in `public/fonts/` with
+their licence (SIL Open Font License 1.1, `public/fonts/OFL.txt`) and load
+through `next/font/local` (`src/app/fonts.ts`), one file per script with its
+`unicode-range`, so a page downloads only the scripts it shows:
+
+| File | Script | Size |
+| --- | --- | --- |
+| `noto-sans-latin-wght.woff2` | Latin (preloaded) | 35.0 KB |
+| `noto-sans-latin-ext-wght.woff2` | the extended Latin letters and currency signs the cabinet's countries use (ğ, ș, ə, ₾, ₽…) | 23.5 KB |
+| `noto-sans-cyrillic-wght.woff2` | Cyrillic | 19.6 KB |
+| `noto-sans-georgian-wght.woff2` | Georgian (Mkhedruli, Mtavruli, Asomtavruli) | 40.6 KB |
+| `noto-sans-hebrew-wght.woff2` | Hebrew | 12.0 KB |
+
+`display: "optional"` and an Arial fallback resized to Noto's metrics
+(next/font's `adjustFontFallback`) keep the layout shift at 0: a font that
+is late for the first paint is not swapped in, the next page has it from the
+cache. `--font-sans` (globals.css) lists the scripts, then Latin and its
+fallback; headings use `font-display` (weight 650, slightly tighter
+tracking). `src/app/fonts.test.ts` keeps every file under 60 KB, its
+unicode-range covering the cabinet's languages, and the licence next to
+them.
+
+Provenance: the `wght-normal` files of the npm packages
+`@fontsource-variable/noto-sans`, `@fontsource-variable/noto-sans-georgian`
+and `@fontsource-variable/noto-sans-hebrew` 5.3.0 (Google Fonts' builds of
+Noto, OFL), renamed; the extended Latin one is cut down with fontTools:
+
+```bash
+pyftsubset noto-sans-latin-ext-wght-normal.woff2 --flavor=woff2 \
+  --unicodes="U+0100-0130,U+0132-0151,U+0154-017F,U+0218-021B,U+0259,U+1E9E,U+20A0-20AB,U+20AD-20C0" \
+  --output-file=public/fonts/noto-sans-latin-ext-wght.woff2
+```
 
 ### Theme
 
@@ -1466,6 +1507,25 @@ motion.
   menu springs up from its button (CSS, `src/styles/shell.css`); badges pop
   in; dashboard numbers count up, handoff and lead lists animate removals,
   dialogs and toasts as above.
+- **Live cabinet**: inbox rows arrive from above, leave and glide into
+  their new places (AnimatePresence `popLayout`, `inbox/_components/list/rowMotion.ts`;
+  a new view or filter swaps its rows without animating); opening a
+  conversation morphs the row's avatar and name into its header
+  (`SharedMorph`: React's `<ViewTransition>` where the browser has view
+  transitions, a plain swap elsewhere; the header preview keeps the pair, and
+  the space, while the card loads); a message that arrives while the
+  conversation is open springs in (`conversation/messageArrival.ts`); a
+  badge (`NavBadge`) counts to its new number and beats once when it grows,
+  and the Overview's tiles count to the new period's numbers; channel and
+  plan cards tilt (`TiltCard`, level while a field inside has focus); the
+  setup finale shows the landing's 3D orb (`FinaleOrb`: the scene's lazy
+  chunk where the hero would get it, the flat drawing elsewhere).
+- **Taps paint first**: a choice whose page redraws (the Overview's
+  period, the inbox views: `useOptimisticChoice`) shows as chosen at once
+  and changes the page after the browser has painted that, in a transition;
+  "More" opens and closes the same way (`afterNextPaint`). Next.js applies a
+  history change (`replaceUrlQuery`) in a microtask, which inside a tap's
+  event would render the whole page at the tap's urgent priority.
 - **Setup invitation**: the landing's still orb among its channels in a
   tilting card (`TiltCard`), aurora and the floor of light running towards
   the viewer behind it, the stages standing in perspective and rising one
@@ -1488,6 +1548,14 @@ motion.
   is the same on the server and in the browser whatever the setting (no
   hydration mismatch); without scripts a `<noscript>` style shows every
   revealed block.
+- **The cabinet's own setting**: "Reduce motion" in the account menu (and
+  in "More" on a phone) stills the cabinet on a device that allows motion.
+  It is kept in the `aw_motion` cookie (a year), so the server renders
+  `<html data-motion="reduce">` and the first paint is already still;
+  `MotionPreference` gives MotionConfig `reducedMotion="always"`, and the
+  CSS rules, the `motion-safe:`/`motion-reduce:` variants, tilt, magnetic
+  buttons, bursts, confetti, view transitions, the tunnel and the 3D scenes
+  follow it like the device's setting.
 - **3D hero rules** (`HeroVisual`): the server sends the poster
   (`HeroFallback`, HTML and CSS in `src/styles/heroPoster.css`: the orb
   among its channels, rings turning in 3D with a comet of light, a breathing
@@ -1514,17 +1582,46 @@ motion.
   switch back when reduced motion is turned on, the reveals, and that
   three.js is never downloaded there nor on a niche page, a legal page or
   `/login`.
+- **Motion budget** (`e2e/motion-budget.spec.ts`, helpers in
+  `e2e/support/motionBudget.ts`): on a phone (390×844, touch) against the
+  demo restaurant, a round of taps: the Overview's three periods, the tab
+  bar to the Inbox, two views, "More" open and closed, a conversation from
+  its row and back, the tab bar to the Overview. The first round fetches
+  everything; between taps the test waits as a person looks (the network
+  quiet, no long task for 500 ms, then an idle callback). With full motion
+  and the processor four times slower (Chrome DevTools' throttling,
+  Lighthouse's phone), three timed rounds follow: the slowest tap of a
+  round is its INP (Event Timing, the time to the next paint), their median
+  stays under 200 ms, no round has a layout shift not caused by input
+  (CLS 0), and the first round saw things move and the conversation morph.
+  With the device's reduced motion, and with the cabinet's own setting on a
+  device that allows motion, nothing moves in either round: no CSS or Web
+  Animation that moves, no spring rewriting a transform, no view
+  transition, no 3D canvas. The trace keeps no DOM snapshots there: they are
+  taken in the page at every tap. 60 frames a second on a real mid-range
+  phone is not measured here (headless Chromium on a server, SwiftShader):
+  that needs a device run.
+
 First load, measured with `npm run build && npm run measure:first-load`
 (gzipped JavaScript a first visit downloads, with the API running for the
 niche pages):
 
-| Page | First load |
-| --- | --- |
-| `/en` (landing) | 189.0 KB |
-| `/ru/for/restaurant`, `/ka/for/hotel` (niche pages) | 186.6 KB |
-| `/ka/terms` (legal pages) | 177.3 KB |
-| `/login` (the cabinet: its pages carry the motion library) | 312.8 KB |
-| 3D chunk (three.js 0.182 + react-three-fiber + the scene), fetched later on capable wide screens only | 241.1 KB |
+| Page | First load | Budget |
+| --- | --- | --- |
+| `/en` (landing) | 189.8 KB | 192 KB |
+| `/ru/for/restaurant`, `/ka/for/hotel` (niche pages) | 187.1 KB | |
+| `/ka/terms` (legal pages) | 177.7 KB | 180 KB |
+| `/offline` (the installed app's offline page) | 171.5 KB | 174 KB |
+| `/login` (the cabinet: its pages carry the motion library) | 313.3 KB | 316 KB |
+| 3D chunk (three.js 0.182 + react-three-fiber + the scenes), fetched later where WebGL draws | 243.0 KB | 245 KB |
+
+The budgets are `first-load-budget.json`; `npm run measure:first-load --
+--check` (CI job "web-build", after the build) measures those pages and
+fails when one is over, when the 3D code is not one lazy chunk any more, or
+when that chunk is over (`scripts/first-load-budget.mjs`, tested in
+`src/test/firstLoadBudget.test.ts`). The typeface's files are not
+JavaScript: Latin (35 KB) is preloaded, the other scripts load on first
+use.
 
 Lighthouse on `/en` (phone profile, three runs; `lighthouserc.json`):
 performance 0.96–0.99, LCP 2.1–2.7 s, blocking time 84–115 ms, CLS 0,

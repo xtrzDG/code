@@ -46,7 +46,8 @@ describe("useOptimisticChoice", () => {
     expect(paint).toBeDefined();
     act(() => paint?.(performance.now()));
     await waitFor(() => expect(onChange).toHaveBeenCalledWith("30d"));
-    expect(screen.getByTestId("page").textContent).toBe("30d");
+    // The page's own redraw is a transition: it lands a moment later.
+    await waitFor(() => expect(screen.getByTestId("page").textContent).toBe("30d"));
     expect(screen.getByRole("button", { name: "30d" }).getAttribute("aria-pressed")).toBe("true");
   });
 

@@ -25,6 +25,7 @@ import { HelpProvider } from "@/components/help/HelpProvider";
 import { PageHelpProvider, PhoneChromeProvider, usePhoneChromeSnapshot } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
+import { afterNextPaint } from "@/lib/afterNextPaint";
 import { sidebarCookie } from "@/lib/shellPreferences";
 
 import { MoreSheet } from "./MoreSheet";
@@ -98,9 +99,9 @@ export function ShellFrame({
   const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [isMoreOpen, setMoreOpen] = useState(false);
-  // "More" opens and closes in a transition (not useTransition, whose pending flag would redraw the
-  // shell at once): the tap paints within a frame on a phone, then the sheet comes.
-  const showMore = (open: boolean) => startTransition(() => setMoreOpen(open));
+  // "More" opens and closes after the tap has painted, in a transition (not useTransition, whose
+  // pending flag would redraw the shell at once): the sheet's commit never holds the tap's frame.
+  const showMore = (open: boolean) => afterNextPaint(() => startTransition(() => setMoreOpen(open)));
   // One element per help article: a new one on every redraw of the shell would redraw every page that reads it.
   const pageHelp = useMemo(() => (helpSlug ? <HelpLink slug={helpSlug} /> : null), [helpSlug]);
   const tabItems = items.filter((item) => item.inTabBar);

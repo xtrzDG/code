@@ -6,14 +6,17 @@
  * opened from its row (the customer morphs into the header where the
  * browser has view transitions), back, and the tab bar to the Overview.
  *
- * The round runs twice: the first fetches everything, the second, which
- * is measured, finds it cached, so what it measures is the motion and the
- * rendering, not the network.
+ * The first round fetches everything; the measured rounds after it find it
+ * cached, so what they measure is the motion and the rendering, not the
+ * network. Between taps the test waits as a person looks at what a tap
+ * brought: until the page has finished rendering it.
  *
  * - With full motion on a processor four times slower (a mid-range phone
- *   by Lighthouse's measure), every tap paints within 200 ms (INP) and
- *   nothing shifts (CLS 0); the motion is really there: things move and
- *   the conversation morphs.
+ *   by Lighthouse's measure), every tap paints within 200 ms (INP: the
+ *   slowest tap of a round, the median of three rounds, so one round slowed
+ *   by a busy machine does not decide) and nothing shifts in any of them
+ *   (CLS 0); the motion is really there: things move and the conversation
+ *   morphs.
  * - With the device's reduced motion, and with the cabinet's own "Reduce
  *   motion" on a device that allows motion, nothing moves at all along
  *   both rounds: no CSS or Web Animation that moves, no spring, no view
@@ -29,10 +32,17 @@ import { uniqueSuffix } from "./support/api";
 import { signInAsDemoOwner, visitorAsksForPerson } from "./support/demo";
 import { expect, signInContext, test } from "./support/fixtures";
 import { en } from "./support/messages";
-import { readMotionBudget, recordMotionBudget, startMeasuring, throttleCpu, waitForMainThreadQuiet } from "./support/motionBudget";
+import {
+  readMotionBudget,
+  recordMotionBudget,
+  startMeasuring,
+  throttleCpu,
+  waitForMainThreadQuiet,
+  type MotionBudgetReading,
+} from "./support/motionBudget";
 import { waitForNetworkQuiet } from "./support/network";
 
-test.describe.configure({ timeout: 180_000 });
+test.describe.configure({ timeout: 240_000 });
 test.use({
   viewport: { width: 390, height: 844 },
   isMobile: true,
@@ -46,6 +56,8 @@ test.use({
 const INP_BUDGET_MS = 200;
 /** Lighthouse's mobile profile: a mid-range phone runs about four times slower than a desktop. */
 const PHONE_CPU_SLOWDOWN = 4;
+/** Timed rounds; their median is the budget's INP (Lighthouse CI also takes three runs). */
+const TIMED_ROUNDS = 3;
 
 /** Signs in as the demo owner with someone waiting in the inbox; returns the business id. */
 async function demoVisit(page: Page, request: Parameters<typeof signInAsDemoOwner>[0]): Promise<string> {
@@ -60,8 +72,9 @@ async function settle(page: Page): Promise<void> {
   await waitForMainThreadQuiet(page);
 }
 
-/** A person looks at what a tap brought before the next one: the page has finished rendering it. */
+/** A person looks at what a tap brought before the next one: its data has come and the page has finished rendering it. */
 async function look(page: Page): Promise<void> {
+  await waitForNetworkQuiet(page);
   await waitForMainThreadQuiet(page, { quietMs: 500 });
 }
 
@@ -108,23 +121,35 @@ async function round(page: Page): Promise<void> {
   await look(page);
 }
 
-/**
- * Opens the Overview, goes round once to fetch everything, then measures a
- * second round. A timed round (`timed`) stops the motion watch first: its
- * observers would weigh on the very taps it times; what moved in the first
- * round stays recorded.
- */
-async function measuredRound(page: Page, businessId: string, { slowdown = 1, timed = false } = {}): Promise<void> {
+/** Opens the Overview and goes round once: everything is fetched (and, with full motion, the motion is seen). */
+async function firstRound(page: Page, businessId: string): Promise<void> {
   await page.goto(`/b/${businessId}/overview`);
   await settle(page);
   await round(page);
   await settle(page);
-  await startMeasuring(page, { watchMotion: !timed });
-  if (slowdown > 1) {
-    await throttleCpu(page, slowdown);
+}
+
+/**
+ * Goes round again `rounds` times and reads each round's own interactions
+ * and layout shifts. Timed rounds (`timed`) stop the motion watch first:
+ * its observers would weigh on the very taps they time; what moved in the
+ * first round stays recorded.
+ */
+async function measuredRounds(page: Page, rounds: number, { timed = false } = {}): Promise<MotionBudgetReading[]> {
+  const readings: MotionBudgetReading[] = [];
+  for (let index = 0; index < rounds; index += 1) {
+    await startMeasuring(page, { watchMotion: !timed });
+    await round(page);
+    await settle(page);
+    readings.push(await readMotionBudget(page));
   }
-  await round(page);
-  await settle(page);
+  return readings;
+}
+
+/** The middle value: one round slowed by a busy machine does not decide, as with Lighthouse's three runs. */
+function median(values: readonly number[]): number {
+  const sorted = [...values].sort((first, second) => first - second);
+  return sorted[Math.floor(sorted.length / 2)] ?? 0;
 }
 
 test.describe("with full motion", () => {
@@ -137,14 +162,20 @@ test.describe("with full motion", () => {
     const businessId = await demoVisit(page, request);
     await recordMotionBudget(page);
 
-    await measuredRound(page, businessId, { slowdown: PHONE_CPU_SLOWDOWN, timed: true });
-    const reading = await readMotionBudget(page);
+    await firstRound(page, businessId);
+    await throttleCpu(page, PHONE_CPU_SLOWDOWN);
+    const readings = await measuredRounds(page, TIMED_ROUNDS, { timed: true });
+    const inp = median(readings.map((reading) => reading.inp));
+    const rounds = readings.map((reading) => `${Math.round(reading.inp)} ms (${reading.slowest})`).join("; ");
 
-    expect(reading.interactions, "the taps were measured").toBeGreaterThanOrEqual(9);
-    expect(reading.inp, `INP ${Math.round(reading.inp)} ms (${reading.slowest})`).toBeLessThan(INP_BUDGET_MS);
-    expect(reading.shifts, "layout shifts (CLS)").toEqual([]);
-    expect(reading.moved.length, "things move with full motion").toBeGreaterThan(0);
-    expect(reading.viewTransitions, "the row's customer morphs into the conversation header").toBeGreaterThan(0);
+    for (const reading of readings) {
+      expect(reading.interactions, "the taps were measured").toBeGreaterThanOrEqual(9);
+    }
+    expect(inp, `INP, the median of the rounds: ${rounds}`).toBeLessThan(INP_BUDGET_MS);
+    expect(readings.flatMap((reading) => reading.shifts), "layout shifts (CLS)").toEqual([]);
+    const last = readings[readings.length - 1];
+    expect(last?.moved.length, "things move with full motion").toBeGreaterThan(0);
+    expect(last?.viewTransitions, "the row's customer morphs into the conversation header").toBeGreaterThan(0);
   });
 });
 
@@ -161,7 +192,8 @@ test("with the device's reduced motion nothing moves", async ({ page, request })
   const businessId = await demoVisit(page, request);
   await recordMotionBudget(page);
 
-  await measuredRound(page, businessId);
+  await firstRound(page, businessId);
+  await measuredRounds(page, 1);
   await expectStillness(page);
 });
 
@@ -183,7 +215,8 @@ test.describe("with the cabinet's own Reduce motion", () => {
 
     // A new visit: the server renders the setting from the cookie, so the first paint is already still.
     await recordMotionBudget(page);
-    await measuredRound(page, businessId);
+    await firstRound(page, businessId);
+    await measuredRounds(page, 1);
     await expect(page.locator("html")).toHaveAttribute("data-motion", "reduce");
     await expectStillness(page);
     expect((await page.context().cookies()).find((cookie) => cookie.name === "aw_motion")?.value).toBe("reduce");

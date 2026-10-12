@@ -2,20 +2,7 @@
 
 import { startTransition, useEffect, useRef, useState } from "react";
 
-/**
- * Runs `task` once the browser has painted the next frame (a frame, then a
- * task after it); returns a function that cancels it.
- */
-function afterNextPaint(task: () => void): () => void {
-  let timer: number | undefined;
-  const frame = window.requestAnimationFrame(() => {
-    timer = window.setTimeout(task, 0);
-  });
-  return () => {
-    window.cancelAnimationFrame(frame);
-    window.clearTimeout(timer);
-  };
-}
+import { afterNextPaint } from "./afterNextPaint";
 
 /**
  * A choice (a period, an inbox view) that shows as chosen at once, while
