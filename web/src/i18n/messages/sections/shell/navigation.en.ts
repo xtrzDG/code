@@ -27,7 +27,7 @@ export const navigationEn = {
     customersList: "Find a customer by name, phone or tag and open their history across channels.",
     customersSegments: "Saved groups of customers by tag, last visit and bookings, with a CSV for your campaigns.",
     assistant: "Try your assistant, teach it, choose where it answers and apply your changes.",
-    settings: "Your business, team, notifications, quick replies, calls, reviews, plan, privacy and the audit log.",
+    settings: "Your business, team, notifications, quick replies, calls, reviews, deposits, plan, privacy and the audit log.",
     assistantTest: "Write as a customer would. Nothing reaches real customers.",
     assistantProfile: "What your assistant knows about the business: the place, the offer, hours and bookings, people and rules. Changes save as you type.",
     assistantVersions: "Every update of the assistant: when customers got it, its checks and a way back.",
