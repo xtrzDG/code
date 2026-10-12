@@ -187,6 +187,8 @@ def test_staff_reply_from_the_cabinet_reaches_the_website_widget(
             "direction": "ltr",
             "created_at": staff_message["created_at"],
             "choices": [],
+            # A staff reply never asks the visitor for thumbs.
+            "invites_rating": False,
         }
     ]
     assert body["cursor"] == staff_message["id"]
