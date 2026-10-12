@@ -9,7 +9,6 @@ import { useAttentionCounts } from "@/components/shell/LiveEvents";
 import { BusinessStatusBadge } from "@/components/business/BusinessStatusBadge";
 import { IconBook, IconHandoff } from "@/components/icons";
 import { useToday } from "@/components/insights/useToday";
-import { SegmentedControl } from "@/components/insights/SegmentedControl";
 import { replaceUrlQuery } from "@/components/insights/urlQuery";
 import { Card, ErrorState, LoadingRegion, PageHeader } from "@/components/ui";
 import { useSetupProgress } from "@/components/setupGuide/useSetupProgress";
@@ -24,7 +23,6 @@ import { AttentionTile, NextStepCard } from "./_components/DashboardWidgets";
 import { InviteCard } from "./_components/InviteCard";
 import {
   canTakeStep,
-  DASHBOARD_PERIODS,
   DEFAULT_DASHBOARD_PERIOD,
   isLaunched,
   needsStatusCard,
@@ -33,6 +31,7 @@ import {
   type DashboardPeriod,
 } from "./_components/dashboardModel";
 import { OverviewStats } from "./_components/OverviewStats";
+import { PeriodPicker } from "./_components/PeriodPicker";
 import { PhoneFold, PhoneFolds } from "./_components/PhoneFold";
 import { SetupGuideCard } from "./_components/setupGuide/SetupGuideCard";
 import { TodayBlock } from "./_components/TodayBlock";
@@ -87,14 +86,7 @@ export function DashboardScreen({ initialPeriod }: { initialPeriod: DashboardPer
     <PhoneFolds>
       <PageHeader
         title={t("navigation.pages.overviewDashboard")}
-        actions={
-          <SegmentedControl
-            label={t("dashboard.periodLabel")}
-            value={period}
-            onChange={choosePeriod}
-            options={DASHBOARD_PERIODS.map((value) => ({ value, label: t(`dashboard.periods.${value}`) }))}
-          />
-        }
+        actions={<PeriodPicker value={period} onChange={choosePeriod} />}
       />
 
       <div className="space-y-6 max-lg:space-y-4">

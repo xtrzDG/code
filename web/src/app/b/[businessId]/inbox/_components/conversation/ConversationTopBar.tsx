@@ -79,7 +79,8 @@ export function ConversationTopBar({
           {initialsOf(conversation.contact_name)}
         </span>
       </SharedMorph>
-      <div className="min-w-0 flex-1 leading-tight">
+      {/* Room for the name, the subline and the customer's standing (which arrives later): the header keeps its height. */}
+      <div className="min-h-15 min-w-0 flex-1 leading-tight">
         {/* The name keeps its own direction (<bdi>) but sits at the start, next to the avatar, in any script. */}
         {/* The inbox row's customer flies into this place when the conversation opens (SharedMorph). */}
         <SharedMorph name={morphName("conversation-name", conversation.id)}>

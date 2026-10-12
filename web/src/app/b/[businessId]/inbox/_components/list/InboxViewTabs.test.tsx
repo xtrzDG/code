@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -108,7 +108,9 @@ describe("InboxViewTabs in the 360 px list column", () => {
     expect(document.activeElement).toBe(within(menu).getAllByRole("menuitemradio")[0]);
     await user.keyboard("{ArrowDown}{Enter}");
 
-    expect(onChange).toHaveBeenCalledWith("all");
+    // The view shows as chosen at once; the inbox follows once that has painted (useOptimisticChoice).
+    expect(document.querySelector("[data-more-views]")?.getAttribute("data-chosen")).toBe("all");
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith("all"));
     expect(screen.queryByRole("menu")).toBeNull();
     expect(document.activeElement).toBe(document.querySelector("[data-more-views]"));
     expect(document.querySelector("[data-more-views]")?.getAttribute("data-chosen")).toBe("all");

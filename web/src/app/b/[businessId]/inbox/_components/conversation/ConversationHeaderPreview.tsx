@@ -14,6 +14,7 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import { useBusiness } from "@/components/business/BusinessContext";
 import { IconArrowLeft } from "@/components/icons";
+import { Skeleton } from "@/components/ui";
 import { morphName, SharedMorph } from "@/components/motion/SharedMorph";
 import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
@@ -60,7 +61,8 @@ export function ConversationHeaderPreview({ conversationId }: { conversationId?:
           {initialsOf(preview.contactName)}
         </span>
       </SharedMorph>
-      <div className="min-w-0 flex-1 py-2.5 leading-tight">
+      {/* The real header's height (ConversationTopBar): nothing moves when it takes over. */}
+      <div className="min-h-15 min-w-0 flex-1 leading-tight">
         <SharedMorph name={morphName("conversation-name", preview.id)}>
           <p className="truncate text-start text-base font-semibold text-ink">
             <bdi dir={preview.contactName ? "auto" : "ltr"} data-user-content={preview.contactName ? true : undefined}>
@@ -68,6 +70,9 @@ export function ConversationHeaderPreview({ conversationId }: { conversationId?:
             </bdi>
           </p>
         </SharedMorph>
+        <div aria-hidden className="flex h-4 items-center">
+          <Skeleton className="h-2.5 w-32 max-w-full" />
+        </div>
       </div>
     </div>
   );

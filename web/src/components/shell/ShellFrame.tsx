@@ -14,7 +14,7 @@
  * conversations and bookings (components/CommandPalette).
  */
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { startTransition, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 
 import type { CurrentUserView } from "@/api/types";
 import { CommandPaletteProvider } from "@/components/CommandPaletteProvider";
@@ -98,6 +98,11 @@ export function ShellFrame({
   const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [isMoreOpen, setMoreOpen] = useState(false);
+  // "More" opens and closes in a transition (not useTransition, whose pending flag would redraw the
+  // shell at once): the tap paints within a frame on a phone, then the sheet comes.
+  const showMore = (open: boolean) => startTransition(() => setMoreOpen(open));
+  // One element per help article: a new one on every redraw of the shell would redraw every page that reads it.
+  const pageHelp = useMemo(() => (helpSlug ? <HelpLink slug={helpSlug} /> : null), [helpSlug]);
   const tabItems = items.filter((item) => item.inTabBar);
   const moreItems = items.filter((item) => !item.inTabBar);
 
@@ -110,7 +115,7 @@ export function ShellFrame({
   return (
     <HelpProvider>
     <CommandPaletteProvider links={items.filter((item) => !item.secondary)} searchScope={searchScope}>
-    <PageHelpProvider help={helpSlug ? <HelpLink slug={helpSlug} /> : null}>
+    <PageHelpProvider help={pageHelp}>
     <PhoneChromeProvider hasTopBar={showPhoneTopBar} hasFabSlot={showTabBar}>
     <div className="min-h-dvh" style={{ "--sidebar-width": collapsed ? "4.5rem" : "16rem" } as CSSProperties}>
       <ServiceWorker />
@@ -152,7 +157,7 @@ export function ShellFrame({
             showTabBar ? undefined : (
               <button
                 type="button"
-                onClick={() => setMoreOpen(true)}
+                onClick={() => showMore(true)}
                 aria-label={t("account.menu")}
                 aria-haspopup="dialog"
                 aria-expanded={isMoreOpen}
@@ -175,12 +180,12 @@ export function ShellFrame({
           items={tabItems}
           isMoreActive={moreItems.some((item) => item.isActive)}
           isMoreOpen={isMoreOpen}
-          onOpenMore={() => setMoreOpen(true)}
+          onOpenMore={() => showMore(true)}
         />
       ) : null}
       <MoreSheet
         open={isMoreOpen}
-        onClose={() => setMoreOpen(false)}
+        onClose={() => showMore(false)}
         items={showTabBar ? moreItems : []}
         top={switcher ? (onNavigate) => switcher(onNavigate) : undefined}
         me={me}

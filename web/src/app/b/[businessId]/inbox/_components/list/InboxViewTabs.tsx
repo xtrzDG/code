@@ -22,6 +22,7 @@ import { useI18n } from "@/i18n/client";
 import { cn } from "@/lib/cn";
 import { springTransition } from "@/lib/motion";
 import type { InboxView } from "@/lib/navigation";
+import { useOptimisticChoice } from "@/lib/useOptimisticChoice";
 
 import { viewCount } from "../../_lib/inboxModel";
 import type { InboxViewCounts } from "../../_lib/types";
@@ -63,15 +64,17 @@ function CountChip({ view, count, checked }: { view: InboxView; count: number; c
 }
 
 export function InboxViewTabs({
-  value,
+  value: chosenView,
   counts,
-  onChange,
+  onChange: chooseView,
 }: {
   value: InboxView;
   counts: InboxViewCounts | null;
   onChange: (view: InboxView) => void;
 }) {
   const { t, tp } = useI18n();
+  // The tapped view shows as chosen at once; the list redraws for it in a transition.
+  const [value, onChange] = useOptimisticChoice(chosenView, chooseView);
   const name = useId();
   const chosenRef = useRef<HTMLLabelElement>(null);
 
