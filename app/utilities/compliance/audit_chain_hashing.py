@@ -60,12 +60,15 @@ def business_of_chain(chain_key: AuditChainKey) -> BusinessId | None:
     return BusinessId(str(chain_key))
 
 
-def link_entry(
+def link_entry_and_hash(
     entry: AuditLogEntryDocument,
     position: AuditChainPosition,
     prev_hash: AuditEntryHash,
-) -> AuditLogEntryDocument:
-    """The entry as stored at `position` of its chain, after `prev_hash`."""
+) -> tuple[AuditLogEntryDocument, AuditEntryHash]:
+    """
+    The entry as stored at `position` of its chain, after `prev_hash`, and
+    its hash (the link of the entry after it).
+    """
 
     chain_key: AuditChainKey = chain_key_of(entry.business_id)
     linked: AuditLogEntryDocument = entry.model_copy(
@@ -76,7 +79,8 @@ def link_entry(
             "entry_hash": None,
         }
     )
-    return linked.model_copy(update={"entry_hash": compute_entry_hash(linked)})
+    entry_hash: AuditEntryHash = compute_entry_hash(linked)
+    return linked.model_copy(update={"entry_hash": entry_hash}), entry_hash
 
 
 def compute_entry_hash(entry: AuditLogEntryDocument) -> AuditEntryHash:

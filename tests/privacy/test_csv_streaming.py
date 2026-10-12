@@ -21,6 +21,7 @@ from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.privacy import CsvExportKind
 from app.schemas.domain.audit_chain import (
     AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
     AuditViewCountDocument,
 )
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -44,6 +45,7 @@ class GeneratedAuditLog(AuditLogRepository):
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument),
             view_counts=InMemoryDocumentCollectionAdapter(AuditViewCountDocument),
             checkpoints=InMemoryDocumentCollectionAdapter(AuditChainCheckpointDocument),
+            heads=InMemoryDocumentCollectionAdapter(AuditChainHeadDocument),
             advisory_locks=InMemoryAdvisoryLockAdapter(),
         )
         self.page_reads: int = 0

@@ -31,6 +31,7 @@ class AuditChainRepositoriesContainer(containers.DeclarativeContainer):
         collection=audit_entry_collections.audit_log_entry_collection,
         view_counts=audit_chain_collections.audit_view_count_collection,
         checkpoints=audit_chain_collections.audit_chain_checkpoint_collection,
+        heads=audit_chain_collections.audit_chain_head_collection,
         advisory_locks=audit_adapters.advisory_locks,
     )
     audit_chain_repo: Singleton[AuditChainRepository] = Singleton(

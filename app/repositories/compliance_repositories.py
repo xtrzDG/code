@@ -13,6 +13,7 @@ from app.repositories.document_queries import of_business
 from app.repositories.listing.audit_listing import AuditLogListing
 from app.schemas.domain.audit_chain import (
     AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
     AuditViewCountDocument,
 )
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
@@ -35,12 +36,13 @@ class AuditLogRepository(AuditLogListing, AuditLogRepoContract):
         collection: DocumentCollectionAdapterContract[AuditLogEntryDocument],
         view_counts: DocumentCollectionAdapterContract[AuditViewCountDocument],
         checkpoints: DocumentCollectionAdapterContract[AuditChainCheckpointDocument],
+        heads: DocumentCollectionAdapterContract[AuditChainHeadDocument],
         advisory_locks: AdvisoryLockAdapterContract,
     ) -> None:
         super().__init__(collection)
         self._views: AuditViewCounting = AuditViewCounting(collection, view_counts)
         self._chain: AuditChainAppending = AuditChainAppending(
-            collection, checkpoints, advisory_locks
+            collection, checkpoints, heads, advisory_locks
         )
 
     def append(self, entry: AuditLogEntryDocument) -> None:

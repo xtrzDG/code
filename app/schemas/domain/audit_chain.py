@@ -1,7 +1,7 @@
 """
 The documents around the audit log's hash chains: counts of repeated
-views, the checkpoints purges leave behind, and what the latest check of
-each chain found.
+views, the checkpoints purges leave behind, each chain's newest entry, and
+what the latest check of each chain found.
 """
 
 from base_pydantic_schemas import BaseDocument
@@ -50,6 +50,22 @@ class AuditChainCheckpointDocument(BaseDocument):
     through_position: AuditChainPosition
     through_hash: AuditEntryHash
     purged_count: AuditChainEntryCount
+
+
+class AuditChainHeadDocument(BaseDocument):
+    """
+    The newest entry of one chain (collection `audit_chain_heads`, under
+    the chain's key): its position and hash, written in the transaction of
+    every append, so the next append reads one row by its key however long
+    the chain grows. A pointer only: the daily check walks the entries
+    themselves, and an append that finds the position after it taken links
+    after the chain's newest entry instead.
+    """
+
+    id: AuditChainKey
+    business_id: BusinessId | None = None
+    head_position: AuditChainPosition
+    head_hash: AuditEntryHash
 
 
 class AuditChainStatusDocument(BaseDocument):

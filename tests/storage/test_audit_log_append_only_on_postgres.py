@@ -1,9 +1,9 @@
 """
 The audit log is append-only on Postgres (migration 1193): the
 application's role cannot change, delete or empty it, a tampered row is
-found by the chain's check, and the previous release keeps writing during
+found by the chain's check, the previous release keeps writing during
 a deploy (its upsert still inserts; its count of a repeated view changes
-nothing).
+nothing), and a chain's head left behind never forks the chain.
 """
 
 from collections.abc import Generator
@@ -128,6 +128,39 @@ def test_a_row_changed_behind_the_application_is_found(
 
     assert status.problem is AuditChainProblem.HASH_MISMATCH
     assert status.broken_position == third.chain_position
+
+
+def test_a_head_left_behind_never_forks_the_chain(process: AuditProcess) -> None:
+    for minute in range(3):
+        process.log.append(entry(BUSINESS, minute))
+    chain_key = chain_key_of(BUSINESS)
+    first, _, third = process.chains.entries_from(
+        chain_key, AuditChainPosition(1), DocumentQueryLimit(3)
+    )
+    head = process.heads.get(str(chain_key))
+    assert head is not None
+    assert first.chain_position is not None
+    assert first.entry_hash is not None
+    process.heads.upsert(
+        str(chain_key),
+        head.model_copy(
+            update={
+                "head_position": first.chain_position,
+                "head_hash": first.entry_hash,
+            }
+        ),
+    )
+
+    fourth = entry(BUSINESS, 3)
+    process.log.append(fourth)
+
+    appended = process.entries.get(str(fourth.id))
+    assert appended is not None
+    assert appended.chain_position == AuditChainPosition(4)
+    assert appended.prev_hash == third.entry_hash
+    moved = process.heads.get(str(chain_key))
+    assert moved is not None
+    assert moved.head_position == AuditChainPosition(4)
 
 
 def tamper_as_superuser(

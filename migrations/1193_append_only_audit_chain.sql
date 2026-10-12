@@ -13,8 +13,12 @@
 -- (SHA-256 of its canonical JSON, app/utilities/compliance/
 -- audit_chain_hashing.py). The application appends under the chain's
 -- advisory lock (`hashtextextended('audit_chain|<chain>', 0)`), reading
--- the chain's newest entry and inserting the next one in one transaction;
+-- where the chain ends and inserting the next entry in one transaction;
 -- the unique index below refuses a second entry at a position anyway.
+-- Where a chain ends is its head, `audit_chain_heads` (one document per
+-- chain, under its key: the newest entry's position and hash), moved in
+-- the same transaction: an append reads one row by key, however long the
+-- chain grows. The head is only a pointer; the checks walk the entries.
 -- Rows written before keep no chain fields and are never changed.
 --
 -- Append-only. A trigger refuses every UPDATE and DELETE of an entry with
@@ -67,6 +71,7 @@ select workshop.add_lookup_column('audit_log_entries', 'entity_id', 'text');
 
 select workshop.create_document_collection('audit_view_counts');
 select workshop.create_document_collection('audit_chain_checkpoints');
+select workshop.create_document_collection('audit_chain_heads');
 select workshop.create_document_collection('audit_chain_statuses');
 select workshop.add_lookup_column('audit_chain_statuses', 'status', 'text');
 

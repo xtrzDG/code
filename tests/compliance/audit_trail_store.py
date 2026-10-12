@@ -11,6 +11,7 @@ from app.repositories.audit.audit_chain_repository import AuditChainRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.domain.audit_chain import (
     AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
     AuditChainStatusDocument,
     AuditViewCountDocument,
 )
@@ -33,10 +34,14 @@ class AuditTrailStore:
         self.statuses = InMemoryDocumentCollectionAdapter[AuditChainStatusDocument](
             AuditChainStatusDocument
         )
+        self.heads = InMemoryDocumentCollectionAdapter[AuditChainHeadDocument](
+            AuditChainHeadDocument
+        )
         self.log = AuditLogRepository(
             self.entries,
             view_counts=self.view_counts,
             checkpoints=self.checkpoints,
+            heads=self.heads,
             advisory_locks=InMemoryAdvisoryLockAdapter(),
         )
         self.chains = AuditChainRepository(

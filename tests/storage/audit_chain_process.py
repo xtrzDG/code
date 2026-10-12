@@ -22,6 +22,7 @@ from app.repositories.audit.audit_chain_repository import AuditChainRepository
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.domain.audit_chain import (
     AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
     AuditChainStatusDocument,
     AuditViewCountDocument,
 )
@@ -55,10 +56,14 @@ class AuditProcess:
         checkpoints = collections(
             AuditChainCheckpointDocument, "audit_chain_checkpoints"
         )
+        self.heads: DocumentCollectionAdapterContract[AuditChainHeadDocument] = (
+            collections(AuditChainHeadDocument, "audit_chain_heads")
+        )
         self.log = AuditLogRepository(
             self.entries,
             view_counts=collections(AuditViewCountDocument, "audit_view_counts"),
             checkpoints=checkpoints,
+            heads=self.heads,
             advisory_locks=PostgresAdvisoryLockAdapter(
                 self.pool, PostgresUnitOfWorkAdapter(self.pool, self.scope)
             ),

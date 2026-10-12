@@ -15,6 +15,7 @@ from app.containers.utilities import UtilitiesContainer
 from app.contracts.audit_chain_purges import AuditChainPurgeAdapterContract
 from app.schemas.domain.audit_chain import (
     AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
     AuditChainStatusDocument,
     AuditViewCountDocument,
 )
@@ -23,11 +24,11 @@ from app.schemas.domain.audit_chain import (
 class AuditChainCollectionsContainer(containers.DeclarativeContainer):
     """
     The document collections around the audit log's hash chains (migration
-    1193): counts of repeated views, the checkpoints purges leave, and the
-    latest check of each chain. A sibling of DocumentCollectionsContainer
-    with the same storage factory (Postgres with DATABASE_URL, else in
-    memory); and the purge of a chain's oldest entries (the database's
-    function, else its rules in memory).
+    1193): counts of repeated views, the checkpoints purges leave, the
+    newest entry and the latest check of each chain. A sibling of
+    DocumentCollectionsContainer with the same storage factory (Postgres
+    with DATABASE_URL, else in memory); and the purge of a chain's oldest
+    entries (the database's function, else its rules in memory).
     """
 
     clients: ClientsContainer = DependenciesContainer()  # type: ignore[assignment]
@@ -47,6 +48,14 @@ class AuditChainCollectionsContainer(containers.DeclarativeContainer):
     audit_chain_checkpoint_collection = document_collection(
         AuditChainCheckpointDocument,
         "audit_chain_checkpoints",
+        config,
+        clients,
+        utilities,
+        time_provider,
+    )
+    audit_chain_head_collection = document_collection(
+        AuditChainHeadDocument,
+        "audit_chain_heads",
         config,
         clients,
         utilities,

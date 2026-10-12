@@ -81,6 +81,25 @@ def test_entries_are_linked_in_order_in_their_business_chain() -> None:
     assert [int(stored.chain_position or 0) for stored in other] == [1]
 
 
+def test_the_chains_head_follows_every_append() -> None:
+    store = AuditTrailStore()
+    for minute in range(3):
+        store.log.append(entry(BUSINESS, minute))
+
+    head = store.heads.get(str(chain_key_of(BUSINESS)))
+    newest = chain_of(store, chain_key_of(BUSINESS))[-1]
+    assert head is not None
+    assert (head.head_position, head.head_hash) == (
+        newest.chain_position,
+        newest.entry_hash,
+    )
+    assert head.business_id == BUSINESS
+    assert (int(head.created_at), int(head.updated_at)) == (
+        START,
+        START + 2 * 60_000_000,
+    )
+
+
 def test_entries_without_a_business_are_in_the_platform_chain() -> None:
     store = AuditTrailStore()
     store.log.append(entry(None, action=AuditAction.LOGIN, entity="user"))

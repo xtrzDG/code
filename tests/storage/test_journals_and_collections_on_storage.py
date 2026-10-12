@@ -36,7 +36,7 @@ from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.compliance.audit_chain_hashing import (
     FIRST_POSITION,
     GENESIS_HASH,
-    link_entry,
+    link_entry_and_hash,
 )
 from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.builders import (
@@ -140,7 +140,7 @@ def test_append_only_journals(collections: CollectionFactory) -> None:
     assert entry.business_id is not None
     # The entry is stored as the first link of its business's chain.
     assert audit_log_repo.list_by_business(entry.business_id) == [
-        link_entry(entry, FIRST_POSITION, GENESIS_HASH)
+        link_entry_and_hash(entry, FIRST_POSITION, GENESIS_HASH)[0]
     ]
 
 

@@ -11,6 +11,7 @@ from app.contracts.locks import AdvisoryLockAdapterContract
 from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.domain.audit_chain import (
     AuditChainCheckpointDocument,
+    AuditChainHeadDocument,
     AuditViewCountDocument,
 )
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -42,6 +43,7 @@ def audit_log_repository(
             if checkpoints is None
             else checkpoints
         ),
+        heads=InMemoryDocumentCollectionAdapter(AuditChainHeadDocument),
         advisory_locks=(
             InMemoryAdvisoryLockAdapter() if advisory_locks is None else advisory_locks
         ),

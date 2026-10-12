@@ -271,9 +271,11 @@ security events ride on actions it reads (`login`, `session_revoked`,
 `tenant_hopping`, `failed_sign_in_checks`, `audit_chain_broken`) are
 written only by the `platform_alerts` job and read by key, so an old
 instance never reads one. The new collections (`audit_view_counts`,
-`audit_chain_checkpoints`, `audit_chain_statuses`) are unknown to the old
-release. `audit_log_entries` is append-only, so `migrate-documents` and the
-data tasks leave it alone (older versions upcast on read), and its four new
+`audit_chain_checkpoints`, `audit_chain_heads`, `audit_chain_statuses`)
+are unknown to the old release; it writes no chained entry, so a chain's
+head stays right across a rollback and the next deploy.
+`audit_log_entries` is append-only, so `migrate-documents` and the data
+tasks leave it alone (older versions upcast on read), and its four new
 lookup columns stay empty for older rows (they are in no chain). A rollback
 keeps the trigger and the privileges: nothing in the previous release
 needs more. Old entries leave only through `workshop purge-audit-log`
