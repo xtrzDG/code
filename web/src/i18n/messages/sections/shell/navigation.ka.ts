@@ -52,6 +52,7 @@ export const navigationKa: Translation<typeof navigationEn> = {
     settingsQuickReplies: "სწრაფი პასუხები",
     settingsCalls: "ზარები",
     settingsReviews: "შეფასებები",
+    settingsDeposits: "დეპოზიტები",
     settingsIntegrations: "ინტეგრაციები",
     settingsBilling: "ტარიფი და გადახდა",
     settingsPrivacy: "კონფიდენციალურობა",

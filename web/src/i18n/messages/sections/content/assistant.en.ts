@@ -105,5 +105,9 @@ export const assistantEn = {
       name: "Offer answers to tap",
       description: "Shows the customer a few answers as buttons — a time, a service, yes or no. Where a channel has no buttons, they come as a numbered list.",
     },
+    send_payment_link: {
+      name: "Deposit link",
+      description: "Sends the link to your payment page for the deposit a booking or a banquet request needs. The amount comes from your deposit settings and the link from your payment page; the assistant never chooses either.",
+    },
   },
 } as const;

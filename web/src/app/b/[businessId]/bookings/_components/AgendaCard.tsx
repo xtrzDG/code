@@ -3,6 +3,7 @@
 import { Fragment, useId } from "react";
 
 import { IconCheck, IconPhone, IconX } from "@/components/icons";
+import { DepositBadge } from "@/components/deposits/DepositBadge";
 import { BookingStatusBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName } from "@/components/insights/common";
 import { usePartyWording } from "@/components/insights/usePartyWording";
@@ -71,6 +72,7 @@ export function AgendaCard({
                 <CustomerName name={booking.contact_name} />
               </span>
               {booking.status === "pending" ? <BookingStatusBadge status={booking.status} /> : null}
+              {booking.deposit ? <DepositBadge status={booking.deposit.status} /> : null}
               {booking.is_sandbox ? <TestBadge /> : null}
             </span>
             <span className="mt-0.5 block text-sm text-ink-muted">

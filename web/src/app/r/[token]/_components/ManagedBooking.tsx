@@ -18,6 +18,8 @@ type View = Schema<"ManagedBookingView">;
 
 const STATUS_TEXT = {
   pending: "statusPending",
+  // Held for its deposit: confirmed once the business sees the payment.
+  pending_deposit: "statusPending",
   confirmed: "statusConfirmed",
   cancelled: "statusCancelled",
   completed: "statusCompleted",

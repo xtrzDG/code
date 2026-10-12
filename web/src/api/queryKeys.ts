@@ -9,6 +9,7 @@
  * optional filter is `null` when unset, never `undefined`.
  */
 
+import { depositQueryKeys } from "./depositQueryKeys";
 import { integrationQueryKeys } from "./integrationQueryKeys";
 import { platformQueryKeys } from "./platformQueryKeys";
 import type { QueryKey } from "./queryKey";
@@ -281,6 +282,8 @@ export const queryKeys = {
   ...platformQueryKeys,
 
   ...integrationQueryKeys,
+
+  ...depositQueryKeys,
 
   assistantSettings: {
     /** Settings → General: whether the assistant remembers returning customers. */

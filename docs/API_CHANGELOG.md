@@ -13,12 +13,12 @@ label and a migration path).
 
 ## 2026-10-12 — deposits and payment links
 
-Spec: `6194eea4b30ee3d6`
+Spec: `aebc2c6b0704bd3c`
 
 - **Added** the deposit settings of a business:
   `GET·PUT /v1/businesses/{business_id}/deposit-settings` (on or off, the
   hold of 15–1440 minutes, the refund cutoff of 0–720 hours, the default
-  payment page; the answer names the business currency and its minor-unit
+  payment page, kept as it is when the request leaves it null; the answer names the business currency and its minor-unit
   digits), `POST …/deposit-settings/payment-links` (an https page of the
   owner's own payment provider, fixed or a template with `{amount}`,
   `{amount_minor}`, `{currency}` and `{reference}`; 201; a page whose query

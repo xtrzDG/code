@@ -36,6 +36,7 @@ export const BUSINESS_PAGES = [
   "settings/quick-replies",
   "settings/calls",
   "settings/reviews",
+  "settings/deposits",
   "settings/integrations",
   "settings/billing",
   "settings/privacy",

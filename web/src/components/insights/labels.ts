@@ -73,10 +73,12 @@ export const TOOL_LABELS: Record<AssistantToolName, MessageKey> = {
   send_link: "conversations.tools.send_link",
   record_unanswered_question: "conversations.tools.record_unanswered_question",
   offer_choices: "conversations.tools.offer_choices",
+  send_payment_link: "conversations.tools.send_payment_link",
 };
 
 export const BOOKING_STATUS: Record<BookingStatus, StatusLabel> = {
   pending: { label: "bookings.status.pending", tone: "warning" },
+  pending_deposit: { label: "bookings.status.pending_deposit", tone: "warning" },
   confirmed: { label: "bookings.status.confirmed", tone: "success" },
   completed: { label: "bookings.status.completed", tone: "neutral" },
   no_show: { label: "bookings.status.no_show", tone: "danger" },

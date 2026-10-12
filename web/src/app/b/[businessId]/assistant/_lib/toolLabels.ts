@@ -19,4 +19,8 @@ export const TOOL_LABELS: Record<AssistantToolName, { name: MessageKey; descript
     description: "assistant.tools.record_unanswered_question.description",
   },
   offer_choices: { name: "assistant.tools.offer_choices.name", description: "assistant.tools.offer_choices.description" },
+  send_payment_link: {
+    name: "assistant.tools.send_payment_link.name",
+    description: "assistant.tools.send_payment_link.description",
+  },
 };

@@ -138,6 +138,7 @@ export const conversationsEn = {
     send_link: "Sent a link",
     record_unanswered_question: "Noted a question without an answer",
     offer_choices: "Offered answers to tap",
+    send_payment_link: "Sent the deposit link",
   },
   messageTokens: { one: "{count} token", other: "{count} tokens" },
   usage: {

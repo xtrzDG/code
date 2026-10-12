@@ -39,6 +39,7 @@ export const bookingsDe: Translation<typeof bookingsEn> = {
   },
   status: {
     pending: "Wartet auf Bestätigung",
+    pending_deposit: "Wartet auf Anzahlung",
     confirmed: "Bestätigt",
     completed: "Abgeschlossen",
     no_show: "Nicht erschienen",

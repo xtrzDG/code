@@ -138,6 +138,7 @@ export const conversationsKa: Translation<typeof conversationsEn> = {
     send_link: "გაგზავნა ბმული",
     record_unanswered_question: "ჩაიწერა უპასუხო კითხვა",
     offer_choices: "შესთავაზა პასუხის ვარიანტები",
+    send_payment_link: "გაგზავნა დეპოზიტის ბმული",
   },
   messageTokens: { one: "{count} ტოკენი", other: "{count} ტოკენი" },
   usage: {

@@ -72,7 +72,16 @@ export function BookingDialogs({ page }: { page: BookingsPage }) {
         size="md"
         footer={dialogBooking ? <BookingDetailActions booking={dialogBooking} page={page} /> : undefined}
       >
-        {dialogBooking ? <BookingDetails booking={dialogBooking} isStay={isStay(dialogBooking)} /> : null}
+        {dialogBooking ? (
+          <BookingDetails
+            booking={dialogBooking}
+            isStay={isStay(dialogBooking)}
+            onDepositPaid={(paid) => {
+              replaceBooking(paid);
+              setDialog({ kind: "details", booking: paid });
+            }}
+          />
+        ) : null}
       </Modal>
 
       <Modal

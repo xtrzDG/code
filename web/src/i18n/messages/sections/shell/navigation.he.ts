@@ -51,6 +51,7 @@ export const navigationHe: Translation<typeof navigationEn> = {
     settingsQuickReplies: "תשובות מהירות",
     settingsCalls: "שיחות טלפון",
     settingsReviews: "ביקורות",
+    settingsDeposits: "פיקדונות",
     settingsIntegrations: "חיבורים",
     settingsBilling: "מסלול וחיוב",
     settingsPrivacy: "פרטיות",

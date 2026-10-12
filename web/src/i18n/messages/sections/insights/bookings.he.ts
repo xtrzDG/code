@@ -39,6 +39,7 @@ export const bookingsHe: Translation<typeof bookingsEn> = {
   },
   status: {
     pending: "ממתינה לאישור",
+    pending_deposit: "ממתינה לפיקדון",
     confirmed: "מאושרת",
     completed: "הושלמה",
     no_show: "לא הגיע",

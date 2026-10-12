@@ -56114,7 +56114,7 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
-                "description": "The owner's choices: deposits on or off, how long a held place waits,\nuntil when before the start a cancellation is refunded, and the\ntemplate that serves policies naming no page.",
+                "description": "The owner's choices: deposits on or off, how long a held place waits,\nuntil when before the start a cancellation is refunded, and the\ntemplate that serves policies naming no page (null keeps the current\none).",
                 "properties": {
                   "default_payment_link_id": {
                     "anyOf": [

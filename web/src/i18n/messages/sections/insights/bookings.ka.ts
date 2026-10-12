@@ -39,6 +39,7 @@ export const bookingsKa: Translation<typeof bookingsEn> = {
   },
   status: {
     pending: "ელოდება დადასტურებას",
+    pending_deposit: "ელოდება დეპოზიტს",
     confirmed: "დადასტურებული",
     completed: "შედგა",
     no_show: "არ გამოცხადდა",

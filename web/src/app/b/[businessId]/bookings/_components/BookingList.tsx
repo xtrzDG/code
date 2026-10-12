@@ -3,6 +3,8 @@
 import Link from "next/link";
 
 import { useBusiness, useBusinessFormat } from "@/components/business/BusinessContext";
+import { BookingDepositRow } from "@/components/deposits/BookingDepositRow";
+import { DepositBadge } from "@/components/deposits/DepositBadge";
 import { IconChevronRight } from "@/components/icons";
 import { BookingStatusBadge, ChannelBadge, TestBadge } from "@/components/insights/Badges";
 import { CustomerName, DetailRow, LoadMore, PhoneLink } from "@/components/insights/common";
@@ -120,6 +122,7 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
               <CustomerName name={booking.contact_name} />
             </span>
             <BookingStatusBadge status={booking.status} />
+            {booking.deposit ? <DepositBadge status={booking.deposit.status} /> : null}
             {booking.is_sandbox ? <TestBadge /> : null}
           </span>
           <span className="mt-0.5 block text-sm text-ink-muted">
@@ -168,8 +171,16 @@ function BookingRow({ booking, isStay, onOpen }: { booking: BookingView; isStay:
   );
 }
 
-/** Everything about one booking, as a definition list. */
-export function BookingDetails({ booking, isStay }: { booking: BookingView; isStay: boolean }) {
+/** Everything about one booking, as a definition list; `onDepositPaid` gets it back once its deposit is marked paid. */
+export function BookingDetails({
+  booking,
+  isStay,
+  onDepositPaid,
+}: {
+  booking: BookingView;
+  isStay: boolean;
+  onDepositPaid: (booking: BookingView) => void;
+}) {
   const { t, locale } = useI18n();
   const { business } = useBusiness();
   const format = useBusinessFormat();
@@ -195,6 +206,11 @@ export function BookingDetails({ booking, isStay }: { booking: BookingView; isSt
           </DetailRow>
         ) : null}
         {value ? <DetailRow label={t("bookings.details.value")}>{value}</DetailRow> : null}
+        {booking.deposit ? (
+          <DetailRow label={t("deposits.booking.label")}>
+            <BookingDepositRow booking={booking} deposit={booking.deposit} onPaid={onDepositPaid} />
+          </DetailRow>
+        ) : null}
         <DetailRow label={party.label(booking.resource_id)}>{party.count(booking.party_size, booking.resource_id)}</DetailRow>
         <DetailRow label={t("bookings.details.phone")}>
           {booking.contact_phone_number ? <PhoneLink phone={booking.contact_phone_number} /> : "–"}

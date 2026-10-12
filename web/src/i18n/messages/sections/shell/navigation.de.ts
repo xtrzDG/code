@@ -51,6 +51,7 @@ export const navigationDe: Translation<typeof navigationEn> = {
     settingsQuickReplies: "Schnellantworten",
     settingsCalls: "Anrufe",
     settingsReviews: "Bewertungen",
+    settingsDeposits: "Anzahlungen",
     settingsIntegrations: "Integrationen",
     settingsBilling: "Tarif und Abrechnung",
     settingsPrivacy: "Datenschutz",
