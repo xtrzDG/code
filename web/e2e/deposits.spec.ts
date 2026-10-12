@@ -74,7 +74,7 @@ test("the owner adds a payment page, turns deposits on and sets the banquet depo
   await expect(page.getByText(deposits.settings.errors.hold)).toBeVisible();
   await page.getByLabel(deposits.settings.holdMinutes).fill("30");
 
-  await page.getByLabel(deposits.policy.rule).selectOption("fixed");
+  await page.getByLabel(deposits.policy.rule, { exact: true }).selectOption("fixed");
   await page.getByLabel(deposits.policy.amount.replace("{currency}", "EUR")).fill("50");
   await page.getByRole("button", { name: deposits.policy.save }).click();
   await expect(page.getByRole("status").filter({ hasText: deposits.policy.saved })).toBeVisible();
@@ -82,7 +82,7 @@ test("the owner adds a payment page, turns deposits on and sets the banquet depo
   await page.reload();
   await expect(page.getByRole("switch", { name: deposits.settings.toggle })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByLabel(deposits.settings.holdMinutes)).toHaveValue("30");
-  await expect(page.getByLabel(deposits.policy.rule)).toHaveValue("fixed");
+  await expect(page.getByLabel(deposits.policy.rule, { exact: true })).toHaveValue("fixed");
   await expect(page.getByLabel(deposits.policy.amount.replace("{currency}", "EUR"))).toHaveValue("50");
 });
 
@@ -95,7 +95,7 @@ test("a table asks a deposit per guest from six guests", async ({ page, request,
   const dialog = page.getByRole("dialog");
   // No payment page yet: the card says where to add one.
   await expect(dialog.getByRole("link", { name: deposits.policy.openSettings })).toBeVisible();
-  await dialog.getByLabel(deposits.policy.rule).selectOption("per_guest");
+  await dialog.getByLabel(deposits.policy.rule, { exact: true }).selectOption("per_guest");
   await dialog.getByLabel(deposits.policy.amountPerGuest.replace("{currency}", "EUR")).fill("20");
   await dialog.getByLabel(deposits.policy.minParty).fill("6");
   await dialog.getByRole("button", { name: deposits.policy.save }).click();
@@ -110,7 +110,7 @@ test("staff mark a held booking's deposit paid and the booking is confirmed", as
   const tableId = await addTable(request, owner.token, owner.businessId, "Window");
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const created = await request.post(`${API_URL}/v1/businesses/${owner.businessId}/bookings`, {
-    data: { contact_name: "Nino Beridze", date: tomorrow, time: "19:00", party_size: 6, duration_minutes: 90, resource_id: tableId },
+    data: { contact_name: "Nino Beridze", date: tomorrow, time: "11:00", party_size: 6, duration_minutes: 60, resource_id: tableId },
     headers: headersOf(owner.token),
   });
   expect(created.status(), await created.text()).toBe(201);
@@ -133,7 +133,8 @@ test("staff mark a held booking's deposit paid and the booking is confirmed", as
     requested_at: Date.now() * 1000,
     hold_expires_at: holdExpiresAt,
   };
-  await page.route("**/api/backend/v1/businesses/*/bookings?*", async (route) => {
+  const isBookingList = (url: URL) => /\/api\/backend\/v1\/businesses\/[^/]+\/bookings$/.test(url.pathname);
+  await page.route(isBookingList, async (route) => {
     const response = await route.fetch();
     const body = (await response.json()) as { items: Schema<"BookingView">[] };
     const items = body.items.map((item) =>
@@ -161,7 +162,7 @@ test("staff mark a held booking's deposit paid and the booking is confirmed", as
     return route.fulfill({ json: { ...request_, status: "paid", paid_at: Date.now() * 1000 } });
   });
 
-  await page.goto(`/b/${owner.businessId}/bookings?from=${tomorrow}&to=${tomorrow}`);
+  await page.goto(`/b/${owner.businessId}/bookings`);
   const bookingRow = page.getByRole("button").filter({ hasText: "Nino Beridze" }).first();
   await expect(bookingRow.getByText(`${deposits.chip} · ${deposits.status.awaiting}`)).toBeVisible();
   await bookingRow.click();
