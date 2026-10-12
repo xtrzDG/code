@@ -133,7 +133,8 @@ def test_list_and_update_leads() -> None:
         if entry.action is AuditAction.VIEW
     ]
     [view] = view_entries
-    assert view.record_count == 2 and view.actor_id == staff_id
+    counts = leads.world.audit_repo.view_counts(leads.business.id, [view.id])
+    assert int(counts[view.id]) == 2 and view.actor_id == staff_id
     with pytest.raises(NotFoundError):
         leads.world.update_lead_status().run(
             UpdateLeadStatusCommand(

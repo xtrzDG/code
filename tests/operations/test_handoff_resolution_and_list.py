@@ -78,9 +78,10 @@ def test_list_handoffs_filters_and_audits() -> None:
     assert real.items[0].contact_name == "Yossi"
     assert real.items[0].urgency is HandoffUrgency.HIGH
     assert len(pending.items) == 2 and len(pending_sandbox) == 1
-    # Both lists within five minutes: one VIEW entry with a count.
+    # Both lists within five minutes: one VIEW entry, counted beside it.
     [view] = fixture.world.audit_repo.list_by_business(fixture.business.id)
-    assert view.record_count == 2
+    counts = fixture.world.audit_repo.view_counts(fixture.business.id, [view.id])
+    assert int(counts[view.id]) == 2
 
 
 def test_handoff_pages_put_urgent_and_long_waiting_ones_first() -> None:
