@@ -1,5 +1,7 @@
 """Settings saves that race other saves, status switches and invitations."""
 
+from collections.abc import Callable
+
 import pytest
 
 from app.schemas.constants.businesses import BusinessStatus
@@ -20,6 +22,8 @@ from app.schemas.typings.businesses.constrained_integers import BusinessRevision
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName, CityName
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
+from app.use_cases.businesses import invite_staff_use_case
+from app.use_cases.shared.team_invitations import find_or_create_invited_user
 from tests.businesses.business_settings_steps import (
     contact,
     georgian_restaurant,
@@ -207,22 +211,30 @@ def test_a_member_invite_racing_a_settings_save_keeps_both(
     owner_id, business = georgian_restaurant(testbed)
     base_revision = int(business.revision)
     invite_staff = testbed.invite_staff
-    find_or_create_user = invite_staff._find_or_create_user  # pyright: ignore[reportPrivateUsage]
 
-    def settings_saved_meanwhile(*args: object) -> UserDocument:
-        # Another owner saves the settings after the invite read the business.
-        update(
-            testbed,
-            owner_id,
-            business.id,
-            BusinessSettingsChanges(
-                expected_revision=BusinessRevision(base_revision),
-                city=CityName("Berlin"),
-            ),
-        )
-        return find_or_create_user(*args)  # type: ignore[arg-type]
+    def settings_saved_first[**P](
+        find: Callable[P, UserDocument],
+    ) -> Callable[P, UserDocument]:
+        def settings_saved_meanwhile(*args: P.args, **kwargs: P.kwargs) -> UserDocument:
+            # Another owner saves the settings after the invite read the business.
+            update(
+                testbed,
+                owner_id,
+                business.id,
+                BusinessSettingsChanges(
+                    expected_revision=BusinessRevision(base_revision),
+                    city=CityName("Berlin"),
+                ),
+            )
+            return find(*args, **kwargs)
 
-    monkeypatch.setattr(invite_staff, "_find_or_create_user", settings_saved_meanwhile)
+        return settings_saved_meanwhile
+
+    monkeypatch.setattr(
+        invite_staff_use_case,
+        "find_or_create_invited_user",
+        settings_saved_first(find_or_create_invited_user),
+    )
 
     invite_staff.run(
         InviteStaffCommand(
