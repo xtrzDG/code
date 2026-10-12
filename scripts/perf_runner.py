@@ -6,11 +6,14 @@ times slower than the last one (docs/operations/capacity.md, "The weekly
 run of 2026-10-12"); next to these lines a slow runner shows as one.
 
     uv run python -m scripts.perf_runner --report perf/results/latest.json
-    python3 -m scripts.perf_runner --seed-seconds 412 --dataset "50 businesses"
+    uv run --no-project python -m scripts.perf_runner --seed-seconds 412 \
+        --dataset "50 businesses"
 
 The latency budgets' report (PERF_REPORT) gives the dataset and the seed
-time; the load job passes the seed time it measured. Standard library only
-(the load job has no project environment). Prints Markdown; exit code 0
+time; the load job passes the seed time it measured. Standard library only:
+the load job has no project environment, only uv's Python 3.14 (the
+runner image's own python3 is older), and the module also stays valid
+Python 3.12, so a stock python3 can run it. Prints Markdown; exit code 0
 also when the report is missing or unreadable (the budgets step failed
 before writing it): the runner line is shown all the same.
 """
@@ -66,9 +69,17 @@ def memory_gib(memory_info: Path = MEMORY_INFO) -> str:
 def read_report(path: Path) -> tuple[str | None, float | None]:
     """The dataset and the seed seconds of a perf report (None: unknown)."""
 
+    # One exception per handler: the formatter writes a handler of two as
+    # `except A, B:` (Python 3.14 only), and the module stays valid for an
+    # older python3 (tests/platform/test_perf_runner.py).
     try:
-        document: object = json.loads(path.read_text(encoding="utf-8"))
-    except OSError, ValueError:
+        text: str = path.read_text(encoding="utf-8")
+    except OSError:
+        return None, None
+
+    try:
+        document: object = json.loads(text)
+    except ValueError:
         return None, None
 
     if not isinstance(document, dict):

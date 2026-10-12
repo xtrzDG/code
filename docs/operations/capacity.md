@@ -146,7 +146,12 @@ answered by one worker for minutes after their scenario, and that backlog
 would otherwise load the webhook burst. Both jobs of `perf.yml` write the
 runner's CPUs, CPU model and memory and the seed time into the job
 summary (`scripts/perf_runner.py`), and every wait its outcome, so a slow
-runner shows next to its numbers.
+runner shows next to its numbers. The load job has no project environment:
+it runs the script with uv's Python 3.14 (`uv run --no-project`), never the
+runner image's older python3, and the step only informs (a failed summary
+never keeps the waits and scenarios from running);
+`tests/platform/test_workflow_python.py` holds every workflow to uv's Python
+for repository code.
 
 | Scenario | Load | Thresholds (the run fails above them) |
 | --- | --- | --- |
