@@ -130,6 +130,7 @@ class ListAnswersToImproveUseCase(
                         else build_written_message_preview(answer)
                     ),
                     rating_reason=conversation.rating_reason,
+                    rating_by=conversation.rating_by,
                     language=conversation.language,
                     at=conversation.rated_at or conversation.last_message_at,
                 )

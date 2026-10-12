@@ -12,6 +12,7 @@ from app.schemas.constants.conversations import (
     CallGuardVerdict,
     CallOutcome,
     ConversationRating,
+    ConversationRatingBy,
     ConversationRatingReason,
     ConversationStatus,
     LlmTurnRole,
@@ -82,7 +83,7 @@ class ConversationDocument(BaseDocument):
     Customer conversation in one channel (concept table `conversations`).
 
     Pinned to one assistant version so its instruction and tools never change
-    mid-conversation. `rating` is the owner's or staff's good / bad verdict.
+    mid-conversation. `rating` is the team's or the customer's good / bad verdict.
 
     The team inbox fields belong to their own operations, and a plain save
     of the conversation keeps their stored values
@@ -96,12 +97,10 @@ class ConversationDocument(BaseDocument):
 
     Version 2: the team inbox fields (all optional, so version 1 rows read
     as they are).
-
     Version 3: `acquisition_source`, where the customer came from when the
     conversation started (a shared link's tag, an ad, the number dialled;
     `app/utilities/sharing/acquisition_sources.py`). Set once, never
     changed; optional, so version 2 rows read as they are.
-
     Version 4: why a bad rating was given (`rating_reason`), the answer it
     is about (`rated_message_id`), when someone acted on it (corrected the
     answer or saved a check from it: `improved_at`) and, derived on every
@@ -109,14 +108,16 @@ class ConversationDocument(BaseDocument):
     the Overview's "Answers worth improving"). The review fields change
     only through `ConversationReviewRepoContract.set_review`; a plain save
     keeps them as stored. All optional, so version 3 rows read as they are.
-
     Version 5: what the conversation was about (`summary`, at most 300
     characters, written by a cheap model once it was quiet for two hours)
     and when (`summarized_at`), the assistant's memory of a returning
     customer. Optional, so version 4 rows read as they are.
+    Version 6: who rated it (`rating_by`: the team, or the customer under the
+    website chat's answers, whose `rated_by` is None). Rated version 5 rows
+    were the team's (the upcaster says so).
     """
 
-    schema_version: SchemaVersion = SchemaVersion("5")
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: ConversationId = Field(default_factory=ConversationId)
     business_id: BusinessId
     contact_id: ContactId
@@ -131,6 +132,7 @@ class ConversationDocument(BaseDocument):
     rating: ConversationRating | None = None
     rated_by: UserId | None = None
     rated_at: Microseconds | None = None
+    rating_by: ConversationRatingBy | None = None
     assignee_user_id: UserId | None = None
     assigned_by: UserId | None = None
     assigned_at: Microseconds | None = None

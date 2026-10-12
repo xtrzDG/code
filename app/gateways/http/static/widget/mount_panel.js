@@ -48,8 +48,19 @@
       // With a live stream the dots wait for the worker's typing signal.
       typingGated: false,
       workerTyping: false,
-      noAnswerTimer: null
+      noAnswerTimer: null,
+      // Photos and voice messages for the next message (mount_attachments,
+      // mount_recording) and this page's pictures of those sent.
+      uploads: [],
+      mediaUrls: {},
+      mediaError: "",
+      recording: null,
+      // The thumbs under answers (mount_rating).
+      rated: [],
+      ratingStep: null,
+      ratingTimer: null
     };
+    state.rated = loadRated();
     state.handoffNoticeShown = state.history.some(function (item) {
       return item.role === "notice";
     });
@@ -178,9 +189,15 @@
     sendButton.type = "submit";
     sendButton.disabled = true;
     sendButton.appendChild(sendIcon());
+    // The paperclip, the input, the microphone, send; the tray above them.
+    var media = buildMedia();
     composer.appendChild(inputLabel);
+    composer.appendChild(media.picker);
+    composer.appendChild(media.attach);
     composer.appendChild(input);
+    composer.appendChild(media.mic);
     composer.appendChild(sendButton);
+    panel.appendChild(media.tray);
     panel.appendChild(composer);
 
     // "AI assistant · can make mistakes · Privacy".

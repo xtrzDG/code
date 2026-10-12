@@ -10,7 +10,7 @@ from app.containers.utilities import UtilitiesContainer
 
 class WidgetVisitorOperatorsContainer(containers.DeclarativeContainer):
     """
-    Operators of a website chat visitor's uploads: each request names its
+    Operators of a website chat visitor's uploads and ratings: each request names its
     business, so each runs in that business's storage scope.
     """
 
@@ -23,4 +23,7 @@ class WidgetVisitorOperatorsContainer(containers.DeclarativeContainer):
     )
     accept_widget_upload_operator = pipeline_operator(
         widget_visitor_pipelines.accept_widget_upload_pipeline, storage_scope
+    )
+    rate_widget_conversation_operator = pipeline_operator(
+        widget_visitor_pipelines.rate_widget_conversation_pipeline, storage_scope
     )

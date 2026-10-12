@@ -2,7 +2,8 @@
 
 /**
  * "Answers worth improving" (Overview, owners and staff): conversations
- * rated bad that nobody acted on yet, then the questions the assistant
+ * rated bad that nobody acted on yet (by the team, or by the customer with
+ * the website chat's thumbs: marked so), then the questions the assistant
  * could not answer. Owners fix an answer or keep the question as a check
  * right here; everyone can open the conversation.
  */
@@ -105,6 +106,7 @@ function ImproveRow({
         <Badge tone={isQuestion ? "warning" : "danger"}>
           {isQuestion ? t("teaching.improve.unanswered") : t("teaching.improve.badRating")}
         </Badge>
+        {item.rating_by === "customer" ? <Badge tone="info">{t("teaching.improve.byCustomer")}</Badge> : null}
         {item.rating_reason ? <span>{t(REASON_LABELS[item.rating_reason])}</span> : null}
         {isQuestion && item.occurrence_count ? <span>{tp("teaching.improve.asked", item.occurrence_count)}</span> : null}
         <span className="ms-auto">{format.dateTime(item.at)}</span>

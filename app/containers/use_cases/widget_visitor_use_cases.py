@@ -8,11 +8,18 @@ from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.contracts.use_case_contract import UseCaseContract
+from app.schemas.dto.channels.widget_ratings import (
+    WidgetRatingCommand,
+    WidgetRatingView,
+)
 from app.schemas.dto.channels.widget_uploads import (
     WidgetAttachmentView,
     WidgetUploadAdmission,
     WidgetUploadAllowance,
     WidgetUploadCommand,
+)
+from app.use_cases.channels.ratings.rate_widget_conversation_use_case import (
+    RateWidgetConversationUseCase,
 )
 from app.use_cases.channels.uploads.accept_widget_upload_use_case import (
     AcceptWidgetUploadUseCase,
@@ -26,7 +33,8 @@ class WidgetVisitorUseCasesContainer(containers.DeclarativeContainer):
     """
     What a website chat visitor does besides writing: a photo or a voice
     note uploaded for the next message (counted before it is read, then
-    checked and kept encrypted, migration 1191).
+    checked and kept encrypted, migration 1191), and the thumbs on the
+    chat's answers.
     """
 
     adapters: AdaptersContainer = composed_container_edge(AdaptersContainer)  # type: ignore[assignment]
@@ -52,5 +60,17 @@ class WidgetVisitorUseCasesContainer(containers.DeclarativeContainer):
         widget_upload_repo=repositories.widget_upload_repo,
         media_storage=adapters.media.media_storage,
         media_settings=config.app_settings.provided.media,
+        wall_clock=time_provider.microsecond_wall_clock,
+    )
+    rate_widget_conversation_use_case: Factory[
+        UseCaseContract[WidgetRatingCommand, WidgetRatingView]
+    ] = Factory(
+        RateWidgetConversationUseCase,
+        business_repo=repositories.business_repo,
+        channel_repo=repositories.channel_repo,
+        conversation_repo=repositories.conversation_repo,
+        conversation_review_repo=repositories.conversation_repo,
+        message_repo=repositories.message_repo,
+        rate_limit_registry=registries.request_rate_limit_registry,
         wall_clock=time_provider.microsecond_wall_clock,
     )

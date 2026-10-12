@@ -14,6 +14,7 @@ from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.businesses.strings import BusinessName
 from app.schemas.typings.channels.booleans import (
     HasMoreWidgetMessages,
+    InvitesRating,
     IsWebChatEnabled,
 )
 from app.schemas.typings.channels.constrained_strings import (
@@ -163,7 +164,9 @@ class WidgetMessageView(ImmutableDTO):
     """
     An assistant or staff message as the widget shows it; `choices` are the
     options an assistant reply offers, shown as chips under it until the
-    visitor writes (a tap sends the label).
+    visitor writes (a tap sends the label). `invites_rating`: the answer of
+    a turn that booked or took a lead, under which the widget asks for a
+    thumbs up or down at once.
     """
 
     id: MessageId
@@ -173,6 +176,7 @@ class WidgetMessageView(ImmutableDTO):
     direction: TextDirection
     created_at: Microseconds
     choices: list[ChoiceLabel] = Field(default_factory=list[ChoiceLabel])
+    invites_rating: InvitesRating = False
 
 
 class WidgetMessagesView(ImmutableDTO):

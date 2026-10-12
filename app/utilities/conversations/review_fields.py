@@ -1,6 +1,7 @@
 """
-The review fields of a conversation: the owner's or staff's rating, why
-it was bad, the answer it is about and whether someone acted on it. Only
+The review fields of a conversation: the rating (the owner's or staff's,
+or the customer's from the website chat), who gave it, why it was bad,
+the answer it is about and whether someone acted on it. Only
 their own writes change them (`ConversationReviewRepoContract`); a plain
 save of the conversation keeps what is stored, so a customer turn that
 read the conversation before it was rated cannot undo the rating.
@@ -14,6 +15,7 @@ REVIEW_OWNED_FIELDS: tuple[str, ...] = (
     "rating",
     "rated_by",
     "rated_at",
+    "rating_by",
     "rating_reason",
     "rated_message_id",
     "improved_at",

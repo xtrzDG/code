@@ -7,6 +7,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.conversations import (
     AnswerToImproveKind,
+    ConversationRatingBy,
     ConversationRatingReason,
 )
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -39,7 +40,9 @@ class AnswerToImproveView(ImmutableDTO):
     (UNANSWERED_QUESTION) has its `question_id`, `question`, how often it
     was asked and its language; a conversation rated bad (BAD_RATING) its
     `conversation_id`, the rated answer (`message_id`, `answer`), the
-    customer's last words (`customer_message`) and the reason given.
+    customer's last words (`customer_message`), the reason given and who
+    flagged it (`rating_by`: the team, or the customer with the website
+    chat's thumbs).
     `at` is when it was last asked or written.
     """
 
@@ -52,6 +55,7 @@ class AnswerToImproveView(ImmutableDTO):
     customer_message: MessagePreview | None = None
     answer: MessagePreview | None = None
     rating_reason: ConversationRatingReason | None = None
+    rating_by: ConversationRatingBy | None = None
     language: LanguageTag | None = None
     at: Microseconds
 

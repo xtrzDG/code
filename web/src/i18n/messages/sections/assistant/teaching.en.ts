@@ -68,6 +68,7 @@ export const teachingEn = {
     },
   },
   rating: {
+    byCustomer: "Rated by the customer in the website chat.",
     reasonLabel: "What was wrong?",
     reasons: {
       wrong_info: "Wrong information",
@@ -146,6 +147,7 @@ export const teachingEn = {
     loading: "Loading answers to improve…",
     empty: "Nothing to improve right now.",
     badRating: "Rated bad",
+    byCustomer: "Customer's rating",
     unanswered: "No answer",
     asked: {
       one: "Asked {count} time",

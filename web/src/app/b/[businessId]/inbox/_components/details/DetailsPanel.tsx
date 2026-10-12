@@ -85,6 +85,9 @@ export function DetailsPanel({
           isPending={rate.isPending}
           onChange={(rating) => void rate.change(rating)}
         />
+        {conversation.rating && conversation.rating_by === "customer" ? (
+          <p className="mt-1 text-xs text-ink-subtle">{t("teaching.rating.byCustomer")}</p>
+        ) : null}
         {conversation.rating === "bad" ? (
           <RatingReasons
             value={conversation.rating_reason ?? null}

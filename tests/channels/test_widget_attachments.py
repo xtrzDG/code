@@ -5,6 +5,8 @@ API, photos lose their metadata, uploads are counted before they are read,
 and a file belongs to the visitor who uploaded it.
 """
 
+from typing import Any
+
 from app.schemas.constants.businesses import BusinessStatus
 from app.schemas.constants.channels import ChannelStatus
 from app.utilities.channels.widget_visitors import widget_visitor_id
@@ -24,8 +26,8 @@ from tests.media.upload_files import (
 )
 
 
-def error_code(response: object) -> str:
-    body = response.json()  # type: ignore[attr-defined]
+def error_code(response: Any) -> str:
+    body: dict[str, Any] = response.json()
     reasons: list[dict[str, str]] = body.get("reasons") or []
     return reasons[0]["code"] if reasons else str(body["error"])
 

@@ -47,7 +47,7 @@
     try {
       if (root.adoptedStyleSheets !== undefined && typeof CSSStyleSheet === "function") {
         var sheet = new CSSStyleSheet();
-        sheet.replaceSync(CSS);
+        sheet.replaceSync(CSS + MEDIA_CSS);
         root.adoptedStyleSheets = [sheet];
         return;
       }
@@ -55,7 +55,7 @@
       // Fall back to a <style> element below.
     }
     var style = document.createElement("style");
-    style.textContent = CSS;
+    style.textContent = CSS + MEDIA_CSS;
     root.appendChild(style);
   }
 
@@ -149,6 +149,36 @@
   function phoneIcon() {
     return svgIcon([
       "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"
+    ]);
+  }
+
+  function attachIcon() {
+    return svgIcon([
+      "M21.4 11.1l-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"
+    ]);
+  }
+
+  function micIcon() {
+    return svgIcon([
+      "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z",
+      "M19 10v2a7 7 0 0 1-14 0v-2",
+      "M12 19v3"
+    ]);
+  }
+
+  function photoIcon() {
+    return svgIcon([
+      "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z",
+      "M3 16l5-5 4 4 3-3 6 6",
+      "M15.5 9.5h.01"
+    ]);
+  }
+
+  // Thumbs up; the thumbs down is the same icon turned over (CSS).
+  function thumbIcon() {
+    return svgIcon([
+      "M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3z",
+      "M7 10l4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"
     ]);
   }
 

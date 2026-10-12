@@ -8,7 +8,7 @@ from app.containers.use_cases.widget_visitor_use_cases import (
 
 
 class WidgetVisitorOrchestratorsContainer(containers.DeclarativeContainer):
-    """Orchestrators of a website chat visitor's uploads (one use case each)."""
+    """Orchestrators of a website chat visitor's uploads and ratings."""
 
     widget_visitor_use_cases: WidgetVisitorUseCasesContainer = DependenciesContainer()  # type: ignore[assignment]
 
@@ -17,4 +17,7 @@ class WidgetVisitorOrchestratorsContainer(containers.DeclarativeContainer):
     )
     accept_widget_upload_orchestrator = use_case_orchestrator(
         widget_visitor_use_cases.accept_widget_upload_use_case
+    )
+    rate_widget_conversation_orchestrator = use_case_orchestrator(
+        widget_visitor_use_cases.rate_widget_conversation_use_case
     )

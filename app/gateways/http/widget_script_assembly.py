@@ -3,7 +3,7 @@
 `/widget.js` is served as one dependency-free script. Its source lives in
 small parts under `static/widget/`, concatenated in the fixed order below:
 the first part opens the script's closure and the last one closes it, and
-`mount` (one closure over the chat panel) spans the four `mount_*` parts.
+`mount` (one closure over the chat panel) spans the `mount_*` parts.
 A part is a slice of that one script, so it need not parse on its own.
 """
 
@@ -21,8 +21,16 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "texts_cyrillic_caucasus_turkic.js",
     # the Middle East and Asia.
     "texts_middle_east_asia.js",
-    # The stylesheet of the shadow root.
+    # Texts of photos, voice messages and the thumbs, in the same groups
+    # (one `MEDIA_TEXTS` object the last part merges into TEXTS).
+    "texts_media_west.js",
+    "texts_media_north.js",
+    "texts_media_east.js",
+    "texts_media_asia.js",
+    # The stylesheet of the shadow root, then that of photos, voice
+    # messages and the thumbs.
     "styles.js",
+    "styles_media.js",
     # Finding the own script tag, its business and the API, loading the config.
     "boot.js",
     # mount: the panel's elements, their events and the first poll,
@@ -37,6 +45,12 @@ WIDGET_SCRIPT_PART_FILE_NAMES: tuple[str, ...] = (
     "mount_actions.js",
     # the cabinet's live preview (colour, corner and language on the fly),
     "mount_preview.js",
+    # the paperclip, uploads and the tray of what the next message carries,
+    "mount_attachments.js",
+    # holding the microphone to record a voice message,
+    "mount_recording.js",
+    # the thumbs under an answer and what went wrong,
+    "mount_rating.js",
     # failures, rate limits, rendering the log and saving the history.
     "mount_rendering.js",
     # Choosing the interface language, accent colour and corner; texts.

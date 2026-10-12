@@ -7,13 +7,15 @@ from app.gateways.http.channel_routes import build_channel_router
 from app.gateways.http.spend_guard_router_assembly import widget_origin_guard_of
 from app.gateways.http.widget_attachment_routes import build_widget_attachment_router
 from app.gateways.http.widget_event_routes import build_widget_event_router
+from app.gateways.http.widget_rating_routes import build_widget_rating_router
 
 
 def build_public_channel_router(app_container: AppContainer) -> APIRouter:
     """
     Webhooks (each authenticated by its platform) and the widget's routes,
     which answer only on websites the business allows: its configuration,
-    messages, its visitors' photos and voice notes and their live stream.
+    messages, its visitors' photos, voice notes and ratings and their live
+    stream.
     """
 
     operators = app_container.operators
@@ -47,6 +49,14 @@ def build_public_channel_router(app_container: AppContainer) -> APIRouter:
         build_widget_attachment_router(
             admit_widget_upload_operator=visitors.admit_widget_upload_operator(),
             accept_widget_upload_operator=visitors.accept_widget_upload_operator(),
+            widget_origin_guard=widget_origin_guard_of(operators),
+        )
+    )
+    router.include_router(
+        build_widget_rating_router(
+            rate_widget_conversation_operator=(
+                visitors.rate_widget_conversation_operator()
+            ),
             widget_origin_guard=widget_origin_guard_of(operators),
         )
     )

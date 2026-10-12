@@ -58,7 +58,9 @@
             pending: item.pending === true,
             sentAt: typeof item.sentAt === "number" ? item.sentAt : 0,
             failed: false,
-            choices: readChoices(item.choices)
+            choices: readChoices(item.choices),
+            attachments: readAttachments(item.attachments),
+            invitesRating: item.invitesRating === true
           };
         });
     } catch (error) {
@@ -77,6 +79,32 @@
         return typeof choice === "string" && choice.trim() !== "" && choice.length <= MAX_CHOICE_LENGTH;
       })
       .slice(0, MAX_CHOICES);
+  }
+
+  // The photos and voice messages a visitor message carried: their ids,
+  // kinds and lengths (the files stay on the API, the pictures on the page
+  // that sent them).
+  function readAttachments(value) {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+    return value
+      .filter(function (attachment) {
+        return (
+          attachment &&
+          typeof attachment.id === "string" &&
+          ATTACHMENT_ID_PATTERN.test(attachment.id) &&
+          (attachment.kind === "image" || attachment.kind === "audio")
+        );
+      })
+      .slice(0, MAX_ATTACHMENTS)
+      .map(function (attachment) {
+        return {
+          id: attachment.id,
+          kind: attachment.kind,
+          seconds: Math.max(0, Math.round(Number(attachment.seconds) || 0))
+        };
+      });
   }
 
   // The script's data-source, else ?src= or ?utm_source= of the page,

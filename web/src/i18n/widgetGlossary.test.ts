@@ -19,12 +19,18 @@ import { describe, expect, it } from "vitest";
 const WIDGET_DIRECTORY = fileURLToPath(
   new URL("../../../app/gateways/http/static/widget/", import.meta.url),
 );
-// The order widget_script_assembly.py joins them in: one `var TEXTS = {…};`.
+// The order widget_script_assembly.py joins them in: one `var TEXTS = {…};`
+// and the media texts it gains.
 const TEXT_PARTS = [
   "texts_latin_west.js",
   "texts_latin_north_baltic.js",
   "texts_cyrillic_caucasus_turkic.js",
   "texts_middle_east_asia.js",
+  // Photos, voice messages and the thumbs: merged into the same TEXTS.
+  "texts_media_west.js",
+  "texts_media_north.js",
+  "texts_media_east.js",
+  "texts_media_asia.js",
 ];
 
 type WidgetTexts = Record<string, Record<string, string>>;

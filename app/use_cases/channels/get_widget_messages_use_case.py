@@ -48,6 +48,7 @@ from app.utilities.channels.widget_rate_limits import (
     WIDGET_POLL_LIMITS,
     refuse_too_frequent_widget_requests,
 )
+from app.utilities.conversations.rating_invitations import invites_rating
 
 # Messages the widget shows besides the visitor's own.
 WIDGET_MESSAGE_AUTHORS: frozenset[MessageAuthor] = frozenset(
@@ -275,6 +276,7 @@ class GetWidgetMessagesUseCase(
             direction=direction,
             created_at=message.created_at,
             choices=[] if message.choices is None else list(message.choices.options),
+            invites_rating=invites_rating(message),
         )
 
 

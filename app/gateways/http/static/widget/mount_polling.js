@@ -206,6 +206,7 @@
           // The stored text replaces the stream's draft.
           known[message.id].text = message.text;
           known[message.id].choices = readChoices(message.choices);
+          known[message.id].invitesRating = message.invites_rating === true;
           delete known[message.id].draft;
           replaced += 1;
           return;
@@ -219,7 +220,8 @@
           id: message.id,
           text: message.text,
           direction: message.direction === "rtl" ? "rtl" : "ltr",
-          choices: readChoices(message.choices)
+          choices: readChoices(message.choices),
+          invitesRating: message.invites_rating === true
         });
         lastText = message.text;
         added += 1;

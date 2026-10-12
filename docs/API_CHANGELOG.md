@@ -11,6 +11,36 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-10-12 — photos and voice messages in the website chat, the visitor's thumbs
+
+Spec: `82cbd3bb472632c6`
+
+- **Added** `POST /v1/widget/{business_id}/attachments` (public, the
+  visitor key in `X-Widget-Session-Key`, multipart part `file`): one photo
+  (JPEG, PNG, WebP) or voice message (WebM, Ogg, MP4) for the visitor's
+  next message; 201 with `attachment_id`, `kind`, `media_type`,
+  `byte_count` and a voice message's `duration_seconds`. The type is read
+  from the file's bytes, a photo's metadata is dropped (its orientation
+  kept), size and length are checked against `MEDIA_MAX_IMAGE_BYTES`,
+  `MEDIA_MAX_VOICE_BYTES` and `MEDIA_MAX_VOICE_SECONDS` (422 with the
+  reason `code`: `unsupported_type`, `type_mismatch`, `file_too_large`,
+  `voice_too_long`, `unreadable_file`); limited like messages (429).
+- **Changed** (additive) `POST /v1/widget/{business_id}/messages`:
+  `attachment_ids` (at most four uploads of the same visitor, at most a
+  day old, each sent once); a message with uploads may have no `text`.
+- **Added** `POST /v1/widget/{business_id}/rating` (public, JSON body
+  with the visitor's `session_key`): `rating` good or bad, a bad one's
+  optional `reason`, the answer's `message_id` (else the latest answer of
+  the visitor's current conversation). 404 for an answer that is not the
+  visitor's; a team's rating is never replaced; limited per visitor (429).
+- **Changed** (additive) the widget config (`GET …/config`):
+  `attachments` (the photo and voice types, size caps and the voice
+  length cap); the widget's messages (`GET …/messages`): `invites_rating`
+  on an answer of a turn that booked or took a lead.
+- **Changed** (additive) the conversation card and the Overview's
+  "Answers worth improving" (`GET …/conversations/{conversation_id}`,
+  `GET …/answers-to-improve`): `rating_by` (`team` or `customer`).
+
 ## 2026-10-07 — webhook switch-off notices, bookings written to Cal.com
 
 Spec: `ed36493999d9107b`

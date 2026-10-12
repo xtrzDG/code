@@ -52,6 +52,7 @@ class TestWidgetPolling:
                 "direction": "rtl",
                 "created_at": int(staff.created_at),
                 "choices": [],
+                "invites_rating": False,
             }
         ]
         assert body["cursor"] == str(staff.id)

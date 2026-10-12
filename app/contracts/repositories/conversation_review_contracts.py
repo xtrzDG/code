@@ -9,7 +9,10 @@ from typed_time_provider import Microseconds
 
 from app.contracts.repo_contract import RepoContract
 from app.schemas.domain.conversations import ConversationDocument
-from app.schemas.dto.conversation_feed.answer_reviews import ConversationRatingChange
+from app.schemas.dto.conversation_feed.answer_reviews import (
+    ConversationRatingChange,
+    CustomerRatingChange,
+)
 from app.schemas.dto.paging import KeysetSlice
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
@@ -24,9 +27,23 @@ class ConversationReviewRepoContract(RepoContract, Protocol):
         change: ConversationRatingChange,
     ) -> ConversationDocument | None:
         """
-        Store the rating, its reason and answer in one step, with
-        `awaits_improvement` derived again; None when the conversation is
-        missing.
+        Store the team's rating (`rating_by` TEAM), its reason and answer
+        in one step, with `awaits_improvement` derived again; None when the
+        conversation is missing.
+        """
+        raise NotImplementedError
+
+    def set_customer_rating(
+        self,
+        business_id: BusinessId,
+        conversation_id: ConversationId,
+        change: CustomerRatingChange,
+    ) -> ConversationDocument | None:
+        """
+        Store a website visitor's rating (`rating_by` CUSTOMER, no
+        `rated_by`) in one step, with `awaits_improvement` derived again;
+        None, and nothing written, when the conversation is missing or the
+        team rated it (the team's verdict stands).
         """
         raise NotImplementedError
 

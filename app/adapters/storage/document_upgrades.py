@@ -49,6 +49,7 @@ from pydantic.fields import FieldInfo
 from app.adapters.storage.booking_upgrades import upgrade_bookings_from_v4
 from app.adapters.storage.channel_upgrades import upgrade_channels_from_v3
 from app.adapters.storage.contact_upgrades import upgrade_contacts_from_v2
+from app.adapters.storage.conversation_upgrades import upgrade_conversations_from_v5
 from app.adapters.storage.knowledge_item_upgrades import (
     upgrade_knowledge_items_from_v1,
 )
@@ -81,6 +82,9 @@ DOCUMENT_UPCASTERS: Mapping[
     },
     DocumentCollectionName("contacts"): {
         DocumentSchemaVersionNumber(2): upgrade_contacts_from_v2,
+    },
+    DocumentCollectionName("conversations"): {
+        DocumentSchemaVersionNumber(5): upgrade_conversations_from_v5,
     },
     DocumentCollectionName("conversation_topics"): {
         DocumentSchemaVersionNumber(1): upgrade_conversation_topics_from_v1,

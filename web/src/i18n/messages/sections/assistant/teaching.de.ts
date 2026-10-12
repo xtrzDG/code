@@ -66,6 +66,7 @@ export const teachingDe: Translation<typeof teachingEn> = {
     },
   },
   rating: {
+    byCustomer: "Vom Kunden im Website-Chat bewertet.",
     reasonLabel: "Was war falsch?",
     reasons: {
       wrong_info: "Falsche Information",
@@ -143,6 +144,7 @@ export const teachingDe: Translation<typeof teachingEn> = {
     loading: "Zu verbessernde Antworten werden geladen…",
     empty: "Gerade gibt es nichts zu verbessern.",
     badRating: "Schlecht bewertet",
+    byCustomer: "Bewertung des Kunden",
     unanswered: "Keine Antwort",
     asked: {
       one: "{count}-mal gefragt",

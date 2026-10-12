@@ -34,6 +34,7 @@ class TestBinding:
 
         assert response.status_code == 202
         [event] = inbox(bed.testbed)
+        assert event.customer_message is not None
         [attachment] = event.customer_message.attachments
         assert attachment.kind is AttachmentKind.IMAGE
         assert str(attachment.provider_media_id) == str(
