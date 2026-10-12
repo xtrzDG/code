@@ -23,6 +23,7 @@ from app.schemas.dto.demo_data import (
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
 from app.schemas.typings.assistants.prefixed_id import AssistantVersionId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.storage.release_gates import BOOKING_DEPOSITS_GATE, is_gate_open
 
 MICROSECONDS_PER_SECOND: int = 1_000_000
 # Every 5 hours over a week (each hour of the day on some weekday), plus
@@ -103,9 +104,12 @@ def test_the_restaurant_covers_what_the_cabinet_shows() -> None:
         ChannelKind.WEB_CHAT,
         ChannelKind.PHONE,
     }
-    assert {b.status for b in restaurant.bookings} == set(BookingStatus) - {
-        BookingStatus.PENDING
-    }
+    not_shown: set[BookingStatus] = {BookingStatus.PENDING}
+    if not is_gate_open(BOOKING_DEPOSITS_GATE):
+        # Storage writes a booking held for its deposit only once the
+        # deposits release gate opens; the demo shows one from then on.
+        not_shown.add(BookingStatus.PENDING_DEPOSIT)
+    assert {b.status for b in restaurant.bookings} == set(BookingStatus) - not_shown
     assert any(message.tool_calls for message in restaurant.messages)
     assert len(restaurant.calls) == 1
     assert restaurant.calls[0].guard_verdict is CallGuardVerdict.CLEAN

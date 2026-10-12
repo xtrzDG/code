@@ -43,6 +43,7 @@ from app.gateways.worker.periodic.growth_analytics import (
 from app.gateways.worker.periodic.growth_jobs import (
     EXPIRE_WAITLIST_OFFERS_JOB,
     RUN_REBOOKING_CAMPAIGNS_JOB,
+    SWEEP_DEPOSITS_JOB,
 )
 from app.gateways.worker.periodic.platform_alerts import PLATFORM_ALERTS_JOB
 from app.gateways.worker.periodic.purge_business_exports import (
@@ -169,6 +170,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),
+        (SWEEP_DEPOSITS_JOB, 60),
         (SEND_WIN_BACK_MESSAGES_JOB, 3_600),
         (RUN_DATA_TASKS_JOB, 300),
         (PURGE_WEBHOOK_DELIVERIES_JOB, 86_400),
@@ -198,20 +200,22 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         DELIVER_WEBHOOK_JOB,
         WRITE_BOOKING_SYSTEM_BOOKING_JOB,
     ]
-    assert (first.periodic_runs, first.queued_runs, first.failures) == (38, 0, 0)
+    assert (first.periodic_runs, first.queued_runs, first.failures) == (39, 0, 0)
     assert right_after.periodic_runs == 0
-    # The trace flush and the end of the waitlist's expired holds.
-    assert a_minute_later.periodic_runs == 2
+    # The trace flush, the end of the waitlist's expired holds and the
+    # deposits' holds and reminders.
+    assert a_minute_later.periodic_runs == 3
     # Trials, overage, grace periods, reminders, the trace flush, the admin
     # client list standings, the sweep of rate-limit counters, the inbox
     # sweep, the owners' value reports, the customers' topics, the feedback
     # requests, the milestones, the activation nudges, the platform alerts,
     # the Meta token check, the platform status record, the service levels,
     # the end of expired support access, the purge of expired exports, the
-    # waitlist's expired holds, the rebooking campaigns, the seasonal pauses,
-    # the win-back messages, the post-deploy data tasks, the calendars'
-    # busy times and the purge of expired idempotency keys.
-    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (26, 0)
+    # waitlist's expired holds, the rebooking campaigns, the deposits' holds
+    # and reminders, the seasonal pauses, the win-back messages, the
+    # post-deploy data tasks, the calendars' busy times and the purge of
+    # expired idempotency keys.
+    assert (an_hour_later.periodic_runs, an_hour_later.failures) == (27, 0)
     # A new worker process (a deploy) only flushes its own trace buffer.
     assert (after_a_restart.periodic_runs, after_a_restart.failures) == (1, 0)
 
