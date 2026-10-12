@@ -72,6 +72,7 @@ describe("plan price lines", () => {
       annual: "€1,069.20",
       setupFee: "€150",
       overage: "€0.15",
+      additionalLocation: "€69",
       currency: "EUR",
       secondary: { kind: "converted", text: "≈ $112" },
     });
