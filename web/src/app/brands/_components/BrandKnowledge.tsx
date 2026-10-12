@@ -80,7 +80,7 @@ export function BrandKnowledge() {
             {isOwner ? (
               <div className="flex shrink-0 gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setEditing(item)} aria-haspopup="dialog">
-                  {t("brands.team.edit")}
+                  {t("brands.knowledge.edit")}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setDeleting(item)} aria-haspopup="dialog">
                   {t("brands.knowledge.delete")}

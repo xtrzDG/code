@@ -126,6 +126,7 @@ export const brandsHe: Translation<typeof brandsEn> = {
     title: "תשובות משותפות",
     description: "עובדות שהעוזר של כל סניף מכיר. סניף יכול להחליף תשובה בתשובה משלו.",
     add: "הוספת תשובה",
+    edit: "עריכה",
     addTitle: "תשובה משותפת חדשה",
     editTitle: "עריכת תשובה משותפת",
     kind: "סוג",

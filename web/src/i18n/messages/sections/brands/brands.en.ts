@@ -126,6 +126,7 @@ export const brandsEn = {
     title: "Shared answers",
     description: "Facts every location's assistant knows. A location can replace one with its own answer.",
     add: "Add an answer",
+    edit: "Edit",
     addTitle: "New shared answer",
     editTitle: "Edit shared answer",
     kind: "Kind",

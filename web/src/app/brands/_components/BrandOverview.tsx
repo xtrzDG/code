@@ -140,7 +140,7 @@ function LocationRow({ row }: { row: BrandLocationDashboard }) {
     >
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-semibold text-ink" data-user-content>
+          <span className="min-w-0 text-sm font-semibold break-words text-ink" data-user-content>
             {place}
           </span>
           {location.is_primary ? <Badge tone="neutral">{t("brands.locations.primary")}</Badge> : null}
@@ -148,8 +148,8 @@ function LocationRow({ row }: { row: BrandLocationDashboard }) {
       </div>
       <dl className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
         {figures.map((figure) => (
-          <div key={figure.label} className="min-w-0">
-            <dt className="truncate text-xs text-ink-subtle">{figure.label}</dt>
+          <div key={figure.label} className="flex min-w-0 flex-col">
+            <dt className="flex-1 text-xs leading-snug text-ink-subtle">{figure.label}</dt>
             <dd className="text-sm font-medium text-ink tabular-nums">{figure.value}</dd>
           </div>
         ))}

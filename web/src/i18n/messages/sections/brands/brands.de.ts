@@ -125,6 +125,7 @@ export const brandsDe: Translation<typeof brandsEn> = {
     title: "Gemeinsame Antworten",
     description: "Fakten, die der Assistent jedes Standorts kennt. Ein Standort kann eine Antwort durch eine eigene ersetzen.",
     add: "Antwort hinzufügen",
+    edit: "Bearbeiten",
     addTitle: "Neue gemeinsame Antwort",
     editTitle: "Gemeinsame Antwort bearbeiten",
     kind: "Art",

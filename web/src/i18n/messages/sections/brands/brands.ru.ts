@@ -127,6 +127,7 @@ export const brandsRu: Translation<typeof brandsEn> = {
     title: "Общие ответы",
     description: "Факты, которые знает помощник каждой точки. Точка может заменить ответ своим.",
     add: "Добавить ответ",
+    edit: "Изменить",
     addTitle: "Новый общий ответ",
     editTitle: "Изменить общий ответ",
     kind: "Тип",

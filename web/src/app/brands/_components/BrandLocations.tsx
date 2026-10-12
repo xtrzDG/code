@@ -60,20 +60,24 @@ export function BrandLocations() {
     >
       <ul className="divide-y divide-line">
         {locations.map((location) => (
-          <li key={location.business_id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
-            <span aria-hidden>{countryFlag(location.country_code)}</span>
+          <li key={location.business_id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+            <span className="shrink-0" aria-hidden>
+              {countryFlag(location.country_code)}
+            </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-ink" data-user-content>
+              <span className="block text-sm font-medium break-words text-ink" data-user-content>
                 {location.name}
               </span>
-              {location.city ? (
-                <span className="block truncate text-xs text-ink-subtle" data-user-content>
-                  {location.city}
-                </span>
-              ) : null}
+              <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                {location.city ? (
+                  <span className="text-xs break-words text-ink-subtle" data-user-content>
+                    {location.city}
+                  </span>
+                ) : null}
+                {location.is_primary ? <Badge tone="neutral">{t("brands.locations.primary")}</Badge> : null}
+              </span>
             </span>
-            {location.is_primary ? <Badge tone="neutral">{t("brands.locations.primary")}</Badge> : null}
-            <Button variant="ghost" size="sm" onClick={() => setRemoving(location)} aria-haspopup="dialog">
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setRemoving(location)} aria-haspopup="dialog">
               {t("brands.locations.remove")}
             </Button>
           </li>
