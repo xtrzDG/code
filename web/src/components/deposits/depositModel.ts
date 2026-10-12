@@ -22,10 +22,9 @@ import {
 
 export type DepositSettingsView = Schema<"DepositSettingsView">;
 export type DepositPolicyView = Schema<"DepositPolicyView">;
-export type DepositRule = Schema<"DepositRule">;
+type DepositRule = Schema<"DepositRule">;
 export type DepositStatus = Schema<"DepositStatus">;
 export type DepositReport = Schema<"DepositReport">;
-export type DepositRequestView = Schema<"DepositRequestView">;
 export type PaymentLinkView = Schema<"PaymentLinkView">;
 export type PaymentLinkKind = Schema<"PaymentLinkKind">;
 export type BookingDepositView = Schema<"BookingDepositView">;

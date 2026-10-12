@@ -9,8 +9,8 @@ import type { MessageKey } from "@/i18n/translate";
 
 import type { DepositSettingsBody, DepositSettingsView, PaymentLinkBody, PaymentLinkKind } from "./depositModel";
 
-export const HOLD_MINUTES = { min: 15, max: 1440 } as const;
-export const REFUND_HOURS = { min: 0, max: 720 } as const;
+const HOLD_MINUTES = { min: 15, max: 1440 } as const;
+const REFUND_HOURS = { min: 0, max: 720 } as const;
 const MAX_LABEL_LENGTH = 80;
 
 export interface DepositSettingsForm {

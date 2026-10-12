@@ -10,7 +10,7 @@ import type { DepositPolicyBody, DepositSettingsBody, PaymentLinkBody } from "./
 import { DEPOSIT_REFUSAL_MESSAGES } from "./depositRefusals";
 
 /** The days the Reports card covers (the API takes 7 to 366). */
-export const DEPOSIT_REPORT_DAYS = 30;
+const DEPOSIT_REPORT_DAYS = 30;
 
 /** The business's deposits: on or off, the hold, the refund window, its payment pages and policies (owners). */
 export function useDepositSettings(options: { enabled?: boolean } = {}) {
