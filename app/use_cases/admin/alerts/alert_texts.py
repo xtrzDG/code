@@ -37,6 +37,10 @@ ALERT_TITLES: dict[str, str] = {
     "api_budget_fast_burn": "API budget burns fast",
     "api_budget_slow_burn": "API budget burns",
     "worker_down": "No worker answers",
+    "bulk_personal_data": "Bulk personal data exports",
+    "tenant_hopping": "Admin in many clients' accounts",
+    "failed_sign_in_checks": "Sign-in codes guessed",
+    "audit_chain_broken": "Audit chain broken",
 }
 
 

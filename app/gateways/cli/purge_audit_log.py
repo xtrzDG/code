@@ -54,7 +54,6 @@ def main(
     environment_variables: Mapping[str, str] | None = None,
     output: TextIO | None = None,
     error_output: TextIO | None = None,
-    now: Microseconds | None = None,
 ) -> int:
     """Run the purge; returns the process exit code."""
 
@@ -85,11 +84,7 @@ def main(
     cast(OverridableProvider, container.config.app_settings).override(
         providers.Object(settings)
     )
-    start: Microseconds = (
-        container.time_provider.microsecond_wall_clock().now_unix()
-        if now is None
-        else now
-    )
+    start: Microseconds = container.time_provider.microsecond_wall_clock().now_unix()
     command = AuditLogPurgeCommand(
         created_before=Microseconds(
             int(start) - int(parsed.older_than_days) * MICROSECONDS_PER_DAY

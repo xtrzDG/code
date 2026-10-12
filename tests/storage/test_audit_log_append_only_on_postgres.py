@@ -82,7 +82,7 @@ def test_the_application_role_cannot_change_delete_or_empty_entries(
         ("truncate workshop.audit_log_entries", ()),
     ):
         with pytest.raises(errors.InsufficientPrivilege):
-            app_role.execute(statement, parameters)  # type: ignore[arg-type]
+            app_role.execute(statement, parameters)
 
     assert process.entries.get(str(stored.id)) == process.chains.head_of(
         chain_key_of(BUSINESS)

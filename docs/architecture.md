@@ -96,7 +96,7 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
 | bookings, leads, handoffs, unanswered_questions | `BookingDocument`, `LeadDocument`, `HandoffDocument`, `UnansweredQuestionDocument` |
 | test_runs | `AutotestRunDocument` |
 | subscriptions, invoices, usage_events | `SubscriptionDocument`, `InvoiceDocument`, `UsageEventDocument` |
-| audit_logs, dpa_acceptances | `AuditLogEntryDocument`, `DpaAcceptanceDocument` |
+| audit_logs, dpa_acceptances | `AuditLogEntryDocument` (только дописывание, цепочка хешей), `AuditViewCountDocument`, `AuditChainCheckpointDocument`, `AuditChainStatusDocument`, `DpaAcceptanceDocument` |
 | входящие и исходящие доставки | `InboundEventDocument` (уровень платформы), `OutboundMessageDocument` |
 | профиль анкеты (§3) | `BusinessProfileDocument` |
 | пошаговый запуск | `SetupStateDocument` (пропущенные шаги), `ActivationEventDocument` (вехи), `AssistantApplyDocument` («Применить изменения») |
@@ -1425,6 +1425,45 @@ WhatsApp, где продолжится ответ клиента; при отк
 «под ключ» команда закрывает кнопкой на странице клиента. Страница админа
 показывает вариант настройки так же, как кабинет владельца: платящий
 пробный период без выбора — SELF_SERVE.
+
+## Журнал аудита: только дописывание и цепочки хешей
+
+Записи аудита нельзя тихо изменить (R13-AUDIT-TRAIL, миграция 1193):
+
+- **только дописывание.** Триггер на `audit_log_entries` отказывает в
+  UPDATE и DELETE любому, у роли приложения нет DELETE и TRUNCATE.
+  Повторный просмотр той же записи за 5 минут не меняет запись, а
+  считается рядом, в `audit_view_counts` (журнал владельца показывает
+  счёт);
+- **цепочка хешей** на каждый бизнес и одна платформенная (записи без
+  бизнеса). `AuditLogRepository.append` под advisory-блокировкой цепочки
+  (`audit_chain|<цепочка>`) в той же транзакции читает её голову и
+  вставляет следующую запись: `chain_position`, `prev_hash` и
+  `entry_hash` — SHA-256 канонического JSON записи
+  (`app/utilities/compliance/audit_chain_hashing.py`). Блокируются только
+  записи аудита, горячие пути не ждут друг друга; уникальный индекс
+  (цепочка, позиция) не пустит вторую запись на ту же позицию;
+- **ежедневная проверка** `verify_audit_chain` проходит каждую цепочку
+  от начала (или от контрольной точки очистки) и пишет статус в
+  `audit_chain_statuses`: целая или сломана на позиции N (изменена,
+  удалена, вставлена запись, обрезан проверенный конец). Владелец видит
+  статус своей цепочки на вкладке «Журнал» настроек, админ — все на
+  `/admin/audit`; сломанная цепочка — тревога SEV1 `audit_chain_broken`;
+- **события безопасности** без бизнеса — в платформенной цепочке и
+  админском журнале: неверный код входа (`login_failed`, последний —
+  `otp_locked`; адрес назван ключевым дайджестом `dest_…`, не самим
+  адресом), неверный второй фактор (`login_failed`, `mfa_locked`), выход
+  (`logout`), ротация ключа (`key_rotation`, старт и финиш);
+- **тревоги аномалий** в `platform_alerts` (по индексированным счётчикам
+  за час): более 20 выгрузок и удалений персональных данных одного
+  бизнеса, админ в более чем 10 аккаунтах клиентов, более 50 неудачных
+  проверок входа на один адрес (runbook `audit-anomaly.md`);
+- **очистка по сроку** — только `workshop purge-audit-log
+  --older-than-days N` (не меньше 365) через функцию базы
+  `workshop.purge_audit_chain`: удаляет начало цепочки пачками и пишет
+  контрольную точку (последняя удалённая позиция и её хеш), так что
+  остаток цепочки проверяется; каждая очищенная цепочка получает запись
+  `retention_purge`.
 
 ## Помощь, поддержка и страница статуса
 

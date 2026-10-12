@@ -105,8 +105,10 @@ def test_the_same_entry_twice_is_refused() -> None:
 def test_the_repository_never_changes_a_stored_entry() -> None:
     entries = AppendOnlyCollection()
     log = audit_log_repository(entries)
-    for minute in (0, 1, 2):
-        log.append(entry(BUSINESS, minute, action=AuditAction.VIEW, actor=UserId()))
+    for first_minute in (0, 1, 2):
+        log.append(
+            entry(BUSINESS, first_minute, action=AuditAction.VIEW, actor=UserId())
+        )
     owner = UserId()
     for minute in (3, 3.5, 4):  # Repeated identical views are counted beside.
         log.append(entry(BUSINESS, minute, action=AuditAction.VIEW, actor=owner))

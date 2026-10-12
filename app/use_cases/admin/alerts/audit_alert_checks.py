@@ -113,7 +113,7 @@ class AuditAlertChecks:
             return observe(rule, 0, "Every audit chain checked is intact.")
 
         named: str = ", ".join(
-            f"{status.id} at {status.broken_position} "
+            f"{status.id} at {int(status.broken_position or 0)} "
             f"({None if status.problem is None else status.problem.value})"
             for status in self._chains.list_broken(BROKEN_NAMED)
         )

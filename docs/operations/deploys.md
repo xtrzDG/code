@@ -252,6 +252,33 @@ same address and secret); an old instance ignores a tap, so a customer who
 taps during the overlap (or after a rollback) gets no answer to it and
 types instead. Nothing needs cleaning after a rollback.
 
+The release with the append-only audit trail (R13-AUDIT-TRAIL, migration
+1193, `AuditLogEntryDocument` version 6, `PlatformAlertStateDocument`
+version 6) changes what the database lets the application do with
+`audit_log_entries`: a trigger refuses every UPDATE and DELETE, and the
+application's role loses DELETE, TRUNCATE and UPDATE on every column but
+the three the previous release's upsert names. Both releases only insert
+audit entries, so both keep working during the overlap and after a
+rollback, with two differences while an old instance serves: a repeated
+view the old release counts on the entry itself is skipped by the trigger
+(no error, the count does not grow), and an entry the old release writes
+joins no hash chain (it has no chain fields; the check walks chains only,
+and the trigger still keeps it unchanged). The new fields (an entry's
+`security_event`, `chain_key`, `chain_position`, `prev_hash`,
+`entry_hash`) are unknown to the old release, which ignores them; the new
+security events ride on actions it reads (`login`, `session_revoked`,
+`update`). The four new alert codes (`bulk_personal_data`,
+`tenant_hopping`, `failed_sign_in_checks`, `audit_chain_broken`) are
+written only by the `platform_alerts` job and read by key, so an old
+instance never reads one. The new collections (`audit_view_counts`,
+`audit_chain_checkpoints`, `audit_chain_statuses`) are unknown to the old
+release. `audit_log_entries` is append-only, so `migrate-documents` and the
+data tasks leave it alone (older versions upcast on read), and its four new
+lookup columns stay empty for older rows (they are in no chain). A rollback
+keeps the trigger and the privileges: nothing in the previous release
+needs more. Old entries leave only through `workshop purge-audit-log`
+(docs/operations/runbooks/audit-chain-broken.md).
+
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are
 validated strictly everywhere they are built and written, carry their

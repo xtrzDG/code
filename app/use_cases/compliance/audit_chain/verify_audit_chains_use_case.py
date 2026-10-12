@@ -80,7 +80,7 @@ def report_check(
         logger.error(
             "Audit chain %s is broken at position %s: %s.",
             status.id,
-            status.broken_position,
+            int(status.broken_position or 0),
             None if status.problem is None else status.problem.value,
         )
         return
@@ -92,6 +92,6 @@ def report_check(
         logger.info(
             "Audit chain %s verified through position %s, hash %s.",
             status.id,
-            status.verified_through_position,
+            int(status.verified_through_position),
             status.verified_through_hash,
         )
