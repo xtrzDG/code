@@ -1,7 +1,7 @@
 "use client";
 
 import { useBusiness } from "@/components/business/BusinessContext";
-import { IconCalendar } from "@/components/icons";
+import { NoBookingsIllustration } from "@/components/illustrations";
 import { RefreshFailed, LoadMore } from "@/components/insights/common";
 import { formatLocalDate, formatLocalTime } from "@/components/insights/dates";
 import type { BookingStatus, BookingView } from "@/components/insights/types";
@@ -92,7 +92,7 @@ export function TodayAgenda({ page }: { page: BookingsPage }) {
       {entries.length === 0 ? (
         <Card>
           <EmptyState
-            icon={<IconCalendar className="size-6" />}
+            illustration={<NoBookingsIllustration />}
             title={t("bookings.today.emptyTitle")}
             description={t("bookings.today.emptyDescription")}
             action={

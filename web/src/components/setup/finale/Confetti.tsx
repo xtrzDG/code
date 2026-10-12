@@ -6,8 +6,9 @@
  * reduced motion (the finale's glow and card carry the moment then).
  */
 
-import { useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
+
+import { useMotionPreference } from "@/components/motion/MotionPreference";
 
 import { confettiPalette } from "@/lib/tunnel/confettiPalette";
 import { advance, alive, burst, type Particle } from "@/lib/tunnel/depth";
@@ -28,7 +29,7 @@ function draw(context: CanvasRenderingContext2D, particles: readonly Particle[])
 
 export function Confetti() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const isReduced = useReducedMotion();
+  const isReduced = useMotionPreference().isCalm;
 
   useEffect(() => {
     const node = canvas.current;

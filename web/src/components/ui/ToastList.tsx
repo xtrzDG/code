@@ -12,6 +12,7 @@ import { AnimatePresence, LazyMotion, MotionConfig } from "motion/react";
 import * as m from "motion/react-m";
 import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 
+import { useMotionPreference } from "@/components/motion/MotionPreference";
 import domMax from "@/components/motion/motionFeatures";
 import { cn } from "@/lib/cn";
 import { springTransition, tweenTransition } from "@/lib/motion";
@@ -141,13 +142,14 @@ function ToastList({ items, onDismiss, closeLabel }: ToastListProps) {
   // The first toasts of a visit rise in; when the list moves into a dialog
   // and back (a remount), the toasts on screen stay where they are.
   const [risesIn] = useState(() => !hasMounted);
+  const { preference } = useMotionPreference();
   useEffect(() => {
     hasMounted = true;
   }, []);
   return (
     // Its own animation features and reduced-motion rule: the public site loads no other motion (MotionProvider).
     <LazyMotion features={domMax}>
-      <MotionConfig reducedMotion="user">
+      <MotionConfig reducedMotion={preference === "reduce" ? "always" : "user"}>
         <AnimatePresence initial={risesIn} mode="popLayout">
           {items.map((item) => (
             <ToastCard key={item.id} item={item} onDismiss={onDismiss} closeLabel={closeLabel} />

@@ -2,7 +2,7 @@
 
 /**
  * Who is signed in and their preferences: the interface language, the
- * theme, the chime when someone needs a person, installing the cabinet as
+ * theme, the chime when someone needs a person, less motion, installing the cabinet as
  * an app, help and support (the help center, "What's new", the status
  * page, the support team's contacts), all businesses, Account → Security
  * (the authenticator app), the platform admin (for admins) and signing out. Shown by the user menu at the bottom
@@ -25,6 +25,7 @@ import { LanguageSwitcher } from "../LanguageSwitcher";
 import { IconBuilding, IconDownload, IconKey, IconLink, IconMegaphone, IconShield } from "../icons";
 import { ThemeSwitcher } from "../theme/ThemeSwitcher";
 import { ChimeSetting } from "./ChimeSetting";
+import { MotionSetting } from "./MotionSetting";
 import { SignOutButton } from "./SignOutButton";
 import { UserAvatar, userDisplayName, userContact } from "./UserAvatar";
 import { useInstallPrompt } from "./useInstallPrompt";
@@ -119,8 +120,9 @@ export function AccountPanel({ me, onNavigate }: { me: CurrentUserView; onNaviga
         </div>
       </section>
 
-      <div className="border-t border-line pt-2.5">
+      <div className="space-y-1 border-t border-line pt-2.5">
         <ChimeSetting />
+        <MotionSetting />
       </div>
 
       <HelpSupportSection rowClassName={ROW} onNavigate={onNavigate} />

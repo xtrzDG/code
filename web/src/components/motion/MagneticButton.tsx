@@ -8,13 +8,15 @@
  *     <MagneticButton><ButtonLink href="/login" size="lg">Get started</ButtonLink></MagneticButton>
  */
 
-import { useReducedMotion, useSpring } from "motion/react";
+import { useSpring } from "motion/react";
 import * as m from "motion/react-m";
 import type { PointerEvent, ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import { SPRINGS } from "@/lib/motion";
 import { magneticOffset } from "@/lib/motionMath";
+
+import { useMotionPreference } from "./MotionPreference";
 
 export function MagneticButton({
   children,
@@ -29,7 +31,7 @@ export function MagneticButton({
   maxOffset?: number;
   className?: string;
 }) {
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference().isCalm;
   const x = useSpring(0, SPRINGS.bouncy);
   const y = useSpring(0, SPRINGS.bouncy);
 

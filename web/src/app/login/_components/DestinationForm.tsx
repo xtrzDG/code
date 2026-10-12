@@ -16,7 +16,7 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
   return (
     <>
       <div className="mb-6 space-y-1.5">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">{t("auth.title")}</h1>
+        <h1 className="text-xl font-display tracking-tight text-ink">{t("auth.title")}</h1>
         <p className="text-sm text-ink-muted">{t("auth.subtitle")}</p>
       </div>
 

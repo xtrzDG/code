@@ -13,4 +13,6 @@ export const accountDe: Translation<typeof accountEn> = {
   installHint: "Öffnen Sie das Dashboard wie eine App über den Startbildschirm oder das Dock.",
   installIosTitle: "App auf iPhone oder iPad installieren",
   installIosSteps: "Tippen Sie in Safari unten auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
+  motion: "Bewegung reduzieren",
+  motionHint: "Das Dashboard bleibt auf diesem Gerät ruhig: keine Animationen, hochzählenden Zahlen oder 3D. Die Einstellung des Geräts selbst gilt immer.",
 };

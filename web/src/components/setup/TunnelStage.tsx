@@ -8,10 +8,11 @@
  * movement; the blur is left out here too).
  */
 
-import { AnimatePresence, useReducedMotion, type Variants } from "motion/react";
+import { AnimatePresence, type Variants } from "motion/react";
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 
+import { useMotionPreference } from "@/components/motion/MotionPreference";
 import { EASINGS, springTransition } from "@/lib/motion";
 
 /** 1: deeper, -1: back out. */
@@ -57,7 +58,7 @@ function depthVariants(reduced: boolean): Variants {
 }
 
 export function TunnelStage({ placeKey, direction, children }: { placeKey: string; direction: Direction; children: ReactNode }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useMotionPreference().isCalm;
   return (
     <div className="tunnel-stage relative">
       <AnimatePresence mode="wait" custom={direction} initial={false}>

@@ -14,12 +14,9 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { cn } from "@/lib/cn";
 import { countUpValue, fractionDigitsOf } from "@/lib/motionMath";
+import { prefersCalmMotion } from "@/lib/motionPreference";
 
 const DEFAULT_DURATION_MS = 900;
-
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 export function AnimatedNumber({
   value,
@@ -50,7 +47,7 @@ export function AnimatedNumber({
     const write = (current: number) => {
       node.textContent = formatRef.current(current);
     };
-    if (from === value || !Number.isFinite(from) || !Number.isFinite(value) || prefersReducedMotion()) {
+    if (from === value || !Number.isFinite(from) || !Number.isFinite(value) || prefersCalmMotion()) {
       shown.current = value;
       write(value);
       return;

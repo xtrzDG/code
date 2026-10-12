@@ -2,7 +2,8 @@
 
 import { useBusinessFormat } from "@/components/business/BusinessContext";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
-import { IconDownload, IconFile } from "@/components/icons";
+import { IconDownload } from "@/components/icons";
+import { NoInvoicesIllustration } from "@/components/illustrations";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
 
@@ -38,7 +39,7 @@ export function InvoicesCard({ invoices }: { invoices: readonly InvoiceView[] | 
       {sorted.length === 0 ? (
         <EmptyState
           className="py-6"
-          icon={<IconFile className="size-6" />}
+          illustration={<NoInvoicesIllustration />}
           title={t("billing.invoices.emptyTitle")}
           description={t("billing.invoices.emptyDescription")}
         />

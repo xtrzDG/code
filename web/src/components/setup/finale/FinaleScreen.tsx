@@ -61,7 +61,7 @@ export function FinaleScreen({ ctx }: { ctx: StepContext }) {
       <TunnelVeil />
       <Confetti />
       <div className="text-center">
-        <h1 ref={heading} tabIndex={-1} className="text-4xl leading-tight font-semibold tracking-tight text-balance text-ink outline-none! sm:text-5xl">
+        <h1 ref={heading} tabIndex={-1} className="text-4xl leading-tight font-display tracking-tight text-balance text-ink outline-none! sm:text-5xl">
           {t("tunnelLaunch.finale.title")}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-ink-muted">

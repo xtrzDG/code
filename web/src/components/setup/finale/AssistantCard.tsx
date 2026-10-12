@@ -6,12 +6,12 @@
  * the tunnel with a slight tilt (just a fade with reduced motion).
  */
 
-import { useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
 
 import { CHANNEL_NAMES } from "@/components/workspace/channelNames";
 import type { Schema } from "@/api/types";
 import { IconSparkles } from "@/components/icons";
+import { useMotionPreference } from "@/components/motion/MotionPreference";
 import { useI18n } from "@/i18n/client";
 import { languageName } from "@/lib/format";
 import { EASINGS } from "@/lib/motion";
@@ -26,7 +26,7 @@ export function AssistantCard({
   channels: readonly Schema<"ChannelKind">[];
 }) {
   const { t, locale } = useI18n();
-  const isReduced = useReducedMotion();
+  const isReduced = useMotionPreference().isCalm;
 
   return (
     <m.div

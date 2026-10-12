@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from "react";
 
-import { IconCheck, IconChat, IconInbox, IconUsers } from "@/components/icons";
+import { InboxCalmIllustration } from "@/components/illustrations";
 import { LoadMore, RefreshFailed } from "@/components/insights/common";
 import { Button, Card, EmptyState, ErrorState, LoadingRegion, Skeleton } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -32,21 +32,12 @@ import { RowHint, type HintTarget } from "./RowHint";
 /** Ages on the rows move on once a minute. */
 const MINUTE_MS = 60_000;
 
-const EMPTY_ICONS: Record<InboxView, typeof IconChat> = {
-  needs_person: IconCheck,
-  requests: IconInbox,
-  mine: IconUsers,
-  unassigned: IconCheck,
-  all: IconChat,
-};
-
 function EmptyView({ view, onShowAll }: { view: InboxView; onShowAll: () => void }) {
   const { t } = useI18n();
-  const Icon = EMPTY_ICONS[view];
   return (
     <Card>
       <EmptyState
-        icon={<Icon className="size-6" />}
+        illustration={<InboxCalmIllustration />}
         title={t(`inbox.empty.${view}.title`)}
         description={t(`inbox.empty.${view}.description`)}
         action={

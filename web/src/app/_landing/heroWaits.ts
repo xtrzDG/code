@@ -5,9 +5,11 @@
  */
 
 import type { DeviceSignals } from "@/lib/heroDevice";
+import { prefersCalmMotion } from "@/lib/motionPreference";
 import type { Wait } from "@/lib/waits";
 
-export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+/** The device's own setting (the cabinet's "Reduce motion" is read with it by readDeviceSignals). */
+export { REDUCED_MOTION_QUERY } from "@/lib/motionPreference";
 /** Tailwind's `lg`: the layout where the scene stands beside the headline. */
 export const WIDE_LAYOUT_QUERY = "(min-width: 64rem)";
 
@@ -24,7 +26,8 @@ interface NetworkInformation {
 export function readDeviceSignals(): DeviceSignals {
   const browser = navigator as Navigator & { deviceMemory?: number; connection?: NetworkInformation };
   return {
-    prefersReducedMotion: window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    // The device's setting or the person's "Reduce motion" (<html data-motion="reduce">).
+    prefersReducedMotion: prefersCalmMotion(),
     isWideLayout: window.matchMedia(WIDE_LAYOUT_QUERY).matches,
     isCoarsePointer: window.matchMedia("(pointer: coarse)").matches,
     cores: browser.hardwareConcurrency || undefined,
