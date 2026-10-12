@@ -356,6 +356,46 @@ repositories ─ adapters (app/adapters/) ─ clients (app/clients/)  внешн
   (`no_answer_handoffs.py`: «нестандартный запрос», высокая срочность,
   сводка `MODEL_UNAVAILABLE` с последним вопросом).
 
+## Фото, голосовые и оценка в чате сайта
+
+Загрузка посетителя — недоверенные байты:
+
+- `POST /v1/widget/{id}/attachments` (`widget_attachment_routes.py`):
+  `AdmitWidgetUploadUseCase` сначала считает лимиты (`WIDGET_UPLOAD_LIMITS`
+  на посетителя, сеть, бизнес, платформу) и проверяет, что чат включён, и
+  только потом маршрут читает тело не длиннее большего из лимитов фото и
+  голосового (`read_limited_body`, плюс `MULTIPART_OVERHEAD_BYTES` на
+  заголовки частей); `AcceptWidgetUploadUseCase` читает тип
+  по байтам (`upload_checks.py`: заявленный тип должен совпасть), у JPEG,
+  PNG и WebP пересобирает файл без метаданных (EXIF остаётся только с
+  ориентацией), меряет голосовое по контейнеру (WebM, Ogg, MP4; с видео —
+  отказ) и кладёт файл в зашифрованное хранилище медиа
+  (`widget-uploads/{бизнес}/…`) с записью `WidgetUploadDocument`
+  (`widget_uploads`, миграция 1191, RLS по бизнесу), привязанной к
+  `WidgetVisitorId` — хешу ключа посетителя;
+- сообщение называет загрузки (`attachment_ids`): `AcceptWidgetMessageUseCase`
+  принимает только загрузки этого посетителя, этого бизнеса, не старше суток
+  и ещё не отправленные; `QueueWidgetMessageUseCase` забирает каждую один раз
+  (блокировка строки) вместе с записью во входящие. Дальше —
+  `InboundAttachment` и путь WhatsApp: воркер берёт файл через
+  `WidgetUploadFetcherAdapter` (только пути своего бизнеса), голосовое
+  расшифровывает `TranscribeVoiceNoteUseCase`, фото уходит модели;
+- неотправленные загрузки старше суток удаляет ежедневная чистка
+  (`PurgeStaleWidgetUploadsUseCase` в цепочке `purge_expired_recordings`,
+  с записью в журнал аудита); копия отправленного файла живёт по сроку
+  хранения бизнеса, как вложения мессенджеров.
+
+Оценка посетителя — `POST /v1/widget/{id}/rating`
+(`RateWidgetConversationUseCase`): лимиты `WIDGET_RATING_LIMITS`, затем
+только разговоры этого ключа посетителя (не тестовые) и только ответ
+ассистента в них — иначе 404. `ConversationReviewWrites.set_customer_rating`
+пишет `rating_by=customer` в один шаг и не трогает оценку команды
+(`rating_by=team`, версия 6 разговора; апкастер считает оценки версии 5
+командными). Плохая оценка клиента попадает в «Ответы, которые стоит
+улучшить» с `rating_by`. Под ответом хода, который создал бронь или заявку
+(`invites_rating` в сообщениях виджета), виджет показывает оценку сразу,
+иначе — после двух минут тишины (`mount_rating.js`).
+
 ## Подтверждение брони и страница гостя
 
 Когда `create_booking` или `reschedule_booking` помощника удаётся вне

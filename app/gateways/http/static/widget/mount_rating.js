@@ -28,7 +28,8 @@
     }
 
     // The last message when it is a stored answer of the assistant: the
-    // thumbs go under it (not under a draft, a staff reply or a greeting).
+    // thumbs go under it (not under a draft, a staff reply or a greeting,
+    // and not while staff have the conversation).
     function lastAnswer() {
       var last = null;
       state.history.forEach(function (item) {
@@ -36,7 +37,7 @@
           last = item;
         }
       });
-      if (!last || last.role !== "assistant" || !last.id || last.draft || isLivePreview) {
+      if (!last || last.role !== "assistant" || !last.id || last.draft || isLivePreview || state.isHandedOff) {
         return null;
       }
       return last;
