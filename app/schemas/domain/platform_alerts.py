@@ -35,7 +35,9 @@ class PlatformAlertStateDocument(BaseDocument):
     # `api_budget_*_burn`, migration 1163). States are stored and read under
     # their code, so a release that does not know a code never reads its row.
     # 5: `code` may be `worker_down` (the API's pipeline watchdog, 1173).
-    schema_version: SchemaVersion = SchemaVersion("5")
+    # 6: `code` may be `bulk_personal_data`, `tenant_hopping`,
+    # `failed_sign_in_checks` or `audit_chain_broken` (the audit log, 1193).
+    schema_version: SchemaVersion = SchemaVersion("6")
     code: PlatformAlertCode
     status: PlatformAlertStatus
     figure: AlertFigure

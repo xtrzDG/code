@@ -22,6 +22,7 @@ from app.use_cases.admin.security.rotate_encrypted_secrets_use_case import (
     RotateEncryptedSecretsUseCase,
 )
 from app.use_cases.admin.security.secret_resealer import RotationTally
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.storage_testing import build_fixed_wall_clock
 
 HOUR: int = 3600 * 1_000_000
@@ -109,6 +110,7 @@ def use_case(
         resealer=CountingResealer(),  # type: ignore[arg-type]
         wall_clock=build_fixed_wall_clock(),
         totp_resealer=NoAuthenticators(),  # type: ignore[arg-type]
+        audit_log_repo=audit_log_repository(),
     )
 
 

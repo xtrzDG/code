@@ -75,6 +75,7 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 from app.gateways.worker.periodic.sweep_stale_inbound_events import (
     sweep_stale_inbound_events_job,
 )
+from app.gateways.worker.periodic.verify_audit_chain import verify_audit_chain_job
 from app.schemas.constants.jobs import JobLane
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
@@ -262,6 +263,10 @@ def periodic_job_specs(operators: OperatorsContainer) -> List:
         Factory(  # Idempotency keys of creating requests, a day each (1174).
             purge_idempotency_keys_job,
             operator=operators.idempotency.purge_idempotency_keys_operator,
+        ),
+        Factory(  # The audit log's hash chains, checked daily (1193).
+            verify_audit_chain_job,
+            operator=operators.audit_trail.verify_audit_chains_operator,
         ),
         Factory(  # Sub-processor changes told 30 days ahead (DPA 8.3).
             send_subprocessor_notices_job,

@@ -32,6 +32,7 @@ SPEND_GUARD: SchemaMigrationName = SchemaMigrationName(
 WAITLIST: SchemaMigrationName = SchemaMigrationName(
     "1151_waitlist_and_rebooking_campaigns"
 )
+AUDIT_CHAIN: SchemaMigrationName = SchemaMigrationName("1193_append_only_audit_chain")
 
 
 def backfill(
@@ -103,6 +104,33 @@ LOOKUP_COLUMNS_WITHOUT_BACKFILL: tuple[LookupColumnWithoutBackfill, ...] = (
         WAITLIST,
         "Bookings written before 1151 came from neither the waitlist nor a "
         "campaign, which is what an empty origin means.",
+    ),
+    # The audit log is append-only (1193): a backfill would rewrite its
+    # rows, which the table refuses, and none of these needs one.
+    without_backfill(
+        "audit_log_entries",
+        "chain_key",
+        AUDIT_CHAIN,
+        "Audit entries written before 1193 are in no hash chain.",
+    ),
+    without_backfill(
+        "audit_log_entries",
+        "chain_position",
+        AUDIT_CHAIN,
+        "Audit entries written before 1193 are in no hash chain.",
+    ),
+    without_backfill(
+        "audit_log_entries",
+        "security_event",
+        AUDIT_CHAIN,
+        "Audit entries written before 1193 record no security event.",
+    ),
+    without_backfill(
+        "audit_log_entries",
+        "entity_id",
+        AUDIT_CHAIN,
+        "Only the failed sign-in checks of the last hour are counted by it, "
+        "and the trigger fills it for every entry written since 1193.",
     ),
 )
 

@@ -33,6 +33,7 @@ from app.use_cases.authorize_business_access_use_case import (
     AuthorizeBusinessAccessUseCase,
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.access_support import ACCESS_SETTINGS, platform_admin
 from tests.foundation.builders import build_business
 from tests.foundation.support_access_builders import build_authorize_business_access
@@ -52,7 +53,7 @@ def build_access_use_case() -> tuple[
     user_repo = UserRepository(
         InMemoryDocumentCollectionAdapter[UserDocument](UserDocument)
     )
-    audit_log_repo = AuditLogRepository(
+    audit_log_repo = audit_log_repository(
         InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](AuditLogEntryDocument)
     )
     use_case = build_authorize_business_access(

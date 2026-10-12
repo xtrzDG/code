@@ -25,6 +25,13 @@ class PlatformAlertCode(StrEnum):
     WORKER_DOWN: no background worker wrote its pulse for five minutes,
     seen from outside the workers too (the API's pipeline watchdog and
     GET /healthz/pipeline): customers' messages are not answered.
+    BULK_PERSONAL_DATA: one business exported or erased personal data more
+    than 20 times in an hour. TENANT_HOPPING: one platform admin entered or
+    changed more than 10 businesses in an hour. FAILED_SIGN_IN_CHECKS: more
+    than 50 wrong sign-in codes in an hour for one destination (a phone, an
+    e-mail address, a person's second factor). AUDIT_CHAIN_BROKEN: the
+    daily check found an audit hash chain broken (an entry changed,
+    removed or put in).
     """
 
     DEAD_JOBS = "dead_jobs"
@@ -44,6 +51,10 @@ class PlatformAlertCode(StrEnum):
     API_BUDGET_FAST_BURN = "api_budget_fast_burn"
     API_BUDGET_SLOW_BURN = "api_budget_slow_burn"
     WORKER_DOWN = "worker_down"
+    BULK_PERSONAL_DATA = "bulk_personal_data"
+    TENANT_HOPPING = "tenant_hopping"
+    FAILED_SIGN_IN_CHECKS = "failed_sign_in_checks"
+    AUDIT_CHAIN_BROKEN = "audit_chain_broken"
 
 
 class PlatformAlertStatus(StrEnum):

@@ -8,6 +8,9 @@ from app.containers.operators.admin_action_operators import (
 )
 from app.containers.operators.analytics_operators import AnalyticsOperatorsContainer
 from app.containers.operators.assistant_operators import AssistantOperatorsContainer
+from app.containers.operators.audit_trail_operators import (
+    AuditTrailOperatorsContainer,
+)
 from app.containers.operators.billing_operators import BillingOperatorsContainer
 from app.containers.operators.booking_link_operators import (
     BookingLinkOperatorsContainer,
@@ -176,6 +179,11 @@ class OperatorsContainer(containers.DeclarativeContainer):
     telemetry: TelemetryOperatorsContainer = Container(  # type: ignore[assignment]
         TelemetryOperatorsContainer,
         telemetry_pipelines=pipelines.telemetry,
+        utilities=utilities,
+    )
+    audit_trail: AuditTrailOperatorsContainer = Container(  # type: ignore[assignment]
+        AuditTrailOperatorsContainer,
+        audit_trail_pipelines=pipelines.audit_trail,
         utilities=utilities,
     )
     reliability: ReliabilityOperatorsContainer = Container(  # type: ignore[assignment]

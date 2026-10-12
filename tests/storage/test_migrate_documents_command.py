@@ -117,12 +117,20 @@ def test_bad_arguments_are_refused_by_the_parser(arguments: list[str]) -> None:
     assert stopped.value.code == 2
 
 
-def test_the_parser_offers_every_catalog_collection() -> None:
+def test_the_parser_offers_every_catalog_collection_but_the_append_only() -> None:
+    rewritable = [
+        definition
+        for definition in DOCUMENT_COLLECTIONS
+        if not definition.is_append_only
+    ]
     parsed = build_argument_parser().parse_args(
-        [f"--collection={definition.name!s}" for definition in DOCUMENT_COLLECTIONS]
+        [f"--collection={definition.name!s}" for definition in rewritable]
     )
 
-    assert len(parsed.collection) == len(DOCUMENT_COLLECTIONS)
+    assert len(parsed.collection) == len(rewritable)
+    assert len(rewritable) == len(DOCUMENT_COLLECTIONS) - 1
+    with pytest.raises(SystemExit):
+        build_argument_parser().parse_args(["--collection=audit_log_entries"])
     assert batch_size("10000") == 10_000
 
 

@@ -67,6 +67,9 @@ class AppContainer(AppEdgesContainer):
         launch_collections=AppEdgesContainer.adapters.launch_collections,
         probe_collections=AppEdgesContainer.adapters.collections,
         call_adapters=AppEdgesContainer.adapters.calls,
+        audit_chain_collections=AppEdgesContainer.audit_chain_collections,
+        audit_entry_collections=AppEdgesContainer.adapters.collections,
+        audit_adapters=AppEdgesContainer.adapters,
     )
     registries: RegistriesContainer = Container(  # type: ignore[assignment]
         RegistriesContainer,

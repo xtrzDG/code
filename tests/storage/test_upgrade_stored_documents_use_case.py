@@ -7,7 +7,10 @@ from app.schemas.dto.document_upgrades import (
     CollectionUpgradeRequest,
     UpgradeStoredDocumentsCommand,
 )
-from app.schemas.exceptions.application_errors import NotFoundError
+from app.schemas.exceptions.application_errors import (
+    NotFoundError,
+    ValidationFailedError,
+)
 from app.schemas.typings.storage.constrained_integers import (
     DocumentCount,
     DocumentSchemaVersionNumber,
@@ -46,12 +49,27 @@ def test_without_names_every_catalog_collection_runs_in_order() -> None:
         UpgradeStoredDocumentsCommand(is_dry_run=True)
     )
 
-    assert [request.collection_name for request in upgrades.requests] == [
-        definition.name for definition in DOCUMENT_COLLECTIONS
+    # The append-only audit log is never rewritten (1193).
+    rewritable = [
+        definition.name
+        for definition in DOCUMENT_COLLECTIONS
+        if not definition.is_append_only
     ]
+    assert [request.collection_name for request in upgrades.requests] == rewritable
+    assert DocumentCollectionName("audit_log_entries") not in rewritable
     assert all(request.is_dry_run for request in upgrades.requests)
     assert report.is_dry_run
-    assert len(report.collections) == len(DOCUMENT_COLLECTIONS)
+    assert len(report.collections) == len(rewritable)
+
+
+def test_an_append_only_collection_is_refused_by_name() -> None:
+    with pytest.raises(ValidationFailedError, match="append-only|Append-only"):
+        UpgradeStoredDocumentsUseCase(RecordingDocumentUpgrades()).run(
+            UpgradeStoredDocumentsCommand(
+                collection_names=[DocumentCollectionName("audit_log_entries")],
+                is_dry_run=True,
+            )
+        )
 
 
 def test_named_collections_run_in_catalog_order_with_the_batch_size() -> None:

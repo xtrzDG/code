@@ -21,7 +21,8 @@ def platform_alert_checks_factory(
     The indexed counts, signal counters, worker pulses and spend sums of the
     `platform_alerts` job, the post-deploy data tasks (1164), the SLOs'
     burn rates over the service level slots (1163) and the freshest worker
-    pulse (WORKER_DOWN, 1173).
+    pulse (WORKER_DOWN, 1173), and the audit log's hour of entries and the
+    checks of its chains (1193).
     """
 
     return Factory(
@@ -42,5 +43,7 @@ def platform_alert_checks_factory(
             extra_alert_checks,
             slot_repo=repositories.service_level_slot_repo,
             heartbeat_repo=repositories.worker_heartbeat_repo,
+            audit_activity_repo=repositories.audit_activity_repo,
+            audit_chain_repo=repositories.audit_chain_repo,
         ),
     )

@@ -186,12 +186,19 @@ DOCUMENT_LOOKUP_FIELDS: Mapping[
         integer_field("occurrence_count"),
         integer_field("last_seen_at"),
     ),
-    # The audit log newest first, filtered by operation, entity and person.
+    # The audit log newest first, filtered by operation, entity and person;
+    # each hash chain by position (its head, the checks, the admin view of
+    # the platform's chain) and the hour's operations of every business by
+    # kind, for the anomaly alerts (1193).
     DocumentCollectionName("audit_log_entries"): (
         text_field("actor_id"),
-        filter_field("action"),
+        text_field("action"),
         filter_field("entity"),
         integer_field("created_at"),
+        text_field("chain_key"),
+        integer_field("chain_position"),
+        filter_field("security_event"),
+        filter_field("entity_id"),
     ),
     # Usage of a billing period; today's spend of a business and of the
     # platform, summed by kind (the spend guard, 1142).

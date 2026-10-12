@@ -13,7 +13,6 @@ from app.gateways.worker.periodic.purge_stale_rows import (
 )
 from app.repositories.call_follow_up_repositories import MissedCallRepository
 from app.repositories.channel_repositories import ChannelMessageReceiptRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.delivery_repositories import (
     InboundEventRepository,
     OutboundMessageRepository,
@@ -61,6 +60,7 @@ from app.utilities.deliveries.delivery_keys import (
     derive_inbound_event_id,
     derive_outbound_message_id,
 )
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.conftest import CollectionFactory
 from tests.storage.storage_testing import FIXED_NANOSECONDS, build_fixed_wall_clock
 
@@ -171,7 +171,7 @@ def test_stale_sessions_codes_and_receipts_are_purged_and_audited(
     )
     receipts = ChannelMessageReceiptRepository(receipt_collection)
     audit_collection = collections(AuditLogEntryDocument, "audit_log_entries")
-    audit = AuditLogRepository(audit_collection)
+    audit = audit_log_repository(audit_collection)
     expired, at_expiry, valid = session(NOW - 1), session(NOW), session(NOW + 1)
     for stored in (expired, at_expiry, valid):
         sessions.save(stored)

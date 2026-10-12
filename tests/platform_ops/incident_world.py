@@ -11,7 +11,6 @@ from app.adapters.storage.in_memory_document_collection import (
 )
 from app.contracts.session_assurance import StepUpGuardContract
 from app.repositories.business_repositories import BusinessRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.incident_repository import IncidentRepository
 from app.repositories.platform_announcement_repository import (
     PlatformAnnouncementRepository,
@@ -41,6 +40,7 @@ from app.use_cases.admin.incidents.expand_incident_use_case import (
 from app.use_cases.admin.incidents.incident_reach import IncidentReach
 from app.use_cases.admin.incidents.owner_breach_notices import OwnerBreachNotices
 from tests.channels.outbox_fakes import RecordingUnitOfWork
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.knowledge.website_import.recording_job_queue import RecordingJobQueue
 from tests.platform_ops.ops_documents import HOUR, at, business, member
 from tests.platform_ops.ops_world import ADMIN, AdminsOnly, OpsClock, put
@@ -117,7 +117,7 @@ class IncidentWorld:
         self.unit_of_work = self.transactions if transactional else None
         self.business_repo = BusinessRepository(self.businesses)
         self.incident_repo = IncidentRepository(self.incidents)
-        self.audit_repo = AuditLogRepository(self.audit)
+        self.audit_repo = audit_log_repository(self.audit)
         self.announcement_repo = PlatformAnnouncementRepository(self.announcements)
         self.reach = IncidentReach(
             OwnerBreachNotices(UserRepository(self.users), self.notifier),

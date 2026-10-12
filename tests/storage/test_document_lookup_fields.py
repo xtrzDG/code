@@ -20,6 +20,7 @@ from app.utilities.storage.document_lookup_fields import (
 
 INTEGER_NAMES: frozenset[str] = frozenset(
     {
+        "AuditChainPosition",
         "BookingEndsAtUnixSeconds",
         "BookingStartsAtUnixSeconds",
         "BookingValueMinor",

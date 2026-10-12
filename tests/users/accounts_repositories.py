@@ -14,7 +14,6 @@ from app.repositories.booking_repositories import (
 from app.repositories.business_repositories import BusinessRepository
 from app.repositories.call_repository import CallRepository
 from app.repositories.compliance_repositories import (
-    AuditLogRepository,
     DpaAcceptanceRepository,
 )
 from app.repositories.contact_activity_repository import ContactActivityRepository
@@ -70,6 +69,7 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.support_access_builders import (
     in_memory_grant_repo,
     in_memory_platform_admin_repo,
@@ -118,7 +118,7 @@ class AccountsRepositories:
         self.audit_log_collection = InMemoryDocumentCollectionAdapter[
             AuditLogEntryDocument
         ](AuditLogEntryDocument)
-        self.audit_log_repo = AuditLogRepository(self.audit_log_collection)
+        self.audit_log_repo = audit_log_repository(self.audit_log_collection)
         self.dpa_acceptance_repo = DpaAcceptanceRepository(
             InMemoryDocumentCollectionAdapter[DpaAcceptanceDocument](
                 DpaAcceptanceDocument

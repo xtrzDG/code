@@ -16,7 +16,6 @@ from app.facilitators.integrations.webhook_disabled_notice_facilitator import (
     WebhookDisabledNoticeFacilitator,
 )
 from app.repositories.business_repositories import BusinessRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.webhook_repositories import (
     WebhookDeliveryRepository,
     WebhookEndpointRepository,
@@ -51,6 +50,7 @@ from app.use_cases.integrations.record_webhook_attempt_use_case import (
     RecordWebhookAttemptUseCase,
 )
 from tests.channels.outbox_fakes import RecordingJobQueue
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.live_events.recording_event_publisher import RecordingEventPublisher
 from tests.notifications.alert_world import NOON, AlertWorld
 from tests.operations.fakes import FakeLocalizedTextResolver
@@ -70,7 +70,7 @@ class NoticeWorld:
             InMemoryDocumentCollectionAdapter(BusinessDocument)
         )
         self.business_repo.save(self.business)
-        self.audit = AuditLogRepository(
+        self.audit = audit_log_repository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
         self.live = RecordingEventPublisher()

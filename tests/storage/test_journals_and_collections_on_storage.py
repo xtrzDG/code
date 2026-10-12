@@ -9,7 +9,6 @@ from typed_time_provider import Microseconds
 
 from app.repositories.billing_repositories import UsageEventRepository
 from app.repositories.booking_repositories import BookingRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import LlmTurnRepository
 from app.repositories.knowledge_repositories import KnowledgeItemRepository
 from app.schemas.constants.billing import UsageKind
@@ -34,6 +33,12 @@ from app.schemas.typings.compliance.strings import AuditEntityName
 from app.schemas.typings.contacts.prefixed_id import ContactId
 from app.schemas.typings.conversations.prefixed_id import ConversationId
 from app.schemas.typings.users.prefixed_id import UserId
+from app.utilities.compliance.audit_chain_hashing import (
+    FIRST_POSITION,
+    GENESIS_HASH,
+    link_entry,
+)
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.storage.builders import (
     COUNTRY_SAMPLES,
     build_business,
@@ -103,7 +108,7 @@ def test_knowledge_bookings_and_usage(collections: CollectionFactory) -> None:
 
 def test_append_only_journals(collections: CollectionFactory) -> None:
     llm_turn_repo = LlmTurnRepository(collections(LlmTurnDocument, "llm_turns"))
-    audit_log_repo = AuditLogRepository(
+    audit_log_repo = audit_log_repository(
         collections(AuditLogEntryDocument, "audit_log_entries")
     )
     conversation_id, other_conversation_id = ConversationId(), ConversationId()
@@ -133,7 +138,10 @@ def test_append_only_journals(collections: CollectionFactory) -> None:
     assert llm_turn_repo.list_by_conversation(conversation_id) == []
     assert len(llm_turn_repo.list_by_conversation(other_conversation_id)) == 1
     assert entry.business_id is not None
-    assert audit_log_repo.list_by_business(entry.business_id) == [entry]
+    # The entry is stored as the first link of its business's chain.
+    assert audit_log_repo.list_by_business(entry.business_id) == [
+        link_entry(entry, FIRST_POSITION, GENESIS_HASH)
+    ]
 
 
 def test_collections_return_fresh_copies_in_first_write_order(

@@ -24,7 +24,6 @@ from app.adapters.voice.elevenlabs_recording_storage_adapter import (
 )
 from app.clients.elevenlabs.elevenlabs_client import ElevenLabsClient
 from app.repositories.call_repository import CallRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument
 from app.schemas.domain.conversations import CallDocument
@@ -48,6 +47,7 @@ from app.use_cases.voice.recordings.archive_call_recording_use_case import (
 from app.use_cases.voice.recordings.recording_archive_paths import (
     ARCHIVE_CALL_RECORDING_JOB,
 )
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.compliance.moto_object_storage import MotoStorage, moto_storage
 from tests.users.accounts_testbed import AdjustableClock
 
@@ -87,7 +87,7 @@ class ArchiveWorld:
         self.business_id = BusinessId()
         self.clock = AdjustableClock()
         self.calls = CallRepository(InMemoryDocumentCollectionAdapter(CallDocument))
-        self.audit = AuditLogRepository(
+        self.audit = audit_log_repository(
             InMemoryDocumentCollectionAdapter(AuditLogEntryDocument)
         )
         self.own = EncryptedObjectRecordingStorageAdapter(storage.client(), MASTER)

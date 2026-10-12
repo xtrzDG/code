@@ -119,10 +119,14 @@ def build_users_router(
 
     @router.post("/v1/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
     def logout(
+        request: Request,
         authorization: Annotated[str | None, Header()] = None,
     ) -> Response:
         logout_operator.operate(
-            LogoutCommand(access_token=parse_bearer_token(authorization))
+            LogoutCommand(
+                access_token=parse_bearer_token(authorization),
+                client_ip_address=read_client_ip_address(request),
+            )
         )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 

@@ -9,6 +9,7 @@ from app.gateways.http.admin_ops_router_assembly import build_admin_ops_routers
 from app.gateways.http.admin_routes import build_admin_router
 from app.gateways.http.analytics_router_assembly import build_analytics_routers
 from app.gateways.http.assistant_routes import build_assistant_router
+from app.gateways.http.audit_trail_router_assembly import build_audit_trail_routers
 from app.gateways.http.billing_router_assembly import build_billing_routers
 from app.gateways.http.business_routes import build_business_router
 from app.gateways.http.calendar_sync_router_assembly import build_calendar_sync_routers
@@ -255,6 +256,7 @@ def build_application_routers(app_container: AppContainer) -> list[APIRouter]:
         *build_inbox_routers(operators, current_user),
         *build_sharing_routers(operators, current_user),
         *build_security_routers(operators, current_user),
+        *build_audit_trail_routers(operators, current_user),
         *build_value_routers(operators, current_user),
         *build_feedback_routers(operators, current_user),
         *build_privacy_routers(operators, current_user),

@@ -41,3 +41,62 @@ class AuditAction(StrEnum):
     ADMIN_SETUP_FEE_WAIVED = "admin_setup_fee_waived"
     ADMIN_INVOICE_MARKED_PAID = "admin_invoice_marked_paid"
     ADMIN_PLAN_OVERRIDDEN = "admin_plan_overridden"
+
+
+class AuditSecurityEvent(StrEnum):
+    """
+    The security event an audit entry records beside its action (version 6
+    of the entry; the action is one the release before already reads):
+
+    - LOGIN_FAILED (action `login`): a wrong sign-in code or second-factor
+      code;
+    - OTP_LOCKED and MFA_LOCKED (action `login`): the wrong code that used
+      up a sign-in code's or a second step's last attempt;
+    - LOGOUT (action `session_revoked`): a person signed out;
+    - KEY_ROTATION (action `update` of the encryption keys): a platform
+      admin started a key rotation, or the rotation finished.
+
+    Every such entry names no business: it is in the platform's chain and
+    the admin audit view.
+    """
+
+    LOGIN_FAILED = "login_failed"
+    OTP_LOCKED = "otp_locked"
+    MFA_LOCKED = "mfa_locked"
+    LOGOUT = "logout"
+    KEY_ROTATION = "key_rotation"
+
+
+class AuditChainStatus(StrEnum):
+    """
+    What the latest check of one audit hash chain found: every entry it
+    read links to the one before and hashes to its stored hash (INTACT), or
+    something does not (BROKEN).
+    """
+
+    INTACT = "intact"
+    BROKEN = "broken"
+
+
+class AuditChainProblem(StrEnum):
+    """
+    Why a check found an audit hash chain broken, at the first entry that
+    fails:
+
+    - HASH_MISMATCH: the entry's content no longer hashes to its hash (it
+      was changed after it was written);
+    - LINK_BROKEN: the entry does not name the hash of the entry before it
+      (an entry before it was changed, removed or put in);
+    - POSITION_GAP: a position is missing (an entry was removed);
+    - HEAD_LOST: the newest entry a check saw is gone or changed, and no
+      purge checkpoint explains it (the end of the chain was cut off or
+      rewritten);
+    - CHECKPOINT_MISMATCH: entries a purge checkpoint says are gone are
+      still there (the checkpoint was moved to hide them).
+    """
+
+    HASH_MISMATCH = "hash_mismatch"
+    LINK_BROKEN = "link_broken"
+    POSITION_GAP = "position_gap"
+    HEAD_LOST = "head_lost"
+    CHECKPOINT_MISMATCH = "checkpoint_mismatch"

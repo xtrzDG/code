@@ -85,6 +85,7 @@ from app.gateways.worker.periodic.sweep_rate_limit_buckets import (
 from app.gateways.worker.periodic.sweep_stale_inbound_events import (
     SWEEP_STALE_INBOUND_EVENTS_JOB,
 )
+from app.gateways.worker.periodic.verify_audit_chain import VERIFY_AUDIT_CHAIN_JOB
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.use_cases.admin.alerts.check_platform_alerts_use_case import (
     SEND_PLATFORM_ALERT_JOB,
@@ -166,6 +167,7 @@ def test_worker_ticks_once_with_every_job_registered() -> None:
         (PURGE_BUSINESS_EXPORTS_JOB, 3600),
         (PURGE_EXPIRED_PERSONAL_DATA_JOB, 86_400),
         (PURGE_IDEMPOTENCY_KEYS_JOB, 3_600),
+        (VERIFY_AUDIT_CHAIN_JOB, 86_400),
         (SEND_SUBPROCESSOR_NOTICES_JOB, 86_400),
         (EXPIRE_WAITLIST_OFFERS_JOB, 60),
         (RUN_REBOOKING_CAMPAIGNS_JOB, 3_600),

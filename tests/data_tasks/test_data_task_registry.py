@@ -36,13 +36,15 @@ def test_every_collection_above_version_one_has_a_migration_task() -> None:
     expected: dict[str, DocumentSchemaVersionNumber] = {}
     for definition in DOCUMENT_COLLECTIONS:
         version = declared_schema_version(definition.document_type)
-        if version is not None and int(version) > 1:
+        if version is not None and int(version) > 1 and not definition.is_append_only:
             expected[str(definition.name)] = version
 
     assert {name: task.target_version for name, task in migrations.items()} == (
         expected
     )
     assert "contacts" in migrations
+    # The append-only audit log keeps its old rows as written (1193).
+    assert "audit_log_entries" not in migrations
     assert migrations["contacts"].lists == [IndexedList.CUSTOMERS]
     assert migrations["knowledge_items"].lists == [IndexedList.KNOWLEDGE]
 

@@ -167,6 +167,8 @@ class AccountUseCasesContainer(containers.DeclarativeContainer):
     logout_use_case: Factory[UseCaseContract[LogoutCommand, None]] = Factory(
         LogoutUseCase,
         user_session_repo=repositories.user_session_repo,
+        audit_log_repo=repositories.audit_log_repo,
+        wall_clock=time_provider.microsecond_wall_clock,
     )
     get_current_user_use_case: Factory[UseCaseContract[UserId, CurrentUserView]] = (
         Factory(

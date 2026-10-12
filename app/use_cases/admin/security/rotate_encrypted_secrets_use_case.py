@@ -4,17 +4,22 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.key_rotations import KeyRotationRepoContract
 from app.contracts.repositories.business_repositories import BusinessRepoContract
+from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.secret_cipher import SecretRotationAdapterContract
 from app.contracts.use_case_contract import UseCaseContract
 from app.schemas.constants.security import KeyRotationStatus
 from app.schemas.domain.key_rotations import KeyRotationDocument
 from app.schemas.dto.jobs import JobReport, QueuedJobInput
 from app.schemas.dto.key_rotation import KeyRotationJobPayload
+from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
 from app.schemas.typings.platform.constrained_integers import ProcessedItemCount
 from app.schemas.typings.platform.strings import JobErrorText
 from app.schemas.typings.security.constrained_integers import (
     StoredSecretCount,
     WebhookRegistrationCount,
+)
+from app.use_cases.admin.security.key_rotation_views import (
+    build_rotation_finished_entry,
 )
 from app.use_cases.admin.security.secret_resealer import RotationTally, SecretResealer
 from app.use_cases.admin.security.totp_secret_resealer import TotpSecretResealer
@@ -36,7 +41,9 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
 
     Idempotent: a retried or repeated run finds the moved secrets current.
     A failure marks the run FAILED (with the error) and lets the job retry.
-    Runs platform-wide (it reads every business).
+    Runs platform-wide (it reads every business). A finished run is
+    audited (KEY_ROTATION in the platform's chain, with how many secrets it
+    sealed anew).
     """
 
     def __init__(
@@ -47,8 +54,10 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
         resealer: SecretResealer,
         wall_clock: WallClock[Microseconds],
         totp_resealer: TotpSecretResealer,
+        audit_log_repo: AuditLogRepoContract,
     ) -> None:
         self._totp_resealer: TotpSecretResealer = totp_resealer
+        self._audit_log_repo: AuditLogRepoContract = audit_log_repo
         self._business_repo: BusinessRepoContract = business_repo
         self._key_rotation_repo: KeyRotationRepoContract = key_rotation_repo
         self._secret_rotation: SecretRotationAdapterContract = secret_rotation
@@ -84,6 +93,13 @@ class RotateEncryptedSecretsUseCase(UseCaseContract[QueuedJobInput, JobReport]):
             raise
 
         self._finish(started, tally, KeyRotationStatus.DONE, None)
+        self._audit_log_repo.append(
+            build_rotation_finished_entry(
+                started,
+                AuditRecordCount(tally.rotated),
+                self._wall_clock.now_unix(),
+            )
+        )
         LOGGER.info(
             "Key rotation %s: %d secrets, %d rotated, %d current, %d unreadable; "
             "%d webhooks renewed, %d failed",

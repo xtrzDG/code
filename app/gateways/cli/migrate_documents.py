@@ -129,7 +129,11 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--collection",
         action="append",
-        choices=[str(definition.name) for definition in DOCUMENT_COLLECTIONS],
+        choices=[
+            str(definition.name)
+            for definition in DOCUMENT_COLLECTIONS
+            if not definition.is_append_only
+        ],
         metavar="NAME",
         help="only this collection (repeatable; default: every collection)",
     )

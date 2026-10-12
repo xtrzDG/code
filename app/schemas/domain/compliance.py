@@ -2,11 +2,18 @@ from base_pydantic_schemas import BaseDocument, SchemaVersion
 from pydantic import Field
 from typed_time_provider import Microseconds
 
-from app.schemas.constants.compliance import AuditAction
+from app.schemas.constants.compliance import AuditAction, AuditSecurityEvent
 from app.schemas.typings.access.constrained_strings import AdminActionReason
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
-from app.schemas.typings.compliance.constrained_strings import DpaDocumentVersion
+from app.schemas.typings.compliance.constrained_integers import (
+    AuditChainPosition,
+    AuditRecordCount,
+)
+from app.schemas.typings.compliance.constrained_strings import (
+    AuditChainKey,
+    AuditEntryHash,
+    DpaDocumentVersion,
+)
 from app.schemas.typings.compliance.prefixed_id import (
     AuditLogEntryId,
     DpaAcceptanceId,
@@ -24,6 +31,14 @@ class AuditLogEntryDocument(BaseDocument):
     One operation on personal data (concept table `audit_logs`).
 
     `actor_id` is null for automatic jobs such as retention purges.
+
+    The log is append-only and hash-chained: every entry written since
+    version 6 sits in one chain (`chain_key`: its business, or `platform`
+    for the entries that name none) at `chain_position`, names the hash
+    of the entry before it (`prev_hash`, 64 zeros for the first) and
+    carries the SHA-256 of its own canonical JSON (`entry_hash`,
+    `app/utilities/compliance/audit_chain_hashing.py`). Entries written
+    before version 6 hold no chain fields; they stay as they were.
     """
 
     # 2: the action `mfa_changed`. Its entries are about a person, not a
@@ -38,7 +53,12 @@ class AuditLogEntryDocument(BaseDocument):
     # 5: the actions `spend_limit_reached` (R12) and ADMIN_* on a client's
     # account (R13; in the business's log, an exception to the enum rule,
     # docs/operations/deploys.md) and the admin's `reason` (optional).
-    schema_version: SchemaVersion = SchemaVersion("5")
+    # 6: the hash chain (`chain_key`, `chain_position`, `prev_hash`,
+    # `entry_hash`) and `security_event` (sign-in failures and lockouts,
+    # sign-outs, key rotations), all optional: a version 5 row reads as an
+    # entry from before the chain. The previous release ignores the new
+    # fields, and every security event rides on an action it reads.
+    schema_version: SchemaVersion = SchemaVersion("6")
     id: AuditLogEntryId = Field(default_factory=AuditLogEntryId)
     business_id: BusinessId | None = None
     actor_id: UserId | None = None
@@ -48,6 +68,11 @@ class AuditLogEntryDocument(BaseDocument):
     ip_address: ClientIpAddress | None = None
     record_count: AuditRecordCount | None = None
     reason: AdminActionReason | None = None
+    security_event: AuditSecurityEvent | None = None
+    chain_key: AuditChainKey | None = None
+    chain_position: AuditChainPosition | None = None
+    prev_hash: AuditEntryHash | None = None
+    entry_hash: AuditEntryHash | None = None
 
 
 class DpaAcceptanceDocument(BaseDocument):

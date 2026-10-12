@@ -34,7 +34,6 @@ from app.repositories.booking_repositories import (
 )
 from app.repositories.business_repositories import BusinessRepository
 from app.repositories.client_care_repositories import BillingCreditRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.conversation_repositories import MessageRepository
 from app.repositories.payment_repositories import (
     PackageUsageWarningRepository,
@@ -81,6 +80,7 @@ from tests.billing.billing_settings import (
 from tests.billing.exchange_rate_fixtures import rate_registry
 from tests.billing.flitt_sandbox import FlittSandbox
 from tests.billing.invoicing_parts import InvoicingParts, build_invoicing_parts
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.referrals.referral_parts import ReferralRepositories
 
 
@@ -148,7 +148,7 @@ class BillingInfrastructure:
                 SubscriptionEventDocument
             )
         )
-        self.audit_log_repo = AuditLogRepository(
+        self.audit_log_repo = audit_log_repository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument
             )

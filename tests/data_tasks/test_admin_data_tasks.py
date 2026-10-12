@@ -6,7 +6,6 @@ from typed_time_provider import Microseconds
 from app.adapters.storage.in_memory_document_collection import (
     InMemoryDocumentCollectionAdapter,
 )
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.schemas.constants.compliance import AuditAction
 from app.schemas.constants.maintenance import DataTaskStatus, IndexedList
 from app.schemas.domain.compliance import AuditLogEntryDocument
@@ -32,6 +31,7 @@ from app.use_cases.admin.system.retry_data_task_use_case import (
     RetryDataTaskUseCase,
 )
 from app.utilities.maintenance.data_task_progress import new_state
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.data_tasks.data_task_support import (
     HOUR,
     MINUTE,
@@ -99,7 +99,7 @@ class Card:
             authorize_platform_admin=AdminsOnly(),
             registry=self.registry,
             state_repo=self.states,
-            audit_log_repo=AuditLogRepository(self.audit),
+            audit_log_repo=audit_log_repository(self.audit),
             wall_clock=self.clock.wall_clock,
         )
 

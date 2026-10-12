@@ -48,6 +48,7 @@ from app.schemas.domain.resources import ScheduleExceptionDocument
 from app.schemas.domain.suppression import SuppressionEntryDocument
 from app.schemas.domain.users import UserDocument
 from tests.brain.brain_memory import BrainMemory, build_brain_memory
+from tests.compliance.audit_repositories import audit_log_repository
 
 
 @dataclass(frozen=True)
@@ -116,7 +117,7 @@ def build_brain_repositories() -> BrainRepositories:
         handoff_repo=HandoffRepository(
             InMemoryDocumentCollectionAdapter[HandoffDocument](HandoffDocument)
         ),
-        audit_log_repo=AuditLogRepository(
+        audit_log_repo=audit_log_repository(
             InMemoryDocumentCollectionAdapter[AuditLogEntryDocument](
                 AuditLogEntryDocument
             )

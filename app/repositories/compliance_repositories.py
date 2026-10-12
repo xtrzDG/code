@@ -1,77 +1,60 @@
-from typed_time_provider import Microseconds
+from collections.abc import Sequence
 
+from app.contracts.document_store import DocumentCollectionAdapterContract
+from app.contracts.locks import AdvisoryLockAdapterContract
 from app.contracts.repositories.compliance_repositories import (
     AuditLogRepoContract,
     DpaAcceptanceRepoContract,
 )
+from app.repositories.audit.audit_chain_appending import AuditChainAppending
+from app.repositories.audit.audit_view_counting import AuditViewCounting
 from app.repositories.business_scoped_repository import BusinessScopedRepository
-from app.repositories.document_queries import (
-    CREATED_AT_FIELD,
-    field_equals,
-    of_business,
-    time_range,
+from app.repositories.document_queries import of_business
+from app.repositories.listing.audit_listing import AuditLogListing
+from app.schemas.domain.audit_chain import (
+    AuditChainCheckpointDocument,
+    AuditViewCountDocument,
 )
-from app.repositories.listing.audit_listing import (
-    ACTION_FIELD,
-    ACTOR_ID_FIELD,
-    ENTITY_FIELD,
-    AuditLogListing,
-)
-from app.schemas.constants.compliance import AuditAction
 from app.schemas.domain.compliance import AuditLogEntryDocument, DpaAcceptanceDocument
-from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.compliance.constrained_integers import AuditRecordCount
-
-# Identical views within this window are one entry with a count.
-VIEW_REPEAT_WINDOW_MICROSECONDS: int = 5 * 60 * 1_000_000
+from app.schemas.typings.compliance.constrained_integers import AuditViewCount
+from app.schemas.typings.compliance.prefixed_id import AuditLogEntryId
 
 
 class AuditLogRepository(AuditLogListing, AuditLogRepoContract):
-    """Append-only audit log; entries without a business are platform-wide."""
+    """
+    The append-only, hash-chained audit log: every entry joins its
+    business's chain, or the platform's when it names no business
+    (`AuditChainAppending`); a repeated identical view raises the first
+    one's count beside the chain (`AuditViewCounting`). No stored entry is
+    ever changed or deleted here (the database refuses it too, 1193).
+    """
+
+    def __init__(
+        self,
+        collection: DocumentCollectionAdapterContract[AuditLogEntryDocument],
+        view_counts: DocumentCollectionAdapterContract[AuditViewCountDocument],
+        checkpoints: DocumentCollectionAdapterContract[AuditChainCheckpointDocument],
+        advisory_locks: AdvisoryLockAdapterContract,
+    ) -> None:
+        super().__init__(collection)
+        self._views: AuditViewCounting = AuditViewCounting(collection, view_counts)
+        self._chain: AuditChainAppending = AuditChainAppending(
+            collection, checkpoints, advisory_locks
+        )
 
     def append(self, entry: AuditLogEntryDocument) -> None:
-        if self._collection.get(str(entry.id)) is not None:
-            raise ConflictError(f"Audit entry {entry.id} is already stored.")
-
-        if entry.action is AuditAction.VIEW and self._count_repeated_view(entry):
+        if self._views.count_if_repeated(entry):
             return
 
-        self._collection.upsert(str(entry.id), entry)
+        self._chain.append(entry)
 
-    def _count_repeated_view(self, entry: AuditLogEntryDocument) -> bool:
-        """Count the view on the same view of the last 5 minutes, if any."""
-
-        if entry.business_id is None or entry.actor_id is None:
-            return False
-
-        since = Microseconds(int(entry.created_at) - VIEW_REPEAT_WINDOW_MICROSECONDS)
-        recent: list[AuditLogEntryDocument] = self._collection.list_by_range(
-            time_range(CREATED_AT_FIELD, starting_at=since),
-            (
-                of_business(entry.business_id),
-                field_equals(ACTION_FIELD, AuditAction.VIEW),
-                field_equals(ENTITY_FIELD, entry.entity),
-                field_equals(ACTOR_ID_FIELD, entry.actor_id),
-            ),
-            is_descending=True,
-        )
-        same: AuditLogEntryDocument | None = next(
-            (stored for stored in recent if is_same_view(stored, entry)), None
-        )
-        if same is None:
-            return False
-
-        def count(stored: AuditLogEntryDocument) -> AuditLogEntryDocument:
-            views: int = int(stored.record_count or 1) + 1
-            return stored.model_copy(
-                update={
-                    "record_count": AuditRecordCount(views),
-                    "updated_at": entry.created_at,
-                }
-            )
-
-        return self._collection.modify(str(same.id), count) is not None
+    def view_counts(
+        self,
+        business_id: BusinessId,
+        entry_ids: Sequence[AuditLogEntryId],
+    ) -> dict[AuditLogEntryId, AuditViewCount]:
+        return self._views.counts_of(business_id, entry_ids)
 
     def list_by_business(
         self,
@@ -98,11 +81,3 @@ class DpaAcceptanceRepository(
             self._list_in_business(business_id),
             key=lambda acceptance: acceptance.accepted_at,
         )
-
-
-def is_same_view(stored: AuditLogEntryDocument, entry: AuditLogEntryDocument) -> bool:
-    return (
-        stored.entity_id == entry.entity_id
-        and stored.ip_address == entry.ip_address
-        and stored.actor_id == entry.actor_id
-    )

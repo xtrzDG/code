@@ -11,7 +11,6 @@ from app.operators.pipeline_operator import PipelineOperator
 from app.orchestrators.use_case_orchestrator import UseCaseOrchestrator
 from app.pipelines.orchestrator_pipeline import OrchestratorPipeline
 from app.repositories.business_repositories import BusinessRepository
-from app.repositories.compliance_repositories import AuditLogRepository
 from app.repositories.platform_admin_repository import PlatformAdminRepository
 from app.repositories.support_access_grant_repository import (
     SupportAccessGrantRepository,
@@ -29,6 +28,7 @@ from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.exceptions.application_errors import AccessDeniedError, NotFoundError
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.security.session_assurance_context import SessionAssuranceContext
+from tests.compliance.audit_repositories import audit_log_repository
 from tests.foundation.access_support import ACCESS_SETTINGS, PLATFORM_ADMIN_EMAIL
 from tests.foundation.support_access_builders import (
     allow_support_changes,
@@ -58,7 +58,7 @@ def test_business_access_for_owner_staff_stranger_and_admin(
 ) -> None:
     business_repo = BusinessRepository(collections(BusinessDocument, "businesses"))
     user_repo = UserRepository(collections(UserDocument, "users"))
-    audit_log_repo = AuditLogRepository(
+    audit_log_repo = audit_log_repository(
         collections(AuditLogEntryDocument, "audit_log_entries")
     )
     grant_repo = SupportAccessGrantRepository(

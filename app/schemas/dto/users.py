@@ -150,9 +150,10 @@ class LoginSessionView(ImmutableDTO):
 
 
 class LogoutCommand(ImmutableDTO):
-    """End the session behind a bearer token."""
+    """End the session behind a bearer token (audited with the address)."""
 
     access_token: AccessToken
+    client_ip_address: ClientIpAddress | None = None
 
 
 class UserMembershipView(ImmutableDTO):

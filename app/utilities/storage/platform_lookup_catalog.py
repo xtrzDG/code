@@ -98,4 +98,6 @@ PLATFORM_LOOKUP_FIELDS: Mapping[
     DocumentCollectionName("service_level_hours"): (integer_field("hour_start"),),
     # The hourly purge of expired idempotency keys (1174).
     DocumentCollectionName("idempotency_keys"): (integer_field("expires_at"),),
+    # Broken audit hash chains, counted for their alert (1193).
+    DocumentCollectionName("audit_chain_statuses"): (text_field("status"),),
 }

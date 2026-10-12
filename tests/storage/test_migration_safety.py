@@ -152,6 +152,8 @@ def test_no_transaction_files_hold_only_idempotent_statements() -> None:
         + "    as $body$ update workshop.contacts set x = 1; select 1 $body$;\n"
         + "create index concurrently contacts_y_idx on workshop.contacts (doc_y);\n"
         + "alter table workshop.contacts add column z text;\n"
+        + "revoke delete on workshop.contacts from current_user;\n"
+        + "grant update (document) on workshop.contacts to current_user;\n"
     ) == [
         "a statement a new try could not run again (not idempotent)",
         "a statement a new try could not run again (not idempotent)",
